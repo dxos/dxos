@@ -93,6 +93,8 @@ type BoardContextValue = {
   /** Cell size and gap in px (converted from the `cellSize`/`gap` props, which are in rem). */
   cellSize: GridCellSize;
   gap: number;
+  /** Perimeter breathing room around the grid, in cell units (see the `margin` prop). */
+  margin: number;
   /** Column/row extent to render (the backdrop shows at least this; grows with content). */
   columns: number;
   rows: number;
@@ -183,6 +185,9 @@ type BoardRootProps = PropsWithChildren<{
   cellSize?: GridCellSize;
   /** Gap between cells in rem. */
   gap?: number;
+  /** Perimeter breathing room around the grid, in cell units, so tiles aren't flush to the board
+   * edges (0 = none). Part of the scaled board, so it zooms with the content. */
+  margin?: number;
   /** Render each backdrop cell's `x,y` coordinate (debugging aid). Off by default. */
   debug?: boolean;
   /**
@@ -225,6 +230,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       onSelectedChange,
       cellSize = defaultCellSize,
       gap = defaultGap,
+      margin = 0,
       debug = false,
       overscroll = false,
       settleDelay = 500,
@@ -334,18 +340,24 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
             { x: position.x, y: position.y, w: position.w ?? 1, h: position.h ?? 1 },
             cellSizePx,
             gapPx,
+            margin,
           );
           anchorX = rect.left + rect.width / 2;
           anchorY = rect.top + rect.height / 2;
         } else {
-          const board = gridBounds(columns, rows, cellSizePx, gapPx);
+          const board = gridBounds(columns, rows, cellSizePx, gapPx, margin);
           anchorX = board.width / 2;
           anchorY = board.height / 2;
         }
         // Place the anchor at the viewport centre. The board sits at `pad` and scales from its top-left
         // (transform-origin 0 0), so a content point maps to `pad + point * zoom` on screen.
         const viewport = { width: el.clientWidth, height: el.clientHeight };
-        const pad = boardPad({ viewport, board: gridBounds(columns, rows, cellSizePx, gapPx), zoom, overscroll });
+        const pad = boardPad({
+          viewport,
+          board: gridBounds(columns, rows, cellSizePx, gapPx, margin),
+          zoom,
+          overscroll,
+        });
         const { left: targetLeft, top: targetTop } = anchoredScroll({
           anchor: { x: anchorX, y: anchorY },
           viewport,
@@ -373,7 +385,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         return;
       }
       const viewport = { width: el.clientWidth, height: el.clientHeight };
-      const pad = boardPad({ viewport, board: gridBounds(columns, rows, cellSizePx, gapPx), zoom, overscroll });
+      const pad = boardPad({ viewport, board: gridBounds(columns, rows, cellSizePx, gapPx, margin), zoom, overscroll });
       pendingAnchorRef.current = viewportCenterAnchor({
         scroll: { left: el.scrollLeft, top: el.scrollTop },
         viewport,
@@ -532,6 +544,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         zoomOut={zoomOut}
         cellSize={cellSizePx}
         gap={gapPx}
+        margin={margin}
         columns={columns}
         rows={rows}
         debug={debug}
@@ -567,8 +580,12 @@ const BOARD_VIEWPORT_NAME = 'Board.Viewport';
 type BoardViewportProps = ThemedClassName<PropsWithChildren>;
 
 const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
-  const { cellSize, gap, columns, rows, zoom, overscrollPad, viewportSize } = useBoardContext(BOARD_VIEWPORT_NAME);
-  const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
+  const { cellSize, gap, margin, columns, rows, zoom, overscrollPad, viewportSize } =
+    useBoardContext(BOARD_VIEWPORT_NAME);
+  const bounds = useMemo(
+    () => gridBounds(columns, rows, cellSize, gap, margin),
+    [columns, rows, cellSize, gap, margin],
+  );
   const overscroll = overscrollPad.x > 0 || overscrollPad.y > 0;
 
   // A CSS transform scales the paint but not the layout box, so at zoom < 1 the board keeps its full
@@ -621,8 +638,20 @@ const BOARD_CONTAINER_NAME = 'Board.Container';
 type BoardContainerProps = ThemedClassName<PropsWithChildren>;
 
 const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { viewportRef, pendingAnchor, zooming, center, resizing, zoom, selected, overscroll, layout, cellSize, gap } =
-    useBoardContext(BOARD_CONTAINER_NAME);
+  const {
+    viewportRef,
+    pendingAnchor,
+    zooming,
+    center,
+    resizing,
+    zoom,
+    selected,
+    overscroll,
+    layout,
+    cellSize,
+    gap,
+    margin,
+  } = useBoardContext(BOARD_CONTAINER_NAME);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = composeRefs(localRef, viewportRef);
 
@@ -632,8 +661,8 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
 
   // Latest state read from refs so the zoom-anchor effect depends only on `zoom` (so selecting a tile
   // at a constant zoom does NOT move the board).
-  const anchorState = useRef({ selected, overscroll, layout, cellSize, gap });
-  anchorState.current = { selected, overscroll, layout, cellSize, gap };
+  const anchorState = useRef({ selected, overscroll, layout, cellSize, gap, margin });
+  anchorState.current = { selected, overscroll, layout, cellSize, gap, margin };
 
   // Keep the board anchored while zooming: animate the scale AND the scroll together each frame so the
   // anchor stays at the viewport centre for the whole animation (no post-animation shift). The anchor
@@ -650,7 +679,7 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
       return;
     }
 
-    const { selected, overscroll, layout, cellSize, gap } = anchorState.current;
+    const { selected, overscroll, layout, cellSize, gap, margin } = anchorState.current;
     // Capture the viewport size once — stable during the animation in a real pane (and avoids a
     // fluctuating measurement mid-animation).
     const viewport = { width: element.clientWidth, height: element.clientHeight };
@@ -668,7 +697,12 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
       let sumY = 0;
       for (const id of ids) {
         const position = layout.items[id];
-        const rect = cellRect({ x: position.x, y: position.y, w: position.w ?? 1, h: position.h ?? 1 }, cellSize, gap);
+        const rect = cellRect(
+          { x: position.x, y: position.y, w: position.w ?? 1, h: position.h ?? 1 },
+          cellSize,
+          gap,
+          margin,
+        );
         sumX += rect.left + rect.width / 2;
         sumY += rect.top + rect.height / 2;
       }
@@ -865,13 +899,14 @@ const BOARD_BACKDROP_NAME = 'Board.Backdrop';
 type BoardBackdropProps = {};
 
 const BoardBackdrop = (_props: BoardBackdropProps) => {
-  const { cellSize, gap, columns, rows, debug, containerId, readonly, onAdd } = useBoardContext(BOARD_BACKDROP_NAME);
+  const { cellSize, gap, margin, columns, rows, debug, containerId, readonly, onAdd } =
+    useBoardContext(BOARD_BACKDROP_NAME);
 
   const cells = useMemo(() => {
     const cells: { position: { x: number; y: number }; rect: Rect }[] = [];
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < columns; x++) {
-        cells.push({ position: { x, y }, rect: cellRect({ x, y, w: 1, h: 1 }, cellSize, gap) });
+        cells.push({ position: { x, y }, rect: cellRect({ x, y, w: 1, h: 1 }, cellSize, gap, margin) });
       }
     }
 
@@ -982,10 +1017,13 @@ const BOARD_MAP_NAME = 'Board.Map';
 type BoardMapProps = ThemedClassName<{}>;
 
 const BoardMap = ({ classNames }: BoardMapProps) => {
-  const { layout, columns, rows, cellSize, gap, selected, viewportRef } = useBoardContext(BOARD_MAP_NAME);
+  const { layout, columns, rows, cellSize, gap, margin, selected, viewportRef } = useBoardContext(BOARD_MAP_NAME);
   // Match the grid's pixel aspect (not the viewport's), and place tiles by their exact rects so the
   // map is a faithful scale model of the board.
-  const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
+  const bounds = useMemo(
+    () => gridBounds(columns, rows, cellSize, gap, margin),
+    [columns, rows, cellSize, gap, margin],
+  );
   const tiles = useMemo(() => Object.entries(layout.items), [layout.items]);
 
   // The visible region as a fraction of the board, derived purely from live DOM geometry (the scaled
@@ -1037,7 +1075,12 @@ const BoardMap = ({ classNames }: BoardMapProps) => {
       style={{ aspectRatio: `${bounds.width} / ${bounds.height}` }}
     >
       {tiles.map(([id, position]) => {
-        const rect = cellRect({ x: position.x, y: position.y, w: position.w ?? 1, h: position.h ?? 1 }, cellSize, gap);
+        const rect = cellRect(
+          { x: position.x, y: position.y, w: position.w ?? 1, h: position.h ?? 1 },
+          cellSize,
+          gap,
+          margin,
+        );
         return (
           <div
             key={id}

@@ -58,6 +58,7 @@ export const BoardCell = ({
   const {
     cellSize,
     gap,
+    margin,
     columns,
     zoom,
     selectionMode,
@@ -239,7 +240,7 @@ export const BoardCell = ({
   // to where it will land (cell-to-cell) during the drag and is already there on drop, rather than
   // snapping back from its original cell. The cursor-following clone is the "picked up" copy.
   const effectiveLayout = previewLayout ? (previewLayout.items[item.id] ?? layout) : layout;
-  const rect = cellRect(span(effectiveLayout), cellSize, gap);
+  const rect = cellRect(span(effectiveLayout), cellSize, gap, margin);
 
   // While this tile is dragged, outline the FULL w×h footprint it will occupy at the target cell
   // (not just the 1x1 cell under the cursor) so the landing area reads as one blue-bordered region.
@@ -248,7 +249,7 @@ export const BoardCell = ({
       ? dragging.target.data.location
       : undefined;
   const moveGhost = moveTarget
-    ? cellRect({ x: moveTarget.x, y: moveTarget.y, w: layout.w ?? 1, h: layout.h ?? 1 }, cellSize, gap)
+    ? cellRect({ x: moveTarget.x, y: moveTarget.y, w: layout.w ?? 1, h: layout.h ?? 1 }, cellSize, gap, margin)
     : undefined;
 
   return (

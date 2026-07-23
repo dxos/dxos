@@ -17,24 +17,29 @@ export const cellRect = (
   { x, y, w, h }: { x: number; y: number; w: number; h: number },
   cellSize: GridCellSize,
   gap: number,
+  // Perimeter breathing room around the grid, in cell units (a cell = its size + one gap). Offsets
+  // every cell so the grid isn't flush to the board edges; 0 leaves the grid flush.
+  margin = 0,
 ): Rect => ({
-  left: gap + x * (cellSize.width + gap),
-  top: gap + y * (cellSize.height + gap),
+  left: margin * (cellSize.width + gap) + gap + x * (cellSize.width + gap),
+  top: margin * (cellSize.height + gap) + gap + y * (cellSize.height + gap),
   width: w * cellSize.width + Math.max(0, w - 1) * gap,
   height: h * cellSize.height + Math.max(0, h - 1) * gap,
 });
 
 /**
- * Overall pixel size of a grid with the given column/row count.
+ * Overall pixel size of a grid with the given column/row count, plus `margin` cells of perimeter
+ * breathing room on each side (see {@link cellRect}).
  */
 export const gridBounds = (
   columns: number,
   rows: number,
   cellSize: GridCellSize,
   gap: number,
+  margin = 0,
 ): { width: number; height: number } => ({
-  width: columns * (cellSize.width + gap) + gap,
-  height: rows * (cellSize.height + gap) + gap,
+  width: (columns + 2 * margin) * (cellSize.width + gap) + gap,
+  height: (rows + 2 * margin) * (cellSize.height + gap) + gap,
 });
 
 type Size = { width: number; height: number };

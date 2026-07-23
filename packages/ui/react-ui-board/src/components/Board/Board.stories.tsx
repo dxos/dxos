@@ -253,6 +253,18 @@ export const Overscroll: Story = {
   },
 };
 
+/** `margin: 1` — one cell of perimeter breathing room around the grid so tiles aren't flush to the
+ * board edges (the margin scales with the board when zooming). */
+export const Margin: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    margin: 1,
+    debug: true,
+  },
+};
+
 /** Single-select: clicking a card selects it (clicking it again clears); at most one is selected. */
 export const SingleSelect: Story = {
   args: {
