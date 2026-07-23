@@ -46,6 +46,8 @@ const DropdownMenuItem = ({
         />
       )}
       <ActionLabel action={action} />
+      {/* Trailing check marks the current value of a single-select group (`checked`). */}
+      {action.properties?.checked && <Icon icon='ph--check--regular' size={iconSize} classNames='mis-auto' />}
     </NaturalDropdownMenu.Item>
   );
 };

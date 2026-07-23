@@ -197,6 +197,14 @@ const AmbientReviewPlugin = Plugin.define(
       Effect.succeed([
         Capability.contributes(MarkdownCapabilities.ExtensionProvider, [() => storyCommentsExtension()]),
         Capability.contributes(MarkdownCapabilities.SuggestionSourcesProvider, StorySuggestionSourcesProvider),
+        // Stand in for plugin-comments' contribution so the Suggesting view-mode entry appears.
+        Capability.contributes(MarkdownCapabilities.ViewModeExtension, {
+          id: 'suggesting',
+          icon: 'ph--pencil-simple--regular',
+          label: 'Suggesting',
+          reviewMode: 'suggesting',
+          order: 3,
+        }),
       ]),
   }),
   Plugin.make,
@@ -708,11 +716,14 @@ const editorReadOnly = (canvasElement: HTMLElement): boolean | undefined => {
   return view?.state.readOnly;
 };
 
-/** Open the toolbar review-mode dropdown and pick a mode (Editing / Suggesting / Viewing). */
-const selectReviewMode = async (canvasElement: HTMLElement, label: string) => {
+/**
+ * Open the editor view-mode dropdown and pick an entry by label. The review mode is now folded into
+ * this single dropdown: Source ⇒ editing, Read-only/Preview ⇒ viewing, Suggesting ⇒ suggesting.
+ */
+const selectViewMode = async (canvasElement: HTMLElement, label: string) => {
   const canvas = within(canvasElement);
   const body = within(canvasElement.ownerDocument.body);
-  await userEvent.click(await canvas.findByRole('button', { name: 'Review mode' }, { timeout: 15_000 }));
+  await userEvent.click(await canvas.findByRole('button', { name: 'View mode' }, { timeout: 15_000 }));
   await userEvent.click(await body.findByText(label));
 };
 
@@ -748,7 +759,7 @@ export const AmbientReview: Story = {
     await waitFor(() => expect(editorReadOnly(canvasElement)).toBe(false));
 
     // Switch to Viewing via the toolbar: suggestions disappear, the comment remains, editor read-only.
-    await selectReviewMode(canvasElement, 'Viewing');
+    await selectViewMode(canvasElement, 'Read-only');
     await waitFor(() => expect(canvasElement.querySelectorAll('.cm-suggest-insert')).toHaveLength(0), {
       timeout: 15_000,
     });
@@ -757,7 +768,7 @@ export const AmbientReview: Story = {
 
     // Switch back to Editing so the toggle round-trips AND the story rests showing the suggestions
     // (Viewing intentionally hides them, which reads as an empty demo at rest).
-    await selectReviewMode(canvasElement, 'Editing');
+    await selectViewMode(canvasElement, 'Source');
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Alice'), { timeout: 15_000 });
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'));
     await waitFor(() => expect(editorReadOnly(canvasElement)).toBe(false));
@@ -788,7 +799,7 @@ export const Suggesting: Story = {
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });
 
     // Switch to Suggesting: the editor rebinds to the user's own suggestion branch (starts == main).
-    await selectReviewMode(canvasElement, 'Suggesting');
+    await selectViewMode(canvasElement, 'Suggesting');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('Hello World'), { timeout: 15_000 });
     // Bob still overlays (diffed vs main, rebased into the user's branch coordinates).
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });

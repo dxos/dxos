@@ -20,14 +20,8 @@ import { VersioningCapabilities } from '@dxos/plugin-versioning';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
-import { Editor, useEditorContext } from '@dxos/react-ui-editor';
-import {
-  type ToolbarMenuActionGroupProperties,
-  createMenuAction,
-  createMenuItemGroup,
-  graphActions,
-  isToolbarAction,
-} from '@dxos/react-ui-menu';
+import { Editor, type ViewModeItem, defaultViewModeItems, useEditorContext } from '@dxos/react-ui-editor';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
 import {
   type DiffHunk,
@@ -37,6 +31,7 @@ import {
   suggestionsOverlay,
   trackChanges,
 } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Branch } from '@dxos/versioning';
 
 import {
@@ -46,7 +41,6 @@ import {
   type MarkdownEditorProviderProps,
 } from '#components';
 import { useLinkQuery, useVersioning } from '#hooks';
-import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 import { mergeConflicts, versionDiff } from '../../extensions';
@@ -71,7 +65,18 @@ const compareCompartment = new Compartment();
 
 export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
   (
-    { role, subject: object, id, attendableId, settings, extensionProviders, onSelectObject, viewMode, ...props },
+    {
+      role,
+      subject: object,
+      id,
+      attendableId,
+      settings,
+      extensionProviders,
+      onSelectObject,
+      viewMode,
+      onViewModeChange,
+      ...props
+    },
     forwardedRef,
   ) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
@@ -92,8 +97,6 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       checkpointContent,
       branchBaseContent,
       selection,
-      setSelection,
-      setView,
       mode,
       setMode,
     } = versioning;
@@ -451,131 +454,51 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       return undefined;
     }, [compareActive, branchBaseContent, diffViewMode]);
 
-    // Enter suggesting: find-or-create the caller's suggestion branch and switch to editing it, so
-    // typed edits accrue on that branch for review rather than mutating main. Called directly (not via
-    // an operation) like the checkpoint "Branch from" action — the UI invoker has no Database.Service,
-    // and `Branch.suggestion` operates on the document's own database.
-    const handleSuggest = useCallback(async () => {
-      const creator = identity?.did;
-      const parent = document?.content.target;
-      if (!document || !parent || !creator) {
-        return;
-      }
-      const branch = await Branch.suggestion(document, parent, creator);
-      setSelection({ kind: 'branch', branchId: branch.id });
-      setView('branch');
-    }, [document, identity, setSelection, setView]);
-
-    // Toolbar actions from app graph, plus the branch switcher dropdown.
+    // Toolbar actions from the app graph. Branch selection / suggest / return-to-main live in the
+    // History companion (the advanced path); the ambient review mode (incl. Suggesting) is surfaced in
+    // the editor view-mode dropdown below.
     const { graph } = useAppGraph();
     const runAction = useActionRunner();
-    const activeBranches = document?.history?.branches.filter((branch) => branch.status === 'active') ?? [];
-    const branchesKey = activeBranches.map((branch) => `${branch.id}:${branch.name}`).join(',');
-    const customActions = useMemo(() => {
-      return Atom.make((get) => {
-        const base = graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction });
-        if (!document) {
-          return base;
-        }
+    const customActions = useMemo(
+      () => Atom.make((get) => graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction })),
+      [graph, attendableId, id],
+    );
 
-        const groupId = 'versions';
-        const group = createMenuItemGroup(groupId, {
-          label: ['versions.title', { ns: meta.profile.key }],
-          icon: 'ph--git-branch--regular',
-          iconOnly: true,
-          variant: 'dropdownMenu',
-          applyActive: false,
-          selectCardinality: 'single',
-        } satisfies ToolbarMenuActionGroupProperties);
-        const actions = [
-          createMenuAction('versions--suggest', () => void handleSuggest().catch((error) => log.catch(error)), {
-            label: ['suggest-edits.label', { ns: meta.profile.key }],
-            icon: 'ph--pencil-simple--regular',
-          }),
-          createMenuAction('versions--current', () => setSelection({ kind: 'current' }), {
-            label: ['main-branch.label', { ns: meta.profile.key }],
-            icon: 'ph--git-branch--regular',
-            checked: !activeBranch && !activeVersion,
-          }),
-          ...activeBranches.map((branch) =>
-            createMenuAction(
-              `versions--${branch.id}`,
-              () => {
-                setSelection({ kind: 'branch', branchId: branch.id });
-                // Switching to a branch from the toolbar defaults to the Diff (review) view rather
-                // than editing the branch directly.
-                setView('diff');
-              },
-              {
-                label: Branch.label(branch),
-                icon: 'ph--git-branch--regular',
-                checked: activeBranch?.id === branch.id,
-              },
-            ),
-          ),
-        ];
-
-        // Per-user review mode toggle — only meaningful on the ambient path (`selection.kind ===
-        // 'current'`): viewing an explicit branch/checkpoint/fork already pins its own read/write
-        // behaviour, so `setMode` would have no visible effect there. Editing / Suggesting / Viewing:
-        // Suggesting binds the editor to the user's own suggestion branch so typing accrues there.
-        const modeGroupId = 'review-mode';
-        const modeGroup = ambient
-          ? createMenuItemGroup(modeGroupId, {
-              label: ['review-mode.title', { ns: meta.profile.key }],
-              icon: 'ph--eye--regular',
-              iconOnly: true,
-              variant: 'dropdownMenu',
-              applyActive: false,
-              selectCardinality: 'single',
-            } satisfies ToolbarMenuActionGroupProperties)
-          : undefined;
-        const modeActions = ambient
-          ? [
-              createMenuAction('review-mode--editing', () => setMode('editing'), {
-                label: ['review-mode.editing.label', { ns: meta.profile.key }],
-                icon: 'ph--pencil-simple-line--regular',
-                checked: mode === 'editing',
-              }),
-              createMenuAction('review-mode--suggesting', () => setMode('suggesting'), {
-                label: ['review-mode.suggesting.label', { ns: meta.profile.key }],
-                icon: 'ph--pencil-simple--regular',
-                checked: mode === 'suggesting',
-              }),
-              createMenuAction('review-mode--viewing', () => setMode('viewing'), {
-                label: ['review-mode.viewing.label', { ns: meta.profile.key }],
-                icon: 'ph--eye--regular',
-                checked: mode === 'viewing',
-              }),
-            ]
-          : [];
-
-        return {
-          nodes: [...base.nodes, group, ...actions, ...(modeGroup ? [modeGroup] : []), ...modeActions],
-          edges: [
-            ...base.edges,
-            { source: 'root', target: groupId, relation: 'child' as const },
-            ...actions.map((action) => ({ source: groupId, target: action.id, relation: 'child' as const })),
-            ...(modeGroup ? [{ source: 'root', target: modeGroupId, relation: 'child' as const }] : []),
-            ...modeActions.map((action) => ({ source: modeGroupId, target: action.id, relation: 'child' as const })),
-          ],
-        };
-      });
-    }, [
-      graph,
-      attendableId,
-      id,
-      document,
-      branchesKey,
-      activeBranch?.id,
-      activeVersion?.id,
-      ambient,
-      mode,
-      setMode,
-      setSelection,
-      setView,
-      handleSuggest,
-    ]);
+    // View-mode dropdown entries: the built-in editor modes plus any contributed review modes (e.g.
+    // Suggesting from plugin-comments). On the ambient path the dropdown is the single GDocs-style mode
+    // control — selecting a built-in also sets the review posture (source→editing, preview/readonly→
+    // viewing) so leaving a contributed mode works; a contributed entry sets its review mode directly.
+    // Off the ambient path (an explicit branch/checkpoint is selected) the review mode has no effect, so
+    // only the built-in editor modes are shown.
+    const viewModeExtensions = useCapabilities(MarkdownCapabilities.ViewModeExtension);
+    const viewModes = useMemo<ViewModeItem[]>(() => {
+      const current = viewMode ?? 'source';
+      const contributed: ViewModeItem[] = ambient
+        ? [...viewModeExtensions]
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+            .map((extension) => ({
+              id: extension.id,
+              icon: extension.icon,
+              label: extension.label,
+              checked: mode === extension.reviewMode,
+              onSelect: () => setMode(extension.reviewMode),
+            }))
+        : [];
+      const contributedActive = contributed.some((item) => item.checked);
+      const builtin: ViewModeItem[] = defaultViewModeItems.map((item) => ({
+        ...item,
+        // A contributed mode owns the single checked slot when active; otherwise the built-in matching
+        // the current editor view mode is checked.
+        checked: !contributedActive && item.id === current,
+        onSelect: () => {
+          onViewModeChange?.(item.id as EditorViewMode);
+          if (ambient) {
+            setMode(item.id === 'source' ? 'editing' : 'viewing');
+          }
+        },
+      }));
+      return [...builtin, ...contributed];
+    }, [viewMode, ambient, mode, setMode, onViewModeChange, viewModeExtensions]);
 
     // File upload.
     const [upload] = useCapabilities(AppCapabilities.FileUploader);
@@ -626,6 +549,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}
         onSelectObject={handleSelectObject}
+        onViewModeChange={onViewModeChange}
         {...props}
       >
         {(editorRootProps) => (
@@ -646,7 +570,11 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
                 <Panel.Toolbar>
-                  <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
+                  <MarkdownEditor.Toolbar
+                    classNames='dx-document'
+                    customActions={customActions}
+                    viewModes={viewModes}
+                  />
                 </Panel.Toolbar>
               )}
               <Panel.Content classNames='flex flex-col'>

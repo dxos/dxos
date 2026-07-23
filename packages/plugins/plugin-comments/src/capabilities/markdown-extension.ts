@@ -11,6 +11,7 @@ import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { Attention } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
+import { meta } from '#meta';
 import { CommentCapabilities, CommentOperation } from '#types';
 
 import { SuggestionSourcesProvider } from '../components';
@@ -27,6 +28,16 @@ export default Capability.makeModule(
       MarkdownCapabilities.SuggestionSourcesProvider,
       SuggestionSourcesProvider,
     );
+
+    // Surface "Suggesting" as an editor view-mode option (the review feature is owned by plugin-comments,
+    // so it appears only when this plugin is present); selecting it puts the document in suggesting mode.
+    const suggestingViewMode = Capability.contributes(MarkdownCapabilities.ViewModeExtension, {
+      id: 'suggesting',
+      icon: 'ph--pencil-simple--regular',
+      label: ['view-mode.suggesting.label', { ns: meta.profile.key }],
+      reviewMode: 'suggesting',
+      order: 3,
+    });
 
     const extensions = Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc, reviewBranch, branchText, suggestionBranch, showComments }) => {
@@ -82,7 +93,7 @@ export default Capability.makeModule(
       },
     ]);
 
-    return [extensions, suggestionSources];
+    return [extensions, suggestionSources, suggestingViewMode];
   }),
 );
 

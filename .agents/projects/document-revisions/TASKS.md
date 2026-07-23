@@ -328,25 +328,31 @@ one combined PR on this branch (user decision). B6 scope = safe hoist + cache on
       once per source). `trackChanges.build` gained a 1-entry (base,doc)→state memo (reuses the diff
       on undo/redo to a cached buffer). Behaviour-identical: hoist-parity regression test added; 302
       ui-editor tests green. Windowed incremental diff deferred (out of safe scope).
-- [ ] **View-mode refactor — Suggesting becomes a view-mode (design settled 2026-07-23).**
-  - [ ] `react-ui-editor` `addViewMode(state, onViewModeChange, items?)` — optional `items` (default
-        the 3 built-ins); item `{ id, icon, label?, checked?, onSelect? }`. Thread `viewModes?` through
-        `EditorToolbarFeatureFlags` → `createMarkdownActions` → `addViewMode`. Backward-compatible.
-  - [ ] plugin-markdown establishes `MarkdownCapabilities.EditorViewMode` contribution
-        `{ id, icon, label, reviewMode, order? }` (mirrors `SuggestionSourcesProvider`); `MarkdownArticle`
+- [x] **View-mode refactor — Suggesting becomes a view-mode (design settled 2026-07-23) — DONE
+      (build+lint green; story play tests pending user eval).**
+  - [x] `react-ui-editor` `addViewMode(state, onViewModeChange, items?)` — optional `items` (default
+        the 3 built-ins via `defaultViewModeItems`); item `ViewModeItem { id, icon, label?, checked?,
+        onSelect? }`. Threaded `viewModes?` through `EditorToolbarFeatureFlags` → `createMarkdownActions`
+        → `addViewMode` (+ memo dep). Exported `ViewModeItem`/`defaultViewModeItems` at the package root
+        (components barrel). Backward-compatible (other editors keep the 3 built-ins). `Label` exported
+        from `@dxos/ui-types`.
+  - [x] plugin-markdown establishes `MarkdownCapabilities.ViewModeExtension` (named to avoid the
+        `EditorViewMode` enum collision) `{ id, icon, label, reviewMode, order? }`; `MarkdownArticle`
         assembles built-in 3 + contributions, central single-checked, built-ins map source→editing /
         readonly|preview→viewing on select, contributed entries `setMode(reviewMode)`; contributed only
         on the ambient path.
-  - [ ] plugin-comments contributes `{ id:'suggesting', icon:'ph--pencil-simple--regular', label,
-    reviewMode:'suggesting', order:3 }` — no plugin-comments ⇒ no Suggesting entry.
-  - [ ] Remove the toolbar `versions` branch-selector group + the separate `review-mode` group +
+  - [x] plugin-comments contributes `{ id:'suggesting', icon:'ph--pencil-simple--regular',
+        label:'view-mode.suggesting.label', reviewMode:'suggesting', order:3 }` — no plugin-comments ⇒
+        no Suggesting entry.
+  - [x] Removed the toolbar `versions` branch-selector group + the separate `review-mode` group +
         `handleSuggest` (History companion covers branch switch / return-to-main / create / merge /
-        discard — confirmed). Keep the `VersionToolbar` banner + its Base/Diff/Branch selector.
-  - [ ] Stories/tests/translations: update `selectReviewMode` to drive the view-mode dropdown; move the
-        `suggesting` label to plugin-comments; `addViewMode` custom-item tests + capability wiring.
-  - [ ] NOTE (2026-07-23): the `react-ui-menu` select control must show a check next to the CURRENT
-        value (the single-select group's active item). Verify/fix the checkmark indicator renders for
-        the view-mode dropdown's active entry.
+        discard — confirmed). Kept the `VersionToolbar` banner + its Base/Diff/Branch selector.
+  - [x] Stories/translations: `selectReviewMode`→`selectViewMode` drives the View-mode dropdown
+        (Viewing→Read-only, Editing→Source, Suggesting→Suggesting); the AmbientReview story fixture
+        contributes a stand-in Suggesting entry; `suggesting` label added to plugin-comments. TODO:
+        `addViewMode` custom-item unit test (deferred — behaviour covered by the story play tests).
+  - [x] `react-ui-menu` DropdownMenu now renders a trailing check on the CURRENT value of a
+        single-select group (the check indicator was missing) — the user's note.
 - [ ] **B4 un-delete phantom (draft)** — re-instate a deleted word in one's own draft via a hover
       popover on the phantom widget (consistent with the B2 accept/reject popover). Play tests.
 - [ ] **Comment-flash-on-Enter (draft)** — diagnose first (hypothesis: optimistic-render vs reactive
