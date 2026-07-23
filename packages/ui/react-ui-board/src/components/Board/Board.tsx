@@ -13,6 +13,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -96,8 +97,9 @@ type BoardContextValue = {
   resizing: boolean;
   /** Scroll viewport element; set by `Board.Container`, used by the controller to center. */
   viewportRef: MutableRefObject<HTMLDivElement | null>;
-  /** Scroll the viewport to center the board, or a specific cell when its id is given. */
-  center: (cell?: string) => void;
+  /** Scroll the viewport to center the board, or a specific cell when its id is given. `smooth`
+   * defaults to true; pass false to jump instantly (used for the flicker-free mount centering). */
+  center: (cell?: string, smooth?: boolean) => void;
   onAdd?: (position: GridPosition) => void;
   onDelete?: (id: string) => void;
   onResize: (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => void;
@@ -289,7 +291,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
     );
 
     const center = useCallback(
-      (cell?: string) => {
+      (cell?: string, smooth = true) => {
         const el = viewportRef.current;
         if (!el) {
           return;
@@ -317,7 +319,16 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         // the anchor at the viewport centre.
         const padX = overscroll ? el.clientWidth / 2 : 0;
         const padY = overscroll ? el.clientHeight / 2 : 0;
-        smoothScrollTo(el, padX + anchorX * zoom - el.clientWidth / 2, padY + anchorY * zoom - el.clientHeight / 2);
+        const targetLeft = padX + anchorX * zoom - el.clientWidth / 2;
+        const targetTop = padY + anchorY * zoom - el.clientHeight / 2;
+        if (smooth) {
+          smoothScrollTo(el, targetLeft, targetTop);
+        } else {
+          // Instant jump (no rAF animation) — the board must already be centered on the first paint.
+          cancelAnimationFrame(scrollFrameRef.current);
+          el.scrollLeft = targetLeft;
+          el.scrollTop = targetTop;
+        }
       },
       [layout, cellSizePx, gapPx, columns, rows, zoom, overscroll, smoothScrollTo],
     );
@@ -712,11 +723,13 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
     };
   }, []);
 
-  // Center the board once on mount only. Deliberately NOT re-centering when the layout/size changes,
-  // so the viewport doesn't jump after a drag or resize (`center` now closes over `layout`, so it is
-  // intentionally excluded from the deps — this must run a single time).
-  useEffect(() => {
-    center();
+  // Center the board once on mount, before the first paint and without animation, so it starts
+  // centered rather than scrolling into place from the top-left. A layout effect + instant jump
+  // avoids the flicker the smooth scroll (used for later, explicit centering) would show here.
+  // Deliberately NOT re-centering when the layout/size changes, so the viewport doesn't jump after a
+  // drag or resize (`center` closes over `layout`, so it is intentionally excluded from the deps).
+  useLayoutEffect(() => {
+    center(undefined, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -880,11 +893,40 @@ const BOARD_MAP_NAME = 'Board.Map';
 type BoardMapProps = ThemedClassName<{}>;
 
 const BoardMap = ({ classNames }: BoardMapProps) => {
-  const { layout, columns, rows, cellSize, gap, selected } = useBoardContext(BOARD_MAP_NAME);
+  const { layout, columns, rows, cellSize, gap, selected, viewportRef, zoom, overscrollPad } =
+    useBoardContext(BOARD_MAP_NAME);
   // Match the grid's pixel aspect (not the viewport's), and place tiles by their exact rects so the
   // map is a faithful scale model of the board.
   const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
   const tiles = useMemo(() => Object.entries(layout.items), [layout.items]);
+
+  // Track the scroll position and size of the viewport so the map can outline the visible region.
+  const [view, setView] = useState({ left: 0, top: 0, width: 0, height: 0 });
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) {
+      return;
+    }
+    const update = () =>
+      setView({ left: el.scrollLeft, top: el.scrollTop, width: el.clientWidth, height: el.clientHeight });
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener('scroll', update);
+      observer.disconnect();
+    };
+  }, [viewportRef]);
+
+  // The visible region in unscaled content coords: undo the overscroll padding and the zoom scale so
+  // it maps onto the same coordinate space as the tile rects (percent of the board bounds).
+  const viewport = {
+    left: ((view.left - overscrollPad.x) / zoom / bounds.width) * 100,
+    top: ((view.top - overscrollPad.y) / zoom / bounds.height) * 100,
+    width: (view.width / zoom / bounds.width) * 100,
+    height: (view.height / zoom / bounds.height) * 100,
+  };
 
   return (
     <div
@@ -907,6 +949,18 @@ const BoardMap = ({ classNames }: BoardMapProps) => {
           />
         );
       })}
+      {/* The current viewport, outlined over the board (clips to the map when it extends past bounds). */}
+      {view.width > 0 && (
+        <div
+          className='pointer-events-none absolute rounded-[1px] border border-accent-bg'
+          style={{
+            left: `${viewport.left}%`,
+            top: `${viewport.top}%`,
+            width: `${viewport.width}%`,
+            height: `${viewport.height}%`,
+          }}
+        />
+      )}
     </div>
   );
 };

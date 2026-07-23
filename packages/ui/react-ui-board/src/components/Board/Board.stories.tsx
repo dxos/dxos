@@ -21,7 +21,7 @@ type TestItem = {
   image?: string;
 };
 
-const titles = ['Sales', 'Revenue', 'Users', 'Latency', 'Errors'];
+const titles = ['A', 'B', 'C', 'D', 'X'];
 
 const testItems: TestItem[] = titles.map((title, index) => ({ id: String(index), title }));
 

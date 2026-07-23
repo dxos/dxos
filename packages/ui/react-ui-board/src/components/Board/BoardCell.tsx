@@ -313,14 +313,14 @@ export const BoardCell = ({
 
       {/* Move outline: the full footprint the tile will occupy at the target cell. */}
       {moveGhost && (
-        <div className='pointer-events-none absolute z-10 rounded-sm ring-2 ring-accent-bg' style={moveGhost} />
+        <div className='pointer-events-none absolute z-10 rounded-md ring-2 ring-accent-bg' style={moveGhost} />
       )}
 
       {/* Resize outline: previews the target size while dragging the handle; the tile snaps to whole
           cells only on release (see the resize draggable's onDrop). */}
       {resizeGhost && (
         <div
-          className='pointer-events-none absolute z-10 rounded-sm ring-2 ring-accent-bg'
+          className='pointer-events-none absolute z-10 rounded-md ring-2 ring-accent-bg'
           style={{ left: rect.left, top: rect.top, width: resizeGhost.width, height: resizeGhost.height }}
         />
       )}
