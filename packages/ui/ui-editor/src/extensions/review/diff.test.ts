@@ -176,6 +176,18 @@ describe('rebaseHunks', () => {
     expect(doc.slice(rebased.from, rebased.to)).toBe(hunks[0].removed);
   });
 
+  test('a zero-width (pure-insertion) hunk at a doc-edit boundary never inverts (from <= to)', ({ expect }) => {
+    // Bob inserts "!" right after "one" (a zero-width hunk at base offset 3); the user also inserts "X"
+    // at that same offset. Both endpoints of the zero-width hunk must map to the same doc offset, so the
+    // rebased range stays collapsed (from === to) rather than inverting.
+    const base = 'one two';
+    const doc = 'oneX two';
+    const hunks = diffHunks(base, 'one! two'); // Bob inserts "!" at offset 3 (from === to).
+    const [rebased] = rebaseHunks(base, doc, hunks);
+    expect(rebased.from).toBe(rebased.to);
+    expect(rebased.to).toBeGreaterThanOrEqual(rebased.from);
+  });
+
   test('a foreign hunk ending exactly where a doc edit begins does not absorb the user text', ({ expect }) => {
     // Bob deletes "one " (base offsets [0,4)); the user inserts "X" at offset 4, immediately after.
     // The rebased strike must cover only "one ", never "one X" (the user's own adjacent character).

@@ -166,7 +166,17 @@ export const rebaseHunksWith = (charHunks: Hunk[], hunks: DiffHunk[]): DiffHunk[
     }
     return pos + delta;
   };
-  return hunks.map((hunk) => ({ ...hunk, from: mapPos(hunk.from, -1), to: mapPos(hunk.to, 1) }));
+  return hunks.map((hunk) => {
+    // A zero-width hunk (pure insertion, from === to) must map both endpoints with the SAME side —
+    // otherwise, at a doc-edit boundary, the lower edge (side -1) and upper edge (side +1) can resolve
+    // to different offsets and invert the range (from > to). Non-zero hunks keep the asymmetric mapping
+    // so an exclusive upper edge never crosses into an adjacent doc edit.
+    if (hunk.from === hunk.to) {
+      const at = mapPos(hunk.from, -1);
+      return { ...hunk, from: at, to: at };
+    }
+    return { ...hunk, from: mapPos(hunk.from, -1), to: mapPos(hunk.to, 1) };
+  });
 };
 
 /** A changed hunk between two documents as character ranges in each (A = original, B = modified). */

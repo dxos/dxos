@@ -31,11 +31,15 @@ const DropdownMenuItem = ({
   const action = item as MenuAction;
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
   const { iconSize } = useMenuScoped('DropdownMenuItem', __menuScope);
+  // An item that declares `checked` is a select-group member: expose the checkbox role + state to AT so
+  // the current value is announced, not conveyed by the trailing check icon alone.
+  const checkable = typeof action.properties?.checked === 'boolean';
   return (
     <NaturalDropdownMenu.Item
       onClick={handleClick}
       classNames='gap-2'
       disabled={action.properties?.disabled}
+      {...(checkable && { 'role': 'menuitemcheckbox', 'aria-checked': !!action.properties?.checked })}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
       {action.properties?.icon && (

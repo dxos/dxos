@@ -803,16 +803,19 @@ export const EditingTyping: Story = {
     content.focus();
     await userEvent.keyboard('{Control>}{End}{/Control} edited');
 
-    // The edit lands on MAIN (root), not a branch.
-    await waitFor(() => expect(rootContent()).toContain('edited'), { timeout: 15_000 });
-
-    // Regression: ordinary editing must not spawn ANY suggestion branch (per keypress or otherwise).
-    const suggestionBranches = (getDoc().history?.branches ?? []).filter(
-      (branch) => branch.status === 'active' && branch.kind === 'suggestion',
+    // Wait for the editor + version state to settle, then assert: the edit landed on MAIN (root); no
+    // suggestion branch was spawned (per keypress or otherwise); nothing renders as a tracked change.
+    await waitFor(
+      async () => {
+        await expect(rootContent()).toContain('edited');
+        const suggestionBranches = (getDoc().history?.branches ?? []).filter(
+          (branch) => branch.status === 'active' && branch.kind === 'suggestion',
+        );
+        await expect(suggestionBranches).toHaveLength(0);
+        await expect(canvasElement.querySelectorAll('.cm-track-insert')).toHaveLength(0);
+      },
+      { timeout: 15_000 },
     );
-    await expect(suggestionBranches).toHaveLength(0);
-    // And nothing renders as a tracked change or overlay in plain editing.
-    await expect(canvasElement.querySelectorAll('.cm-track-insert')).toHaveLength(0);
   },
 };
 
