@@ -12,7 +12,7 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Graph } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
@@ -75,7 +75,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   );
 
   // TODO(wittjosiah): This is very convoluted, find a simpler way to make this work.
-  const eventSegment = linkedSegment(event.id);
+  const eventSegment = Attention.linkedSegment(event.id);
   const isEventNode = !!attendableId?.endsWith(`/${eventSegment}`);
   const nodeId = isEventNode ? attendableId : attendableId ? getEventNodeId(attendableId, eventSegment) : undefined;
 

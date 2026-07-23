@@ -25,7 +25,7 @@ const gutterSizes: Record<GutterSize, string> = {
   lg: 'var(--dx-gutter-lg)',
 };
 
-type ColumnRootProps = { gutter?: GutterSize };
+type ColumnRootProps = { gutter?: GutterSize; subgrid?: boolean };
 
 /**
  * Creates a 3-column CSS grid with left/right gutter columns and a center content column.
@@ -33,6 +33,11 @@ type ColumnRootProps = { gutter?: GutterSize };
  *
  * `--dx-col` defaults to `2 / span 1` (center column),
  * enabling `withColumn` utilities to cascade the correct grid placement to slotted children.
+ *
+ * With `subgrid`, the root adopts the parent grid's tracks instead of defining its own — it spans
+ * all parent columns (`grid-column: 1 / -1`) and its column template becomes `subgrid`, so a Column
+ * (or Card) nested inside another 3-track grid aligns its gutters/center to the outer columns. The
+ * parent must expose (at least) three tracks; `--dx-col`/gutter placement still targets track 2/1/3.
  *
  * Direct children participate in the grid in one of several ways:
  * - **Column.Center** — places element in the center column (col 2). Preferred for plain content.
@@ -43,7 +48,7 @@ type ColumnRootProps = { gutter?: GutterSize };
  * Use `withColumn.center()` / `withColumn.bleed()` helpers to apply placement on slotted elements.
  */
 const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
-  ({ children, asChild, role, gutter = 'lg', ...props }, forwardedRef) => {
+  ({ children, asChild, role, gutter = 'lg', subgrid, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
@@ -57,7 +62,8 @@ const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
             ...rest.style,
             '--gutter': gutterSize,
             '--dx-col': '2 / span 1',
-            'gridTemplateColumns': [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
+            'gridTemplateColumns': subgrid ? 'subgrid' : [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
+            ...(subgrid && { gridColumn: '1 / -1' }),
           } as CSSProperties
         }
         className={tx('column.root', { gutter }, className)}

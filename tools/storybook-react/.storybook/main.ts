@@ -20,6 +20,11 @@ const __dirname = dirname(__filename);
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
+// Single-pass `vitest run` (not `vitest watch`); `VITEST` is set in both and `VITEST_MODE` is
+// worker-only, so read the run subcommand (first positional token, not any `run`-named filter).
+const vitestSubcommand = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
+const isVitestRun = isTrue(process.env.VITEST) && (vitestSubcommand === 'run' || process.argv.includes('--run'));
+
 // Browsers targeted for syntax transforms (also applied to `oxc` below so that dev-server
 // transforms downlevel syntax WebKit doesn't parse yet, e.g. `using`/`await using`).
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
@@ -266,6 +271,9 @@ export const createConfig = ({
             // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
             overlay: false,
           },
+          // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it
+          // in run mode only, so interactive `storybook dev` (local + e2e) and `vitest watch` keep HMR.
+          ...(isVitestRun ? { watch: null } : {}),
         },
         optimizeDeps: {
           // WASM modules.

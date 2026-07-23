@@ -6,20 +6,20 @@ import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { createDefaultBackends } from './backends';
-import { ViewStateManager, defineViewState } from './view-state';
+import { createDefaultBackends } from '../core';
+import { Manager, define } from './ViewState';
 
-const Counter = defineViewState({
+const Counter = define({
   key: 'counter',
   backend: 'memory',
   schema: Schema.Struct({ value: Schema.Number }).pipe(Schema.mutable),
   defaultValue: () => ({ value: 0 }),
 });
 
-describe('ViewStateManager', () => {
+describe('Manager', () => {
   const make = () => {
     const registry = Registry.make();
-    return new ViewStateManager({ registry, backends: createDefaultBackends(registry) });
+    return new Manager({ registry, backends: createDefaultBackends(registry) });
   };
 
   test('returns the aspect default for an unwritten context', ({ expect }) => {

@@ -118,7 +118,7 @@ export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | und
 
     created: email.receivedAt,
     sender,
-    ...(email.threadId ? { threadId: email.threadId } : {}),
+    threadId: email.threadId,
 
     properties: {
       threadId: email.threadId,

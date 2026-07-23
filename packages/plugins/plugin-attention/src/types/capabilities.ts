@@ -3,11 +3,11 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { type AttentionManager, type ViewStateManager } from '@dxos/react-ui-attention';
+import { Attention, ViewState } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
 export namespace AttentionCapabilities {
-  export const Attention = Capability.make<AttentionManager>(`${meta.profile.key}.capability.attention`);
-  export const ViewState = Capability.make<ViewStateManager>(`${meta.profile.key}.capability.view-state`);
+  export const Attention = Capability.make<Attention.AttentionManager>(`${meta.profile.key}.capability.attention`);
+  export const ViewState = Capability.make<ViewState.Manager>(`${meta.profile.key}.capability.view-state`);
 }

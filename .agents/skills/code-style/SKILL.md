@@ -3,8 +3,9 @@ name: dxos-code-style
 description: >-
   DXOS TypeScript authoring conventions. Use when writing or refactoring code —
   namespace-export packages, internal module imports, class member ordering,
-  options-bag types, function overloads, the no-cast rule, the comment rule
-  (say why, once), and test structure.
+  options-bag types, function overloads, the no-cast rule, the
+  no-suppressing-unhandled-errors rule, the comment rule (say why, once), and
+  test structure.
 ---
 
 # DXOS Code Style
@@ -34,6 +35,24 @@ Do NOT cast to silence a build error; fix the type where it originates.
   decision, never an autopilot stopgap.
 - Use @dxos/util `trim` to create multi-line strings (e.g., prompts).
 
+## Unhandled errors — surface, don't suppress
+
+Unhandled errors and rejections are findings; surface them and fix the root
+cause. Do NOT silence them to make a suite go green.
+
+- **Never set `dangerouslyIgnoreUnhandledErrors: true`** in any vitest config
+  (shared `vite.base.config.ts` or a per-package config). It lets a run exit 0
+  despite unhandled rejections, hiding real failures — including the teardown
+  races it is usually reached for. It has slipped in before; keep it out.
+- A flaky teardown rejection (e.g. vitest worker rpc closing while a console log
+  is pending, browser/birpc close races) is a bug to fix at its source — close
+  the resource, await the pending work, or disable what leaks — not to blanket-
+  ignore. If a specific, understood signature must be tolerated, filter exactly
+  it via `onUnhandledError` (returning `false` only for that case) so every other
+  unhandled error stays fatal; never widen that to all errors.
+- Same rule for a swallowed `unhandledRejection` handler, an empty `.catch()` on
+  real work, and a blanket try/catch that drops the error — handle or rethrow.
+
 ## Comments — say why, once
 
 A comment earns its place by stating the _why_ the code can't — the constraint,
@@ -44,6 +63,17 @@ The code already says _what_ it does; a comment that restates that is noise.
   mechanism, state the constraint in a sentence and stop — resist narrating each
   step, the alternatives you rejected, or how it used to work. This applies
   hardest to JSDoc on a new abstraction, where the instinct to over-explain peaks.
+- **Line-count is itself a signal.** If a comment runs past ~2 lines, that length
+  is almost never buying explanatory power proportional to its size — it's
+  restating what a competent reader already infers from the code, the variable
+  names, or the fact that it's test/fixture scaffolding. Compress to the one
+  clause a reader couldn't get any other way, or delete outright. A correct but
+  low-stakes "why" (this is a toolkit stub, this layer is a noop) does not
+  justify three sentences of scene-setting — the reader can see it's a stub.
+- Test/fixture code gets a **lower** comment bar, not a higher one: "this is a
+  minimal/fake X for testing Y" is exactly what the surrounding `describe`
+  block, filename, and variable names (`TestToolkit`, `*LayerNoop`,
+  `scripted*`) already communicate — restating it in prose adds nothing.
 - Never narrate history or the conversation ("previously X, now Y", "as
   requested", "changed to…"). State the current invariant as if it always was.
 - Delete a comment that a competent reader gets from the code itself. Prefer a
@@ -53,6 +83,9 @@ The code already says _what_ it does; a comment that restates that is noise.
   `git diff origin/main | grep -nE '^\+\s*(//|\*|/\*)'`. Re-read each added line
   and cut it to its load-bearing clause — or delete it. A verbose comment is the
   autopilot default; conciseness is the deliberate pass. Do not defer to review.
+  **A comment that survives your own audit deserves a second look** — try
+  deleting it first, and keep only words that don't come back on their own
+  from re-reading the code.
 
 ```ts
 // ✅ why the code can't be the obvious thing, in one clause:
@@ -62,6 +95,16 @@ The code already says _what_ it does; a comment that restates that is noise.
 // Set displayItems to initialItems if it has items, otherwise the empty array.
 // We used to reset here but that flashed empty, so now we hold the previous page
 // and only replace it once the new query delivers its own results, which means…
+
+// ❌ correct but over-explained test scaffolding — the name/context already says this:
+// A minimal echo tool: the deterministic developer code the loop invokes when the
+// (scripted) model emits a tool call. Its handler runs for real, so a genuine
+// tool-call → result → continue cycle is exercised without any live model.
+const TestToolkit = Toolkit.make(Tool.make('Echo', { ... }));
+
+// ✅ same fact, one clause, or just delete it and let the name carry it:
+// Real handler, so tool-call → result → continue is a genuine cycle, not a mock.
+const TestToolkit = Toolkit.make(Tool.make('Echo', { ... }));
 ```
 
 ## Namespace-export packages

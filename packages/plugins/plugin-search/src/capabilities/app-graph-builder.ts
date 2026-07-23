@@ -9,7 +9,7 @@ import { AppCapabilities, AppNode, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { SearchOperation } from '#types';
@@ -30,7 +30,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeDeckCompanion({
-                id: linkedSegment('search'),
+                id: Attention.linkedSegment('search'),
                 label: ['search.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
                 data: space,

@@ -41,6 +41,9 @@ type CardRootProps = {
   'id'?: string;
   'border'?: boolean;
   'fullWidth'?: boolean;
+  /** Adopt the parent grid's columns (via `subgrid`) instead of defining the card's own gutters —
+   * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`. */
+  'subgrid'?: boolean;
   'density'?: Density;
   'style'?: CSSProperties;
   'tabIndex'?: number;
@@ -62,7 +65,7 @@ type CardRootProps = {
  * `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
  */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(
-  ({ children, id, role, border = true, fullWidth, density, ...props }, forwardedRef) => {
+  ({ children, id, role, border = true, fullWidth, subgrid, density, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
 
@@ -70,6 +73,7 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
       <Column.Root
         asChild
         gutter='lg'
+        subgrid={subgrid}
         classNames={tx('card.root', { border, fullWidth }, className)}
         role={role ?? 'group'}
       >
@@ -236,7 +240,11 @@ CardMenu.displayName = CARD_MENU_NAME;
 
 const CARD_BLOCK_NAME = 'Card.Block';
 
-type CardBlockProps = SlottableProps<{ end?: boolean; compact?: boolean; square?: boolean }>;
+type CardBlockProps = SlottableProps<{
+  end?: boolean;
+  compact?: boolean;
+  square?: boolean;
+}>;
 
 /**
  * Leading (default) or trailing (`end`) gutter slot of a Card row/header. Sized to the
