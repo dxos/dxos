@@ -119,6 +119,9 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
                 label='Center board'
                 onClick={() => controller.current?.center()}
               />
+              <Toolbar.Button onClick={() => setZoom(1)} disabled={zoom === 1}>
+                100%
+              </Toolbar.Button>
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>

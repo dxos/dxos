@@ -89,6 +89,8 @@ type BoardContextValue = {
   overscroll: boolean;
   /** Overscroll padding in px (half the viewport on each axis), or 0 when disabled. */
   overscrollPad: { x: number; y: number };
+  /** Scroll viewport size in px (0 until measured); used to centre a board smaller than the viewport. */
+  viewportSize: { width: number; height: number };
   containerId: string;
   /** During an active drag, the layout the board would settle into — tiles animate to these
    * positions and spring back to `layout` when the drag ends without a drop. Undefined when idle. */
@@ -270,12 +272,12 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       scrollFrameRef.current = requestAnimationFrame(step);
     }, []);
 
-    // Overscroll padding: half the viewport on each side, measured from the scroll element so the
-    // board can pad itself (see Board.Viewport) enough for any cell to reach the centre.
+    // Track the scroll viewport's size (always — used both for overscroll padding and for centering the
+    // board when it is smaller than the viewport, see Board.Viewport / `center`).
     const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
     useEffect(() => {
       const el = viewportRef.current;
-      if (!el || !overscroll) {
+      if (!el) {
         setViewportSize({ width: 0, height: 0 });
         return;
       }
@@ -284,7 +286,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       const observer = new ResizeObserver(update);
       observer.observe(el);
       return () => observer.disconnect();
-    }, [overscroll]);
+    }, []);
     const overscrollPad = useMemo(
       () => (overscroll ? { x: viewportSize.width / 2, y: viewportSize.height / 2 } : { x: 0, y: 0 }),
       [overscroll, viewportSize.width, viewportSize.height],
@@ -314,11 +316,13 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
           anchorX = board.width / 2;
           anchorY = board.height / 2;
         }
-        // The board box sits at the overscroll padding offset and scales from its top-left
-        // (transform-origin 0 0), so a content point maps to `pad + point * zoom` on screen; place
-        // the anchor at the viewport centre.
-        const padX = overscroll ? el.clientWidth / 2 : 0;
-        const padY = overscroll ? el.clientHeight / 2 : 0;
+        // The board box sits at a left/top pad and scales from its top-left (transform-origin 0 0), so a
+        // content point maps to `pad + point * zoom` on screen; place the anchor at the viewport centre.
+        // The pad is half the viewport under overscroll, else the margin that centres a board smaller
+        // than the viewport (0 when it overflows) — matching Board.Viewport's margins.
+        const boardBox = gridBounds(columns, rows, cellSizePx, gapPx);
+        const padX = overscroll ? el.clientWidth / 2 : Math.max(0, (el.clientWidth - boardBox.width * zoom) / 2);
+        const padY = overscroll ? el.clientHeight / 2 : Math.max(0, (el.clientHeight - boardBox.height * zoom) / 2);
         const targetLeft = padX + anchorX * zoom - el.clientWidth / 2;
         const targetTop = padY + anchorY * zoom - el.clientHeight / 2;
         if (smooth) {
@@ -481,6 +485,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         debug={debug}
         overscroll={overscroll}
         overscrollPad={overscrollPad}
+        viewportSize={viewportSize}
         containerId={containerId}
         previewLayout={previewLayout}
         resizing={!!resizePreview}
@@ -508,31 +513,31 @@ const BOARD_VIEWPORT_NAME = 'Board.Viewport';
 type BoardViewportProps = ThemedClassName<PropsWithChildren>;
 
 const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
-  const { cellSize, gap, columns, rows, zoom, overscrollPad } = useBoardContext(BOARD_VIEWPORT_NAME);
+  const { cellSize, gap, columns, rows, zoom, overscrollPad, viewportSize } = useBoardContext(BOARD_VIEWPORT_NAME);
   const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
   const overscroll = overscrollPad.x > 0 || overscrollPad.y > 0;
 
   // A CSS transform scales the paint but not the layout box, so at zoom < 1 the board keeps its full
-  // unscaled footprint and leaves a void to the right/below in the scroll area. Pull that extra extent
-  // back with negative right/bottom margins so the scrollable area matches the scaled board — without
-  // touching the transform, so Board.Container's scroll/zoom-anchor math (which maps a content point to
-  // `point * zoom` from the board's top-left) is unchanged.
+  // unscaled footprint. `voidX/Y` is that extra extent (unscaled minus scaled).
   const voidX = zoom < 1 ? bounds.width * (1 - zoom) : 0;
   const voidY = zoom < 1 ? bounds.height * (1 - zoom) : 0;
+  // Left/top pad that centres a board smaller than the viewport (0 when it overflows). Computed
+  // explicitly rather than via `m-auto` so it stays symmetric — `m-auto` combined with the negative
+  // right margin (below) would shove the board to one side and leave a void on the left/top.
+  const padX = overscroll ? overscrollPad.x : Math.max(0, (viewportSize.width - bounds.width * zoom) / 2);
+  const padY = overscroll ? overscrollPad.y : Math.max(0, (viewportSize.height - bounds.height * zoom) / 2);
 
   return (
-    // `m-auto` centers the board within the (flex) scroll container when it fits, and stays fully
-    // scrollable when it overflows (unlike justify-center, which would clip the top/left).
+    // The board sits at `pad` (centring it when it fits, 0 + overscroll when it overflows) and sheds the
+    // unscaled void on the right/bottom so the scrollable area matches the scaled board.
     // A zoom < 1 gives a scaled overview; drag/resize are disabled in that mode (see BoardCell).
-    // With overscroll, an explicit margin (half the viewport) replaces `m-auto` so any cell can be
-    // scrolled to the centre.
     <div
       // `shrink-0`: as a flex item the board must keep its full width, else the row container shrinks
       // it and the right-hand overflow (incl. the overscroll margin) collapses.
       data-dx-board-viewport='true'
       // No CSS transform transition — Board.Container drives the zoom (scale + scroll together) per
       // frame so the focal point stays fixed while zooming.
-      className={mx('relative m-auto shrink-0', classNames)}
+      className={mx('relative shrink-0', classNames)}
       style={{
         width: bounds.width,
         height: bounds.height,
@@ -540,12 +545,10 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
         // compensates scroll on zoom to keep the anchor (selected tile / current centre) fixed.
         transform: zoom !== 1 ? `scale(${zoom})` : undefined,
         transformOrigin: '0 0',
-        // Left/top keep `m-auto` (or the overscroll pad); right/bottom shed the unscaled void so the
-        // scroll extent matches the scaled board.
-        marginLeft: overscroll ? overscrollPad.x : undefined,
-        marginTop: overscroll ? overscrollPad.y : undefined,
-        marginRight: overscroll ? overscrollPad.x - voidX : voidX ? -voidX : undefined,
-        marginBottom: overscroll ? overscrollPad.y - voidY : voidY ? -voidY : undefined,
+        marginLeft: padX,
+        marginTop: padY,
+        marginRight: padX - voidX,
+        marginBottom: padY - voidY,
       }}
     >
       {children}
@@ -599,8 +602,15 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
     // fluctuating measurement mid-animation).
     const clientWidth = element.clientWidth;
     const clientHeight = element.clientHeight;
-    const padX = overscroll ? clientWidth / 2 : 0;
-    const padY = overscroll ? clientHeight / 2 : 0;
+    const board = element.querySelector<HTMLElement>('[data-dx-board-viewport]');
+    // Board's unscaled footprint (offsetWidth ignores the transform), used to derive its left/top
+    // offset in the scroll content at a given scale — matching Board.Viewport's margins: half the
+    // viewport under overscroll, else the margin that centres a board smaller than the viewport.
+    const boardW = board?.offsetWidth ?? 0;
+    const boardH = board?.offsetHeight ?? 0;
+    const padXAt = (scale: number) => (overscroll ? clientWidth / 2 : Math.max(0, (clientWidth - boardW * scale) / 2));
+    const padYAt = (scale: number) =>
+      overscroll ? clientHeight / 2 : Math.max(0, (clientHeight - boardH * scale) / 2);
 
     // Anchor point in unscaled, board-relative content coords.
     let anchorX: number;
@@ -620,15 +630,14 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
       anchorY = sumY / ids.length;
     } else {
       // Nothing selected: hold whatever is currently at the viewport centre.
-      anchorX = (element.scrollLeft + clientWidth / 2 - padX) / prevZoom;
-      anchorY = (element.scrollTop + clientHeight / 2 - padY) / prevZoom;
+      anchorX = (element.scrollLeft + clientWidth / 2 - padXAt(prevZoom)) / prevZoom;
+      anchorY = (element.scrollTop + clientHeight / 2 - padYAt(prevZoom)) / prevZoom;
     }
 
     // Drive the zoom ourselves (scale + scroll together) each frame, so the anchor stays at the
     // viewport centre for the whole animation — the selected tiles are the focal point, not the
     // board's top-left. We set the scale imperatively (overriding React's inline transform for the
     // ~duration); it lands on React's value at the end.
-    const board = element.querySelector<HTMLElement>('[data-dx-board-viewport]');
     const from = prevZoom;
     const to = zoom;
     const duration = 200;
@@ -636,8 +645,8 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
       if (board) {
         board.style.transform = scale === 1 ? '' : `scale(${scale})`;
       }
-      element.scrollLeft = padX + anchorX * scale - clientWidth / 2;
-      element.scrollTop = padY + anchorY * scale - clientHeight / 2;
+      element.scrollLeft = padXAt(scale) + anchorX * scale - clientWidth / 2;
+      element.scrollTop = padYAt(scale) + anchorY * scale - clientHeight / 2;
     };
 
     let frame = 0;
@@ -932,11 +941,14 @@ const BoardMap = ({ classNames }: BoardMapProps) => {
     };
   }, [viewportRef]);
 
-  // The visible region in unscaled content coords: undo the overscroll padding and the zoom scale so
-  // it maps onto the same coordinate space as the tile rects (percent of the board bounds).
+  // The visible region in unscaled content coords: undo the board's left/top pad (overscroll, or the
+  // margin that centres a board smaller than the viewport) and the zoom scale so it maps onto the same
+  // coordinate space as the tile rects (percent of the board bounds).
+  const padX = overscrollPad.x > 0 ? overscrollPad.x : Math.max(0, (view.width - bounds.width * zoom) / 2);
+  const padY = overscrollPad.y > 0 ? overscrollPad.y : Math.max(0, (view.height - bounds.height * zoom) / 2);
   const viewport = {
-    left: ((view.left - overscrollPad.x) / zoom / bounds.width) * 100,
-    top: ((view.top - overscrollPad.y) / zoom / bounds.height) * 100,
+    left: ((view.left - padX) / zoom / bounds.width) * 100,
+    top: ((view.top - padY) / zoom / bounds.height) * 100,
     width: (view.width / zoom / bounds.width) * 100,
     height: (view.height / zoom / bounds.height) * 100,
   };
