@@ -402,6 +402,20 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authorHuesKey, members]);
 
+    // The user's own tracked-changes layer (Suggesting mode only), isolated in its own memo so that
+    // `mainContent` — which changes on EVERY keystroke while editing main — never reaches
+    // `combinedExtensions`. Otherwise a new extensions array each keystroke would make `useTextEditor`
+    // recreate the view and drop the caret's focus. In Suggesting mode the editor is bound to the
+    // branch, so `mainContent` (main) is stable across keystrokes; a merge to main updates the base via
+    // `trackChanges`'s `setBase` rather than by recreating the extension.
+    const ownTrackChanges = useMemo<Extension | undefined>(
+      () =>
+        ambientSuggesting && ownBranchText && mainContent !== undefined
+          ? trackChanges({ main: mainContent, colour: selfColour })
+          : undefined,
+      [ambientSuggesting, ownBranchText, mainContent, selfColour],
+    );
+
     // The compare overlay lives in a compartment (reconfigured live, see `compareCompartment`), so it
     // is intentionally absent here — its config changing must not alter this array, which would make
     // `useTextEditor` recreate the view. The suggest overlay stays baked in: it rebinds the editor to
@@ -420,11 +434,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           }),
         );
       }
-      if (ambientSuggesting && ownBranchText && mainContent !== undefined) {
-        // Editor is bound to the user's own suggestion branch: their live edits render as tracked
-        // changes vs main (self). Foreign authors overlay separately via the compartment overlay
-        // (diffed vs main, self excluded) so this stays a single-author layer.
-        list.push(trackChanges({ main: mainContent, colour: selfColour }));
+      // Foreign authors overlay separately via the compartment overlay (diffed vs main, self excluded),
+      // so this own-author layer stays single-author.
+      if (ownTrackChanges) {
+        list.push(ownTrackChanges);
       }
       return list;
     }, [
@@ -435,10 +448,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       suggestColour,
       handleAcceptChange,
       handleRejectChange,
-      ambientSuggesting,
-      ownBranchText,
-      mainContent,
-      selfColour,
+      ownTrackChanges,
     ]);
 
     // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants use
