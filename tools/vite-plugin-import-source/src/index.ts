@@ -30,6 +30,15 @@ const PluginImportSource = ({
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
 
+  // `this.addWatchFile()` registers a per-file libuv `fs_event` watcher that Vite never releases on
+  // close (independent of `server.watch`), so single-pass `vitest run` teardown hangs on the retained
+  // handles. Vitest manages its own watching, so skip registration under it; `VITEST` is exported to
+  // the whole process tree (workers and child loaders), so it matches wherever this plugin runs.
+  // Interactive `storybook dev` / `vite dev` have `VITEST` unset and keep HMR.
+  const isVitest = process.env.VITEST === 'true';
+  // TEMPORARY diagnostic: prove this build is the one running and confirm the signal at resolve time.
+  let loggedDiag = false;
+
   // `nocomment: true` keeps Minimatch from treating leading `#` (used for Node
   // subpath imports like `#diagnostics-broadcast`) as a comment pattern that
   // matches nothing.
@@ -57,6 +66,12 @@ const PluginImportSource = ({
     resolveId: {
       order: 'pre',
       async handler(source, importer) {
+        if (!loggedDiag) {
+          loggedDiag = true;
+          console.warn(
+            `[DX-IMPORTSRC] first resolveId: VITEST=${process.env.VITEST} isVitest=${isVitest} (watch ${isVitest ? 'DISABLED' : 'enabled'})`,
+          );
+        }
         // Check if source looks like an npm package name or a subpath import (#).
         if (!source.match(/^[a-zA-Z@#][a-zA-Z0-9._-]*(\/[a-zA-Z0-9._-]+)*$/)) {
           return null; // Skip to next resolver.
@@ -96,11 +111,13 @@ const PluginImportSource = ({
             return null;
           }
 
-          if (resolved.packageJsonPath) {
-            this.addWatchFile(resolved.packageJsonPath);
-          }
+          if (!isVitest) {
+            if (resolved.packageJsonPath) {
+              this.addWatchFile(resolved.packageJsonPath);
+            }
 
-          this.addWatchFile(resolved.path);
+            this.addWatchFile(resolved.path);
+          }
           verbose && console.log(`[plugin-import-source] ${source} -> ${resolved.path}`);
           return resolved.path;
         } catch (error) {
