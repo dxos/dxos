@@ -29,6 +29,7 @@ const PluginImportSource = ({
   verbose = process.env.IMPORT_SOURCE_DEBUG === '1' || process.env.IMPORT_SOURCE_DEBUG === 'true',
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
+  let resolvedConfig: ResolvedConfig;
 
   // `nocomment: true` keeps Minimatch from treating leading `#` (used for Node
   // subpath imports like `#diagnostics-broadcast`) as a comment pattern that
@@ -42,6 +43,8 @@ const PluginImportSource = ({
     name: 'plugin-import-source',
 
     configResolved: (config: ResolvedConfig) => {
+      resolvedConfig = config;
+
       // Get Vite's conditions and prepend 'source'.
       const viteConditions = config.resolve.conditions ?? [];
       const conditionNames = ['source', ...viteConditions];
@@ -96,11 +99,17 @@ const PluginImportSource = ({
             return null;
           }
 
-          if (resolved.packageJsonPath) {
-            this.addWatchFile(resolved.packageJsonPath);
-          }
+          // Each `addWatchFile` registers a per-file libuv `fs_event` watcher that Vite never
+          // releases on close, so single-pass `vitest run` teardown hangs on the retained handles;
+          // watching is pointless without an active watcher, so skip it when the file watcher is
+          // disabled (vitest nulls `server.watch` in run mode).
+          if (resolvedConfig.server.watch !== null) {
+            if (resolved.packageJsonPath) {
+              this.addWatchFile(resolved.packageJsonPath);
+            }
 
-          this.addWatchFile(resolved.path);
+            this.addWatchFile(resolved.path);
+          }
           verbose && console.log(`[plugin-import-source] ${source} -> ${resolved.path}`);
           return resolved.path;
         } catch (error) {
