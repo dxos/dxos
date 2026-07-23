@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
@@ -31,7 +31,9 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
     const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
 
-    const objectMenuItems = useObjectMenuItems(data);
+    // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
+    const cardRef = useRef<HTMLDivElement>(null);
+    const objectMenuItems = useObjectMenuItems(data, cardRef);
 
     const menuItems = useMemo(
       () => [
@@ -61,7 +63,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         >
           <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
-              <Card.Header>
+              <Card.Header ref={cardRef}>
                 <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
                 <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}

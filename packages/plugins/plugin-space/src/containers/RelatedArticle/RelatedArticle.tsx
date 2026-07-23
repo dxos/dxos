@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
@@ -45,12 +45,14 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
 
+  // The card menu renders in a portal; resolve the origin plank from the card element instead.
+  const cardRef = useRef<HTMLDivElement>(null);
   // TODO(burdon): BUG: Includes item itself.
-  const menuItems = useObjectMenuItems(subject);
+  const menuItems = useObjectMenuItems(subject, cardRef);
 
   return (
     <Menu.Root>
-      <Card.Root classNames={classNames}>
+      <Card.Root ref={cardRef} classNames={classNames}>
         <Card.Header>
           <Card.Block>
             <Icon icon={icon} />

@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useCardPivot } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
@@ -21,6 +21,7 @@ export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>
 
 export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) => {
   const { invokePromise } = useOperationInvoker();
+  const [cardRef, getPivotId] = useCardPivot();
   const db = Obj.getDatabase(contact);
   const workspace = db ? Paths.getSpacePath(db.spaceId) : undefined;
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
@@ -70,42 +71,40 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
     .toSorted((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     .slice(0, 3);
 
+  // Open the message directly as its own (standalone) plank, not the mailbox with the message selected.
   const handleMessageClick = useCallback(
     async (message: Message.Message) => {
-      if (!mailbox) {
-        return;
-      }
-
-      const mailboxPath = Paths.getObjectPathFromObject(mailbox);
+      const messagePath = Paths.getObjectPathFromObject(message);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      await invokePromise(LayoutOperation.Open, { subject: [mailboxPath], workspace });
-      await invokePromise(LayoutOperation.Select, {
-        contextId: mailboxPath,
-        subject: { mode: 'single', id: message.id },
+      // A card always opens beside the plank it lives in, never replacing it.
+      await invokePromise(LayoutOperation.Open, {
+        subject: [messagePath],
+        pivotId: getPivotId(),
+        disposition: 'add',
+        workspace,
       });
     },
-    [invokePromise, db, mailbox],
+    [invokePromise, workspace, getPivotId],
   );
 
+  // Open the event directly as its own (standalone) plank, not the calendar with the event selected.
   const handleEventClick = useCallback(
     async (event: Event.Event) => {
-      if (!calendar) {
-        return;
-      }
-
-      const calendarPath = Paths.getObjectPathFromObject(calendar);
+      const eventPath = Paths.getObjectPathFromObject(event);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      await invokePromise(LayoutOperation.Open, { subject: [calendarPath], workspace });
-      await invokePromise(LayoutOperation.Select, {
-        contextId: calendarPath,
-        subject: { mode: 'single', id: event.id },
+      // A card always opens beside the plank it lives in, never replacing it.
+      await invokePromise(LayoutOperation.Open, {
+        subject: [eventPath],
+        pivotId: getPivotId(),
+        disposition: 'add',
+        workspace,
       });
     },
-    [invokePromise, db, calendar],
+    [invokePromise, workspace, getPivotId],
   );
 
   return (
-    <Card.Body>
+    <Card.Body ref={cardRef}>
       <RelatedMessages messages={relatedMessages} onMessageClick={handleMessageClick} />
       <RelatedEvents recent={sortedRecentEvents} upcoming={sortedUpcomingEvents} onEventClick={handleEventClick} />
     </Card.Body>

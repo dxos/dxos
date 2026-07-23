@@ -709,7 +709,9 @@ export const DeckPlanks = () => {
             <DeckPlank
               id={rendered[0]}
               part='main'
-              active={rendered}
+              // Pass the real deck.active (not the collapsed `rendered`) so flat mode can derive the
+              // breadcrumb trail from the planks preceding the current one.
+              active={deck.active}
               soloLook
               classNames={mx('absolute inset-0', mainIntrinsicSize)}
             />

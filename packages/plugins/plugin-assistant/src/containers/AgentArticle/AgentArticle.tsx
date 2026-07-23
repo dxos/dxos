@@ -5,7 +5,7 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import React, { forwardRef, useCallback, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface, useSpaceCallback } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
@@ -140,12 +140,14 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
 };
 
 const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ data, ...props }, forwardedRef) => {
-  const objectMenuItems = useObjectMenuItems(data);
+  // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const objectMenuItems = useObjectMenuItems(data, cardRef);
   const icon = Obj.getIcon(data)?.icon ?? 'ph--circle-dashed--regular';
 
   return (
     <Card.Root {...props} ref={forwardedRef} data-testid='board-item' fullWidth>
-      <Card.Header>
+      <Card.Header ref={cardRef}>
         <Card.Block>
           <Icon icon={icon} />
         </Card.Block>

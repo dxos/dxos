@@ -114,14 +114,15 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // Compute the next active deck state and apply it. Dispositions:
       // - 'solo' (default): navigate — the deck becomes just the subjects, unless they are all already
       //   open (scroll-into-view only).
-      // - 'add': insert the subjects as new planks, immediately after `pivotId` when provided, else at
-      //   the end.
+      // - 'add': always insert the subjects as new planks, immediately after `pivotId` when provided,
+      //   else at the end; never replaces. Card navigation passes the card's own plank as `pivotId`
+      //   (see `usePivotId`), so opened objects appear beside the plank the card lives in.
       // - 'auto': follow the deck — add beside the origin (`pivotId`, falling back to the attended
-      //   plank) when already sliding (2+ planks), otherwise navigate solo. In-plank/card navigation
-      //   uses this so it grows a sliding deck but replaces a solo one.
+      //   plank) when already sliding (2+ planks), otherwise navigate solo. In-plank inline references
+      //   use this so they grow a sliding deck but replace a solo one.
       // Holding shift forces any disposition into an add (callers forward the raw modifier rather than
-      // encoding the policy). Only 'auto' anchors at the origin, so a forced add from an in-plank
-      // navigation inserts beside the attended plank, while a forced add from the nav-tree appends.
+      // encoding the policy). Only 'auto' falls back to the attended plank; a shift-forced add from the
+      // nav-tree (a 'solo' gesture with no pivot) appends at the end.
       const navigateSolo = (active: readonly string[]): string[] =>
         input.subject.every((id) => active.includes(id)) ? [...active] : [...input.subject];
 

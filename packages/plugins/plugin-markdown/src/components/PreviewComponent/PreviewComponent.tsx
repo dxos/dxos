@@ -6,7 +6,7 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useSta
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, getRootAttendableId } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
@@ -156,8 +156,8 @@ export const PreviewComponent = ({
     [view, range, dxn, remSize],
   );
 
-  // Open the referenced object: defer to the caller's handler when provided, else follow the deck
-  // (`auto`) — add beside the current plank when sliding, replace it when solo; shift-hold always adds.
+  // Open the referenced object: defer to the caller's handler when provided, else always add a plank
+  // beside this embed's plank (`add`, resolved structurally from the click target) — never replacing it.
   const handleOpen = useCallback(
     (event: MouseEvent) => {
       if (!uri || !object) {
@@ -169,7 +169,8 @@ export const PreviewComponent = ({
       } else {
         void invokePromise?.(LayoutOperation.Open, {
           subject: [Paths.getObjectPathFromObject(object)],
-          disposition: 'auto',
+          pivotId: getRootAttendableId(event.currentTarget),
+          disposition: 'add',
           modifiers: { shift: event.shiftKey },
           navigation: 'immediate',
         });

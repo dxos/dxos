@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useCardPivot } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
@@ -22,6 +22,7 @@ export const RelatedToOrganization = ({
   subject: organization,
 }: AppSurface.ObjectArticleProps<Organization.Organization>) => {
   const { invoke } = useOperationInvoker();
+  const [cardRef, getPivotId] = useCardPivot();
   const db = Obj.getDatabase(organization);
 
   const contacts = useQuery(db, Filter.type(Person.Person));
@@ -39,17 +40,21 @@ export const RelatedToOrganization = ({
     (contact: Person.Person) =>
       Effect.gen(function* () {
         const contactPath = Paths.getObjectPathFromObject(contact);
+        const pivotId = getPivotId();
         yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
         yield* invoke(LayoutOperation.Open, {
           subject: [contactPath],
+          // A card always opens beside the plank it lives in, never replacing it.
+          pivotId,
+          disposition: 'add',
           workspace: db ? Paths.getSpacePath(db.spaceId) : undefined,
         });
       }).pipe(EffectEx.runAndForwardErrors),
-    [invoke, db, contacts, spaceContactTable],
+    [invoke, db, contacts, spaceContactTable, getPivotId],
   );
 
   return (
-    <Card.Body>
+    <Card.Body ref={cardRef}>
       <RelatedContacts contacts={related} onContactClick={handleContactClick} />
     </Card.Body>
   );

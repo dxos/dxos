@@ -151,18 +151,21 @@ op Open
     Opens one or more subjects (item IDs or navigation paths) in the deck.
     `disposition` places them (see F-7): 'solo' — the default — navigates, so the deck becomes just
     the opened subjects, unless they are all already open (the existing plank scrolls into view);
-    'add' inserts them as new planks, immediately after `pivotId` when provided (in-plank navigation
-    anchors at its origin), else at the end of the deck; 'auto' follows the deck — it adds beside the
-    origin (`pivotId`, falling back to the attended plank) when already sliding, and navigates solo
-    otherwise, so in-plank/card navigation grows a sliding deck but replaces a solo one. Holding
-    shift (forwarded as `modifiers.shift`) forces any disposition into an add — callers pass the raw
-    modifier rather than encoding the policy, so the shift-forces-add rule lives only here. `key`
+    'add' always inserts them as new planks immediately after `pivotId`, else at the end of the deck,
+    and never replaces — card navigation passes the card's own plank as `pivotId` (resolved structurally
+    from the click target via `getRootAttendableId`), so it always grows the deck beside that plank;
+    'auto' follows the deck — it adds beside the origin (`pivotId`, falling back to the attended plank)
+    when already sliding, and navigates solo otherwise, so in-plank inline references grow a sliding
+    deck but replace a solo one. Holding shift (forwarded as `modifiers.shift`) forces any disposition
+    into an add — callers pass the raw modifier rather than encoding the policy, so the shift-forces-add
+    rule lives only here; only 'auto' falls back to the attended plank, so a shift-forced add from a
+    'solo' gesture (the nav-tree) appends at the end. `key`
     replaces an existing plank sharing the key prefix in place. Validates each target against the app
     graph and redirects to a 404 node if not found. Fires ScrollIntoView, Expose, and an
     observability event for each newly opened item.
   input:
     subject: string[]             # item IDs or navigation paths to open
-    disposition?: solo | add | auto  # solo (default) navigates; add inserts new planks; auto follows the deck
+    disposition?: solo | add | auto  # solo (default) navigates; add always adds beside origin; auto follows the deck
     modifiers?: { shift?: boolean }  # gesture modifiers; shift forces any disposition into an add
     pivotId?: string              # insert opened items immediately after this plank (add/auto)
     key?: string                  # replace an existing plank whose ID shares this key prefix
@@ -501,12 +504,22 @@ feat F-7: Navigation Model
           and attended; plain click retains its navigate-solo meaning regardless of deck size
 
   req F-7.3:
-    when: desktop — user navigates to an object from inside a plank (an inline reference, its hover
-          card, or a card's Open menu action / title)
+    when: desktop — user follows an inline reference inside a plank (e.g. an @-ref in a document)
     then: navigation follows the deck (Open with disposition 'auto', origin as pivotId or the
           attended plank) — when the deck is already sliding the target opens beside the originating
-          plank; when the deck is solo it replaces the current plank; holding shift (where a
-          modifier is available, e.g. the inline reference and hover card) always adds a new plank
+          plank; when the deck is solo it replaces the current plank; holding shift always adds a
+          new plank
+
+  req F-7.3a:
+    when: desktop — user opens an object from a card (a hover card, an object card's title, or its
+          Open menu action)
+    then: navigation always adds a new plank beside the card's own plank (Open with disposition 'add'
+          and `pivotId` = the plank the card is rendered within, resolved structurally from the click
+          target via `getRootAttendableId` — the outermost attendable ancestor, not the attended plank,
+          so it is correct even when another plank is attended, e.g. opening a card from a type node's
+          masonry view while attending elsewhere; the portaled card menu instead passes its plank's
+          `pivotId` in from the caller). It never replaces the current plank, since the breadcrumb trail
+          makes an ever-growing deck navigable; a solo deck becomes a two-plank sliding deck
 
   req F-7.4:
     when: desktop — user closes a plank
@@ -666,18 +679,26 @@ test T-11: Desktop modifier-click appends
     - active deck becomes [A, B, C]
     - plank C is scrolled into view and attended
 
-test T-11a: In-plank card navigation follows the deck (auto)
+test T-11a: Card navigation always adds beside the card's plank (add)
   tags: [F-7]
-  given: a card navigation dispatches Open({ subject: ['C'], disposition: 'auto', pivotId: 'A' })
+  given: a card navigation dispatches Open({ subject: ['C'], disposition: 'add', pivotId: 'A' })
+         (pivotId is the plank the card is rendered within, resolved via useHostAttendableId)
+  when: the deck is solo [A]
+  then:
+    - active deck becomes [A, C] (a new plank beside A, never replacing)
+  when: the deck is sliding [A, B] and the card lives in plank A
+  then:
+    - active deck becomes [A, C, B] (added beside its plank A, regardless of what is attended)
+
+test T-11b: In-plank inline reference follows the deck (auto)
+  tags: [F-7]
+  given: an inline reference dispatches Open({ subject: ['C'], disposition: 'auto', pivotId: 'A' })
   when: the deck is solo [A]
   then:
     - active deck becomes [C] (replace — solo navigation)
   when: the deck is sliding [A, B]
   then:
     - active deck becomes [A, C, B] (added beside the origin A)
-  when: shift is held (disposition 'add') from solo [A]
-  then:
-    - active deck becomes [A, C] (a new plank, never replacing)
 ```
 
 ```mdl

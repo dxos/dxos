@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -58,7 +58,9 @@ export const PipelineArticle = ({ role, subject: pipeline, attendableId }: Pipel
 
 const PipelineItem = ({ item, projectionModel }: ItemProps) => {
   const menu = useMenu(PIPELINE_ITEM);
-  const items = useObjectMenuItems(item);
+  // The card menu renders in a portal; resolve the origin plank from the item element instead.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const items = useObjectMenuItems(item, cardRef);
 
   useEffect(() => {
     menu.addMenuItems({
@@ -72,14 +74,16 @@ const PipelineItem = ({ item, projectionModel }: ItemProps) => {
   }, [menu, items]);
 
   return (
-    <Surface.Surface
-      type={AppSurface.CardContent}
-      data={{
-        subject: item,
-        projection: projectionModel,
-      }}
-      limit={1}
-    />
+    <div ref={cardRef} className='contents'>
+      <Surface.Surface
+        type={AppSurface.CardContent}
+        data={{
+          subject: item,
+          projection: projectionModel,
+        }}
+        limit={1}
+      />
+    </div>
   );
 };
 

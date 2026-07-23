@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, getRootAttendableId, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import {
   Card,
@@ -76,7 +76,9 @@ export const PopoverContent = () => {
   const popoverSubject =
     state.popoverContent && 'subject' in state.popoverContent ? state.popoverContent.subject : undefined;
   const isObjectPopover = Obj.isObject(popoverSubject);
-  const objectMenuItems = useObjectMenuItems(popoverSubject);
+  // The popover is portaled; resolve the origin plank from the anchor element it was opened from.
+  const pivotId = state.popoverAnchor instanceof Element ? getRootAttendableId(state.popoverAnchor) : undefined;
+  const objectMenuItems = useObjectMenuItems(popoverSubject, pivotId);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const icon = isObjectPopover ? (Obj.getIcon(popoverSubject)?.icon ?? 'ph--circle-dashed--regular') : undefined;
   const content = state.popoverContent;

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
+import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
@@ -78,7 +78,9 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
   ({ data, location, current }, forwardedRef) => {
     const { result, query } = data;
     const label = result.label ?? (result.object && Entity.getLabel(result.object)) ?? '';
-    const menuItems = useObjectMenuItems(result.object);
+    // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
+    const cardRef = useRef<HTMLDivElement>(null);
+    const menuItems = useObjectMenuItems(result.object, cardRef);
     const { setCurrentId } = useMosaicContainer('SearchResultTile');
 
     const handleCurrentChange = useCallback(() => {
@@ -96,7 +98,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
         >
           <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
             <Card.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
-              <Card.Header>
+              <Card.Header ref={cardRef}>
                 <Card.Block />
                 <Card.Title>
                   <Highlighted text={label} query={query} />
