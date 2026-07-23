@@ -4,4 +4,8 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const SketchOperationHandlerSet = OperationHandlerSet.lazy(() => import('./create'));
+export const SketchOperationHandlerSet = OperationHandlerSet.lazy(
+  () => import('./create'),
+  () => import('./edit'),
+  () => import('./read'),
+);

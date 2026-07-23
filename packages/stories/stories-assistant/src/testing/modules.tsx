@@ -26,6 +26,7 @@ import {
   RoutineCompanionModule,
   RoutineModule,
   ScriptModule,
+  SketchModule,
   SkillModule,
   TasksModule,
   TestModule,
@@ -60,6 +61,7 @@ export const Module = {
   Routine: Role.make<Record<string, any>>('org.dxos.storybook.module.routine'),
   RoutineCompanion: Role.make<Record<string, any>>('org.dxos.storybook.module.routineCompanion'),
   Script: Role.make<Record<string, any>>('org.dxos.storybook.module.script'),
+  Sketch: Role.make<Record<string, any>>('org.dxos.storybook.module.sketch'),
   Skill: Role.make<Record<string, any>>('org.dxos.storybook.module.skill'),
   Tasks: Role.make<Record<string, any>>('org.dxos.storybook.module.tasks'),
   Test: Role.make<Record<string, any>>('org.dxos.storybook.module.test'),
@@ -172,6 +174,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'module.skill',
     filter: Surface.makeFilter(Module.Skill),
     component: withModuleProps(SkillModule),
+  }),
+  Surface.create({
+    id: 'module.sketch',
+    filter: Surface.makeFilter(Module.Sketch),
+    component: withModuleProps(SketchModule),
   }),
   Surface.create({
     id: 'module.tasks',

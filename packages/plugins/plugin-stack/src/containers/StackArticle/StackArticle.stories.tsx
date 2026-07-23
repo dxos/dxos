@@ -15,9 +15,8 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { Sketch } from '@dxos/plugin-sketch';
+import { Sketch, SketchModel } from '@dxos/plugin-sketch';
 import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
-import { SketchBuilder } from '@dxos/plugin-sketch/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -30,7 +29,7 @@ import { translations } from '#translations';
 import { StackArticle, type StackArticleProps } from './StackArticle';
 
 // A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test image.
-const SKETCH_CONTENT = new SketchBuilder()
+const SKETCH_CONTENT = new SketchModel.SketchBuilder()
   .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
   .ellipse({ id: 'echo', x: 320, y: 0, text: 'ECHO', color: 'green' })
   .arrow({ from: 'rect', to: 'echo' })
