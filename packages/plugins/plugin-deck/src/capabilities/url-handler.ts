@@ -73,7 +73,7 @@ export default Capability.makeModule(
     };
 
     const handleNavigation = Effect.fn(function* (url?: URL) {
-      const { builder } = yield* Capability.get(AppCapabilities.AppGraph);
+      const builder = yield* Capability.get(AppCapabilities.AppGraph);
       const resolvedUrl = url ?? new URL(window.location.href);
       // When native redirect is active, check-app-scheme owns the initial dispatch
       // to prevent one-time tokens from being consumed before the native app can use them.
@@ -256,7 +256,7 @@ export default Capability.makeModule(
     // The graph builder instance is stable for the app's lifetime once contributed (it's created once
     // by plugin-graph); handleNavigation above already required it to be ready, so it's safe to read
     // once more here for the outbound (state -> URL) sync closures below.
-    const { builder } = yield* Capability.get(AppCapabilities.AppGraph);
+    const builder = yield* Capability.get(AppCapabilities.AppGraph);
 
     // Sync URL with layout state changes: deck state (active planks, companion open/closed),
     // attention (which plank the companion attaches to), and the companion's selected variant.

@@ -30,9 +30,6 @@ export default Capability.makeModule(
         const next: GraphBuilder.BuilderExtension[] = [];
         for (const [moduleId, extensions] of Object.entries(extensionsByModule)) {
           for (const ext of GraphBuilder.flattenExtensions(extensions)) {
-            // URL resolution is fully explicit: an extension is URL-addressable only if it declares a
-            // `urlKey` itself — there is no plugin-id fallback. Keys are global (never namespaced by
-            // module), unlike node/extension ids.
             next.push({
               ...ext,
               id: `${moduleId}.${ext.id}`,
@@ -52,14 +49,11 @@ export default Capability.makeModule(
 
     setupDevtools(builder.graph);
 
-    return Capability.contributes(
-      AppCapabilities.AppGraph,
-      { graph: builder.graph, explore: GraphBuilder.explore, builder },
-      () =>
-        Effect.sync(() => {
-          // clearInterval(interval);
-          unsubscribe();
-        }),
+    return Capability.contributes(AppCapabilities.AppGraph, builder, () =>
+      Effect.sync(() => {
+        // clearInterval(interval);
+        unsubscribe();
+      }),
     );
   }),
 );

@@ -95,7 +95,7 @@ export const useExtensions = ({
   const { platform } = useThemeContext();
   // Optional: the low-level MarkdownEditor renders outside a plugin manager (e.g. in storybook),
   // where no app graph is available; internal-link resolution simply no-ops without it.
-  const builder = useOptionalCapability(AppCapabilities.AppGraph)?.builder;
+  const builder = useOptionalCapability(AppCapabilities.AppGraph);
   const space = getSpace(object);
 
   // Get the content reference from Document objects.
@@ -187,7 +187,7 @@ const createBaseExtensions = ({
   setWidgets,
   platform,
   builder,
-}: ExtensionsOptions & { space?: Space; builder?: AppCapabilities.AppGraph['builder'] }): Extension[] => {
+}: ExtensionsOptions & { space?: Space; builder?: AppCapabilities.AppGraph }): Extension[] => {
   const extensions: Extension[] = [
     viewState && selectionChange(viewState),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
@@ -276,7 +276,7 @@ const selectionChange = (viewState: ViewStateManager) => {
 const createRenderLink =
   (
     onSelectObject: (id: string, modifiers?: { shift: boolean }) => void,
-    builder: AppCapabilities.AppGraph['builder'] | undefined,
+    builder: AppCapabilities.AppGraph | undefined,
   ): RenderCallback<{ url: string }> =>
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.

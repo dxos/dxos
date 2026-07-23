@@ -415,7 +415,7 @@ const constructObjectActions = ({
             id: 'copyLink',
             data: () =>
               Effect.gen(function* () {
-                const { builder } = yield* Capability.get(AppCapabilities.AppGraph);
+                const builder = yield* Capability.get(AppCapabilities.AppGraph);
                 const path = Paths.getShareableLinkPath(builder, nodeId);
                 if (Option.isNone(path)) {
                   log.warn('object has no URL representation; cannot copy link', { nodeId });

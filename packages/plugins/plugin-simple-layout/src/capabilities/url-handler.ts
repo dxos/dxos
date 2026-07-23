@@ -53,7 +53,7 @@ export default Capability.makeModule(
     });
 
     const handleNavigation = Effect.fn(function* (url?: URL) {
-      const { builder } = yield* Capability.get(AppCapabilities.AppGraph);
+      const builder = yield* Capability.get(AppCapabilities.AppGraph);
       const resolvedUrl = url ?? new URL(window.location.href);
       yield* dispatchNavigationHandlers(resolvedUrl);
 
@@ -132,7 +132,7 @@ export default Capability.makeModule(
       );
     }
 
-    const { builder } = yield* Capability.get(AppCapabilities.AppGraph);
+    const builder = yield* Capability.get(AppCapabilities.AppGraph);
 
     // Sync URL with layout state changes.
     const syncUrl = (method: 'push' | 'replace' = 'push') => {

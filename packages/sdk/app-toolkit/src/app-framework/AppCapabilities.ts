@@ -13,7 +13,7 @@ import * as Schema$ from 'effect/Schema';
 import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
-import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
+import type { BuilderExtensions, GraphBuilder } from '@dxos/app-graph';
 import type { Credential, Operation, Skill } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
 import { type Translator as Translator$ } from '@dxos/i18n';
@@ -150,16 +150,12 @@ export type StatsPanelStore = Readonly<{
  */
 export const StatsPanel = Capability$.make<StatsPanelStore>('org.dxos.app-toolkit.capability.statsPanel');
 
-export type AppGraph = Readonly<{
-  graph: Graph.ExpandableGraph;
-  explore: typeof GraphBuilder.explore;
-  /**
-   * The graph builder instance backing {@link graph}, exposed so URL resolution
-   * (`@dxos/app-graph`'s `path-resolution.ts`) can read `urlKey` declarations and reverse-map nodes
-   * back to their producing extension — neither of which is derivable from `graph` alone.
-   */
-  builder: GraphBuilder.GraphBuilder;
-}>;
+/**
+ * The graph builder instance. Its `graph` is the reactive node tree; the builder also carries the
+ * `urlKey` declarations and node→extension provenance that URL resolution (`@dxos/app-graph`'s
+ * `path-resolution.ts`) reads and reverse-maps — neither derivable from `graph` alone.
+ */
+export type AppGraph = GraphBuilder.GraphBuilder;
 
 /**
  * @category Capability
