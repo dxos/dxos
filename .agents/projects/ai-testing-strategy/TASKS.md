@@ -236,13 +236,15 @@ as primary coverage.
       deliberately not autoevals' built-in classifiers (Factuality/ClosedQA/Battle/etc. are
       hardcoded to an OpenAI-shaped client; using them here would need a separate OpenAI key or
       Braintrust's proxy, neither wired up in this repo). Uses `claude-haiku-4-5` (grading is
-      classification, not generation — a fast/cheap model is enough). Wired into
-      `planning.eval.ts`'s haiku-quality check, replacing the keyword-heuristic proxy. Added a
-      second case in the same file (not a separate meta-test file, and not converting other evals
-      to use it — deliberately scoped to this one example per direct guidance) demonstrating the
-      judge correctly _fails_ a hand-crafted malformed transcript against the same rubric — a
-      judge that only ever passes is worthless as a scorer. Verified live: real scenario 100% (5/5
-      criteria), malformed-transcript case correctly fails with substantive reasoning.
+      classification, not generation — a fast/cheap model is enough). Wired into two consumers:
+      `planning.eval.ts`'s haiku-quality check (replacing the keyword-heuristic proxy) and
+      `crm-mailbox.eval.ts`'s `crm-data-accurate` scorer (grades whether the created Person/
+      Organization/Employer-role records are accurate against the source email, not just present).
+      Each carries a same-file negative case (not a separate meta-test file, and not converting
+      other evals to use the judge — deliberately scoped to these two examples per direct guidance)
+      demonstrating the judge correctly _fails_ hand-crafted bad data against the same rubric — a
+      judge that only ever passes is worthless as a scorer. Verified live: both real scenarios
+      scored 100% at least once, both negative cases correctly fail with substantive reasoning.
       **Investigated but rejected in the same session:** collapsing the two vitest configs
       (`vitest.config.ts` for evalite, `vitest.e2e.config.ts` for gated tests) into one
       `projects`-based file — confirmed by direct experiment (renaming the file, adding a

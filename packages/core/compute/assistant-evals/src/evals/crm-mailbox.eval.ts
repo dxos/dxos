@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { Relation } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
+import { ProfileOf } from '@dxos/plugin-crm/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -95,6 +96,11 @@ const task = createEvalRunner({
         const target = Relation.getTarget(rel);
         return source?.fullName === 'Vishal Sharma' && target?.name === 'SigNoz';
       });
+      const isOrganization = Obj.instanceOf(Organization.Organization);
+      const summaryProfile = yield* findObject(ProfileOf.ProfileOf, (rel) => {
+        const target = Relation.getTarget(rel);
+        return isOrganization(target) && target.name === 'SigNoz';
+      });
 
       const accuracyVerdict = yield* judge(
         ACCURACY_JUDGE_RUBRIC,
@@ -113,6 +119,7 @@ const task = createEvalRunner({
         organizationExists: !!organization,
         employerRelationExists: !!employerRelation,
         employerRoleCorrect: employerRelation?.role === 'Founding Engineer',
+        summaryDocumentLinked: !!summaryProfile,
         accuracyVerdict,
       };
     }),
@@ -141,6 +148,11 @@ evalite('CRM Mailbox — processes a mailbox email into CRM profiles and employe
       name: 'employer-role-correct',
       description: 'The Employer relation\'s role is "Founding Engineer", stored as a proper schema field.',
       scorer: ({ output }) => (output.dbQuery.employerRoleCorrect ? 1 : 0),
+    },
+    {
+      name: 'summary-document-linked',
+      description: 'A Profile Document is linked to the SigNoz Organization via a ProfileOf relation.',
+      scorer: ({ output }) => (output.dbQuery.summaryDocumentLinked ? 1 : 0),
     },
     {
       name: 'crm-data-accurate',

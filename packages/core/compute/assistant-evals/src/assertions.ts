@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { CompleteBlock } from '@dxos/assistant';
@@ -44,12 +43,12 @@ export const findObject = <T extends Type.AnyEntity>(
 export const completedBlocks = (): Effect.Effect<
   { role: string; block: ContentBlock.Any }[],
   unknown,
-  Database.Service
+  Database.Service | FeedTraceSink.FeedTraceSink
 > =>
   Effect.gen(function* () {
-    // `FeedTraceSink`'s writes are buffered and flushed on a forked fiber; there's no handle here
-    // on the already-running sink instance to flush directly, so give the last writes a moment.
-    yield* Effect.sleep(Duration.millis(300));
+    // Waits for the sink's buffered writes to actually land, rather than guessing how long that
+    // takes — a fixed sleep would still race the last write under load.
+    yield* FeedTraceSink.flush();
 
     const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
     const messages = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
@@ -67,9 +66,9 @@ export const completedBlocks = (): Effect.Effect<
 
 export interface ToolInvocation {
   readonly name: string;
-  /** Key of the Operation backing this call (e.g. `org.dxos.function.planning.updateTasks`) — a stable
-   * match target, unlike `name` (a display/toolkit name that varies by provider/toolkit). Absent for
-   * tool calls not backed by an Operation (provider-defined tools, MCP tools). */
+  /** Key of the Operation backing this call (e.g. `dxn:org.dxos.function.planning.updateTasks`) — a
+   * stable match target, unlike `name` (a display/toolkit name that varies by provider/toolkit). Absent
+   * for tool calls not backed by an Operation (provider-defined tools, MCP tools). */
   readonly operationKey?: string;
   readonly input: string;
   readonly result?: unknown;
@@ -77,7 +76,11 @@ export interface ToolInvocation {
 }
 
 /** Pairs `toolCall`/`toolResult` blocks (by `toolCallId`) from {@link completedBlocks}. */
-export const toolInvocations = (): Effect.Effect<ToolInvocation[], unknown, Database.Service> =>
+export const toolInvocations = (): Effect.Effect<
+  ToolInvocation[],
+  unknown,
+  Database.Service | FeedTraceSink.FeedTraceSink
+> =>
   Effect.gen(function* () {
     const blocks = yield* completedBlocks();
     const calls = new Map<string, { name: string; operationKey?: string; input: string }>();

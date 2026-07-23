@@ -3,6 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
@@ -16,6 +17,7 @@ import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, ServiceResolver, type Skill } from '@dxos/compute';
+import { FeedTraceSink } from '@dxos/compute-runtime';
 import { Database, Feed, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
@@ -37,11 +39,14 @@ const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.def
 /** Per-eval fallback; scenarios with more tool round-trips should pass an explicit `timeout`. */
 const DEFAULT_EVAL_TIMEOUT_MILLIS = 60_000;
 
-class EvalTimeoutError extends Error {
-  constructor(millis: number) {
-    super(`Eval exceeded its ${millis}ms timeout`);
-  }
-}
+class EvalTimeoutError extends Data.TaggedError('EvalTimeoutError')<{ millis: number }> {}
+
+/**
+ * Tags a failure as coming specifically from the agent's own `RunInstructions` invocation —
+ * distinct from a harness setup/disposal problem or other infrastructure failure, neither of
+ * which is "the agent failed as instructed" (see `expect: 'failure'` handling below).
+ */
+class AgentRunFailure extends Data.TaggedError('AgentRunFailure')<{ cause: unknown }> {}
 
 const SYSTEM_INSTRUCTIONS = trim`
   You are running within an evaluation environment.
@@ -145,7 +150,10 @@ export interface CreateEvalRunnerOptions<I, O> {
 }
 
 /** A deterministic DB-state assertion run after the agent completes, before the harness is disposed. */
-export type DbQuery<I, D> = (input: I, spaceId: SpaceId) => Effect.Effect<D, unknown, Database.Service>;
+export type DbQuery<I, D> = (
+  input: I,
+  spaceId: SpaceId,
+) => Effect.Effect<D, unknown, Database.Service | FeedTraceSink.FeedTraceSink>;
 
 export type VariantConfig =
   | undefined
@@ -170,6 +178,9 @@ export type VariantConfig =
  *
  * Pass `expect: 'failure'` for scenarios that assert the agent correctly fails; the task then
  * returns `{ failed: boolean }` instead of throwing, so a Scorer can grade "failed as instructed".
+ * Only a failure of the agent's own `RunInstructions` invocation counts as `{ failed: true }` — a
+ * harness setup/disposal problem or other infrastructure failure still throws, since neither is
+ * evidence the agent behaved as instructed.
  *
  * The run is aborted after `timeout` (default 60s, see {@link CreateEvalRunnerOptions.timeout}) —
  * evalite has no per-scenario timeout of its own, so this is what keeps a hung/slow scenario from
@@ -211,9 +222,10 @@ export function createEvalRunner<I, O, D>(
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
 
-        const agentOutput = yield* Effect.promise(() =>
-          runInstructions(harness, instructions, model, personalSpace.id, input, options.sessionChat),
-        );
+        const agentOutput = yield* Effect.tryPromise({
+          try: () => runInstructions(harness, instructions, model, personalSpace.id, input, options.sessionChat),
+          catch: (cause) => new AgentRunFailure({ cause }),
+        });
 
         const dbQueryFn = options.dbQuery;
         if (!dbQueryFn) {
@@ -223,7 +235,9 @@ export function createEvalRunner<I, O, D>(
         const dbQuery = yield* Effect.promise(() =>
           harness.runPromise(
             dbQueryFn(input, personalSpace.id).pipe(
-              Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service)),
+              Effect.provide(
+                ServiceResolver.provide({ space: personalSpace.id }, Database.Service, FeedTraceSink.FeedTraceSink),
+              ),
             ),
           ),
         );
@@ -236,7 +250,7 @@ export function createEvalRunner<I, O, D>(
     const timedRun = run.pipe(
       Effect.timeoutFail({
         duration: timeoutMillis,
-        onTimeout: () => new EvalTimeoutError(timeoutMillis),
+        onTimeout: () => new EvalTimeoutError({ millis: timeoutMillis }),
       }),
     );
 
@@ -245,14 +259,17 @@ export function createEvalRunner<I, O, D>(
     }
 
     const exit = await Effect.runPromiseExit(timedRun);
-    if (
-      Exit.isFailure(exit) &&
-      Option.exists(Cause.failureOption(exit.cause), (error) => error instanceof EvalTimeoutError)
-    ) {
-      // A timeout is not "the agent failed as instructed" — it means the run never got far enough
-      // to demonstrate anything, so it must not be scored as a pass.
-      throw new EvalTimeoutError(timeoutMillis);
+    if (Exit.isSuccess(exit)) {
+      return { failed: false };
     }
-    return { failed: Exit.isFailure(exit) };
+
+    // Only a failure of the agent's own RunInstructions invocation counts as "failed as
+    // instructed" — a timeout, harness setup/disposal problem, or other infrastructure failure
+    // means the run never got far enough to demonstrate anything, so it must propagate as a real
+    // error instead of being silently scored as a pass.
+    if (Option.exists(Cause.failureOption(exit.cause), (error) => error instanceof AgentRunFailure)) {
+      return { failed: true };
+    }
+    return EffectEx.unwrapExit(exit);
   };
 }

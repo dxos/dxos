@@ -139,9 +139,10 @@ deterministic code through a frozen LLM recording.
     can fail; a judge that only ever passes is worthless as a scorer.
   - **Statistical, not binary:** report pass-rate ≥ threshold over N runs; the LLM variance is
     graded, not asserted away. Not wired up yet — see the plan below.
-  - **Model-pinned** and run **on a schedule / on demand**, not on every PR — evalite is not part of
-    any CI workflow. This relocates LLM cost and variance out of the gating path instead of
-    freezing it.
+  - Run **manually / on demand** today (`DX_ANTHROPIC_API_KEY` + `moon run assistant-evals:evals`);
+    evalite is not part of any CI workflow, so this is already out of the gating path. **Target,
+    not yet built:** pin model versions and move to a scheduled (nightly / on-demand) run — see the
+    plan below.
   - **H (composition)** lives here too: a cross-plugin scenario needs the full
     `createComposerTestApp` harness wired across multiple plugins (e.g. crm-mailbox spans
     CRM+Mailbox+Markdown, planning spans the planning skill + task tools). That's a central,
@@ -218,9 +219,9 @@ as a long migration.**
 G2/G3 memoized replay is already de-gated from PR CI (`runMemoizedTests()`, off by default; opt in
 with `DX_RUN_LLM_TESTS=1` or `ALLOW_LLM_GENERATION=1` to regenerate). A scripted `LanguageModel`
 primitive (`ai/src/testing/ScriptedLanguageModel.ts`) and harness (D) unit tests over it
-(`agent-runtime/.../scripted-loop.test.ts`, `assistant/.../AiRequest.test.ts`) cover the loop
-branches — tool-call → result → continue, clean stop, tool error, malformed output — without a
-live model. Remaining:
+(`agent-runtime/.../scripted-loop.test.ts`, `assistant/.../AiRequest.test.ts`) cover the clean-stop
+and tool-call → result → continue (including multi-iteration) branches without a live model;
+tool-error and malformed-output branches are still deferred. Remaining:
 
 1. **Operation (C) unit tests**: convert G2 to deterministic mocked unit tests; introduce a
    golden-args fixture convention (seed handler tests with tool-call args captured from the eval

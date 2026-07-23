@@ -43,7 +43,10 @@ describe.skipIf(!runMemoizedTests())('DescriptiveName', () => {
 
 Rules:
 
-- `Obj.ID.dangerouslyDisableRandomness()` **must** appear at module scope before `describe`.
+- Memoized replay tests that don't need run-specific IDs **must** call
+  `Obj.ID.dangerouslyDisableRandomness()` at module scope before `describe`. Tests against live
+  external infra keyed by entity ID (e.g. `sandbox.test.ts`'s sandbox-service, which rejects a
+  repeated ID under a new space) must leave randomness enabled instead.
 - No extra code apart from the prompt — the test is the prompt and nothing else.
 - Always pass `{ timeout: agentTestTimeout() }` as the third argument.
 - The agent starts with an **empty database** — instruct it to create any required data.
