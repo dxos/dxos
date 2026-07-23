@@ -10,7 +10,7 @@ description: >-
 
 Browser e2e drives the real Composer app in a browser — the only tier that verifies _perceived_
 behavior: interactivity during async work, no false empty states, and full click→render flows.
-Distinct from `agent-e2e-tests` (the LLM agent harness) and storybook interaction tests.
+Distinct from `agent-eval-tests` (the LLM agent harness) and storybook interaction tests.
 
 Location: `packages/apps/composer-app/src/playwright/` — `*.spec.ts` specs, root page-objects
 (`app-manager.ts`), and per-plugin helpers under `plugins/` (re-exported from `plugins/index.ts`).

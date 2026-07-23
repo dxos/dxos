@@ -10,6 +10,7 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useManager } from '@dxos/react-ui-attention';
 import { DraftMessage, type Message as MessageType } from '@dxos/types';
@@ -120,14 +121,12 @@ export const MessageArticle = ({
     [db, invoker],
   );
 
-  // Per-message invoker-backed actions, built here so the ConversationStack tiles stay invoker-free.
+  // Per-message delete action, backed by the space operation for removing objects.
   const handleDelete = useCallback(
     (message: MessageType.Message) => {
-      if (mailbox) {
-        void invoker.invokePromise(InboxOperation.DeleteEmail, { mailbox, message }, { spaceId: db?.spaceId });
-      }
+      void invoker.invokePromise(SpaceOperation.RemoveObjects, { objects: [message] });
     },
-    [invoker, mailbox, db],
+    [invoker],
   );
 
   // Generate a grounded reply body (thread + facts), then open the reply draft prefilled; on LLM failure
