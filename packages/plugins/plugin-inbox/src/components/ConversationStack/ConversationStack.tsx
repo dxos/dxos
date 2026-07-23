@@ -262,11 +262,11 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
         >
           <ScrollArea.Viewport ref={viewportRef}>
             <Mosaic.Stack
+              Tile={ConversationMessageTile}
               classNames='dx-document gap-2 pbs-2'
               items={tileItems}
               getId={getId}
               draggable={false}
-              Tile={ConversationMessageTile}
             />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
@@ -413,8 +413,9 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
 
       {isExpanded && (
         <div className='col-span-full grid grid-cols-subgrid items-start'>
+          {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
+          <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
           <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pe-3'>
-            <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
             <MessageBody message={message} mailbox={mailbox} options={options} />
           </div>
         </div>
@@ -496,8 +497,10 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
   // Extracted objects — trips, people, etc.
   const objects = useMessageExtractedObjects(db, mailbox, message);
 
+  // `subgrid` so the card adopts the tile's columns: row icons land in the avatar column and row
+  // content aligns with the sender/subject/body, rather than the card defining its own gutters.
   return (
-    <Card.Root border={false} fullWidth data-testid='message-header'>
+    <Card.Root subgrid classNames='bg-transparent' border={false} data-testid='message-header'>
       <Card.Body>
         {/* TODO(burdon): List other To/CC/BCC (Message schema only models `sender` today). */}
         {/* <Row.Person actor={message.sender} role='from' db={db} onContactCreate={onContactCreate} /> */}
