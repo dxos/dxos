@@ -5,16 +5,16 @@
 import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
-import { type AspectDef, type BackendName, type ViewStateBackend } from './view-state';
+import { ViewState } from '../types';
 
-// Only the stable `key` string is needed to form the map key; avoids variance issues with AspectDef<T>.
+// Only the stable `key` string is needed to form the map key; avoids variance issues with Aspect<T>.
 const cacheKey = (aspect: { key: string }, contextId: string) => `${aspect.key}:${contextId}`;
 
 /** In-memory backend: state is ephemeral and scoped to the session (never persisted). */
-export class MemoryBackend implements ViewStateBackend {
+export class MemoryBackend implements ViewState.Backend {
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
 
-  atom<T>(aspect: AspectDef<T>, contextId: string): Atom.Writable<T> {
+  atom<T, Encoded>(aspect: ViewState.Aspect<T, Encoded>, contextId: string): Atom.Writable<T> {
     const key = cacheKey(aspect, contextId);
     let atom = this.#atoms.get(key);
     if (!atom) {
@@ -25,7 +25,7 @@ export class MemoryBackend implements ViewStateBackend {
     return atom as Atom.Writable<T>;
   }
 
-  contexts<T>(aspect: AspectDef<T>): string[] {
+  contexts<T, Encoded>(aspect: ViewState.Aspect<T, Encoded>): string[] {
     const prefix = `${aspect.key}:`;
     return [...this.#atoms.keys()].filter((key) => key.startsWith(prefix)).map((key) => key.slice(prefix.length));
   }
@@ -52,14 +52,14 @@ export interface LocalBackendOptions {
 }
 
 /** localStorage-backed backend: seeds atoms from storage, persists on set, syncs across tabs. */
-export class LocalBackend implements ViewStateBackend {
+export class LocalBackend implements ViewState.Backend {
   readonly #registry: Registry.Registry;
   // Absent in non-browser contexts (SSR/tests without injection); the backend then degrades to
   // ephemeral, in-memory behaviour rather than crashing on a missing `localStorage`.
   readonly #storage: Storage | undefined;
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
   // Reverse map: storage key -> (aspect, contextId) so `storage` events can target the right atom.
-  readonly #byStorageKey = new Map<string, { aspect: AspectDef<unknown>; contextId: string }>();
+  readonly #byStorageKey = new Map<string, { aspect: ViewState.Aspect<unknown, unknown>; contextId: string }>();
   #storageListener?: (event: StorageEvent) => void;
 
   constructor({ registry, storage }: LocalBackendOptions) {
@@ -80,7 +80,7 @@ export class LocalBackend implements ViewStateBackend {
     }
   }
 
-  atom<T>(aspect: AspectDef<T>, contextId: string): Atom.Writable<T> {
+  atom<T, Encoded>(aspect: ViewState.Aspect<T, Encoded>, contextId: string): Atom.Writable<T> {
     const key = cacheKey(aspect, contextId);
     let atom = this.#atoms.get(key);
     if (!atom) {
@@ -89,17 +89,17 @@ export class LocalBackend implements ViewStateBackend {
       this.#atoms.set(key, atom);
       // Cast erases the per-aspect value type so the reverse map can hold aspects of any `T`; the
       // stored aspect is only used to re-read/decode its own value, so the erasure is safe.
-      this.#byStorageKey.set(storageKey, { aspect: aspect as AspectDef<unknown>, contextId });
+      this.#byStorageKey.set(storageKey, { aspect: aspect as ViewState.Aspect<unknown, unknown>, contextId });
     }
     // Cast bridges the per-aspect value type erased by the shared atom map; safe by construction.
     return atom as Atom.Writable<T>;
   }
 
-  persist<T>(aspect: AspectDef<T>, contextId: string, value: T): void {
+  persist<T, Encoded>(aspect: ViewState.Aspect<T, Encoded>, contextId: string, value: T): void {
     this.#storage?.setItem(storageKeyFor(aspect, contextId), JSON.stringify(Schema.encodeSync(aspect.schema)(value)));
   }
 
-  contexts<T>(aspect: AspectDef<T>): string[] {
+  contexts<T, Encoded>(aspect: ViewState.Aspect<T, Encoded>): string[] {
     if (!this.#storage) {
       // No persistent storage: fall back to the in-memory atoms (mirrors `atom()`'s ephemeral path).
       const prefix = `${aspect.key}:`;
@@ -125,7 +125,7 @@ export class LocalBackend implements ViewStateBackend {
     this.#byStorageKey.clear();
   }
 
-  #read<T>(aspect: AspectDef<T>, storageKey: string): T {
+  #read<T, Encoded>(aspect: ViewState.Aspect<T, Encoded>, storageKey: string): T {
     const raw = this.#storage?.getItem(storageKey);
     if (raw == null) {
       return aspect.defaultValue();
@@ -133,13 +133,15 @@ export class LocalBackend implements ViewStateBackend {
     try {
       return Schema.decodeUnknownSync(aspect.schema)(JSON.parse(raw));
     } catch {
-      // Tolerate stale/corrupt entries (e.g. a prior schema shape) by falling back to the default.
+      // Tolerate stale/corrupt entries (e.g., a prior schema shape) by falling back to the default.
       return aspect.defaultValue();
     }
   }
 }
 
-export const createDefaultBackends = (registry: Registry.Registry): Record<BackendName, ViewStateBackend> => ({
+export const createDefaultBackends = (
+  registry: Registry.Registry,
+): Record<ViewState.BackendName, ViewState.Backend> => ({
   memory: new MemoryBackend(),
   local: new LocalBackend({ registry }),
 });

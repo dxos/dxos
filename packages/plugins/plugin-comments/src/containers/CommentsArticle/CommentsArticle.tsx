@@ -6,13 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import {
-  Surface,
-  useAtomCapabilityState,
-  useCapabilities,
-  useCapability,
-  useOperationInvoker,
-} from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
@@ -24,7 +18,7 @@ import { Markdown } from '@dxos/plugin-markdown';
 import { VersioningCapabilities } from '@dxos/plugin-versioning';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
+import { useAttention, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
@@ -34,12 +28,11 @@ import { hexToHue } from '@dxos/util';
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
-import { CommentCapabilities, type ViewState } from '#types';
+import { CommentCapabilities } from '#types';
 
+import { commentsViewAspect } from '../../capabilities/comments-view-state';
 import { type SuggestionGroup, useStatus } from '../../hooks';
 import { getMessageMetadata } from '../../util';
-
-const initialViewState: ViewState = { showResolvedThreads: false };
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -154,21 +147,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
 
   const stateAtom = useCapability(CommentCapabilities.State);
-  const viewStoreAtom = useCapability(CommentCapabilities.ViewState);
   const state = useAtomValue(stateAtom);
-  const viewStore = useAtomValue(viewStoreAtom);
   const drafts = state.drafts[subjectId];
 
-  // Get or initialize view state for this subject.
-  const viewState = useMemo(() => {
-    if (!viewStore[subjectId]) {
-      registry.set(viewStoreAtom, { ...viewStore, [subjectId]: { ...initialViewState } });
-      return initialViewState;
-    }
-
-    return viewStore[subjectId];
-  }, [viewStore, subjectId, registry, viewStoreAtom]);
-  const { showResolvedThreads } = viewState;
+  // Per-subject view state (session-only), read/written through the ViewState aspect.
+  const { showResolvedThreads } = useViewState(commentsViewAspect, subjectId);
+  const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
   const commentConfigs = useCapabilities(AppCapabilities.CommentConfig);
   const anchorSorts = useCapabilities(AppCapabilities.AnchorSort);
@@ -180,18 +164,17 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // The active review branch: the core branch the local user is currently viewing for this subject
   // (per-object version selection, shared with the editor surface). `undefined` = main/unbranched.
   // Comments are scoped to it so the companion shows only the branch under review's threads.
-  const [versioningState] = useAtomCapabilityState(VersioningCapabilities.VersioningState);
+  const versionSelection = useViewState(VersioningCapabilities.viewAspect, subject.id).selection;
   const markdownDoc = Obj.instanceOf(Markdown.Document, subject) ? subject : undefined;
   const reviewBranch = useMemo(() => {
-    const selection = versioningState.selection[subject.id];
-    if (!markdownDoc || selection?.kind !== 'branch') {
+    if (!markdownDoc || versionSelection?.kind !== 'branch') {
       return undefined;
     }
     const branch = markdownDoc.history?.branches.find(
-      (candidate) => candidate.id === selection.branchId && candidate.status === 'active',
+      (candidate) => candidate.id === versionSelection.branchId && candidate.status === 'active',
     );
     return branch?.key;
-  }, [markdownDoc, versioningState, subject.id]);
+  }, [markdownDoc, versionSelection]);
   const activeBranch = reviewBranch ?? 'main';
 
   const db = Obj.getDatabase(subject);
@@ -214,12 +197,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   const handleChangeViewState = useCallback(
     (nextValue: string) => {
-      registry.set(viewStoreAtom, {
-        ...registry.get(viewStoreAtom),
-        [subjectId]: { ...registry.get(viewStoreAtom)[subjectId], showResolvedThreads: nextValue === 'all' },
-      });
+      setCommentsView({ showResolvedThreads: nextValue === 'all' });
     },
-    [registry, viewStoreAtom, subjectId],
+    [setCommentsView],
   );
 
   const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);

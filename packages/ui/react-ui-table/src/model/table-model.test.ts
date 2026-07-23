@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { LocalBackend, MemoryBackend, ViewStateManager } from '@dxos/react-ui-attention';
+import { LocalBackend, MemoryBackend, ViewState } from '@dxos/react-ui-attention';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
@@ -137,7 +137,7 @@ describe('TableModel sort view state', () => {
       const registry = Registry.make();
       const local = new LocalBackend({ registry, storage });
       disposables.push(local);
-      const viewState = new ViewStateManager({ registry, backends: { memory: new MemoryBackend(), local } });
+      const viewState = new ViewState.Manager({ registry, backends: { memory: new MemoryBackend(), local } });
       const projection = new ProjectionModel({
         registry,
         view,

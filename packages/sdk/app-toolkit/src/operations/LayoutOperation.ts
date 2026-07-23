@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
-import { SelectionSchema } from '@dxos/react-ui-attention/types';
+import { Selection } from '@dxos/react-ui-attention/types';
 
 import { Translations } from '../app';
 
@@ -461,7 +461,7 @@ export const Select = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     contextId: Schema.String.annotations({ description: 'The id of the attention context.' }),
-    subject: SelectionSchema.annotations({ description: 'The selection to apply.' }),
+    subject: Selection.Selection.annotations({ description: 'The selection to apply.' }),
   }),
   output: Schema.Void,
 });

@@ -8,7 +8,7 @@ import * as Match from 'effect/Match';
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { selectionAspect } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities } from '../types';
 
@@ -18,22 +18,22 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Select> = LayoutOper
       const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
       Match.value(input.subject).pipe(
         Match.when({ mode: 'single', id: undefined }, () => {
-          viewState.set(selectionAspect, input.contextId, { mode: 'single' });
+          viewState.set(Selection.aspect, input.contextId, { mode: 'single' });
         }),
         Match.when({ mode: 'single' }, (s) => {
-          viewState.set(selectionAspect, input.contextId, { mode: 'single', id: s.id });
+          viewState.set(Selection.aspect, input.contextId, { mode: 'single', id: s.id });
         }),
         Match.when({ mode: 'multi' }, (s) => {
-          viewState.set(selectionAspect, input.contextId, { mode: 'multi', ids: [...s.ids] });
+          viewState.set(Selection.aspect, input.contextId, { mode: 'multi', ids: [...s.ids] });
         }),
         Match.when({ mode: 'range', from: undefined, to: undefined }, () => {
-          viewState.set(selectionAspect, input.contextId, { mode: 'range' });
+          viewState.set(Selection.aspect, input.contextId, { mode: 'range' });
         }),
         Match.when({ mode: 'range' }, (s) => {
-          viewState.set(selectionAspect, input.contextId, { mode: 'range', from: s.from, to: s.to });
+          viewState.set(Selection.aspect, input.contextId, { mode: 'range', from: s.from, to: s.to });
         }),
         Match.when({ mode: 'multi-range' }, (s) => {
-          viewState.set(selectionAspect, input.contextId, { mode: 'multi-range', ranges: [...s.ranges] });
+          viewState.set(Selection.aspect, input.contextId, { mode: 'multi-range', ranges: [...s.ranges] });
         }),
         Match.exhaustive,
       );

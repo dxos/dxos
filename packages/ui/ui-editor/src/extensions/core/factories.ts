@@ -225,7 +225,7 @@ export const fullWidth: ThemeExtensionsOptions['slots'] = {
   },
 } as const;
 
-export const defaultThemeSlots = fullWidth;
+export const defaultThemeSlots = grow;
 
 export const defaultStyles = {
   dark: vscodeDarkStyle,

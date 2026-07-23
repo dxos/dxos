@@ -9,10 +9,10 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { useQuery } from '@dxos/react-client/echo';
-import { getLinkedVariant, linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { type ModuleProps } from '@dxos/story-modules';
 
-const automationCompanionId = linkedSegment('automation');
+const automationCompanionId = Attention.linkedSegment('automation');
 
 /**
  * Per-object routines companion for the story mailbox — mirrors the deck automation companion panel.
@@ -31,7 +31,7 @@ export const RoutineCompanionModule = ({ space }: ModuleProps) => {
         attendableId: mailbox.id,
         subject: 'automation',
         companionTo: mailbox,
-        variant: getLinkedVariant(automationCompanionId),
+        variant: Attention.getLinkedVariant(automationCompanionId),
       }}
       limit={1}
     />

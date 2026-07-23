@@ -47,7 +47,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'state',
-    // Wait for AttentionEvents.AttentionReady so ViewStateManager is available when the module
+    // Wait for AttentionEvents.AttentionReady so Manager is available when the module
     // resolves AttentionCapabilities.ViewState to build the editor state store.
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AttentionEvents.AttentionReady),
     activate: MarkdownState,

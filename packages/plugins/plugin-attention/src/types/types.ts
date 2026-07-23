@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SelectionSchema } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
@@ -14,7 +14,7 @@ export namespace AttentionAction {
   export class Select extends Schema.TaggedClass<Select>()(`${ATTENTION_ACTION}.select`, {
     input: Schema.Struct({
       contextId: Schema.String,
-      selection: SelectionSchema,
+      selection: Selection.Selection,
     }),
     output: Schema.Void,
   }) {}

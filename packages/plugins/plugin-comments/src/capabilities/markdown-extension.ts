@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
 import { CommentCapabilities, CommentOperation } from '#types';
@@ -73,7 +73,7 @@ export default Capability.makeModule(
                 // the companion highlights and scrolls to it, then open the companion.
                 void invokePromise(CommentOperation.Select, { current: effect.value });
                 void invokePromise(LayoutOperation.UpdateCompanion, {
-                  subject: linkedSegment('comments'),
+                  subject: Attention.linkedSegment('comments'),
                 });
               }
             });

@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { AppNode } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
 import { Position } from '@dxos/util';
@@ -31,7 +31,7 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
         connector: (node) =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('settings'),
+              id: Attention.linkedSegment('settings'),
               label: ['object-properties.label', { ns: meta.profile.key }],
               icon: 'ph--sliders--regular',
               data: 'settings', // TODO(burdon): Change to 'object-properties'.
@@ -47,7 +47,7 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
         connector: (node) =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('related'),
+              id: Attention.linkedSegment('related'),
               label: ['companion-related.label', { ns: meta.profile.key }],
               icon: 'ph--graph--regular',
               data: 'related',
@@ -85,7 +85,7 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
         connector: (node) =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('selected-objects'),
+              id: Attention.linkedSegment('selected-objects'),
               label: ['companion-selected-objects.label', { ns: meta.profile.key }],
               icon: 'ph--tree-view--regular',
               data: 'selected-objects',

@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type Obj } from '@dxos/echo';
+import { ViewState } from '@dxos/react-ui-attention/types';
 import { type Text } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -29,19 +30,35 @@ export namespace VersioningCapabilities {
   /** Per-user editing posture for a document (Google-Docs-style). Local UI preference, never replicated. */
   export type ReviewMode = 'editing' | 'suggesting' | 'viewing';
 
-  export type VersioningState = {
-    /** Selection keyed by object id. Missing entry = current. */
-    selection: Record<string, VersionSelection>;
-    /** Active branch view keyed by object id. Missing entry = `branch` (the editable draft). */
-    view: Record<string, BranchView>;
-    /** Review mode keyed by object id. Missing entry = `editing`. */
-    mode: Record<string, ReviewMode>;
+  /**
+   * Per-object version view state (which version is selected, which branch side is shown, the review
+   * mode). In-memory / per-session (never replicated); a missing field falls back to its default
+   * (`selection` = current, `view` = branch, `mode` = editing).
+   */
+  export type VersioningView = {
+    selection?: VersionSelection;
+    view?: BranchView;
+    mode?: ReviewMode;
   };
 
-  /** In-memory (per-session) version selection state. */
-  export const VersioningState = Capability.make<Atom.Writable<VersioningState>>(
-    `${meta.profile.key}.capability.versioning-state`,
+  const VersionSelectionSchema: Schema.Schema<VersionSelection> = Schema.Union(
+    Schema.Struct({ kind: Schema.Literal('current') }),
+    Schema.Struct({ kind: Schema.Literal('branch'), branchId: Schema.String }),
+    Schema.Struct({ kind: Schema.Literal('fork'), branchId: Schema.String }),
+    Schema.Struct({ kind: Schema.Literal('checkpoint'), versionId: Schema.String }),
   );
+
+  /** Version view state keyed by object id, read/written through the ViewState hooks. */
+  export const viewAspect: ViewState.Aspect<VersioningView> = ViewState.define<VersioningView>({
+    key: 'versioning-view',
+    backend: 'memory',
+    schema: Schema.Struct({
+      selection: Schema.optional(VersionSelectionSchema),
+      view: Schema.optional(Schema.Literal('base', 'diff', 'branch')),
+      mode: Schema.optional(Schema.Literal('editing', 'suggesting', 'viewing')),
+    }).pipe(Schema.mutable),
+    defaultValue: () => ({}),
+  });
 
   /** What the editor should render for a given review mode. */
   export type ReviewRenderConfig = { showSuggestions: boolean; showComments: boolean; editable: boolean };
