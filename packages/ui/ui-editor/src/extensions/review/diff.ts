@@ -136,8 +136,15 @@ export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolic
  * `from` to its start, the `to` to its end). Without this, a proposal diffed against `base` would
  * render at stale offsets over the diverged `doc`.
  */
-export const rebaseHunks = (base: string, doc: string, hunks: DiffHunk[]): DiffHunk[] => {
-  const charHunks = computeCharHunks(base, doc);
+export const rebaseHunks = (base: string, doc: string, hunks: DiffHunk[]): DiffHunk[] =>
+  rebaseHunksWith(computeCharHunks(base, doc), hunks);
+
+/**
+ * {@link rebaseHunks} with a precomputed `base`↔`doc` character diff. Callers rebasing MANY hunk sets
+ * against the same pair — e.g. every author's proposal over one branch (see {@link suggestions}) —
+ * compute {@link computeCharHunks} once and reuse it, rather than re-diffing the whole document per set.
+ */
+export const rebaseHunksWith = (charHunks: Hunk[], hunks: DiffHunk[]): DiffHunk[] => {
   const mapPos = (pos: number, side: -1 | 1): number => {
     let delta = 0;
     for (const hunk of charHunks) {

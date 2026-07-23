@@ -250,9 +250,9 @@ an advanced/history path (reached via explicit selection); ambient overlay is th
       in-pane, so an automated assertion is deferred to avoid a flaky test. `showComments` consumption
       and the `useVersioning` hook-test harness also deferred.
 - [x] **Milestone B — Suggesting-mode authoring** (A1 bind-to-branch) — **PR #12302 MERGED
-  (2026-07-22 08:41Z, squash 77fff35b41)** incl. the `@dxos/plugin-versioning` extraction
-  (published 0.10.0, core via `tags:['system']`). B0–B3 + B7 landed; B4/B6 deferred to own PRs,
-  B5 substantially met. Sub-item status below.
+      (2026-07-22 08:41Z, squash 77fff35b41)** incl. the `@dxos/plugin-versioning` extraction
+      (published 0.10.0, core via `tags:['system']`). B0–B3 + B7 landed; B4/B6 deferred to own PRs,
+      B5 substantially met. Sub-item status below.
   - [x] **B0 spike** (2026-07-22, two parallel Opus agents): A1 bind-to-branch chosen over A2
         bind-to-main. Reports: `.superpowers/sdd/spike-*.md`.
   - [x] **B1 `trackChanges` extension + eval story — A1 RATIFIED by user felt-eval (2026-07-22).**
@@ -317,6 +317,41 @@ cursor <id> is invalid`. **Root cause:** in Branch view the editor binds to the 
 - [ ] Storybook with a real LLM making suggestions; a play function where suggestions are created by
       a mock agent and dismissed by the user. (tracked 2026-07-21)
 - [ ] BUG: creating a comment — after pressing Enter the comment flashes. (tracked 2026-07-21)
+
+## Overnight combined PR (2026-07-23) — one PR, left green + OPEN for eval
+
+Only B6 is land-quality; the rest are draft for morning felt-eval. Cannot create branches, so
+one combined PR on this branch (user decision). B6 scope = safe hoist + cache only.
+
+- [x] **B6 perf (land-quality)** — DONE. `rebaseHunksWith(charHunks, hunks)` extracted; `suggestions`
+      computes `computeCharHunks(base, doc)` ONCE per build and reuses it across every source (was
+      once per source). `trackChanges.build` gained a 1-entry (base,doc)→state memo (reuses the diff
+      on undo/redo to a cached buffer). Behaviour-identical: hoist-parity regression test added; 302
+      ui-editor tests green. Windowed incremental diff deferred (out of safe scope).
+- [ ] **View-mode refactor — Suggesting becomes a view-mode (design settled 2026-07-23).**
+  - [ ] `react-ui-editor` `addViewMode(state, onViewModeChange, items?)` — optional `items` (default
+        the 3 built-ins); item `{ id, icon, label?, checked?, onSelect? }`. Thread `viewModes?` through
+        `EditorToolbarFeatureFlags` → `createMarkdownActions` → `addViewMode`. Backward-compatible.
+  - [ ] plugin-markdown establishes `MarkdownCapabilities.EditorViewMode` contribution
+        `{ id, icon, label, reviewMode, order? }` (mirrors `SuggestionSourcesProvider`); `MarkdownArticle`
+        assembles built-in 3 + contributions, central single-checked, built-ins map source→editing /
+        readonly|preview→viewing on select, contributed entries `setMode(reviewMode)`; contributed only
+        on the ambient path.
+  - [ ] plugin-comments contributes `{ id:'suggesting', icon:'ph--pencil-simple--regular', label,
+    reviewMode:'suggesting', order:3 }` — no plugin-comments ⇒ no Suggesting entry.
+  - [ ] Remove the toolbar `versions` branch-selector group + the separate `review-mode` group +
+        `handleSuggest` (History companion covers branch switch / return-to-main / create / merge /
+        discard — confirmed). Keep the `VersionToolbar` banner + its Base/Diff/Branch selector.
+  - [ ] Stories/tests/translations: update `selectReviewMode` to drive the view-mode dropdown; move the
+        `suggesting` label to plugin-comments; `addViewMode` custom-item tests + capability wiring.
+  - [ ] NOTE (2026-07-23): the `react-ui-menu` select control must show a check next to the CURRENT
+        value (the single-select group's active item). Verify/fix the checkmark indicator renders for
+        the view-mode dropdown's active entry.
+- [ ] **B4 un-delete phantom (draft)** — re-instate a deleted word in one's own draft via a hover
+      popover on the phantom widget (consistent with the B2 accept/reject popover). Play tests.
+- [ ] **Comment-flash-on-Enter (draft)** — diagnose first (hypothesis: optimistic-render vs reactive
+      requery race — one empty frame after commit). Fix + unit/play test; visible-flash confirmation
+      by user (full-stack boot times out in-pane).
 
 ## Future
 

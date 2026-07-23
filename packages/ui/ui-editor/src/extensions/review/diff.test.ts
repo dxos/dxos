@@ -4,7 +4,17 @@
 
 import { describe, test } from 'vitest';
 
-import { type DiffHunk, cherryPickHunk, computeHunks, diffHunks, groupHunks, rebaseHunks, revertHunk } from './diff';
+import {
+  type DiffHunk,
+  cherryPickHunk,
+  computeCharHunks,
+  computeHunks,
+  diffHunks,
+  groupHunks,
+  rebaseHunks,
+  rebaseHunksWith,
+  revertHunk,
+} from './diff';
 
 describe('diff hunks', () => {
   const original = ['# Title', '', 'Line one.', 'Line two.', ''].join('\n');
@@ -174,6 +184,19 @@ describe('rebaseHunks', () => {
     const hunks = diffHunks(base, 'two'); // Bob removes the leading "one ".
     const [rebased] = rebaseHunks(base, doc, hunks);
     expect(doc.slice(rebased.from, rebased.to)).toBe('one ');
+  });
+
+  test('rebaseHunksWith with a precomputed char diff equals rebaseHunks (hoist parity)', ({ expect }) => {
+    // The hoisted path (compute the base↔doc char diff once, reuse across sources) must produce
+    // identical results to the per-call rebaseHunks — several sources over the same diverged doc.
+    const base = 'The quick brown fox jumps over the lazy dog.';
+    const doc = 'The very quick brown fox leaps over the lazy dog.';
+    const sources = ['The quick brown cat jumps over the lazy dog.', 'The quick brown fox jumps over the tired dog.'];
+    const charHunks = computeCharHunks(base, doc);
+    for (const source of sources) {
+      const hunks = diffHunks(base, source);
+      expect(rebaseHunksWith(charHunks, hunks)).toEqual(rebaseHunks(base, doc, hunks));
+    }
   });
 });
 
