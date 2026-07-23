@@ -5,6 +5,7 @@
 import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo, useRef, useState } from 'react';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -18,6 +19,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   Cursor,
   EditorView,
+  commentClickedEffect,
   comments,
   createBasicExtensions,
   createComment,
@@ -27,6 +29,7 @@ import {
   documentSlots,
   formattingKeymap,
   scrollCommentIntoView,
+  setSelection,
 } from '@dxos/ui-editor';
 import { type Comment } from '@dxos/ui-editor/types';
 
@@ -63,6 +66,18 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           setDocVersion((version) => version + 1);
+        }
+      }),
+      // Consume `commentClickedEffect` (dispatched by the comment click handler) to select the clicked
+      // thread — mirrors what plugin-comments does in the app, minus the companion, so this isolated
+      // story reproduces the click→select behaviour (and surfaces click-detection regressions).
+      EditorView.updateListener.of((update) => {
+        for (const transaction of update.transactions) {
+          for (const effect of transaction.effects) {
+            if (effect.is(commentClickedEffect)) {
+              update.view.dispatch({ effects: setSelection.of({ current: effect.value }) });
+            }
+          }
         }
       }),
       comments({
@@ -233,5 +248,30 @@ export const Default: Story = {
       { id: PublicKey.random().toHex(), cursor: '16:197' },
       { id: PublicKey.random().toHex(), cursor: '402:420' },
     ],
+  },
+};
+
+/**
+ * Regression: clicking INSIDE a comment must be detected. The highlight-layer rectangles are drawn over
+ * the comment text; if they intercept the click (no `pointer-events: none`), it never reaches
+ * `handleCommentClick` and the thread isn't selected. Asserts the clicked comment becomes current.
+ */
+export const ClickSelectsComment: Story = {
+  args: {
+    content: 'The quick brown fox jumps over the lazy dog.',
+    comments: [{ id: PublicKey.random().toHex(), cursor: '4:19' }], // "quick brown fox"
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector('.cm-comment')).not.toBeNull(), { timeout: 15_000 });
+    const comment = canvasElement.querySelector<HTMLElement>('.cm-comment');
+    if (!comment) {
+      throw new Error('comment mark not rendered');
+    }
+
+    // Click inside the comment: must reach handleCommentClick and select the thread (data-current="1").
+    await userEvent.click(comment);
+    await waitFor(() => expect(canvasElement.querySelector('.cm-comment[data-current="1"]')).not.toBeNull(), {
+      timeout: 5_000,
+    });
   },
 };
