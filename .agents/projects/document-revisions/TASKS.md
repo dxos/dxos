@@ -359,9 +359,13 @@ one combined PR on this branch (user decision). B6 scope = safe hoist + cache on
       a global undo). Ships wherever `trackChanges` renders (ambient Suggesting mode). Unit test added
       (306 ui-editor tests green). Author-side accept/reject of one's own draft deferred (lower value —
       the author revises by editing); needs user eval.
-- [ ] **Comment-flash-on-Enter (draft)** — diagnose first (hypothesis: optimistic-render vs reactive
-      requery race — one empty frame after commit). Fix + unit/play test; visible-flash confirmation
-      by user (full-stack boot times out in-pane).
+- [x] **Comment-flash-on-Enter (draft) — DONE (diagnosed + fixed; visual confirm pending user).**
+      Root cause: `add-message.ts` removed the draft from `state.drafts` BEFORE `AddObject`/`AddRelation`
+      persisted the thread, so for a frame the comment was in neither the draft list nor the ECHO query
+      (`CommentsArticle` renders `query.concat(drafts)`) → it flashed out. Fix: persist first, remove the
+      draft last (comment always in one list); plus dedupe the render by source thread id so the brief
+      draft/persisted overlap shows once. build + 21 unit tests green. Visual confirmation needs the app
+      (in-pane full-stack boot times out).
 
 ## Future
 

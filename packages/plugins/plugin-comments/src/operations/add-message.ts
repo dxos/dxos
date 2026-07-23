@@ -41,13 +41,10 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         Obj.update(thread, (thread) => {
           thread.status = 'active';
         });
-        registry.set(stateAtom, {
-          ...state,
-          drafts: {
-            ...state.drafts,
-            [subjectId]: state.drafts[subjectId]?.filter((a: { id: string }) => a.id !== anchor.id),
-          },
-        });
+        // Persist the thread + its relation BEFORE dropping the draft, so the comment is always in one
+        // of the two rendered lists (query results or drafts). Removing the draft first left a frame in
+        // which the persisted relation was not yet queryable and the draft was gone — the comment
+        // flashed out of the companion. (The render dedupes the brief draft/persisted overlap.)
         yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db });
         yield* Operation.invoke(SpaceOperation.AddRelation, {
           db,
@@ -55,6 +52,14 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
           source: thread,
           target: subject,
           fields: { anchor: draft.anchor, branch: draft.branch },
+        });
+        const latest = registry.get(stateAtom);
+        registry.set(stateAtom, {
+          ...latest,
+          drafts: {
+            ...latest.drafts,
+            [subjectId]: latest.drafts[subjectId]?.filter((a: { id: string }) => a.id !== anchor.id),
+          },
         });
         yield* Operation.schedule(ObservabilityOperation.SendEvent, {
           name: 'comments.create',

@@ -182,6 +182,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // Resolving a thread mutates the Thread object, not the AnchoredTo relation the query above tracks;
   // subscribe to threads so the resolved filter (below) re-applies when a thread's status changes.
   useQuery(db, Filter.type(Thread.Thread));
+  // Committed anchors come first, then drafts; on submit a draft's thread is persisted with a new
+  // relation, so both briefly reference the same thread. Dedupe by source thread id (first — the
+  // committed relation — wins) so that overlap renders once rather than flashing a duplicate.
+  const seenThreads = new Set<string>();
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
     .filter((anchor) => {
@@ -193,7 +197,19 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       }
     })
     .concat(drafts ?? [])
-    .filter((anchor) => (anchor.branch ?? 'main') === activeBranch);
+    .filter((anchor) => (anchor.branch ?? 'main') === activeBranch)
+    .filter((anchor) => {
+      try {
+        const threadId = Relation.getSource(anchor).id;
+        if (seenThreads.has(threadId)) {
+          return false;
+        }
+        seenThreads.add(threadId);
+      } catch {
+        // Leave unresolved anchors in place; they are filtered elsewhere once resolved.
+      }
+      return true;
+    });
 
   const handleChangeViewState = useCallback(
     (nextValue: string) => {
