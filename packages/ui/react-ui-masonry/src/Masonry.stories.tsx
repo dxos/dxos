@@ -3,24 +3,67 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useState } from 'react';
 
-import { Filter, Obj } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
-import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card } from '@dxos/react-ui';
+import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { Person } from '@dxos/types';
 
 import { Masonry, type MasonryRootProps } from './Masonry';
 
 random.seed(1);
 
-const generator: ValueGenerator = random as any;
+/** Item counts the toolbar can switch between to exercise the layout under different loads. */
+const ITEM_COUNTS = [10, 100, 200, 500] as const;
 
-const StoryItem = ({ data: person }: { data: Person.Person }) => {
+/** Fisher-Yates shuffle (seeded) so switching sets re-randomizes tile order. */
+const shuffle = <T,>(array: readonly T[]): T[] => {
+  const copy = [...array];
+  for (let index = copy.length - 1; index > 0; index--) {
+    const swap = random.number.int({ min: 0, max: index });
+    [copy[index], copy[swap]] = [copy[swap], copy[index]];
+  }
+  return copy;
+};
+
+type PersonData = {
+  id: string;
+  fullName: string;
+  jobTitle?: string;
+  department?: string;
+  image?: string;
+  emails?: { value: string; label?: string }[];
+  notes?: string;
+};
+
+// Generate plain (non-ECHO) data so even the largest preset mounts instantly — the masonry is a
+// pure layout component, so seeding a database would only add unrelated cost. Variable notes and a
+// distinct image per person make cards differ in height and exercise the column-balancing layout.
+const createPeople = (count: number): PersonData[] =>
+  Array.from({ length: count }, (_, index) => {
+    const fullName = random.person.fullName();
+    const slug = fullName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '.')
+      .replace(/^\.+|\.+$/g, '');
+    return {
+      id: `person-${index}`,
+      fullName,
+      jobTitle: random.person.jobTitle(),
+      department: random.commerce.department(),
+      image: `https://picsum.photos/seed/${random.string.uuid()}/256/256`,
+      emails: [
+        { value: `${slug}@example.com` },
+        ...(index % 3 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
+      ],
+      notes: index % 2 === 0 ? random.lorem.sentences(random.number.int({ min: 1, max: 4 })) : undefined,
+    };
+  });
+
+// Seed the largest preset once so switching counts is a cheap slice.
+const PEOPLE = createPeople(ITEM_COUNTS[ITEM_COUNTS.length - 1]);
+
+const StoryItem = ({ data: person }: { data: PersonData }) => {
   const { fullName, jobTitle, department, image, emails, notes } = person;
   const role = [jobTitle, department].filter(Boolean).join(' · ');
   return (
@@ -48,61 +91,71 @@ const StoryItem = ({ data: person }: { data: Person.Person }) => {
   );
 };
 
+// A random subset of the generated people is rendered so the toolbar can switch the item count
+// (bulk render under load, re-shuffled each time) and add/remove single tiles (the small-edit
+// reflow animation).
 const DefaultStory = (props: MasonryRootProps) => {
-  const { space } = useClientStory();
-  const people = useQuery(space?.db, Filter.type(Person.Person));
+  const [visible, setVisible] = useState<PersonData[]>(() => shuffle(PEOPLE).slice(0, ITEM_COUNTS[0]));
+
+  const addOne = () =>
+    setVisible((current) => {
+      const shown = new Set(current.map((person) => person.id));
+      const candidates = PEOPLE.filter((person) => !shown.has(person.id));
+      if (candidates.length === 0) {
+        return current;
+      }
+      const person = candidates[random.number.int({ min: 0, max: candidates.length - 1 })];
+      const next = [...current];
+      next.splice(random.number.int({ min: 0, max: current.length }), 0, person);
+      return next;
+    });
+
+  const removeOne = () =>
+    setVisible((current) => {
+      if (current.length === 0) {
+        return current;
+      }
+      const index = random.number.int({ min: 0, max: current.length - 1 });
+      return current.filter((_, position) => position !== index);
+    });
 
   return (
-    <Masonry.Root {...props} Tile={StoryItem}>
-      <Masonry.Content>
-        <Masonry.Viewport items={people} getId={(person) => person.id} />
-      </Masonry.Content>
-    </Masonry.Root>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          {ITEM_COUNTS.map((count) => (
+            <Toolbar.Button key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
+              {count}
+            </Toolbar.Button>
+          ))}
+          <Toolbar.Button onClick={addOne}>Add one</Toolbar.Button>
+          <Toolbar.Button onClick={removeOne}>Remove one</Toolbar.Button>
+          <Toolbar.Button onClick={() => setVisible([])}>Clear</Toolbar.Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <Masonry.Root {...props} Tile={StoryItem}>
+          <Masonry.Content>
+            <Masonry.Viewport items={visible} getId={(person) => person.id} />
+          </Masonry.Content>
+        </Masonry.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-masonry/Masonry',
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    withClientProvider({
-      types: [Person.Person],
-      createIdentity: true,
-      createSpace: true,
-      onCreateSpace: async ({ space }) => {
-        const createObjects = createObjectFactory(space.db, generator);
-        const objects = await createObjects([{ type: Person.Person, count: 36 }]);
-
-        // The generator only populates fields with a GeneratorAnnotation and skips array fields;
-        // enrich each person (job data, distinct image, emails, variable-length notes) so cards vary
-        // in height and exercise the column-balancing layout.
-        objects
-          .filter((object): object is Person.Person => Obj.instanceOf(Person.Person, object))
-          .forEach((person, index) => {
-            Obj.update(person, (person: Obj.Mutable<Person.Person>) => {
-              person.jobTitle = random.person.jobTitle();
-              person.department = random.commerce.department();
-              person.image = `https://picsum.photos/seed/${random.string.uuid()}/256/256`;
-              const slug = (person.fullName ?? 'user')
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '.')
-                .replace(/^\.+|\.+$/g, '');
-              person.emails = [
-                { value: `${slug}@example.com` },
-                ...(index % 3 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
-              ];
-              if (index % 2 === 0) {
-                person.notes = random.lorem.sentences(random.number.int({ min: 1, max: 4 }));
-              }
-            });
-          });
-      },
-    }),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
+  },
+  argTypes: {
+    animate: { control: 'boolean' },
+  },
+  args: {
+    animate: true,
   },
 } satisfies Meta<typeof DefaultStory>;
 

@@ -9,7 +9,12 @@ import { type LayoutResult, layout } from './layout';
 /** Sub-pixel changes below this threshold (px) don't trigger a re-layout. */
 const HEIGHT_EPSILON = 0.5;
 
+/** Assumed tile height (px) before any real measurement exists, so the first layout is spaced out. */
+const ESTIMATED_TILE_HEIGHT = 280;
+
 export type MasonryLayout = LayoutResult & {
+  /** True once every tile has reported a height, so positions are final (not the all-zero stack). */
+  measured: boolean;
   /** Stable ref callback for the tile wrapper of `id` (measures + registers it). */
   getTileRef: (id: string) => (element: HTMLElement | null) => void;
   /** Live map of currently-mounted tile wrappers by id (for FLIP positioning). */
@@ -117,8 +122,18 @@ export const useMasonryLayout = ({
       }
     }
 
-    const tileHeights = ids.map((id) => heights.current.get(id) ?? 0);
-    return layout({ heights: tileHeights, columnCount, containerWidth, gapPx, maxColumnWidthPx });
+    // Unmeasured tiles fall back to an estimate — the running average of measured tiles, else a
+    // default — so the first layout spaces every tile out instead of stacking them all at y≈0 (the
+    // source of the initial bunched/overlapping flash). Real heights replace the estimate as they
+    // arrive, and the estimate tracks the actual card size, so the correcting reflow stays small.
+    const measuredValues = [...heights.current.values()];
+    const estimate = measuredValues.length
+      ? measuredValues.reduce((sum, value) => sum + value, 0) / measuredValues.length
+      : ESTIMATED_TILE_HEIGHT;
+    const tileHeights = ids.map((id) => heights.current.get(id) ?? estimate);
+    // Positions are final only once every tile has contributed a real height.
+    const measured = ids.every((id) => heights.current.has(id));
+    return { ...layout({ heights: tileHeights, columnCount, containerWidth, gapPx, maxColumnWidthPx }), measured };
     // `version` re-runs layout when a measured height changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids, columnCount, containerWidth, gapPx, maxColumnWidthPx, version]);
