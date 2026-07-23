@@ -718,10 +718,20 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
     const to = zoom;
     const duration = ANIMATION_DURATION;
     const apply = (scale: number) => {
+      const pad = padAt(scale);
       if (board) {
         board.style.transform = scale === 1 ? '' : `scale(${scale})`;
+        // Animate the footprint with the scale, not just the paint: a CSS transform leaves the
+        // scrollable area at the layout size, so without this the scroll area stays sized for the
+        // FINAL zoom while a frame's scroll target is computed for the (larger) intermediate scale —
+        // the target overflows the collapsed scroll area and clamps (worst once the board fits). The
+        // margins mirror Board.Viewport so the board lands exactly on React's values at the end.
+        board.style.marginLeft = `${pad.x}px`;
+        board.style.marginTop = `${pad.y}px`;
+        board.style.marginRight = `${pad.x - boardSize.width * (1 - scale)}px`;
+        board.style.marginBottom = `${pad.y - boardSize.height * (1 - scale)}px`;
       }
-      const { left, top } = anchoredScroll({ anchor, viewport, pad: padAt(scale), zoom: scale });
+      const { left, top } = anchoredScroll({ anchor, viewport, pad, zoom: scale });
       element.scrollLeft = left;
       element.scrollTop = top;
     };
