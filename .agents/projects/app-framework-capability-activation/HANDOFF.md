@@ -221,3 +221,40 @@ tests (`capability.test.ts`, 10 tests). Converted `edge-model-resolver.ts` as a 
 **State**: app-framework build + 203 tests green; plugin-assistant build green; full-repo build green;
 app-framework/plugin-assistant lint clean; `pnpm format` clean. Committed + pushed to
 `claude/resume-app-framework-activation-nfxu2u`, no PR requested.
+
+## RESUME (2026-07-22, later) — contribute rename + e2e/startup probe
+
+Continuation of the same branch `claude/resume-app-framework-activation-nfxu2u` (still NO PR; user
+standing instruction). This session was a live review of the branch diff; see TASKS.md "Sixth
+reopened addendum" for the itemized list + commit shas. Commit stack (newest first):
+
+- `de48d6e9` rename `Capability.provide`→`contribute`, `provideAll`→`contributeAll` (+ changeset)
+- `598ed778` remove legacy `Capability.contributes` raw builder
+- `5c430292` prefer `Capability.getAll` over `(yield* Tag).get()`
+- `fc56defd` prefer `Capability.atom` over `(yield* Tag).atom`
+- `05926eff` optional plugin options when `{} extends T` (`Plugin`/`Plugin.lazy`)
+- `fa838e3c` return a single contribution from single-provide modules (306-site sweep)
+- `e40c5147` allow a module to return a single contribution (type surface)
+- `bf27210b` remove the dead `Null` capability
+- (earlier: `760f6fa9`/`f84128b2`/… NSID-identifier migration — prior addenda)
+
+**Vocabulary end-state**: declare `provides:`/`requires:` (contract) → `contribute()`/`contributeAll()`
+in activate → `Contribution`/`Contributions`/`manager.contribute` (registry). `Provides*` type names
+kept. No legacy `contributes`. `PluginFactory<T>` param optional when all-optional/void.
+
+**Gate (per commit)**: full-repo build rc=0; app-framework 204 tests; full lint (298) + format clean.
+
+**OWED / OPEN — startup regression measurement not obtained.** User asked for startup regressions vs
+main. Could NOT run: this is a shallow clone with no `main` ref (only the two `claude/*` branches),
+and the session branch can't be switched. Absolute numbers here (cold `profilerTotal` ≈20–22s, STABLE
+across load 2.5→7.5 — so NOT contention, and NOT comparable to the ledger's ~5–7s: unknown baseline
+hardware + ~1mo main drift 399→434 modules). By mechanism no regression is expected (renames +
+runtime-equivalent changes; activated-module profile matches historical shape). To actually measure:
+same-container A/B — fetch main, build the merge-base's `composer-app:bundle` in a SEPARATE dir, run the
+cold startup spec with the Chromium-1194 executablePath pin, diff `profilerTotal` HEAD vs merge-base.
+
+**E2E note**: full suite 12/11/17 (pass/fail/skip) under load; all failures are timeouts/target-closed,
+none logic. `create document`/`re-order collections` pass in isolation; `comments/edit message` fails
+even isolated but the trace shows comments fully working (only the hover-gated `thread.message.edit`
+missing; sibling test annotated Flaky in CI). No wiring regression evident. Browser pin needed to run:
+`executablePath: /opt/pw-browsers/chromium-1194/chrome-linux/chrome`, env `DX_PWA=false`.

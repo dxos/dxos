@@ -417,3 +417,65 @@ regardless, so it doesn't meet the "reduce dependency" goal. Left as-is.
       element up adjacent to `return`; verified zero `return;`/lone-`return` regressions post-sweep.
 - [x] Gate: full-repo build rc=0 (zero `error TS`); app-framework 203 tests green; full-repo lint (298
       tasks) clean; `pnpm format` clean.
+
+## Sixth reopened addendum (2026-07-22) — API ergonomics review + contribute rename + e2e/startup probe
+
+Session driven by live PR-style review of the branch diff. All committed + pushed to
+`claude/resume-app-framework-activation-nfxu2u`; NO PR opened (standing instruction).
+
+- [x] **Optional single-contribution return** (`e40c5147`): a single-provide module may `return
+      Capability.contribute(...)` directly. Widened `ProvidesReturn` (single | array), `CoveredBy`
+      (added non-array arm), `makeModule` `TReturn`, `normalizeActivateResult` param. Runtime already
+      normalized single values. Tests added.
+- [x] **Optional plugin options** (`05926eff`): `PluginFactory<T>` param is optional when `{} extends
+      T` (all-optional or void); factory defaults omitted options to `{}`. Same overload-split applied
+      to `Plugin.lazy`. `CommentsPlugin()` no longer needs `{}`.
+- [x] **`Capability.atom` / `Capability.getAll` standardization** (`fc56defd`, `5c430292`): reverted 5
+      `(yield* Tag).atom` + 3 `(yield* Tag).get()` view-threading sites back to the helpers (user pref:
+      the helper reads cleaner; both resolve to the same manager atom/snapshot).
+- [x] **Removed legacy `Capability.contributes`** (`598ed778`): the raw-entry builder. Its portability
+      rationale is obsolete (`contribute` returns an NSID-branded portable `Contribution`). Migrated all
+      ~36 sites (modules + story/test fixtures) to `contribute`; the deprecated `withPluginManager`
+      `capabilities` option now takes `Contribution[]` and expands via `expandContributions`. Fixed the
+      introspect indexer, which had keyed off `contributes` and so indexed only a fraction of contributions.
+- [x] **Renamed `Capability.provide` → `contribute`, `provideAll` → `contributeAll`** (`de48d6e9`):
+      690 + 10 call sites + core defs + JSDoc + indexer constants; changeset added
+      (`.changeset/capability-contribute-rename.md`, `@dxos/app-framework: minor`). Declaration fields
+      `provides:`/`requires:` and the `Provides*`/`EnsureProvides` type names are intentionally KEPT —
+      the vocabulary now splits cleanly: declare with `provides:`/`requires:`, do with `contribute()`,
+      hold `Contribution`/`Contributions`/`manager.contribute`. Effect/Layer/ServiceResolver `provide`
+      untouched (token required a `(`; verified). Q3 (factor `CreateObjectEntry` into app-toolkit) was
+      investigated and DECLINED — layering-clean but doesn't reduce plugin-space coupling (real coupling
+      is `SpaceOperation.AddObject`; no consumer fully sheds plugin-space).
+- [x] Gate for every commit: full-repo build rc=0; app-framework 204 tests; full lint (298 tasks) +
+      `pnpm format` clean.
+
+### E2E + startup probe (NOT committed — investigation only)
+
+Ran composer-app e2e + startup benchmark in THIS container. Key artifacts were reverted (the
+harness auto-appended contention/env-confounded rows to `BENCHMARKS.md` — reverted; a throwaway
+`pw-local.config.ts` pinning the pre-installed Chromium build 1194 was deleted). Findings:
+
+- **Browser pin**: env's Chromium is build **1194** (`/opt/pw-browsers/chromium-1194/chrome-linux/chrome`)
+  but the project's Playwright wants 1200 → launch fails. Workaround: a config overriding
+  `use.launchOptions.executablePath` to the 1194 binary. Recreate this to re-run.
+- **E2E**: 12 passed / 11 failed / 17 skipped under load. ALL failures are timeouts / "target closed",
+  none logic assertions. Core capability flows PASS (create identity, space, collection, all startup
+  specs). Re-run in isolation: `create document` ✅ (48.5s), `re-order collections` ✅ (51.3s) — both
+  near the 60s cap. `comments/edit message` fails even isolated at 180s, but the trace screenshot shows
+  the comments feature fully working (thread + message rendered); only the hover-revealed
+  `thread.message.edit` control is absent (sibling "delete message" is annotated `Flaky in CI`). Read:
+  timeout-boundary + hover flakes on a slow box, NOT a wiring regression.
+- **Startup**: cold `profilerTotal` ≈ **20–22s**, STABLE across load 2.5→7.5 (so NOT contention-bound;
+  earlier contention hypothesis was wrong). Top cost = `observability.ClientReady` (~7.8s) +
+  `client.Client` (~5.9s) — network/IO modules, i.e. an environment-fixed cost, unrelated to the
+  changes. moduleCount 434 (vs 399 in the ledger's last row `391b48086b`, 2026-06-16 — that delta is
+  ~1mo of main additions, not this work).
+- **OPEN — the measurement the user actually asked for was NOT obtained**: a valid startup
+  regression number needs a SAME-CONTAINER A/B against the merge-base (the main commit this branch
+  forked from). Could not run: shallow clone, NO `main` ref present (only the two `claude/*` branches),
+  and the session branch can't be switched. To do it: `git fetch origin main` (confirm default-branch
+  name first), clone/checkout the merge-base into a SEPARATE dir, build + `moon run composer-app:bundle`,
+  run the cold startup spec with the 1194 browser pin, compare `profilerTotal` HEAD vs merge-base on the
+  same box. By mechanism no regression is expected (renames + runtime-equivalent changes), but this is
+  the empirical check still owed.
