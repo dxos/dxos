@@ -73,6 +73,12 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   widened `any` signatures, and non-null `!` are not fixes — fix the type at its
   source. `as const` is fine. See the `code-style` skill for the full rule and
   the pre-commit audit command.
+- **Never suppress unhandled errors to go green.** Do not set
+  `dangerouslyIgnoreUnhandledErrors` in any vitest config, and do not swallow
+  unhandled rejections — surface them and fix the root cause (a suppressed
+  teardown race hides real failures). Tolerate a specific known signature only
+  via a narrowly-scoped `onUnhandledError`, never a blanket ignore. Full rule →
+  `code-style` skill.
 - **New packages are private.** Every new package MUST set `"private": true` in
   `package.json`; it is removed manually only after a trusted publisher exists.
 - **Workspace deps use `workspace:*`.** Any in-repo `@dxos` package is added with
