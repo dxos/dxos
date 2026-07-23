@@ -6,6 +6,7 @@ import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
@@ -78,6 +79,7 @@ export default Capability.makeModule(
           update.transactions.forEach((transaction) => {
             transaction.effects.forEach((effect) => {
               if (effect.is(commentClickedEffect)) {
+                log('comment selected', { thread: effect.value });
                 // Select the clicked comment's thread (its id is the thread URI) AND reveal it: `reveal`
                 // makes the Select handler open the comments companion via a nested operation, which
                 // opens reliably where a top-level `invokePromise(UpdateCompanion)` from this listener
