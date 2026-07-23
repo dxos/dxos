@@ -118,10 +118,6 @@ export const createTypeSectionExtension = (
 
   const sectionExtension = GraphBuilder.createExtension({
     id: typename,
-    // Section objects are inline children of the section node, so this key/path govern them. A
-    // space-direct section (default match) sits at `root/<space>/<typename>`; a grouped section
-    // (custom match + `groupSegment`) sits at `root/<space>/<groupSegment>/<typename>`. Declare the
-    // matching static `path` either way for deterministic forward resolution.
     url: { key: urlKey, kind: 'item', path: options?.groupSegment ? [options.groupSegment, typename] : [typename] },
     match: options?.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {

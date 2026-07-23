@@ -10,9 +10,9 @@ import { log } from '@dxos/log';
 import { PlankSizing } from '#types';
 
 /**
- * Superset of the current on-disk deck shape that additionally accepts the fields the single-mode
- * deck redesign removed (`solo`, `initialized`, `fullscreen`, `companionOrientation`), so a
- * pre-migration blob decodes without error and its legacy fields can be detected and stripped.
+ * Superset of the current on-disk deck shape that additionally accepts fields absent from the current
+ * deck schema (`solo`, `initialized`, `fullscreen`, `companionOrientation`), so a pre-migration blob
+ * decodes without error and its legacy fields can be detected and stripped.
  */
 const LegacyDeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
@@ -40,7 +40,7 @@ type LegacyStoredDeckState = Schema.Schema.Type<typeof LegacyStoredDeckState>;
 
 const decodeLegacyState = Schema.decodeUnknownEither(LegacyStoredDeckState);
 
-/** Whether any field the single-mode deck redesign removed is still present. */
+/** Whether any field absent from the current deck schema is still present. */
 const hasLegacyFields = (state: LegacyStoredDeckState): boolean =>
   state.previousMode !== undefined ||
   Object.values(state.decks).some(
@@ -51,7 +51,7 @@ const hasLegacyFields = (state: LegacyStoredDeckState): boolean =>
       deck.companionOrientation !== undefined,
   );
 
-/** Strips the fields the redesign removed from a single legacy deck, promoting a solo plank to the front of `active`. */
+/** Strips fields absent from the current deck schema from a legacy deck, promoting a solo plank to the front of `active`. */
 const migrateDeck = ({
   solo,
   initialized: _initialized,

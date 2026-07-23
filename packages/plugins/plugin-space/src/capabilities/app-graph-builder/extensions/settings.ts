@@ -46,8 +46,6 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
   // id-less key can address only one fixed node — its terminal segment IS the key).
   const generalExtension = yield* GraphBuilder.createExtension({
     id: 'settingsGeneral',
-    // The space's general settings panel — "space settings" — addressed id-less as `settings`; the node
-    // segment matches the key (`root/<space>/settings/settings`).
     url: { key: 'settings', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
     connector: (space) =>
@@ -70,7 +68,6 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
 
   const membersExtension = yield* GraphBuilder.createExtension({
     id: 'settingsMembers',
-    // Fixed panel at `root/<space>/settings/members` (non-personal spaces only); id-less.
     url: { key: 'members', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
     connector: (space) =>

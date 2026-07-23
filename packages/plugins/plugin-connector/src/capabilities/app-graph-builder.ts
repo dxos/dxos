@@ -117,7 +117,6 @@ export default Capability.makeModule(
       // Separate listing extension so the graph reacts when connections are added or removed.
       GraphBuilder.createExtension({
         id: 'connectionsSection',
-        // Fixed node under the space settings section (`root/<space>/settings/connections`); id-less.
         url: { key: 'connections', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
         match: AppNodeMatcher.whenSpaceSettings,
         connector: (space) =>
@@ -213,7 +212,6 @@ export default Capability.makeModule(
       // Connection objects listed under the connections section node.
       GraphBuilder.createExtension({
         id: 'connectionListing',
-        // Connections live at `root/<space>/settings/connections/<connectionId>`.
         url: { key: 'connection', kind: 'item', path: [SETTINGS_SECTION_ID, CONNECTIONS_SECTION_ID] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;

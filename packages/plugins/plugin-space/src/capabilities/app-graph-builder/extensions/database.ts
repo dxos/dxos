@@ -80,8 +80,6 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
       id: 'database',
-      // A type node sits at `…/system/database/<typeSlug>`; the slug is data-dependent but fixed-depth,
-      // so it is the pair id under the `type` key rather than searched — restoring a type plank on reload.
       url: { key: 'type', kind: 'item', path: [Paths.GroupSegments.system, Paths.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -153,8 +151,6 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // {All} virtual node + view objects under each schema node.
     GraphBuilder.createExtension({
       id: 'schemaChildren',
-      // View objects sit at `…/system/database/<typeSlug>/<id>`; the type slug is data-dependent but of
-      // fixed depth, so it is encoded into the pair id (`view/<slug>+<id>`) rather than searched.
       url: { key: 'view', kind: 'item', path: [Paths.GroupSegments.system, Paths.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -197,8 +193,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // excludes them) so the two connectors never emit a node with the same id under the same parent.
     // The `db` key names the database subgraph — the generic key that guarantees every ECHO object a
     // URL (see the design's "Unmapped nodes"); `object` addresses the same object via the collection
-    // subgraph. The type-slug segment is data-dependent but fixed-depth, so it is encoded into the pair
-    // id (`db/<slug>+<id>`) via the shared `path` rather than searched.
+    // subgraph.
     GraphBuilder.createExtension({
       id: 'databaseObjects',
       url: { key: 'db', kind: 'item', path: [Paths.GroupSegments.system, Paths.Segments.database] },
@@ -215,7 +210,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const viewIndex = buildViewIndex(get, space, schemas);
 
         // Feed-only objects (e.g. games appended via Feed.append) are not in the Automerge graph;
-        // includeFeeds resolves them too — mirrors the removed `typeCollectionObject` resolver.
+        // includeFeeds resolves them too.
         const objects = get(
           space.db.query(Query.select(Filter.type(typeUri)).from(space.db, { includeFeeds: true })).atom,
         );

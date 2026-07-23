@@ -227,8 +227,6 @@ export default Capability.makeModule(
       // the surrounding conversation is looked up by `MessageArticle` when the message is opened.
       GraphBuilder.createExtension({
         id: 'mailboxMessages',
-        // Messages nest under their mailbox: `…/mailboxes/<mailboxId>/<messageId>`. The mailbox id is a
-        // fixed-depth data-dependent segment, so it is `+`-encoded into the pair id after this path.
         url: { key: 'message', kind: 'item', path: [Paths.GroupSegments.communications, getMailboxesSectionId()] },
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (mailbox, get) => {
@@ -301,14 +299,10 @@ export default Capability.makeModule(
       }),
 
       // Every event in a calendar's feed, plus its local draft events, as a hidden child of the
-      // calendar node — so `…/calendars/<calendarId>/<eventId>` resolves via the `event` key.
-      // Reinstates both the removed `createFeedObjectNodeExtension` (calendar variant) and the
-      // EID-keyed `eventObjectNode` resolver: both existed only to make an event reachable by id,
-      // which enumerating events as children now does uniformly for any deep-link shape.
+      // calendar node — so `…/calendars/<calendarId>/<eventId>` resolves via the `event` key for any
+      // deep-link shape.
       GraphBuilder.createExtension({
         id: 'calendarEvents',
-        // Events nest under their calendar: `…/<calendarTypename>/<calendarId>/<eventId>`. The calendar
-        // id is a fixed-depth data-dependent segment, so it is `+`-encoded into the pair id.
         url: { key: 'event', kind: 'item', path: [Paths.GroupSegments.communications, calendarTypename] },
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (calendar, get) => {

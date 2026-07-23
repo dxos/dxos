@@ -564,10 +564,8 @@ export const DeckPlanks = () => {
       const vpRect = viewport.getBoundingClientRect();
       const rects = tiles.map((tile) => tile.getBoundingClientRect());
       const folded = tiles.map((tile, index) => {
-        // In both piles a plank is covered on its right by the next plank (which stacks above it), so its
-        // spine is the sliver from its own left edge to the next plank's left edge. Fold once that sliver
-        // is narrow enough that the header no longer fits. The last plank has no cover, so use its own
-        // visible width. Reads the CSS-pinned rects only — no repositioning — so nothing lags the scroll.
+        // A plank's spine is the sliver from its left edge to the next plank's left edge (the last plank,
+        // uncovered, uses its own visible width); fold once that sliver is too narrow for the header.
         const rect = rects[index];
         const coverLeft = rects[index + 1]?.left ?? Math.min(rect.right, vpRect.right);
         const uncovered = coverLeft - rect.left;
@@ -620,10 +618,9 @@ export const DeckPlanks = () => {
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
   }, [isSliding, rendered.length, maxPlankWidthPx, getPlankTiles, attention]);
 
-  // Cap the plank width to the viewport so the current plank's trailing controls never hide behind the
-  // piled spines: reserve a spine (plus the stack gap) for every other plank, then subtract the stack
-  // padding. Recomputed as the viewport resizes (window, sidebar) so the bound tracks the screen size.
-  // A layout effect so the cap lands before first paint — no flash of full-width planks on load.
+  // Cap plank width to the viewport (reserving a spine + gap per other plank, minus stack padding) so
+  // the current plank's trailing controls stay clear of the piled spines. A layout effect so the cap
+  // lands before first paint — no flash of full-width planks on load.
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport || !isSliding) {

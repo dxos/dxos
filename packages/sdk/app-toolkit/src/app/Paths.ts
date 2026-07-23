@@ -167,9 +167,9 @@ export const getCollectionObjectPath = (collectionQualifiedId: string, objectId:
 /**
  * Structurally parse a qualified graph path into an ECHO EID: the SpaceId segment plus the trailing
  * EntityId-valid segment, regardless of what lies between them (a canonical database path, a
- * collection path, a custom type-section path, …). Ported from plugin-space's old generic
- * `NavigationPathResolver` so app-toolkit can do this parsing with no plugin dependency — used by
- * `NotFound.validateNavigationTarget` and `plugin-deck`'s DXN dedup. `graph` gates the result on the
+ * collection path, a custom type-section path, …). Lives in app-toolkit so this parsing has no plugin
+ * dependency — used by `NotFound.validateNavigationTarget` and `plugin-deck`'s DXN dedup. `graph` gates
+ * the result on the
  * path's workspace actually being a known node, so an arbitrary SpaceId-shaped substring in an
  * unrelated string can't be mistaken for a valid target.
  */

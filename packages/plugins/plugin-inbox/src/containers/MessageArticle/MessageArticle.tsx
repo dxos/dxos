@@ -69,7 +69,7 @@ export const MessageArticle = ({
 
   // When opened as its own plank the subject is a single message (an Echo object, so it gets the
   // standard object companions); look up its whole conversation from the mailbox feed here, correlated
-  // by threadId across space + feed (one combined query, matching the former companion connector).
+  // by threadId across space + feed (one combined query).
   // Array callers (sections) already pass the thread and skip the lookup.
   const singleMessage = Array.isArray(subject) ? undefined : subject;
   const mailboxDb = mailbox ? Obj.getDatabase(mailbox) : undefined;

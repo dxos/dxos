@@ -82,7 +82,6 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'categories',
-        // Category panels are direct children of the registry workspace (`root/<REGISTRY_ID>/<categoryId>`).
         url: { key: 'category', kind: 'item', path: [] },
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
@@ -183,7 +182,6 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'plugins',
-        // Plugin entries are direct children of the registry workspace (`root/<REGISTRY_ID>/<pluginKey>`).
         url: { key: 'registry', kind: 'item', path: [] },
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {

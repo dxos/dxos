@@ -69,8 +69,6 @@ export default Capability.makeModule(
       // "+ Publication" action on the section.
       GraphBuilder.createExtension({
         id: 'publicationNodes',
-        // Publications are branch planks at `root/<space>/content/<publications>/<pubId>`; their Posts
-        // nest one level deeper (the publication id is `+`-encoded into the pair id).
         url: { key: 'publication', kind: 'item', path: [Paths.GroupSegments.content, PUBLICATIONS_SEGMENT] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;

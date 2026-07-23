@@ -45,8 +45,6 @@ export default Capability.makeModule(
       // the node is absent and the button stays hidden.
       GraphBuilder.createExtension({
         id: 'pluginSpec',
-        // The spec hangs off a registry plugin entry (`root/<REGISTRY_ID>/<pluginKey>/spec`); the
-        // pluginKey is data-dependent but fixed-depth, so it is `+`-encoded into the pair id.
         url: { key: 'spec', kind: 'item', path: [] },
         match: NodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node, get) => {
@@ -103,8 +101,6 @@ export default Capability.makeModule(
       // Listing of CodeProjects under the section, each with Spec + Build sub-nodes.
       GraphBuilder.createExtension({
         id: 'codeProjectListing',
-        // CodeProjects are branch planks at `root/<space>/<codeProjects>/<projectId>`; their Spec and
-        // Build sub-nodes nest one level deeper (the project id is `+`-encoded into the pair id).
         url: { key: 'code', kind: 'item', path: [getCodeProjectsSectionId()] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;

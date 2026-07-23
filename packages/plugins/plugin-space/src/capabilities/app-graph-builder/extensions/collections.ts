@@ -99,9 +99,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Root collection objects under the Collections virtual node. Shares the `object` urlKey with the
     // nested-collection `objects` connector below so an object is addressed the same way wherever it
     // sits in the collection tree (the key names the *collection subgraph*, not the container's type;
-    // the database subgraph addresses the same object under `db`). Its shape is fixed
-    // (`root/<space>/content/collections/<id>`), so it declares a static `path` for deterministic
-    // forward resolution; the recursive `objects` connector below resolves dynamically instead.
+    // the database subgraph addresses the same object under `db`).
     GraphBuilder.createExtension({
       id: 'collections',
       url: { key: 'object', kind: 'item', path: [Paths.GroupSegments.content, Paths.Segments.collections] },

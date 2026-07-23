@@ -46,8 +46,6 @@ export default Capability.makeModule(
       // natural type folders under the Database section.
       GraphBuilder.createExtension({
         id: 'crmTypes',
-        // Type-collection nodes are planks at `root/<space>/crm/<typeSlug>`; address them under the `crm`
-        // key with the type slug as the id (`crm/<typeSlug>`).
         url: { key: 'crm', kind: 'item', path: [Paths.GroupSegments.crm] },
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.crm),
         connector: (space, get) => {
