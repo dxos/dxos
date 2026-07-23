@@ -34,7 +34,7 @@ A `minor` does **not** cascade the group to `1.0.0` (the tooling keeps standard 
 
 ## Body + format
 
-`.changeset/<slug>.md` (any unique slug). One or two sentences, **changelog quality** — the body ships verbatim in `CHANGELOG.md` (via `@changesets/changelog-github`), so write it from the **consumer's** point of view and end with a period.
+`.changeset/<slug>.md` (any unique slug). One or two sentences, **changelog quality** — the body ships verbatim in `CHANGELOG.md` (via `@changesets/changelog-git`), so write it from the **consumer's** point of view and end with a period.
 
 ```md
 ---
