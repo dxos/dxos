@@ -130,37 +130,33 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               )}
             </ActionRoot>
             {breadcrumbs && breadcrumbs.length > 0 ? (
-              // Flat mode: the navigation history plus the current plank as one Breadcrumb. Root grows to
-              // fill the toolbar (packing the trail + title left, controls right), and its trail links
-              // shrink far faster than the title (shrink-[999]) so breadcrumb labels truncate first.
-              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='min-w-0 grow shrink gap-1'>
-                <Breadcrumb.List>
+              // Flat mode: the navigation history plus the current plank as one Breadcrumb. The trail
+              // scrolls horizontally when it overflows (see the theme); the current plank stays the
+              // attention-aware Pane.Title, sized to its content so it keeps a stable width.
+              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-2'>
+                <Breadcrumb.List classNames='gap-1'>
                   {breadcrumbs.map((crumb) => (
-                    <Breadcrumb.ListItem key={crumb.id}>
-                      <Breadcrumb.Link asChild>
+                    <Fragment key={crumb.id}>
+                      <Breadcrumb.ListItem asChild>
                         <button
                           type='button'
-                          className='min-w-0 shrink-[999] truncate rounded-sm px-1 text-sm text-description hover:text-baseText'
+                          className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
                           onClick={() => onSelectBreadcrumb?.(crumb.id)}
                         >
                           {crumb.label}
                         </button>
-                      </Breadcrumb.Link>
+                      </Breadcrumb.ListItem>
                       <Breadcrumb.Separator />
-                    </Breadcrumb.ListItem>
+                    </Fragment>
                   ))}
                   <Breadcrumb.ListItem>
-                    <Breadcrumb.Current asChild>
-                      {/* The current plank stays the attention-aware Pane.Title; grow-0 so it keeps its
-                          content width and truncates only once the trail has collapsed. */}
-                      <Pane.Title
-                        attendableId={attendableId}
-                        related={related}
-                        classNames={[pending && 'text-description', 'grow-0 w-auto']}
-                      >
-                        {label}
-                      </Pane.Title>
-                    </Breadcrumb.Current>
+                    <Pane.Title
+                      attendableId={attendableId}
+                      related={related}
+                      classNames={[pending && 'text-description', 'w-auto grow-0']}
+                    >
+                      {label}
+                    </Pane.Title>
                   </Breadcrumb.ListItem>
                 </Breadcrumb.List>
               </Breadcrumb.Root>
