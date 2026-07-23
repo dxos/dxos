@@ -27,6 +27,7 @@ export default Capability.makeModule(
       const state = get(stateAtom);
       return {
         variant: 'storybook',
+        layoutMode: 'solo',
         fullscreen: false,
         dialogOpen: state.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',

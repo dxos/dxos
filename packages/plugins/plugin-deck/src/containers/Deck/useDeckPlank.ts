@@ -31,8 +31,6 @@ export type UseDeckPlankOptions = {
   id: string;
   /** Resolved part for the primary plank (`main` | `complementary`). */
   part: ResolvedPart;
-  /** Whether the deck currently shows a single active plank (fullbleed look). */
-  soloLook: boolean;
   /** Ordered active planks (multi mode); enables the increment affordances. */
   active?: string[];
 };
@@ -55,7 +53,7 @@ export type DeckPlank = {
  * dispatchers that mutate deck layout state. Companions are rendered as their own planks
  * ({@link CompanionPlank}), so this hook only handles ordinary content planks.
  */
-export const useDeckPlank = ({ id, part, soloLook, active }: UseDeckPlankOptions): DeckPlank => {
+export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPlank => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
   const { deck, state } = useDeckState();

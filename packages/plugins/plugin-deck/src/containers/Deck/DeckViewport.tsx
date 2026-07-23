@@ -191,7 +191,7 @@ const useRenderedPlanks = (): { rendered: string[]; companionId: string | undefi
  * resizable {@link Mosaic.Tile} whose committed width persists via `plankSizing`, full-viewport-width
  * and scroll-snapped below the `md` breakpoint. Reads the deck context directly since the Mosaic stack
  * renders tiles by id. Passes the real `deck.active` (not the rendered list) to {@link DeckPlank} so
- * ordering and the "open companion" affordance key off real planks, and `soloLook` off the rendered count.
+ * ordering, the "open companion" affordance, and the solo/multi mode all key off real planks.
  */
 const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const id = props.data;
@@ -203,7 +203,9 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { rendered } = useRenderedPlanks();
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
-  const soloLook = rendered.length === 1;
+  // Solo/multi is the underlying mode, keyed off the real active planks — an open companion renders a
+  // second tile but does not make a single-plank deck `multi`.
+  const soloLook = deck.active.length === 1;
   // Stacking (experiment): each plank is `position: sticky` on both edges (see the style below) so the
   // browser pins scrolled-past planks into the left pile and not-yet-reached planks into the right pile
   // natively — no per-frame JS repin, so the spines stay stable and opaque. The folded spine's sigil
@@ -370,7 +372,7 @@ const TilingDeck = ({
       {rendered.map((id, index) => (
         <Fragment key={id}>
           <div className='relative h-full min-w-0' style={{ flexGrow: applied[index], flexBasis: '0%' }}>
-            <DeckPlank id={id} part='main' active={active} soloLook={false} classNames='size-full' />
+            <DeckPlank id={id} part='main' active={active} soloLook={active.length === 1} classNames='size-full' />
           </div>
           {index < rendered.length - 1 && (
             <TilingSplitter

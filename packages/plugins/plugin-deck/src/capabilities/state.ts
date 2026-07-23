@@ -69,6 +69,7 @@ export default Capability.makeModule(
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
         variant: 'deck',
+        layoutMode: deck.active.length > 1 ? 'multi' : 'solo',
         fullscreen: !!ephemeral.fullscreen,
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',

@@ -59,7 +59,7 @@ export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   variant?: 'hide-disabled' | 'default';
   close?: boolean | 'minify-start' | 'minify-end';
   capabilities: PlankCapabilities;
-  /** Whether the deck currently shows a single active plank (fullbleed look). */
+  /** Whether the deck is in `solo` mode (a single active plank; companions excluded). */
   soloLook?: boolean;
   /** Whether this plank is currently displayed fullscreen. */
   fullscreen?: boolean;

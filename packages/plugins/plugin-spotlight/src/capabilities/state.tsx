@@ -25,6 +25,7 @@ export default Capability.makeModule(() =>
       const state = get(stateAtom);
       return {
         variant: 'spotlight',
+        layoutMode: 'solo',
         fullscreen: false,
         dialogOpen: state.dialogOpen,
         sidebarOpen: false,

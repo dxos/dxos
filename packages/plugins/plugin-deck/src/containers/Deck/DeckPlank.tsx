@@ -30,8 +30,8 @@ export type DeckPlankProps = ThemedClassName<{
   /** The real active planks (excludes the derived companion plank), for ordering/close semantics. */
   active?: string[];
   /**
-   * Whether the deck renders as a single fullbleed plank. Derived from the *rendered* plank count
-   * (which includes the companion) by the parent; defaults to the `active`-based heuristic.
+   * Whether the deck is in `solo` mode (a single active plank; companions excluded). Gates the
+   * fullscreen toggle and hides the increment/close controls. Defaults to the `active`-based heuristic.
    */
   soloLook?: boolean;
   path?: string[];
@@ -77,12 +77,11 @@ const DeckPlankInner = ({
   const { findFirstFocusable } = useFocusFinders();
   const { invokePromise } = useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
-  // A singleton (fullbleed) deck offers the manual fullscreen toggle and hides the increment/close
-  // controls. Derived from the rendered plank count by the parent (so an open companion counts);
-  // falls back to the real-plank heuristic.
+  // Solo mode (a single active plank) offers the manual fullscreen toggle and hides the increment/close
+  // controls; falls back to the real-plank heuristic when the parent passes no explicit value.
   const soloLook = soloLookProp ?? (active === undefined || active.length === 1);
   const { node, capabilities, sigilActions, popoverAnchorId, scrollIntoView, onAction, onAdjust, onScrollIntoView } =
-    useDeckPlank({ id, part, soloLook, active });
+    useDeckPlank({ id, part, active });
 
   // In flat mode only the current (last) plank renders; its predecessors in the stack become
   // breadcrumbs in the heading. Clicking one drops the planks after it (go back), reusing Close.

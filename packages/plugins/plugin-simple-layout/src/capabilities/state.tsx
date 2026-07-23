@@ -33,6 +33,8 @@ export default Capability.makeModule(({ initialState }: SimpleLayoutStateOptions
       const state = get(stateAtom);
       return {
         variant: 'simple',
+        // Simple layout shows a single pane, so it is always `solo`.
+        layoutMode: 'solo',
         fullscreen: false,
         dialogOpen: state.dialogOpen,
         sidebarOpen: false,

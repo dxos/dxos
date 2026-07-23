@@ -43,8 +43,20 @@ export const FileInfoSchema = Schema$.Struct({
 
 export type FileInfo = Schema$.Schema.Type<typeof FileInfoSchema>;
 
+/**
+ * Underlying deck-layout mode, derived from the number of active planks (companions excluded): `solo`
+ * for a single active plank, `multi` for more than one. The visual presentation (fullbleed / tiling /
+ * sliding) is a further derivation of this plus the companion and breakpoint — see the deck's
+ * `useDeckPresentation`.
+ */
+export type LayoutMode = 'solo' | 'multi';
+
 export type Layout = Readonly<{
   variant: string;
+  /**
+   * Whether a single plank (`solo`) or several (`multi`) are active — companions do not count.
+   */
+  layoutMode: LayoutMode;
   /**
    * Whether the active plank is displayed fullscreen (headless, no chrome).
    */
