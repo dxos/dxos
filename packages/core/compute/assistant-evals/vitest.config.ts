@@ -23,12 +23,13 @@ export default defineConfig({
   root: dirname,
   plugins: [PluginImportSource({ include: ['@dxos/**', '#*'] })],
   test: {
-    // evalite has no per-scenario timeout of its own (defaults to vitest's global
-    // `testTimeout`, 30s), and no way to override it per eval — `runner.ts`'s `createEvalRunner`
-    // owns per-scenario timeouts instead (default 60s, overridable via its `timeout` option), so
-    // most scenarios time out well before this fires. This is only the outer safety net: the
-    // longest per-eval timeout in use (150s, e.g. `crm-mailbox.eval.ts`) plus margin for harness
-    // teardown.
-    testTimeout: 240_000,
+    // evalite has no per-scenario timeout of its own, and no way to override this setting per
+    // eval file — `runner.ts`'s `createEvalRunner` owns per-scenario timeouts instead (default
+    // 60s, overridable via its `timeout` option), so most scenarios time out well before this
+    // fires. This is only the outer safety net: `Effect.timeoutFail`'s interrupt blocks until the
+    // timed-out fiber's finalizers (harness teardown, any in-flight tool call) actually settle, so
+    // the net must clear the longest per-eval timeout in use (150s, e.g. `crm-mailbox.eval.ts`)
+    // with room for that, not just equal it.
+    testTimeout: 180_000,
   },
 });
