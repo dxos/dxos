@@ -12,7 +12,7 @@ import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Text as EchoText, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
@@ -26,65 +26,21 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
-import { random } from '@dxos/random';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
-import { Branch } from '@dxos/versioning';
 
 import { CommentsPlugin } from '../../CommentsPlugin';
 import { textOf } from '../../should-trigger-agent';
+import { SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
 import { translations } from '../../translations';
 import { AgentIdentity, CommentCapabilities } from '../../types';
 
-random.seed(1);
-
-const STORY_AGENT_NAME = 'Kai';
-
-const SAMPLE_CONTENT = [
-  '# Sample',
-  '',
-  'This document has comment threads attached to it.',
-  '',
-  'Comments are anchored to ranges of text using an Effect schema relation, so they survive edits to the surrounding prose.',
-  '',
-  'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.',
-  '',
-  random.lorem.paragraphs(1),
-  '',
-  'Select text in the editor to add a new comment, or view existing threads in the companion.',
-  '',
-  random.lorem.paragraphs(1),
-  '',
-].join('\n');
-
-// Phrases in LARGE_CONTENT that the seeded comment threads are anchored to.
+// Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
-
-// Two story agents, each with a fixed synthetic DID so their authored suggestions are deterministic
-// (no LLM). Each proposes a different revision of the document; edits in distinct paragraphs diff as
-// separate reviewable cards. The companion labels each by its DID until agent-author resolution
-// lands (see the document-revisions tasks) but already tints each card's avatar with the author's
-// hue — the point of the variant is multiple agent-authored suggestions, colour-coded per author.
-const KAI_SUGGESTION = SAMPLE_CONTENT.replace(
-  'This document has comment threads attached to it.',
-  'This document has comment threads and inline suggestions attached to it.',
-).replace(
-  'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.',
-  'The companion renders each thread and suggestion on a shared virtual stack, mirroring the chat experience while keeping the editor in sync.',
-);
-const NOVA_SUGGESTION = SAMPLE_CONTENT.replace(
-  'Select text in the editor to add a new comment, or view existing threads in the companion.',
-  'Select text in the editor to add a comment, or open the companion to review threads and suggestions.',
-);
-/** Exported for reuse by `SuggestionSources.stories.tsx` (two deterministic synthetic-DID authors). */
-export const STORY_AGENTS = [
-  { did: 'did:agent:kai', name: STORY_AGENT_NAME, content: KAI_SUGGESTION },
-  { did: 'did:agent:nova', name: 'Nova', content: NOVA_SUGGESTION },
-];
 
 /**
  * Seed anchored comment threads over known phrases so the editor renders the
@@ -122,25 +78,6 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
         anchor,
       }),
     );
-  }
-};
-
-/**
- * Seed suggestions authored by agents — deterministic, no LLM. For each agent, opens its per-author
- * `kind:'suggestion'` branch (via {@link Branch.suggestion}) and edits the content to that agent's
- * proposed revision, so the companion overlays them against the base as agent-authored suggestion
- * cards (multiple authors, each colour-coded by its own hue).
- *
- * Exported for reuse by `SuggestionSources.stories.tsx`.
- */
-export const seedAgentSuggestions = async (doc: Markdown.Document, parent: Text.Text) => {
-  for (const agent of STORY_AGENTS) {
-    const branch = await Branch.suggestion(doc, parent, agent.did);
-    const binding = await Branch.bind(doc, branch);
-    Obj.update(binding.object, () => {
-      EchoText.update(binding.object, 'content', agent.content);
-    });
-    binding.dispose();
   }
 };
 
