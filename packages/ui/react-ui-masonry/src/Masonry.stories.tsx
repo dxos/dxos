@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
@@ -14,7 +14,17 @@ import { Masonry, type MasonryRootProps } from './Masonry';
 random.seed(1);
 
 /** Item counts the toolbar can switch between to exercise the layout under different loads. */
-const ITEM_COUNTS = [100, 200, 500] as const;
+const ITEM_COUNTS = [10, 100, 200, 500] as const;
+
+/** Fisher-Yates shuffle (seeded) so switching sets re-randomizes tile order. */
+const shuffle = <T,>(array: readonly T[]): T[] => {
+  const copy = [...array];
+  for (let index = copy.length - 1; index > 0; index--) {
+    const swap = random.number.int({ min: 0, max: index });
+    [copy[index], copy[swap]] = [copy[swap], copy[index]];
+  }
+  return copy;
+};
 
 type PersonData = {
   id: string;
@@ -81,25 +91,46 @@ const StoryItem = ({ data: person }: { data: PersonData }) => {
   );
 };
 
-// A slice of the generated people is rendered so the toolbar can switch the item count (bulk
-// render under load) and add/remove single tiles (the small-edit reflow animation).
+// A random subset of the generated people is rendered so the toolbar can switch the item count
+// (bulk render under load, re-shuffled each time) and add/remove single tiles (the small-edit
+// reflow animation).
 const DefaultStory = (props: MasonryRootProps) => {
-  const [limit, setLimit] = useState<number>(ITEM_COUNTS[0]);
-  const visible = useMemo(() => PEOPLE.slice(0, limit), [limit]);
+  const [visible, setVisible] = useState<PersonData[]>(() => shuffle(PEOPLE).slice(0, ITEM_COUNTS[0]));
+
+  const addOne = () =>
+    setVisible((current) => {
+      const shown = new Set(current.map((person) => person.id));
+      const candidates = PEOPLE.filter((person) => !shown.has(person.id));
+      if (candidates.length === 0) {
+        return current;
+      }
+      const person = candidates[random.number.int({ min: 0, max: candidates.length - 1 })];
+      const next = [...current];
+      next.splice(random.number.int({ min: 0, max: current.length }), 0, person);
+      return next;
+    });
+
+  const removeOne = () =>
+    setVisible((current) => {
+      if (current.length === 0) {
+        return current;
+      }
+      const index = random.number.int({ min: 0, max: current.length - 1 });
+      return current.filter((_, position) => position !== index);
+    });
 
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {ITEM_COUNTS.map((count) => (
-            <Toolbar.Button key={count} onClick={() => setLimit(count)}>
+            <Toolbar.Button key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
               {count}
             </Toolbar.Button>
           ))}
-          <Toolbar.Button onClick={() => setLimit((value) => Math.min(PEOPLE.length, value + 1))}>
-            Add one
-          </Toolbar.Button>
-          <Toolbar.Button onClick={() => setLimit((value) => Math.max(0, value - 1))}>Remove one</Toolbar.Button>
+          <Toolbar.Button onClick={addOne}>Add one</Toolbar.Button>
+          <Toolbar.Button onClick={removeOne}>Remove one</Toolbar.Button>
+          <Toolbar.Button onClick={() => setVisible([])}>Clear</Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
