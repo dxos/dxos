@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { PathResolution } from '@dxos/app-graph';
+import { GraphBuilder, PathResolution } from '@dxos/app-graph';
 import { AppCapabilities, LayoutOperation, NotFound, Paths, UrlPath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { EffectEx } from '@dxos/effect';
@@ -143,7 +143,9 @@ export default Capability.makeModule(
             if (pair.id === undefined) {
               return Effect.void;
             }
-            const entityId = pair.id;
+            // A static-path pair id is `<...pathSegments>+<objectId>`; the loader wants the bare object
+            // id (the final tail segment), else `EntityId.isValid` rejects the compound form.
+            const entityId = pair.id.slice(pair.id.lastIndexOf(GraphBuilder.TAIL_SEPARATOR) + 1);
             return Effect.forEach(loaders, (loader) =>
               loader.load({ spaceId: pair.workspace, entityId }).pipe(Effect.catchAll(() => Effect.succeed(false))),
             ).pipe(Effect.tap((results) => Effect.sync(() => (confirmed[index] = results.some(Boolean)))));

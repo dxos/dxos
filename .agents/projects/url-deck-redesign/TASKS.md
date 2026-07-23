@@ -1,10 +1,37 @@
 # URL & Deck Redesign — Tasks
 
-_Resume: Phases C+D plus the companion-width single-unit fix and the Tile size-prop re-sync fix are committed and pushed to PR #12273 (…655a35d7ee, e15aee02de, ec9c3df734). All browser-verified locally (companion width now sticks in both 2nd- and 3rd-plank positions). Uncommitted: none. Next: watch PR #12273 Check workflow; then the small deferred cleanups (delete dead useCompanionSplit + companionFrameSizing schema field; confirm a nested-collection object cold-load), then mark PR ready for review. Gotchas saved to memory: never import a DOM/UI package (@dxos/react-ui-attention) into worker-reachable modules (app-toolkit AppNode) — crashes the client dedicated worker; and `Mosaic.Tile` seeds size from the prop but must re-sync on prop change or a tile mounted without a size never applies it._
+_Resume: Cold-restore not-found for grouped planks (inbox mail/calendar, database type + db objects) fixed via debug-mode and browser-verified — about to commit to PR #12273 (three files: InboxPlugin activation event, database `type` url binding, url-handler loader compound-id extraction). Uncommitted: those three (formatted + lint-green). Next: commit this checkpoint; watch PR #12273 Check; then the small deferred cleanups (delete dead useCompanionSplit + companionFrameSizing schema field), then mark PR ready for review. Gotchas saved to memory: never import a DOM/UI package (@dxos/react-ui-attention) into worker-reachable modules (app-toolkit AppNode) — crashes the client dedicated worker; and `Mosaic.Tile` seeds size from the prop but must re-sync on prop change or a tile mounted without a size never applies it._
 
 ## Companion width position-dependence (debug-mode, fixed)
 
 Root cause (confirmed via `[DEBUG H4]` logs): `Mosaic.Tile` (`react-ui-mosaic/Tile.tsx`) seeded internal size with `useState(sizeProp)` and never re-synced. A companion opened as the 2nd plank rode the fullbleed→sliding branch switch (or a not-yet-settled breakpoint), so its tile first rendered with no size, locking `internalSize=undefined`; the later real `size` prop was ignored (`sized=false`, no `inlineSize`). As the 3rd plank it mounted directly into an already-sliding deck, so it worked. Fix: `useEffect(() => setInternalSize(sizeProp), [sizeProp])` — prop is the source of truth; a live drag only changes it on commit. Fix `ec9c3df734` + patch changeset for `@dxos/react-ui-mosaic`.
+
+## Cold-restore not-found for grouped planks (debug-mode, fixed)
+
+Reload of a mailbox/calendar/database-type/db-object plank fell to Not Found while collection
+documents restored fine. Diagnosed via debug-mode `[DEBUG H*]` logs across the resolve → open →
+represent path. Three independent causes, each fixed:
+
+- **Inbox `mail`/`calendar` keys absent at parse time** — plugin-inbox registered its `AppGraphBuilder`
+  on `allOf(SetupAppGraph, AttentionReady)`; `AttentionReady` fires _after_ the deck url-handler's
+  startup navigation, so the keys weren't in the key table yet → `UrlPath.parse` returns none (an
+  unregistered key makes the whole path unparseable) → not-found, before resolution ever runs. The
+  `AttentionReady` dep was stale (the companion-connector refactor removed all attention usage from
+  that builder). Fix: register on the default `allOf(SetupSettings, SetupAppGraph)` like crm/registry
+  (`InboxPlugin.tsx`). This was the sole cause for mail/calendar.
+- **Database type nodes had no url binding** — the `database` connector (SCHEMA_NODE_TYPE type nodes)
+  declared no `url`, so type planks couldn't be represented/restored. Fix: `url: { key: 'type', kind:
+'item', path: [system, database] }` (`database.ts`).
+- **Loader rejected compound `db` ids** — a static-path pair id is `<slug>+<objId>`; the
+  NavigationTargetLoader validated `EntityId.isValid(pair.id)` which fails on the compound form →
+  the pair was never `confirmed` → the retry loop skipped it → the hidden `db` object node hadn't
+  materialized on cold restore → not-found. Fix: url-handler passes the bare object id (final
+  `TAIL_SEPARATOR` segment) to the loader (`url-handler.ts`). `open.ts` unaffected (it derives the id
+  via `EID.getEntityId`, already bare).
+
+All three browser-verified (mail/calendar/type/db planks restore on reload). The earlier "immediate
+fallback" experiment in `resolveKeyId` was reverted — it targeted the resolution layer, but the bug
+was parse-time (and the confirmed-gated retry already covers "chain still loading").
 
 ## Phase C: Runtime fixes (manual-e2e findings)
 

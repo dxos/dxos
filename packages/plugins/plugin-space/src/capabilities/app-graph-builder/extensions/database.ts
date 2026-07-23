@@ -80,6 +80,9 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
       id: 'database',
+      // A type node sits at `…/system/database/<typeSlug>`; the slug is data-dependent but fixed-depth,
+      // so it is the pair id under the `type` key rather than searched — restoring a type plank on reload.
+      url: { key: 'type', kind: 'item', path: [Paths.GroupSegments.system, Paths.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === DATABASE_SECTION_TYPE && space ? Option.some(space) : Option.none();
