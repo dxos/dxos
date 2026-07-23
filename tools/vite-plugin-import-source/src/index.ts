@@ -29,7 +29,15 @@ const PluginImportSource = ({
   verbose = process.env.IMPORT_SOURCE_DEBUG === '1' || process.env.IMPORT_SOURCE_DEBUG === 'true',
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
-  let resolvedConfig: ResolvedConfig;
+
+  // Each `addWatchFile` below registers a per-file libuv `fs_event` watcher that Vite never
+  // releases on close. Under Vitest the Storybook builder runs in-process where neither
+  // `server.watch` nor an argv run-mode check is reliably set, so those watchers leak and hang
+  // single-pass `vitest run` teardown (the main process never exits). Vitest manages its own file
+  // watching, so skip registration entirely when running under it — `VITEST` is exported to the
+  // whole process tree (workers and child loaders included); interactive `storybook dev` / `vite
+  // dev` have `VITEST` unset and keep HMR.
+  const isVitest = process.env.VITEST === 'true';
 
   // `nocomment: true` keeps Minimatch from treating leading `#` (used for Node
   // subpath imports like `#diagnostics-broadcast`) as a comment pattern that
@@ -43,8 +51,6 @@ const PluginImportSource = ({
     name: 'plugin-import-source',
 
     configResolved: (config: ResolvedConfig) => {
-      resolvedConfig = config;
-
       // Get Vite's conditions and prepend 'source'.
       const viteConditions = config.resolve.conditions ?? [];
       const conditionNames = ['source', ...viteConditions];
@@ -99,11 +105,9 @@ const PluginImportSource = ({
             return null;
           }
 
-          // Each `addWatchFile` registers a per-file libuv `fs_event` watcher that Vite never
-          // releases on close, so single-pass `vitest run` teardown hangs on the retained handles;
-          // watching is pointless without an active watcher, so skip it when the file watcher is
-          // disabled (vitest nulls `server.watch` in run mode).
-          if (resolvedConfig.server.watch !== null) {
+          // See `isVitest` above: skip watch registration under Vitest to avoid leaking `fs_event`
+          // handles that hang teardown.
+          if (!isVitest) {
             if (resolved.packageJsonPath) {
               this.addWatchFile(resolved.packageJsonPath);
             }
