@@ -10,6 +10,7 @@ import { describe, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import * as Graph from './graph';
 import * as GraphBuilder from './graph-builder';
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
@@ -462,6 +463,48 @@ describe('path-resolution', () => {
     test('getAnchorKey returns the declared anchor key', ({ expect }) => {
       const builder = buildTestBuilder();
       expect(PathResolution.getAnchorKey(builder)).toBe('w');
+    });
+  });
+
+  describe('urlSegment stamping', () => {
+    test('stamps `/<key>/<id>` on a materialized item node', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'doc', id: 'docA', workspace: WORKSPACE_A }],
+        }),
+      );
+      const node = Option.getOrThrow(Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/docA`));
+      expect(node.properties.urlSegment).toBe('/doc/docA');
+    });
+
+    test('stamps `/<key>` on a materialized singleton node', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'home', workspace: WORKSPACE_A }],
+        }),
+      );
+      const node = Option.getOrThrow(Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/${HOME_SEGMENT}`));
+      expect(node.properties.urlSegment).toBe('/home');
+    });
+
+    test('encodes a fixed-depth tail into `/<key>/<seg>+<id>`', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [
+            { key: 'nested', id: `${SUBGROUP_ID}${GraphBuilder.TAIL_SEPARATOR}nestedDocA`, workspace: WORKSPACE_A },
+          ],
+        }),
+      );
+      const node = Option.getOrThrow(
+        Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA`),
+      );
+      expect(node.properties.urlSegment).toBe(`/nested/${SUBGROUP_ID}${GraphBuilder.TAIL_SEPARATOR}nestedDocA`);
     });
   });
 });

@@ -11,8 +11,6 @@ import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, type URI } from '@dxos/keys';
 
-import * as UrlPath from './UrlPath';
-
 /**
  * The URL prefix key for the workspace tier (`/w/<workspace>/…`). The canonical declaration: the
  * workspace-anchor graph extension declares its `url.key` from this, and serializers fall back to it
@@ -194,16 +192,20 @@ export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Op
  * `PathResolution.representNode` and formats it under the pair-chain grammar. Returns `Option.none()`
  * for a node with no key-declaring producer (unmapped — see `PathResolution.representNode`).
  */
-export const getShareableLinkPath = (builder: GraphBuilder.GraphBuilder, nodeId: string): Option.Option<string> =>
-  Option.map(PathResolution.representNode(builder, nodeId), (represented) =>
-    UrlPath.format({
-      workspace: represented.workspace,
-      // The declared workspace-anchor key; falls back to the canonical constant when no anchor extension
-      // is registered (e.g. a bare builder in a test).
-      workspaceKey: PathResolution.getAnchorKey(builder) ?? WORKSPACE_URL_KEY,
-      pairs: [represented],
-    }),
-  );
+export const getShareableLinkPath = (builder: GraphBuilder.GraphBuilder, nodeId: string): Option.Option<string> => {
+  // Compose the full link from the node's own stamped `urlSegment` (`/<key>[/<id>]`) plus the workspace
+  // prefix — the segment is the single source; `representNode` remains the multi-pair (deck) machinery.
+  const urlSegment: string | undefined = Option.getOrUndefined(Graph.getNode(builder.graph, nodeId))?.properties
+    ?.urlSegment;
+  const workspace = nodeId.split('/')[1];
+  if (!urlSegment || !workspace) {
+    return Option.none();
+  }
+  // The declared workspace-anchor key; falls back to the canonical constant when no anchor extension is
+  // registered (e.g. a bare builder in a test).
+  const workspaceKey = PathResolution.getAnchorKey(builder) ?? WORKSPACE_URL_KEY;
+  return Option.some(`/${workspaceKey}/${workspace}${urlSegment}`);
+};
 
 /**
  * Canonical qualified path to the custom type section node directly under a space.

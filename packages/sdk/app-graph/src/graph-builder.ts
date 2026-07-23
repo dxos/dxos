@@ -115,6 +115,71 @@ export type PathResolver = (params: PathResolveParams) => Effect.Effect<string |
 
 export type BuilderExtensions = BuilderExtension | BuilderExtension[] | BuilderExtensions[];
 
+/**
+ * Separator joining the fixed-depth node-id segments between a key's static `path` and the object id into
+ * a single URL id (e.g. a database object `…/database/<slug>/<id>` → `db/<slug>+<id>`), so a fixed-depth
+ * nested shape needs no resolver. Chosen because it never appears in an entity id or a type slug.
+ */
+export const TAIL_SEPARATOR = '+';
+
+/**
+ * The `(key, id?)` URL representation of a node under a given {@link UrlBinding} — the reverse of forward
+ * resolution, minus the workspace (always the node id's second segment). A singleton has no id; a
+ * resolver-backed key keeps just the object id; a static path encodes the segments between the path and
+ * the id, `+`-joined (empty when the node sits at the path — a container whose children are the items).
+ */
+export const urlRepresentation = (nodeId: string, url: UrlBinding): { key: string; id?: string } => {
+  if (url.kind === 'singleton') {
+    return { key: url.key };
+  }
+  const segments = nodeId.split('/');
+  const id =
+    typeof url.path === 'function'
+      ? segments[segments.length - 1]
+      : segments.slice(2 + url.path.length).join(TAIL_SEPARATOR);
+  return { key: url.key, id };
+};
+
+/**
+ * A node's own URL pair segment — `/<key>[/<id>]`, with no workspace/anchor prefix — or `undefined` when
+ * the node is not addressable in its own right (a container node sitting at the binding's `path`, whose
+ * children are the addressable items). A full URL is composed by prefixing `/w/<workspace>`.
+ */
+export const nodeUrlSegment = (nodeId: string, url: UrlBinding): string | undefined => {
+  const { key, id } = urlRepresentation(nodeId, url);
+  if (id === undefined) {
+    return `/${key}`; // singleton
+  }
+  return id === '' ? undefined : `/${key}/${id}`; // empty id: container at the path, not addressable
+};
+
+/**
+ * A graph node with its computed {@link nodeUrlSegment} attached at `properties.urlSegment` when the node
+ * is URL-addressable. The core {@link Node.Node} stays URL-agnostic; this is the typed view for reading
+ * the segment — an open properties record with an explicit `urlSegment` field — mirroring how
+ * `@dxos/react-ui-menu` wraps `Node` for menu items. The builder stamps binding-backed nodes; the
+ * companion segment (`/companion/<variant>`) is stamped by `@dxos/app-toolkit`'s `AppNode.makeCompanion`,
+ * since companion addressing lives outside the graph builder.
+ */
+export type BuilderNode<TData = any> = Node.Node<TData, { urlSegment?: string } & Record<string, any>>;
+
+/** Return a copy of `node` (and its inline descendants) with `properties.urlSegment` stamped from `url`. */
+const stampUrlSegment = (node: Node.NodeArg<any>, url: UrlBinding | undefined): Node.NodeArg<any> => {
+  if (!url) {
+    return node;
+  }
+  const segment = nodeUrlSegment(node.id, url);
+  const nodes = node.nodes?.map((child) => stampUrlSegment(child, url));
+  if (segment === undefined && !nodes) {
+    return node;
+  }
+  return {
+    ...node,
+    ...(segment !== undefined && { properties: { ...node.properties, urlSegment: segment } }),
+    ...(nodes && { nodes }),
+  };
+};
+
 //
 // GraphBuilder Core
 //
@@ -349,12 +414,18 @@ class GraphBuilderImpl implements GraphBuilder {
     const cancel = this._registry.subscribe(
       connectors,
       (entries) => {
-        const nodes = qualifyNodeArgs(id)(entries.map((entry) => entry.node));
+        const extensions = this.getExtensions();
+        // Stamp `properties.urlSegment` (`/<key>[/<id>]`) on each node produced by a `url`-bound extension
+        // — and its inline descendants, which share the binding — so the computed segment is readable off
+        // the node (see `BuilderNode`). Non-bound nodes (e.g. companions) pass through untouched; their
+        // segment is stamped by their own producer (`AppNode.makeCompanion`).
+        const nodes = qualifyNodeArgs(id)(entries.map((entry) => entry.node)).map((node, index) =>
+          stampUrlSegment(node, extensions[entries[index].extensionId]?.url),
+        );
         // Record provenance for each qualified node — top-level and inline descendants alike — so
-        // reverse (node → URL) mapping and the forward search can find the producing extension's
-        // `urlKey`. Inline children (e.g. a TypeSection's objects, returned in the section node's
-        // `nodes` array) are produced by the same extension, so they carry the same provenance;
-        // without this they would have no URL representation.
+        // reverse (node → URL) mapping can find the producing extension's `url` binding. Inline children
+        // (e.g. a TypeSection's objects, returned in the section node's `nodes` array) are produced by the
+        // same extension, so they carry the same provenance; without this they would have no URL representation.
         entries.forEach((entry, index) => {
           this._recordProvenance(nodes[index], entry.extensionId);
         });

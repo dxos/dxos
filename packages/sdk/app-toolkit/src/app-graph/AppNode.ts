@@ -19,6 +19,7 @@ import { type Position } from '@dxos/util';
 
 import { NotFound } from '../app';
 import { Translations } from '../app';
+import { UrlPath } from '../app';
 import { AppAnnotation } from '../echo';
 
 //
@@ -309,19 +310,25 @@ export const makeCompanion = <TData = string>({
   icon: string;
   data: TData;
   position?: Position.Position;
-}): Node.NodeArg<TData> => ({
+}): Node.NodeArg<TData> => {
   // Companion ids are always linked segments (`~<variant>`) so they share the plank's attention and are
   // uniformly addressable as `companion/<variant>` in the URL; normalize callers that pass a bare id.
-  id: toLinkedSegment(id),
-  type: PLANK_COMPANION_TYPE,
-  data,
-  properties: {
-    label,
-    icon,
-    disposition: 'hidden',
-    ...(position !== undefined && { position }),
-  },
-});
+  const variant = id.startsWith(LINKED_PREFIX) ? id.slice(LINKED_PREFIX.length) : id;
+  return {
+    id: toLinkedSegment(id),
+    type: PLANK_COMPANION_TYPE,
+    data,
+    properties: {
+      label,
+      icon,
+      disposition: 'hidden',
+      // Stamp the URL segment here (not in the graph builder): companion addressing is an app-toolkit
+      // concept, keyed generically as `companion/<variant>` rather than by an extension `url` binding.
+      urlSegment: `/${UrlPath.COMPANION_KEY}/${variant}`,
+      ...(position !== undefined && { position }),
+    },
+  };
+};
 
 /** Build a deck-level (workspace-wide) companion panel node. */
 export const makeDeckCompanion = <TData = any>({

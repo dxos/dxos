@@ -413,3 +413,19 @@ New helper `PathResolution.getAnchorKey(builder)` returns the declared anchor
 key; `UrlPath.ParsedUrl`/`format` carry `workspaceKey` so `parse ∘ format`
 round-trips. URL output is byte-identical (`getAnchorKey → 'w'`), so there is no
 migration.
+
+### Addendum (2026-07-22): `urlSegment` on nodes
+
+Graph-builder nodes now carry their computed URL pair as `properties.urlSegment`
+(`/<key>[/<id>]`, no workspace prefix), readable via the `GraphBuilder.BuilderNode`
+wrapper type (an open properties record with an explicit `urlSegment?: string`,
+mirroring react-ui-menu's node wrappers). Core `Node` stays URL-agnostic.
+
+- The builder stamps binding-backed nodes (and their inline children) during the
+  connector-materialization pass via `nodeUrlSegment(nodeId, url)` — the same
+  `urlRepresentation` derivation `representNode` uses, so there is one source.
+  Container nodes sitting at the binding's `path` (empty id) get no segment.
+- Companion nodes are stamped by `AppNode.makeCompanion` (`/companion/<variant>`),
+  keeping companion addressing in the app-toolkit layer, not the graph builder.
+- `Paths.getShareableLinkPath` composes the full link as `/w/<workspace>` +
+  `node.urlSegment`.

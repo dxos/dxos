@@ -54,13 +54,6 @@ const LINKED_PREFIX = '~';
  * preceding plank. Not registered by any extension; mirrored in `UrlPath`'s reserved-key set. */
 const COMPANION_KEY = 'companion';
 
-/**
- * Separator joining the node-id segments *between* a key's static `urlPath` and the object id into a
- * single URL id, so a fixed-depth nested shape (e.g. a database object `…/database/<slug>/<id>` →
- * `db/<slug>+<id>`) needs no resolver. Chosen because it never appears in an entity id or a type slug.
- */
-const TAIL_SEPARATOR = '+';
-
 /** Reserved words that can never be registered as a `urlKey`, duplicated from `UrlPath.isReservedKey`
  * (rather than imported) to keep app-graph free of an app-toolkit dependency. The workspace key (`w`) is
  * NOT reserved — it is a declared `kind: 'anchor'` binding (see the workspace-anchor extension). */
@@ -207,7 +200,7 @@ const resolveKeyId = async (
   id: string,
 ): Promise<string | null> => {
   // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
-  const idSegments = id.split(TAIL_SEPARATOR);
+  const idSegments = id.split(GraphBuilder.TAIL_SEPARATOR);
   for (const extension of extensions) {
     if (Array.isArray(extension.path)) {
       const resolved = await materializeCandidate(
@@ -355,23 +348,12 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
     return Option.none();
   }
   const url = builder.getExtensions()[extensionId]?.url;
-  const key = url?.key;
-  if (!url || !key) {
+  if (!url) {
     return Option.none();
   }
 
-  // Singleton (id-less, e.g. `home`): the key is the terminal segment, no id.
-  if (url.kind === 'singleton') {
-    return Option.some({ key, workspace });
-  }
-
-  // A resolver-backed key keeps the URL minimal — just the object id — because its ancestry is
-  // reconstructed at resolve time (nested collections, whose objects move). A static-path key encodes the
-  // node segments *between* its path and the id, `+`-joined, so a fixed-depth shape round-trips without a
-  // resolver (the inverse of `resolveKeyId`'s `id.split(TAIL_SEPARATOR)`).
-  if (typeof url.path === 'function') {
-    return Option.some({ key, id: lastSegment, workspace });
-  }
-  const id = segments.slice(2 + url.path.length).join(TAIL_SEPARATOR);
-  return Option.some({ key, id, workspace });
+  // The (key, id?) representation is derived from the node id + binding (a singleton has no id; a
+  // resolver-backed key keeps just the object id; a static path `+`-joins the segments after the path) —
+  // the same derivation the builder uses to stamp `urlSegment`.
+  return Option.some({ ...GraphBuilder.urlRepresentation(nodeId, url), workspace });
 };
