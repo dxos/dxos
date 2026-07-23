@@ -36,9 +36,31 @@ type PersonData = {
   notes?: string;
 };
 
+// A small fixed pool of inline (data-URI) images, cycled by index, so the bench is fully
+// self-contained — even the 500 preset issues zero network requests. Distinct hues keep cards varied.
+const IMAGE_POOL = [
+  '#e11d48',
+  '#db2777',
+  '#c026d3',
+  '#9333ea',
+  '#7c3aed',
+  '#4f46e5',
+  '#2563eb',
+  '#0891b2',
+  '#059669',
+  '#65a30d',
+  '#ca8a04',
+  '#ea580c',
+].map(
+  (color) =>
+    `data:image/svg+xml,${encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><rect width='256' height='256' fill='${color}'/></svg>`,
+    )}`,
+);
+
 // Generate plain (non-ECHO) data so even the largest preset mounts instantly — the masonry is a
 // pure layout component, so seeding a database would only add unrelated cost. Variable notes and a
-// distinct image per person make cards differ in height and exercise the column-balancing layout.
+// cycled image make cards differ in height and exercise the column-balancing layout.
 const createPeople = (count: number): PersonData[] =>
   Array.from({ length: count }, (_, index) => {
     const fullName = random.person.fullName();
@@ -51,7 +73,7 @@ const createPeople = (count: number): PersonData[] =>
       fullName,
       jobTitle: random.person.jobTitle(),
       department: random.commerce.department(),
-      image: `https://picsum.photos/seed/${random.string.uuid()}/256/256`,
+      image: IMAGE_POOL[index % IMAGE_POOL.length],
       emails: [
         { value: `${slug}@example.com` },
         ...(index % 3 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
