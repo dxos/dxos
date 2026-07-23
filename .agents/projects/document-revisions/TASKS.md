@@ -16,6 +16,15 @@ hiding all suggestions (incl. the user's own in-progress one). The edit stays on
 (decouple render from posture / viewing-shows-suggestions-readonly / keep-as-is). **Not changed overnight
 — user decides.**
 
+## Tracked follow-ups
+
+- [ ] **Root-cause the `Relation.getSource` mitigation (follow-up with Dima).** `threads.ts` `getAnchors`
+      now try/catches `Relation.getSource` (crash: "Relation source could not be resolved" when the query
+      surfaces a relation whose source proxy isn't yet resolved — e.g. a just-persisted comment). The real
+      fix belongs in the query layer (defer/await source resolution or expose a resolved flag) so callers
+      don't guard each `getSource`; then remove the try/catch. TODO(burdon) in
+      [`threads.ts`](../../../packages/plugins/plugin-comments/src/extensions/threads.ts).
+
 ## P0 REGRESSION (2026-07-23, reported) — "each keypress creates a new suggestion" in editing mode
 
 User: in Markdown mode (NOT suggesting) each keypress creates a new suggestion. **Static analysis:** only
