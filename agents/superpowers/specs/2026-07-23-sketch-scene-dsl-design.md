@@ -1,7 +1,16 @@
 # Sketch Scene DSL
 
-Status: draft (implementation in progress on `claude/sketch-diagram-dsl-abe69c`).
+Status: implemented on `claude/sketch-diagram-dsl-abe69c` (as-built record: `plugin-sketch/PLUGIN.mdl` F-8/T-7/T-8).
 Author: Claude (session with Rich), 2026-07-23.
+
+Verification note: unit + operation-level integration tests pass
+(`src/model/scene.test.ts`, `src/operations/operations.test.ts` — the latter runs
+the create → edit → read loop through the real Database layer). The live-AI
+storybook renders (chat + tldraw canvas, skill and sketch bound to context), but
+the end-to-end model round-trip could not be exercised from this environment: the
+pre-existing `Chat → Default` story exhibits the same symptom (submitted prompts
+never reach the thread; zero invocation events), so the blocker predates this
+change — run `Sketch → DrawAndUpdateTest` manually once the remote stack works.
 
 A backend-neutral mini-DSL that lets an agent create, edit, and delete diagrams
 in `plugin-sketch`. The agent thinks in terms of _world objects_ ("face",
@@ -217,10 +226,10 @@ Token counts summed from this session's transcript
 (`~/.claude/projects/…sketch-diagram-dsl-abe69c/*.jsonl`); cache figures are
 prompt-cache traffic, not billed like fresh input.
 
-|                    |                                     |
-| ------------------ | ----------------------------------- |
-| Start              | 2026-07-23 04:48 UTC                |
-| End                | in progress (updated at completion) |
-| Output tokens      | ~200k (snapshot 05:11 UTC)          |
-| Fresh input tokens | ~1k (+1.16M cache-write)            |
-| Cache-read tokens  | ~18.2M                              |
+|                    |                            |
+| ------------------ | -------------------------- |
+| Start              | 2026-07-23 04:48 UTC       |
+| End                | 2026-07-23 05:35 UTC       |
+| Output tokens      | ~349k                      |
+| Fresh input tokens | ~1.6k (+1.47M cache-write) |
+| Cache-read tokens  | ~82.6M                     |

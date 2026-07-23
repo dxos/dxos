@@ -138,12 +138,14 @@
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect/vitest": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
