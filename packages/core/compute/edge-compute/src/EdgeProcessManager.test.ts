@@ -9,6 +9,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { RemoteProcessManager } from '@dxos/compute-runtime';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 
@@ -27,7 +28,7 @@ describe('EdgeProcessManager', () => {
       yield* manager.cancel({ space, trigger });
     });
 
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       program.pipe(
         Effect.provide(EdgeProcessManager.fromEdgeClient(edgeClient)),
         Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
@@ -45,7 +46,7 @@ describe('EdgeProcessManager', () => {
       return { hasCancel: manager.cancel !== undefined, tree: yield* manager.processTree };
     });
 
-    const result = await Effect.runPromise(
+    const result = await EffectEx.runPromise(
       program.pipe(
         Effect.provide(EdgeProcessManager.layer),
         Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
