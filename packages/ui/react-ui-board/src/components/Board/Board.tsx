@@ -115,6 +115,8 @@ type BoardContextValue = {
   viewportRef: MutableRefObject<HTMLDivElement | null>;
   /** Anchor captured before an incremental zoom (consumed by the zoom-anchor animation). */
   pendingAnchor: MutableRefObject<{ x: number; y: number } | null>;
+  /** True while a zoom animation is in flight; the animation clears it when it settles. */
+  zooming: MutableRefObject<boolean>;
   /** Scroll the viewport to center the board, or a specific cell when its id is given. `smooth`
    * defaults to true; pass false to jump instantly (used for the flicker-free mount centering). */
   center: (cell?: string, smooth?: boolean) => void;
@@ -267,8 +269,11 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
     // Anchor (unscaled content point at the viewport centre) captured just before an incremental zoom.
     // Captured here — before `onZoomChange` shrinks the board — because on a zoom-out commit the browser
     // clamps scrollLeft to the smaller board, so an anchor read afterwards (in the zoom effect) would be
-    // taken from an already-shifted scroll and hold the wrong point.
+    // taken from an already-shifted scroll and hold the wrong point. `zooming` gates re-capture: while a
+    // zoom animation is in flight the live scroll is mid-transition, so a rapid second zoom must reuse
+    // the in-flight anchor rather than read the (still-moving) scroll.
     const pendingAnchorRef = useRef<{ x: number; y: number } | null>(null);
+    const zoomingRef = useRef(false);
 
     // Smooth scroll via rAF (instant per-frame assignment): the ScrollArea viewport ignores native
     // `scrollTo({ behavior: 'smooth' })`, so we animate the scroll ourselves.
@@ -385,12 +390,20 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
     }, [columns, rows, cellSizePx, gapPx, zoom, overscroll]);
 
     // Zoom stepping (clamped to [minZoom, 1]); the scale is controlled by the consumer via onZoomChange.
+    // Capture the anchor only when no zoom is in flight (a rapid second zoom reuses the in-flight anchor,
+    // since the live scroll is mid-animation); mark zooming so the animation-end handler can clear it.
     const zoomIn = useCallback(() => {
-      captureAnchor();
+      if (!zoomingRef.current) {
+        captureAnchor();
+      }
+      zoomingRef.current = true;
       onZoomChange?.(Math.min(1, Math.round((zoom + zoomStep) * 100) / 100));
     }, [captureAnchor, onZoomChange, zoom, zoomStep]);
     const zoomOut = useCallback(() => {
-      captureAnchor();
+      if (!zoomingRef.current) {
+        captureAnchor();
+      }
+      zoomingRef.current = true;
       onZoomChange?.(Math.max(minZoom, Math.round((zoom - zoomStep) * 100) / 100));
     }, [captureAnchor, onZoomChange, zoom, zoomStep, minZoom]);
 
@@ -537,6 +550,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         resizing={!!resizePreview}
         viewportRef={viewportRef}
         pendingAnchor={pendingAnchorRef}
+        zooming={zoomingRef}
         center={center}
         onAdd={readonly ? undefined : onAdd}
         onDelete={readonly ? undefined : onDelete}
@@ -614,7 +628,7 @@ const BOARD_CONTAINER_NAME = 'Board.Container';
 type BoardContainerProps = ThemedClassName<PropsWithChildren>;
 
 const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { viewportRef, pendingAnchor, center, resizing, zoom, selected, overscroll, layout, cellSize, gap } =
+  const { viewportRef, pendingAnchor, zooming, center, resizing, zoom, selected, overscroll, layout, cellSize, gap } =
     useBoardContext(BOARD_CONTAINER_NAME);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = composeRefs(localRef, viewportRef);
@@ -668,9 +682,8 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
       anchor = { x: sumX / ids.length, y: sumY / ids.length };
     } else if (pendingAnchor.current) {
       // An incremental zoom captured the pre-zoom centre before the board (and scroll) shrank — use it
-      // rather than the now-clamped scroll.
+      // rather than the now-clamped scroll. Kept (not cleared) so a rapid follow-up zoom reuses it.
       anchor = pendingAnchor.current;
-      pendingAnchor.current = null;
     } else {
       // Fallback (e.g. a programmatic zoom): hold whatever is currently at the viewport centre.
       anchor = viewportCenterAnchor({
@@ -723,6 +736,8 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
       if (t < 1) {
         frame = requestAnimationFrame(step);
       } else {
+        // Settled: allow the next zoom to re-capture the anchor from the (now-stable) scroll.
+        zooming.current = false;
         // The actual scroll reached, and the content point now at the viewport centre — compare with
         // `target` / `anchor` above to see whether the anchor held.
         const scrollAfter = { left: Math.round(element.scrollLeft), top: Math.round(element.scrollTop) };
