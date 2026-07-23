@@ -1003,22 +1003,38 @@ const BOARD_MAP_NAME = 'Board.Map';
 type BoardMapProps = ThemedClassName<{}>;
 
 const BoardMap = ({ classNames }: BoardMapProps) => {
-  const { layout, columns, rows, cellSize, gap, selected, viewportRef, zoom, overscrollPad } =
-    useBoardContext(BOARD_MAP_NAME);
+  const { layout, columns, rows, cellSize, gap, selected, viewportRef } = useBoardContext(BOARD_MAP_NAME);
   // Match the grid's pixel aspect (not the viewport's), and place tiles by their exact rects so the
   // map is a faithful scale model of the board.
   const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
   const tiles = useMemo(() => Object.entries(layout.items), [layout.items]);
 
-  // Track the scroll position and size of the viewport so the map can outline the visible region.
+  // The visible region as a fraction of the board, derived purely from live DOM geometry (the scaled
+  // board rect vs the viewport rect). Reading the actual transform each update keeps the outline exact
+  // even mid-zoom — deriving it from scroll + the React zoom would lag the animation (scroll moves per
+  // frame while zoom is already at its final value) and the outline would jump.
   const [view, setView] = useState({ left: 0, top: 0, width: 0, height: 0 });
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) {
       return;
     }
-    const update = () =>
-      setView({ left: el.scrollLeft, top: el.scrollTop, width: el.clientWidth, height: el.clientHeight });
+    const update = () => {
+      const boardEl = el.querySelector<HTMLElement>('[data-dx-board-viewport]');
+      if (!boardEl) {
+        return;
+      }
+      const vr = el.getBoundingClientRect();
+      const br = boardEl.getBoundingClientRect();
+      const scale = br.width / boardEl.offsetWidth || 1;
+      // Visible region in unscaled content coords, relative to the board's top-left.
+      setView({
+        left: (vr.left - br.left) / scale,
+        top: (vr.top - br.top) / scale,
+        width: vr.width / scale,
+        height: vr.height / scale,
+      });
+    };
     update();
     el.addEventListener('scroll', update, { passive: true });
     const observer = new ResizeObserver(update);
@@ -1029,20 +1045,11 @@ const BoardMap = ({ classNames }: BoardMapProps) => {
     };
   }, [viewportRef]);
 
-  // The visible region in unscaled content coords: undo the board's left/top pad (shared with the
-  // layout / scroll math) and the zoom scale so it maps onto the same coordinate space as the tile
-  // rects (percent of the board bounds).
-  const pad = boardPad({
-    viewport: { width: view.width, height: view.height },
-    board: bounds,
-    zoom,
-    overscroll: overscrollPad.x > 0 || overscrollPad.y > 0,
-  });
   const viewport = {
-    left: ((view.left - pad.x) / zoom / bounds.width) * 100,
-    top: ((view.top - pad.y) / zoom / bounds.height) * 100,
-    width: (view.width / zoom / bounds.width) * 100,
-    height: (view.height / zoom / bounds.height) * 100,
+    left: (view.left / bounds.width) * 100,
+    top: (view.top / bounds.height) * 100,
+    width: (view.width / bounds.width) * 100,
+    height: (view.height / bounds.height) * 100,
   };
 
   return (
