@@ -15,6 +15,13 @@
     from live board/viewport geometry. Wired into `plugin-board`'s `BoardArticle`
     as a corner overlay.
 
+- [ ] **Overscroll mount-centering shift** (CodeRabbit PR #12321)
+  - With `overscroll`, `overscrollPad` is populated by a passive effect that runs
+    *after* the mount `useLayoutEffect` centre, so the board shifts by half the
+    viewport on first paint. Fix: commit the padding (measure viewport) before the
+    one-shot instant centre, or re-centre once after padding initialises — keeping
+    it mount-only. Overscroll-story only.
+
 - [ ] **Margin button to add a row/column**
   - Add a control (edge affordance / toolbar button) to grow the board by a
     row or column, extending the grid extent (relates to the `margin` prop and
