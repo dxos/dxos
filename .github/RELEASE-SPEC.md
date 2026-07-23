@@ -36,7 +36,7 @@ Two fixed/lockstep groups plus deploy-only apps:
 - **`privatePackages: { version: true, tag: false }`** — version private group members (storybook, Composer) but never tag or publish them; deploy-only apps get no changeset, so never bump.
 - **`snapshot`** — the `@next` template (calculated base version + commit suffix, e.g. `0.10.0-next-<commit>`).
 - **`bumpVersionsWithWorkspaceProtocolOnly`** and **`onlyUpdatePeerDependentsWhenOutOfRange`** — part of the semver-cascade fix (below).
-- Otherwise standard: `@changesets/changelog-github`, `access: public`, `baseBranch: main`, `updateInternalDependencies: patch`.
+- Otherwise standard: `@changesets/changelog-git` (git-based, not GitHub API-based — `changelog-github` batches a GraphQL lookup across every unreleased changeset's commit in one query, which reliably timed out once the backlog grew past a few dozen changesets), `access: public`, `baseBranch: main`, `updateInternalDependencies: patch`.
 
 **Standard semver at every version.** At `0.x`, breaking rides the **minor** (`0.9.0 → 0.10.0`) and `major` is reserved for the deliberate `1.0.0` cut. A `minor` does **not** cascade the group to `1.0.0`. Bump-level rules live in the [authoring guide](../agents/instructions/changesets.md); the mechanism below is kept out of it.
 

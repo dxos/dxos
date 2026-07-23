@@ -60,7 +60,7 @@
     "vite-plugin-solid": "catalog:"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "catalog:",
+    "@changesets/changelog-git": "catalog:",
     "@changesets/cli": "catalog:",
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@cloudflare/workers-types": "catalog:",
