@@ -8,11 +8,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
-import { DraftMessage, type Message as MessageType } from '@dxos/types';
+import { DraftMessage, Message as MessageType } from '@dxos/types';
 
 import {
   type MessageHeaderProps,
@@ -25,7 +26,7 @@ import {
 import { InboxCapabilities, InboxOperation, Mailbox, type Settings } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
-import { orderThreadItems } from '../../util';
+import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
 
 /** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
 const DEFAULT_VIEW_MODE: ViewMode = 'html';
@@ -66,8 +67,31 @@ export const MessageArticle = ({
   const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
 
+  // When opened as its own plank the subject is a single message (an Echo object, so it gets the
+  // standard object companions); look up its whole conversation from the mailbox feed here, correlated
+  // by threadId across space + feed (one combined query, matching the former companion connector).
+  // Array callers (sections) already pass the thread and skip the lookup.
+  const singleMessage = Array.isArray(subject) ? undefined : subject;
+  const mailboxDb = mailbox ? Obj.getDatabase(mailbox) : undefined;
+  const feed = useResolveRef(mailbox?.feed);
+  const feedUri = feed ? Obj.getURI(feed, { prefer: 'absolute' }) : undefined;
+  const conversation = useQuery(
+    mailboxDb,
+    singleMessage && feedUri
+      ? Query.select(Filter.type(MessageType.Message, { threadId: singleMessage.threadId }))
+          .from([Scope.space(), Scope.feed(feedUri)])
+          .orderBy(Order.property('created', 'asc'))
+      : Query.select(Filter.nothing()),
+  ) as MessageType.Message[];
+
   // Normalize the singular-or-plural subject to a conversation (chronological, drafts interleaved).
-  const messages: MessageType.Message[] = Array.isArray(subject) ? subject : [subject];
+  const messages: MessageType.Message[] = useMemo(() => {
+    if (Array.isArray(subject)) {
+      return subject;
+    }
+    // Synced messages always pass; drafts pass only when scoped to this mailbox and not yet superseded.
+    return mailbox && conversation.length > 0 ? dedupeSupersededDrafts(conversation, Obj.getURI(mailbox)) : [subject];
+  }, [subject, mailbox, conversation]);
 
   // Reorder for display so a reply draft sits directly after the message it answers, rather than at the
   // bottom (the connector delivers everything in chronological order).
@@ -75,16 +99,18 @@ export const MessageArticle = ({
 
   const messageIds = useMemo(() => orderedMessages.map(keyOf), [orderedMessages]);
 
-  // The most recent non-draft message is the one worth reading first; expand it by default and leave
-  // the rest collapsed. Drafts always render their composer, so they are irrelevant to the anchor.
+  // The opened message (the plank's subject) is the one worth reading first; expand it by default and
+  // leave the rest of the thread collapsed. Array callers (no single subject) fall back to the most
+  // recent non-draft message. Drafts always render their composer, so they are irrelevant to the anchor.
   const mostRecentId = useMemo(() => {
     const recent = [...messages].reverse().find((message) => !DraftMessage.instanceOf(message));
     return recent ? keyOf(recent) : undefined;
   }, [messages]);
+  const openId = singleMessage ? keyOf(singleMessage) : mostRecentId;
 
   // Expanded state is owned here so the thread toolbar's collapse-all/expand-all can fold or unfold
-  // every message. Default: only the most recent message is expanded.
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(mostRecentId ? [mostRecentId] : []));
+  // every message. Default: only the opened message is expanded.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(openId ? [openId] : []));
   const handleExpandedChange = useCallback((id: string, isExpanded: boolean) => {
     setExpanded((prev) => {
       const next = new Set(prev);

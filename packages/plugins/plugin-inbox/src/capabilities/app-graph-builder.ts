@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -10,13 +9,11 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Feed, Filter, Obj, Order, Query, Scope, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
@@ -34,7 +31,7 @@ import {
   getSentId,
   getSubscriptionsId,
 } from '../paths';
-import { dedupeSupersededDrafts, syncTarget } from '../util';
+import { syncTarget } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -42,15 +39,6 @@ const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-    // Derive a single-mode selected id per context from the ViewStateManager selection slice.
-    const selectedId = Atom.family((nodeId: string) =>
-      Atom.make((get) => {
-        const selection = get(viewState.atom(selectionAspect, nodeId));
-        return selection.mode === 'single' ? selection.id : undefined;
-      }),
-    );
-
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'mailboxesSection',
@@ -207,8 +195,7 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'mailboxDraftsActions',
-        // Companion comes from `mailboxMessage` below; this only contributes "create draft", scoped to
-        // the Drafts view.
+        // Contributes "create draft", scoped to the Drafts view.
         match: (node) =>
           node.properties.systemTag === 'draft' && Mailbox.instanceOf(node.data)
             ? Option.some(node.data)
@@ -233,56 +220,11 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
-        id: 'mailboxMessage',
-        match: (node) =>
-          Mailbox.instanceOf(node.data) ? Option.some({ mailbox: node.data, nodeId: node.id }) : Option.none(),
-        connector: ({ mailbox, nodeId }, get) => {
-          const db = Obj.getDatabase(mailbox);
-          const feed = get(mailbox.feed.atom);
-          if (!db || !feed) {
-            return Effect.succeed([]);
-          }
-
-          const messageId = get(selectedId(nodeId));
-          const idFilter = messageId ? Filter.id(messageId) : Filter.nothing();
-          const fromFeed = get(db.query(Query.select(idFilter).from(feed)).atom)[0];
-          // Drafts live in the space db, not the feed; fall back to a db lookup (mirrors `calendarEvent`).
-          const fromDb = messageId ? get(db.query(Query.select(Filter.id(messageId))).atom)[0] : undefined;
-          const message = fromFeed ?? fromDb;
-
-          // Whole conversation for the companion, one combined-scope query (space + this mailbox's feed)
-          // correlated by threadId — two same-shape subscriptions here deadlock the connector's recompute.
-          const conversation = !message
-            ? []
-            : get(
-                db.query(
-                  Query.select(Filter.type(Message.Message, { threadId: message.threadId }))
-                    .from([Scope.space(), Scope.feed(Obj.getURI(feed, { prefer: 'absolute' }))])
-                    .orderBy(Order.property('created', 'asc')),
-                ).atom,
-              );
-
-          // Synced messages always pass; drafts pass only when scoped to this mailbox and not yet
-          // superseded by their sent copy in the feed. Deleting the superseded draft is deferred to
-          // sync (`reconcileDrafts`).
-          const thread = dedupeSupersededDrafts(conversation, Obj.getURI(mailbox));
-
-          return Effect.succeed([
-            AppNode.makeCompanion({
-              id: linkedSegment('message'),
-              label: ['message.label', { ns: meta.profile.key }],
-              icon: 'ph--envelope-open--regular',
-              data: thread.length > 0 ? thread : 'message',
-            }),
-          ]);
-        },
-      }),
-
-      // Every message in a mailbox's feed, plus its in-progress local drafts, as a hidden child of
-      // the mailbox node — so `…/mailboxes/<mailboxId>/<messageId>` resolves via the `message` key
-      // even though messages aren't otherwise enumerated in the nav tree. Reinstates the deep-link
-      // behavior of the removed `createFeedObjectNodeExtension` (mailbox variant) as a connector.
+      // Every message in a mailbox's feed, plus its in-progress local drafts, as a hidden child of the
+      // mailbox node — so `…/mailboxes/<mailboxId>/<messageId>` resolves via the `message` key even
+      // though messages aren't enumerated in the nav tree. Each node's data is the message Echo object
+      // itself (so it picks up the standard object companions — assistant, properties, info, debug);
+      // the surrounding conversation is looked up by `MessageArticle` when the message is opened.
       GraphBuilder.createExtension({
         id: 'mailboxMessages',
         // Messages nest under their mailbox: `…/mailboxes/<mailboxId>/<messageId>`. The mailbox id is a
@@ -297,7 +239,7 @@ export default Capability.makeModule(
           }
 
           const feedMessages = get(db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom);
-          // Drafts live in the space db, not the feed (mirrors `mailboxMessage` above).
+          // Drafts live in the space db, not the feed.
           const draftMessages = get(db.query(Filter.type(Message.Message)).atom).filter((message) =>
             DraftMessage.belongsTo(message, Obj.getURI(mailbox)),
           );
@@ -356,55 +298,6 @@ export default Capability.makeModule(
             typename: calendarTypename,
             targetNodeId: getCalendarsPath(space.db.spaceId),
           }),
-      }),
-
-      GraphBuilder.createExtension({
-        id: 'calendarEvent',
-        match: (node) =>
-          Calendar.instanceOf(node.data) ? Option.some({ calendar: node.data, nodeId: node.id }) : Option.none(),
-        connector: (matched, get) => {
-          const calendar = matched.calendar;
-          const db = Obj.getDatabase(calendar);
-          const feed = calendar.feed ? (get(calendar.feed.atom) as Feed.Feed | undefined) : undefined;
-          if (!db || !feed) {
-            return Effect.succeed([]);
-          }
-
-          const eventId = get(selectedId(matched.nodeId));
-          const fromFeed = get(
-            db.query(Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)).atom,
-          )[0];
-          // Draft events live in the space db (not the feed); fall back to a db lookup so the
-          // companion resolves a locally-created event too.
-          const fromDb = eventId ? get(db.query(Query.select(Filter.id(eventId))).atom)[0] : undefined;
-          const event = fromFeed ?? fromDb;
-          const nodes = [
-            AppNode.makeCompanion({
-              id: linkedSegment('event'),
-              label: ['event.label', { ns: meta.profile.key }],
-              icon: 'ph--calendar-dot--regular',
-              data: event ?? 'event',
-            }),
-          ];
-          if (event) {
-            // Produce an event-specific hidden node so graph extensions can attach
-            // `whenEchoType(Event.Event)` actions (e.g. plugin-meeting's "Create meeting")
-            // regardless of whether the event has been navigated to.
-            nodes.push(
-              Node.make({
-                id: linkedSegment(event.id),
-                type: Type.getTypename(Event.Event),
-                data: event,
-                properties: {
-                  label: event.title ?? ['event.label', { ns: meta.profile.key }],
-                  icon: 'ph--calendar-dot--regular',
-                  disposition: 'hidden',
-                },
-              }),
-            );
-          }
-          return Effect.succeed(nodes);
-        },
       }),
 
       // Every event in a calendar's feed, plus its local draft events, as a hidden child of the

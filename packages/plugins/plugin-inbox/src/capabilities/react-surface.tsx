@@ -84,19 +84,13 @@ export default Capability.makeModule(() =>
         ),
         component: ({ data, role }) => {
           const { graph } = useAppGraph();
-          const parentId = getParentId(data.attendableId);
-          const parent = useNode(graph, parentId);
-          const mailbox = parent?.properties.mailbox;
-          // companionTo is only present on Article data; Section renders without a companion.
-          const companionTo = (data as { companionTo?: Mailbox.Mailbox }).companionTo;
+          const parent = useNode(graph, getParentId(data.attendableId));
+          // A message lives under its mailbox view; every mailbox view carries the mailbox as its node
+          // `data`, so use that (not `properties.mailbox`, which only some views set) to scope the
+          // conversation lookup in MessageArticle.
+          const mailbox = Mailbox.instanceOf(parent?.data) ? parent.data : undefined;
           return (
-            <MessageArticle
-              role={role}
-              subject={data.subject}
-              attendableId={data.attendableId}
-              companionTo={companionTo}
-              mailbox={companionTo ? undefined : mailbox}
-            />
+            <MessageArticle role={role} subject={data.subject} attendableId={data.attendableId} mailbox={mailbox} />
           );
         },
       }),

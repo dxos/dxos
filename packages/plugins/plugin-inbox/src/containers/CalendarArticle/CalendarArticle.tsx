@@ -8,12 +8,12 @@ import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } 
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
   Menu,
@@ -30,7 +30,7 @@ import { EventStack, type EventStackActionHandler, useTargetConnection } from '#
 import { meta } from '#meta';
 import { Calendar, DraftEvent, InboxOperation, SystemTags } from '#types';
 
-import { getCalendarEventPath, getCalendarRangeSelectionId } from '../../paths';
+import { getCalendarRangeSelectionId } from '../../paths';
 import { InitializeCalendar } from './InitializeCalendar';
 
 const byDate =
@@ -43,7 +43,6 @@ export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calend
 export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
-  const showItem = useShowItem();
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
   const [calendar] = useObject(subject);
   const id = attendableId ?? Obj.getURI(calendar);
@@ -119,14 +118,16 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const handleNavigate = useCallback(
     (eventId: string) => {
       // Setting the current item updates `activeEvent`, which selects + scrolls the grid (effect below).
-      void showItem({
-        contextId: id,
-        selectionId: eventId,
-        companion: linkedSegment('event'),
-        path: db ? getCalendarEventPath(db.spaceId, calendar.id, eventId) : undefined,
+      void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: eventId } });
+      // Open the event as its own plank beside the calendar (add), never a companion.
+      void invokePromise(LayoutOperation.Open, {
+        subject: [`${id}/${eventId}`],
+        pivotId: id,
+        disposition: 'add',
+        navigation: 'immediate',
       });
     },
-    [db, id, calendar.id, showItem],
+    [id, invokePromise],
   );
 
   // The active event drives the grid's selection: set + scroll it once whenever the active event changes
