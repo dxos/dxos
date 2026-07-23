@@ -87,6 +87,9 @@ export const threads = (
         // `Relation.getSource` throws while ECHO is still resolving the source proxy (e.g. a
         // just-persisted comment relation, or during restore); skip such anchors until they resolve
         // rather than crash the query listener.
+        // TODO(burdon): Mitigation — the query surfaces relations whose source isn't yet resolved.
+        //   Fix at the source: have the query defer/await source resolution (or expose a resolved
+        //   flag) so callers don't guard each `getSource`; then remove this try/catch.
         try {
           const thread = Relation.getSource(anchor);
           return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
