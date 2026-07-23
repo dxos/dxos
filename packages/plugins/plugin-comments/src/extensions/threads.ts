@@ -84,8 +84,15 @@ export const threads = (
   const getAnchors = () =>
     query.results
       .filter((anchor) => {
-        const thread = Relation.getSource(anchor);
-        return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
+        // `Relation.getSource` throws while ECHO is still resolving the source proxy (e.g. a
+        // just-persisted comment relation, or during restore); skip such anchors until they resolve
+        // rather than crash the query listener.
+        try {
+          const thread = Relation.getSource(anchor);
+          return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
+        } catch {
+          return false;
+        }
       })
       .concat(registry.get(stateAtom).drafts[objectId] ?? [])
       .filter((anchor) => (anchor.branch ?? 'main') === (reviewBranch ?? 'main'));
