@@ -36,9 +36,13 @@ type PersonData = {
   notes?: string;
 };
 
+// A small fixed pool of image URLs, cycled by index, so even the 500 preset issues only a handful
+// of (cacheable) requests instead of one per person — keeping the bench fast and offline-friendly.
+const IMAGE_POOL = Array.from({ length: 12 }, (_, index) => `https://picsum.photos/seed/masonry-${index}/256/256`);
+
 // Generate plain (non-ECHO) data so even the largest preset mounts instantly — the masonry is a
 // pure layout component, so seeding a database would only add unrelated cost. Variable notes and a
-// distinct image per person make cards differ in height and exercise the column-balancing layout.
+// cycled image make cards differ in height and exercise the column-balancing layout.
 const createPeople = (count: number): PersonData[] =>
   Array.from({ length: count }, (_, index) => {
     const fullName = random.person.fullName();
@@ -51,7 +55,7 @@ const createPeople = (count: number): PersonData[] =>
       fullName,
       jobTitle: random.person.jobTitle(),
       department: random.commerce.department(),
-      image: `https://picsum.photos/seed/${random.string.uuid()}/256/256`,
+      image: IMAGE_POOL[index % IMAGE_POOL.length],
       emails: [
         { value: `${slug}@example.com` },
         ...(index % 3 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),

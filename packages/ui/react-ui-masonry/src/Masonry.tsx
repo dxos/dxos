@@ -22,7 +22,7 @@ import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/r
 import { composable, composableProps } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
-import { useFlip } from './useFlip';
+import { prefersReducedMotion, useFlip } from './useFlip';
 import { useMasonryLayout } from './useMasonryLayout';
 
 /** Reveal the grid once the layout has been stable for this long (the initial reflow has settled). */
@@ -233,7 +233,10 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
                 width: `${contentWidth}px`,
                 height: `${height}px`,
                 opacity: revealed ? 1 : 0,
-                transition: animate ? 'opacity 200ms cubic-bezier(0.2, 0, 0, 1)' : undefined,
+                // Hidden (not just transparent) before reveal so the settling tiles are neither
+                // focusable nor hit-testable; the opacity fade only runs when motion is allowed.
+                visibility: revealed ? 'visible' : 'hidden',
+                transition: animate && !prefersReducedMotion() ? 'opacity 200ms cubic-bezier(0.2, 0, 0, 1)' : undefined,
               },
             })}
             {...arrowNavigationAttrs}
