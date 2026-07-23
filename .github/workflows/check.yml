@@ -61,7 +61,7 @@ jobs:
           detached: true
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
         with:
           fetch-depth: 0
           lfs: true
@@ -143,7 +143,7 @@ jobs:
       TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
@@ -195,7 +195,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: vitest-report-${{ matrix.node-version }}
           path: test-results
@@ -240,7 +240,7 @@ jobs:
       TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
@@ -292,7 +292,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: vitest-report-storybook-${{ matrix.node-version }}
           path: test-results
@@ -337,7 +337,7 @@ jobs:
       TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
@@ -386,7 +386,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: vitest-report-workerd-${{ matrix.node-version }}
           path: test-results
@@ -422,7 +422,7 @@ jobs:
           detached: true
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
         with:
           fetch-depth: 0
           lfs: true
@@ -481,7 +481,7 @@ jobs:
           run: moon exec --on-failure continue :e2e --concurrency=1
 
       - name: Upload Traces
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         if: always()
         with:
           name: playwright-report
@@ -536,7 +536,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -548,7 +548,7 @@ jobs:
         run: node scripts/check-changeset.mjs
 
       - name: Post or remove reminder comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
         env:
           MISSING: ${{ steps.detect.outputs.missing }}
           PACKAGES: ${{ steps.detect.outputs.packages }}
