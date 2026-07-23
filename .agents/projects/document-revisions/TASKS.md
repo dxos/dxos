@@ -366,6 +366,10 @@ label:'view-mode.suggesting.label', reviewMode:'suggesting', order:3 }` — no p
       draft last (comment always in one list); plus dedupe the render by source thread id so the brief
       draft/persisted overlap shows once. build + 21 unit tests green. Visual confirmation needs the app
       (in-pane full-stack boot times out).
+- [x] **Change-bar gutter (draft) — DONE.** New shared `change-bar.ts`: a facet whose `enables` adds one
+      gutter, fed by both `trackChanges` (own edits) and `suggestions` (foreign authors), so a line
+      carrying a suggestion shows a vertical bar tinted with that author's colour (no double column).
+      Unit test added (307 ui-editor tests green).
 
 ## Future
 
