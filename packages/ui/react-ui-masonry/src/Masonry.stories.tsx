@@ -9,7 +9,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Button, Card } from '@dxos/react-ui';
+import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Person } from '@dxos/types';
@@ -48,22 +48,9 @@ const StoryItem = ({ data: person }: { data: Person.Person }) => {
   );
 };
 
+// A slice of the seeded people is rendered so the toolbar can exercise both paths: the
+// full set snaps in (bulk render), while adding or removing one card animates the reflow.
 const DefaultStory = (props: MasonryRootProps) => {
-  const { space } = useClientStory();
-  const people = useQuery(space?.db, Filter.type(Person.Person));
-
-  return (
-    <Masonry.Root {...props} Tile={StoryItem}>
-      <Masonry.Content>
-        <Masonry.Viewport items={people} getId={(person) => person.id} />
-      </Masonry.Content>
-    </Masonry.Root>
-  );
-};
-
-// Exercises the animate-only-on-small-edits behaviour: the full set snaps in (bulk),
-// while adding or removing one card animates the reflow.
-const InteractiveStory = (props: MasonryRootProps) => {
   const { space } = useClientStory();
   const people = useQuery(space?.db, Filter.type(Person.Person));
   // Undefined tracks the full set even as the async query resolves; a number pins a slice.
@@ -72,66 +59,71 @@ const InteractiveStory = (props: MasonryRootProps) => {
   const visible = useMemo(() => people.slice(0, shown), [people, shown]);
 
   return (
-    <div className='flex flex-col grow bs-full min-is-0'>
-      <div className='flex gap-2 p-2'>
-        <Button onClick={() => setLimit((value) => Math.min(people.length, (value ?? people.length) + 1))}>
-          Add one
-        </Button>
-        <Button onClick={() => setLimit((value) => Math.max(0, (value ?? people.length) - 1))}>Remove one</Button>
-        <Button onClick={() => setLimit(0)}>Clear</Button>
-        <Button onClick={() => setLimit(people.length)}>Show all</Button>
-      </div>
-      <div className='flex grow min-bs-0'>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={() => setLimit((value) => Math.min(people.length, (value ?? people.length) + 1))}>
+            Add one
+          </Toolbar.Button>
+          <Toolbar.Button onClick={() => setLimit((value) => Math.max(0, (value ?? people.length) - 1))}>
+            Remove one
+          </Toolbar.Button>
+          <Toolbar.Button onClick={() => setLimit(0)}>Clear</Toolbar.Button>
+          <Toolbar.Button onClick={() => setLimit(people.length)}>Show all</Toolbar.Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
         <Masonry.Root {...props} Tile={StoryItem}>
           <Masonry.Content>
             <Masonry.Viewport items={visible} getId={(person) => person.id} />
           </Masonry.Content>
         </Masonry.Root>
-      </div>
-    </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
+
+// Seed a space with `count` enriched people. Per-story (not on the meta) so each
+// variant gets an independently-sized dataset for exercising the layout under load.
+const withPeople = (count: number) =>
+  withClientProvider({
+    types: [Person.Person],
+    createIdentity: true,
+    createSpace: true,
+    onCreateSpace: async ({ space }) => {
+      const createObjects = createObjectFactory(space.db, generator);
+      const objects = await createObjects([{ type: Person.Person, count }]);
+
+      // The generator only populates fields with a GeneratorAnnotation and skips array fields;
+      // enrich each person (job data, distinct image, emails, variable-length notes) so cards vary
+      // in height and exercise the column-balancing layout.
+      objects
+        .filter((object): object is Person.Person => Obj.instanceOf(Person.Person, object))
+        .forEach((person, index) => {
+          Obj.update(person, (person: Obj.Mutable<Person.Person>) => {
+            person.jobTitle = random.person.jobTitle();
+            person.department = random.commerce.department();
+            person.image = `https://picsum.photos/seed/${random.string.uuid()}/256/256`;
+            const slug = (person.fullName ?? 'user')
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '.')
+              .replace(/^\.+|\.+$/g, '');
+            person.emails = [
+              { value: `${slug}@example.com` },
+              ...(index % 3 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
+            ];
+            if (index % 2 === 0) {
+              person.notes = random.lorem.sentences(random.number.int({ min: 1, max: 4 }));
+            }
+          });
+        });
+    },
+  });
 
 const meta = {
   title: 'ui/react-ui-masonry/Masonry',
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    withClientProvider({
-      types: [Person.Person],
-      createIdentity: true,
-      createSpace: true,
-      onCreateSpace: async ({ space }) => {
-        const createObjects = createObjectFactory(space.db, generator);
-        const objects = await createObjects([{ type: Person.Person, count: 36 }]);
-
-        // The generator only populates fields with a GeneratorAnnotation and skips array fields;
-        // enrich each person (job data, distinct image, emails, variable-length notes) so cards vary
-        // in height and exercise the column-balancing layout.
-        objects
-          .filter((object): object is Person.Person => Obj.instanceOf(Person.Person, object))
-          .forEach((person, index) => {
-            Obj.update(person, (person: Obj.Mutable<Person.Person>) => {
-              person.jobTitle = random.person.jobTitle();
-              person.department = random.commerce.department();
-              person.image = `https://picsum.photos/seed/${random.string.uuid()}/256/256`;
-              const slug = (person.fullName ?? 'user')
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '.')
-                .replace(/^\.+|\.+$/g, '');
-              person.emails = [
-                { value: `${slug}@example.com` },
-                ...(index % 3 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
-              ];
-              if (index % 2 === 0) {
-                person.notes = random.lorem.sentences(random.number.int({ min: 1, max: 4 }));
-              }
-            });
-          });
-      },
-    }),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
@@ -147,8 +139,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [withPeople(36)],
+};
 
-export const Interactive: Story = {
-  render: InteractiveStory,
+// Seeds 200 tiles to exercise the bulk-render path under load: with `animate` on, the
+// initial render must snap into place (not animate every tile), which the layout gate handles.
+export const Stress: Story = {
+  decorators: [withPeople(200)],
 };
