@@ -85,9 +85,24 @@ const Story = ({ breadcrumbs }: StoryArgs) => {
   // Synthetic ancestor chain (structural nodes carry no data); the ECHO object is the leaf.
   const trail = useMemo<Node.Node[]>(
     () => [
-      { id: 'root/registry', type: 'test', data: null, properties: { label: 'Plugins', icon: 'ph--squares-four--regular' } },
-      { id: 'root/registry/companies', type: 'test', data: null, properties: { label: 'Companies', icon: 'ph--buildings--regular' } },
-      { id: 'root/registry/companies/west-coast', type: 'test', data: null, properties: { label: 'West Coast Region', icon: 'ph--map-pin--regular' } },
+      {
+        id: 'root/registry',
+        type: 'test',
+        data: null,
+        properties: { label: 'Plugins', icon: 'ph--squares-four--regular' },
+      },
+      {
+        id: 'root/registry/companies',
+        type: 'test',
+        data: null,
+        properties: { label: 'Companies', icon: 'ph--buildings--regular' },
+      },
+      {
+        id: 'root/registry/companies/west-coast',
+        type: 'test',
+        data: null,
+        properties: { label: 'West Coast Region', icon: 'ph--map-pin--regular' },
+      },
       organizationNode,
     ],
     [organizationNode],
