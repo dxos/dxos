@@ -136,13 +136,15 @@ export const threads = (
             cursor: anchor.anchor,
           })),
       subscribe: (sink) => {
-        // Prime the initial decoration pass: the `comments()` ViewPlugin only calls `getComments` when
-        // the sink fires, and ECHO's `query.subscribe` does not emit for the already-resolved current
-        // value — so without an immediate `sink()` a query that resolved before mount never renders.
-        sink();
         // Subscribe to both query changes and store state changes.
         const unsubQuery = query.subscribe(sink);
         const unsubStore = registry.subscribe(stateAtom, sink);
+        // Prime the initial decoration pass AFTER subscribing: the `comments()` ViewPlugin only calls
+        // `getComments` when the sink fires, and ECHO's `query.subscribe` does not emit for the
+        // already-resolved current value — so without this a query that resolved before mount never
+        // renders. Must run after `query.subscribe` because `getComments` reads `query.results`, which
+        // throws unless the query has at least one subscriber.
+        sink();
         return () => {
           unsubQuery();
           unsubStore();

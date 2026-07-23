@@ -29,7 +29,6 @@ import {
   documentSlots,
   formattingKeymap,
   scrollCommentIntoView,
-  setSelection,
 } from '@dxos/ui-editor';
 import { type Comment } from '@dxos/ui-editor/types';
 
@@ -75,7 +74,13 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
         for (const transaction of update.transactions) {
           for (const effect of transaction.effects) {
             if (effect.is(commentClickedEffect)) {
-              update.view.dispatch({ effects: setSelection.of({ current: effect.value }) });
+              // Select the clicked thread via `scrollCommentIntoView`: it moves the caret INTO the comment
+              // range and marks it current, so the proximity tracker keeps it selected (a bare
+              // `setSelection({current})` is immediately overwritten by the tracker with `closest`, since
+              // `handleCommentClick` returns true and CodeMirror never places the caret in the range).
+              // Deferred: dispatching from within an update listener is disallowed by CodeMirror.
+              const current = effect.value;
+              queueMicrotask(() => scrollCommentIntoView(update.view, current));
             }
           }
         }

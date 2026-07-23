@@ -24,9 +24,18 @@ storybook DOM/console instrumentation:** the companion listed all threads but th
 the initial decoration pass. The `comments()` ViewPlugin (ui-editor) only calls `getComments` when the
 sink fires, and ECHO's `query.subscribe` does not emit for the already-resolved current value — so when
 the seed (or a real doc) resolved BEFORE mount, `getComments` was never called and no marks rendered.
-**Fix:** call `sink()` once immediately in `threads.ts` `subscribe` (matches the isolated
-`react-ui-editor/Comments` story's pattern). Verified in-browser: 3 marks / 3 `data-comment-id` / 3
-highlight rects render; `plugin-comments:test` 21✓, `ui-editor:test` 305✓.
+**Fix:** call `sink()` once in `threads.ts` `subscribe`, AFTER `query.subscribe(sink)` (subscribing
+calls `_start()` synchronously → `query.results` becomes readable; priming before it throws
+"Query must have at least 1 subscriber"). Verified in-browser: 3 marks / 3 `data-comment-id` / 3
+highlight rects render.
+
+**Follow-on (CI storybook check red):** the `ClickSelectsComment` play test I added failed — after
+`userEvent.click`, `data-current="1"` never set. Root cause: `handleCommentClick` returns `true`, so
+CodeMirror skips caret placement; the proximity tracker (`comments.ts` updateListener) then keeps
+resetting the selection to `{closest}` (caret not in range), clobbering `{current}`. Fix: the isolated
+story's click consumer now calls `scrollCommentIntoView(view, id)` (moves the caret INTO the range and
+marks current) instead of a bare `setSelection({current})`. Verified: `react-ui-editor:test-storybook`
+62✓ (incl. Comments 2✓), `plugin-comments:test` 21✓, lint clean.
 
 ## Tracked follow-ups
 
