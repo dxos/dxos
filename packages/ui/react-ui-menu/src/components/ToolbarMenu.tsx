@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import {
   Input,
@@ -56,21 +56,32 @@ export type ToolbarMenuActionProps = {
 const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: MenuAction }>) => {
   const { iconSize, onAction } = useMenuScoped('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
+  const [pending, setPending] = useState(false);
+  const pendingRef = useRef(false);
 
   const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames, spin } = action.properties;
   const buttonVariant = action.properties.variant === 'primary' ? ('primary' as const) : ('ghost' as const);
 
   const handleClick = useCallback(() => {
+    if (pendingRef.current) {
+      return;
+    }
+    pendingRef.current = true;
+    setPending(true);
+    const done = () => {
+      pendingRef.current = false;
+      setPending(false);
+    };
     if (onAction) {
-      onAction(action, {});
+      Promise.resolve(onAction(action, {})).then(done, done);
     } else {
-      void executeMenuAction(action);
+      executeMenuAction(action).then(done, done);
     }
   }, [action, onAction]);
 
   const commonProps = {
     variant: buttonVariant,
-    disabled,
+    disabled: disabled || pending,
     classNames,
     onClick: handleClick,
     ...(testId && { 'data-testid': testId }),

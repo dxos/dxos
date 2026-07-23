@@ -68,10 +68,6 @@ export const translations = [
         'sync-calendar.label': 'Sync calendar',
         'empty-calendar.message': 'Calendar empty',
 
-        'sync-contacts.label': 'Sync contacts',
-        'sync-contacts-error.title': 'Failed to sync contacts',
-        'sync-contacts-success.title': 'Contacts sync complete',
-
         'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
         'mailbox-account.label': 'Account',
