@@ -227,6 +227,11 @@ jobs:
           lfs: true
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
+      # Install first: the validate step below runs apps.mjs, which imports json5 (parsing wrangler.jsonc),
+      # so dependencies must be resolvable before any script runs.
+      - name: Setup
+        uses: ./.github/actions/setup
+
       # Catches e.g. `app=storybook-react` on an environment it doesn't define (no env.staging/labs) —
       # before this existed, bundle-env.mjs/deploy-env.mjs silently no-op'd and the job still went green
       # with a false "deploying"/"succeeded" Discord ping despite deploying nothing. Runs before the
@@ -270,9 +275,6 @@ jobs:
           DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
-
-      - name: Setup
-        uses: ./.github/actions/setup
 
       # Reuse the prebuilt Composer bundle when the prep job produced one — populating out/composer means
       # bundle-env.mjs reuses it instead of rebuilding.
