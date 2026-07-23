@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -87,8 +87,17 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     // The client/space take a moment to initialize (identity creation, etc.), well past
-    // testing-library's default 1s `findBy*` timeout — mirrors the explicit timeouts other
-    // ECHO-backed stories use (e.g. plugin-kanban/KanbanArticle.stories.tsx).
-    void expect(await canvas.findByText('Post body.', undefined, { timeout: 10_000 })).toBeVisible();
+    // testing-library's default 1s `findBy*` timeout. Re-query and check visibility together
+    // inside `waitFor`: StrictMode double-mounts the body editor, so a bare `findByText` can
+    // resolve on the first CodeMirror instance right before it is detached, failing
+    // `toBeVisible` with "element is not in the document". Retrying as a unit lands on the
+    // live editor. Mirrors plugin-magazine/MagazineArticle.stories.tsx.
+    await waitFor(
+      async () => {
+        const body = await canvas.findByText('Post body.');
+        await expect(body).toBeVisible();
+      },
+      { timeout: 10_000 },
+    );
   },
 };
