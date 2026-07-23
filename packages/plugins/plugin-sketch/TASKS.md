@@ -1,6 +1,6 @@
 # plugin-sketch — Tasks
 
-_Resume: open a PR for `claude/sketch-diagram-dsl-abe69c` (submit-pr skill). Uncommitted: none. Last: trace-panel column added to the sketch story; live loop verified end-to-end (face → hat, face untouched)._
+_Resume: PR #12324 open — watch Check to green and respond to review. Uncommitted: none. Last: changeset added, origin/main merged, plugin-stack import fixed._
 
 ## Phase 1: Scene DSL (agent draws/edits diagrams)
 
@@ -23,7 +23,7 @@ read/edit operations and the `org.dxos.skill.sketch` skill. Design:
 
 ## Phase 2 (future)
 
-- [ ] **Open PR** for `claude/sketch-diagram-dsl-abe69c` (needs changeset check — new operations/skill are consumer-relevant).
+- [x] **Open PR** — #12324 (changeset `sketch-scene-dsl.md`, minor bump for @dxos/plugin-sketch).
 - [ ] **Excalidraw backend** — second compiler `Scene → ExcalidrawElementSkeleton`.
 - [ ] **Dialects** — `mermaid` / `d2` / `sequence` / `uml-class` compilers → scene commands (auto-layout owned per dialect).
 - [ ] **`rename-object` command** (D2 Oracle Rename: rewrite record ids + meta + bindings) and object re-`scale`.

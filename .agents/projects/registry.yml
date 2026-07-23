@@ -14,8 +14,8 @@ projects:
     summary: Backend-neutral scene DSL so the agent can draw/edit sketches (world objects by id); tldraw backend, read/edit operations, sketch skill, live-AI storybook.
     tasks: packages/plugins/plugin-sketch/TASKS.md
     design: agents/superpowers/specs/2026-07-23-sketch-scene-dsl-design.md
-    prs: []
-    resume: 'Phase 1 complete and live-verified (face -> hat on untouched face; Reflection story first). All committed on claude/sketch-diagram-dsl-abe69c. Next: open PR (submit-pr skill; add changeset for plugin-sketch operations/skill).'
+    prs: [12324]
+    resume: 'PR #12324 open (scene DSL + operations + skill + live-AI storybook; changeset added; merged origin/main). Next: watch Check to green, respond to review comments; then Phase 2 backlog (excalidraw backend, dialects).'
 
   - name: mailbox-research
     status: active
