@@ -42,6 +42,15 @@ describe('trackChanges', () => {
     view.destroy();
   });
 
+  test('a changed line renders a gutter change-bar in the author colour', ({ expect }) => {
+    // Branch inserts " extra" on the first line → that line gets a change-bar; an unchanged line does not.
+    const view = mount('alpha extra\nbravo\ncharlie');
+    const bars = view.dom.querySelectorAll<HTMLElement>('.cm-change-bar');
+    expect(bars.length).toBe(1);
+    expect(bars[0].style.background).toBe('var(--dx-accent)');
+    view.destroy();
+  });
+
   test('the phantom restore control re-instates that specific deletion (out of edit order)', ({ expect }) => {
     // The branch removed the middle line "bravo\n" (a phantom). Unlike undo, the restore control targets
     // THIS deletion regardless of later edits: clicking it splices the removed text back and clears it.
