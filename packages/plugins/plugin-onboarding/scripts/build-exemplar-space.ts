@@ -41,11 +41,25 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Annotation, Collection, DXN, EID, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import {
+  Annotation,
+  Collection,
+  DXN,
+  EID,
+  Feed,
+  Filter,
+  JsonSchema,
+  Obj,
+  Query,
+  Ref,
+  Tag,
+  Type,
+  View,
+} from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format, FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { Calendar, Mailbox } from '@dxos/plugin-inbox';
+import { Calendar, Mailbox, SystemTags } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Map as MapView } from '@dxos/plugin-map';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -53,7 +67,7 @@ import { Sheet } from '@dxos/plugin-sheet';
 import { Sketch } from '@dxos/plugin-sketch';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Table } from '@dxos/react-ui-table/types';
-import { ViewModel } from '@dxos/schema';
+import { TagIndex, Tagging, ViewModel } from '@dxos/schema';
 import { Actor, ContentBlock, Event, Message, Organization, Person, Project, Task } from '@dxos/types';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -114,6 +128,8 @@ const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
 const SCHEMAS: Type.AnyEntity[] = [
   Collection.Collection,
   Feed.Feed,
+  Tag.Tag,
+  TagIndex.TagIndex,
   Markdown.Document,
   Person.Person,
   Organization.Organization,
@@ -148,6 +164,21 @@ const daysFromNow = (days: number, hours = 9): string => daysAgo(-days, hours);
 const textBlock = (text: string): ContentBlock.Text => ({ _tag: 'text', text }) satisfies ContentBlock.Text;
 
 const actor = (name: string, email: string): Actor.Actor => ({ role: 'user', name, email });
+
+// Strip any run of leading reply/forward prefixes ("Re:", "Fwd:") so replies share their root's
+// thread key. Case-insensitive; collapses surrounding whitespace.
+const normalizeSubject = (subject: string): string => subject.replace(/^(\s*(re|fwd?):\s*)+/i, '').trim();
+
+// Deterministic, human-readable thread id from a normalized subject — keeps the 1-line JSON diff
+// legible on regeneration (Gmail uses opaque hex ids; any stable string works for grouping).
+const threadSlug = (normalizedSubject: string): string =>
+  // NFKD splits accented letters into base + combining mark; the non-alphanumeric replace then drops
+  // the marks, so "Fotos del beneficio" and "Café" slugify cleanly without a separate diacritics pass.
+  normalizedSubject
+    .normalize('NFKD')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase() || 'thread';
 
 //
 // Space population
@@ -184,6 +215,7 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   // Inbox ------------------------------------------------------------------
   const { mailbox, messages } = makeMailbox(people);
   space.db.add(mailbox);
+  await tagMailboxMessages(space, mailbox, messages);
 
   // Calendar ---------------------------------------------------------------
   const { calendar, events } = makeCalendar(people, organizations);
@@ -340,6 +372,11 @@ type PeopleBundle = {
 
 type PersonKey = 'kai' | 'diego' | 'sam' | 'riley' | 'carmen' | 'abel' | 'jordan' | 'priya' | 'mateo';
 
+// The exemplar's main character — the mailbox's primary user. Mail this person authored is tagged
+// `sent`; everything else is received into the shared team inbox. Kai (co-founder / head roaster)
+// anchors the Spring Blend narrative, so her outbox reads as the natural protagonist's.
+const MAIN_CHARACTER: PersonKey = 'kai';
+
 const PEOPLE_SEEDS: Array<{
   key: PersonKey;
   fullName: string;
@@ -472,12 +509,15 @@ const makeMailbox = (
 ): { mailbox: Mailbox.Mailbox; messages: Message.Message[] } => {
   const mailbox = Mailbox.make({ name: 'Inbox' });
 
-  // Build emails as a chronological list — oldest first. Numbers are days-ago.
+  // Build emails as a chronological list — oldest first. Numbers are days-ago. `to` names the
+  // recipient(s); replies reuse the root's subject with a "Re:" prefix so subject-based threading
+  // (see below) collapses them into one conversation.
   type Email = {
     from: PersonKey | 'noise';
     subject: string;
     body: string;
     daysAgo: number;
+    to: string;
     senderOverride?: Actor.Actor;
   };
   const peopleSeedByKey = Object.fromEntries(PEOPLE_SEEDS.map((seed) => [seed.key, seed])) as Record<
@@ -491,35 +531,43 @@ const makeMailbox = (
     }
     return actor(seed.fullName, seed.email);
   };
+  // Render an RFC-style recipient header ("Kai Chen <kai@bramblecoffee.com>, …") from person keys.
+  const toAddr = (...keys: PersonKey[]): string =>
+    keys.map((key) => `${peopleSeedByKey[key].fullName} <${peopleSeedByKey[key].email}>`).join(', ');
 
   const emails: Email[] = [
     {
       from: 'carmen',
       daysAgo: 41,
+      to: toAddr('diego'),
       subject: 'Hola Diego — Q2 harvest update from Esperanza',
       body: 'Hola Diego, the cherries are coming in heavier than last year. Brix is good. I think we will have your full lot ready for shipment in 5–6 weeks. Will send photos next week. Saludos, Carmen',
     },
     {
       from: 'diego',
       daysAgo: 40,
+      to: toAddr('carmen'),
       subject: 'Re: Hola Diego — Q2 harvest update from Esperanza',
       body: 'Carmen — that is great news. I will plan around a mid-June arrival. Let me know if you need anything from us before then. — Diego',
     },
     {
       from: 'abel',
       daysAgo: 38,
+      to: toAddr('diego'),
       subject: 'Sidamo: lots 42–44 cupping scores',
       body: 'Diego, attached are the cupping scores for lots 42–44 this season. Lot 42 is the standout — fruit-forward, jasmine, clean ferment. Pricing for the full container coming separately. — Abel',
     },
     {
       from: 'jordan',
       daysAgo: 35,
+      to: toAddr('sam'),
       subject: 'Reorder: 30 lb Linden + 10 lb Field Notes',
       body: 'Hey Sam, ready for another round. Same as last time: 30 lb Linden whole bean, 10 lb Field Notes. Friday delivery if possible. — Jordan',
     },
     {
       from: 'noise',
       daysAgo: 35,
+      to: toAddr('riley'),
       subject: 'Your Stripe payout — $4,218.91',
       senderOverride: actor('Stripe', 'no-reply@stripe.com'),
       body: 'Your weekly payout has been initiated. View details in the Stripe dashboard.',
@@ -527,30 +575,35 @@ const makeMailbox = (
     {
       from: 'priya',
       daysAgo: 33,
+      to: toAddr('kai'),
       subject: 'Espresso blend pilot — interested',
       body: "Hi Kai — Hatch would love to be part of the Spring Blend pilot. We have an espresso bar that's ready for something new. What are next steps? — Priya",
     },
     {
       from: 'kai',
       daysAgo: 32,
+      to: toAddr('priya'),
       subject: 'Re: Espresso blend pilot — interested',
       body: 'Priya — yes! I will send a 2 lb sample with v1 of the blend next week. Would love your feedback. — Kai',
     },
     {
       from: 'carmen',
       daysAgo: 30,
+      to: toAddr('diego'),
       subject: 'Fotos del beneficio',
       body: 'Photos from the wet mill this week. The new patio is making a real difference for drying. Te mando un abrazo. — Carmen',
     },
     {
       from: 'diego',
       daysAgo: 28,
+      to: toAddr('kai', 'sam'),
       subject: 'Trip planning — Colombia → Ethiopia',
       body: 'Kai, Sam — I am locking dates for the Q2 trip. Tentatively: 9 days in Huila, then 5 in Ethiopia. Will share the full itinerary by end of week. — Diego',
     },
     {
       from: 'noise',
       daysAgo: 27,
+      to: toAddr('sam'),
       subject: 'Coffee Expo NYC — registration open',
       senderOverride: actor('SCA Events', 'events@sca.coffee'),
       body: 'Specialty Coffee Expo NYC registration is now open. Early-bird pricing through next month.',
@@ -558,42 +611,49 @@ const makeMailbox = (
     {
       from: 'kai',
       daysAgo: 26,
+      to: toAddr('diego', 'sam', 'riley'),
       subject: 'Roast curve memo — Spring Blend v1',
       body: 'Team — current draft is in the roast log. First crack at 9:18, drop at 11:30. We are tasting flat for the espresso shot — will pull up the development a touch on v2. — Kai',
     },
     {
       from: 'jordan',
       daysAgo: 24,
+      to: toAddr('sam'),
       subject: 'Question about the Sidamo single-origin',
       body: 'Hi Sam — any chance of getting a few pounds of the new Sidamo when it lands? Customers loved the last lot. — Jordan',
     },
     {
       from: 'sam',
       daysAgo: 23,
+      to: toAddr('jordan'),
       subject: 'Re: Question about the Sidamo single-origin',
       body: 'Jordan — putting you down for 8 lb of lot 42 when it arrives. Should be ~3 weeks out. — Sam',
     },
     {
       from: 'mateo',
       daysAgo: 21,
+      to: toAddr('sam'),
       subject: 'Hello from Olive & Vine in Austin',
       body: 'Hi there — Olive & Vine is a small wine bar / coffee bar opening soon in East Austin. A friend at North Star recommended you. Could we talk wholesale? — Mateo',
     },
     {
       from: 'sam',
       daysAgo: 20,
+      to: toAddr('mateo'),
       subject: 'Re: Hello from Olive & Vine in Austin',
       body: 'Mateo — we would love to. Sending a sampler with Linden, Field Notes, and a current single-origin tomorrow. Let me know what resonates. — Sam',
     },
     {
       from: 'priya',
       daysAgo: 17,
+      to: toAddr('kai'),
       subject: 'Cupping invite — Tuesday',
       body: 'Kai — we are doing a cupping at the bakery next Tuesday at 4. Could send the Spring Blend v1 ahead, or would you want to bring it in person? — Priya',
     },
     {
       from: 'noise',
       daysAgo: 15,
+      to: toAddr('riley'),
       subject: 'Shipment update: tracking #1Z999AA10123456789',
       senderOverride: actor('UPS', 'tracking@ups.com'),
       body: 'Your shipment is in transit. Expected delivery: tomorrow by 8pm.',
@@ -601,46 +661,103 @@ const makeMailbox = (
     {
       from: 'riley',
       daysAgo: 12,
+      to: toAddr('kai', 'diego', 'sam'),
       subject: 'Packaging vendor switch — heads up',
       body: 'Team — we are moving label printing from Stack & Co. to Letterform Press starting next month. Better minimums and same lead times. — Riley',
     },
     {
       from: 'abel',
       daysAgo: 9,
+      to: toAddr('diego'),
       subject: 'Pricing — Sidamo container',
       body: 'Diego — pricing attached for the full container. Up ~6% from last year, in line with what we discussed. Confirm and I will start the export paperwork. — Abel',
     },
     {
       from: 'kai',
       daysAgo: 7,
+      to: toAddr('diego', 'sam', 'riley'),
       subject: 'Spring blend v2 — cupping notes',
       body: 'v2 cupping notes are in the document. Big improvement on body, the espresso shot is much more balanced. Heading toward v3 with a small ratio change. — Kai',
     },
     {
       from: 'jordan',
       daysAgo: 4,
+      to: toAddr('sam'),
       subject: 'Visiting Oakland — coffee?',
       body: 'Sam — I am in town next Wednesday. Want to grab a cupping at the roastery? — Jordan',
     },
     {
       from: 'priya',
       daysAgo: 2,
+      to: toAddr('kai'),
       subject: 'Spring blend v1 — feedback',
       body: 'Kai — the team loved the chocolate and red fruit notes. Wholesale customers asked about the espresso roast specifically. Would order standing 20 lb/wk starting at launch. — Priya',
     },
   ];
 
+  // Thread by normalized subject: assign every subject group a stable `threadId` (first-seen order),
+  // then link each non-first message in a group to its predecessor via `parentMessage`. Emails are
+  // authored oldest-first, so a reply's parent is always created before it. The mailbox conversation
+  // list groups on the top-level `threadId`; it's mirrored into `properties.threadId` to match the
+  // shape real synced (Gmail/JMAP) messages carry.
+  const threadIdBySubject = new Map<string, string>();
+  for (const email of emails) {
+    const key = normalizeSubject(email.subject);
+    if (!threadIdBySubject.has(key)) {
+      threadIdBySubject.set(key, `thread-${threadSlug(key)}`);
+    }
+  }
+
+  const lastMessageIdByThread = new Map<string, string>();
   const messages: Message.Message[] = emails.map((email) => {
-    const sender = email.senderOverride ?? senderFor(email.from as PersonKey); // 'noise' emails always carry senderOverride
-    return Message.make({
+    const sender = email.senderOverride ?? senderFor(email.from as PersonKey); // 'noise' emails always carry senderOverride.
+    const key = normalizeSubject(email.subject);
+    const threadId = threadIdBySubject.get(key)!;
+    const parentMessage = lastMessageIdByThread.get(key);
+    const message = Message.make({
       created: daysAgo(email.daysAgo, 10),
       sender,
       blocks: [textBlock(email.body)],
-      properties: { subject: email.subject },
+      threadId,
+      ...(parentMessage ? { parentMessage } : {}),
+      properties: { subject: email.subject, threadId, to: email.to },
     });
+    lastMessageIdByThread.set(key, message.id);
+    return message;
   });
 
   return { mailbox, messages };
+};
+
+/**
+ * Applies canonical system tags to the mailbox's feed messages so the folder views resolve them:
+ * every message carries `inbox` (the mailbox opens on the Inbox view, which selects by that tag), and
+ * mail authored by the {@link MAIN_CHARACTER} additionally carries `sent` (surfacing it in the Sent
+ * folder). Feed messages are immutable, so membership lives in the mailbox's child `TagIndex` keyed by
+ * the tag object's URI — the same representation the runtime writes and reads.
+ */
+const tagMailboxMessages = async (
+  space: Space,
+  mailbox: Mailbox.Mailbox,
+  messages: Message.Message[],
+): Promise<void> => {
+  const inboxTag = await SystemTags.findOrCreateSystemTag(space.db, 'inbox');
+  const sentTag = await SystemTags.findOrCreateSystemTag(space.db, 'sent');
+  // Store space-relative tag ids so membership survives the space-id remap on import. The runtime
+  // resolves the same tags to space-absolute uris, but `TagIndex` compares by entity id, so both match.
+  const inboxUri = Obj.getURI(inboxTag, { prefer: 'relative' }).toString();
+  const sentUri = Obj.getURI(sentTag, { prefer: 'relative' }).toString();
+  const index = mailbox.tags.target;
+  if (!index) {
+    throw new Error('Mailbox is missing its tag index.');
+  }
+
+  const mainCharacterEmail = PEOPLE_SEEDS.find((seed) => seed.key === MAIN_CHARACTER)!.email;
+  const entries = messages.flatMap((message) => [
+    { object: message, tagId: inboxUri },
+    ...(message.sender.email === mainCharacterEmail ? [{ object: message, tagId: sentUri }] : []),
+  ]);
+  Tagging.setBatch(entries, { index });
 };
 
 //
