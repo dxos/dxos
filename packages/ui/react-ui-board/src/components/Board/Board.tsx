@@ -113,6 +113,8 @@ type BoardContextValue = {
   resizing: boolean;
   /** Scroll viewport element; set by `Board.Container`, used by the controller to center. */
   viewportRef: MutableRefObject<HTMLDivElement | null>;
+  /** Anchor captured before an incremental zoom (consumed by the zoom-anchor animation). */
+  pendingAnchor: MutableRefObject<{ x: number; y: number } | null>;
   /** Scroll the viewport to center the board, or a specific cell when its id is given. `smooth`
    * defaults to true; pass false to jump instantly (used for the flicker-free mount centering). */
   center: (cell?: string, smooth?: boolean) => void;
@@ -262,6 +264,12 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
     // Scroll viewport (set by Board.Container) + imperative centering, exposed via the Root ref.
     const viewportRef = useRef<HTMLDivElement | null>(null);
 
+    // Anchor (unscaled content point at the viewport centre) captured just before an incremental zoom.
+    // Captured here — before `onZoomChange` shrinks the board — because on a zoom-out commit the browser
+    // clamps scrollLeft to the smaller board, so an anchor read afterwards (in the zoom effect) would be
+    // taken from an already-shifted scroll and hold the wrong point.
+    const pendingAnchorRef = useRef<{ x: number; y: number } | null>(null);
+
     // Smooth scroll via rAF (instant per-frame assignment): the ScrollArea viewport ignores native
     // `scrollTo({ behavior: 'smooth' })`, so we animate the scroll ourselves.
     const scrollFrameRef = useRef(0);
@@ -359,15 +367,32 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
     );
     useImperativeHandle(forwardedRef, () => ({ center }), [center]);
 
+    // Capture the point currently at the viewport centre from the live (pre-zoom) scroll, so the
+    // zoom-anchor animation holds it across the incremental zoom (see pendingAnchorRef).
+    const captureAnchor = useCallback(() => {
+      const el = viewportRef.current;
+      if (!el) {
+        return;
+      }
+      const viewport = { width: el.clientWidth, height: el.clientHeight };
+      const pad = boardPad({ viewport, board: gridBounds(columns, rows, cellSizePx, gapPx), zoom, overscroll });
+      pendingAnchorRef.current = viewportCenterAnchor({
+        scroll: { left: el.scrollLeft, top: el.scrollTop },
+        viewport,
+        pad,
+        zoom,
+      });
+    }, [columns, rows, cellSizePx, gapPx, zoom, overscroll]);
+
     // Zoom stepping (clamped to [minZoom, 1]); the scale is controlled by the consumer via onZoomChange.
-    const zoomIn = useCallback(
-      () => onZoomChange?.(Math.min(1, Math.round((zoom + zoomStep) * 100) / 100)),
-      [onZoomChange, zoom, zoomStep],
-    );
-    const zoomOut = useCallback(
-      () => onZoomChange?.(Math.max(minZoom, Math.round((zoom - zoomStep) * 100) / 100)),
-      [onZoomChange, zoom, zoomStep, minZoom],
-    );
+    const zoomIn = useCallback(() => {
+      captureAnchor();
+      onZoomChange?.(Math.min(1, Math.round((zoom + zoomStep) * 100) / 100));
+    }, [captureAnchor, onZoomChange, zoom, zoomStep]);
+    const zoomOut = useCallback(() => {
+      captureAnchor();
+      onZoomChange?.(Math.max(minZoom, Math.round((zoom - zoomStep) * 100) / 100));
+    }, [captureAnchor, onZoomChange, zoom, zoomStep, minZoom]);
 
     // Selection (hand-rolled controlled/uncontrolled; Radix useControllableState mishandles clearing).
     const emptySelection = useMemo<ReadonlySet<string>>(() => new Set(), []);
@@ -511,6 +536,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         previewLayout={previewLayout}
         resizing={!!resizePreview}
         viewportRef={viewportRef}
+        pendingAnchor={pendingAnchorRef}
         center={center}
         onAdd={readonly ? undefined : onAdd}
         onDelete={readonly ? undefined : onDelete}
@@ -588,7 +614,7 @@ const BOARD_CONTAINER_NAME = 'Board.Container';
 type BoardContainerProps = ThemedClassName<PropsWithChildren>;
 
 const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { viewportRef, center, resizing, zoom, selected, overscroll, layout, cellSize, gap } =
+  const { viewportRef, pendingAnchor, center, resizing, zoom, selected, overscroll, layout, cellSize, gap } =
     useBoardContext(BOARD_CONTAINER_NAME);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = composeRefs(localRef, viewportRef);
@@ -640,8 +666,13 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
         sumY += rect.top + rect.height / 2;
       }
       anchor = { x: sumX / ids.length, y: sumY / ids.length };
+    } else if (pendingAnchor.current) {
+      // An incremental zoom captured the pre-zoom centre before the board (and scroll) shrank — use it
+      // rather than the now-clamped scroll.
+      anchor = pendingAnchor.current;
+      pendingAnchor.current = null;
     } else {
-      // Nothing selected: hold whatever is currently at the viewport centre.
+      // Fallback (e.g. a programmatic zoom): hold whatever is currently at the viewport centre.
       anchor = viewportCenterAnchor({
         scroll: { left: element.scrollLeft, top: element.scrollTop },
         viewport,
