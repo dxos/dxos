@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { EntityId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 
 import * as TagIndex from './TagIndex';
 
@@ -62,6 +62,29 @@ describe('TagIndex', () => {
     tags.unsetTag(urgent, b.id);
     expect([...tags.objects(urgent)]).toEqual([]);
     expect(tags.tagIds()).toEqual([later]);
+  });
+
+  test('matches tag membership across absolute and relative key forms (import round-trips)', ({ expect }) => {
+    const tagIndex = TagIndex.make();
+    const tags = TagIndex.bind(tagIndex);
+
+    const entityId = EntityId.random();
+    const item = EntityId.random();
+    const absolute = EID.make({ spaceId: SpaceId.random(), entityId }); // How live data stores a tag id.
+    const relative = EID.make({ entityId }); // How a portable snapshot stores it (no space id).
+
+    // A tag stored under its absolute uri is found by the relative query and vice versa: membership
+    // ignores the space id, so a space import (which mints a new space id) keeps tags resolvable.
+    tags.setTag(absolute, item);
+    expect([...tags.objects(relative)]).toEqual([item]);
+    expect([...tags.objects(absolute)]).toEqual([item]);
+    // Same entity id under a different space also matches (the post-import resolution case).
+    expect([...tags.objects(EID.make({ spaceId: SpaceId.random(), entityId }))]).toEqual([item]);
+
+    // Non-EID tag ids are still compared verbatim.
+    tags.setTag('dxn:tag:urgent', item);
+    expect([...tags.objects('dxn:tag:urgent')]).toEqual([item]);
+    expect([...tags.objects('dxn:tag:other')]).toEqual([]);
   });
 
   test('atom family returns tag uris for one object', () => {
