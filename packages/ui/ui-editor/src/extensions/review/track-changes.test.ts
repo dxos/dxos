@@ -58,16 +58,4 @@ describe('trackChanges', () => {
     expect(view.dom.querySelectorAll('.cm-change-bar')).toHaveLength(1);
     view.destroy();
   });
-
-  test('the phantom restore control re-instates that specific deletion (out of edit order)', ({ expect }) => {
-    // The branch removed the middle line "bravo\n" (a phantom). Unlike undo, the restore control targets
-    // THIS deletion regardless of later edits: clicking it splices the removed text back and clears it.
-    const view = mount('alpha\ncharlie');
-    const restore = view.dom.querySelector<HTMLElement>('.cm-track-restore');
-    expect(restore).not.toBeNull();
-    restore!.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-    expect(view.state.doc.toString()).toBe(MAIN);
-    expect(view.dom.querySelector('.cm-track-delete')).toBeNull();
-    view.destroy();
-  });
 });

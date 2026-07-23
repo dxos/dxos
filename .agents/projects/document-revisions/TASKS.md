@@ -383,12 +383,11 @@ label:'view-mode.suggesting.label', reviewMode:'suggesting', order:3 }` — no p
         `addViewMode` custom-item unit test (deferred — behaviour covered by the story play tests).
   - [x] `react-ui-menu` DropdownMenu now renders a trailing check on the CURRENT value of a
         single-select group (the check indicator was missing) — the user's note.
-- [x] **B4 un-delete phantom (draft) — DONE.** `PhantomDeleteWidget.toDOM(view)` renders a
-      hover-revealed restore control (floated above, absolute — no reserved layout) that splices the
-      removed base text back at the phantom's position, clearing THAT deletion out of edit order (unlike
-      a global undo). Ships wherever `trackChanges` renders (ambient Suggesting mode). Unit test added
-      (306 ui-editor tests green). Author-side accept/reject of one's own draft deferred (lower value —
-      the author revises by editing); needs user eval.
+- [x] **B4 un-delete phantom — REVERTED (user decision 2026-07-23).** Shipped a hover restore control on
+      own deletion phantoms; user found it flaky (the floating control leaves the hover zone on click) and
+      directed: in Suggesting mode there must be NO popovers over one's own suggestions. Removed the
+      restore control + theme + test from `trackChanges` (suggest-mode-only). Un-delete now via native
+      undo (already works) — a non-popover affordance can be revisited later.
 - [x] **Comment-flash-on-Enter (draft) — DONE (diagnosed + fixed; visual confirm pending user).**
       Root cause: `add-message.ts` removed the draft from `state.drafts` BEFORE `AddObject`/`AddRelation`
       persisted the thread, so for a frame the comment was in neither the draft list nor the ECHO query
