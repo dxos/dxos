@@ -5,7 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, createWorkspaceAnchorExtension } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  AppNode,
+  LayoutOperation,
+  createCompanionExtension,
+  createWorkspaceAnchorExtension,
+} from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -107,6 +113,8 @@ export default Capability.makeModule(
       ...extensions.flat(),
       // Register the workspace tier (`/w/<workspace>`) as a declared anchor key for the URL grammar.
       ...createWorkspaceAnchorExtension(),
+      // Register the companion tier (`/companion/<variant>`) as a declared linked key.
+      ...createCompanionExtension(),
     ]);
   }),
 );

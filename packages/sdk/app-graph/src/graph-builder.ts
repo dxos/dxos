@@ -62,37 +62,41 @@ export type BuilderExtension = Readonly<{
 }>;
 
 /**
- * How an extension's nodes map to (and from) the URL pair chain. Grouped so the whole URL contract for
- * an extension lives in one place.
+ * How an extension's nodes map to (and from) the URL pair chain — one binding per extension, holding
+ * the whole URL contract for the nodes it produces. The `kind` is the *resolution tier*: what a pair
+ * with this key resolves against.
+ *
+ * - `'anchor'`    — Resolves at the graph root and *establishes the base* that subsequent pairs resolve
+ *                   against; consumed as a workspace rebase, never opened as a plank. Carries an id (the
+ *                   workspace). The workspace tier (`w/<workspace>`).
+ * - `'item'`      — Resolves against the current anchor (workspace) base, addressed by a variable id.
+ *                   The default addressable node; may itself have children (e.g. a mailbox). (`doc/<id>`).
+ * - `'singleton'` — Resolves against the current anchor base, but is a single fixed node per anchor, so
+ *                   it carries no id — its terminal node-id segment is the key itself. (`settings`).
+ * - `'linked'`    — Resolves against the *immediately preceding item*, not the anchor, addressed by a
+ *                   variant id. A sub-view attached to a plank — e.g. a companion (`companion/<variant>`,
+ *                   whose node is the plank's `~<variant>` linked-segment child). Has no `path`:
+ *                   resolution is structural (find the preceding item's `~<variant>` child), and its
+ *                   `urlSegment` is stamped from the linked-segment convention, not a path.
+ *
+ * `path` (on the non-`linked` kinds) is how the node is located, in one of two forms:
+ * - `string[]` — fixed ancestor node-id segments between the workspace base and the node (the common,
+ *   deterministic case): the node is `${Node.RootId}/<workspace>/<...segments>/<id>`. Fixed-depth
+ *   dynamic tails beyond the segments are `+`-encoded into the id.
+ * - {@link PathResolver} — a dynamic resolver, for data-dependent shapes (e.g. nested collections at
+ *   arbitrary depth) that cannot declare static segments.
+ *
+ * Read by `path-resolution.ts` (which derives the parse table's `hasId`/`anchor` from `kind`) and
+ * consumed by `UrlPath.parse`.
  */
-export type UrlBinding = {
-  /**
-   * Registered URL prefix key for nodes this extension's connector produces. Global and unique among
-   * extensions (a key may be shared by extensions that together address one subtree, e.g. collections).
-   */
-  key: string;
-  /**
-   * Resolution tier:
-   * - `'item'` — a node addressed by a variable id, relative to the workspace base (may have children).
-   * - `'anchor'` — the workspace tier (`w`): its pair sets the base following pairs resolve against and
-   *   is consumed (a rebase) rather than opened as a plank.
-   * - `'singleton'` — a fixed node addressed by its key, with no variable id (e.g. `home`, `settings`);
-   *   its terminal node-id segment IS the key.
-   * Read by `path-resolution.ts` (which derives the parse table's `hasId`/`anchor` from it) and consumed
-   * by `UrlPath.parse`.
-   */
-  kind: 'anchor' | 'item' | 'singleton';
-  /**
-   * The path to this key's nodes, in one of two forms:
-   * - `string[]` — fixed ancestor node-id segments between the workspace base and the node (the common,
-   *   deterministic case): the node is `${Node.RootId}/<workspace>/<...segments>/<id>`, so
-   *   `path-resolution.ts` can expand that exact path. Fixed-depth dynamic tails beyond the segments are
-   *   `+`-encoded into the id.
-   * - {@link PathResolver} — a dynamic resolver, for data-dependent shapes (e.g. nested collections at
-   *   arbitrary depth) that cannot declare static segments.
-   */
-  path: string[] | PathResolver;
-};
+export type UrlBinding =
+  | { key: string; kind: 'anchor' | 'item' | 'singleton'; path: string[] | PathResolver }
+  | { key: string; kind: 'linked' };
+
+/** Prefix marking a "linked segment" node id (`<parent>/~<variant>`) — a child sharing its parent's
+ * identity, the structural form of a `kind: 'linked'` node. Mirrors `@dxos/react-ui-attention`'s
+ * `linkedSegment`/`isLinkedSegment` (duplicated to keep app-graph free of a UI-layer dependency). */
+export const LINKED_PREFIX = '~';
 
 /** Params passed to a {@link PathResolver} for a single `(key, id)` URL pair. */
 export type PathResolveParams = {
@@ -129,7 +133,8 @@ export const TAIL_SEPARATOR = '+';
  * the id, `+`-joined (empty when the node sits at the path — a container whose children are the items).
  */
 export const urlRepresentation = (nodeId: string, url: UrlBinding): { key: string; id?: string } => {
-  if (url.kind === 'singleton') {
+  // Singleton (no id) and linked (id derived structurally, not from `path`) carry no path-based id here.
+  if (url.kind === 'singleton' || url.kind === 'linked') {
     return { key: url.key };
   }
   const segments = nodeId.split('/');
@@ -138,6 +143,19 @@ export const urlRepresentation = (nodeId: string, url: UrlBinding): { key: strin
       ? segments[segments.length - 1]
       : segments.slice(2 + url.path.length).join(TAIL_SEPARATOR);
   return { key: url.key, id };
+};
+
+/**
+ * The single declared linked-tier key (`kind: 'linked'`, conventionally `companion`), used to stamp and
+ * reverse-map `~<variant>` nodes. Returns undefined if no linked extension is registered.
+ */
+export const getLinkedKey = (builder: GraphBuilder): string | undefined => {
+  for (const extension of Object.values(builder.getExtensions())) {
+    if (extension.url?.kind === 'linked') {
+      return extension.url.key;
+    }
+  }
+  return undefined;
 };
 
 /**
@@ -157,25 +175,31 @@ export const nodeUrlSegment = (nodeId: string, url: UrlBinding): string | undefi
  * A graph node with its computed {@link nodeUrlSegment} attached at `properties.urlSegment` when the node
  * is URL-addressable. The core {@link Node.Node} stays URL-agnostic; this is the typed view for reading
  * the segment — an open properties record with an explicit `urlSegment` field — mirroring how
- * `@dxos/react-ui-menu` wraps `Node` for menu items. The builder stamps binding-backed nodes; the
- * companion segment (`/companion/<variant>`) is stamped by `@dxos/app-toolkit`'s `AppNode.makeCompanion`,
- * since companion addressing lives outside the graph builder.
+ * `@dxos/react-ui-menu` wraps `Node` for menu items.
  */
 export type BuilderNode<TData = any> = Node.Node<TData, { urlSegment?: string } & Record<string, any>>;
 
-/** Return a copy of `node` (and its inline descendants) with `properties.urlSegment` stamped from `url`. */
-const stampUrlSegment = (node: Node.NodeArg<any>, url: UrlBinding | undefined): Node.NodeArg<any> => {
-  if (!url) {
-    return node;
-  }
-  const segment = nodeUrlSegment(node.id, url);
-  const nodes = node.nodes?.map((child) => stampUrlSegment(child, url));
-  if (segment === undefined && !nodes) {
+/**
+ * Return a copy of `node` (and its inline descendants) with `properties.urlSegment` stamped. A linked
+ * node (id ending in a `~<variant>` segment) is stamped from the `linked` tier key, independent of its
+ * producing extension's binding; any other node is stamped from `url` (its producer's binding), if any.
+ */
+const stampUrlSegment = (
+  node: Node.NodeArg<any>,
+  url: UrlBinding | undefined,
+  linkedKey: string | undefined,
+): Node.NodeArg<any> => {
+  const lastSegment = node.id.slice(node.id.lastIndexOf('/') + 1);
+  const segment = lastSegment.startsWith(LINKED_PREFIX)
+    ? linkedKey && `/${linkedKey}/${lastSegment.slice(LINKED_PREFIX.length)}`
+    : url && nodeUrlSegment(node.id, url);
+  const nodes = node.nodes?.map((child) => stampUrlSegment(child, url, linkedKey));
+  if (!segment && !nodes) {
     return node;
   }
   return {
     ...node,
-    ...(segment !== undefined && { properties: { ...node.properties, urlSegment: segment } }),
+    ...(segment && { properties: { ...node.properties, urlSegment: segment } }),
     ...(nodes && { nodes }),
   };
 };
@@ -415,12 +439,12 @@ class GraphBuilderImpl implements GraphBuilder {
       connectors,
       (entries) => {
         const extensions = this.getExtensions();
-        // Stamp `properties.urlSegment` (`/<key>[/<id>]`) on each node produced by a `url`-bound extension
-        // — and its inline descendants, which share the binding — so the computed segment is readable off
-        // the node (see `BuilderNode`). Non-bound nodes (e.g. companions) pass through untouched; their
-        // segment is stamped by their own producer (`AppNode.makeCompanion`).
+        const linkedKey = getLinkedKey(this);
+        // Stamp `properties.urlSegment` on each produced node (and its inline descendants) so the computed
+        // segment is readable off the node (see `BuilderNode`): `/<key>[/<id>]` from the producing
+        // extension's binding, or `/<linkedKey>/<variant>` for a `~<variant>` linked (companion) node.
         const nodes = qualifyNodeArgs(id)(entries.map((entry) => entry.node)).map((node, index) =>
-          stampUrlSegment(node, extensions[entries[index].extensionId]?.url),
+          stampUrlSegment(node, extensions[entries[index].extensionId]?.url, linkedKey),
         );
         // Record provenance for each qualified node — top-level and inline descendants alike — so
         // reverse (node → URL) mapping can find the producing extension's `url` binding. Inline children

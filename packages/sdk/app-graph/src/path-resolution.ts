@@ -45,19 +45,11 @@ export type RepresentedNode = {
   workspace: string;
 };
 
-/** Prefix marking a "linked segment" (companion) node id, e.g. `<parent>/~comments`. Mirrors the
- * convention established by `@dxos/react-ui-attention`'s `linkedSegment`/`isLinkedSegment`, duplicated
- * here (rather than imported) to keep app-graph free of a UI-layer dependency. */
-const LINKED_PREFIX = '~';
-
-/** The single well-known URL key for every plank companion: `companion/<variant>`, resolved against the
- * preceding plank. Not registered by any extension; mirrored in `UrlPath`'s reserved-key set. */
-const COMPANION_KEY = 'companion';
-
 /** Reserved words that can never be registered as a `urlKey`, duplicated from `UrlPath.isReservedKey`
- * (rather than imported) to keep app-graph free of an app-toolkit dependency. The workspace key (`w`) is
- * NOT reserved — it is a declared `kind: 'anchor'` binding (see the workspace-anchor extension). */
-const RESERVED_URL_KEYS = new Set(['reset', 'redirect', 'not-found', COMPANION_KEY]);
+ * (rather than imported) to keep app-graph free of an app-toolkit dependency. The workspace (`w`, an
+ * `anchor` binding) and companion (`companion`, a `linked` binding) keys are NOT reserved — they are
+ * declared bindings (see the workspace-anchor and companion extensions). */
+const RESERVED_URL_KEYS = new Set(['reset', 'redirect', 'not-found']);
 
 const isReservedUrlKey = (key: string): boolean =>
   RESERVED_URL_KEYS.has(key) || SpaceId.isValid(key) || EntityId.isValid(key);
@@ -126,9 +118,6 @@ export type UrlKeyTableEntry = { key: string; hasId: boolean; anchor: boolean };
  */
 export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, UrlKeyTableEntry> => {
   const table = new Map<string, UrlKeyTableEntry>();
-  // The companion key is not registered by any extension; seed it so `UrlPath.parse` tokenizes
-  // `companion/<variant>` as an id-bearing pair. Resolution attaches it to the preceding plank.
-  table.set(COMPANION_KEY, { key: COMPANION_KEY, hasId: true, anchor: false });
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.url!.key;
     const kind = extension.url!.kind;
@@ -246,7 +235,7 @@ const resolveCompanion = async (
   Graph.expand(builder.graph, precedingNodeId, 'child');
   await GraphBuilder.flush(builder);
 
-  const linkedSegment = `${LINKED_PREFIX}${variant}`;
+  const linkedSegment = `${GraphBuilder.LINKED_PREFIX}${variant}`;
   const match = Graph.getConnections(builder.graph, precedingNodeId, 'child').find(
     (child) => child.id.slice(child.id.lastIndexOf('/') + 1) === linkedSegment,
   );
@@ -258,24 +247,16 @@ const resolveUrlAsync = async (
   parsed: { workspace: string; pairs: ReadonlyArray<UrlPair> },
 ): Promise<Array<ResolvedPair | null>> => {
   const keyTable = buildKeyTable(builder);
+  const allExtensions = builder.getExtensions();
   const results: Array<ResolvedPair | null> = [];
-  // Tracks the most recently resolved *plank* (id-bearing) node, the anchor for companion pairs —
-  // a companion always attaches to the preceding plank, never to another companion.
+  // Tracks the most recently resolved *item* (plank) node, the base for `linked` pairs — a linked pair
+  // always attaches to the preceding item, never to another linked pair.
   let lastPlankNodeId: string | undefined;
 
   for (let pairIndex = 0; pairIndex < parsed.pairs.length; pairIndex++) {
     const pair = parsed.pairs[pairIndex];
 
-    if (pair.key === COMPANION_KEY) {
-      // Companion pair (`companion/<variant>`): attach to the preceding plank by variant. Not itself a
-      // plank, so it does not become the anchor for a following companion.
-      const nodeId = lastPlankNodeId && pair.id ? await resolveCompanion(builder, lastPlankNodeId, pair.id) : null;
-      results.push(nodeId ? { pairIndex, nodeId } : null);
-      continue;
-    }
-
     const extensionIdList = keyTable.get(pair.key);
-
     if (!extensionIdList || extensionIdList.length === 0) {
       log.warn('unknown URL prefix key', { key: pair.key });
       results.push(null);
@@ -285,18 +266,26 @@ const resolveUrlAsync = async (
       continue;
     }
 
+    // Linked pair (`kind: 'linked'`, e.g. `companion/<variant>`): resolves against the preceding item by
+    // variant, not the workspace base — the linked resolution tier. Not itself a plank, so it does not
+    // become the base for a following linked pair.
+    if (extensionIdList.some((extensionId) => allExtensions[extensionId]?.url?.kind === 'linked')) {
+      const nodeId = lastPlankNodeId && pair.id ? await resolveCompanion(builder, lastPlankNodeId, pair.id) : null;
+      results.push(nodeId ? { pairIndex, nodeId } : null);
+      continue;
+    }
+
     const workspaceBaseId = `${Node.RootId}/${pair.workspace}`;
-    const allExtensions = builder.getExtensions();
     const extensions: KeyedExtension[] = [];
     for (const extensionId of extensionIdList) {
-      const path = allExtensions[extensionId]?.url?.path;
-      if (path !== undefined) {
-        extensions.push({ id: extensionId, path });
+      const url = allExtensions[extensionId]?.url;
+      if (url && url.kind !== 'linked') {
+        extensions.push({ id: extensionId, path: url.path });
       }
     }
-    // A normal key addresses a node by id; an id-less non-companion key (`hasId: false`, e.g.
-    // `home`) addresses a fixed node whose terminal segment IS the key — resolve it the same way with
-    // the key standing in for the id (`root/<ws>/<...urlPath>/<key>`).
+    // A normal key addresses a node by id; an id-less singleton key (e.g. `home`) addresses a fixed node
+    // whose terminal segment IS the key — resolve it the same way with the key standing in for the id
+    // (`root/<ws>/<...path>/<key>`).
     const nodeId = await resolveKeyId(builder, workspaceBaseId, pair.workspace, extensions, pair.id ?? pair.key);
     results.push(nodeId ? { pairIndex, nodeId } : null);
     lastPlankNodeId = nodeId ?? undefined;
@@ -337,10 +326,13 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
   }
 
   const lastSegment = segments[segments.length - 1];
-  if (lastSegment.startsWith(LINKED_PREFIX)) {
-    // Companion node: keyed generically as `companion`, with the variant (the `~`-stripped segment) as
-    // its id — no per-extension `urlKey` required.
-    return Option.some({ key: COMPANION_KEY, id: lastSegment.slice(LINKED_PREFIX.length), workspace });
+  if (lastSegment.startsWith(GraphBuilder.LINKED_PREFIX)) {
+    // Linked node (e.g. a companion): keyed by the declared `linked` key, with the variant (the
+    // `~`-stripped segment) as its id — matched by the convention, independent of the producing extension.
+    const linkedKey = GraphBuilder.getLinkedKey(builder);
+    if (linkedKey) {
+      return Option.some({ key: linkedKey, id: lastSegment.slice(GraphBuilder.LINKED_PREFIX.length), workspace });
+    }
   }
 
   const extensionId = builder.getNodeExtensionId(nodeId);

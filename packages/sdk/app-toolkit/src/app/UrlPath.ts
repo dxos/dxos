@@ -51,12 +51,13 @@ export type ParsedUrl = {
 
 /**
  * The single well-known key for every plank companion (`companion/<variant>`), resolved against the
- * preceding plank rather than registered by any extension.
+ * preceding plank. Declared once as a `kind: 'linked'` binding (see `createCompanionExtension`).
  */
 export const COMPANION_KEY = 'companion';
 
-// The workspace key (`w`) is NOT reserved — it is a declared `kind: 'anchor'` binding.
-const RESERVED_KEYS = new Set(['reset', 'redirect', 'not-found', COMPANION_KEY]);
+// The workspace (`w`, an `anchor` binding) and companion (`companion`, a `linked` binding) keys are NOT
+// reserved — they are declared bindings.
+const RESERVED_KEYS = new Set(['reset', 'redirect', 'not-found']);
 
 /**
  * Whether a segment is reserved and therefore cannot be registered as a prefix key: the `w`

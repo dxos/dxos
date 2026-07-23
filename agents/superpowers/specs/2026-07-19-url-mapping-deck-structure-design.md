@@ -377,26 +377,35 @@ The per-extension URL contract was refactored from four flat fields
 addressable), but when present all fields are required:
 
 ```ts
-url?: {
-  key: string;
-  kind: 'anchor' | 'item' | 'singleton';   // required
-  path: string[] | PathResolver;           // required: static segments OR a dynamic resolver
-}
+url?:
+  | { key: string; kind: 'anchor' | 'item' | 'singleton'; path: string[] | PathResolver }
+  | { key: string; kind: 'linked' };
 ```
 
-The three kinds cover every addressable node; `hasId` is derived
-(`hasId = kind !== 'singleton'`), so invalid combos are unrepresentable:
+`kind` is the **resolution tier** — what a pair with this key resolves against;
+`hasId` is derived (`hasId = kind !== 'singleton'`), so invalid combos are
+unrepresentable:
 
-- `item` — a node addressed by a variable id, relative to the workspace base
+- `anchor` — resolves at the root and _establishes the base_ others resolve
+  against; consumed as a workspace rebase (`w`).
+- `item` — resolves against the current anchor base, addressed by a variable id
   (may have children — not a graph leaf).
-- `anchor` — the workspace tier (`w`); its pair rebases the base and is consumed.
-- `singleton` — a fixed node addressed by its key, no variable id (`home`,
-  `settings`).
+- `singleton` — resolves against the anchor base, one fixed node per anchor, no
+  id (`home`, `settings`).
+- `linked` — resolves against the _immediately preceding item_, addressed by a
+  variant id; a sub-view attached to a plank (a companion). Has no `path`
+  (resolution is structural: the preceding item's `~<variant>` child).
 
-`path` merges the former `path`/`resolve` into one required field, discriminated
-at runtime by `Array.isArray`: `string[]` = static ancestor segments (the common
-case); `PathResolver` = a dynamic resolver (nested collections, native fs). A key
-therefore always declares exactly one resolution mechanism.
+`path` (non-`linked` kinds) merges the former `path`/`resolve` into one required
+field, discriminated at runtime by `Array.isArray`: `string[]` = static ancestor
+segments (the common case); `PathResolver` = a dynamic resolver (nested
+collections, native fs). A key therefore always declares exactly one resolution
+mechanism.
+
+Both `anchor` and `linked` are declared once via declaration-only extensions
+(`createWorkspaceAnchorExtension` / `createCompanionExtension`) contributed by the
+layout plugin — so `w` and `companion` are ordinary declared keys, not reserved
+tokens. Only `reset`/`redirect`/`not-found` remain reserved.
 
 The workspace tier (`/w/<workspace>`) is no longer a hard-coded token. It is a
 declared `kind: 'anchor'` binding contributed by
@@ -425,7 +434,10 @@ mirroring react-ui-menu's node wrappers). Core `Node` stays URL-agnostic.
   connector-materialization pass via `nodeUrlSegment(nodeId, url)` — the same
   `urlRepresentation` derivation `representNode` uses, so there is one source.
   Container nodes sitting at the binding's `path` (empty id) get no segment.
-- Companion nodes are stamped by `AppNode.makeCompanion` (`/companion/<variant>`),
-  keeping companion addressing in the app-toolkit layer, not the graph builder.
+- Linked (companion) nodes — those whose id ends in a `~<variant>` segment — are
+  stamped by the builder too, as `/<linkedKey>/<variant>` (the declared `linked`
+  tier key; see `getLinkedKey`). So `AppNode.makeCompanion` no longer stamps a
+  segment — the builder owns the whole mapping. (Superseded the interim
+  makeCompanion-stamps-it approach.)
 - `Paths.getShareableLinkPath` composes the full link as `/w/<workspace>` +
   `node.urlSegment`.

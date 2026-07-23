@@ -183,6 +183,13 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     url: { key: 'w', kind: 'anchor', path: [] },
   });
 
+  // A declaration-only linked tier: registers the `companion` key (`kind: 'linked'`), so `companion/<variant>`
+  // pairs resolve against the preceding plank and `~<variant>` nodes reverse-map + stamp as `/companion/…`.
+  const companionAnchor = GraphBuilder.createExtensionRaw({
+    id: 'companion',
+    url: { key: 'companion', kind: 'linked' },
+  });
+
   GraphBuilder.addExtension(builder, [
     workspaces,
     docs,
@@ -196,6 +203,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     nestedDocs,
     homes,
     workspaceAnchor,
+    companionAnchor,
   ]);
   return builder;
 };
@@ -489,6 +497,23 @@ describe('path-resolution', () => {
       );
       const node = Option.getOrThrow(Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/${HOME_SEGMENT}`));
       expect(node.properties.urlSegment).toBe('/home');
+    });
+
+    test('stamps `/companion/<variant>` on a materialized linked node', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [
+            { key: 'doc', id: 'docA', workspace: WORKSPACE_A },
+            { key: 'companion', id: 'comments', workspace: WORKSPACE_A },
+          ],
+        }),
+      );
+      const node = Option.getOrThrow(
+        Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/docA/${GraphBuilder.LINKED_PREFIX}comments`),
+      );
+      expect(node.properties.urlSegment).toBe('/companion/comments');
     });
 
     test('encodes a fixed-depth tail into `/<key>/<seg>+<id>`', async ({ expect }) => {
