@@ -17,7 +17,7 @@
 
 - [ ] **Overscroll mount-centering shift** (CodeRabbit PR #12321)
   - With `overscroll`, `overscrollPad` is populated by a passive effect that runs
-    *after* the mount `useLayoutEffect` centre, so the board shifts by half the
+    _after_ the mount `useLayoutEffect` centre, so the board shifts by half the
     viewport on first paint. Fix: commit the padding (measure viewport) before the
     one-shot instant centre, or re-centre once after padding initialises — keeping
     it mount-only. Overscroll-story only.
