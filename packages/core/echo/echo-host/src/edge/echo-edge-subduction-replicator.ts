@@ -178,7 +178,19 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
         this._closeReplacedConnection(spaceId, connection);
       }
       if (this._context !== null && this._connectedSpaces.has(spaceId)) {
-        await this._openConnection(this._ctx ?? Context.default(), spaceId);
+        // Reconnect handshakes must not parent under the long-ended connect-time span — detach
+        // demotes it to a link so each reconnect starts an operation-sized trace (SC-1). The
+        // derived ctx is disposed immediately: derive() hooks the long-lived `_ctx`, and its
+        // attributes stay readable after dispose (the handshake frame sends asynchronously).
+        const baseCtx = this._ctx ?? Context.default();
+        const handshakeCtx = trace.detach(baseCtx);
+        try {
+          await this._openConnection(handshakeCtx, spaceId);
+        } finally {
+          if (handshakeCtx !== baseCtx) {
+            void handshakeCtx.dispose();
+          }
+        }
       }
     }
   }
@@ -314,7 +326,16 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
               return;
             }
             log.trace('dxos.echo.edge.subduction-replicator.restart', { spaceId, reconnects, restartDelay });
-            await this._openConnection(ctx ?? Context.default(), spaceId, reconnects + 1);
+            // Detached + disposed for the same reasons as `_handleReconnect` above.
+            const baseCtx = ctx ?? Context.default();
+            const handshakeCtx = trace.detach(baseCtx);
+            try {
+              await this._openConnection(handshakeCtx, spaceId, reconnects + 1);
+            } finally {
+              if (handshakeCtx !== baseCtx) {
+                void handshakeCtx.dispose();
+              }
+            }
           },
           restartDelay,
         );

@@ -310,16 +310,20 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
       // operation-sized trace instead of riding a long-lived ctx; the HTTP call below
       // carries this span as `traceparent`, parenting the edge notarization server span.
       const spanId = `notarize-edge-round-${this._spaceId}-${++edgePollRound}`;
+      // Detached per-round ctx MUST be disposed after the round: derive() registers a
+      // dispose hook on the long-lived `_ctx`, and an undisposed hook per poll round is
+      // an unbounded leak (Context warns at 300 callbacks; this polls every few seconds).
+      const detachedCtx = trace.detach(this._ctx);
       const roundCtx =
         trace.spanStart({
           name: 'NotarizationPlugin._notarizePendingEdgeCredentials',
           id: spanId,
           instance: this,
           methodName: '_notarizePendingEdgeCredentials',
-          parentCtx: trace.detach(this._ctx),
+          parentCtx: detachedCtx,
           op: 'notarization.round',
           attributes: { spaceId: this._spaceId },
-        }) ?? this._ctx;
+        }) ?? detachedCtx;
       try {
         const response = await client.getCredentialsForNotarization(roundCtx, this._spaceId, {
           retry: { count: MAX_EDGE_RETRIES },
@@ -345,6 +349,9 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
         handleEdgeError(error);
       } finally {
         trace.spanEnd(spanId);
+        if (detachedCtx !== this._ctx) {
+          void detachedCtx.dispose();
+        }
       }
     });
   }

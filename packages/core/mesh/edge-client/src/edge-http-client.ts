@@ -22,6 +22,7 @@ import {
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EDGE_CLIENT_TAG_HEADER,
+  EDGE_SESSION_ID_HEADER,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -47,7 +48,7 @@ import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import { createUrl } from '@dxos/util';
+import { SESSION_ID, createUrl } from '@dxos/util';
 
 import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs, getTraceHeaders } from './base-http-client';
 import { proxyFetchLegacy } from './cors-proxy';
@@ -615,6 +616,9 @@ export class EdgeHttpClient extends BaseHttpClient {
       if (this._clientTag) {
         headers.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
       }
+      // SC-2 invariant: the session id rides EVERY edge HTTP request (this path duplicates
+      // `_call`'s header assembly — see the merge TODO above).
+      headers.set(EDGE_SESSION_ID_HEADER, SESSION_ID);
 
       const response = await fetch(target, { method, headers, body, signal: request.signal });
       // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets

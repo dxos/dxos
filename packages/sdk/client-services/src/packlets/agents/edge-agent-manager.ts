@@ -117,19 +117,26 @@ export class EdgeAgentManager extends Resource {
       // operation-sized traces; the HTTP call carries this span as `traceparent`,
       // parenting the edge `GET /users/:identity/agent/status` server span.
       const spanId = `agent-status-fetch-${++agentStatusFetchRound}`;
+      // Detached per-round ctx MUST be disposed after the round: derive() registers a
+      // dispose hook on the long-lived `_ctx`, and an undisposed hook per poll round is
+      // an unbounded leak (Context warns at 300 callbacks).
+      const detachedCtx = trace.detach(this._ctx);
       const roundCtx =
         trace.spanStart({
           name: 'EdgeAgentManager._fetchAgentStatus',
           id: spanId,
           instance: this,
           methodName: '_fetchAgentStatus',
-          parentCtx: trace.detach(this._ctx),
+          parentCtx: detachedCtx,
           op: 'agent.status',
-        }) ?? this._ctx;
+        }) ?? detachedCtx;
       try {
         await this._fetchAgentStatus(roundCtx);
       } finally {
         trace.spanEnd(spanId);
+        if (detachedCtx !== this._ctx) {
+          void detachedCtx.dispose();
+        }
       }
     });
     this._fetchAgentStatusTask.schedule();
