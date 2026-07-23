@@ -35,8 +35,20 @@ describe('trackChanges', () => {
     expect(view.state.doc.toString()).toBe('alpha\ncharlie');
 
     // Native undo restores the deleted text (the deletion is an ordinary branch edit) and the phantom
-    // disappears — so no bespoke "un-delete" affordance is needed.
+    // disappears.
     undo(view);
+    expect(view.state.doc.toString()).toBe(MAIN);
+    expect(view.dom.querySelector('.cm-track-delete')).toBeNull();
+    view.destroy();
+  });
+
+  test('the phantom restore control re-instates that specific deletion (out of edit order)', ({ expect }) => {
+    // The branch removed the middle line "bravo\n" (a phantom). Unlike undo, the restore control targets
+    // THIS deletion regardless of later edits: clicking it splices the removed text back and clears it.
+    const view = mount('alpha\ncharlie');
+    const restore = view.dom.querySelector<HTMLElement>('.cm-track-restore');
+    expect(restore).not.toBeNull();
+    restore!.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
     expect(view.state.doc.toString()).toBe(MAIN);
     expect(view.dom.querySelector('.cm-track-delete')).toBeNull();
     view.destroy();

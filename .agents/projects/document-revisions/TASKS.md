@@ -353,8 +353,12 @@ one combined PR on this branch (user decision). B6 scope = safe hoist + cache on
         `addViewMode` custom-item unit test (deferred — behaviour covered by the story play tests).
   - [x] `react-ui-menu` DropdownMenu now renders a trailing check on the CURRENT value of a
         single-select group (the check indicator was missing) — the user's note.
-- [ ] **B4 un-delete phantom (draft)** — re-instate a deleted word in one's own draft via a hover
-      popover on the phantom widget (consistent with the B2 accept/reject popover). Play tests.
+- [x] **B4 un-delete phantom (draft) — DONE.** `PhantomDeleteWidget.toDOM(view)` renders a
+      hover-revealed restore control (floated above, absolute — no reserved layout) that splices the
+      removed base text back at the phantom's position, clearing THAT deletion out of edit order (unlike
+      a global undo). Ships wherever `trackChanges` renders (ambient Suggesting mode). Unit test added
+      (306 ui-editor tests green). Author-side accept/reject of one's own draft deferred (lower value —
+      the author revises by editing); needs user eval.
 - [ ] **Comment-flash-on-Enter (draft)** — diagnose first (hypothesis: optimistic-render vs reactive
       requery race — one empty frame after commit). Fix + unit/play test; visible-flash confirmation
       by user (full-stack boot times out in-pane).
