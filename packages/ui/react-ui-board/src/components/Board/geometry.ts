@@ -37,6 +37,64 @@ export const gridBounds = (
   height: rows * (cellSize.height + gap) + gap,
 });
 
+type Size = { width: number; height: number };
+export type Point = { x: number; y: number };
+export type Scroll = { left: number; top: number };
+
+/**
+ * The board's top-left offset (px) within the scroll content. Under overscroll it is half the
+ * viewport (so any cell can reach the centre); otherwise it is the margin that centres a board
+ * smaller than the viewport, and 0 once the scaled board overflows. Board.Viewport applies this as
+ * the board's margin, and the scroll/zoom math below assumes a content point maps to
+ * `pad + point * zoom`, so all three must use this single definition to stay consistent.
+ */
+export const boardPad = ({
+  viewport,
+  board,
+  zoom,
+  overscroll,
+}: {
+  viewport: Size;
+  board: Size;
+  zoom: number;
+  overscroll: boolean;
+}): Point => ({
+  x: overscroll ? viewport.width / 2 : Math.max(0, (viewport.width - board.width * zoom) / 2),
+  y: overscroll ? viewport.height / 2 : Math.max(0, (viewport.height - board.height * zoom) / 2),
+});
+
+/** The unscaled content point currently at the viewport centre (inverse of {@link anchoredScroll}). */
+export const viewportCenterAnchor = ({
+  scroll,
+  viewport,
+  pad,
+  zoom,
+}: {
+  scroll: Scroll;
+  viewport: Size;
+  pad: Point;
+  zoom: number;
+}): Point => ({
+  x: (scroll.left + viewport.width / 2 - pad.x) / zoom,
+  y: (scroll.top + viewport.height / 2 - pad.y) / zoom,
+});
+
+/** Scroll offset that places the unscaled content point `anchor` at the viewport centre. */
+export const anchoredScroll = ({
+  anchor,
+  viewport,
+  pad,
+  zoom,
+}: {
+  anchor: Point;
+  viewport: Size;
+  pad: Point;
+  zoom: number;
+}): Scroll => ({
+  left: pad.x + anchor.x * zoom - viewport.width / 2,
+  top: pad.y + anchor.y * zoom - viewport.height / 2,
+});
+
 /** A tile position (span optional, defaulting to 1×1) as stored in a layout keyed by id. */
 type Position = { x: number; y: number; w?: number; h?: number };
 

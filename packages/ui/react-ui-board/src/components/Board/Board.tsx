@@ -20,6 +20,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import {
   IconButton,
   ScrollArea,
@@ -50,7 +51,20 @@ import {
   type Layout,
   pushToFit,
 } from './engine';
-import { type GridCellSize, type Rect, cellRect, getColumnCount, getRowCount, gridBounds } from './geometry';
+import {
+  type GridCellSize,
+  type Rect,
+  anchoredScroll,
+  boardPad,
+  cellRect,
+  getColumnCount,
+  getRowCount,
+  gridBounds,
+  viewportCenterAnchor,
+} from './geometry';
+
+/** Duration (ms) of the zoom-anchor and recenter scroll animations. */
+const ANIMATION_DURATION = 500;
 
 // TODO(burdon): Multi-select + keyboard move/resize.
 // TODO(burdon): Zoom/overview + toolbar (port from the previous Board — deferred).
@@ -257,7 +271,11 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       const startTop = el.scrollTop;
       const deltaLeft = left - startLeft;
       const deltaTop = top - startTop;
-      const duration = 200;
+      const duration = ANIMATION_DURATION;
+      log.info('recenter begin', {
+        from: { left: Math.round(startLeft), top: Math.round(startTop) },
+        to: { left: Math.round(left), top: Math.round(top) },
+      });
       let startTime: number | undefined;
       const step = (time: number) => {
         startTime ??= time;
@@ -267,6 +285,8 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         el.scrollTop = startTop + deltaTop * eased;
         if (t < 1) {
           scrollFrameRef.current = requestAnimationFrame(step);
+        } else {
+          log.info('recenter end', { at: { left: Math.round(el.scrollLeft), top: Math.round(el.scrollTop) } });
         }
       };
       scrollFrameRef.current = requestAnimationFrame(step);
@@ -316,15 +336,16 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
           anchorX = board.width / 2;
           anchorY = board.height / 2;
         }
-        // The board box sits at a left/top pad and scales from its top-left (transform-origin 0 0), so a
-        // content point maps to `pad + point * zoom` on screen; place the anchor at the viewport centre.
-        // The pad is half the viewport under overscroll, else the margin that centres a board smaller
-        // than the viewport (0 when it overflows) — matching Board.Viewport's margins.
-        const boardBox = gridBounds(columns, rows, cellSizePx, gapPx);
-        const padX = overscroll ? el.clientWidth / 2 : Math.max(0, (el.clientWidth - boardBox.width * zoom) / 2);
-        const padY = overscroll ? el.clientHeight / 2 : Math.max(0, (el.clientHeight - boardBox.height * zoom) / 2);
-        const targetLeft = padX + anchorX * zoom - el.clientWidth / 2;
-        const targetTop = padY + anchorY * zoom - el.clientHeight / 2;
+        // Place the anchor at the viewport centre. The board sits at `pad` and scales from its top-left
+        // (transform-origin 0 0), so a content point maps to `pad + point * zoom` on screen.
+        const viewport = { width: el.clientWidth, height: el.clientHeight };
+        const pad = boardPad({ viewport, board: gridBounds(columns, rows, cellSizePx, gapPx), zoom, overscroll });
+        const { left: targetLeft, top: targetTop } = anchoredScroll({
+          anchor: { x: anchorX, y: anchorY },
+          viewport,
+          pad,
+          zoom,
+        });
         if (smooth) {
           smoothScrollTo(el, targetLeft, targetTop);
         } else {
@@ -522,10 +543,9 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
   const voidX = zoom < 1 ? bounds.width * (1 - zoom) : 0;
   const voidY = zoom < 1 ? bounds.height * (1 - zoom) : 0;
   // Left/top pad that centres a board smaller than the viewport (0 when it overflows). Computed
-  // explicitly rather than via `m-auto` so it stays symmetric — `m-auto` combined with the negative
-  // right margin (below) would shove the board to one side and leave a void on the left/top.
-  const padX = overscroll ? overscrollPad.x : Math.max(0, (viewportSize.width - bounds.width * zoom) / 2);
-  const padY = overscroll ? overscrollPad.y : Math.max(0, (viewportSize.height - bounds.height * zoom) / 2);
+  // explicitly (shared with the scroll/zoom-anchor math) rather than via `m-auto`, which — combined
+  // with the negative right margin below — would shove the board to one side and void the left/top.
+  const { x: padX, y: padY } = boardPad({ viewport: viewportSize, board: bounds, zoom, overscroll });
 
   return (
     // The board sits at `pad` (centring it when it fits, 0 + overscroll when it overflows) and sheds the
@@ -600,21 +620,14 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
     const { selected, overscroll, layout, cellSize, gap } = anchorState.current;
     // Capture the viewport size once — stable during the animation in a real pane (and avoids a
     // fluctuating measurement mid-animation).
-    const clientWidth = element.clientWidth;
-    const clientHeight = element.clientHeight;
+    const viewport = { width: element.clientWidth, height: element.clientHeight };
     const board = element.querySelector<HTMLElement>('[data-dx-board-viewport]');
-    // Board's unscaled footprint (offsetWidth ignores the transform), used to derive its left/top
-    // offset in the scroll content at a given scale — matching Board.Viewport's margins: half the
-    // viewport under overscroll, else the margin that centres a board smaller than the viewport.
-    const boardW = board?.offsetWidth ?? 0;
-    const boardH = board?.offsetHeight ?? 0;
-    const padXAt = (scale: number) => (overscroll ? clientWidth / 2 : Math.max(0, (clientWidth - boardW * scale) / 2));
-    const padYAt = (scale: number) =>
-      overscroll ? clientHeight / 2 : Math.max(0, (clientHeight - boardH * scale) / 2);
+    // Board's unscaled footprint (offsetWidth ignores the transform), used to derive its pad at a scale.
+    const boardSize = { width: board?.offsetWidth ?? 0, height: board?.offsetHeight ?? 0 };
+    const padAt = (scale: number) => boardPad({ viewport, board: boardSize, zoom: scale, overscroll });
 
     // Anchor point in unscaled, board-relative content coords.
-    let anchorX: number;
-    let anchorY: number;
+    let anchor: { x: number; y: number };
     const ids = [...selected].filter((id) => layout.items[id]);
     if (ids.length > 0) {
       // Centre of mass of the selected tiles' centres.
@@ -626,13 +639,32 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
         sumX += rect.left + rect.width / 2;
         sumY += rect.top + rect.height / 2;
       }
-      anchorX = sumX / ids.length;
-      anchorY = sumY / ids.length;
+      anchor = { x: sumX / ids.length, y: sumY / ids.length };
     } else {
       // Nothing selected: hold whatever is currently at the viewport centre.
-      anchorX = (element.scrollLeft + clientWidth / 2 - padXAt(prevZoom)) / prevZoom;
-      anchorY = (element.scrollTop + clientHeight / 2 - padYAt(prevZoom)) / prevZoom;
+      anchor = viewportCenterAnchor({
+        scroll: { left: element.scrollLeft, top: element.scrollTop },
+        viewport,
+        pad: padAt(prevZoom),
+        zoom: prevZoom,
+      });
     }
+
+    const target = anchoredScroll({ anchor, viewport, pad: padAt(zoom), zoom });
+    // Diagnostic: the full anchor computation for one zoom step. Enable in the browser with
+    // `localStorage.setItem('dxlog', 'info:react-ui-board/board')` (or check the default console).
+    log.info('zoom anchor begin', {
+      prevZoom,
+      zoom,
+      scrollBefore: { left: Math.round(element.scrollLeft), top: Math.round(element.scrollTop) },
+      viewport,
+      boardSize,
+      overscroll,
+      padPrev: padAt(prevZoom),
+      padNext: padAt(zoom),
+      anchor: { x: Math.round(anchor.x), y: Math.round(anchor.y) },
+      target,
+    });
 
     // Drive the zoom ourselves (scale + scroll together) each frame, so the anchor stays at the
     // viewport centre for the whole animation — the selected tiles are the focal point, not the
@@ -640,13 +672,14 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
     // ~duration); it lands on React's value at the end.
     const from = prevZoom;
     const to = zoom;
-    const duration = 200;
+    const duration = ANIMATION_DURATION;
     const apply = (scale: number) => {
       if (board) {
         board.style.transform = scale === 1 ? '' : `scale(${scale})`;
       }
-      element.scrollLeft = padXAt(scale) + anchorX * scale - clientWidth / 2;
-      element.scrollTop = padYAt(scale) + anchorY * scale - clientHeight / 2;
+      const { left, top } = anchoredScroll({ anchor, viewport, pad: padAt(scale), zoom: scale });
+      element.scrollLeft = left;
+      element.scrollTop = top;
     };
 
     let frame = 0;
@@ -658,6 +691,15 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
       apply(from + (to - from) * eased);
       if (t < 1) {
         frame = requestAnimationFrame(step);
+      } else {
+        // The actual scroll reached, and the content point now at the viewport centre — compare with
+        // `target` / `anchor` above to see whether the anchor held.
+        const scrollAfter = { left: Math.round(element.scrollLeft), top: Math.round(element.scrollTop) };
+        log.info('zoom anchor end', {
+          zoom,
+          scrollAfter,
+          achievedAnchor: viewportCenterAnchor({ scroll: scrollAfter, viewport, pad: padAt(zoom), zoom }),
+        });
       }
     };
     frame = requestAnimationFrame(step);
@@ -941,14 +983,18 @@ const BoardMap = ({ classNames }: BoardMapProps) => {
     };
   }, [viewportRef]);
 
-  // The visible region in unscaled content coords: undo the board's left/top pad (overscroll, or the
-  // margin that centres a board smaller than the viewport) and the zoom scale so it maps onto the same
-  // coordinate space as the tile rects (percent of the board bounds).
-  const padX = overscrollPad.x > 0 ? overscrollPad.x : Math.max(0, (view.width - bounds.width * zoom) / 2);
-  const padY = overscrollPad.y > 0 ? overscrollPad.y : Math.max(0, (view.height - bounds.height * zoom) / 2);
+  // The visible region in unscaled content coords: undo the board's left/top pad (shared with the
+  // layout / scroll math) and the zoom scale so it maps onto the same coordinate space as the tile
+  // rects (percent of the board bounds).
+  const pad = boardPad({
+    viewport: { width: view.width, height: view.height },
+    board: bounds,
+    zoom,
+    overscroll: overscrollPad.x > 0 || overscrollPad.y > 0,
+  });
   const viewport = {
-    left: ((view.left - padX) / zoom / bounds.width) * 100,
-    top: ((view.top - padY) / zoom / bounds.height) * 100,
+    left: ((view.left - pad.x) / zoom / bounds.width) * 100,
+    top: ((view.top - pad.y) / zoom / bounds.height) * 100,
     width: (view.width / zoom / bounds.width) * 100,
     height: (view.height / zoom / bounds.height) * 100,
   };
