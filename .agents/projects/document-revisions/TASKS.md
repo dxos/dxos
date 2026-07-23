@@ -1,5 +1,7 @@
 # Document Revisions & Branches — Tasks
 
+_Resume: pick a deferred follow-up (recommend B4 un-delete phantom, then comment-flash-on-Enter bug). Uncommitted: none. Last: #12302 MERGED 2026-07-22 08:41Z (squash 77fff35b41) — Milestone B + @dxos/plugin-versioning extraction._
+
 Design: [`packages/plugins/plugin-comments/DESIGN.md`](../../../packages/plugins/plugin-comments/DESIGN.md).
 Convergence plan (+ resolved decisions):
 [`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md).
