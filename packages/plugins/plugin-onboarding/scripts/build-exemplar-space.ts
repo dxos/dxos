@@ -67,7 +67,7 @@ import { Sheet } from '@dxos/plugin-sheet';
 import { Sketch } from '@dxos/plugin-sketch';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Table } from '@dxos/react-ui-table/types';
-import { TagIndex, Tagging, ViewModel } from '@dxos/schema';
+import { Tagging, TagIndex, ViewModel } from '@dxos/schema';
 import { Actor, ContentBlock, Event, Message, Organization, Person, Project, Task } from '@dxos/types';
 
 const __filename = fileURLToPath(import.meta.url);
