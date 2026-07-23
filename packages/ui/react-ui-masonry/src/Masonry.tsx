@@ -25,6 +25,12 @@ import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 import { useFlip } from './useFlip';
 import { useMasonryLayout } from './useMasonryLayout';
 
+/** Reveal the grid once the layout has been stable for this long (the initial reflow has settled). */
+const REVEAL_SETTLE_MS = 80;
+
+/** Reveal the grid no later than this after mount, so churning content never hides it indefinitely. */
+const REVEAL_DEADLINE_MS = 1200;
+
 //
 // Context
 //
@@ -185,14 +191,23 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     });
     useFlip({ nodes, ids, rects, columnCount, containerWidth: contentWidth, enabled: animate });
 
-    // Hide the grid until the first layout is measured so the initial all-heights-zero stack
-    // (every tile bunched at the top) never flashes; latch on so later edits never re-hide it.
+    // Hide the grid until the layout stops changing, then fade in; latch on so later edits never
+    // re-hide it. Revealing on the first measurement is not enough: tiles mount collapsed (their
+    // poster reserves height a frame later), so the first pass stacks them bunched at the top and
+    // only settles over the next few reflows. Debounce on `rects` identity — which changes on every
+    // relayout — and reveal once it has been stable for a beat, with a hard deadline as a backstop.
     const [revealed, setRevealed] = useState(false);
     useEffect(() => {
-      if (measured) {
-        setRevealed(true);
+      if (revealed || !measured) {
+        return;
       }
-    }, [measured]);
+      const timer = setTimeout(() => setRevealed(true), REVEAL_SETTLE_MS);
+      return () => clearTimeout(timer);
+    }, [revealed, measured, rects]);
+    useEffect(() => {
+      const deadline = setTimeout(() => setRevealed(true), REVEAL_DEADLINE_MS);
+      return () => clearTimeout(deadline);
+    }, []);
 
     // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all four
     // arrows move focus through the items as flat next/previous-focusable, giving
