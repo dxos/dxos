@@ -40,6 +40,11 @@ type MasonryContextValue = {
   maxColumnWidth: number;
   /** Space applied uniformly between tiles and around the grid perimeter, in rem. */
   gap: number;
+  /**
+   * Animate reflow when a small number of tiles are added or removed. Disabled, or on a
+   * bulk change (initial render, data swap) or resize, tiles snap to position instead.
+   */
+  animate: boolean;
 };
 
 const MASONRY_NAME = 'Masonry';
@@ -60,6 +65,7 @@ const MasonryRoot = ({
   minColumnWidth = cardMinInlineSize,
   maxColumnWidth = cardMaxInlineSize,
   gap = 0.75,
+  animate = true,
 }: MasonryRootProps) => (
   <MasonryProvider
     Tile={Tile!}
@@ -68,6 +74,7 @@ const MasonryRoot = ({
     minColumnWidth={minColumnWidth}
     maxColumnWidth={maxColumnWidth}
     gap={gap}
+    animate={animate}
   >
     {children}
   </MasonryProvider>
@@ -146,7 +153,8 @@ type MasonryViewportProps<Item> = ThemedClassName<{
 
 const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
   ({ items, getId, selectedIds, onSelect, ...props }, forwardedRef) => {
-    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap } = useMasonryContext('Masonry.Viewport');
+    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate } =
+      useMasonryContext('Masonry.Viewport');
     const remInPx = usePx(1);
     // Measure the viewport's own content box (net of padding and scrollbar) rather
     // than deriving it from the root width, so the grid tracks the actual available
@@ -173,7 +181,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       gapPx,
       maxColumnWidthPx: maxColumnWidth * remInPx,
     });
-    useFlip({ nodes, ids, rects, enabled: true });
+    useFlip({ nodes, ids, rects, columnCount, containerWidth: contentWidth, enabled: animate });
 
     // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all four
     // arrows move focus through the items as flat next/previous-focusable, giving

@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card } from '@dxos/react-ui';
+import { Button, Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Person } from '@dxos/types';
@@ -61,6 +61,37 @@ const DefaultStory = (props: MasonryRootProps) => {
   );
 };
 
+// Exercises the animate-only-on-small-edits behaviour: the full set snaps in (bulk),
+// while adding or removing one card animates the reflow.
+const InteractiveStory = (props: MasonryRootProps) => {
+  const { space } = useClientStory();
+  const people = useQuery(space?.db, Filter.type(Person.Person));
+  // Undefined tracks the full set even as the async query resolves; a number pins a slice.
+  const [limit, setLimit] = useState<number | undefined>(undefined);
+  const shown = limit ?? people.length;
+  const visible = useMemo(() => people.slice(0, shown), [people, shown]);
+
+  return (
+    <div className='flex flex-col grow bs-full min-is-0'>
+      <div className='flex gap-2 p-2'>
+        <Button onClick={() => setLimit((value) => Math.min(people.length, (value ?? people.length) + 1))}>
+          Add one
+        </Button>
+        <Button onClick={() => setLimit((value) => Math.max(0, (value ?? people.length) - 1))}>Remove one</Button>
+        <Button onClick={() => setLimit(0)}>Clear</Button>
+        <Button onClick={() => setLimit(people.length)}>Show all</Button>
+      </div>
+      <div className='flex grow min-bs-0'>
+        <Masonry.Root {...props} Tile={StoryItem}>
+          <Masonry.Content>
+            <Masonry.Viewport items={visible} getId={(person) => person.id} />
+          </Masonry.Content>
+        </Masonry.Root>
+      </div>
+    </div>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-masonry/Masonry',
   render: DefaultStory,
@@ -104,6 +135,12 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
+  argTypes: {
+    animate: { control: 'boolean' },
+  },
+  args: {
+    animate: true,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -111,3 +148,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Interactive: Story = {
+  render: InteractiveStory,
+};
