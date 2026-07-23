@@ -20,7 +20,6 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import {
   IconButton,
   ScrollArea,
@@ -64,7 +63,7 @@ import {
 } from './geometry';
 
 /** Duration (ms) of the zoom-anchor and recenter scroll animations. */
-const ANIMATION_DURATION = 500;
+const ANIMATION_DURATION = 200;
 
 // TODO(burdon): Multi-select + keyboard move/resize.
 // TODO(burdon): Zoom/overview + toolbar (port from the previous Board — deferred).
@@ -285,10 +284,6 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       const deltaLeft = left - startLeft;
       const deltaTop = top - startTop;
       const duration = ANIMATION_DURATION;
-      log.info('recenter begin', {
-        from: { left: Math.round(startLeft), top: Math.round(startTop) },
-        to: { left: Math.round(left), top: Math.round(top) },
-      });
       let startTime: number | undefined;
       const step = (time: number) => {
         startTime ??= time;
@@ -298,8 +293,6 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         el.scrollTop = startTop + deltaTop * eased;
         if (t < 1) {
           scrollFrameRef.current = requestAnimationFrame(step);
-        } else {
-          log.info('recenter end', { at: { left: Math.round(el.scrollLeft), top: Math.round(el.scrollTop) } });
         }
       };
       scrollFrameRef.current = requestAnimationFrame(step);
@@ -694,22 +687,6 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
       });
     }
 
-    const target = anchoredScroll({ anchor, viewport, pad: padAt(zoom), zoom });
-    // Diagnostic: the full anchor computation for one zoom step. Enable in the browser with
-    // `localStorage.setItem('dxlog', 'info:react-ui-board/board')` (or check the default console).
-    log.info('zoom anchor begin', {
-      prevZoom,
-      zoom,
-      scrollBefore: { left: Math.round(element.scrollLeft), top: Math.round(element.scrollTop) },
-      viewport,
-      boardSize,
-      overscroll,
-      padPrev: padAt(prevZoom),
-      padNext: padAt(zoom),
-      anchor: { x: Math.round(anchor.x), y: Math.round(anchor.y) },
-      target,
-    });
-
     // Drive the zoom ourselves (scale + scroll together) each frame, so the anchor stays at the
     // viewport centre for the whole animation — the selected tiles are the focal point, not the
     // board's top-left. We set the scale imperatively (overriding React's inline transform for the
@@ -748,14 +725,6 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
       } else {
         // Settled: allow the next zoom to re-capture the anchor from the (now-stable) scroll.
         zooming.current = false;
-        // The actual scroll reached, and the content point now at the viewport centre — compare with
-        // `target` / `anchor` above to see whether the anchor held.
-        const scrollAfter = { left: Math.round(element.scrollLeft), top: Math.round(element.scrollTop) };
-        log.info('zoom anchor end', {
-          zoom,
-          scrollAfter,
-          achievedAnchor: viewportCenterAnchor({ scroll: scrollAfter, viewport, pad: padAt(zoom), zoom }),
-        });
       }
     };
     frame = requestAnimationFrame(step);
