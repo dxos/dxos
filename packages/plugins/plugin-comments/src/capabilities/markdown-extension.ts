@@ -6,9 +6,7 @@ import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { Attention } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -80,15 +78,11 @@ export default Capability.makeModule(
           update.transactions.forEach((transaction) => {
             transaction.effects.forEach((effect) => {
               if (effect.is(commentClickedEffect)) {
-                // Select the clicked comment's thread (its id is the thread URI) so the companion
-                // highlights and scrolls to it, THEN open the companion. The two must run in sequence
-                // (as `CommentOperation.Create` does): firing them concurrently from inside the editor's
-                // transaction dispatch let the companion-open write get clobbered, so the panel selected
-                // the thread but never opened. Chaining also defers the open out of the dispatch cycle.
-                const current = effect.value;
-                void invokePromise(CommentOperation.Select, { current }).then(() =>
-                  invokePromise(LayoutOperation.UpdateCompanion, { subject: Attention.linkedSegment('comments') }),
-                );
+                // Select the clicked comment's thread (its id is the thread URI) AND reveal it: `reveal`
+                // makes the Select handler open the comments companion via a nested operation, which
+                // opens reliably where a top-level `invokePromise(UpdateCompanion)` from this listener
+                // did not.
+                void invokePromise(CommentOperation.Select, { current: effect.value, reveal: true });
               }
             });
           });
