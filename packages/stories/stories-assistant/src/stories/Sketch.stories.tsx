@@ -53,7 +53,7 @@ const decorators = createDecorators({
 });
 
 const sharedArgs = {
-  layout: [[Module.Chat], [Module.Sketch]],
+  layout: [[Module.Chat], [Module.Sketch], [Module.Trace]],
   skills: [AssistantSkill.key, SketchSkill.key],
 };
 
