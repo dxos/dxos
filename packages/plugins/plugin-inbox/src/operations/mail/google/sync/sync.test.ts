@@ -546,14 +546,18 @@ describe('runGoogleSync against a mock Gmail API', () => {
     // More than one `listMessages` page (`GOOGLE_SYNC_CONFIG.listPageSize` = 500) within one date chunk
     // (`dateChunkDays` = 7): reversing page-by-page would be oldest-first only within each page, not
     // across the chunk — the regression this test guards against.
-    const end = subDays(new Date(), 3);
+    // Pin `now` so window/horizon resolution is deterministic: the dataset's `end` and the sync's
+    // reference time must share one clock, or a real-time day rollover between them shifts the forward
+    // window by a day and drops boundary messages.
+    const now = new Date('2026-06-15T12:00:00.000Z');
+    const end = subDays(now, 3);
     const dataset = generateGmailDataset({ count: 510, seed: 13, start: subDays(end, 2), end });
 
     // Backward (initial sync): Gmail's native newest-first order is never reversed, so it's already
     // globally consistent across pages — asserted here as a regression guard alongside forward.
     const backward = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
     await EffectEx.runPromise(
-      runGoogleSync({ binding: Ref.make(backward.binding), maxMessages: 1000 }).pipe(
+      runGoogleSync({ binding: Ref.make(backward.binding), maxMessages: 1000, now }).pipe(
         Effect.provide(inboxSyncTestServices(backward.db, dataset)),
       ),
     );
@@ -570,7 +574,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
       options: { syncBackDays: 1 },
     });
     await EffectEx.runPromise(
-      runGoogleSync({ binding: Ref.make(forward.binding), maxMessages: 1000 }).pipe(
+      runGoogleSync({ binding: Ref.make(forward.binding), maxMessages: 1000, now }).pipe(
         Effect.provide(inboxSyncTestServices(forward.db, dataset)),
       ),
     );
