@@ -512,6 +512,14 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
   const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
   const overscroll = overscrollPad.x > 0 || overscrollPad.y > 0;
 
+  // A CSS transform scales the paint but not the layout box, so at zoom < 1 the board keeps its full
+  // unscaled footprint and leaves a void to the right/below in the scroll area. Pull that extra extent
+  // back with negative right/bottom margins so the scrollable area matches the scaled board — without
+  // touching the transform, so Board.Container's scroll/zoom-anchor math (which maps a content point to
+  // `point * zoom` from the board's top-left) is unchanged.
+  const voidX = zoom < 1 ? bounds.width * (1 - zoom) : 0;
+  const voidY = zoom < 1 ? bounds.height * (1 - zoom) : 0;
+
   return (
     // `m-auto` centers the board within the (flex) scroll container when it fits, and stays fully
     // scrollable when it overflows (unlike justify-center, which would clip the top/left).
@@ -532,7 +540,12 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
         // compensates scroll on zoom to keep the anchor (selected tile / current centre) fixed.
         transform: zoom !== 1 ? `scale(${zoom})` : undefined,
         transformOrigin: '0 0',
-        margin: overscroll ? `${overscrollPad.y}px ${overscrollPad.x}px` : undefined,
+        // Left/top keep `m-auto` (or the overscroll pad); right/bottom shed the unscaled void so the
+        // scroll extent matches the scaled board.
+        marginLeft: overscroll ? overscrollPad.x : undefined,
+        marginTop: overscroll ? overscrollPad.y : undefined,
+        marginRight: overscroll ? overscrollPad.x - voidX : voidX ? -voidX : undefined,
+        marginBottom: overscroll ? overscrollPad.y - voidY : voidY ? -voidY : undefined,
       }}
     >
       {children}
