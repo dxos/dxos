@@ -34,8 +34,6 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Magazine type section in the content group.
       TypeSection.createTypeSectionExtension(Magazine.Magazine, {
-        // Set here rather than via a schema annotation so the URL key does not leak into the
-        // schema serialized in LLM prompts (memoized assistant conversations).
         urlKey: 'magazine',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
         groupSegment: Paths.GroupSegments.content,

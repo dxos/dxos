@@ -207,8 +207,6 @@ export default Capability.makeModule(
         ),
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
         groupSegment: Paths.GroupSegments.ai,
-        // Set explicitly: the Chat schema lives in @dxos/assistant-toolkit (bundled for
-        // workerd), which must not import the UrlPrefixAnnotation from @dxos/app-toolkit.
         urlKey: 'chat',
       }),
 

@@ -22,8 +22,6 @@ import { SpaceOperation } from '@dxos/plugin-space';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* TypeSection.createTypeSectionExtension(Topic.Topic, {
-      // Topic's schema lives in `@dxos/compute`, which app-toolkit depends on — it cannot carry
-      // `AppAnnotation.UrlPrefixAnnotation` without a cycle, so the key is set explicitly here.
       urlKey: 'topic',
       match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
       groupSegment: Paths.GroupSegments.ai,

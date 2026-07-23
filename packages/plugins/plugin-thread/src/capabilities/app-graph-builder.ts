@@ -26,8 +26,6 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Channel.Channel, {
-        // Channel's schema lives in `@dxos/types`, which app-toolkit depends on — it cannot carry
-        // `AppAnnotation.UrlPrefixAnnotation` without a cycle, so the key is set explicitly here.
         urlKey: 'channel',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
         groupSegment: Paths.GroupSegments.communications,

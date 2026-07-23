@@ -23,8 +23,6 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Routine.Routine, {
-        // Set here rather than via a schema annotation so the URL key does not leak into the
-        // schema serialized in LLM prompts (memoized assistant conversations).
         urlKey: 'routine',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
         groupSegment: Paths.GroupSegments.ai,

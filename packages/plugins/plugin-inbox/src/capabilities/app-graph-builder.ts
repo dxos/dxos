@@ -285,8 +285,6 @@ export default Capability.makeModule(
       }),
 
       TypeSection.createTypeSectionExtension(Calendar.Calendar, {
-        // Set here rather than via a schema annotation so the URL key does not leak into the
-        // schema serialized in LLM prompts (memoized assistant conversations).
         urlKey: 'calendar',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
         groupSegment: Paths.GroupSegments.communications,
