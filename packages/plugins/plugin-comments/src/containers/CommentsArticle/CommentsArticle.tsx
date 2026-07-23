@@ -206,7 +206,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         }
         seenThreads.add(threadId);
       } catch {
-        // Leave unresolved anchors in place; they are filtered elsewhere once resolved.
+        // Drop anchors whose source isn't resolved yet — otherwise they reach the render path and the
+        // comment/item handlers, which call `Relation.getSource` again and would throw. They reappear
+        // once the source resolves and the query re-emits.
+        return false;
       }
       return true;
     });

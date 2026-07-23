@@ -808,7 +808,11 @@ export const EditingTyping: Story = {
     await waitFor(
       async () => {
         await expect(rootContent()).toContain('edited');
-        const suggestionBranches = (getDoc().history?.branches ?? []).filter(
+        // Require history to be initialized — otherwise a not-yet-loaded `history` would collapse to an
+        // empty branch list and pass before the regression scenario has settled.
+        const history = getDoc().history;
+        invariant(history, 'history not initialized');
+        const suggestionBranches = history.branches.filter(
           (branch) => branch.status === 'active' && branch.kind === 'suggestion',
         );
         await expect(suggestionBranches).toHaveLength(0);

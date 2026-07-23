@@ -43,6 +43,7 @@ export default Capability.makeModule(
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
+
         return threads({ registry, stateAtom }, doc, invokePromise, {
           reviewBranch,
           branchText,
@@ -54,6 +55,7 @@ export default Capability.makeModule(
         if (!doc) {
           return [];
         }
+
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
 
@@ -73,6 +75,7 @@ export default Capability.makeModule(
         if (!doc) {
           return [];
         }
+
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
 
         return EditorView.updateListener.of((update) => {

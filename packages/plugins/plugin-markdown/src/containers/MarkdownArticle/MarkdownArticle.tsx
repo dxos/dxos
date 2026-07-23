@@ -31,7 +31,6 @@ import {
   suggestionsOverlay,
   trackChanges,
 } from '@dxos/ui-editor';
-import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Branch } from '@dxos/versioning';
 
 import {
@@ -501,7 +500,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         // the current editor view mode is checked.
         checked: !contributedActive && item.id === current,
         onSelect: () => {
-          onViewModeChange?.(item.id as EditorViewMode);
+          onViewModeChange?.(item.id);
           if (ambient) {
             setMode(item.id === 'source' ? 'editing' : 'viewing');
           }

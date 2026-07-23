@@ -24,8 +24,11 @@ export type ViewModeItem = {
   onSelect?: () => void;
 };
 
-/** The built-in view modes: preview (rendered), source (raw edit), readonly (non-editable source). */
-export const defaultViewModeItems: ViewModeItem[] = [
+/**
+ * The built-in view modes: preview (rendered), source (raw edit), readonly (non-editable source). Typed
+ * so each `id` is an {@link EditorViewMode}, letting callers pass `item.id` to `onViewModeChange` without a cast.
+ */
+export const defaultViewModeItems: Array<ViewModeItem & { id: EditorViewMode }> = [
   { id: 'preview', icon: 'ph--eye--regular' },
   { id: 'source', icon: 'ph--pencil-simple--regular' },
   { id: 'readonly', icon: 'ph--pencil-slash--regular' },

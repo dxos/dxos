@@ -15,6 +15,8 @@ Legend: ☐ = to verify. Note anything that differs from **Expected**.
 
 ---
 
+<a id="0-open-design-issue"></a>
+
 ## 0. Open design issue — view-mode ↔ review-mode coupling
 
 **What happens.** The review posture (Editing / Suggesting / Viewing) is now folded into the editor
@@ -198,7 +200,3 @@ Notes: revisit the cohort percentage after the first week.
 - History companion (timeline/branches/checkpoints) → `plugin-versioning` `ObjectHistory.tsx`.
 - Review posture ↔ render policy → `plugin-versioning` `VersioningCapabilities` (`viewAspect`,
   `defaultReviewRenderPolicy`); consumed in `MarkdownArticle`.
-
-```
-
-```

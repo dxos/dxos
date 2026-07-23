@@ -21,25 +21,29 @@ export type DropdownMenuProps = DropdownMenuRootProps & {
 
 const DropdownMenuItem = ({
   item,
+  group,
   onClick,
   __menuScope,
 }: MenuScopedProps<{
   item: MenuItem;
+  group?: MenuItemGroup;
   onClick: (action: MenuAction, event: MouseEvent) => void;
 }>) => {
   // TODO(thure): handle other items.
   const action = item as MenuAction;
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
   const { iconSize } = useMenuScoped('DropdownMenuItem', __menuScope);
-  // An item that declares `checked` is a select-group member: expose the checkbox role + state to AT so
-  // the current value is announced, not conveyed by the trailing check icon alone.
+  // An item that declares `checked` is a select-group member: expose the checked role + state to AT so
+  // the current value is announced, not conveyed by the trailing check icon alone. Mutually-exclusive
+  // (single-select) groups use radio semantics; multi-select groups use checkbox.
   const checkable = typeof action.properties?.checked === 'boolean';
+  const role = group?.properties?.selectCardinality === 'multiple' ? 'menuitemcheckbox' : 'menuitemradio';
   return (
     <NaturalDropdownMenu.Item
       onClick={handleClick}
       classNames='gap-2'
       disabled={action.properties?.disabled}
-      {...(checkable && { 'role': 'menuitemcheckbox', 'aria-checked': !!action.properties?.checked })}
+      {...(checkable && { role, 'aria-checked': !!action.properties?.checked })}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
       {action.properties?.icon && (
@@ -104,7 +108,7 @@ const DropdownMenuRoot = ({
               isSeparator(item) ? (
                 <NaturalDropdownMenu.Separator key={item.id} />
               ) : (
-                <DropdownMenuItem key={item.id} item={item} onClick={handleActionClick} />
+                <DropdownMenuItem key={item.id} item={item} group={group} onClick={handleActionClick} />
               ),
             )}
           </NaturalDropdownMenu.Viewport>
