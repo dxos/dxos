@@ -591,6 +591,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                 <VersionToolbar versioning={versioning} />
                 <MarkdownEditor.Content initialValue={initialValue} />
                 <Editor.Blocks />
+                {/* Developer diagnostics panel (live editor state), gated behind the debug setting. */}
+                {settings.debug && <Editor.Diagnostics />}
               </Panel.Content>
             </Panel.Root>
           </Editor.Root>
