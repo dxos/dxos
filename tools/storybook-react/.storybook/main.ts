@@ -201,10 +201,6 @@ export const createConfig = ({
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final
    */
   viteFinal: async (config: InlineConfig, options: { configType?: string }) => {
-    // TEMPORARY diagnostic: confirm the run-mode signals visible inside the in-process builder.
-    console.warn(
-      `[DX-WATCHDIAG] viteFinal VITEST=${process.env.VITEST} isVitestRun=${isVitestRun} configType=${options.configType} argv=${JSON.stringify(process.argv.slice(2))}`,
-    );
     if (isTrue(process.env.DX_DEBUG)) {
       console.log(JSON.stringify({ config, options }, null, 2));
     }
@@ -275,12 +271,9 @@ export const createConfig = ({
             // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
             overlay: false,
           },
-          // Vite watches every served module (leaking per-file `fs_event` handles that hang
-          // single-pass teardown), so disable the watcher whenever running under Vitest. `VITEST`
-          // is exported to the whole process tree (unlike the run subcommand in `process.argv`,
-          // which does not reach this in-process builder), so it reliably matches here; interactive
-          // `storybook dev` (local + e2e) has `VITEST` unset and keeps HMR.
-          ...(isTrue(process.env.VITEST) ? { watch: null } : {}),
+          // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it
+          // in run mode only, so interactive `storybook dev` (local + e2e) and `vitest watch` keep HMR.
+          ...(isVitestRun ? { watch: null } : {}),
         },
         optimizeDeps: {
           // WASM modules.
