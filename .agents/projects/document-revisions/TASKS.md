@@ -15,6 +15,24 @@ hiding all suggestions (incl. the user's own in-progress one). The edit stays on
 `viewAspect` mode is in-memory so reload resets to `editing` and it reappears. Options in TEST-PLAN §0
 (decouple render from posture / viewing-shows-suggestions-readonly / keep-as-is). **Not changed overnight
 — user decides.**
+
+## P0 REGRESSION (2026-07-23, reported) — "each keypress creates a new suggestion" in editing mode
+
+User: in Markdown mode (NOT suggesting) each keypress creates a new suggestion. **Static analysis:** only
+two paths create a `kind:'suggestion'` branch — the ambient bind effect
+([MarkdownArticle.tsx:147](../../../packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx),
+gated on `mode==='suggesting'`) and the agent-only `SuggestEdit` op. So either (1) mode is not actually
+`editing` (post-refactor you exit Suggesting by picking a built-in view mode; if that `setMode` doesn't
+take, you stay `suggesting` while it looks like plain markdown), or (2) a find-or-create RACE in the bind
+effect re-runs per edit and spawns a branch before the prior is queryable (fits "reload fixes it";
+pre-existing from #12302). Could NOT run storybook play tests headlessly (browser project). **Repro story
+added: `DocumentVersioning > EditingTyping`** — types in default editing mode, asserts NO suggestion
+branch is created + no `.cm-track-insert`. **MORNING: run EditingTyping + Suggesting to bisect;** if it's
+the exit-suggesting path, fix the `setMode` on built-in view-mode select / add a mode indicator; if it's
+the race, guard the effect (debounce / idempotent find-or-create that sees the just-created branch).
+Option on the table: revert the view-mode refactor (506b37c37c) to a clean #12302 base, keeping
+B6/B4/comment-flash/change-bar, and rebuild the view-mode feature storybook-first.
+
 Convergence plan (+ resolved decisions):
 [`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md).
 PRs: [#12237](https://github.com/dxos/dxos/pull/12237) (landed 2026-07-16); stage 1 on branch

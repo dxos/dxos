@@ -783,6 +783,39 @@ export const AmbientReview: Story = {
  * - The edit lands on the user's branch (asserted via the branch content) and main stays unchanged.
  * - A second author (seeded) still overlays vs main and does NOT strike the user's new text.
  */
+/**
+ * Regression: in the default **Editing** mode (not Suggesting) ordinary typing must write to main and
+ * must NOT create a suggestion branch. Guards the reported "each keypress creates a new suggestion" bug.
+ */
+export const EditingTyping: Story = {
+  args: {
+    content: '# Hello World\n\nBody paragraph.\n',
+  },
+  parameters: {
+    ambientReview: true,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('Body paragraph'), { timeout: 20_000 });
+
+    // Type at the end of the body paragraph — default mode is Editing, editor bound to main.
+    const content = canvasElement.querySelector<HTMLElement>('.cm-content');
+    invariant(content, 'editor content not mounted');
+    content.focus();
+    await userEvent.keyboard('{Control>}{End}{/Control} edited');
+
+    // The edit lands on MAIN (root), not a branch.
+    await waitFor(() => expect(rootContent()).toContain('edited'), { timeout: 15_000 });
+
+    // Regression: ordinary editing must not spawn ANY suggestion branch (per keypress or otherwise).
+    const suggestionBranches = (getDoc().history?.branches ?? []).filter(
+      (branch) => branch.status === 'active' && branch.kind === 'suggestion',
+    );
+    expect(suggestionBranches).toHaveLength(0);
+    // And nothing renders as a tracked change or overlay in plain editing.
+    expect(canvasElement.querySelectorAll('.cm-track-insert')).toHaveLength(0);
+  },
+};
+
 export const Suggesting: Story = {
   args: {
     content: '# Hello World\n',
