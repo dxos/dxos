@@ -64,7 +64,7 @@ describe('TagIndex', () => {
     expect(tags.tagIds()).toEqual([later]);
   });
 
-  test('matches tag membership across absolute and relative key forms (import round-trips)', () => {
+  test('matches tag membership across absolute and relative key forms (import round-trips)', ({ expect }) => {
     const tagIndex = TagIndex.make();
     const tags = TagIndex.bind(tagIndex);
 

@@ -693,27 +693,110 @@ const makeMailbox = (
       subject: 'Spring blend v1 — feedback',
       body: 'Kai — the team loved the chocolate and red fruit notes. Wholesale customers asked about the espresso roast specifically. Would order standing 20 lb/wk starting at launch. — Priya',
     },
+
+    // Replies that extend existing threads (subjects match a root above, with a "Re:" prefix).
+    {
+      from: 'sam',
+      daysAgo: 34,
+      to: toAddr('jordan'),
+      subject: 'Re: Reorder: 30 lb Linden + 10 lb Field Notes',
+      body: 'On it, Jordan — Friday delivery confirmed. I am tossing in a small bag of the new Sidamo lot 42 for you to try. — Sam',
+    },
+    {
+      from: 'priya',
+      daysAgo: 31,
+      to: toAddr('kai'),
+      subject: 'Re: Espresso blend pilot — interested',
+      body: 'Perfect — the espresso bar is all yours to experiment on. We will pull shots the day it lands. — Priya',
+    },
+    {
+      from: 'diego',
+      daysAgo: 8,
+      to: toAddr('abel'),
+      subject: 'Re: Pricing — Sidamo container',
+      body: 'Confirmed, Abel — please start the export paperwork. Looking forward to seeing you in Sidamo next month. — Diego',
+    },
+    {
+      from: 'kai',
+      daysAgo: 1,
+      to: toAddr('priya'),
+      subject: 'Re: Spring blend v1 — feedback',
+      body: 'Wonderful to hear, Priya. I will pencil in a standing 20 lb/wk for launch and send v3 the moment it is signed off. — Kai',
+    },
+
+    // Label proofs — a three-message internal thread with the Letterform Press redesign.
+    {
+      from: 'riley',
+      daysAgo: 19,
+      to: toAddr('kai', 'diego', 'sam'),
+      subject: 'Label proofs — Spring Blend',
+      body: 'First proofs back from Letterform Press. I am partial to option B with the bramble sketch. Any objections before I approve? — Riley',
+    },
+    {
+      from: 'kai',
+      daysAgo: 18,
+      to: toAddr('riley', 'diego', 'sam'),
+      subject: 'Re: Label proofs — Spring Blend',
+      body: 'Option B for me too. Could we warm the background up a shade? Otherwise ship it. — Kai',
+    },
+    {
+      from: 'sam',
+      daysAgo: 16,
+      to: toAddr('riley', 'kai', 'diego'),
+      subject: 'Re: Label proofs — Spring Blend',
+      body: 'Plus one on B. Our wholesale accounts will love the sketch. — Sam',
+    },
+
+    // Green coffee arrival — a two-message logistics thread.
+    {
+      from: 'riley',
+      daysAgo: 11,
+      to: toAddr('kai', 'diego'),
+      subject: 'Esperanza container — customs cleared',
+      body: 'The Esperanza container cleared customs in Oakland this morning. Delivery to the warehouse is set for Thursday. — Riley',
+    },
+    {
+      from: 'diego',
+      daysAgo: 10,
+      to: toAddr('riley', 'kai'),
+      subject: 'Re: Esperanza container — customs cleared',
+      body: 'Great news. I will come by Thursday to check moisture on arrival. — Diego',
+    },
+
+    // Q2 planning — a two-message internal thread, with Kai kicking it off.
+    {
+      from: 'kai',
+      daysAgo: 6,
+      to: toAddr('diego', 'sam', 'riley'),
+      subject: 'Q2 planning — agenda',
+      body: 'Pulling together the Q2 planning agenda: Spring Blend launch date, sourcing-trip logistics, and the part-time roaster hire. Send me anything to add. — Kai',
+    },
+    {
+      from: 'riley',
+      daysAgo: 5,
+      to: toAddr('kai', 'diego', 'sam'),
+      subject: 'Re: Q2 planning — agenda',
+      body: 'Adding packaging lead times and the new freight quote to the list. — Riley',
+    },
   ];
 
-  // Thread by normalized subject: assign every subject group a stable `threadId` (first-seen order),
-  // then link each non-first message in a group to its predecessor via `parentMessage`. Emails are
-  // authored oldest-first, so a reply's parent is always created before it. The mailbox conversation
-  // list groups on the top-level `threadId`; it's mirrored into `properties.threadId` to match the
-  // shape real synced (Gmail/JMAP) messages carry.
-  const threadIdBySubject = new Map<string, string>();
-  for (const email of emails) {
-    const key = normalizeSubject(email.subject);
-    if (!threadIdBySubject.has(key)) {
-      threadIdBySubject.set(key, `thread-${threadSlug(key)}`);
-    }
-  }
+  // Author order is chronological (oldest-first) so a reply's parent is created before it. Sort
+  // defensively by `daysAgo` (descending = oldest-first) so new entries can be appended in any order
+  // above without hand-placing them; the sort is stable, so same-day messages keep their listed order.
+  emails.sort((left, right) => right.daysAgo - left.daysAgo);
+
+  // Thread by normalized subject: a message's `threadId` is a deterministic slug of its subject (with
+  // any "Re:" prefix stripped), so replies land in their root's thread. Each non-first message in a
+  // thread links to its predecessor via `parentMessage`; the chronological sort above guarantees a
+  // reply's parent is created before it. The mailbox conversation list groups on the top-level
+  // `threadId`; it's mirrored into `properties.threadId` to match the shape synced (Gmail/JMAP) mail carries.
+  const threadIdFor = (subject: string): string => `thread-${threadSlug(normalizeSubject(subject))}`;
 
   const lastMessageIdByThread = new Map<string, string>();
   const messages: Message.Message[] = emails.map((email) => {
     const sender = email.senderOverride ?? senderFor(email.from as PersonKey); // 'noise' emails always carry senderOverride.
-    const key = normalizeSubject(email.subject);
-    const threadId = threadIdBySubject.get(key)!;
-    const parentMessage = lastMessageIdByThread.get(key);
+    const threadId = threadIdFor(email.subject);
+    const parentMessage = lastMessageIdByThread.get(threadId);
     const message = Message.make({
       created: daysAgo(email.daysAgo, 10),
       sender,
@@ -722,7 +805,7 @@ const makeMailbox = (
       ...(parentMessage ? { parentMessage } : {}),
       properties: { subject: email.subject, threadId, to: email.to },
     });
-    lastMessageIdByThread.set(key, message.id);
+    lastMessageIdByThread.set(threadId, message.id);
     return message;
   });
 
@@ -733,8 +816,8 @@ const makeMailbox = (
  * Applies canonical system tags to the mailbox's feed messages so the folder views resolve them:
  * every message carries `inbox` (the mailbox opens on the Inbox view, which selects by that tag), and
  * mail authored by the {@link MAIN_CHARACTER} additionally carries `sent` (surfacing it in the Sent
- * folder). Feed messages are immutable, so membership lives in the mailbox's child `TagIndex` keyed by
- * the tag object's URI — the same representation the runtime writes and reads.
+ * folder). Feed messages are immutable, so membership lives in the mailbox's child `TagIndex`, keyed by
+ * the tag's space-relative URI so it survives the space-id remap on import (`TagIndex` matches by entity id).
  */
 const tagMailboxMessages = async (
   space: Space,
@@ -752,7 +835,11 @@ const tagMailboxMessages = async (
     throw new Error('Mailbox is missing its tag index.');
   }
 
-  const mainCharacterEmail = PEOPLE_SEEDS.find((seed) => seed.key === MAIN_CHARACTER)!.email;
+  const mainCharacterSeed = PEOPLE_SEEDS.find((seed) => seed.key === MAIN_CHARACTER);
+  if (!mainCharacterSeed) {
+    throw new Error(`No PEOPLE_SEEDS entry for MAIN_CHARACTER "${MAIN_CHARACTER}".`);
+  }
+  const mainCharacterEmail = mainCharacterSeed.email;
   const entries = messages.flatMap((message) => [
     { object: message, tagId: inboxUri },
     ...(message.sender.email === mainCharacterEmail ? [{ object: message, tagId: sentUri }] : []),
