@@ -36,9 +36,27 @@ type PersonData = {
   notes?: string;
 };
 
-// A small fixed pool of image URLs, cycled by index, so even the 500 preset issues only a handful
-// of (cacheable) requests instead of one per person — keeping the bench fast and offline-friendly.
-const IMAGE_POOL = Array.from({ length: 12 }, (_, index) => `https://picsum.photos/seed/masonry-${index}/256/256`);
+// A small fixed pool of inline (data-URI) images, cycled by index, so the bench is fully
+// self-contained — even the 500 preset issues zero network requests. Distinct hues keep cards varied.
+const IMAGE_POOL = [
+  '#e11d48',
+  '#db2777',
+  '#c026d3',
+  '#9333ea',
+  '#7c3aed',
+  '#4f46e5',
+  '#2563eb',
+  '#0891b2',
+  '#059669',
+  '#65a30d',
+  '#ca8a04',
+  '#ea580c',
+].map(
+  (color) =>
+    `data:image/svg+xml,${encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><rect width='256' height='256' fill='${color}'/></svg>`,
+    )}`,
+);
 
 // Generate plain (non-ECHO) data so even the largest preset mounts instantly — the masonry is a
 // pure layout component, so seeding a database would only add unrelated cost. Variable notes and a
