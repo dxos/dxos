@@ -8,9 +8,9 @@
 // resize shapes in the UI. An object's `origin` is the top-left of its bounding box.
 //
 
-import { type CanvasContent } from './SketchBuilder';
 import { type ExternalBox } from './render';
 import type * as Scene from './scene';
+import { type CanvasContent } from './SketchBuilder';
 
 /** A world object as derived from the canvas: placement is always resolved. */
 export type ReadWorldObject = Scene.WorldObject & { origin: Scene.Point; scale: number };
@@ -113,9 +113,7 @@ const readElement = (record: ShapeRecord, ctx: ReadContext): Scene.Element | und
         return { kind: 'curve', id, points, ...readStyle(record) };
       }
       const closed =
-        points.length > 2 &&
-        points[0].x === points[points.length - 1].x &&
-        points[0].y === points[points.length - 1].y;
+        points.length > 2 && points[0].x === points[points.length - 1].x && points[0].y === points[points.length - 1].y;
       return {
         kind: 'line',
         id,
@@ -129,7 +127,9 @@ const readElement = (record: ShapeRecord, ctx: ReadContext): Scene.Element | und
       return {
         kind: 'arrow',
         id,
-        ...(from ? { from } : { start: ctx.local({ x: record.x + record.props.start.x, y: record.y + record.props.start.y }) }),
+        ...(from
+          ? { from }
+          : { start: ctx.local({ x: record.x + record.props.start.x, y: record.y + record.props.start.y }) }),
         ...(to ? { to } : { end: ctx.local({ x: record.x + record.props.end.x, y: record.y + record.props.end.y }) }),
         ...(record.props.text ? { text: record.props.text } : {}),
         ...readStyle(record),

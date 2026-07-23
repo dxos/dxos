@@ -4,8 +4,8 @@ Status: draft (implementation in progress on `claude/sketch-diagram-dsl-abe69c`)
 Author: Claude (session with Rich), 2026-07-23.
 
 A backend-neutral mini-DSL that lets an agent create, edit, and delete diagrams
-in `plugin-sketch`. The agent thinks in terms of *world objects* ("face",
-"hat") composed of *graphical elements* (rect, ellipse, line, curve, text) in
+in `plugin-sketch`. The agent thinks in terms of _world objects_ ("face",
+"hat") composed of _graphical elements_ (rect, ellipse, line, curve, text) in
 object-local coordinates; a compiler maps the scene onto the concrete canvas
 implementation (tldraw today, Excalidraw later).
 
@@ -13,7 +13,7 @@ implementation (tldraw today, Excalidraw later).
 
 - `SketchBuilder` (previously `src/testing/`) already generates tldraw record
   maps but is tldraw-specific, test-only, and append-only (no edit/delete).
-- The assistant needs a stable, semantic vocabulary to *iterate* on a drawing:
+- The assistant needs a stable, semantic vocabulary to _iterate_ on a drawing:
   "draw a face" then "add a hat" then "make the smile bigger" — without ever
   seeing tldraw records. The LLM maintains a mental model of the scene, not of
   the underlying store.
@@ -23,17 +23,17 @@ implementation (tldraw today, Excalidraw later).
 Text-to-diagram languages all share one architecture: **dialect → intermediate
 positioned model → renderer**.
 
-| System | Lesson taken |
-|---|---|
-| PIC (Kernighan '82) / Pikchr | Named objects addressed after creation; object-relative placement. |
-| SVG | The neutral scene model: primitives + `<g translate/scale>` groups with ids. Our object/element split is a one-level SVG group tree. |
-| D2 (d2lang.com) | One grammar; dialects triggered in-language (`shape: sequence_diagram`, `sql_table`, `class`); layout engines pluggable and decoupled. |
+| System                          | Lesson taken                                                                                                                                                                                                                                                                                 |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PIC (Kernighan '82) / Pikchr    | Named objects addressed after creation; object-relative placement.                                                                                                                                                                                                                           |
+| SVG                             | The neutral scene model: primitives + `<g translate/scale>` groups with ids. Our object/element split is a one-level SVG group tree.                                                                                                                                                         |
+| D2 (d2lang.com)                 | One grammar; dialects triggered in-language (`shape: sequence_diagram`, `sql_table`, `class`); layout engines pluggable and decoupled.                                                                                                                                                       |
 | D2 Oracle (d2lang.com/tour/api) | Programmatic edit API over the graph: Create / Set / Delete / Rename / Move addressed by **key id**, built for incremental bidirectional IDE edits without recompiling the source. Directly validates our id-addressed edit-command layer; motivated adding `move-object` (Rename deferred). |
-| Mermaid | First token selects a dialect grammar; each dialect owns parser + layout over a shared rendering core. |
-| Kroki | Registry of independent diagram DSLs behind one uniform interface. |
-| Excalidraw `ElementSkeleton` | Flat JSON element list purpose-built for programmatic generation; arrows bind via `start/end: {id}`. |
-| tldraw shape partials | Flat records (`geo`, `line`, `arrow` + bindings, `text`); styles color/fill/dash/size. |
-| plugin-mermaid (in-repo) | Rendering-only CM widget (mermaid source → opaque SVG). Validates a future `mermaid` *dialect* that would instead compile to native, editable shapes. |
+| Mermaid                         | First token selects a dialect grammar; each dialect owns parser + layout over a shared rendering core.                                                                                                                                                                                       |
+| Kroki                           | Registry of independent diagram DSLs behind one uniform interface.                                                                                                                                                                                                                           |
+| Excalidraw `ElementSkeleton`    | Flat JSON element list purpose-built for programmatic generation; arrows bind via `start/end: {id}`.                                                                                                                                                                                         |
+| tldraw shape partials           | Flat records (`geo`, `line`, `arrow` + bindings, `text`); styles color/fill/dash/size.                                                                                                                                                                                                       |
+| plugin-mermaid (in-repo)        | Rendering-only CM widget (mermaid source → opaque SVG). Validates a future `mermaid` _dialect_ that would instead compile to native, editable shapes.                                                                                                                                        |
 
 ## Architecture
 
@@ -45,7 +45,7 @@ dialect input ──compile──▶ Scene (neutral IR) ──backend──▶ c
 ```
 
 1. **Scene IR** — Effect-Schema types, no tldraw imports. The `scene` dialect
-   *is* the IR (identity compile); the agent emits it directly.
+   _is_ the IR (identity compile); the agent emits it directly.
 2. **Dialects** — a `Dialect` is a compiler `input → Scene`. v1 defines the
    interface and registers only `scene`. Future: `mermaid`, `d2`, `sequence`,
    `uml-class` — each owns its layout (Mermaid-style), and its output lands as
@@ -64,19 +64,19 @@ Element      = { id, kind, ...geometry in object-local units, style?, text? }
 
 Element kinds (neutral vocabulary, intersection of tldraw/Excalidraw):
 
-| Kind | Geometry | tldraw mapping | Excalidraw (later) |
-|---|---|---|---|
-| `rect` | x, y, w, h | geo:rectangle | rectangle |
-| `ellipse` | x, y, w, h | geo:ellipse | ellipse |
-| `circle` | cx, cy, r (sugar) | geo:ellipse | ellipse |
-| `diamond` | x, y, w, h | geo:diamond | diamond |
-| `triangle` | x, y, w, h | geo:triangle | closed line |
-| `line` | points[2] | line spline:line | line |
-| `polyline` | points[], closed? | line spline:line | line |
-| `curve` | points[], smooth | line spline:cubic | line w/ roundness |
-| `arc` | cx, cy, r, startAngle, endAngle (sugar → curve) | line spline:cubic | line |
-| `text` | x, y, w?, text | text | text |
-| `arrow` | from/to element refs or points | arrow + bindings | arrow + start/end ids |
+| Kind       | Geometry                                        | tldraw mapping    | Excalidraw (later)    |
+| ---------- | ----------------------------------------------- | ----------------- | --------------------- |
+| `rect`     | x, y, w, h                                      | geo:rectangle     | rectangle             |
+| `ellipse`  | x, y, w, h                                      | geo:ellipse       | ellipse               |
+| `circle`   | cx, cy, r (sugar)                               | geo:ellipse       | ellipse               |
+| `diamond`  | x, y, w, h                                      | geo:diamond       | diamond               |
+| `triangle` | x, y, w, h                                      | geo:triangle      | closed line           |
+| `line`     | points[2]                                       | line spline:line  | line                  |
+| `polyline` | points[], closed?                               | line spline:line  | line                  |
+| `curve`    | points[], smooth                                | line spline:cubic | line w/ roundness     |
+| `arc`      | cx, cy, r, startAngle, endAngle (sugar → curve) | line spline:cubic | line                  |
+| `text`     | x, y, w?, text                                  | text              | text                  |
+| `arrow`    | from/to element refs or points                  | arrow + bindings  | arrow + start/end ids |
 
 Styles (abstract, both backends can express): `color` (named palette from
 `SketchBuilder.Color`), `fill` (`none | solid | pattern`), `stroke`
@@ -120,13 +120,13 @@ meta: { object: 'face', element: 'left-eye', scale: 1, dialect: 'scene' }
 `SketchOperation.Edit` — batch of commands applied atomically in one
 `Obj.update` on `Canvas.content`:
 
-| Command | Semantics |
-|---|---|
-| `upsert-object` | Replace-or-create a whole world object (its records are regenerated). Omitting `origin` on an existing object keeps its current (derived) origin. |
-| `upsert-elements` | Add or replace specific elements of an existing object by id. |
-| `remove-elements` | Delete elements by id. |
-| `remove-object` | Delete the object and all its records. |
-| `move-object` | Translate an object to a new origin (records shifted by the delta; elements untouched). D2-Oracle-style Move. |
+| Command           | Semantics                                                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `upsert-object`   | Replace-or-create a whole world object (its records are regenerated). Omitting `origin` on an existing object keeps its current (derived) origin. |
+| `upsert-elements` | Add or replace specific elements of an existing object by id.                                                                                     |
+| `remove-elements` | Delete elements by id.                                                                                                                            |
+| `remove-object`   | Delete the object and all its records.                                                                                                            |
+| `move-object`     | Translate an object to a new origin (records shifted by the delta; elements untouched). D2-Oracle-style Move.                                     |
 
 `SketchOperation.Read` — returns the derived `Scene` (+ `unmanaged` count).
 This is what lets the LLM "remember" the drawing across turns without ever
@@ -155,7 +155,7 @@ Both new operations require `Database.Service` and take a `Ref(Sketch.Sketch)`
 - Moves `src/testing/SketchBuilder.ts` → `src/model/SketchBuilder.ts`
   (production; `#model` import path; no compat re-exports — call sites
   updated).
-- Gains the ability to emit records for merging into an *existing* canvas
+- Gains the ability to emit records for merging into an _existing_ canvas
   (explicit ids, meta pass-through, fractional indexes seeded past existing
   content) instead of only whole-snapshot `build()`.
 - `src/model/` layout:
@@ -173,7 +173,7 @@ Both new operations require `Database.Service` and take a `Ref(Sketch.Sketch)`
 - `Sketch.stories.tsx`:
   - **Default** — `[[Module.Chat], [Module.Sketch]]`, `config.remote` (live
     EDGE AI), lazy `SketchPlugin`, seeded empty Sketch, `skills:
-    [AssistantSkill, SketchSkill]`. Interactive prompting.
+[AssistantSkill, SketchSkill]`. Interactive prompting.
   - **SequenceTest** (`tags: ['!test']`, play) — submits "Draw a simple
     face…" via the chat editor, waits for records with
     `meta.object === 'face'`; then "Add a hat…", waits for `hat` records
@@ -217,10 +217,10 @@ Token counts summed from this session's transcript
 (`~/.claude/projects/…sketch-diagram-dsl-abe69c/*.jsonl`); cache figures are
 prompt-cache traffic, not billed like fresh input.
 
-| | |
-|---|---|
-| Start | 2026-07-23 04:48 UTC |
-| End | in progress (updated at completion) |
-| Output tokens | ~200k (snapshot 05:11 UTC) |
-| Fresh input tokens | ~1k (+1.16M cache-write) |
-| Cache-read tokens | ~18.2M |
+|                    |                                     |
+| ------------------ | ----------------------------------- |
+| Start              | 2026-07-23 04:48 UTC                |
+| End                | in progress (updated at completion) |
+| Output tokens      | ~200k (snapshot 05:11 UTC)          |
+| Fresh input tokens | ~1k (+1.16M cache-write)            |
+| Cache-read tokens  | ~18.2M                              |

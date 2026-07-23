@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { userEvent, within } from 'storybook/test';
 
 import { Filter, Ref } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { SketchSkill } from '@dxos/plugin-sketch';
+import { type Space } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 
 import { Module, ModuleContainer, config, createDecorators } from '../testing';

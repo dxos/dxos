@@ -9,10 +9,10 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type CanvasContent, DOCUMENT_ID, PAGE_ID } from './SketchBuilder';
-import { renderObject } from './render';
 import { elementBoxes, readScene } from './read';
+import { renderObject } from './render';
 import type * as Scene from './scene';
+import { type CanvasContent, DOCUMENT_ID, PAGE_ID } from './SketchBuilder';
 
 export type ApplyResult = {
   /** Object ids created or modified. */

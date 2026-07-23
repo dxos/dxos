@@ -18,7 +18,14 @@ const face: Scene.WorldObject = {
     { kind: 'circle', id: 'head', cx: 50, cy: 50, r: 50, color: 'yellow', fill: 'solid' },
     { kind: 'circle', id: 'left-eye', cx: 30, cy: 35, r: 6, fill: 'solid' },
     { kind: 'circle', id: 'right-eye', cx: 70, cy: 35, r: 6, fill: 'solid' },
-    { kind: 'line', id: 'nose', points: [{ x: 50, y: 45 }, { x: 50, y: 60 }] },
+    {
+      kind: 'line',
+      id: 'nose',
+      points: [
+        { x: 50, y: 45 },
+        { x: 50, y: 60 },
+      ],
+    },
     { kind: 'arc', id: 'smile', cx: 50, cy: 55, r: 25, startAngle: 30, endAngle: 150, color: 'red' },
   ],
 };
@@ -50,13 +57,7 @@ describe('scene DSL', () => {
     // Origin is derived from the bounding box: head top-left = origin + (0,0) * scale.
     expect(read.origin).to.deep.eq({ x: 100, y: 100 });
     expect(read.scale).to.eq(2);
-    expect(read.elements.map((element) => element.id)).to.deep.eq([
-      'head',
-      'left-eye',
-      'right-eye',
-      'nose',
-      'smile',
-    ]);
+    expect(read.elements.map((element) => element.id)).to.deep.eq(['head', 'left-eye', 'right-eye', 'nose', 'smile']);
 
     // Circle sugar reads back as an ellipse in local units.
     const head = read.elements.find((element) => element.id === 'head');
@@ -77,7 +78,16 @@ describe('scene DSL', () => {
         elements: [
           { kind: 'text', id: 'caption', x: 0, y: 0, text: 'portrait' },
           { kind: 'arrow', id: 'points-at', from: 'caption', to: 'face/head', text: 'head' },
-          { kind: 'line', id: 'zigzag', points: [{ x: 0, y: 20 }, { x: 10, y: 30 }, { x: 20, y: 20 }], closed: true },
+          {
+            kind: 'line',
+            id: 'zigzag',
+            points: [
+              { x: 0, y: 20 },
+              { x: 10, y: 30 },
+              { x: 20, y: 20 },
+            ],
+            closed: true,
+          },
           { kind: 'diamond', id: 'gem', x: 40, y: 20, w: 20, h: 20, rotation: 45, stroke: 'dashed', weight: 'l' },
         ],
       }),
@@ -99,10 +109,7 @@ describe('scene DSL', () => {
       upsert({
         id: 'hat',
         origin: { x: 120, y: 40 },
-        elements: [
-          ...hat.elements,
-          { kind: 'arrow', id: 'sits-on', from: 'brim', to: 'face/head' },
-        ],
+        elements: [...hat.elements, { kind: 'arrow', id: 'sits-on', from: 'brim', to: 'face/head' }],
       }),
     ]);
 
@@ -207,8 +214,8 @@ describe('scene DSL', () => {
   });
 
   test('upsert-elements on an unknown object fails with guidance', ({ expect }) => {
-    expect(() =>
-      applyCommands({}, [{ op: 'upsert-elements', objectId: 'ghost', elements: [] }]),
-    ).to.throw(/unknown object/);
+    expect(() => applyCommands({}, [{ op: 'upsert-elements', objectId: 'ghost', elements: [] }])).to.throw(
+      /unknown object/,
+    );
   });
 });

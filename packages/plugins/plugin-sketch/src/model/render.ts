@@ -8,6 +8,7 @@
 // so `read.ts` can reconstruct the scene and edits can address records by id.
 //
 
+import * as Scene from './scene';
 import {
   type CanvasContent,
   type ConnectorProps,
@@ -18,7 +19,6 @@ import {
   type ShapeProps,
   SketchBuilder,
 } from './SketchBuilder';
-import * as Scene from './scene';
 
 export const DEFAULT_SCALE = 1;
 
