@@ -240,7 +240,11 @@ CardMenu.displayName = CARD_MENU_NAME;
 
 const CARD_BLOCK_NAME = 'Card.Block';
 
-type CardBlockProps = SlottableProps<{ end?: boolean; compact?: boolean; square?: boolean }>;
+type CardBlockProps = SlottableProps<{
+  end?: boolean;
+  compact?: boolean;
+  square?: boolean;
+}>;
 
 /**
  * Leading (default) or trailing (`end`) gutter slot of a Card row/header. Sized to the
