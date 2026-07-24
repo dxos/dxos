@@ -5,7 +5,14 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { CommentConfig, CreateObject, OperationHandler, ReactSurface, SketchSettings } from '#capabilities';
+import {
+  CommentConfig,
+  CreateObject,
+  OperationHandler,
+  ReactSurface,
+  SketchSettings,
+  SkillDefinition,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Sketch } from '#types';
@@ -19,6 +26,7 @@ export const SketchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Sketch.Canvas, Sketch.Sketch] }),
   AppPlugin.addSettingsModule({ activate: SketchSettings }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({

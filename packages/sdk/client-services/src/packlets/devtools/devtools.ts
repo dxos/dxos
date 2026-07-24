@@ -203,7 +203,12 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   }
 
   ['DevtoolsHost.subscribeToSignal'](): EffectStream.Stream<SignalResponse, Error> {
-    return toEffectStream(subscribeToSignal({ signalManager: this.params.context.signalManager }));
+    return toEffectStream(
+      subscribeToSignal({
+        signalManager: this.params.context.signalManager,
+        networkManager: this.params.context.networkManager,
+      }),
+    );
   }
 
   ['DevtoolsHost.subscribeToSwarmInfo'](

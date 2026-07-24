@@ -5,12 +5,13 @@
 import React, { useState } from 'react';
 
 import { NamePopover } from '@dxos/app-framework/ui';
-import { type SpaceCapabilities } from '@dxos/plugin-space';
+import { type VersioningCapabilities } from '@dxos/plugin-versioning';
 import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
+import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-type BranchView = SpaceCapabilities.BranchView;
+type BranchView = VersioningCapabilities.BranchView;
 
 /** The `base`/`diff`/`branch` view options, in banner display order. */
 const BRANCH_VIEWS: BranchView[] = ['base', 'diff', 'branch'];
@@ -51,11 +52,16 @@ export type VersionBannerProps = {
    */
   mode: 'checkpoint' | 'branch' | 'fork';
   name: string;
+  /**
+   * Palette hue for the name tag — pass the branch author's identity hue so a suggestion banner reads
+   * with the author's colour (matching their avatar/tag and the inline suggestion markers). Defaults
+   * to neutral.
+   */
+  hue?: Hue;
   /** ISO timestamp — shown as a compact age tag (`2d`, `5h`, `30m`) with the full date in a tooltip. */
   timestamp?: string;
   onRestore?: () => void;
   onBranchFrom?: (name: string) => void;
-  onMerge?: () => void;
   /** Active branch view; renders the `[Base | Diff | Branch]` selector when paired with `onViewChange`. */
   view?: BranchView;
   onViewChange?: (view: BranchView) => void;
@@ -69,10 +75,10 @@ export type VersionBannerProps = {
 export const VersionBanner = ({
   mode,
   name,
+  hue = 'neutral',
   timestamp,
   onRestore,
   onBranchFrom,
-  onMerge,
   view,
   onViewChange,
   onClose,
@@ -84,7 +90,7 @@ export const VersionBanner = ({
     <Toolbar.Root data-testid={`version-banner-${mode}`} aria-live='polite'>
       <div className='flex items-center gap-1 px-2 truncate'>
         <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
-        <Tag hue='neutral' classNames='flex gap-2'>
+        <Tag hue={hue} classNames='flex gap-2'>
           {name}
         </Tag>
         {timestamp && (
@@ -128,9 +134,6 @@ export const VersionBanner = ({
             </Toolbar.ToggleGroupItem>
           ))}
         </Toolbar.ToggleGroup>
-      )}
-      {mode === 'branch' && onMerge && (
-        <Toolbar.IconButton variant='ghost' icon='ph--git-merge--regular' label={t('merge.label')} onClick={onMerge} />
       )}
       <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
     </Toolbar.Root>

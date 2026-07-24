@@ -8,10 +8,6 @@ export interface ThreadModel {
   root: Thread.Thread;
 }
 
-type SubjectId = string;
-export type ViewState = { showResolvedThreads: boolean };
-export type ViewStore = Record<SubjectId, ViewState>;
-
 export type CommentState = {
   /** Object toolbar state. */
   toolbar: Record<string, boolean>;

@@ -4,7 +4,7 @@
 
 **Goal:** Replace the in-memory-only `SelectionManager` with a generic, pluggable-backend `ViewState` mechanism (memory + localStorage now, ECHO/personal-space later), make selection one aspect of it, and migrate the markdown editor's bespoke `EditorStateStore` onto it.
 
-**Architecture:** A `ViewStateManager` holds a set of declared _aspects_ (`defineViewState({ key, backend, schema, defaultValue })`) and routes each `(aspect, contextId)` pair to a reactive `Atom.Writable<T>` produced by a named backend. The `memory` backend keeps atoms in a `Map`; the `local` backend seeds atoms from `localStorage`, persists on `set`, and reacts to cross-tab `storage` events. The contract permits asynchronous hydration so a future `personal` (ECHO) backend slots in without interface changes. Selection becomes a memory-backed aspect plus pure helpers; thin `useSelection` / `useSelectionActions` hooks preserve today's ergonomics. The editor exemplar swaps `createEditorStateStore` for a `local`-backed aspect adapter.
+**Architecture:** A `Manager` holds a set of declared _aspects_ (`define({ key, backend, schema, defaultValue })`) and routes each `(aspect, contextId)` pair to a reactive `Atom.Writable<T>` produced by a named backend. The `memory` backend keeps atoms in a `Map`; the `local` backend seeds atoms from `localStorage`, persists on `set`, and reacts to cross-tab `storage` events. The contract permits asynchronous hydration so a future `personal` (ECHO) backend slots in without interface changes. Selection becomes a memory-backed aspect plus pure helpers; thin `useSelection` / `useSelectionActions` hooks preserve today's ergonomics. The editor exemplar swaps `createEditorStateStore` for a `local`-backed aspect adapter.
 
 **Tech Stack:** TypeScript, Effect Schema, `@effect-atom/atom-react` (Atom/Registry), React, vitest, moon.
 
@@ -27,7 +27,7 @@
 
 ## File structure (Phase 1)
 
-- Create `packages/ui/react-ui-attention/src/view-state/view-state.ts` — `AspectDef`, `BackendName`, `defineViewState`, `ViewStateBackend`, `ViewStateManager`.
+- Create `packages/ui/react-ui-attention/src/view-state/view-state.ts` — `AspectDef`, `BackendName`, `define`, `Backend`, `Manager`.
 - Create `packages/ui/react-ui-attention/src/view-state/backends.ts` — `MemoryBackend`, `LocalBackend`, `createDefaultBackends`.
 - Create `packages/ui/react-ui-attention/src/view-state/index.ts` — barrel.
 - Create tests `view-state.test.ts`, `backends.test.ts` alongside.
@@ -52,20 +52,20 @@ import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { ViewStateManager, defineViewState } from './view-state';
+import { Manager, define } from './view-state';
 import { createDefaultBackends } from './backends';
 
-const Counter = defineViewState({
+const Counter = define({
   key: 'counter',
   backend: 'memory',
   schema: Schema.Struct({ value: Schema.Number }).pipe(Schema.mutable),
   defaultValue: () => ({ value: 0 }),
 });
 
-describe('ViewStateManager', () => {
+describe('Manager', () => {
   const make = () => {
     const registry = Registry.make();
-    return new ViewStateManager({ registry, backends: createDefaultBackends(registry) });
+    return new Manager({ registry, backends: createDefaultBackends(registry) });
   };
 
   test('returns the aspect default for an unwritten context', ({ expect }) => {
@@ -133,14 +133,14 @@ export interface AspectDef<T> {
 /**
  * Identity helper that pins the value type from the schema while keeping the literal `key`/`backend`.
  */
-export const defineViewState = <T>(def: AspectDef<T>): AspectDef<T> => def;
+export const define = <T>(def: AspectDef<T>): AspectDef<T> => def;
 
 /**
  * A backend produces a reactive, writable atom for each `(aspect, contextId)` pair. Backends may
  * hydrate asynchronously (an ECHO backend would), yielding `aspect.defaultValue()` until loaded;
  * the memory and local backends resolve synchronously.
  */
-export interface ViewStateBackend {
+export interface Backend {
   /** Stable atom for the pair; created (and seeded) on first access, cached thereafter. */
   atom: <T>(aspect: AspectDef<T>, contextId: string) => Atom.Writable<T>;
   /** Persist a value after the atom is updated. No-op for in-memory backends. */
@@ -151,20 +151,20 @@ export interface ViewStateBackend {
   dispose?: () => void;
 }
 
-export interface ViewStateManagerOptions {
+export interface ManagerOptions {
   readonly registry: Registry.Registry;
-  readonly backends: Record<BackendName, ViewStateBackend>;
+  readonly backends: Record<BackendName, Backend>;
 }
 
 /**
  * Routes per-context UI state to the backend declared by each aspect. Reads/writes go through the
  * effect-atom registry so React hooks and graph atoms observe changes uniformly.
  */
-export class ViewStateManager {
+export class Manager {
   readonly #registry: Registry.Registry;
-  readonly #backends: Record<BackendName, ViewStateBackend>;
+  readonly #backends: Record<BackendName, Backend>;
 
-  constructor({ registry, backends }: ViewStateManagerOptions) {
+  constructor({ registry, backends }: ManagerOptions) {
     this.#registry = registry;
     this.#backends = backends;
   }
@@ -210,12 +210,12 @@ Create `packages/ui/react-ui-attention/src/view-state/backends.ts` with the `Mem
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
 
-import { type AspectDef, type BackendName, type ViewStateBackend } from './view-state';
+import { type AspectDef, type BackendName, type Backend } from './view-state';
 
 const cacheKey = (aspect: AspectDef<unknown>, contextId: string) => `${aspect.key}:${contextId}`;
 
 /** In-memory backend: reproduces the legacy `SelectionManager` behaviour. */
-export class MemoryBackend implements ViewStateBackend {
+export class MemoryBackend implements Backend {
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
 
   atom<T>(aspect: AspectDef<T>, contextId: string): Atom.Writable<T> {
@@ -234,7 +234,7 @@ export class MemoryBackend implements ViewStateBackend {
   }
 }
 
-export const createDefaultBackends = (registry: Registry.Registry): Record<BackendName, ViewStateBackend> => {
+export const createDefaultBackends = (registry: Registry.Registry): Record<BackendName, Backend> => {
   const memory = new MemoryBackend();
   return { memory, local: memory };
 };
@@ -249,7 +249,7 @@ Expected: PASS (4 tests).
 
 ```bash
 git add packages/ui/react-ui-attention/src/view-state/
-git commit -m "feat(react-ui-attention): add ViewStateManager + aspect definitions
+git commit -m "feat(react-ui-attention): add Manager + aspect definitions
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -275,9 +275,9 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { LocalBackend } from './backends';
-import { ViewStateManager, defineViewState } from './view-state';
+import { Manager, define } from './view-state';
 
-const Editor = defineViewState({
+const Editor = define({
   key: 'editor',
   backend: 'local',
   schema: Schema.Struct({ scrollTo: Schema.optional(Schema.Number) }).pipe(Schema.mutable),
@@ -304,7 +304,7 @@ describe('LocalBackend', () => {
     const registry = Registry.make();
     const storage = fakeStorage();
     const local = new LocalBackend({ registry, storage });
-    const manager = new ViewStateManager({ registry, backends: { memory: local, local } });
+    const manager = new Manager({ registry, backends: { memory: local, local } });
     return { manager, storage };
   };
 
@@ -368,7 +368,7 @@ export interface LocalBackendOptions {
 }
 
 /** localStorage-backed backend: seeds atoms from storage, persists on set, syncs across tabs. */
-export class LocalBackend implements ViewStateBackend {
+export class LocalBackend implements Backend {
   readonly #registry: Registry.Registry;
   readonly #storage: Storage;
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
@@ -446,7 +446,7 @@ export class LocalBackend implements ViewStateBackend {
 Update `createDefaultBackends`:
 
 ```ts
-export const createDefaultBackends = (registry: Registry.Registry): Record<BackendName, ViewStateBackend> => ({
+export const createDefaultBackends = (registry: Registry.Registry): Record<BackendName, Backend> => ({
   memory: new MemoryBackend(),
   local: new LocalBackend({ registry }),
 });
@@ -488,8 +488,8 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ## File structure (Phase 2)
 
-- Modify `packages/ui/react-ui-attention/src/selection.ts` — keep `SelectionMode`/`Selection`/`SelectionResult`/`SelectionSchema`/`defaultSelection`; add `selectionAspect` + pure helpers (`resolveSelection`, `toggleSelection`); reimplement `getSelectionSet` against `ViewStateManager`; **remove the `SelectionManager` class**.
-- Rename dir `components/SelectionProvider/` → `components/ViewStateProvider/`; file `ViewStateProvider.tsx` exporting `ViewStateProvider`, `useViewStateManager`, `useViewState`, `useViewStateActions`, `useSelection`, `useSelectionActions`.
+- Modify `packages/ui/react-ui-attention/src/view-state/Selection.ts` — keep `SelectionMode`/`Selection`/`Result`/`defaultValue`; add `aspect` + pure helpers (`resolveSelection`, `toggleSelection`); reimplement `getValue` against `Manager`; **remove the `SelectionManager` class**.
+- Rename dir `components/SelectionProvider/` → `components/ViewStateProvider/`; file `ViewStateProvider.tsx` exporting `ViewStateProvider`, `useManager`, `useViewState`, `useViewStateActions`, `useSelection`, `useSelectionActions`.
 - Update `components/index.ts`, `src/index.ts`, `src/types/index.ts`.
 - Migrate all consumers (Tasks 5–8).
 
@@ -511,13 +511,13 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 import { describe, test } from 'vitest';
 
-import { resolveSelection, selectionAspect, toggleSelection } from './selection';
+import { resolveSelection, aspect, toggleSelection } from './selection';
 
 describe('selection helpers', () => {
-  test('selectionAspect declares a memory-backed aspect', ({ expect }) => {
-    expect(selectionAspect.key).toEqual('selection');
-    expect(selectionAspect.backend).toEqual('memory');
-    expect(selectionAspect.defaultValue()).toEqual({ mode: 'multi', ids: [] });
+  test('aspect declares a memory-backed aspect', ({ expect }) => {
+    expect(aspect.key).toEqual('selection');
+    expect(aspect.backend).toEqual('memory');
+    expect(aspect.defaultValue()).toEqual({ mode: 'multi', ids: [] });
   });
 
   test('resolveSelection extracts the value for the requested mode', ({ expect }) => {
@@ -546,21 +546,21 @@ describe('selection helpers', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `moon run react-ui-attention:test -- src/selection.test.ts`
-Expected: FAIL — `selectionAspect` / `resolveSelection` / `toggleSelection` not exported.
+Expected: FAIL — `aspect` / `resolveSelection` / `toggleSelection` not exported.
 
 - [ ] **Step 3: Rewrite `selection.ts`**
 
-Keep the existing `SelectionMode`, `SelectionSchema`, `Selection`, `defaultSelection`, `SelectionResult` (lines 11–52 of the current file) unchanged. Replace `getSelectionSet` and the entire `SelectionManager` class (current lines 54–228) with:
+Keep the existing `SelectionMode`, `Selection`, `defaultValue`, `Result` (top of `view-state/Selection.ts`) unchanged. Replace `getValue` and the entire `SelectionManager` class with:
 
 ```ts
-import { defineViewState } from './view-state';
-import type { ViewStateManager } from './view-state';
+import { define } from './view-state';
+import type { Manager } from './view-state';
 
 /** Selection state for a context, stored in memory (ephemeral, per-device session). */
-export const selectionAspect = defineViewState<Selection>({
+export const aspect = define<Selection>({
   key: 'selection',
   backend: 'memory',
-  schema: SelectionSchema,
+  schema: Selection,
   defaultValue: () => ({ mode: 'multi', ids: [] }),
 });
 
@@ -568,18 +568,15 @@ export const selectionAspect = defineViewState<Selection>({
  * Extract the typed result for `mode` from a stored selection value, returning the requested
  * mode's default when the stored value is absent or holds a different mode.
  */
-export const resolveSelection = <T extends SelectionMode>(
-  selection: Selection | undefined,
-  mode: T,
-): SelectionResult<T> => {
-  const value = selection?.mode === mode ? selection : defaultSelection(mode);
+export const resolveSelection = <T extends SelectionMode>(selection: Selection | undefined, mode: T): Result<T> => {
+  const value = selection?.mode === mode ? selection : defaultValue(mode);
   return Match.type<Selection>().pipe(
     Match.when({ mode: 'single' }, (s) => s.id),
     Match.when({ mode: 'multi' }, (s) => s.ids),
     Match.when({ mode: 'range' }, (s) => (s.from && s.to ? { from: s.from, to: s.to } : undefined)),
     Match.when({ mode: 'multi-range' }, (s) => s.ranges),
     Match.exhaustive,
-  )(value) as SelectionResult<T>;
+  )(value) as Result<T>;
 };
 
 /** Toggle `id` within a multi selection; resets to a multi selection if the current value differs. */
@@ -589,10 +586,10 @@ export const toggleSelection = (selection: Selection | undefined, id: string): S
 };
 
 /** Union of all multi-selected ids across every selection context, plus an optional explicit id. */
-export const getSelectionSet = (manager: ViewStateManager, contextId?: string): Set<string> => {
+export const getValue = (manager: Manager, contextId?: string): Set<string> => {
   const ids = new Set<string>(contextId ? [contextId] : []);
-  for (const context of manager.contexts(selectionAspect)) {
-    const selection = manager.get(selectionAspect, context);
+  for (const context of manager.contexts(aspect)) {
+    const selection = manager.get(aspect, context);
     if (selection.mode === 'multi') {
       for (const id of selection.ids) {
         ids.add(id);
@@ -645,11 +642,11 @@ import React, { type PropsWithChildren } from 'react';
 import { describe, test } from 'vitest';
 
 import { createDefaultBackends } from '../../view-state';
-import { ViewStateManager } from '../../view-state';
+import { Manager } from '../../view-state';
 import { ViewStateProvider, useSelection, useSelectionActions } from './ViewStateProvider';
 
 const wrapper =
-  (manager: ViewStateManager, registry: Registry.Registry) =>
+  (manager: Manager, registry: Registry.Registry) =>
   ({ children }: PropsWithChildren) => (
     <RegistryContext.Provider value={registry}>
       <ViewStateProvider manager={manager}>{children}</ViewStateProvider>
@@ -659,7 +656,7 @@ const wrapper =
 describe('useSelection / useSelectionActions', () => {
   test('single select updates the resolved value', ({ expect }) => {
     const registry = Registry.make();
-    const manager = new ViewStateManager({ registry, backends: createDefaultBackends(registry) });
+    const manager = new Manager({ registry, backends: createDefaultBackends(registry) });
     const Wrapper = wrapper(manager, registry);
     const { result: value } = renderHook(() => useSelection('ctx', 'single'), { wrapper: Wrapper });
     const { result: actions } = renderHook(() => useSelectionActions('ctx'), { wrapper: Wrapper });
@@ -670,7 +667,7 @@ describe('useSelection / useSelectionActions', () => {
 
   test('toggle within multi selection', ({ expect }) => {
     const registry = Registry.make();
-    const manager = new ViewStateManager({ registry, backends: createDefaultBackends(registry) });
+    const manager = new Manager({ registry, backends: createDefaultBackends(registry) });
     const Wrapper = wrapper(manager, registry);
     const { result: value } = renderHook(() => useSelection('ctx', 'multi'), { wrapper: Wrapper });
     const { result: actions } = renderHook(() => useSelectionActions('ctx'), { wrapper: Wrapper });
@@ -703,39 +700,30 @@ import React, { type PropsWithChildren, useContext, useEffect, useMemo, useState
 
 import { useDefaultValue } from '@dxos/react-hooks';
 
-import {
-  type SelectionMode,
-  type SelectionResult,
-  resolveSelection,
-  selectionAspect,
-  toggleSelection,
-} from '../../selection';
-import { type AspectDef, ViewStateManager, createDefaultBackends } from '../../view-state';
+import { type SelectionMode, type Result, resolveSelection, aspect, toggleSelection } from '../../selection';
+import { type AspectDef, Manager, createDefaultBackends } from '../../view-state';
 
 const VIEW_STATE_NAME = 'ViewState';
 
-type ViewStateContextValue = { manager: ViewStateManager };
+type ViewStateContextValue = { manager: Manager };
 
 // Default value lets consumers render outside a provider (isolated stories/tests) without throwing;
 // `manager` reads as `undefined` and hooks fall back to aspect defaults / no-op actions.
 const [ViewStateContextProvider, useViewStateContext] = createContext<ViewStateContextValue>(VIEW_STATE_NAME, {
-  manager: undefined as unknown as ViewStateManager,
+  manager: undefined as unknown as Manager,
 });
 
 /** Provides the per-context UI state manager. Replaces the former `SelectionProvider`. */
-export const ViewStateProvider = ({
-  children,
-  manager: managerProp,
-}: PropsWithChildren<{ manager?: ViewStateManager }>) => {
+export const ViewStateProvider = ({ children, manager: managerProp }: PropsWithChildren<{ manager?: Manager }>) => {
   const registry = useContext(RegistryContext);
   const manager = useDefaultValue(
     managerProp,
-    () => new ViewStateManager({ registry, backends: createDefaultBackends(registry) }),
+    () => new Manager({ registry, backends: createDefaultBackends(registry) }),
   );
   return <ViewStateContextProvider manager={manager}>{children}</ViewStateContextProvider>;
 };
 
-export const useViewStateManager = (): ViewStateManager => useViewStateContext(VIEW_STATE_NAME).manager;
+export const useManager = (): Manager => useViewStateContext(VIEW_STATE_NAME).manager;
 
 /** Reactive read of an aspect value for a context; yields the aspect default when unset or unprovided. */
 export const useViewState = <T,>(aspect: AspectDef<T>, contextId?: string): T => {
@@ -773,8 +761,8 @@ export const useViewStateActions = <T,>(aspect: AspectDef<T>, contextId?: string
 };
 
 /** Resolved selection value for `contextId` in the requested `mode` (default `multi`). */
-export const useSelection = <T extends SelectionMode>(contextId?: string, mode: T = 'multi' as T): SelectionResult<T> =>
-  resolveSelection(useViewState(selectionAspect, contextId), mode);
+export const useSelection = <T extends SelectionMode>(contextId?: string, mode: T = 'multi' as T): Result<T> =>
+  resolveSelection(useViewState(aspect, contextId), mode);
 
 export type UseSelectionActions = {
   single: (id: string) => void;
@@ -786,7 +774,7 @@ export type UseSelectionActions = {
 
 /** Selection mutators for a single context, built on the generic ViewState actions. */
 export const useSelectionActions = (contextId?: string): UseSelectionActions => {
-  const { update, clear } = useViewStateActions(selectionAspect, contextId);
+  const { update, clear } = useViewStateActions(aspect, contextId);
   return useMemo<UseSelectionActions>(
     () => ({
       single: (id) => update(() => ({ mode: 'single', id })),
@@ -852,12 +840,12 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `packages/plugins/plugin-attention/src/types/capabilities.ts`
 - Modify: `packages/plugins/plugin-attention/src/capabilities/react-context.tsx`
 
-- [ ] **Step 1: Update the capability type.** In `types/capabilities.ts`: import `ViewStateManager` (from `@dxos/react-ui-attention`) instead of `SelectionManager`; rename the capability to carry it. Keep the capability id stable to avoid churn elsewhere, but rename the binding:
+- [ ] **Step 1: Update the capability type.** In `types/capabilities.ts`: import `Manager` (from `@dxos/react-ui-attention`) instead of `SelectionManager`; rename the capability to carry it. Keep the capability id stable to avoid churn elsewhere, but rename the binding:
 
 ```ts
-import { type AttentionManager, type ViewStateManager } from '@dxos/react-ui-attention';
+import { type AttentionManager, type Manager } from '@dxos/react-ui-attention';
 // ...
-export const ViewState = Capability.make<ViewStateManager>(`${meta.id}.capability.view-state`);
+export const ViewState = Capability.make<Manager>(`${meta.id}.capability.view-state`);
 ```
 
 Remove the old `Selection` capability export.
@@ -865,10 +853,10 @@ Remove the old `Selection` capability export.
 - [ ] **Step 2: Construct the manager.** In `AttentionPlugin.ts`:
 
 ```ts
-import { AttentionManager, ViewStateManager, createDefaultBackends } from '@dxos/react-ui-attention';
+import { AttentionManager, Manager, createDefaultBackends } from '@dxos/react-ui-attention';
 // ...
 const attention = new AttentionManager(registry);
-const viewState = new ViewStateManager({ registry, backends: createDefaultBackends(registry) });
+const viewState = new Manager({ registry, backends: createDefaultBackends(registry) });
 setupDevtools(attention);
 return [
   Capability.contributes(AttentionCapabilities.Attention, attention),
@@ -887,7 +875,7 @@ Expected: success. (Other consumers of the old `Selection` capability — plugin
 
 ```bash
 git add packages/plugins/plugin-attention/src
-git commit -m "refactor(plugin-attention): provide ViewStateManager capability
+git commit -m "refactor(plugin-attention): provide Manager capability
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -931,7 +919,7 @@ For files importing `useArticleKeyboardNavigation` / `linkedSegment` alongside, 
   - `packages/ui/react-ui-list/src/components/RowList/RowList.tsx:37,42`
   - `packages/plugins/plugin-commerce/src/containers/SearchArticle/SearchArticle.tsx:67`
   - `packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx:296`
-    Replace `useSelected` with `useSelection` in prose and `SelectionManager` with `ViewStateManager` where mentioned.
+    Replace `useSelected` with `useSelection` in prose and `SelectionManager` with `Manager` where mentioned.
 
 - [ ] **Step 4: Build affected packages.**
 
@@ -961,13 +949,13 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `packages/plugins/plugin-trip/src/capabilities/app-graph-builder.ts`
 - Modify: `packages/plugins/plugin-comments/src/capabilities/app-graph-builder.ts`
 
-- [ ] **Step 1: plugin-trip.** Replace the `SelectionManager` import with `ViewStateManager`, `selectionAspect`; consume `AttentionCapabilities.ViewState`. Rewrite `resolvePlanningWindow` and `selectedId`:
+- [ ] **Step 1: plugin-trip.** Replace the `SelectionManager` import with `Manager`, `aspect`; consume `AttentionCapabilities.ViewState`. Rewrite `resolvePlanningWindow` and `selectedId`:
 
 ```ts
-import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { linkedSegment, aspect, type Manager } from '@dxos/react-ui-attention';
 // ...
-const resolvePlanningWindow = (viewState: ViewStateManager, nodeId: string): { from: Date; to: Date } => {
-  const selection = viewState.get(selectionAspect, getCalendarRangeSelectionId(nodeId));
+const resolvePlanningWindow = (viewState: Manager, nodeId: string): { from: Date; to: Date } => {
+  const selection = viewState.get(aspect, getCalendarRangeSelectionId(nodeId));
   const range =
     selection.mode === 'range' && selection.from && selection.to
       ? { from: selection.from, to: selection.to }
@@ -981,7 +969,7 @@ const resolvePlanningWindow = (viewState: ViewStateManager, nodeId: string): { f
 const viewState = yield * Capability.get(AttentionCapabilities.ViewState);
 const selectedId = Atom.family((nodeId: string) =>
   Atom.make((get) => {
-    const selection = get(viewState.atom(selectionAspect, nodeId));
+    const selection = get(viewState.atom(aspect, nodeId));
     return selection.mode === 'single' ? selection.id : undefined;
   }),
 );
@@ -989,20 +977,20 @@ const selectedId = Atom.family((nodeId: string) =>
 
 Update the `resolvePlanningWindow(selectionManager, …)` call site to pass `viewState`.
 
-- [ ] **Step 2: plugin-comments.** Replace imports with `selectionAspect, type ViewStateManager` (drop `SelectionMode`/`defaultSelection` unless still referenced for `selectionMode` config — keep `SelectionMode` import if the `selectionMode` field type uses it). Change the `selectionManager: SelectionManager` field to `viewState: ViewStateManager`. Rewrite the reactive read (current lines 43–46):
+- [ ] **Step 2: plugin-comments.** Replace imports with `aspect, type Manager` (drop `SelectionMode`/`defaultValue` unless still referenced for `selectionMode` config — keep `SelectionMode` import if the `selectionMode` field type uses it). Change the `selectionManager: SelectionManager` field to `viewState: Manager`. Rewrite the reactive read (current lines 43–46):
 
 ```ts
-const selection = get(viewState.atom(selectionAspect, objectId));
+const selection = get(viewState.atom(aspect, objectId));
 const anchor = getAnchor(selection);
 ```
 
 And the imperative read (current line 118):
 
 ```ts
-const selection = viewState.get(selectionAspect, objectUri);
+const selection = viewState.get(aspect, objectUri);
 ```
 
-Update the capability lookup (line 100) to `AttentionCapabilities.ViewState` and the params object key (`selectionManager` → `viewState`). The `selectionMode` config and `getAnchor` logic are unchanged; the aspect default (`multi`) already stands in for the previous `defaultSelection(selectionMode)` fallback when a context is unwritten.
+Update the capability lookup (line 100) to `AttentionCapabilities.ViewState` and the params object key (`selectionManager` → `viewState`). The `selectionMode` config and `getAnchor` logic are unchanged; the aspect default (`multi`) already stands in for the previous `defaultValue(selectionMode)` fallback when a context is unwritten.
 
 - [ ] **Step 3: Build.**
 
@@ -1013,7 +1001,7 @@ Expected: success.
 
 ```bash
 git add packages/plugins/plugin-trip/src packages/plugins/plugin-comments/src
-git commit -m "refactor(plugin-trip,plugin-comments): read selection via ViewStateManager
+git commit -m "refactor(plugin-trip,plugin-comments): read selection via Manager
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -1027,12 +1015,12 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx`
 - Modify: `packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx`
 
-- [ ] **Step 1: Update the writer.** In `useExtensions.tsx`: replace the `SelectionManager` import/type with `ViewStateManager` + `selectionAspect`. Rename the `selectionManager?: SelectionManager` option to `viewState?: ViewStateManager`. Rewrite `selectionChange` to write a `multi-range` selection through the manager:
+- [ ] **Step 1: Update the writer.** In `useExtensions.tsx`: replace the `SelectionManager` import/type with `Manager` + `aspect`. Rename the `selectionManager?: SelectionManager` option to `viewState?: Manager`. Rewrite `selectionChange` to write a `multi-range` selection through the manager:
 
 ```ts
-import { selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { aspect, type Manager } from '@dxos/react-ui-attention';
 // ...
-const selectionChange = (viewState: ViewStateManager) => {
+const selectionChange = (viewState: Manager) => {
   const debouncedHandler = debounceAndThrottle((update: ViewUpdate) => {
     const id = update.state.facet(documentId);
     const cursorConverter = update.state.facet(Cursor.converter);
@@ -1040,7 +1028,7 @@ const selectionChange = (viewState: ViewStateManager) => {
     const ranges = selection.ranges
       .filter((range) => range.to > range.from)
       .map((range) => ({ from: cursorConverter.toCursor(range.from), to: cursorConverter.toCursor(range.to) }));
-    viewState.set(selectionAspect, id, { mode: 'multi-range', ranges });
+    viewState.set(aspect, id, { mode: 'multi-range', ranges });
   }, 100);
 
   return EditorView.updateListener.of((update: ViewUpdate) => {
@@ -1053,7 +1041,7 @@ const selectionChange = (viewState: ViewStateManager) => {
 
 Update the place that calls `selectionChange(selectionManager)` to pass the renamed `viewState` option (search within the file).
 
-- [ ] **Step 2: Update the prop plumbing.** In `MarkdownArticle.tsx`: rename the `selectionManager?: SelectionManager` prop to `viewState?: ViewStateManager` (import `ViewStateManager`), and update where it is sourced (it is read from the attention capability — change to `AttentionCapabilities.ViewState`) and passed into `useExtensions`. Grep the markdown plugin for the prop name to catch all hand-offs: `grep -rn "selectionManager" packages/plugins/plugin-markdown/src`.
+- [ ] **Step 2: Update the prop plumbing.** In `MarkdownArticle.tsx`: rename the `selectionManager?: SelectionManager` prop to `viewState?: Manager` (import `Manager`), and update where it is sourced (it is read from the attention capability — change to `AttentionCapabilities.ViewState`) and passed into `useExtensions`. Grep the markdown plugin for the prop name to catch all hand-offs: `grep -rn "selectionManager" packages/plugins/plugin-markdown/src`.
 
 - [ ] **Step 3: Build.**
 
@@ -1064,7 +1052,7 @@ Expected: success.
 
 ```bash
 git add packages/plugins/plugin-markdown/src
-git commit -m "refactor(plugin-markdown): write collaborative selection via ViewStateManager
+git commit -m "refactor(plugin-markdown): write collaborative selection via Manager
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -1076,7 +1064,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## File structure (Phase 3)
 
 - Modify `packages/ui/ui-editor/src/extensions/selection.ts` — add an Effect Schema for `EditorSelectionState`; **delete `createEditorStateStore`**; keep `EditorStateStore` type + `selectionState` extension (the get/set seam stays).
-- Modify `packages/plugins/plugin-markdown/src/capabilities/state.ts` — build the editor store from the `ViewStateManager` editor aspect instead of `createEditorStateStore`.
+- Modify `packages/plugins/plugin-markdown/src/capabilities/state.ts` — build the editor store from the `Manager` editor aspect instead of `createEditorStateStore`.
 - Modify `packages/plugins/plugin-markdown/src/types/MarkdownCapabilities.ts` — unchanged type, but the value is now manager-backed (no code change unless import path changes).
 - Modify `packages/ui/react-ui-editor/src/stories/components/util.tsx` — story helper uses an in-memory store (already does via `global` Map); replace any `createEditorStateStore` usage.
 
@@ -1125,14 +1113,14 @@ Expected: FAIL — `EditorSelectionStateSchema` not exported.
 ```ts
 import * as Schema from 'effect/Schema';
 
-export const EditorSelectionSchema = Schema.Struct({
+export const EditorSelection = Schema.Struct({
   anchor: Schema.Number,
   head: Schema.optional(Schema.Number),
 }).pipe(Schema.mutable);
 
 export const EditorSelectionStateSchema = Schema.Struct({
   scrollTo: Schema.optional(Schema.Number),
-  selection: Schema.optional(EditorSelectionSchema),
+  selection: Schema.optional(EditorSelection),
 }).pipe(Schema.mutable);
 ```
 
@@ -1175,11 +1163,11 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 // Copyright 2026 DXOS.org
 //
 
-import { type ViewStateManager, defineViewState } from '@dxos/react-ui-attention';
+import { type Manager, define } from '@dxos/react-ui-attention';
 import { type EditorStateStore, EditorSelectionStateSchema } from '@dxos/ui-editor';
 
 /** Per-document editor scroll/caret state, persisted to localStorage on this device. */
-export const editorViewStateAspect = defineViewState({
+export const editorViewStateAspect = define({
   key: 'editor',
   backend: 'local',
   schema: EditorSelectionStateSchema,
@@ -1187,7 +1175,7 @@ export const editorViewStateAspect = defineViewState({
 });
 
 /** Adapts the imperative editor store seam onto the ViewState manager (local backend). */
-export const createEditorViewStateStore = (manager: ViewStateManager): EditorStateStore => ({
+export const createEditorViewStateStore = (manager: Manager): EditorStateStore => ({
   getState: (id) => manager.get(editorViewStateAspect, id),
   setState: (id, state) => manager.set(editorViewStateAspect, id, state),
 });
@@ -1195,7 +1183,7 @@ export const createEditorViewStateStore = (manager: ViewStateManager): EditorSta
 
 > `EditorStateStore.getState` returns `EditorSelectionState | undefined`; the adapter returns the aspect default `{}` instead of `undefined`. Confirm `selectionState`/`MarkdownEditorContent` treat `{}` the same as `undefined` (they read `scrollTo`/`selection` which are simply absent). If any code branches on the whole object being undefined, adjust it to check the fields. Verify by reading `MarkdownEditorContent.tsx:89` and `ui-editor/.../selection.ts` Ctrl-r handler.
 
-- [ ] **Step 2: Wire it in `state.ts`.** The `state.ts` makeModule must obtain the `ViewStateManager`. Resolve the attention capability inside the module:
+- [ ] **Step 2: Wire it in `state.ts`.** The `state.ts` makeModule must obtain the `Manager`. Resolve the attention capability inside the module:
 
 ```ts
 import { Capability } from '@dxos/app-framework';
@@ -1247,7 +1235,7 @@ Expected: no results in source (only possibly in this plan/spec docs). Fix any r
 git diff origin/main | grep -nE '\bas (any|unknown|[A-Z])|as unknown as'
 ```
 
-Expected: only the two `SelectionResult<T>` casts inside `resolveSelection` (carried over from the original `getSelected`, justified by the `Match` return type not relating to `T`) and the backend `as Atom.Writable<T>` / `as unknown as ViewStateManager` context-default casts. Justify each with a comment or remove; do not add new unjustified casts.
+Expected: only the two `Result<T>` casts inside `resolveSelection` (carried over from the original `getSelected`, justified by the `Match` return type not relating to `T`) and the backend `as Atom.Writable<T>` / `as unknown as Manager` context-default casts. Justify each with a comment or remove; do not add new unjustified casts.
 
 - [ ] **Step 3: Build everything.**
 
@@ -1288,6 +1276,6 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ## Notes carried from the spec
 
-- **Personal-space backend is not built** here. The `ViewStateBackend` contract already permits async hydration, so a `'personal'` backend (ECHO-backed atom in the personal space) can be added later by implementing the interface and adding `'personal'` to `BackendName` + `createDefaultBackends`. No consumer code changes.
+- **Personal-space backend is not built** here. The `Backend` contract already permits async hydration, so a `'personal'` backend (ECHO-backed atom in the personal space) can be added later by implementing the interface and adding `'personal'` to `BackendName` + `createDefaultBackends`. No consumer code changes.
 - **No legacy localStorage migration.** Old `org.dxos.plugin.markdown.editor/*` entries are abandoned; editor state now lives at `dxos:view-state:editor:<docId>`.
 - **Selection mode is carried by the value**, resolved defensively per reader (`resolveSelection`). A context's effective mode is set by writes; unwritten contexts resolve to the requested mode's default.

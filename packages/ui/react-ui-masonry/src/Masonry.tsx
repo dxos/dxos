@@ -11,8 +11,10 @@ import React, {
   type MouseEvent,
   type PropsWithChildren,
   type Ref,
+  useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -20,8 +22,14 @@ import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/r
 import { composable, composableProps } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
-import { useFlip } from './useFlip';
+import { prefersReducedMotion, useFlip } from './useFlip';
 import { useMasonryLayout } from './useMasonryLayout';
+
+/** Reveal the grid once the layout has been stable for this long (the initial reflow has settled). */
+const REVEAL_SETTLE_MS = 80;
+
+/** Reveal the grid no later than this after mount, so churning content never hides it indefinitely. */
+const REVEAL_DEADLINE_MS = 1200;
 
 //
 // Context
@@ -40,6 +48,11 @@ type MasonryContextValue = {
   maxColumnWidth: number;
   /** Space applied uniformly between tiles and around the grid perimeter, in rem. */
   gap: number;
+  /**
+   * Animate reflow when a small number of tiles are added or removed. Disabled, or on a
+   * bulk change (initial render, data swap) or resize, tiles snap to position instead.
+   */
+  animate: boolean;
 };
 
 const MASONRY_NAME = 'Masonry';
@@ -60,6 +73,7 @@ const MasonryRoot = ({
   minColumnWidth = cardMinInlineSize,
   maxColumnWidth = cardMaxInlineSize,
   gap = 0.75,
+  animate = true,
 }: MasonryRootProps) => (
   <MasonryProvider
     Tile={Tile!}
@@ -68,6 +82,7 @@ const MasonryRoot = ({
     minColumnWidth={minColumnWidth}
     maxColumnWidth={maxColumnWidth}
     gap={gap}
+    animate={animate}
   >
     {children}
   </MasonryProvider>
@@ -146,7 +161,8 @@ type MasonryViewportProps<Item> = ThemedClassName<{
 
 const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
   ({ items, getId, selectedIds, onSelect, ...props }, forwardedRef) => {
-    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap } = useMasonryContext('Masonry.Viewport');
+    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate } =
+      useMasonryContext('Masonry.Viewport');
     const remInPx = usePx(1);
     // Measure the viewport's own content box (net of padding and scrollbar) rather
     // than deriving it from the root width, so the grid tracks the actual available
@@ -166,14 +182,32 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // `maxColumnWidth` and centres them, so no scrollbar/padding math is duplicated here.
     const gapPx = gap * remInPx;
     const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
-    const { rects, columnWidth, height, getTileRef, nodes } = useMasonryLayout({
+    const { rects, columnWidth, height, getTileRef, nodes, measured } = useMasonryLayout({
       ids,
       columnCount,
       containerWidth: contentWidth,
       gapPx,
       maxColumnWidthPx: maxColumnWidth * remInPx,
     });
-    useFlip({ nodes, ids, rects, enabled: true });
+    useFlip({ nodes, ids, rects, columnCount, containerWidth: contentWidth, enabled: animate });
+
+    // Hide the grid until the layout stops changing, then fade in; latch on so later edits never
+    // re-hide it. Revealing on the first measurement is not enough: tiles mount collapsed (their
+    // poster reserves height a frame later), so the first pass stacks them bunched at the top and
+    // only settles over the next few reflows. Debounce on `rects` identity — which changes on every
+    // relayout — and reveal once it has been stable for a beat, with a hard deadline as a backstop.
+    const [revealed, setRevealed] = useState(false);
+    useEffect(() => {
+      if (revealed || !measured) {
+        return;
+      }
+      const timer = setTimeout(() => setRevealed(true), REVEAL_SETTLE_MS);
+      return () => clearTimeout(timer);
+    }, [revealed, measured, rects]);
+    useEffect(() => {
+      const deadline = setTimeout(() => setRevealed(true), REVEAL_DEADLINE_MS);
+      return () => clearTimeout(deadline);
+    }, []);
 
     // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all four
     // arrows move focus through the items as flat next/previous-focusable, giving
@@ -195,7 +229,15 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
           <div
             {...composableProps(props, {
               classNames: 'relative',
-              style: { width: `${contentWidth}px`, height: `${height}px` },
+              style: {
+                width: `${contentWidth}px`,
+                height: `${height}px`,
+                opacity: revealed ? 1 : 0,
+                // Hidden (not just transparent) before reveal so the settling tiles are neither
+                // focusable nor hit-testable; the opacity fade only runs when motion is allowed.
+                visibility: revealed ? 'visible' : 'hidden',
+                transition: animate && !prefersReducedMotion() ? 'opacity 200ms cubic-bezier(0.2, 0, 0, 1)' : undefined,
+              },
             })}
             {...arrowNavigationAttrs}
             role='list'

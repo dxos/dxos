@@ -146,6 +146,9 @@
       "path": "../../ui/react-ui-calendar"
     },
     {
+      "path": "../../ui/react-ui-card"
+    },
+    {
       "path": "../../ui/react-ui-components"
     },
     {

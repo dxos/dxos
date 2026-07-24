@@ -604,6 +604,9 @@
       "path": "packages/plugins/plugin-typefully/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-versioning/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-video/tsconfig.json"
     },
     {
@@ -682,6 +685,9 @@
       "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-card/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-chat/tsconfig.json"
     },
     {
@@ -689,6 +695,9 @@
     },
     {
       "path": "packages/ui/react-ui-dashboard/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-debug/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-dnd/tsconfig.json"
@@ -773,9 +782,6 @@
     },
     {
       "path": "packages/sdk/shell/tsconfig.json"
-    },
-    {
-      "path": "packages/core/mesh/signal/tsconfig.json"
     },
     {
       "path": "packages/ui/solid-ui/tsconfig.json"

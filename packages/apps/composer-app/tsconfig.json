@@ -472,6 +472,9 @@
       "path": "../../plugins/plugin-typefully"
     },
     {
+      "path": "../../plugins/plugin-versioning"
+    },
+    {
       "path": "../../plugins/plugin-video"
     },
     {

@@ -87,7 +87,6 @@
   "devDependencies": {
     "@dxos/edge-client": "workspace:*",
     "@dxos/keyring": "workspace:*",
-    "@dxos/signal": "workspace:*",
     "fetch-mock": "catalog:"
   },
   "publishConfig": {

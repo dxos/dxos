@@ -3,6 +3,7 @@
 //
 
 import { type QueryAST } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 
 /**
  * A (possibly composite) group key: one coerced scalar component per grouped property.
@@ -155,18 +156,37 @@ export const GroupBy = Object.freeze({
    * Computes each group's scalar aggregates (`group`/`max`/`min`/`count`) and returns the same items
    * with those values stamped on every member (all members of a group share them), so a following
    * group-level `OrderStep` can order by them — including by a `group` field whose result name differs
-   * from its source property. The `items` aggregate is not stamped — it collects the members and is
-   * materialised at result assembly. Assumes `items` are already partitioned into contiguous groups
+   * from its source property. Assumes `items` are already partitioned into contiguous groups
    * (see {@link partitionByGroupKey}).
+   *
+   * If an `items`-kind aggregate declares its own `order`, each group's members are stably
+   * re-sorted by it (via `compareByOrder`) before scalar aggregates are stamped — this ordering is
+   * local to that aggregate's member selection, independent of whatever order the input stream
+   * arrived in. `items` itself is not stamped: it is materialised (and capped to `limit`) at result
+   * assembly, from the (possibly now re-sorted) member order this function returns.
+   *
+   * All members of a group share a single member order, so at most one distinct `order` may be
+   * requested across the group's `items`-kind aggregates — two conflicting orders are rejected
+   * rather than silently honoring only one of them.
    */
   withGroupAggregates: <T extends { aggregates?: GroupAggregates }>(
     items: readonly T[],
     getKey: (item: T) => string,
     aggregates: readonly QueryAST.GroupAggregate[],
     getProperty: (item: T, property: string) => unknown,
+    compareByOrder?: (a: T, b: T, order: QueryAST.Order) => number,
   ): T[] => {
+    const itemsOrders = aggregates.flatMap((aggregate) =>
+      aggregate.kind === 'items' && aggregate.order?.length ? [aggregate.order] : [],
+    );
+    if (itemsOrders.length > 1) {
+      const serialized = new Set(itemsOrders.map((order) => JSON.stringify(order)));
+      invariant(serialized.size === 1, 'Multiple `items` aggregates with different `order`s are not supported.');
+    }
+    const itemsOrder = itemsOrders[0];
+    const needsStamping = aggregates.some((aggregate) => aggregate.kind !== 'items');
     // Only group/max/min/count are stamped for ordering; `items` collects members at result assembly.
-    if (!aggregates.some((aggregate) => aggregate.kind !== 'items')) {
+    if (!needsStamping && !itemsOrder) {
       return items.slice();
     }
     const result: T[] = [];
@@ -178,6 +198,22 @@ export const GroupBy = Object.freeze({
         end += 1;
       }
       const members = items.slice(index, end);
+      if (itemsOrder && compareByOrder) {
+        members.sort((a, b) => {
+          for (const order of itemsOrder) {
+            const comparison = compareByOrder(a, b, order);
+            if (comparison !== 0) {
+              return comparison;
+            }
+          }
+          return 0;
+        });
+      }
+      if (!needsStamping) {
+        result.push(...members);
+        index = end;
+        continue;
+      }
       const computed: GroupAggregates = {};
       for (const aggregate of aggregates) {
         if (aggregate.kind === 'items') {

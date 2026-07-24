@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 
 import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
-import { type Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention';
 import { type MessageMetadata } from '@dxos/react-ui-thread';
 import { hexToFallback, toFallback } from '@dxos/util';
 
@@ -40,6 +40,7 @@ const hashString = (str: string): number => {
   for (let index = 0; index < str.length; index++) {
     hash = (hash * 31 + str.charCodeAt(index)) | 0;
   }
+
   return hash >>> 0;
 };
 
@@ -47,7 +48,7 @@ const hashString = (str: string): number => {
  * Resolve presentational metadata (author name, avatar) for a message.
  */
 export const getMessageMetadata = (
-  id: string,
+  id: string | undefined,
   identity?: MessageAuthor,
   /**
    * Externally-sourced sender info (Slack/Discord/etc). Used only when no
@@ -77,7 +78,7 @@ export const getMessageMetadata = (
 /**
  * Derive the anchor string for a selection.
  */
-export const getAnchor = Match.type<Selection | undefined>().pipe(
+export const getAnchor = Match.type<Selection.Selection | undefined>().pipe(
   Match.when({ mode: 'single' }, (selection) => selection.id),
   Match.when({ mode: 'multi' }, (selection) => (selection.ids.length > 0 ? selection.ids.join(',') : undefined)),
   Match.when({ mode: 'range' }, (selection) =>

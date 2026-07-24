@@ -22,13 +22,7 @@
       "path": "../../../plugins/plugin-client"
     },
     {
-      "path": "../../../plugins/plugin-crm"
-    },
-    {
       "path": "../../../plugins/plugin-inbox"
-    },
-    {
-      "path": "../../../plugins/plugin-markdown"
     },
     {
       "path": "../../../plugins/plugin-routine"
@@ -46,6 +40,9 @@
       "path": "../../../sdk/app-toolkit"
     },
     {
+      "path": "../../../sdk/client"
+    },
+    {
       "path": "../../../sdk/config"
     },
     {
@@ -59,9 +56,6 @@
     },
     {
       "path": "../ai"
-    },
-    {
-      "path": "../assistant"
     },
     {
       "path": "../assistant-toolkit"

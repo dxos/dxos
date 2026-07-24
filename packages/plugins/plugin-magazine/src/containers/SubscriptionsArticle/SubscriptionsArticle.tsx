@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
+import { Attention, useSelection } from '@dxos/react-ui-attention';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';
@@ -39,7 +39,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
             subject: { mode: 'single', id: action.feedId },
           });
 
-          const companion = linkedSegment('feed');
+          const companion = Attention.linkedSegment('feed');
           if (layout.mode === 'simple') {
             void invokePromise(LayoutOperation.UpdateComplementary, {
               subject: companion,

@@ -1,0 +1,115 @@
+---
+id: org.dxos.plugin.versioning
+name: VersioningPlugin
+version: 0.1.0
+---
+
+A generic version/review plugin for DXOS Composer. Adds a history companion (checkpoints, branches,
+merges) to any object type that opts in via a HistoryProvider, plus per-user version selection and
+review-mode state and a default review-render policy.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+
+## Types
+
+```mdl
+type VersionSelection
+  literals: current | branch | fork | checkpoint
+  desc: Which version of an object the local user is viewing. Never replicated.
+```
+
+```mdl
+type ReviewMode
+  literals: editing | suggesting | viewing
+  desc: Per-user editing posture for a document. Local UI preference, never replicated.
+```
+
+```mdl
+type HistoryProvider
+  fields:
+    id: string                  # typename gating the history companion
+    getTarget: Function         # resolves the versioned Text root for an object
+  desc: Per-type opt-in to the generic history companion.
+```
+
+## Components
+
+```mdl
+component ObjectHistory
+  desc: |
+    Companion panel: git-graph timeline of an object's checkpoints, branch forks, and merges.
+    Clicking a checkpoint time-travels the object's surfaces; clicking a branch fork switches to it.
+    Gated per-type by a HistoryProvider contribution.
+  props:
+    subject: History.VersionedObject
+    role?: string
+  actions:
+    createCheckpoint(name)
+    createBranch(name)
+    merge()
+    discard()
+```
+
+## Features
+
+```mdl
+feat F-1: History Companion
+
+  req F-1.1:
+    when: an object's typename has a registered HistoryProvider
+    then: the object gains a companion "History" node in the app graph
+  req F-1.2:
+    when: user selects a checkpoint in the timeline
+    then: the object's surfaces time-travel to that revision (per-user, not replicated)
+```
+
+```mdl
+feat F-2: Review Model
+
+  req F-2.1: A default review-render policy maps review mode to render config with GDocs parity.
+  req F-2.2:
+    when: a plugin contributes a ReviewRenderPolicy earlier in plugin order
+    then: that policy overrides the default
+```
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+```

@@ -5,7 +5,7 @@
 import { Chunk, unifiedMergeView } from '@codemirror/merge';
 import { type Extension, Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { diffWordsWithSpace } from 'diff';
+import { diffChars, diffWordsWithSpace } from 'diff';
 
 export type DiffOptions = {
   /**
@@ -127,19 +127,65 @@ export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolic
   return groups;
 };
 
+/**
+ * Re-anchors {@link DiffHunk}s computed against `base` into `doc` coordinates, so a foreign author's
+ * proposal (diffed `base` vs proposal) can be decorated over a `doc` that has itself diverged from
+ * `base` (the user's own branch edits). Each hunk offset is mapped through the character-level
+ * `base`↔`doc` diff ({@link computeCharHunks}): a position in an unchanged region shifts by the net
+ * length of edits before it; a position inside a doc-edited region clamps to that region's edge (the
+ * `from` to its start, the `to` to its end). Without this, a proposal diffed against `base` would
+ * render at stale offsets over the diverged `doc`.
+ */
+export const rebaseHunks = (base: string, doc: string, hunks: DiffHunk[]): DiffHunk[] =>
+  rebaseHunksWith(computeCharHunks(base, doc), hunks);
+
+/**
+ * {@link rebaseHunks} with a precomputed `base`↔`doc` character diff. Callers rebasing MANY hunk sets
+ * against the same pair — e.g. every author's proposal over one branch (see {@link suggestions}) —
+ * compute {@link computeCharHunks} once and reuse it, rather than re-diffing the whole document per set.
+ */
+export const rebaseHunksWith = (charHunks: Hunk[], hunks: DiffHunk[]): DiffHunk[] => {
+  const mapPos = (pos: number, side: -1 | 1): number => {
+    let delta = 0;
+    for (const hunk of charHunks) {
+      if (pos < hunk.fromA) {
+        break;
+      }
+      // An exclusive upper edge (`side > 0`) sitting exactly at a doc edit's start belongs to the
+      // region BEFORE the edit, so map it to `fromB` — never across the edit (which would absorb the
+      // user's own adjacent text into a foreign hunk).
+      if (pos === hunk.fromA && side > 0) {
+        return hunk.fromB;
+      }
+      if (pos < hunk.toA) {
+        // Inside a doc-edited region: clamp to its edge so the offset stays a valid doc position.
+        return side < 0 ? hunk.fromB : hunk.toB;
+      }
+      // Past this region: `toB - toA` is the net offset shift it contributes.
+      delta = hunk.toB - hunk.toA;
+    }
+    return pos + delta;
+  };
+  return hunks.map((hunk) => {
+    // A zero-width hunk (pure insertion, from === to) must map both endpoints with the SAME side —
+    // otherwise, at a doc-edit boundary, the lower edge (side -1) and upper edge (side +1) can resolve
+    // to different offsets and invert the range (from > to). Non-zero hunks keep the asymmetric mapping
+    // so an exclusive upper edge never crosses into an adjacent doc edit.
+    if (hunk.from === hunk.to) {
+      const at = mapPos(hunk.from, -1);
+      return { ...hunk, from: at, to: at };
+    }
+    return { ...hunk, from: mapPos(hunk.from, -1), to: mapPos(hunk.to, 1) };
+  });
+};
+
 /** A changed hunk between two documents as character ranges in each (A = original, B = modified). */
 export type Hunk = { fromA: number; toA: number; fromB: number; toB: number };
 
 /**
- * Compute the changed hunks between `original` (A) and `modified` (B) as character ranges. Used to
- * locate and apply an individual change (e.g. accepting one hunk from a branch) outside an editor.
- *
- * Granularity is LINE-level (via `@codemirror/merge` `Chunk.build`), unlike the word-level
- * {@link diffHunks} the suggestion UI renders. This means {@link cherryPickHunk} / {@link revertHunk}
- * accept or revert a whole changed line, even when only one word on it differs: an anchor anywhere on
- * the line resolves to the same line-sized splice. Per-word cherry-pick would require a word-level
- * hunk carrying both A and B ranges (extending {@link diffHunks}, which anchors in the before text
- * only) and reworking the anchor contract these functions' tests encode — deferred as a follow-up.
+ * LINE-level changed hunks between `original` (A) and `modified` (B) as character ranges (via
+ * `@codemirror/merge` `Chunk.build`). Coarser than {@link computeWordHunks}; retained for callers that
+ * want whole-line change regions.
  */
 export const computeHunks = (original: string, modified: string): Hunk[] =>
   Chunk.build(Text.of(original.split('\n')), Text.of(modified.split('\n'))).map((chunk) => ({
@@ -148,6 +194,79 @@ export const computeHunks = (original: string, modified: string): Hunk[] =>
     fromB: chunk.fromB,
     toB: chunk.toB,
   }));
+
+/**
+ * WORD-level changed hunks between `original` (A) and `modified` (B), each carrying both coordinate
+ * ranges. Matches the word granularity of {@link diffHunks} (same `diffWordsWithSpace` alignment), so
+ * {@link cherryPickHunk} / {@link revertHunk} resolve exactly the anchored word(s) — accepting one
+ * word does not pull in the rest of its line.
+ */
+export const computeWordHunks = (original: string, modified: string): Hunk[] => {
+  const hunks: Hunk[] = [];
+  let positionA = 0;
+  let positionB = 0;
+  let pending: Hunk | undefined;
+  const flush = () => {
+    if (pending) {
+      hunks.push(pending);
+      pending = undefined;
+    }
+  };
+  for (const change of diffWordsWithSpace(original, modified)) {
+    if (change.added) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      positionB += change.value.length;
+      pending.toB = positionB;
+    } else if (change.removed) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      positionA += change.value.length;
+      pending.toA = positionA;
+    } else {
+      flush();
+      positionA += change.value.length;
+      positionB += change.value.length;
+    }
+  }
+  flush();
+  return hunks;
+};
+
+/**
+ * CHARACTER-level changed hunks between `original` (A) and `modified` (B), each carrying both
+ * coordinate ranges. Finer than {@link computeWordHunks}: an in-word or whitespace/newline edit shows
+ * only the changed characters, not a whole-word delete+insert. Used for live "Suggesting mode" tracked
+ * changes (see {@link trackChanges}), where word granularity makes every keystroke read as a struck
+ * word rebuilt beside it.
+ */
+export const computeCharHunks = (original: string, modified: string): Hunk[] => {
+  const hunks: Hunk[] = [];
+  let positionA = 0;
+  let positionB = 0;
+  let pending: Hunk | undefined;
+  const flush = () => {
+    if (pending) {
+      hunks.push(pending);
+      pending = undefined;
+    }
+  };
+  for (const change of diffChars(original, modified)) {
+    if (change.added) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      positionB += change.value.length;
+      pending.toB = positionB;
+    } else if (change.removed) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      positionA += change.value.length;
+      pending.toA = positionA;
+    } else {
+      flush();
+      positionA += change.value.length;
+      positionB += change.value.length;
+    }
+  }
+  flush();
+  return hunks;
+};
 
 /**
  * Resolve a single change to apply when cherry-picking from `compare` (A) into `current` (B): find
@@ -162,7 +281,7 @@ export const cherryPickHunk = (
   range: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
   // Half-open overlap: a range touching a neighbouring hunk's boundary is not on that hunk.
-  const hunk = computeHunks(compare, current).find((h) => h.fromB < range.end && h.toB > range.start);
+  const hunk = computeWordHunks(compare, current).find((h) => h.fromB < range.end && h.toB > range.start);
   if (!hunk) {
     return undefined;
   }
@@ -185,7 +304,7 @@ export const revertHunk = (
   baseRange: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
   // A = base, B = compare (branch); locate the hunk by its base-side range.
-  const hunk = computeHunks(base, compare).find((h) => h.fromA < baseRange.end && h.toA > baseRange.start);
+  const hunk = computeWordHunks(base, compare).find((h) => h.fromA < baseRange.end && h.toA > baseRange.start);
   if (!hunk) {
     return undefined;
   }

@@ -6,12 +6,13 @@ import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryContext, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
+import { Feed, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
 import { type MessageOptions } from '#components';
@@ -19,14 +20,26 @@ import { initializeMailbox } from '#testing';
 import { translations } from '#translations';
 import { Mailbox } from '#types';
 
-import { MessageThread } from './ConversationStack';
+import { ConversationStack } from './ConversationStack';
 
 type StoryArgs = {
   length?: number;
 };
 
+/** Tags applied to the seeded messages by index (some messages carry several tags). */
+const MESSAGE_TAGS: { label: string; hue: string }[][] = [
+  [{ label: 'Important', hue: 'red' }],
+  [{ label: 'Investor', hue: 'amber' }],
+  [
+    { label: 'Team', hue: 'green' },
+    { label: 'Eng', hue: 'cyan' },
+  ],
+  [{ label: 'Personal', hue: 'indigo' }],
+  [{ label: 'Work', hue: 'violet' }],
+];
+
 /**
- * Renders the seeded mailbox's one thread through `MessageThread` in isolation. The whole-thread
+ * Renders the seeded mailbox's one thread through `ConversationStack` in isolation. The whole-thread
  * toolbar (view controls, collapse-all) belongs to `MessageArticle`, not the stack, so it is left out
  * here to keep the component's own surface — the message tiles and their per-message toolbars — clear.
  * Starts with every message collapsed; expand one by clicking its summary. (Deciding which message is
@@ -64,7 +77,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <MessageThread.Root
+    <ConversationStack.Root
       attendableId='story'
       items={messages}
       mailbox={mailbox}
@@ -76,26 +89,50 @@ const DefaultStory = () => {
       <Dnd.Root>
         <Panel.Root role='article'>
           <Panel.Content asChild>
-            <MessageThread.Content />
+            <ConversationStack.Content />
           </Panel.Content>
         </Panel.Root>
       </Dnd.Root>
-    </MessageThread.Root>
+    </ConversationStack.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/components/MessageThread',
+  title: 'plugins/plugin-inbox/components/ConversationStack',
   render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
-      types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
+      types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person, Tag.Tag, TagIndex.TagIndex],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }, { args: { length = 8 } = {} }: StoryContext<StoryArgs>) => {
-        await initializeMailbox(space.db, length, 1);
+        const mailbox = await initializeMailbox(space.db, length, 1);
+        // Flush first so the appended feed messages are queryable below.
+        await space.db.flush({ indexes: true });
+
+        // Tag the first messages so the stack renders per-message tag chips.
+        const feed = await mailbox.feed?.tryLoad();
+        if (feed) {
+          const messages = await space.db
+            .query(
+              Query.select(Filter.type(Message.Message))
+                .from([Scope.space(), Scope.feed(Obj.getURI(feed, { prefer: 'absolute' }))])
+                .orderBy(Order.property('created', 'asc')),
+            )
+            .run();
+          for (const [index, tags] of MESSAGE_TAGS.entries()) {
+            const message = messages[index];
+            if (!message) {
+              break;
+            }
+            for (const tag of tags) {
+              await Mailbox.applyTag(mailbox, tag, message, space.db);
+            }
+          }
+        }
+
         await space.db.flush({ indexes: true });
       },
     }),

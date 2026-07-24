@@ -14,7 +14,7 @@ import { type FallbackValue } from '@dxos/util';
  * free of `@dxos/react-client`.
  */
 export type MessageMetadata = {
-  id: string;
+  id?: string;
   timestamp?: string;
   authorId?: string;
   authorName?: string;
@@ -39,6 +39,10 @@ export type MessageCallbacks = {
   onMessageDelete?: (messageId: string) => void;
   /** Accept an assistant proposal block on a message (omit to hide the affordance). */
   onAcceptProposal?: (messageId: string) => void;
+  /** Accept a suggested-change block on a message (omit to hide the affordance). */
+  onAcceptChange?: (messageId: string) => void;
+  /** Reject a suggested-change block on a message (omit to hide the affordance). */
+  onRejectChange?: (messageId: string) => void;
 };
 
 /** Shared context provided by `Thread.Root` to its message tiles. */

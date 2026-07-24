@@ -22,8 +22,7 @@ import { FormRow } from '../../FormRow';
 // second click never turns the outline blue. Keyed on `focus-within` because focus lands on the inner
 // CodeMirror contenteditable, not this wrapper.
 const editorClassNames = [
-  'min-h-[6lh] transition-colors rounded-xs p-1 px-2 bg-input-surface border border-input-separator',
-  'focus:border-separator focus-within:border-separator focus-within:bg-focus-surface',
+  'dx-input min-h-[6lh] p-1 px-2',
   'focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-focus-ring-subtle focus-within:z-[1]',
 ];
 

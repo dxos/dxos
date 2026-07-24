@@ -16,7 +16,6 @@ import {
   type Command,
   Decoration,
   EditorView,
-  type PluginValue,
   type Rect,
   RectangleMarker,
   ViewPlugin,
@@ -60,6 +59,11 @@ export type CommentsOptions = {
    */
   reviewBranch?: string;
   /**
+   * Prohibit creating new comments (e.g. on a per-user suggestion branch). Existing comments still
+   * render; the create command becomes a no-op.
+   */
+  readonly?: boolean;
+  /**
    * Called to create a new thread and return the thread id.
    */
   onCreate?: (params: { cursor: string; from: number; location?: Rect | null; branch?: string }) => void;
@@ -75,6 +79,12 @@ export type CommentsOptions = {
    * Called to notify which thread is currently closest to the cursor.
    */
   onSelect?: (state: CommentsState) => void;
+  /**
+   * Called when a comment is deliberately activated (clicked). Distinct from `onSelect` (passive
+   * cursor-proximity): a click is an explicit user intent, e.g. to reveal the thread in a companion.
+   * The editor-side selection/highlight is already applied by the time this fires.
+   */
+  onActivate?: (id: string) => void;
 };
 
 /**
@@ -119,6 +129,10 @@ export const comments = (options: CommentsOptions): Extension => {
           };
 
           this.unsubscribe = options.subscribe?.(updateComments) ?? (() => {});
+          // Prime the initial decoration pass: `subscribe` may not emit for an already-resolved source
+          // (e.g. an ECHO query whose results resolved before mount), so read once now that the source is
+          // subscribed. Owning this here means adapters never have to prime manually.
+          updateComments();
         }
 
         destroy = () => {
@@ -372,31 +386,46 @@ const commentsHighlightLayer = layer({
   },
 });
 
-export const commentClickedEffect = StateEffect.define<string>();
-
 const handleCommentClick = EditorView.domEventHandlers({
   click: (event, view) => {
-    let target = event.target as HTMLElement;
-    const editorRoot = view.dom;
-
-    // Traverse up the DOM tree looking for an element with data-comment-id
-    // Stop if we reach the editor root or find the comment id
-    while (target && target !== editorRoot && !target.hasAttribute('data-comment-id')) {
-      target = target.parentElement as HTMLElement;
+    const id = commentIdAtClick(event, view);
+    if (!id) {
+      return false;
     }
 
-    // Check if we found a comment id and are still within the editor
-    if (target && target !== editorRoot) {
-      const commentId = target.getAttribute('data-comment-id');
-      if (commentId) {
-        view.dispatch({ effects: commentClickedEffect.of(commentId) });
-        return true;
-      }
-    }
-
-    return false;
+    // Select the clicked thread in the editor (moves the caret into the range so the proximity tracker
+    // keeps it current) and notify the app for deliberate-click behaviour (e.g. reveal in a companion).
+    scrollCommentIntoView(view, id);
+    view.state.facet(optionsFacet).onActivate?.(id);
+    return true;
   },
 });
+
+/**
+ * Resolve the comment id under a click. Prefers the DOM target (a direct hit on the `.cm-comment`
+ * span), then falls back to a document-position hit-test: the highlight-layer rectangles
+ * (pointer-events: none) sit over the text, so a click often lands on the `.cm-line` (an ancestor of
+ * the span) and an upward target walk would miss it.
+ */
+const commentIdAtClick = (event: MouseEvent, view: EditorView): string | undefined => {
+  let target = event.target as HTMLElement | null;
+  const editorRoot = view.dom;
+  while (target && target !== editorRoot && !target.hasAttribute?.('data-comment-id')) {
+    target = target.parentElement;
+  }
+  const domId = target && target !== editorRoot ? target.getAttribute('data-comment-id') : null;
+  if (domId) {
+    return domId;
+  }
+
+  const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+  if (pos != null) {
+    const commentState = view.state.field(commentsState, false);
+    return commentState?.comments.find(({ range }) => pos >= range.from && pos <= range.to)?.comment.id;
+  }
+
+  return undefined;
+};
 
 //
 // Cut-and-paste.
@@ -527,6 +556,11 @@ const optionsFacet = singleValueFacet<CommentsOptions>();
  */
 export const createComment: Command = (view) => {
   const options = view.state.facet(optionsFacet);
+  // Comment creation is prohibited on this surface (e.g. a suggestion branch).
+  if (options.readonly) {
+    return false;
+  }
+
   let { from, to } = view.state.selection.main;
 
   // Snap to the largest logical region so commenting never depends on a precise selection. Inside a
@@ -569,29 +603,6 @@ export const createComment: Command = (view) => {
 
   return false;
 };
-
-/**
- * Manages external comment synchronization for the editor.
- * This class subscribes to external comment updates and applies them to the editor view.
- */
-class ExternalCommentSync implements PluginValue {
-  private readonly unsubscribe: () => void;
-
-  constructor(view: EditorView, options: Pick<CommentsOptions, 'id' | 'subscribe' | 'getComments'>) {
-    const updateComments = () => {
-      const comments = options.getComments?.() ?? [];
-      if (options.id === view.state.facet(documentId)) {
-        queueMicrotask(() => view.dispatch({ effects: setComments.of({ id: options.id, comments }) }));
-      }
-    };
-
-    this.unsubscribe = options.subscribe?.(updateComments) ?? (() => {});
-  }
-
-  destroy = () => {
-    this.unsubscribe();
-  };
-}
 
 //
 // Utils.
@@ -678,9 +689,19 @@ const styles = EditorView.theme({
   // `box-shadow` with a 1px spread extends the block 1px on every side in the same colour — visual
   // padding without changing layout. Vertically adjacent line rectangles paint into each other's gap
   // with the same colour, so a multi-line comment stays seamless.
+  // 2px horizontal breathing room around the text: `padding-inline` widens the background box and the
+  // compensating negative `margin-inline` keeps it aligned to the text; `content-box` makes the padding
+  // grow the box (rather than shrink the content) so the fill and border-radius extend with it.
+  // `pointer-events: none` on the rectangles themselves (not only the layer wrapper) so a click over a
+  // comment passes through to the `.cm-comment` mark's `data-comment-id` (and reaches `handleCommentClick`)
+  // instead of landing on a highlight rectangle that carries no id.
   '.cm-comment-highlight': {
     backgroundColor: 'var(--color-teal-bg)',
     boxShadow: '0 0 0 1px var(--color-teal-bg)',
+    boxSizing: 'content-box',
+    marginInline: '-2px',
+    paddingInline: '2px',
+    pointerEvents: 'none',
   },
   '.cm-comment-highlight-current': {
     backgroundColor: 'var(--color-orange-bg)',

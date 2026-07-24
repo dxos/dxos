@@ -66,6 +66,8 @@ const ThreadRoot = ({
   editable,
   onMessageDelete,
   onAcceptProposal,
+  onAcceptChange,
+  onRejectChange,
 }: ThreadRootProps) => {
   // Composer focus handler registered by Thread.Textbox; invoked by Thread.Header's caret.
   const composerFocus = useRef<(() => void) | undefined>(undefined);
@@ -86,6 +88,8 @@ const ThreadRoot = ({
       focusComposer={focusComposer}
       onMessageDelete={onMessageDelete}
       onAcceptProposal={onAcceptProposal}
+      onAcceptChange={onAcceptChange}
+      onRejectChange={onRejectChange}
     >
       {children}
     </ThreadContextProvider>

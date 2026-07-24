@@ -12,7 +12,8 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Graph } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { Attention } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
@@ -75,7 +76,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   );
 
   // TODO(wittjosiah): This is very convoluted, find a simpler way to make this work.
-  const eventSegment = linkedSegment(event.id);
+  const eventSegment = Attention.linkedSegment(event.id);
   const isEventNode = !!attendableId?.endsWith(`/${eventSegment}`);
   const nodeId = isEventNode ? attendableId : attendableId ? getEventNodeId(attendableId, eventSegment) : undefined;
 
@@ -98,21 +99,10 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
     void invokePromise(LayoutOperation.Open, { subject: [getCalendarEventPath(db.spaceId, calendar.id, event.id)] });
   }, [invokePromise, db, calendar, event.id]);
 
-  // Push this draft event to Google Calendar.
-  // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
-  // (Database/Feed/Credentials) can materialize.
-  const handleSave = useCallback(() => {
-    if (calendar) {
-      void invokePromise(InboxOperation.SyncDraftEvents, { calendar, event }, { spaceId: db?.spaceId });
-    }
-  }, [invokePromise, calendar, event, db]);
-
-  // Delete the event (locally if draft, otherwise on Google Calendar too).
+  // Delete the event locally.
   const handleDelete = useCallback(() => {
-    if (calendar) {
-      void invokePromise(InboxOperation.DeleteEvent, { calendar, event }, { spaceId: db?.spaceId });
-    }
-  }, [invokePromise, calendar, event, db]);
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [event] });
+  }, [invokePromise, event]);
 
   return (
     <Event.Root event={event} attendableId={attendableId} nodeId={nodeId}>
@@ -124,7 +114,6 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
             editing={draft}
             saveDisabled={!connection}
             onOpen={calendar ? handleOpen : undefined}
-            onSave={draft ? handleSave : undefined}
             onDelete={calendar ? handleDelete : undefined}
           />
         }

@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: sketch-scene-dsl
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-07-23
+    summary: Backend-neutral scene DSL so the agent can draw/edit sketches (world objects by id); tldraw backend, read/edit operations, sketch skill, live-AI storybook.
+    tasks: packages/plugins/plugin-sketch/TASKS.md
+    design: agents/superpowers/specs/2026-07-23-sketch-scene-dsl-design.md
+    prs: [12324]
+    resume: 'PR #12324 Check GREEN (preview pr-12324-composer-main.dxos.workers.dev). Next: respond to review comments (only bot stubs at checkpoint) and land via the land skill; then Phase 2 backlog (excalidraw backend, mermaid/d2/sequence dialects, rename-object).'
+
   - name: mailbox-research
     status: active
     user: burdon
@@ -17,7 +28,7 @@ projects:
     prs: [12163, 12167, 12178]
     resume: 'PRs #12178 + #12205 merged (Topics UX v2 + Topics/Subscriptions Mosaic lists). In progress (uncommitted, NOT yet a PR): converted plugin-inbox folder articles to the ObjectArticleProps<Mailbox> pattern (db from subject, folder graph nodes carry data:mailbox, sentinels dropped) + SubscriptionsArticle unsubscribe removes on success. Build/lint/fmt + 167 unit tests green. NOTE: TopicsArticle/CreateTopic storybook play-tests fail on the committed baseline too (pre-existing, headless topic-query returns empty). Next: commit this work / open PR when ready; then Priority 1 manual topics + management. Deferred: Active Topics v2 (LLM labels + personEmails), two-tier latency, re-sync dedup bug, MailboxArticle search wiring.'
 
-  - name: task-planning-skill-update
+  - name: task-planning-skill
     status: active
     user: burdon
     host: burdon-mbp-2022
@@ -27,6 +38,17 @@ projects:
     design: .agents/skills/task-planning/SKILL.md
     prs: [12174]
     resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
+
+  - name: inbox-test-suite
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-13
+    summary: Layered test suite enforcing plugin-inbox PLUGIN.mdl (unit→storybook→harness→agent-e2e→browser-e2e→bench→live); current branch delivers Tier 4 Playwright browser-e2e (task #7).
+    tasks: packages/plugins/plugin-inbox/TASKS.md
+    design: packages/plugins/plugin-inbox/PLUGIN.mdl
+    prs: [12197]
+    resume: 'PR #12197: task #7 (JMAP e2e) done, 3/3 green — survived two upstream refactors (connector-auth schema-annotation rewrite; vite+rolldown build + conversation-mosaic-toolbar redesign) and a code-review fix round (PLUGIN.mdl draftEmailAndOpen/jmapSync accuracy, http-mock Jmap.MethodCall/Filter reuse + validated parsing). Latest merge (origin/main, 29 commits) needed zero fixes. Committed but not pushed: http-mock export-path fix, reply e2e simplified to Reply All, latest merge. Next: push, then Gmail suite (#7e, DX_E2E-gated connection bridge + provider adapter) or #6/#8-#11 per user priority.'
 
   - name: composer-search
     status: active
@@ -46,9 +68,20 @@ projects:
     created: 2026-07-15
     summary: Document revisions & branches (checkpoints, draft branches, merge) for markdown + @dxos/versioning; convergence with PR 11829 core branching.
     tasks: .agents/projects/document-revisions/TASKS.md
-    design: packages/plugins/plugin-markdown/DESIGN.md
-    prs: [12237, 12246]
-    resume: 'PR #12246 GREEN (Check passed on HEAD e7b6ec0a0c) with ALL stages 1-4 complete + all post-merge/CI fixes. NEXT (morning): review + land (submit-pr/land skill); no failures outstanding, no new review comments. Future (not blocking, own PR): discriminated-union Branch shape after legacy content-copy records drain; generalize @dxos/versioning to non-Text objects; branch-level access control. User has role=none cleanup WIP uncommitted in the shared worktree (theirs, untouched by me). Overnight-fixed: flaky forkDump head-count assertion; useVersioning tolerant of absent VersioningState (plugin-blogger crash); assistant-e2e markdown + crm-mailbox memoized fixtures regenerated for the branchId/accept-change tool-schema change.'
+    design: packages/plugins/plugin-comments/DESIGN.md
+    prs: [12237, 12246, 12290, 12301, 12302, 12315]
+    resume: 'PR #12315 OPEN (eval, no auto-merge). Recent work (all pushed) fixes app comment-click + tightens the comments() seam: (1) dedupe MarkdownArticle extension double-application (react-surface re-read the ExtensionProvider capability MarkdownArticle already reads); (2) handleCommentClick now hit-tests by document position (posAtCoords) since the click lands on .cm-line, not the span; (3) comments() port refactor — renamed threads.ts to comment-sync.ts (commentSync/CommentSyncStore/CommentSyncOptions), the primitive owns the initial decoration read (ViewPlugin primes; adapters no longer sink), added an onActivate callback for click-reveal (removed raw commentClickedEffect + markdown-extension listener), deleted dead ExternalCommentSync; (4) 2px horizontal padding on the comment highlight. Also merged origin/main clean. Regression tests: react-ui-editor Comments 3/3 (incl. ClickThroughLineSelectsComment reproducing the .cm-line click); ui-editor 305, plugin-comments 21; builds+lint+fmt green. NOTE: mcp browser pane cannot do positioned clicks (0-viewport) — use the vitest storybook (chromium) harness; a storybook runs on :9009 (theirs was down). NEXT: address PR #12315 review comments, then eval + merge. Open follow-ups (TASKS.md): comment-decoration-as-layer decision (recommended NO full rewrite — highlight already a layer, mark only earns text-color), popover-obscured-by-R0 z-index, getSource root-cause w/Dima, section-0 view-mode vs review-mode coupling, P0 keypress-suggestion bisect.'
+
+  - name: ai-testing-strategy
+    status: active
+    user: burdon
+    host: burdon-mbp-2022
+    created: 2026-07-20
+    summary: Replace the memoized-LLM e2e strategy with tiered tests (deterministic unit tiers in CI + graded evals out-of-band); retire the current e2e framework.
+    tasks: .agents/projects/ai-testing-strategy/TASKS.md
+    design: packages/core/compute/ai/TESTING.md
+    prs: [12287, 12291, 12297, 12305, 12307]
+    resume: "Design doc PR #12287 MERGED. PR #12291 MERGED — Phase 1 steps 1-3. PR #12297 MERGED — kept G1 assistant-e2e gated instead of deleting it (superseded below). PR #12305 MERGED — leaner package-level D-tier companion. PR #12307 is READY FOR REVIEW (not draft), CI green, latest commit at time of writing 3cc239de67 — the G1 migration is COMPLETE: all 6 former-G1 scenarios (database, smoke, markdown, crm-mailbox, web-search, planning) have scored evalite evals in @dxos/assistant-evals, every one passing live at 100% at least once, graded by deterministic DB-effect/tool-invocation assertions plus two native LLM-judge integrations (src/judge.ts, using @dxos/ai's LanguageModel.generateObject rather than autoevals' OpenAI-coupled classifiers): planning's haiku-quality check and crm-mailbox's data-accuracy check, each with a same-file negative case. @dxos/assistant-e2e is kept as its own deprecated package (not merged into assistant-evals) holding harness.ts + 3 not-yet-portable scenarios (inbox-enable, local-ai, sandbox), each marked TODO(wittjosiah): migrate to an eval. Per-eval timeouts (createEvalRunner's timeout option, 60s default/150s for the two multi-tool scenarios) replaced a flat 360s vitest testTimeout (now 180s, just the outer safety net — confirmed via evalite's source that it has no per-eval timeout of its own). A CodeRabbit review round after marking ready found and fixed: two TESTING.md accuracy overstatements (model-pinning/scheduling, scripted-test branch coverage — both actually deferred), a assistant-e2e/README.md rule contradicting sandbox.test.ts's randomness requirement, EvalTimeoutError converted to Data.TaggedError, expect:'failure' no longer conflates infra/setup failures with the agent's own instructed failure (new AgentRunFailure tag), the 300ms fixed sleep in completedBlocks() replaced with a real FeedTraceSink.flush() call, plus two new scorers (crm-mailbox's summary-document-linked via the ProfileOf relation, database's database-queried via toolInvocations). NEXT: verify build/lint/test green, commit, re-verify with CodeRabbit. Then: G2→C mocked unit conversions (scheduled-run/model-pinning work explicitly deferred per direct instruction), then E/F tiers. Also tracked, own PRs: delete orphaned .agent/ (singular) dir; decide whether AiRequest.run needs a max-iterations cap (none exists today); consider tool-error/malformed-output branch tests."
 
   - name: ai-testing-strategy
     status: active

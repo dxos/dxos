@@ -60,7 +60,7 @@
     "vite-plugin-solid": "catalog:"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "catalog:",
+    "@changesets/changelog-git": "catalog:",
     "@changesets/cli": "catalog:",
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@cloudflare/workers-types": "catalog:",
@@ -75,7 +75,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
-    "@dxos/signal": "workspace:*",
     "@dxos/toolbox": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",

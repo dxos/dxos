@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Node } from '@dxos/plugin-graph';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { Position } from '@dxos/util';
 
@@ -54,7 +54,7 @@ export const createCompanionActions = (
   const edges: ActionGraphProps['edges'] = [];
 
   companions.forEach((companion: Node.Node) => {
-    const companionVariant = getLinkedVariant(companion.id);
+    const companionVariant = Attention.getLinkedVariant(companion.id);
     const companionAction = {
       id: `${idPrefix}-companion-${companion.id}`,
       type: Node.ActionType,

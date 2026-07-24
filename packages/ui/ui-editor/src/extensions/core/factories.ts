@@ -215,7 +215,7 @@ export type ThemeExtensionsOptions = {
 
 export const grow: ThemeExtensionsOptions['slots'] = {
   editor: {
-    className: 'h-full w-full',
+    className: 'w-full h-full',
   },
 } as const;
 

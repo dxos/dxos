@@ -27,16 +27,56 @@ export const SYSTEM_TAG_SOURCE = 'org.dxos.tag';
 
 /** The canonical system-tag registry. Each entry's `id` is the stable foreign-key slug. */
 export const SystemTag = {
-  starred: { id: 'starred', label: 'Starred', hue: 'amber' },
-  inbox: { id: 'inbox', label: 'Inbox', hue: 'blue' },
-  important: { id: 'important', label: 'Important', hue: 'orange' },
-  sent: { id: 'sent', label: 'Sent', hue: 'green' },
-  draft: { id: 'draft', label: 'Draft', hue: 'yellow' },
-  personal: { id: 'personal', label: 'Personal', hue: 'neutral' },
-  social: { id: 'social', label: 'Social', hue: 'cyan' },
-  promotions: { id: 'promotions', label: 'Promotions', hue: 'emerald' },
-  updates: { id: 'updates', label: 'Updates', hue: 'indigo' },
-  forums: { id: 'forums', label: 'Forums', hue: 'purple' },
+  starred: {
+    id: 'starred',
+    label: 'Starred',
+    hue: 'amber',
+  },
+  inbox: {
+    id: 'inbox',
+    label: 'Inbox',
+    hue: 'blue',
+  },
+  important: {
+    id: 'important',
+    label: 'Important',
+    hue: 'orange',
+  },
+  sent: {
+    id: 'sent',
+    label: 'Sent',
+    hue: 'green',
+  },
+  draft: {
+    id: 'draft',
+    label: 'Draft',
+    hue: 'yellow',
+  },
+  personal: {
+    id: 'personal',
+    label: 'Personal',
+    hue: 'neutral',
+  },
+  social: {
+    id: 'social',
+    label: 'Social',
+    hue: 'cyan',
+  },
+  promotions: {
+    id: 'promotions',
+    label: 'Promotions',
+    hue: 'emerald',
+  },
+  updates: {
+    id: 'updates',
+    label: 'Updates',
+    hue: 'indigo',
+  },
+  forums: {
+    id: 'forums',
+    label: 'Forums',
+    hue: 'purple',
+  },
 } as const;
 export type SystemTagId = keyof typeof SystemTag;
 

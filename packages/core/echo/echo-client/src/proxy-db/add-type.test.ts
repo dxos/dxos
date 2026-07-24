@@ -66,8 +66,8 @@ describe('Database.addType', () => {
     expect(objects[0].id).to.eq(object.id);
   });
 
-  // Objects from a persisted type are stamped with the type entity's echo:/<id> URI, not the
-  // typename DXN. The type's URI (Type.getURI) is the space-less echo:/<id>, which matches the
+  // Objects from a persisted type are stamped with the type entity's echo:///<id> URI, not the
+  // typename DXN. The type's URI (Type.getURI) is the space-less echo:///<id>, which matches the
   // object regardless of space; a space-qualified EID matches only within the owning space.
   test('Filter.type matches objects of a persisted type by URI', async () => {
     const { db } = await builder.createDatabase();

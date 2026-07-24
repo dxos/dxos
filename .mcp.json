@@ -3,6 +3,10 @@
     "dxos-introspect": {
       "type": "http",
       "url": "https://introspect-service-labs.dxos.workers.dev/mcp"
+    },
+    "trunk": {
+      "type": "http",
+      "url": "https://mcp.trunk.io/mcp"
     }
   }
 }
