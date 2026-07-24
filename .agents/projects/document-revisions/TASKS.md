@@ -39,6 +39,12 @@ marks current) instead of a bare `setSelection({current})`. Verified: `react-ui-
 
 ## Tracked follow-ups
 
+- [ ] **Rename the `threads` extension / reconsider comment decoration as an overlay.** Ask why
+      [`threads.ts`](../../../packages/plugins/plugin-comments/src/extensions/threads.ts) is named
+      "threads" (it wires comment-anchor sync + the `comments()` editor extension; "threads" reads as
+      the data model, not the editor integration). Separately, evaluate implementing the comment
+      decoration as an overlay (like the ambient suggestions overlay / `commentsHighlightLayer`) rather
+      than inline `Decoration.mark`s — may simplify click routing and the proximity/selection coupling.
 - [ ] **Root-cause the `Relation.getSource` mitigation (follow-up with Dima).** `threads.ts` `getAnchors`
       now try/catches `Relation.getSource` (crash: "Relation source could not be resolved" when the query
       surfaces a relation whose source proxy isn't yet resolved — e.g. a just-persisted comment). The real

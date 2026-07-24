@@ -381,20 +381,27 @@ export const commentClickedEffect = StateEffect.define<string>();
 
 const handleCommentClick = EditorView.domEventHandlers({
   click: (event, view) => {
-    let target = event.target as HTMLElement;
+    // Fast path: the click landed on (or inside) the `.cm-comment` span — walk up to its id.
+    let target = event.target as HTMLElement | null;
     const editorRoot = view.dom;
-
-    // Traverse up the DOM tree looking for an element with data-comment-id
-    // Stop if we reach the editor root or find the comment id.
-    while (target && target !== editorRoot && !target.hasAttribute('data-comment-id')) {
-      target = target.parentElement as HTMLElement;
+    while (target && target !== editorRoot && !target.hasAttribute?.('data-comment-id')) {
+      target = target.parentElement;
+    }
+    const domId = target && target !== editorRoot ? target.getAttribute('data-comment-id') : null;
+    if (domId) {
+      view.dispatch({ effects: commentClickedEffect.of(domId) });
+      return true;
     }
 
-    // Check if we found a comment id and are still within the editor.
-    if (target && target !== editorRoot) {
-      const commentId = target.getAttribute('data-comment-id');
-      if (commentId) {
-        view.dispatch({ effects: commentClickedEffect.of(commentId) });
+    // Fallback: the highlight-layer rectangles (pointer-events: none) sit over the text, so a click on a
+    // comment often lands on the `.cm-line` (an ancestor of the span) and the walk above misses it.
+    // Resolve the comment by document position instead.
+    const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+    if (pos != null) {
+      const commentState = view.state.field(commentsState, false);
+      const hit = commentState?.comments.find(({ range }) => pos >= range.from && pos <= range.to);
+      if (hit) {
+        view.dispatch({ effects: commentClickedEffect.of(hit.comment.id) });
         return true;
       }
     }
