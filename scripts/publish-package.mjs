@@ -7,9 +7,10 @@
 // Bootstrap-publish a single workspace package to npm. Intended for the FIRST publish of a new
 // public package (e.g. a freshly-extracted leaf lib), after which CI's `check-packages-published`
 // passes and release automation takes over. Builds the package, validates it is publishable, and
-// runs `npm publish`, then opens the package's npm settings page (where trusted publishing is
-// configured for future automated releases). Auth is the caller's responsibility (`npm login` or a
-// scoped token in ~/.npmrc) — this script never handles credentials.
+// runs `pnpm publish` (which rewrites `workspace:`/`catalog:` specifiers to concrete versions —
+// npm would ship them verbatim), then opens the package's npm settings page (where trusted
+// publishing is configured for future automated releases). Auth is the caller's responsibility
+// (`npm login` or a scoped token in ~/.npmrc) — this script never handles credentials.
 //
 // Usage:
 //   node scripts/publish-package.mjs <package-name|package-dir> [--dry-run] [--tag <tag>] [--no-build] [--no-open]
@@ -154,14 +155,18 @@ const main = async () => {
     run(moonBin(), ['run', `${projectId}:build`], REPO_ROOT);
   }
 
-  const publishArgs = ['publish', '--access', access ?? 'public'];
+  // `pnpm publish` (not npm): it rewrites `workspace:`/`catalog:` protocol specifiers to concrete
+  // versions at pack time — `npm publish` would ship them verbatim and produce an uninstallable
+  // manifest for any package with in-repo dependencies. `--no-git-checks` because bootstrap
+  // publishes legitimately run from feature branches.
+  const publishArgs = ['publish', '--access', access ?? 'public', '--no-git-checks'];
   if (tag) {
     publishArgs.push('--tag', tag);
   }
   if (dryRun) {
     publishArgs.push('--dry-run');
   }
-  run('npm', publishArgs, packageDir);
+  run('pnpm', publishArgs, packageDir);
 
   // The npm package settings page is where trusted publishing (OIDC) is configured for future
   // automated releases — surface it (and open it) after the first real publish.
