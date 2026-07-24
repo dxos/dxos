@@ -24,7 +24,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch, Version } from '@dxos/versioning';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
 import { MarkdownProperties } from './MarkdownProperties';
 
 const MarkdownExtensionsPlugin = Plugin.define(

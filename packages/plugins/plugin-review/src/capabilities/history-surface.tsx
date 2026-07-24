@@ -12,7 +12,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { ObjectHistory } from '#containers';
 
-import { MarkdownProperties } from '../markdown';
+import { MarkdownProperties } from '../components';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

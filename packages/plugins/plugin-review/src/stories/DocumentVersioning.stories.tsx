@@ -91,6 +91,7 @@ const storyCommentsExtension = (): Extension => [
         if (from < 0) {
           return;
         }
+
         const id = view.state.facet(documentId);
         const cursor = Cursor.getCursorFromRange(view.state, { from, to: from + 'Hello'.length });
         queueMicrotask(() =>
@@ -237,7 +238,7 @@ const mergeViaPanel = async (canvasElement: HTMLElement) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-review/DocumentVersioning',
+  title: 'plugins/plugin-review/stories/DocumentVersioning',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),

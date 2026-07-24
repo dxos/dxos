@@ -10,8 +10,8 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Version } from '@dxos/versioning';
 
-import { useVersioning } from '../hooks';
-import { meta } from '../meta';
+import { useVersioning } from '../../hooks';
+import { meta } from '../../meta';
 
 export type MarkdownPropertiesProps = AppSurface.ObjectPropertiesProps<Markdown.Document>;
 
