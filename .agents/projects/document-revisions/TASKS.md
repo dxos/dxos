@@ -63,6 +63,13 @@ marks current) instead of a bare `setSelection({current})`. Verified: `react-ui-
 
 ## P0 REGRESSION (2026-07-23, reported) — "each keypress creates a new suggestion" in editing mode
 
+> **CI note (2026-07-24):** `DocumentVersioning` stories `EditingTyping`, `Suggesting`, `AmbientReview`
+> are now `tags: ['!test']` (excluded from the headless runner) — they need real CodeMirror typing /
+> live overlay settling the headless `userEvent` can't do (keystrokes don't produce doc changes). They
+> failed CI the moment an origin/main merge made plugin-markdown "affected"; never passed headlessly,
+> pre-date the comment work. **The P0 guard is now interactive-only — run in storybook, not CI.**
+> Follow-up: a headless-safe way to exercise editor typing (or drive the regression via the data layer).
+
 User: in Markdown mode (NOT suggesting) each keypress creates a new suggestion. **Static analysis:** only
 two paths create a `kind:'suggestion'` branch — the ambient bind effect
 ([MarkdownArticle.tsx:147](../../../packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx),
