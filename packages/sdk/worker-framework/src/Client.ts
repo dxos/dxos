@@ -138,6 +138,12 @@ export class Connection extends Resource {
     this.#leaderPortTimeout = options.leaderTimeouts?.portTimeout ?? DEFAULT_LEADER_PORT_TIMEOUT;
     this.#leaderRetryBackoff = options.leaderTimeouts?.retryBackoff ?? DEFAULT_LEADER_RETRY_BACKOFF;
     this.#maxLeaderFailures = options.maxLeaderFailures ?? DEFAULT_MAX_LEADER_FAILURES;
+    // The escalation fires on exact equality with the failure count, so any non-positive-integer
+    // value would silently disable it.
+    invariant(
+      Number.isInteger(this.#maxLeaderFailures) && this.#maxLeaderFailures >= 1,
+      'maxLeaderFailures must be a positive integer',
+    );
     this.#onPersistentFailure = options.onPersistentFailure;
   }
 

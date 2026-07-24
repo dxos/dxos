@@ -172,9 +172,12 @@ describe('Connection multi-client', () => {
       },
       onConnect: async () => ({ close: async () => {} }),
     });
-    void connection.open().catch(() => {});
+    // open() can never complete (no leader session ever opens) and rejects when close() aborts it
+    // at teardown — capture that expected rejection; anything thrown by close() fails the test.
+    const opened = connection.open().catch((error: unknown) => error);
     onTestFinished(async () => {
-      await connection.close().catch(() => {});
+      await connection.close();
+      expect(await opened).toBeInstanceOf(Error);
     });
 
     const error = await asyncTimeout(failure.wait(), 5_000);

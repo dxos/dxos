@@ -85,6 +85,9 @@ import { steps } from './util';
 
 export type { PluginConfig, State } from './plugin-defs.core';
 
+/**
+ * Plugin keys enabled by default for new users, per environment (dev/local/labs).
+ */
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
@@ -138,6 +141,9 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     .filter(isTruthy)
     .flat();
 
+/**
+ * Full Composer plugin registry: shared core infrastructure plus every content plugin.
+ */
 export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = conf;
   return [

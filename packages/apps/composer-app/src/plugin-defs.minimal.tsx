@@ -15,15 +15,10 @@ export type { PluginConfig, State } from './plugin-defs.core';
 
 /**
  * Minimal plugin registry for fast dev startup (`serve-min`, DX_PLUGIN_SET=minimal):
- * core infrastructure + Markdown + Assistant. Keep the plugin list in sync with
- * the `optimizeDeps.entries` brace glob in vite.config.ts. See
- * `agents/superpowers/specs/2026-07-24-composer-serve-min-design.md`.
+ * core infrastructure + Assistant, Comments, Inbox, Markdown, and Thread. Keep the
+ * plugin list in sync with the `optimizeDeps.entries` brace glob in vite.config.ts.
+ * See `agents/superpowers/specs/2026-07-24-composer-serve-min-design.md`.
  */
-export const getDefaults = (_: PluginConfig): string[] => [
-  AssistantPlugin.meta.profile.key,
-  MarkdownPlugin.meta.profile.key,
-];
-
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   ...getCorePlugins(config),
   AssistantPlugin(),
@@ -31,4 +26,12 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   InboxPlugin(),
   MarkdownPlugin(),
   ThreadPlugin(),
+];
+
+/**
+ * Plugin keys enabled by default for new users of the minimal set.
+ */
+export const getDefaults = (_: PluginConfig): string[] => [
+  AssistantPlugin.meta.profile.key,
+  MarkdownPlugin.meta.profile.key,
 ];
