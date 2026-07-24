@@ -36,6 +36,7 @@ import { Message } from '@dxos/types';
 import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause';
+import { createPromptContent, type ProcessorRequestContext } from './prompt';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -83,6 +84,8 @@ export type ProcessorRequestOptions = {};
 
 export type ProcessorRequest = {
   message: string;
+  /** Ephemeral context (e.g. companion-document selection) captured at submit time. */
+  context?: ProcessorRequestContext;
   options?: ProcessorRequestOptions;
 };
 
@@ -301,7 +304,7 @@ export class AiChatProcessor {
         );
 
         log('chat processor submitting prompt', { length: requestProp.message.length });
-        yield* session.submitPrompt(requestProp.message);
+        yield* session.submitPrompt(createPromptContent(requestProp));
         log('chat processor submitPrompt returned, waiting for agent', {});
 
         // On the first message (no name yet), schedule rename immediately so it
