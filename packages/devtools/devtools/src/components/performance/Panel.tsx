@@ -37,7 +37,20 @@ export const Panel = ({
     <PanelPrimitive.Root style={{ gridTemplateRows: 'auto auto' }} classNames='shrink-0'>
       {/* Panel.Toolbar's public type omits onClick even though it forwards DOM props at runtime, so the handler lives on an asChild div. */}
       <PanelPrimitive.Toolbar asChild classNames='px-2 text-sm text-fine cursor-pointer'>
-        <div role='button' className='flex items-center justify-between' onClick={() => onToggle?.(id, !open)}>
+        <div
+          role='button'
+          tabIndex={0}
+          className='flex items-center justify-between'
+          onClick={() => onToggle?.(id, !open)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              if (event.key === ' ') {
+                event.preventDefault();
+              }
+              onToggle?.(id, !open);
+            }
+          }}
+        >
           <div className='flex items-center gap-2 py-1'>
             <Icon icon={icon} />
             <span className='truncate'>{title}</span>

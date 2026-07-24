@@ -17,17 +17,17 @@ export const translations = [
         'copy.label': 'Copy log',
         'copy-entry.label': 'Copy entry',
         'empty.message': 'No log entries.',
-        // oxlint-disable-next-line @dxos/rules/translation-key-format -- level enum name, not a UI-role suffix.
+        // oxlint-disable-next-line @dxos/rules/translation-key-format
         'level.trace': 'Trace',
-        // oxlint-disable-next-line @dxos/rules/translation-key-format -- level enum name, not a UI-role suffix.
+        // oxlint-disable-next-line @dxos/rules/translation-key-format
         'level.debug': 'Debug',
-        // oxlint-disable-next-line @dxos/rules/translation-key-format -- level enum name, not a UI-role suffix.
+        // oxlint-disable-next-line @dxos/rules/translation-key-format
         'level.verbose': 'Verbose',
-        // oxlint-disable-next-line @dxos/rules/translation-key-format -- level enum name, not a UI-role suffix.
+        // oxlint-disable-next-line @dxos/rules/translation-key-format
         'level.info': 'Info',
-        // oxlint-disable-next-line @dxos/rules/translation-key-format -- level enum name, not a UI-role suffix.
+        // oxlint-disable-next-line @dxos/rules/translation-key-format
         'level.warn': 'Warn',
-        // oxlint-disable-next-line @dxos/rules/translation-key-format -- level enum name, not a UI-role suffix.
+        // oxlint-disable-next-line @dxos/rules/translation-key-format
         'level.error': 'Error',
       },
     },
