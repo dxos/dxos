@@ -172,12 +172,18 @@ describe('Connection multi-client', () => {
       },
       onConnect: async () => ({ close: async () => {} }),
     });
-    // open() can never complete (no leader session ever opens) and rejects when close() aborts it
-    // at teardown — capture that expected rejection; anything thrown by close() fails the test.
-    const opened = connection.open().catch((error: unknown) => error);
+    // open() can never complete (no leader session ever opens); it settles via the connection's
+    // internal lock/RPC timeout, whose timing differs per environment (node keeps it pending past
+    // close()), so teardown must not await it. The rejection handler keeps the expected failure
+    // from surfacing as unhandled; an unexpected resolution throws, which vitest reports.
+    void connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: no leader session can ever open in this test.');
+      },
+      () => {},
+    );
     onTestFinished(async () => {
       await connection.close();
-      expect(await opened).toBeInstanceOf(Error);
     });
 
     const error = await asyncTimeout(failure.wait(), 5_000);
