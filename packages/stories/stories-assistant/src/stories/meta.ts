@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { translations } from '@dxos/plugin-assistant/translations';
+import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
+import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 /**
@@ -19,5 +20,5 @@ export const storyDecorators = [
 
 export const storyParameters = {
   layout: 'fullscreen',
-  translations,
+  translations: [...assistantTranslations, ...debugTranslations],
 };

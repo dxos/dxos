@@ -221,6 +221,9 @@
       "path": "../../ui/react-ui-components"
     },
     {
+      "path": "../../ui/react-ui-debug"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {

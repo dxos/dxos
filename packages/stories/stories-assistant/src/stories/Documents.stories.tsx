@@ -112,7 +112,7 @@ export const WithMarkdown: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Document], [Module.History, Module.Comments]],
+    layout: [[Module.Chat], [Module.Document], [Module.History, Module.Comments], [Module.Logging]],
     skills: [AssistantSkill.key, MarkdownSkill.key, CommentSkill.key],
   },
 };
