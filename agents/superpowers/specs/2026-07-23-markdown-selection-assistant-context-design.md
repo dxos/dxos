@@ -34,11 +34,12 @@ export const AnchorResolver = Capability$.make<AnchorResolver>(
 );
 ```
 
-- `CommentConfig` drops `getAnchorLabel`; comments consumers
-  (`plugin-comments` app-graph-builder, `CommentsArticle`) look up
-  `AnchorResolver` by typename instead.
-- Contributors migrated in the same change (no shims): plugin-markdown,
-  plugin-sheet, plugin-bookmarks.
+- `CommentConfig` drops `getAnchorLabel`; the sole consumer
+  (`plugin-comments` app-graph-builder) looks up `AnchorResolver` by typename
+  instead.
+- Only plugin-markdown ever implemented `getAnchorLabel` (sheet and bookmarks
+  contribute `CommentConfig` without it), so markdown is the only contributor
+  to migrate; registration mirrors the existing `AnchorSort` module.
 - The anchor string format `"${from}:${to}"` (cursor pair) is wrapped in an
   echo-client helper `getTextInAnchorRange(accessor, anchor)`, resolving the
   existing `TODO(burdon): Wrap this` in markdown's comment-config.
@@ -47,20 +48,32 @@ export const AnchorResolver = Capability$.make<AnchorResolver>(
 
 - plugin-markdown keeps writing `{ mode: 'multi-range', ranges }` to
   `Selection.aspect` (useExtensions `selectionChange`).
-- Add `Selection.toAnchors(selection): string[]` in react-ui-attention so the
-  comments `getAnchor` path and the assistant share one selection→anchor
-  normalization.
+- Add `Selection.toAnchors(selection): string[]` in react-ui-attention: the
+  selection→anchor-list normalization used by the assistant. Comments' own
+  `getAnchor` keeps its single-anchor aggregation (one thread anchors to one
+  string; multi ids join with `,`, multi-range takes the first range) — the
+  semantics differ, so it is not folded in (amended during planning).
 
 ### 3. Assistant consumption
 
-- At submit time, `ChatCompanion` reads `Selection.aspect` for
+- At submit time, `ChatArticle` reads `Selection.aspect` for
   `Obj.getURI(companionTo)` via the `AttentionCapabilities.ViewState`
   capability (already held), maps ranges → anchors → text via the
   `AnchorResolver` registered for `companionTo`'s typename.
-- `ProcessorRequest` gains an optional ephemeral field:
+- `ProcessorRequest` gains an optional field:
   `context?: { selection?: { anchors: string[]; text: string } }`.
-- The processor appends the selection text to that request's system context
-  only — never persisted to the feed or context bindings.
+- **Delivery (amended during planning):** the selection travels as a
+  `ContentBlock.Text` with `disposition: 'synthetic'` prepended to the user's
+  prompt blocks — the codebase's existing mechanism for system-generated
+  user-turn content (tool results, alarm wake-ups use it). Synthetic blocks
+  are not rendered as user-authored text and are hidden in summary view; they
+  do persist in the conversation feed, which gives provenance for what the
+  agent saw. This replaces the earlier "never persisted" wording, which
+  assumed a per-request system-prompt seam that does not exist — adding one
+  would mean threading per-turn state through the durable agent-process input
+  queue for no behavioral gain.
+- Requires widening `AgentService.Session.submitPrompt` (and the agent
+  process input schema) from `string` to `string | ContentBlock.Any[]`.
 - Empty/no ranges → field omitted; request proceeds unchanged.
 
 ### 4. Error handling
