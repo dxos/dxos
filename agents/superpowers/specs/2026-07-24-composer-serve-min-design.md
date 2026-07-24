@@ -69,6 +69,44 @@ Leads: the `awaitWriteFinish` watcher comment in vite.config.ts (theme CSS
 invalidation → monorepo-wide Tailwind rescan queue), vite dep-optimizer
 re-runs. Output: diagnosis + fix or a documented follow-up.
 
+#### Findings (2026-07-24)
+
+Prior mitigations (June 2026: `dist/**` watcher ignore for the `.d.ts` HMR
+storm, trailing-edge theme-CSS reload coalescing in
+`ui-theme/src/plugins/ThemePlugin.ts`, `awaitWriteFinish` burst coalescing)
+address the historical storm causes; the residual hang has a different
+profile:
+
+- **Edit-burst repro (serve-min):** touching 350 in-graph files degraded
+  module responses to ~1.9 s for a few seconds, full recovery in <10 s — no
+  hang. The full app's graph is an order of magnitude larger and vite's
+  transform pipeline is single-threaded, so the same wave there produces
+  minutes of unresponsiveness that presents as a hang.
+- **Dep-optimizer cost (measured):** the main checkout's optimizer cache is
+  **3,545 files / 243 MB** (`packages/apps/composer-app/node_modules/.vite/deps`).
+  Any invalidation of the optimizer key (lockfile, vite config, env in the
+  cache key — typical fallout of a large refactor) re-bundles everything;
+  requests for optimized deps block behind it. Measured on serve-min
+  (1,844 dep files): ~20 s to first index response, ~45 s to page load after
+  a cache wipe. The full app roughly doubles that, and interleaved requests
+  against outdated dep hashes mid-optimization can loop (classic
+  `504 outdated optimize dep` failure mode) — matching the observed "hangs
+  on startup until the cache is deleted" ritual.
+- **Broken first load mid-optimization:** loading the page while the
+  optimizer runs produced a looping `Missing ThemeContext` crash inside the
+  error dialog itself (`AlertDialog.Overlay` rendered outside a
+  ThemeProvider) — the startup failure was unrecoverable-looking when a
+  plain reload sufficed. Filed as a separate task.
+
+**Conclusion:** the two reported symptoms (mid-edit hang, post-refactor
+startup hang) share one root: the size of the full app's module graph and
+optimizer set. `serve-min` bounds both (15 vs 89 plugin entries scanned,
+~half the optimizer set, no 200-package pre-build) and is the recommended
+daily-dev path. If a hang recurs under serve-min, capture `sample <vite pid>`
+during the stall — that distinguishes transform load from optimizer
+deadlock. A speculative optimizer pin (`optimizeDeps.noDiscovery` + explicit
+include list) was deliberately not applied without a direct full-app repro.
+
 ## Verification
 
 - `moon run composer-app:serve-min` on an alternate port boots to a usable
