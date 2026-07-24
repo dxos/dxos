@@ -22,6 +22,7 @@ import {
   removeList,
   removeStyle,
   setHeading,
+  toggleList,
 } from './formatting';
 
 export const emptyFormatting: Formatting = {
@@ -310,6 +311,8 @@ describe('removeList', () => {
 
   testCommand('can remove a task list', '- [x] Hi{}', removeList(List.Task), 'Hi');
 
+  testCommand('can remove a task list with an uppercase check', '- [X] Hi{}', removeList(List.Task), 'Hi');
+
   testCommand(
     'can remove a bullet list from multiple blocks',
     '- {One\n\n- # Two\n\n- Three}',
@@ -340,6 +343,56 @@ describe('removeList', () => {
     '1. one\n\n2. {two\n\n3. three}\n\n4. four\n\n5. five',
     ordered,
     '1. one\n\ntwo\n\nthree\n\n1. four\n\n2. five',
+  );
+});
+
+describe('toggleList', () => {
+  testCommand('can add a bullet list', 'Hi{}', toggleList(List.Bullet), '- Hi');
+
+  testCommand('can remove a bullet list', '- Hi{}', toggleList(List.Bullet), 'Hi');
+
+  testCommand('can remove a task list', '- [ ] Hi{}', toggleList(List.Task), 'Hi');
+
+  testCommand('converts a bullet list to a task list', '- Hi{}', toggleList(List.Task), '- [ ] Hi');
+
+  testCommand('converts a task list to a bullet list', '- [ ] Hi{}', toggleList(List.Bullet), '- Hi');
+
+  testCommand('converts a checked task list to a bullet list', '- [x] Hi{}', toggleList(List.Bullet), '- Hi');
+
+  testCommand('converts an ordered list to a bullet list', '1. Hi{}', toggleList(List.Bullet), '- Hi');
+
+  testCommand('converts an ordered list to a task list', '1. Hi{}', toggleList(List.Task), '- [ ] Hi');
+
+  testCommand('converts a bullet list to an ordered list', '- Hi{}', toggleList(List.Ordered), '1. Hi');
+
+  testCommand(
+    'converts multiple bullet items to a task list',
+    '- {one\n- two}',
+    toggleList(List.Task),
+    '- [ ] one\n- [ ] two',
+  );
+
+  testCommand('converts an empty bullet item to a task item', '- {}', toggleList(List.Task), '- [ ] ');
+
+  testCommand(
+    'reindents continuation lines when converting a multi-line item',
+    '- [ ] Hello this\n      is wrapped{}',
+    toggleList(List.Bullet),
+    '- Hello this\n  is wrapped',
+  );
+
+  testCommand(
+    'numbers items when converting to an ordered list',
+    '- {one\n- two\n- three}',
+    toggleList(List.Ordered),
+    '1. one\n2. two\n3. three',
+  );
+
+  testCommand(
+    'renumbers following items when converting from an ordered list',
+    '1. {one}\n2. two\n3. three',
+    toggleList(List.Bullet),
+    '- one\n1. two\n2. three',
   );
 });
 

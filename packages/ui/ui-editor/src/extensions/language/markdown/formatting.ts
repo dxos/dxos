@@ -770,7 +770,7 @@ export const removeList = (type: List): StateCommand => {
           } else if (name === 'ListItem' && stack[stack.length - 1] === targetNodeType && node.from !== lastBlock) {
             lastBlock = node.from;
             let line = state.doc.lineAt(node.from);
-            const mark = /^\s*(\d+[.)] |[-*+] (\[[ x]\] )?)/.exec(line.text.slice(node.from - line.from));
+            const mark = /^\s*(\d+[.)] |[-*+] (\[[ xX]\] )?)/.exec(line.text.slice(node.from - line.from));
             if (!mark) {
               return false;
             }
@@ -813,7 +813,96 @@ export const toggleList = (type: List): StateCommand => {
     const formatting = getFormatting(target.state);
     const active =
       formatting.listStyle === (type === List.Bullet ? 'bullet' : type === List.Ordered ? 'ordered' : 'task');
-    return (active ? removeList(type) : addList(type))(target);
+    if (active) {
+      return removeList(type)(target);
+    }
+    if (formatting.listStyle) {
+      const current =
+        formatting.listStyle === 'bullet' ? List.Bullet : formatting.listStyle === 'ordered' ? List.Ordered : List.Task;
+      return convertList(current, type)(target);
+    }
+    return addList(type)(target);
+  };
+};
+
+/**
+ * Convert list items from one style to another by rewriting markers in place;
+ * removing and re-adding would merge adjacent items into a single paragraph,
+ * while adding on top of an existing list would nest markers (e.g. `- - [ ] item`).
+ */
+export const convertList = (from: List, to: List): StateCommand => {
+  return ({ state, dispatch }) => {
+    let lastBlock = -1;
+    const changes: ChangeSpec[] = [];
+    const stack: string[] = [];
+    const counters: number[] = [];
+    const sourceNodeType = from === List.Ordered ? 'OrderedList' : from === List.Bullet ? 'BulletList' : 'TaskList';
+    for (const range of state.selection.ranges) {
+      syntaxTree(state).iterate({
+        from: range.from,
+        to: range.to,
+        enter: (node) => {
+          const { name } = node;
+          if (name === 'BulletList' || name === 'OrderedList' || name === 'Blockquote') {
+            // Maintain block context.
+            stack.push(name);
+            counters.push(1);
+          } else if (name === 'Task' && stack[stack.length - 1] === 'BulletList') {
+            stack[stack.length - 1] = 'TaskList';
+          }
+        },
+        leave: (node) => {
+          const { name } = node;
+          if (name === 'BulletList' || name === 'OrderedList' || name === 'Blockquote') {
+            stack.pop();
+            counters.pop();
+          } else if (name === 'ListItem' && stack[stack.length - 1] === sourceNodeType && node.from !== lastBlock) {
+            lastBlock = node.from;
+            let line = state.doc.lineAt(node.from);
+            const mark = /^\s*(\d+[.)] |[-*+] (\[[ xX]\] )?)/.exec(line.text.slice(node.from - line.from));
+            if (!mark) {
+              return;
+            }
+            const newMark =
+              to === List.Ordered ? `${counters[counters.length - 1]++}. ` : to === List.Task ? '- [ ] ' : '- ';
+            changes.push({ from: node.from, to: node.from + mark[0].length, insert: newMark });
+            // Adjust continuation-line indentation to match the new marker width.
+            const delta = newMark.length - mark[0].length;
+            const column = node.from - line.from;
+            while (line.to < node.to) {
+              line = state.doc.lineAt(line.to + 1);
+              const open = /^[\s>]*/.exec(line.text)![0].length;
+              if (open <= column) {
+                continue;
+              }
+              if (delta > 0) {
+                changes.push({ from: line.from + column, insert: ' '.repeat(delta) });
+              } else if (delta < 0) {
+                changes.push({ from: line.from + column, to: line.from + Math.min(column - delta, open) });
+              }
+            }
+            if (from === List.Ordered && node.to >= range.to) {
+              renumberListItems(node.node.nextSibling, 1, changes, state.doc);
+            }
+          }
+        },
+      });
+    }
+
+    if (!changes.length) {
+      return false;
+    }
+
+    const changeSet = state.changes(changes);
+    dispatch(
+      state.update({
+        changes: changeSet,
+        selection: state.selection.map(changeSet, 1),
+        userEvent: 'format.list.convert',
+        scrollIntoView: true,
+      }),
+    );
+    return true;
   };
 };
 
