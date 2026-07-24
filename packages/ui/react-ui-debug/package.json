@@ -1,0 +1,54 @@
+{
+  "name": "@dxos/react-ui-debug",
+  "version": "0.10.0",
+  "private": true,
+  "description": "In-app @dxos/log viewer (LogPanel).",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "type": "module",
+  "imports": {
+    "#translations": "./src/translations.ts"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/storybook-utils": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}
