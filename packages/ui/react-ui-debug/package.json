@@ -1,7 +1,6 @@
 {
   "name": "@dxos/react-ui-debug",
   "version": "0.10.0",
-  "private": true,
   "description": "In-app @dxos/log viewer (LogPanel).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -51,5 +50,8 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
