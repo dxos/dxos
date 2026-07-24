@@ -217,9 +217,9 @@ Automated = play-asserted, runs in `moon run plugin-review:test-storybook` + CI.
 | A3  | DocumentVersioning / **BranchMerge**                                  | merge → content folded to main, branch archived                                  |
 | A4  | DocumentVersioning / **ChainedBranches**                              | sequential fork→merge chains                                                     |
 | A5  | DocumentVersioning / **ConflictAutoResolve** + **ConflictResolution** | CRDT auto-merge + conflict markers path                                          |
-| A6  | DocumentVersioning / **AmbientReview**                                | overlay + comment coexistence (now via real SuggestionSourcesProvider)           |
-| A7  | DocumentVersioning / **EditingTyping**                                | typing stability on ambient path (no remount/caret loss)                         |
-| A8  | DocumentVersioning / **Suggesting**                                   | own-branch bind, tracked changes, multi-author lanes                             |
+| A6  | DocumentVersioning / **AmbientReviewTest**                            | overlay + comment coexistence (now via real SuggestionSourcesProvider)           |
+| A7  | DocumentVersioning / **EditingTypingTest**                            | typing stability on ambient path (no remount/caret loss)                         |
+| A8  | DocumentVersioning / **SuggestingTest**                               | own-branch bind, tracked changes, multi-author lanes                             |
 | A9  | SuggestionSources (2), SuggestionThread (1), VersionBanner (1)        | enumeration/thread/banner units                                                  |
 
 ### Manual (no play coverage — the joint session)
@@ -245,14 +245,15 @@ JSDoc (CommentsArticle: add/delete comments, click-thread ↔ highlight sync, ov
 
 ### 3b. Storybook-driven suggest/review walkthrough (interactive, after play settles)
 
-Numbered scripts live in each story's JSDoc (`Test:` blocks), on the play-free `*Manual` variants —
-a play would leave the story past the state its script starts from. Order:
+Numbered scripts live in each story's JSDoc (`Test:` blocks), on the play-free stories — a play would
+leave the story past the state its script starts from, so the automated twin carries the `Test`
+suffix and the plain name belongs to the hands-on story. Order:
 
 | #   | Story (plugins/plugin-review/…)                  | Flow (maps §2 app script onto storybook)                                                  |
 | --- | ------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| S1  | DocumentVersioning / **SuggestingManual**        | own edits: insert/delete phantoms, hover-restore, block deletion, mode-switch matrix (§0) |
-| S2  | DocumentVersioning / **AmbientReviewManual**     | other-author overlay, Accept/Reject popover, comment click-through                        |
-| S3  | DocumentVersioning / **EditingTypingManual**     | typing stability on ambient path                                                          |
+| S1  | DocumentVersioning / **Suggesting**              | own edits: insert/delete phantoms, hover-restore, block deletion, mode-switch matrix (§0) |
+| S2  | DocumentVersioning / **AmbientReview**           | other-author overlay, Accept/Reject popover, comment click-through                        |
+| S3  | DocumentVersioning / **EditingTyping**           | typing stability on ambient path                                                          |
 | S4  | CommentsArticle / **WithAgentSuggestions**       | change-block cards: Accept folds / Reject reverts, author hues                            |
 | S5  | CommentsArticle / **WithCommentsAndSuggestions** | comments + suggestions coexistence, click-through                                         |
 | S6  | DocumentVersioning / **Default**                 | no-review baseline (default binding)                                                      |
