@@ -306,6 +306,12 @@ type Story = StoryObj<typeof meta>;
  * Baseline:
  * - Document article on the left, the comments companion on the right (history companion below it).
  * - No seeded comments or suggestions; empty-state review surface.
+ *
+ * Test:
+ * - Select text in the doc; click Add comment; type + Enter: thread appears, anchor label = selection, highlight in doc.
+ * - Add a second comment on another range; both threads listed in document order.
+ * - Delete a thread (thread menu): highlight clears from the editor.
+ * - Click a thread card: editor scrolls and the anchored range highlights (active state).
  */
 export const Default: Story = {};
 
@@ -314,6 +320,9 @@ export const Default: Story = {};
  * - The thread is opted into the agent.
  * - Type `@Kai …` in the comment input to trigger the stub runner.
  * - Plain (non-mention) messages are ignored.
+ *
+ * Test:
+ * - Post `@Kai hello`: stub agent replies; plain message: no reply.
  */
 export const WithMentionAgent: Story = {
   args: {
@@ -326,6 +335,9 @@ export const WithMentionAgent: Story = {
  * - The thread is opted into the agent.
  * - Every user message triggers the stub runner.
  * - The runner appends a canned echo reply.
+ *
+ * Test:
+ * - Post any message: canned echo reply appears on the thread.
  */
 export const WithAutoAgent: Story = {
   args: {
@@ -338,6 +350,10 @@ export const WithAutoAgent: Story = {
  * - A larger, multi-paragraph document seeded with three anchored comment threads.
  * - Exercises snippet rendering in the companion.
  * - Exercises the companion ↔ editor selection sync.
+ *
+ * Test:
+ * - Click each seeded thread: editor scrolls + range highlights; click in doc on a highlight: thread activates.
+ * - Add a new comment mid-doc; delete it; highlights stay consistent.
  */
 export const WithComments: Story = {
   args: {
@@ -351,6 +367,10 @@ export const WithComments: Story = {
  * - Editor (main): both authors' changes overlay inline, colour-coded per author.
  * - Right column: comments companion (top) + history companion (below).
  * - Companion: one accept/reject change-block card per grouped change, avatar tinted by author hue.
+ *
+ * Test:
+ * - Accept one change-block: text folds into doc, card resolves; Reject another: text reverts.
+ * - Author hue consistent across card avatar and inline marker.
  */
 export const WithAgentSuggestions: Story = {
   args: {
@@ -363,6 +383,10 @@ export const WithAgentSuggestions: Story = {
  * Use it to check whether clicking a comment is still detected (watch for the `comment selected` log)
  * when the suggestion overlay is layered over the text; if detection works in `WithComments` but not
  * here, the suggestion overlay is intercepting the click.
+ *
+ * Test:
+ * - Click a comment highlight UNDER the suggestion overlay: thread activates (overlay must not eat the click).
+ * - Add + delete a comment while suggestions are visible; both layers stay correct.
  */
 export const WithCommentsAndSuggestions: Story = {
   args: {
