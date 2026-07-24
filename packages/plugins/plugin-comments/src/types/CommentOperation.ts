@@ -56,6 +56,10 @@ export const Select = Operation.make({
   input: Schema.Struct({
     // Optional so callers can clear the active thread (e.g. after delete/close).
     current: Schema.optional(Schema.String),
+    // When true (a deliberate click, not cursor movement), also open the comments companion. Done here
+    // as a nested operation so the companion-open runs in an operation context — a top-level
+    // `invokePromise(UpdateCompanion)` from the editor's event listener did not open the panel.
+    reveal: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,
 });

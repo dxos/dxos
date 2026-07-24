@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { useDevices, useIdentity } from '@dxos/react-client/halo';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 
-import { JsonView, PanelContainer } from '../../../components';
+import { JsonView } from '../../../components';
 import { VaultSelector } from '../../../containers';
 
 export const IdentityPanel = () => {
@@ -15,14 +15,15 @@ export const IdentityPanel = () => {
   const devices = useDevices();
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           <VaultSelector />
         </Toolbar.Root>
-      }
-    >
-      <JsonView data={{ ...identity, devices }} />
-    </PanelContainer>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <JsonView data={{ ...identity, devices }} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

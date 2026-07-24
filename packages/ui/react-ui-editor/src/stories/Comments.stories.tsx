@@ -5,6 +5,7 @@
 import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo, useRef, useState } from 'react';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -80,6 +81,9 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
             closest: selection.closest?.slice(0, 8),
           });
         },
+        // A deliberate click selects the thread in the editor (handled internally); reflect it in the
+        // list immediately (mirrors plugin-comments revealing the companion on click).
+        onActivate: (id) => setActiveComment(id),
         getComments: () => registry.get(commentsAtom),
         subscribe: (sink) => {
           sink();
@@ -233,5 +237,69 @@ export const Default: Story = {
       { id: PublicKey.random().toHex(), cursor: '16:197' },
       { id: PublicKey.random().toHex(), cursor: '402:420' },
     ],
+  },
+};
+
+/**
+ * Regression: clicking INSIDE a comment must be detected. The highlight-layer rectangles are drawn over
+ * the comment text; if they intercept the click (no `pointer-events: none`), it never reaches
+ * `handleCommentClick` and the thread isn't selected. Asserts the clicked comment becomes current.
+ */
+export const ClickSelectsComment: Story = {
+  args: {
+    content: 'The quick brown fox jumps over the lazy dog.',
+    comments: [{ id: PublicKey.random().toHex(), cursor: '4:19' }], // "quick brown fox"
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector('.cm-comment')).not.toBeNull(), { timeout: 15_000 });
+    const comment = canvasElement.querySelector<HTMLElement>('.cm-comment');
+    if (!comment) {
+      throw new Error('comment mark not rendered');
+    }
+
+    // Click inside the comment: must reach handleCommentClick and select the thread (data-current="1").
+    await userEvent.click(comment);
+    await waitFor(() => expect(canvasElement.querySelector('.cm-comment[data-current="1"]')).not.toBeNull(), {
+      timeout: 5_000,
+    });
+  },
+};
+
+/**
+ * Regression (app repro): a click on a comment often lands on the `.cm-line` (an ANCESTOR of the
+ * `.cm-comment` span), because the highlight-layer rectangles sit over the text with
+ * `pointer-events: none` and pass the click through to the line. An upward DOM-target walk never finds
+ * the span's `data-comment-id`, so `handleCommentClick` must fall back to a `posAtCoords` hit-test.
+ * Dispatches the click ON the line element (target = line) at the comment's coordinates and asserts the
+ * thread is still selected — this is exactly the "first click ignored" case seen in the app.
+ */
+export const ClickThroughLineSelectsComment: Story = {
+  args: {
+    content: 'The quick brown fox jumps over the lazy dog.',
+    comments: [{ id: PublicKey.random().toHex(), cursor: '4:19' }], // "quick brown fox"
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector('.cm-comment')).not.toBeNull(), { timeout: 15_000 });
+    const comment = canvasElement.querySelector<HTMLElement>('.cm-comment');
+    const line = comment?.closest<HTMLElement>('.cm-line');
+    if (!comment || !line) {
+      throw new Error('comment mark or line not rendered');
+    }
+
+    // Dispatch the click on the LINE (not the span) at the comment's centre — reproduces the highlight
+    // rect passing the click through to `.cm-line`, which the old target-walk missed.
+    const rect = comment.getBoundingClientRect();
+    line.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2,
+      }),
+    );
+    await waitFor(() => expect(canvasElement.querySelector('.cm-comment[data-current="1"]')).not.toBeNull(), {
+      timeout: 5_000,
+    });
   },
 };

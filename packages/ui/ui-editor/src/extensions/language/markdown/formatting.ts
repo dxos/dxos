@@ -675,7 +675,7 @@ export const addList = (type: List): StateCommand => {
       return false;
     }
 
-    const changes: ChangeSpec[] = [];
+    const changes: SimpleChange[] = [];
     for (let i = 0; i < blocks.length; i++) {
       const { node, counter, parentColumn } = blocks[i];
       const nodeFrom = node.name === 'CodeBlock' ? node.from - 4 : node.from;
@@ -743,63 +743,120 @@ export const addList = (type: List): StateCommand => {
   };
 };
 
+type ListItemContext = {
+  node: SyntaxNode;
+  /** The item's first line. */
+  line: Line;
+  /** Length of the matched marker (leading whitespace + list mark, including any task marker). */
+  markLength: number;
+  /** 1-based position among the matched items of the containing list. */
+  ordinal: number;
+  /** Whether this is the last matched item of its selection range (following siblings may need renumbering). */
+  endOfRange: boolean;
+};
+
+/**
+ * Invokes `callback` for each list item in the selection whose style matches `type`. Task-ness is
+ * resolved per item (an item is a task when it carries its own task marker), so mixed bullet/task
+ * siblings match independently of document order. Shared by `removeList` and `convertList`.
+ */
+const forEachListItem = (state: EditorState, type: List, callback: (item: ListItemContext) => void): void => {
+  let lastBlock = -1;
+  const stack: string[] = [];
+  const ordinals: number[] = [];
+  for (const { from, to } of state.selection.ranges) {
+    syntaxTree(state).iterate({
+      from,
+      to,
+      enter: (node) => {
+        const { name } = node;
+        if (name === 'BulletList' || name === 'OrderedList' || name === 'Blockquote') {
+          // Maintain block context.
+          stack.push(name);
+          ordinals.push(0);
+        }
+      },
+      leave: (node) => {
+        const { name } = node;
+        if (name === 'BulletList' || name === 'OrderedList' || name === 'Blockquote') {
+          stack.pop();
+          ordinals.pop();
+        } else if (name === 'ListItem' && node.from !== lastBlock) {
+          const context = stack[stack.length - 1];
+          const isTask = node.node.getChild('Task') != null;
+          const matches =
+            type === List.Ordered
+              ? context === 'OrderedList'
+              : context === 'BulletList' && (type === List.Task) === isTask;
+          if (!matches) {
+            return;
+          }
+          lastBlock = node.from;
+          const line = state.doc.lineAt(node.from);
+          const mark = /^\s*(\d+[.)] |[-*+] (\[[ xX]\] )?)/.exec(line.text.slice(node.from - line.from));
+          if (!mark) {
+            return;
+          }
+          ordinals[ordinals.length - 1]++;
+          callback({
+            node: node.node,
+            line,
+            markLength: mark[0].length,
+            ordinal: ordinals[ordinals.length - 1],
+            endOfRange: node.to >= to,
+          });
+        }
+      },
+    });
+  }
+};
+
+type SimpleChange = { from: number; to?: number; insert?: string };
+
+/**
+ * Changes from `candidates` that overlap neither `changes` nor an earlier kept candidate.
+ * Renumbering walks siblings on the original doc, so disjoint multi-cursor ranges in the same
+ * ordered list can otherwise produce overlapping specs, which `state.changes` rejects.
+ */
+const nonOverlappingChanges = (candidates: SimpleChange[], changes: SimpleChange[]): SimpleChange[] => {
+  const kept: SimpleChange[] = [];
+  const overlaps = (a: SimpleChange, b: SimpleChange) => a.from < (b.to ?? b.from) && b.from < (a.to ?? a.from);
+  for (const candidate of candidates) {
+    if (![...changes, ...kept].some((change) => overlaps(candidate, change))) {
+      kept.push(candidate);
+    }
+  }
+  return kept;
+};
+
 export const removeList = (type: List): StateCommand => {
   return ({ state, dispatch }) => {
-    let lastBlock = -1;
-    const changes: ChangeSpec[] = [];
-    const stack: string[] = [];
-    const targetNodeType = type === List.Ordered ? 'OrderedList' : type === List.Bullet ? 'BulletList' : 'TaskList';
-    // Scan the syntax tree to locate list items that can be unwrapped.
-    for (const { from, to } of state.selection.ranges) {
-      syntaxTree(state).iterate({
-        from,
-        to,
-        enter: (node) => {
-          const { name } = node;
-          if (name === 'BulletList' || name === 'OrderedList' || name === 'Blockquote') {
-            // Maintain block context.
-            stack.push(name);
-          } else if (name === 'Task' && stack[stack.length - 1] === 'BulletList') {
-            stack[stack.length - 1] = 'TaskList';
-          }
-        },
-        leave: (node) => {
-          const { name } = node;
-          if (name === 'BulletList' || name === 'OrderedList' || name === 'Blockquote') {
-            stack.pop();
-          } else if (name === 'ListItem' && stack[stack.length - 1] === targetNodeType && node.from !== lastBlock) {
-            lastBlock = node.from;
-            let line = state.doc.lineAt(node.from);
-            const mark = /^\s*(\d+[.)] |[-*+] (\[[ x]\] )?)/.exec(line.text.slice(node.from - line.from));
-            if (!mark) {
-              return false;
-            }
-            const column = node.from - line.from;
-            // Delete the marker on the first line.
-            changes.push({ from: node.from, to: node.from + mark[0].length });
-            // and indentation on subsequent lines.
-            while (line.to < node.to) {
-              line = state.doc.lineAt(line.to + 1);
-              const open = /^[\s>]*/.exec(line.text)![0].length;
-              if (open > column) {
-                changes.push({ from: line.from + column, to: line.from + Math.min(column + mark[0].length, open) });
-              }
-            }
-            if (node.to >= to) {
-              renumberListItems(node.node.nextSibling, 1, changes, state.doc);
-            }
-            return false;
-          }
-        },
-      });
-    }
+    const changes: SimpleChange[] = [];
+    const renumbers: SimpleChange[] = [];
+    forEachListItem(state, type, ({ node, line: startLine, markLength, endOfRange }) => {
+      const column = node.from - startLine.from;
+      // Delete the marker on the first line.
+      changes.push({ from: node.from, to: node.from + markLength });
+      // and indentation on subsequent lines.
+      let line = startLine;
+      while (line.to < node.to) {
+        line = state.doc.lineAt(line.to + 1);
+        const open = /^[\s>]*/.exec(line.text)![0].length;
+        if (open > column) {
+          changes.push({ from: line.from + column, to: line.from + Math.min(column + markLength, open) });
+        }
+      }
+      if (endOfRange) {
+        renumberListItems(node.nextSibling, 1, renumbers, state.doc);
+      }
+    });
     if (!changes.length) {
       return false;
     }
 
     dispatch(
       state.update({
-        changes,
+        changes: [...changes, ...nonOverlappingChanges(renumbers, changes)],
         userEvent: 'format.list.remove',
         scrollIntoView: true,
       }),
@@ -813,11 +870,69 @@ export const toggleList = (type: List): StateCommand => {
     const formatting = getFormatting(target.state);
     const active =
       formatting.listStyle === (type === List.Bullet ? 'bullet' : type === List.Ordered ? 'ordered' : 'task');
-    return (active ? removeList(type) : addList(type))(target);
+    if (active) {
+      return removeList(type)(target);
+    }
+    if (formatting.listStyle) {
+      const current =
+        formatting.listStyle === 'bullet' ? List.Bullet : formatting.listStyle === 'ordered' ? List.Ordered : List.Task;
+      return convertList(current, type)(target);
+    }
+    return addList(type)(target);
   };
 };
 
-const renumberListItems = (item: SyntaxNode | null, counter: number, changes: ChangeSpec[], doc: Text) => {
+/**
+ * Convert list items from one style to another by rewriting markers in place;
+ * removing and re-adding would merge adjacent items into a single paragraph,
+ * while adding on top of an existing list would nest markers (e.g. `- - [ ] item`).
+ */
+export const convertList = (from: List, to: List): StateCommand => {
+  return ({ state, dispatch }) => {
+    const changes: SimpleChange[] = [];
+    const renumbers: SimpleChange[] = [];
+    forEachListItem(state, from, ({ node, line: startLine, markLength, ordinal, endOfRange }) => {
+      const newMark = to === List.Ordered ? `${ordinal}. ` : to === List.Task ? '- [ ] ' : '- ';
+      changes.push({ from: node.from, to: node.from + markLength, insert: newMark });
+      // Adjust continuation-line indentation to match the new marker width.
+      const delta = newMark.length - markLength;
+      const column = node.from - startLine.from;
+      let line = startLine;
+      while (line.to < node.to) {
+        line = state.doc.lineAt(line.to + 1);
+        const open = /^[\s>]*/.exec(line.text)![0].length;
+        if (open <= column) {
+          continue;
+        }
+        if (delta > 0) {
+          changes.push({ from: line.from + column, insert: ' '.repeat(delta) });
+        } else if (delta < 0) {
+          changes.push({ from: line.from + column, to: line.from + Math.min(column - delta, open) });
+        }
+      }
+      if (from === List.Ordered && endOfRange) {
+        renumberListItems(node.nextSibling, 1, renumbers, state.doc);
+      }
+    });
+
+    if (!changes.length) {
+      return false;
+    }
+
+    const changeSet = state.changes([...changes, ...nonOverlappingChanges(renumbers, changes)]);
+    dispatch(
+      state.update({
+        changes: changeSet,
+        selection: state.selection.map(changeSet, 1),
+        userEvent: 'format.list.convert',
+        scrollIntoView: true,
+      }),
+    );
+    return true;
+  };
+};
+
+const renumberListItems = (item: SyntaxNode | null, counter: number, changes: SimpleChange[], doc: Text) => {
   for (; item; item = item.nextSibling) {
     if (item.name === 'ListItem') {
       const number = /(\s*)(\d+)[.)]/.exec(doc.sliceString(item.from, item.from + 10));

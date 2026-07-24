@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './change-bar';
 export * from './comments';
 export * from './diff';
 export * from './suggest';

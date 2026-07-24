@@ -9,6 +9,8 @@ import { type Atom } from '@effect-atom/atom-react';
 import { type ComponentType } from 'react';
 
 import { Capability } from '@dxos/app-framework';
+import { type VersioningCapabilities } from '@dxos/plugin-versioning';
+import { type ViewModeItem } from '@dxos/react-ui-editor';
 import { type EditorStateStore, type SuggestionSource } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -56,4 +58,26 @@ export type SuggestionSourcesProviderProps = {
  */
 export const SuggestionSourcesProvider = Capability.make<ComponentType<SuggestionSourcesProviderProps>>(
   `${meta.profile.key}.capability.suggestion-sources-provider`,
+);
+
+/**
+ * A contributed entry for the editor's view-mode dropdown: surfaces a per-document review mode (e.g.
+ * "Suggesting") as a view-mode option beside the built-in preview/source/readonly. Selecting it sets
+ * the document's review mode to {@link reviewMode}; it is checked when that mode is active. Contributed
+ * by plugin-comments (which owns the suggestion/review feature) and consumed by the markdown toolbar,
+ * so the option appears only when that plugin is present.
+ */
+export type ViewModeExtension = {
+  /** Stable id, unique across contributions (e.g. `'suggesting'`). */
+  id: string;
+  icon: string;
+  label: ViewModeItem['label'];
+  /** The per-document review mode this entry activates and is checked against. */
+  reviewMode: VersioningCapabilities.ReviewMode;
+  /** Sort order among view-mode entries (the built-in modes occupy 0..2). */
+  order?: number;
+};
+
+export const ViewModeExtension = Capability.make<ViewModeExtension>(
+  `${meta.profile.key}.capability.view-mode-extension`,
 );
