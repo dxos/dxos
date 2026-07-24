@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { Connector, OperationHandler } from '#capabilities';
+import { AppGraphBuilder, Connector, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 
 // eslint-disable-next-line import/no-relative-packages
@@ -13,7 +13,9 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 import { translations } from './translations';
 
 export const GitHubPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupConnectors,
