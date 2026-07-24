@@ -18,21 +18,21 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '../../translations';
-import { TopicArticle } from './TopicArticle';
+import { ProjectArticle } from './ProjectArticle';
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const topics = useQuery(space?.db, Filter.type(Project.Project));
-  const topic = topics.find((entry) => entry.name === name);
-  if (!space?.db || !topic) {
-    return <Loading data={{ db: !!space?.db, topic: !!topic }} />;
+  const projects = useQuery(space?.db, Filter.type(Project.Project));
+  const project = projects.find((entry) => entry.name === name);
+  if (!space?.db || !project) {
+    return <Loading data={{ db: !!space?.db, project: !!project }} />;
   }
 
-  return <TopicArticle role='article' subject={topic} attendableId='test' />;
+  return <ProjectArticle role='article' subject={project} attendableId='test' />;
 };
 
 const meta = {
-  title: 'plugins/plugin-brain/containers/TopicArticle',
+  title: 'plugins/plugin-projects/containers/ProjectArticle',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -49,7 +49,7 @@ const meta = {
               yield* Effect.promise(async () => {
                 personalSpace.db.add(
                   Project.make({
-                    name: 'Topic 1',
+                    name: 'Project 1',
                   }),
                 );
 

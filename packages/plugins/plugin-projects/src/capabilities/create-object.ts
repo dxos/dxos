@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Paths } from '@dxos/app-toolkit';
 import { Instructions, Operation, Project } from '@dxos/compute';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Collection, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 import { trim } from '@dxos/util';
 
@@ -25,8 +25,9 @@ const CreateProjectSchema = Schema.Struct({
 
 /**
  * Contributes the "create Project" entry so a new `Project` can be created from the nav menu (the
- * Projects type-section `+` action). An agent-instructions object is created and linked with the
- * Project, materialized here at the plugin layer, which can depend on `@dxos/compute`.
+ * Projects type-section `+` action). An agent-instructions object and an owned artifacts collection are
+ * created and linked with the Project, materialized here at the plugin layer, which can depend on
+ * `@dxos/compute`.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -38,8 +39,11 @@ export default Capability.makeModule(
           const project = Project.make({ name: name ?? '' });
           const instructions = Instructions.make({ text: DEFAULT_PROJECT_INSTRUCTIONS });
           Obj.setParent(instructions, project);
+          const artifacts = Collection.make();
+          Obj.setParent(artifacts, project);
           Obj.update(project, (project) => {
             project.instructions = Ref.make(instructions);
+            project.artifacts = Ref.make(artifacts);
           });
 
           return yield* Operation.invoke(SpaceOperation.AddObject, {

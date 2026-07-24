@@ -10,14 +10,14 @@ import { Card, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/re
 
 import { meta } from '#meta';
 
-export type TopicArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
+export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 /**
  * Detail view for one `Project`: its label, summary, keyword chips, participants, and rolled-up
  * questions / tasks / member-thread subjects. Renders the project's own stored fields (self-contained —
  * no cross-object resolution); resolving `threadIds` to live messages with click-to-open is a follow-up.
  */
-export const TopicArticle = ({ role, subject: topic }: TopicArticleProps) => {
+export const ProjectArticle = ({ role, subject: project }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
@@ -33,37 +33,37 @@ export const TopicArticle = ({ role, subject: topic }: TopicArticleProps) => {
                 <Card.Block>
                   <Icon icon='ph--stack--regular' />
                 </Card.Block>
-                <Card.Title>{topic.name}</Card.Title>
+                <Card.Title>{project.name}</Card.Title>
               </Card.Header>
               <Card.Body>
-                {topic.summary.length > 0 && (
+                {project.summary.length > 0 && (
                   <Card.Row>
-                    <Card.Text variant='description'>{topic.summary}</Card.Text>
+                    <Card.Text variant='description'>{project.summary}</Card.Text>
                   </Card.Row>
                 )}
-                {topic.keywords.length > 0 && (
+                {project.keywords.length > 0 && (
                   <Card.Row>
                     <Card.Block>
                       <Icon icon='ph--tag--regular' />
                     </Card.Block>
                     <div className='flex flex-wrap gap-1 py-1 -mx-0.5'>
-                      {topic.keywords.map((keyword) => (
+                      {project.keywords.map((keyword) => (
                         <Tag key={keyword}>{keyword}</Tag>
                       ))}
                     </div>
                   </Card.Row>
                 )}
-                {topic.participants.length > 0 && (
+                {project.participants.length > 0 && (
                   <Card.Row>
                     <Card.Block>
                       <Icon icon='ph--users--regular' />
                     </Card.Block>
-                    <Card.Text variant='description'>{topic.participants.join(', ')}</Card.Text>
+                    <Card.Text variant='description'>{project.participants.join(', ')}</Card.Text>
                   </Card.Row>
                 )}
-                <ListSection icon='ph--tree-view--regular' label={t('topic.threads.label')} items={topic.threadIds} />
-                <ListSection icon='ph--question--regular' label={t('topic.questions.label')} items={topic.questions} />
-                <ListSection icon='ph--check-square--regular' label={t('topic.tasks.label')} items={topic.tasks} />
+                <ListSection icon='ph--tree-view--regular' label={t('project.threads.label')} items={project.threadIds} />
+                <ListSection icon='ph--question--regular' label={t('project.questions.label')} items={project.questions} />
+                <ListSection icon='ph--check-square--regular' label={t('project.tasks.label')} items={project.tasks} />
               </Card.Body>
             </Card.Root> */}
           </ScrollArea.Viewport>
@@ -73,7 +73,7 @@ export const TopicArticle = ({ role, subject: topic }: TopicArticleProps) => {
   );
 };
 
-TopicArticle.displayName = 'TopicArticle';
+ProjectArticle.displayName = 'ProjectArticle';
 
 type ListSectionProps = {
   icon: string;
