@@ -200,3 +200,41 @@ Notes: revisit the cohort percentage after the first week.
 - History companion (timeline/branches/checkpoints) → `plugin-versioning` `ObjectHistory.tsx`.
 - Review posture ↔ render policy → `plugin-versioning` `VersioningCapabilities` (`viewAspect`,
   `defaultReviewRenderPolicy`); consumed in `MarkdownArticle`.
+
+---
+
+## 3. Post-merge (plugin-review) — combined review walkthrough (2026-07-24)
+
+All stories now live under **`plugins/plugin-review/*`** (worktree storybook: `localhost:9014`).
+Automated = play-asserted, runs in `moon run plugin-review:test-storybook` + CI. Manual = eyeball/judgment.
+
+### Automated (verify green, then spot-eyeball)
+
+| # | Story | Asserts |
+|---|-------|---------|
+| A1 | DocumentVersioning / **TimeTravel** | v1–v3 checkpoints, travel back/forward, Now returns editable tip, banner testids |
+| A2 | DocumentVersioning / **BranchRevisions** | draft branch bind, branch-lane revisions, Base/Diff/Branch views |
+| A3 | DocumentVersioning / **BranchMerge** | merge → content folded to main, branch archived |
+| A4 | DocumentVersioning / **ChainedBranches** | sequential fork→merge chains |
+| A5 | DocumentVersioning / **ConflictAutoResolve** + **ConflictResolution** | CRDT auto-merge + conflict markers path |
+| A6 | DocumentVersioning / **AmbientReview** | overlay + comment coexistence (now via real SuggestionSourcesProvider) |
+| A7 | DocumentVersioning / **EditingTyping** | typing stability on ambient path (no remount/caret loss) |
+| A8 | DocumentVersioning / **Suggesting** | own-branch bind, tracked changes, multi-author lanes |
+| A9 | SuggestionSources (2), SuggestionThread (1), VersionBanner (1) | enumeration/thread/banner units |
+
+### Manual (no play coverage — the joint session)
+
+| # | Story | Verify |
+|---|-------|--------|
+| M1 | CommentsArticle / **Default** | empty state prompt; create thread via selection + toolbar |
+| M2 | CommentsArticle / **WithComments** | threads render, anchor labels (AnchorResolver path), click-reveal scroll |
+| M3 | CommentsArticle / **WithAgentSuggestions** | suggestion tiles + Accept/Reject route to ops |
+| M4 | CommentsArticle / **WithCommentsAndSuggestions** | mixed list, author colours consistent |
+| M5 | CommentsArticle / **WithMentionAgent** / **WithAutoAgent** | agent replies (stubbed runner) |
+| M6 | **ObjectHistory** | static timeline renders; checkpoint/branch buttons; selection highlight lanes |
+| M7 | **DocumentHistory** | history companion beside live doc; time-travel via panel |
+| M8 | **MarkdownProperties** | Versions summary counts; create checkpoint button |
+| M9 | DocumentVersioning / **Default** | bare doc, no review chrome (default binding path) |
+| M10 | VersionBanner variants | checkpoint/branch/fork banners, view selector, hues |
+
+Exit criteria: automated suite green + M1–M10 checked; then §2 App script in `serve-min` (Review enabled).
