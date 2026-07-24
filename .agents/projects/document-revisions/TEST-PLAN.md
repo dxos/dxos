@@ -61,7 +61,7 @@ Serve: `moon run storybook-react:serve` (port 9009) — or reuse your running in
 story and eyeball. (Most have play functions that already assert the core path; watch them run green,
 then interact manually.)
 
-### plugins/plugin-markdown/containers/DocumentVersioning
+### plugins/plugin-review/stories/DocumentVersioning
 
 - ☐ **TimeTravel** — create checkpoints on main; click older revisions (editor shows that snapshot,
   read-only); click **Now** to return. Timeline git-graph renders the lane.
@@ -232,7 +232,6 @@ Automated = play-asserted, runs in `moon run plugin-review:test-storybook` + CI.
 | M4  | CommentsArticle / **WithCommentsAndSuggestions**           | mixed list, author colours consistent                                         |
 | M5  | CommentsArticle / **WithMentionAgent** / **WithAutoAgent** | agent replies (stubbed runner)                                                |
 | M6  | **ObjectHistory**                                          | static timeline renders; checkpoint/branch buttons; selection highlight lanes |
-| M7  | **DocumentHistory**                                        | history companion beside live doc; time-travel via panel                      |
 | M8  | **MarkdownProperties**                                     | Versions summary counts; create checkpoint button                             |
 | M9  | DocumentVersioning / **Default**                           | bare doc, no review chrome (default binding path)                             |
 | M10 | VersionBanner variants                                     | checkpoint/branch/fork banners, view selector, hues                           |

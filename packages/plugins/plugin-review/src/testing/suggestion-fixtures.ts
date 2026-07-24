@@ -8,10 +8,13 @@ import { random } from '@dxos/random';
 import { type Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
 
-// Deterministic filler so seeded suggestions/comments are stable across runs.
 random.seed(1);
 
 export const STORY_AGENT_NAME = 'Kai';
+
+const LINE_1 =
+  'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.';
+const LINE_2 = 'Select text in the editor to add a new comment, or view existing threads in the companion.';
 
 export const SAMPLE_CONTENT = [
   '# Sample',
