@@ -16,4 +16,10 @@ import { dxosTheme } from './theme';
 addons.setConfig({
   enableShortcuts: true,
   theme: dxosTheme,
+  sidebar: {
+    // Opening a story with a play function runs its script and leaves the UI in a post-assertion
+    // state, so it is not a clean starting point for hands-on testing; mark it in the sidebar.
+    // `play-fn` is applied by the indexer, so nothing has to be annotated per story.
+    renderLabel: (item) => (item.type === 'story' && item.tags?.includes('play-fn') ? `▶ ${item.name}` : item.name),
+  },
 });

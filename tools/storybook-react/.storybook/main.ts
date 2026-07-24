@@ -188,6 +188,9 @@ export const createConfig = ({
     '@storybook/addon-themes',
     '@storybook/addon-vitest',
   ],
+  // Per-package storybooks point `configDir` at their own `.storybook`, so the shared manager config
+  // (theme, sidebar labels) is only picked up if it is registered as a manager entry here.
+  managerEntries: [resolve(__dirname, './manager.ts')],
   staticDirs: [staticDir, { from: sketchAssetsDir, to: '/assets/plugin-sketch' }],
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
