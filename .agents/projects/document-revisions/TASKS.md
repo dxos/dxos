@@ -541,3 +541,22 @@ Reported by the user during the storybook walkthrough (§3b). **Log only — no 
   focus-loss defect.
 - **S5 (CommentsArticle / WithCommentsAndSuggestions): PASS** — comments and suggestions coexist,
   click-reveal works both directions, author colours consistent across editor/companion/timeline.
+
+### S6 — DocumentVersioning / Default (no-review baseline)
+
+- [ ] **S6.1 Focus lost on the first click and on every keystroke — with NO review binding active.** The
+      control case fails, so the defect is upstream of the review/ambient path (S1.3/S1.4 are very likely
+      the same bug, not three). Prime suspect: the editor subtree remounting per render — this story's
+      `DefaultStory` drives the Surface from `useSpaces`/`useQuery`, so a fresh doc identity per render
+      would rekey `MarkdownEditorProvider` (keyed on `binding.key`).
+
+### Triage order (walkthrough complete)
+
+1. **S6.1 first** — it is the control-case failure and probably subsumes S1.3/S1.4. First question to
+   settle: does it reproduce in `serve-min` (product) or only in storybook (harness)? That split decides
+   whether the rest of this list is product work.
+2. **S4.2** accept/reject inert (core function; A3's assertion stops at op dispatch).
+3. **S1.2** suggestion lost on view-mode round-trip; **S1.5** caret trapped after a trailing suggestion.
+4. **S2.1** popover hover gap; **S1.1** decoration flicker on click.
+5. Story/harness: **S2.0** comment fixture never fires, **S2.2** + **S4.1** companion as the accept/reject
+   surface with comment-style click-reveal and per-suggestion cards.
