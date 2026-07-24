@@ -8,7 +8,7 @@ import { Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { type SyncInput, type SyncOutput } from '@dxos/plugin-connector';
-import { Routine, connectedRoutinesQuery } from '@dxos/plugin-routine';
+import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
 
 /** How often an auto-created sync routine's timer trigger fires. */
 const SYNC_ROUTINE_CRON = '*/10 * * * *';
@@ -30,7 +30,7 @@ const ensureOperationRecord = (
   });
 
 /**
- * Ensures a recurring sync {@link Routine} exists for `target` (a Mailbox or Calendar) and returns its
+ * Ensures a recurring sync Routine exists for `target` (a Mailbox or Calendar) and returns its
  * timer trigger — the existing one if a routine is already connected, otherwise a freshly-created one:
  * a local (`remote` unset) timer trigger, every 10 minutes, wired to `sync` — the connector's own sync
  * operation, the same one `ConnectorOperation.SyncConnection` invokes directly — with `binding` bound
@@ -64,7 +64,7 @@ export const createSyncRoutine = ({
       input: { binding: Ref.make(cursor) },
     });
 
-    const routine = Routine.make({
+    const routine = makeRoutine({
       name: 'Sync',
       spec: { kind: 'runnable', runnable: Ref.make(operation) },
       trigger,

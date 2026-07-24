@@ -3,6 +3,7 @@
 //
 
 export * as Instructions from './Instructions';
+export * as Routine from './Routine';
 export * as Script from './Script';
 export * as Skill from './Skill';
 export * as Template from './Template';

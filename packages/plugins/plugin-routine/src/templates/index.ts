@@ -9,7 +9,9 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { Instructions, Skill, Trigger } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 
-import { Routine, type RoutineCapabilities } from '#types';
+import { type RoutineCapabilities } from '#types';
+
+import { makeRoutine } from '../util';
 
 /**
  * Blank template: an instructions-action routine draft with an empty trigger; the action kind, schedule, and
@@ -23,7 +25,7 @@ export const blank: RoutineCapabilities.Template = {
   icon: 'ph--lightning--regular',
   scaffold: ({ name, subject }) =>
     Effect.succeed(
-      Routine.make({
+      makeRoutine({
         name,
         instructions: Instructions.make({
           skills: subject ? skillRefsForObject(subject) : [],

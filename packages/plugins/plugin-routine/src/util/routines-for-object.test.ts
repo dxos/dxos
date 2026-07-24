@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Instructions, Trigger } from '@dxos/compute';
+import { Instructions, Routine, Trigger } from '@dxos/compute';
 import { type Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID, URI } from '@dxos/keys';
@@ -14,9 +14,8 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { Routine } from '#types';
-
 import { connectedRoutinesQuery, routinesForObject } from './routines-for-object';
+import { makeRoutine } from './wire';
 
 // A minimal feed-annotated host (like a mailbox): an object holding a `feed` ref.
 const FeedHost = Type.makeObject(DXN.make('org.dxos.test.feedHost', '0.1.0'))(
@@ -130,7 +129,7 @@ describe('routines connected to an object', () => {
     // The routine's action is owned instructions that bind the object as a context object — the second
     // connection path (O ← Instructions.objects ← Routine via spec.instructions), with no trigger involved.
     const instructions = db.add(Instructions.make({ objects: [qualifiedRef(db, target)] }));
-    const owner = db.add(Routine.make({ name: 'owner', instructions }));
+    const owner = db.add(makeRoutine({ name: 'owner', instructions }));
     await db.flush();
 
     expect(routinesForObject(target, [owner, other]).map((routine) => routine.id)).toEqual([owner.id]);
