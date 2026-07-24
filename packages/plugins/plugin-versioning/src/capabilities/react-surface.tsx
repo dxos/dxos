@@ -8,8 +8,11 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { ObjectHistory } from '#containers';
+
+import { MarkdownProperties } from '../markdown';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -23,6 +26,11 @@ export default Capability.makeModule(
         component: ({ data, role, ref }) => (
           <ObjectHistory role={role} attendableId={data.attendableId} subject={data.companionTo} ref={ref} />
         ),
+      }),
+      Surface.create({
+        id: 'surface.markdownProperties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Markdown.Document),
+        component: ({ data, role }) => <MarkdownProperties role={role} subject={data.subject} />,
       }),
     ]);
   }),

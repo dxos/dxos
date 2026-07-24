@@ -4,8 +4,9 @@
 
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
 
-import { AppGraphBuilder, ReactSurface, VersioningState } from '#capabilities';
+import { AppGraphBuilder, MarkdownExtension, ReactSurface, VersioningState } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -19,6 +20,10 @@ export const VersioningPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
     activate: VersioningState,
+  }),
+  Plugin.addModule({
+    activatesOn: MarkdownEvents.SetupExtensions,
+    activate: MarkdownExtension,
   }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

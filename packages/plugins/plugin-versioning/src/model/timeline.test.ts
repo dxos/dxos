@@ -10,21 +10,14 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, Database, Text as EchoText, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import {
-  BRANCH_TIP_PREFIX,
-  MAIN_BRANCH,
-  NOW_COMMIT_ID,
-  commitToSelection,
-  createTimelineModel,
-} from '@dxos/plugin-versioning';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown';
+import { WithProperties } from '@dxos/plugin-markdown/testing';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { Branch, Version } from '@dxos/versioning';
 
-import { WithProperties } from '#testing';
-
-import { MarkdownOperationHandlerSet } from '../operations';
-import { Markdown } from '../types';
+import { BRANCH_TIP_PREFIX, MAIN_BRANCH, NOW_COMMIT_ID, commitToSelection, createTimelineModel } from '../index';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',

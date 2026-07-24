@@ -12,6 +12,7 @@ import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { type Identity } from '@dxos/halo';
 import { useMembers } from '@dxos/halo-react';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
 import {
@@ -24,12 +25,10 @@ import {
 } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { type useVersioning } from '#hooks';
-import { Markdown } from '#types';
-
-import { versionDiff } from '../../extensions';
 import { authorHue, hueColour } from './author-hue';
 import { type VersionedEditor } from './useVersionedEditor';
+import { type useVersioning } from './useVersioning';
+import { versionDiff } from './version-diff';
 
 export type ReviewExtensionsProps = {
   object: Markdown.Document | Text.Text;

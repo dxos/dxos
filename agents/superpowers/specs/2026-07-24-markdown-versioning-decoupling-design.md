@@ -16,13 +16,23 @@ DocumentVersioning, timeline.test) into plugin-versioning without a dependency c
   - `useReviewExtensions` — review affordances: Accept/Reject collaboration ops, ambient
     multi-author overlay + sources, author colours, own `trackChanges`, `suggestChanges`,
     compare/diff overlay.
-  Verified: build/lint green, node suite unchanged (27 passed), TimeTravel story play test passes
-  live against the refactored container.
+    Verified: build/lint green, node suite unchanged (27 passed), TimeTravel story play test passes
+    live against the refactored container.
+
+- **Stages 1–5 (done)**: implemented as a single inversion rather than five increments — markdown
+  owns a `MarkdownCapabilities.EditorBindingHook` socket (`EditorBinding` contract in
+  `types/types.ts`); plugin-versioning contributes `useMarkdownEditorBinding` (subject swap, review
+  extensions, overlays, banner) from `src/markdown/`, importing `@dxos/plugin-markdown/types` the
+  way plugin-comments does. `useVersioning`, `VersionBanner`, `VersionToolbar`, `MarkdownProperties`,
+  `version-diff`, the history provider, and the versioning stories/tests all moved to
+  plugin-versioning; `@dxos/plugin-versioning` removed from plugin-markdown (`@dxos/versioning`
+  stays for the headless operations). Verified live: TimeTravel, BranchRevisions, and Suggesting
+  play tests pass against the inverted architecture.
 
 ## Direction (per review note)
 
 **Reference model: plugin-comments.** It contributes its CodeMirror extension to the editor through
-`MarkdownCapabilities.ExtensionProvider` — markdown owns the *socket*, comments owns the *plug*.
+`MarkdownCapabilities.ExtensionProvider` — markdown owns the _socket_, comments owns the _plug_.
 plugin-versioning should relate to plugin-markdown the same way. The dependency then inverts:
 versioning depends on markdown's capability surface (or a neutral one), markdown knows nothing of
 versioning.
@@ -42,22 +52,28 @@ fields with a neutral contract:
 
 ### Stage 2 — an EditorBindingProvider capability (the subject swap moves out)
 
-`useVersionedEditor` decides *what object the editor binds to*. Generalize it as a markdown-owned
+`useVersionedEditor` decides _what object the editor binds to_. Generalize it as a markdown-owned
 capability (mirroring ExtensionProvider):
 
 ```ts
 // MarkdownCapabilities.EditorBindingProvider — contributed by plugin-versioning.
-type EditorBindingProvider = (props: { object; viewMode }) => {
-  editorObject; initialValue; editorKey; effectiveViewMode; loading: boolean;
-  context: Record<string, unknown>; // e.g. { reviewBranch, suggestionBranch, ambient, policy }
-} | undefined; // undefined = default binding (bind the object itself)
+type EditorBindingProvider = (props: { object; viewMode }) =>
+  | {
+      editorObject;
+      initialValue;
+      editorKey;
+      effectiveViewMode;
+      loading: boolean;
+      context: Record<string, unknown>; // e.g. { reviewBranch, suggestionBranch, ambient, policy }
+    }
+  | undefined; // undefined = default binding (bind the object itself)
 ```
 
 - plugin-versioning implements it with the current `useVersionedEditor` body (it owns
   `useVersioning`, `Branch.bind`, the render policy, review modes).
 - `MarkdownArticle` calls providers in contribution order, first non-undefined wins, falls back to
   the plain binding. Zero providers = a version-less editor (Text-only hosts, stories).
-- Note: the provider is a *hook-shaped* contribution (it uses state/effects). Precedent exists —
+- Note: the provider is a _hook-shaped_ contribution (it uses state/effects). Precedent exists —
   `SuggestionSourcesProvider` is already a contributed React component. Contribute it as a custom
   hook the container calls via a stable wrapper component, or as a component that renders nothing
   and reports through a callback (the SuggestionSourcesProvider pattern).
@@ -65,6 +81,7 @@ type EditorBindingProvider = (props: { object; viewMode }) => {
 ### Stage 3 — review extensions move to plugin-versioning
 
 `useReviewExtensions` output is (a) plain CM extensions and (b) live-reconfigured overlays.
+
 - (a) `suggestChanges` / `trackChanges` become an ordinary `ExtensionProvider` contribution from
   plugin-versioning (exactly the plugin-comments pattern), reading its inputs from the stage-2
   binding `context`.
@@ -90,7 +107,7 @@ type EditorBindingProvider = (props: { object; viewMode }) => {
   `useReviewExtensions`, `history-provider`, `anchor-sort`(versioning parts) from plugin-markdown;
   drop `@dxos/plugin-versioning` + `@dxos/versioning` from its package.json.
 - Move `DocumentHistory.stories`, `DocumentVersioning.stories`, `timeline.test` into
-  plugin-versioning (now cycle-free; they exercise markdown *through* versioning's dev-deps, or are
+  plugin-versioning (now cycle-free; they exercise markdown _through_ versioning's dev-deps, or are
   rewritten against a neutral versioned host like the new ObjectHistory story).
 
 ## Risks

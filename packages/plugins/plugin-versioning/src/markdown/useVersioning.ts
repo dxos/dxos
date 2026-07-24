@@ -7,12 +7,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { VersioningCapabilities } from '@dxos/plugin-versioning';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 
-import { Markdown } from '../types';
+import { VersioningCapabilities } from '../types';
 
 export type UseVersioningResult = {
   document?: Markdown.Document;

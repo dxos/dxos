@@ -5,5 +5,6 @@
 import { Capability } from '@dxos/app-framework';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const VersioningState = Capability.lazy('VersioningState', () => import('./state'));

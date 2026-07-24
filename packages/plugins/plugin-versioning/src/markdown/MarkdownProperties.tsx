@@ -5,14 +5,13 @@
 import React, { useCallback } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type Markdown } from '@dxos/plugin-markdown/types';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Version } from '@dxos/versioning';
 
-import { meta } from '#meta';
-
-import { useVersioning } from '../../hooks';
-import { type Markdown } from '../../types';
+import { meta } from '../meta';
+import { useVersioning } from './useVersioning';
 
 export type MarkdownPropertiesProps = AppSurface.ObjectPropertiesProps<Markdown.Document>;
 

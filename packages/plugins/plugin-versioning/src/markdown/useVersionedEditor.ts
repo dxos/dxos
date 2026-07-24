@@ -7,13 +7,13 @@ import { useEffect, useState } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
-import { VersioningCapabilities } from '@dxos/plugin-versioning';
+import { type Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Branch } from '@dxos/versioning';
 
-import { type useVersioning } from '#hooks';
-import { type Markdown } from '#types';
+import { VersioningCapabilities } from '../types';
+import { type useVersioning } from './useVersioning';
 
 export type VersionedEditorProps = {
   object: Markdown.Document | Text.Text;

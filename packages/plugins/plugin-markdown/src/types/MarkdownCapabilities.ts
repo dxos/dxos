@@ -9,14 +9,13 @@ import { type Atom } from '@effect-atom/atom-react';
 import { type ComponentType } from 'react';
 
 import { Capability } from '@dxos/app-framework';
-import { type VersioningCapabilities } from '@dxos/plugin-versioning';
 import { type ViewModeItem } from '@dxos/react-ui-editor';
 import { type EditorStateStore, type SuggestionSource } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
 import type * as Markdown from './Markdown';
-import { type MarkdownExtensionProvider } from './types';
+import { type MarkdownExtensionProvider, type ReviewMode, type UseEditorBinding } from './types';
 
 export type EditorViewEntry = { view: EditorView; documentId: string };
 
@@ -40,6 +39,13 @@ export const EditorViews = Capability.make<EditorViewRegistry>(`${meta.profile.k
 export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(
   `${meta.profile.key}.capability.extensions`,
 );
+
+/**
+ * Hook-shaped contribution computing the editor's subject binding and review affordances (see
+ * {@link UseEditorBinding}). Contributed by plugin-versioning; absent, the article binds the object
+ * directly with no review affordances.
+ */
+export const EditorBindingHook = Capability.make<UseEditorBinding>(`${meta.profile.key}.capability.editor-binding`);
 
 export type SuggestionSourcesProviderProps = {
   /** The versioned document whose active `kind:'suggestion'` branches are enumerated. */
@@ -73,7 +79,7 @@ export type ViewModeExtension = {
   icon: string;
   label: ViewModeItem['label'];
   /** The per-document review mode this entry activates and is checked against. */
-  reviewMode: VersioningCapabilities.ReviewMode;
+  reviewMode: ReviewMode;
   /** Sort order among view-mode entries (the built-in modes occupy 0..2). */
   order?: number;
 };

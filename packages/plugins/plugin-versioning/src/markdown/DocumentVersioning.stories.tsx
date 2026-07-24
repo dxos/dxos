@@ -37,12 +37,12 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import { translations as markdownTranslations } from '@dxos/plugin-markdown/translations';
+import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { ObjectHistory } from '@dxos/plugin-versioning/containers';
-import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
-import { translations as versioningTranslations } from '@dxos/plugin-versioning/translations';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -50,10 +50,9 @@ import { Text } from '@dxos/schema';
 import { Cursor, EditorView, type SuggestionSource, comments, documentId, setComments } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { translations } from '#translations';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
-
-import { MarkdownPlugin } from '../MarkdownPlugin';
+import { ObjectHistory } from '../containers';
+import { VersioningPlugin } from '../plugin';
+import { translations } from '../translations';
 
 const concat = (...lines: string[]) => lines.join('\n');
 
@@ -320,7 +319,7 @@ const mergeViaPanel = async (canvasElement: HTMLElement) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-markdown/containers/DocumentVersioning',
+  title: 'plugins/plugin-versioning/DocumentVersioning',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -352,7 +351,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...translations, ...spaceTranslations, ...versioningTranslations],
+    translations: [...translations, ...markdownTranslations, ...spaceTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -722,9 +721,18 @@ const editorReadOnly = (canvasElement: HTMLElement): boolean | undefined => {
  * this single dropdown: Source ⇒ editing, Read-only/Preview ⇒ viewing, Suggesting ⇒ suggesting.
  */
 const selectViewMode = async (canvasElement: HTMLElement, label: string) => {
-  const canvas = within(canvasElement);
   const body = within(canvasElement.ownerDocument.body);
-  await userEvent.click(await canvas.findByRole('button', { name: 'View mode' }, { timeout: 15_000 }));
+  // The dropdown trigger's accessible name is the ACTIVE item's label (applyActive), so locate it
+  // by its stable eye icon rather than a name that changes with the selection.
+  const trigger = await waitFor(
+    () => {
+      const found = canvasElement.querySelector('button:has(use[href*="ph--eye"])');
+      invariant(found instanceof HTMLElement);
+      return found;
+    },
+    { timeout: 15_000 },
+  );
+  await userEvent.click(trigger);
   await userEvent.click(await body.findByText(label));
 };
 

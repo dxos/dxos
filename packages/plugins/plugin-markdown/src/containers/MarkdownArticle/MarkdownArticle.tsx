@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Compartment, type Extension } from '@codemirror/state';
+import { type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
-import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
@@ -18,7 +18,6 @@ import { ViewState } from '@dxos/react-ui-attention';
 import { Editor, type ViewModeItem, defaultViewModeItems, useEditorContext } from '@dxos/react-ui-editor';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
-import { type SuggestionSource, suggestionsOverlay } from '@dxos/ui-editor';
 
 import {
   MarkdownEditor,
@@ -26,13 +25,53 @@ import {
   MarkdownEditorProvider,
   type MarkdownEditorProviderProps,
 } from '#components';
-import { useLinkQuery, useVersioning } from '#hooks';
-import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
+import { useLinkQuery } from '#hooks';
+import {
+  type EditorBinding,
+  Markdown,
+  MarkdownCapabilities,
+  type MarkdownPluginState,
+  type ReviewMode,
+  type UseEditorBinding,
+} from '#types';
 
 import { mergeConflicts } from '../../extensions';
-import { useReviewExtensions } from './useReviewExtensions';
-import { useVersionedEditor } from './useVersionedEditor';
-import { VersionToolbar } from './VersionToolbar';
+
+/**
+ * Built-in binding when no {@link MarkdownCapabilities.EditorBindingHook} is contributed: bind the
+ * object directly, no review affordances. The review mode is kept locally so contributed view-mode
+ * entries (e.g. Suggesting) still toggle without a versioning host.
+ */
+const useDefaultEditorBinding: UseEditorBinding = ({ object, viewMode }) => {
+  const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
+  const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
+  const [reviewMode, setReviewMode] = useState<ReviewMode>('editing');
+  return {
+    subject: object,
+    initialValue: docContent ?? textContent,
+    key: 'current',
+    viewMode,
+    loading: false,
+    ambient: true,
+    reviewMode,
+    setReviewMode,
+  };
+};
+
+/**
+ * Calls the (single) binding hook through a component boundary so a change in which hook is
+ * contributed remounts the boundary rather than violating the rules of hooks.
+ */
+// TODO(burdon): Review this mechanism.
+const BindingBoundary = ({
+  useBinding,
+  props,
+  children,
+}: {
+  useBinding: UseEditorBinding;
+  props: Parameters<UseEditorBinding>[0];
+  children: (binding: EditorBinding) => React.ReactNode;
+}) => <>{children(useBinding(props))}</>;
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
@@ -45,12 +84,31 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
     Pick<MarkdownEditorContentProps, 'editorStateStore'>
 >;
 
-// The compare/diff overlay is swapped in and out through a compartment so toggling Compare
-// reconfigures the live editor rather than remounting it (which would rebind automerge and lose
-// scroll/selection). The branch binding is unchanged while comparing, so only the overlay moves.
-const compareCompartment = new Compartment();
+export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>((props, forwardedRef) => {
+  const { subject: object, id, settings, viewMode } = props;
+  // At most one contributed binding hook is honored (versioning); the boundary key remounts the
+  // subtree if the contribution set changes, keeping hook order legal.
+  const bindingHooks = useCapabilities(MarkdownCapabilities.EditorBindingHook);
+  const contributedBinding = bindingHooks.length > 0 ? bindingHooks[0] : undefined;
+  const bindingProps = useMemo(
+    () => ({ object, id, viewMode, diffView: settings.diffView }),
+    [object, id, viewMode, settings.diffView],
+  );
 
-export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
+  return (
+    <BindingBoundary
+      key={contributedBinding ? 'contributed' : 'default'}
+      useBinding={contributedBinding ?? useDefaultEditorBinding}
+      props={bindingProps}
+    >
+      {(binding) => <MarkdownArticleImpl {...props} binding={binding} ref={forwardedRef} />}
+    </BindingBoundary>
+  );
+});
+
+MarkdownArticle.displayName = 'MarkdownArticle';
+
+const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { binding: EditorBinding }>(
   (
     {
       role,
@@ -62,50 +120,19 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       onSelectObject,
       viewMode,
       onViewModeChange,
+      binding,
       ...props
     },
     forwardedRef,
   ) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
-    const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
-    const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
 
-    // Local identity (collaboration awareness + suggestion authorship).
+    // Local identity (collaboration awareness).
     const identity = useIdentity();
 
-    // The accepted base (`main`) the review overlays diff against.
-    const mainContent = docContent ?? textContent;
-
-    // Version selection: swap the editor's subject to the active branch (a per-surface binding
-    // for core branches, the forked Text for legacy ones); viewing a checkpoint pins the live
-    // Text to historical heads (the hook manages the pin). Selection.Selection is per-user session state.
-    const versioning = useVersioning(object);
-    const { document, mode, setMode } = versioning;
-    const editor = useVersionedEditor({
-      object,
-      versioning,
-      identity,
-      mainContent,
-      diffView: settings.diffView,
-      viewMode,
-      id,
-    });
-    const {
-      editorObject,
-      initialValue,
-      editorKey,
-      effectiveViewMode,
-      branchLoading,
-      ambient,
-      policy,
-      suggestActive,
-      branchText,
-      reviewBranch,
-      suggestionBranch,
-    } = editor;
-
-    // Extensions from other plugins.
+    // Extensions from other plugins, given the binding's review context.
     const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+    const extensionProps = binding.extensionProps;
     const extensions = useMemo<Extension[]>(() => {
       if (!Obj.instanceOf(Markdown.Document, object) && !Obj.instanceOf(Text.Text, object)) {
         return [];
@@ -117,17 +144,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         .reduce((acc: Extension[], provider) => {
           const extension =
             typeof provider === 'function'
-              ? provider({
-                  document,
-                  viewMode,
-                  reviewBranch,
-                  // Only when the editor is bound to the branch doc directly (Branch view) — in the
-                  // diff/suggest overlay the editor stays on main, so anchors resolve against main.
-                  branchText: suggestActive ? undefined : branchText,
-                  suggestionBranch,
-                  // Ambient view follows the review policy; the advanced paths always show comments.
-                  showComments: ambient ? policy.showComments : true,
-                })
+              ? provider({ document, viewMode, showComments: true, ...extensionProps })
               : provider;
           if (extension) {
             acc.push(extension);
@@ -135,40 +152,13 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
           return acc;
         }, []);
-    }, [
-      extensionProviders,
-      otherExtensionProviders,
-      object,
-      viewMode,
-      reviewBranch,
-      branchText,
-      suggestActive,
-      suggestionBranch,
-      ambient,
-      policy.showComments,
-    ]);
+    }, [extensionProviders, otherExtensionProviders, object, viewMode, extensionProps]);
 
-    // Review affordances: durable Accept/Reject ops, multi-author overlays, tracked changes, and the
-    // compare/diff overlay — all versioning-model access for the review concern lives in the hook.
-    const { invokePromise } = useOperationInvoker();
-    const review = useReviewExtensions({
-      object,
-      versioning,
-      editor,
-      identity,
-      mainContent,
-      diffView: settings.diffView,
-    });
-    const { compareOverlay, overlay, overlaySources, overlayBase, setSuggestionSources, authorHues } = review;
-    const [SuggestionSourcesProvider] = useCapabilities(MarkdownCapabilities.SuggestionSourcesProvider);
-
-    // The compare overlay lives in a compartment (reconfigured live, see `compareCompartment`), so it
-    // is intentionally absent here — its config changing must not alter this array, which would make
-    // `useTextEditor` recreate the view. The review extensions (suggest overlay, own tracked changes)
-    // are stable across keystrokes by construction (see the hook).
+    // The binding's extensions (review overlays/compartments) are stable across keystrokes by
+    // construction — recreating this array remounts nothing but recreates the editor state config.
     const combinedExtensions = useMemo<Extension[]>(
-      () => [...extensions, mergeConflicts(), compareCompartment.of([]), overlay.extension, ...review.reviewExtensions],
-      [extensions, overlay, review.reviewExtensions],
+      () => [...extensions, mergeConflicts(), ...(binding.extensions ?? [])],
+      [extensions, binding.extensions],
     );
 
     // Toolbar actions from the app graph. Branch selection / suggest / return-to-main live in the
@@ -187,6 +177,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // viewing) so leaving a contributed mode works; a contributed entry sets its review mode directly.
     // Off the ambient path (an explicit branch/checkpoint is selected) the review mode has no effect, so
     // only the built-in editor modes are shown.
+    const { ambient, reviewMode, setReviewMode } = binding;
     const viewModeExtensions = useCapabilities(MarkdownCapabilities.ViewModeExtension);
     const viewModes = useMemo<ViewModeItem[]>(() => {
       const current = viewMode ?? 'source';
@@ -197,8 +188,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
               id: extension.id,
               icon: extension.icon,
               label: extension.label,
-              checked: mode === extension.reviewMode,
-              onSelect: () => setMode(extension.reviewMode),
+              checked: reviewMode === extension.reviewMode,
+              onSelect: () => setReviewMode(extension.reviewMode),
             }))
         : [];
       const contributedActive = contributed.some((item) => item.checked);
@@ -210,12 +201,12 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         onSelect: () => {
           onViewModeChange?.(item.id);
           if (ambient) {
-            setMode(item.id === 'source' ? 'editing' : 'viewing');
+            setReviewMode(item.id === 'source' ? 'editing' : 'viewing');
           }
         },
       }));
       return [...builtin, ...contributed];
-    }, [viewMode, ambient, mode, setMode, onViewModeChange, viewModeExtensions]);
+    }, [viewMode, ambient, reviewMode, setReviewMode, onViewModeChange, viewModeExtensions]);
 
     // File upload.
     const [upload] = useCapabilities(AppCapabilities.FileUploader);
@@ -231,6 +222,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const handleLinkQuery = useLinkQuery(db, Obj.isObject(object) ? object : undefined);
 
     // Open linked objects.
+    const { invokePromise } = useOperationInvoker();
     const handleSelectObject = useCallback(
       (targetId: string) => {
         if (onSelectObject) {
@@ -247,20 +239,20 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       [onSelectObject, invokePromise, attendableId],
     );
 
-    if (branchLoading) {
+    if (binding.loading) {
       return <Panel.Root role={role} ref={forwardedRef} />;
     }
 
     return (
       <MarkdownEditorProvider
-        key={editorKey}
+        key={binding.key}
         id={id}
         attendableId={attendableId}
-        object={editorObject}
+        object={binding.subject}
         compact={role !== AppSurface.Article.role}
         extensions={combinedExtensions}
         settings={settings}
-        viewMode={effectiveViewMode}
+        viewMode={binding.viewMode ?? viewMode}
         identity={identity}
         onAction={runAction}
         onFileUpload={handleFileUpload}
@@ -272,18 +264,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         {(editorRootProps) => (
           <Editor.Root {...editorRootProps}>
             <RegisterEditorView id={id} attendableId={attendableId} />
-            <CompareOverlay overlay={compareOverlay} />
-            {/* Ambient review: enumerate every author's suggestion branches (invisible bridge) and
-                overlay them live; both are no-ops off the ambient path or when no provider exists. */}
-            {ambient && document && SuggestionSourcesProvider && (
-              <SuggestionSourcesProvider document={document} authorHues={authorHues} onSources={setSuggestionSources} />
-            )}
-            <SuggestionsOverlay
-              overlay={overlay}
-              sources={overlaySources}
-              base={overlayBase}
-              enabled={ambient && policy.showSuggestions}
-            />
+            {binding.overlays}
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
                 <Panel.Toolbar>
@@ -295,8 +276,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                 </Panel.Toolbar>
               )}
               <Panel.Content classNames='flex flex-col'>
-                <VersionToolbar versioning={versioning} />
-                <MarkdownEditor.Content initialValue={initialValue} />
+                {binding.banner}
+                <MarkdownEditor.Content initialValue={binding.initialValue} />
                 <Editor.Blocks />
                 {/* Developer diagnostics panel (live editor state), gated behind the debug setting. */}
                 {settings.debug && <Editor.Diagnostics />}
@@ -309,7 +290,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
   },
 );
 
-MarkdownArticle.displayName = 'MarkdownArticle';
+MarkdownArticleImpl.displayName = 'MarkdownArticleImpl';
 
 /**
  * Registers the mounted editor view in the shared `EditorViews` registry so operations (e.g.
@@ -325,50 +306,6 @@ const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: s
       return () => editorViews.unregister(attendableId ?? id);
     }
   }, [view, editorViews, attendableId, id]);
-
-  return null;
-};
-
-/**
- * Reconfigures the compare/diff overlay on the live editor when Compare is toggled, avoiding a
- * remount. Must render inside `Editor.Root`.
- */
-const CompareOverlay = ({ overlay }: { overlay?: Extension }) => {
-  const { controller } = useEditorContext('MarkdownArticle.CompareOverlay');
-  const view = controller?.view;
-  useEffect(() => {
-    if (view) {
-      view.dispatch({ effects: compareCompartment.reconfigure(overlay ?? []) });
-    }
-  }, [view, overlay]);
-
-  return null;
-};
-
-/**
- * Reconfigures the ambient multi-author suggestion overlay (the shared `@dxos/ui-editor` factory) on
- * the live editor as the resolved sources or review mode change — no remount (see
- * {@link suggestionsOverlay}). Must render inside `Editor.Root`.
- */
-const SuggestionsOverlay = ({
-  overlay,
-  sources,
-  base,
-  enabled,
-}: {
-  overlay: ReturnType<typeof suggestionsOverlay>;
-  sources: SuggestionSource[];
-  /** The accepted base (main) sources are diffed against when the editor is bound to a diverged branch. */
-  base?: string;
-  enabled: boolean;
-}) => {
-  const { controller } = useEditorContext('MarkdownArticle.SuggestionsOverlay');
-  const view = controller?.view;
-  useEffect(() => {
-    if (view) {
-      overlay.reconfigure(view, sources, enabled, base);
-    }
-  }, [view, overlay, sources, enabled, base]);
 
   return null;
 };

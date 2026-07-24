@@ -19,6 +19,12 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -34,10 +40,25 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
       "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -46,10 +67,16 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../../sdk/versioning"
@@ -64,6 +91,15 @@
       "path": "../../ui/react-ui-components"
     },
     {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -71,6 +107,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"

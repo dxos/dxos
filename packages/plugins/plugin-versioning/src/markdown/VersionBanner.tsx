@@ -5,11 +5,11 @@
 import React, { useState } from 'react';
 
 import { NamePopover } from '@dxos/app-framework/ui';
-import { type VersioningCapabilities } from '@dxos/plugin-versioning';
 import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { meta } from '../meta';
+import { type VersioningCapabilities } from '../types';
 
 type BranchView = VersioningCapabilities.BranchView;
 
