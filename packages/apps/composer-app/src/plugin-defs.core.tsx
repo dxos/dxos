@@ -17,6 +17,7 @@ import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
 import { OnboardingPlugin } from '@dxos/plugin-onboarding/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/plugin';
@@ -94,6 +95,7 @@ export const getCorePlugins = ({
     OnboardingPlugin({ generateExemplarSpace: !isLocal }),
     ProcessManagerPlugin(),
     RegistryPlugin(),
+    RoutinePlugin(),
     SettingsPlugin(),
     SpacePlugin({
       observability: true,
