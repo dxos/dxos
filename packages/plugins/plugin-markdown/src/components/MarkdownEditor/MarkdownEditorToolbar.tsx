@@ -18,10 +18,13 @@ export type MarkdownEditorToolbarProps = {
   // `react-ui-editor/.../controller.ts` for the full rationale.
   getView?: () => EditorView | null;
   onFileUpload?: (file: File) => Promise<AppCapabilities.FileInfo | undefined>;
-} & Pick<EditorToolbarProps, 'role' | 'customActions' | 'onAction' | 'onViewModeChange'>;
+} & Pick<EditorToolbarProps, 'role' | 'customActions' | 'onAction' | 'onViewModeChange' | 'viewModes'>;
 
 export const MarkdownEditorToolbar = composable<HTMLDivElement, MarkdownEditorToolbarProps>(
-  ({ id, role, getView, customActions, onAction, onFileUpload, onViewModeChange, ...props }, forwardedRef) => {
+  (
+    { id, role, getView, customActions, onAction, onFileUpload, onViewModeChange, viewModes, ...props },
+    forwardedRef,
+  ) => {
     const { className, ...rest } = composableProps(props);
     const [upload, setUpload] = useState<FileUploadAction | null>(null);
     const uploadRef = useCallback((next: FileUploadAction) => setUpload(() => next), []);
@@ -41,6 +44,7 @@ export const MarkdownEditorToolbar = composable<HTMLDivElement, MarkdownEditorTo
           onAction={onAction}
           onImageUpload={upload ?? undefined}
           onViewModeChange={onViewModeChange}
+          viewModes={viewModes}
         />
 
         {onFileUpload && <FileUpload ref={uploadRef} getView={getView} onFileUpload={onFileUpload} />}

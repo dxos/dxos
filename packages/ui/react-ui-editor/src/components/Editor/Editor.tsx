@@ -2,10 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
+import { type EditorState, type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
@@ -193,6 +202,93 @@ const EditorBlocks = () => {
 EditorBlocks.displayName = EDITOR_BLOCKS_NAME;
 
 //
+// Diagnostics
+//
+
+const EDITOR_DIAGNOSTICS_NAME = 'Editor.Diagnostics';
+
+/** Rough leaf count of a (recursively nested) CodeMirror extension tree. */
+const countExtensions = (extension: Extension | undefined): number =>
+  extension == null
+    ? 0
+    : Array.isArray(extension)
+      ? extension.reduce((sum, child) => sum + countExtensions(child), 0)
+      : 1;
+
+type EditorDiagnosticsProps = ThemedClassName<{}>;
+
+/**
+ * Developer panel showing live editor state read from the CodeMirror `EditorState` (document size,
+ * selection, viewport, configured-extension count). A debugging aid — gate it behind a dev/debug
+ * setting; unrelated to `@codemirror/lint` diagnostics. Place inside `Editor.Root`, below the content.
+ */
+const EditorDiagnostics = ({ classNames }: EditorDiagnosticsProps) => {
+  const { controller, extensions } = useEditorContext(EDITOR_DIAGNOSTICS_NAME);
+  const view = controller?.view ?? null;
+  // `EditorState` is immutable (a new object per transaction), so a reference change signals an update.
+  // Poll on animation frames while mounted — self-contained (no injected updateListener) and re-renders
+  // only when the state actually changes; catches programmatic transactions too.
+  const [, setRevision] = useState(0);
+  const lastState = useRef<EditorState | null>(null);
+  useEffect(() => {
+    if (!view) {
+      return;
+    }
+    let frame = 0;
+    const tick = () => {
+      if (view.state !== lastState.current) {
+        lastState.current = view.state;
+        setRevision((revision) => revision + 1);
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [view]);
+
+  if (!view) {
+    return null;
+  }
+
+  const { state } = view;
+  const { doc, selection } = state;
+  const { main } = selection;
+  const head = doc.lineAt(main.head);
+  // The context holds the extensions passed to `Root`; count leaves (CodeMirror does not expose the
+  // resolved extension set at runtime, so this is the configured, not the active, count).
+  const extensionCount = countExtensions(extensions);
+  const item = (label: string, value: string | number) => (
+    <span>
+      <span className='text-subdued'>{label} </span>
+      {value}
+    </span>
+  );
+
+  return (
+    <div
+      className={mx(
+        'flex flex-wrap gap-x-4 gap-y-0.5 border-bs border-separator px-2 py-1 text-xs font-mono text-description',
+        classNames,
+      )}
+      data-testid='editor.diagnostics'
+    >
+      {item('chars', doc.length)}
+      {item('lines', doc.lines)}
+      {item(
+        'cursor',
+        main.empty ? `${head.number}:${main.head - head.from + 1}` : `${main.from}–${main.to} (${main.to - main.from})`,
+      )}
+      {selection.ranges.length > 1 && item('ranges', selection.ranges.length)}
+      {item('viewport', `${view.viewport.from}–${view.viewport.to}`)}
+      {item('mode', state.readOnly ? 'read-only' : 'editable')}
+      {item('extensions', extensionCount)}
+    </div>
+  );
+};
+
+EditorDiagnostics.displayName = EDITOR_DIAGNOSTICS_NAME;
+
+//
 // Editor
 //
 
@@ -202,6 +298,7 @@ export const Editor = {
   Content: EditorContent,
   View: EditorView,
   Blocks: EditorBlocks,
+  Diagnostics: EditorDiagnostics,
 };
 
 export type {

@@ -34,12 +34,12 @@ const getName = (text: Text.Text | undefined, anchor: string): string | undefine
   }
 };
 
-export type ThreadStore = {
+export type CommentSyncStore = {
   registry: Registry.Registry;
   stateAtom: Atom.Writable<CommentState>;
 };
 
-export type ThreadsOptions = {
+export type CommentSyncOptions = {
   // The active review branch (the core branch the editor is showing); undefined = main. Threaded from
   // the markdown editor (which resolves it from the per-object version selection) rather than read
   // from core `getCurrentBranch`, which stays 'main' under this branch's per-surface binding model.
@@ -57,11 +57,11 @@ export type ThreadsOptions = {
 /**
  * Construct comment-sync editor extensions for a document.
  */
-export const threads = (
-  store: ThreadStore,
+export const commentSync = (
+  store: CommentSyncStore,
   doc?: Markdown.Document,
   invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
-  options: ThreadsOptions = {},
+  options: CommentSyncOptions = {},
 ): Extension => {
   const { reviewBranch, branchText, suggestionBranch, showComments = true } = options;
   const db = doc && Obj.getDatabase(doc);
@@ -79,13 +79,24 @@ export const threads = (
   const objectId = Obj.getURI(doc);
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
 
+  // TODO(burdon): Externalize ECHO?
   // Get current anchors by combining query results with store drafts, scoped to the review branch so
   // inline marks show only the comments for the branch currently in view (undefined tag = main).
   const getAnchors = () =>
     query.results
       .filter((anchor) => {
-        const thread = Relation.getSource(anchor);
-        return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
+        // `Relation.getSource` throws while ECHO is still resolving the source proxy (e.g. a
+        // just-persisted comment relation, or during restore); skip such anchors until they resolve
+        // rather than crash the query listener.
+        // TODO(burdon): Mitigation — the query surfaces relations whose source isn't yet resolved.
+        //   Fix at the source: have the query defer/await source resolution (or expose a resolved
+        //   flag) so callers don't guard each `getSource`; then remove this try/catch.
+        try {
+          const thread = Relation.getSource(anchor);
+          return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
+        } catch {
+          return false;
+        }
       })
       .concat(registry.get(stateAtom).drafts[objectId] ?? [])
       .filter((anchor) => (anchor.branch ?? 'main') === (reviewBranch ?? 'main'));
@@ -125,7 +136,8 @@ export const threads = (
             cursor: anchor.anchor,
           })),
       subscribe: (sink) => {
-        // Subscribe to both query changes and store state changes.
+        // Subscribe to both query changes and store state changes. `comments()` primes the initial read
+        // itself (after this returns), so no manual first `sink()` is needed here.
         const unsubQuery = query.subscribe(sink);
         const unsubStore = registry.subscribe(stateAtom, sink);
         return () => {
@@ -195,6 +207,11 @@ export const threads = (
         if (current) {
           void invokePromise(CommentOperation.Select, { current });
         }
+      },
+      // A deliberate click reveals the thread in the comments companion; `reveal` routes the companion
+      // open through the Select handler (a nested operation that opens reliably).
+      onActivate: (current) => {
+        void invokePromise(CommentOperation.Select, { current, reveal: true });
       },
     }),
   ];

@@ -35,10 +35,27 @@ describe('trackChanges', () => {
     expect(view.state.doc.toString()).toBe('alpha\ncharlie');
 
     // Native undo restores the deleted text (the deletion is an ordinary branch edit) and the phantom
-    // disappears — so no bespoke "un-delete" affordance is needed.
+    // disappears.
     undo(view);
     expect(view.state.doc.toString()).toBe(MAIN);
     expect(view.dom.querySelector('.cm-track-delete')).toBeNull();
+    view.destroy();
+  });
+
+  test('a changed line renders a gutter change-bar in the author colour', ({ expect }) => {
+    // Branch inserts " extra" on the first line → that line gets a change-bar; an unchanged line does not.
+    const view = mount('alpha extra\nbravo\ncharlie');
+    const bars = view.dom.querySelectorAll<HTMLElement>('.cm-change-bar');
+    expect(bars.length).toBe(1);
+    expect(bars[0].style.background).toBe('var(--dx-accent)');
+    view.destroy();
+  });
+
+  test('a new-paragraph insertion bars only the text line, not the trailing blank line', ({ expect }) => {
+    // The branch inserts a new first paragraph "intro\n\n" before "alpha"; the trailing paragraph break
+    // must not tag the blank line — exactly one bar, on the inserted text line.
+    const view = mount('intro\n\nalpha\nbravo\ncharlie');
+    expect(view.dom.querySelectorAll('.cm-change-bar')).toHaveLength(1);
     view.destroy();
   });
 });

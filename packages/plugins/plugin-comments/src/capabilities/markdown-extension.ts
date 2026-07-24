@@ -6,15 +6,14 @@ import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { Attention } from '@dxos/react-ui-attention';
-import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
+import { type EditorState, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
-import { CommentCapabilities, CommentOperation } from '#types';
+import { meta } from '#meta';
+import { CommentCapabilities } from '#types';
 
 import { SuggestionSourcesProvider } from '../components';
-import { threads } from '../extensions';
+import { commentSync } from '../extensions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -28,22 +27,35 @@ export default Capability.makeModule(
       SuggestionSourcesProvider,
     );
 
+    // Surface "Suggesting" as an editor view-mode option (the review feature is owned by plugin-comments,
+    // so it appears only when this plugin is present); selecting it puts the document in suggesting mode.
+    const suggestingViewMode = Capability.contributes(MarkdownCapabilities.ViewModeExtension, {
+      id: 'suggesting',
+      icon: 'ph--pencil-simple--regular',
+      label: ['view-mode.suggesting.label', { ns: meta.profile.key }],
+      reviewMode: 'suggesting',
+      order: 3,
+    });
+
     const extensions = Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc, reviewBranch, branchText, suggestionBranch, showComments }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
-        return threads({ registry, stateAtom }, doc, invokePromise, {
+
+        return commentSync({ registry, stateAtom }, doc, invokePromise, {
           reviewBranch,
           branchText,
           suggestionBranch,
           showComments,
         });
       },
+      // TODO(burdon): Factor out?
       ({ document: doc }) => {
         if (!doc) {
           return [];
         }
+
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
 
@@ -59,30 +71,9 @@ export default Capability.makeModule(
           }
         });
       },
-      ({ document: doc }) => {
-        if (!doc) {
-          return [];
-        }
-        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
-
-        return EditorView.updateListener.of((update) => {
-          update.transactions.forEach((transaction) => {
-            transaction.effects.forEach((effect) => {
-              if (effect.is(commentClickedEffect)) {
-                // Select the clicked comment's thread (its id is the thread URI) so
-                // the companion highlights and scrolls to it, then open the companion.
-                void invokePromise(CommentOperation.Select, { current: effect.value });
-                void invokePromise(LayoutOperation.UpdateCompanion, {
-                  subject: Attention.linkedSegment('comments'),
-                });
-              }
-            });
-          });
-        });
-      },
     ]);
 
-    return [extensions, suggestionSources];
+    return [extensions, suggestionSources, suggestingViewMode];
   }),
 );
 
