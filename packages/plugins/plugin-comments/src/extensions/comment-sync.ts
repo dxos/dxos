@@ -34,12 +34,12 @@ const getName = (text: Text.Text | undefined, anchor: string): string | undefine
   }
 };
 
-export type ThreadStore = {
+export type CommentSyncStore = {
   registry: Registry.Registry;
   stateAtom: Atom.Writable<CommentState>;
 };
 
-export type ThreadsOptions = {
+export type CommentSyncOptions = {
   // The active review branch (the core branch the editor is showing); undefined = main. Threaded from
   // the markdown editor (which resolves it from the per-object version selection) rather than read
   // from core `getCurrentBranch`, which stays 'main' under this branch's per-surface binding model.
@@ -57,11 +57,11 @@ export type ThreadsOptions = {
 /**
  * Construct comment-sync editor extensions for a document.
  */
-export const threads = (
-  store: ThreadStore,
+export const commentSync = (
+  store: CommentSyncStore,
   doc?: Markdown.Document,
   invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
-  options: ThreadsOptions = {},
+  options: CommentSyncOptions = {},
 ): Extension => {
   const { reviewBranch, branchText, suggestionBranch, showComments = true } = options;
   const db = doc && Obj.getDatabase(doc);
@@ -136,15 +136,10 @@ export const threads = (
             cursor: anchor.anchor,
           })),
       subscribe: (sink) => {
-        // Subscribe to both query changes and store state changes.
+        // Subscribe to both query changes and store state changes. `comments()` primes the initial read
+        // itself (after this returns), so no manual first `sink()` is needed here.
         const unsubQuery = query.subscribe(sink);
         const unsubStore = registry.subscribe(stateAtom, sink);
-        // Prime the initial decoration pass AFTER subscribing: the `comments()` ViewPlugin only calls
-        // `getComments` when the sink fires, and ECHO's `query.subscribe` does not emit for the
-        // already-resolved current value — so without this a query that resolved before mount never
-        // renders. Must run after `query.subscribe` because `getComments` reads `query.results`, which
-        // throws unless the query has at least one subscriber.
-        sink();
         return () => {
           unsubQuery();
           unsubStore();
@@ -212,6 +207,11 @@ export const threads = (
         if (current) {
           void invokePromise(CommentOperation.Select, { current });
         }
+      },
+      // A deliberate click reveals the thread in the comments companion; `reveal` routes the companion
+      // open through the Select handler (a nested operation that opens reliably).
+      onActivate: (current) => {
+        void invokePromise(CommentOperation.Select, { current, reveal: true });
       },
     }),
   ];

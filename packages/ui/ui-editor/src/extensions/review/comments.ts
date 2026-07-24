@@ -16,7 +16,6 @@ import {
   type Command,
   Decoration,
   EditorView,
-  type PluginValue,
   type Rect,
   RectangleMarker,
   ViewPlugin,
@@ -80,6 +79,12 @@ export type CommentsOptions = {
    * Called to notify which thread is currently closest to the cursor.
    */
   onSelect?: (state: CommentsState) => void;
+  /**
+   * Called when a comment is deliberately activated (clicked). Distinct from `onSelect` (passive
+   * cursor-proximity): a click is an explicit user intent, e.g. to reveal the thread in a companion.
+   * The editor-side selection/highlight is already applied by the time this fires.
+   */
+  onActivate?: (id: string) => void;
 };
 
 /**
@@ -124,6 +129,10 @@ export const comments = (options: CommentsOptions): Extension => {
           };
 
           this.unsubscribe = options.subscribe?.(updateComments) ?? (() => {});
+          // Prime the initial decoration pass: `subscribe` may not emit for an already-resolved source
+          // (e.g. an ECHO query whose results resolved before mount), so read once now that the source is
+          // subscribed. Owning this here means adapters never have to prime manually.
+          updateComments();
         }
 
         destroy = () => {
@@ -377,38 +386,46 @@ const commentsHighlightLayer = layer({
   },
 });
 
-export const commentClickedEffect = StateEffect.define<string>();
-
 const handleCommentClick = EditorView.domEventHandlers({
   click: (event, view) => {
-    // Fast path: the click landed on (or inside) the `.cm-comment` span — walk up to its id.
-    let target = event.target as HTMLElement | null;
-    const editorRoot = view.dom;
-    while (target && target !== editorRoot && !target.hasAttribute?.('data-comment-id')) {
-      target = target.parentElement;
-    }
-    const domId = target && target !== editorRoot ? target.getAttribute('data-comment-id') : null;
-    if (domId) {
-      view.dispatch({ effects: commentClickedEffect.of(domId) });
-      return true;
+    const id = commentIdAtClick(event, view);
+    if (!id) {
+      return false;
     }
 
-    // Fallback: the highlight-layer rectangles (pointer-events: none) sit over the text, so a click on a
-    // comment often lands on the `.cm-line` (an ancestor of the span) and the walk above misses it.
-    // Resolve the comment by document position instead.
-    const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
-    if (pos != null) {
-      const commentState = view.state.field(commentsState, false);
-      const hit = commentState?.comments.find(({ range }) => pos >= range.from && pos <= range.to);
-      if (hit) {
-        view.dispatch({ effects: commentClickedEffect.of(hit.comment.id) });
-        return true;
-      }
-    }
-
-    return false;
+    // Select the clicked thread in the editor (moves the caret into the range so the proximity tracker
+    // keeps it current) and notify the app for deliberate-click behaviour (e.g. reveal in a companion).
+    scrollCommentIntoView(view, id);
+    view.state.facet(optionsFacet).onActivate?.(id);
+    return true;
   },
 });
+
+/**
+ * Resolve the comment id under a click. Prefers the DOM target (a direct hit on the `.cm-comment`
+ * span), then falls back to a document-position hit-test: the highlight-layer rectangles
+ * (pointer-events: none) sit over the text, so a click often lands on the `.cm-line` (an ancestor of
+ * the span) and an upward target walk would miss it.
+ */
+const commentIdAtClick = (event: MouseEvent, view: EditorView): string | undefined => {
+  let target = event.target as HTMLElement | null;
+  const editorRoot = view.dom;
+  while (target && target !== editorRoot && !target.hasAttribute?.('data-comment-id')) {
+    target = target.parentElement;
+  }
+  const domId = target && target !== editorRoot ? target.getAttribute('data-comment-id') : null;
+  if (domId) {
+    return domId;
+  }
+
+  const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+  if (pos != null) {
+    const commentState = view.state.field(commentsState, false);
+    return commentState?.comments.find(({ range }) => pos >= range.from && pos <= range.to)?.comment.id;
+  }
+
+  return undefined;
+};
 
 //
 // Cut-and-paste.
@@ -586,29 +603,6 @@ export const createComment: Command = (view) => {
 
   return false;
 };
-
-/**
- * Manages external comment synchronization for the editor.
- * This class subscribes to external comment updates and applies them to the editor view.
- */
-class ExternalCommentSync implements PluginValue {
-  private readonly unsubscribe: () => void;
-
-  constructor(view: EditorView, options: Pick<CommentsOptions, 'id' | 'subscribe' | 'getComments'>) {
-    const updateComments = () => {
-      const comments = options.getComments?.() ?? [];
-      if (options.id === view.state.facet(documentId)) {
-        queueMicrotask(() => view.dispatch({ effects: setComments.of({ id: options.id, comments }) }));
-      }
-    };
-
-    this.unsubscribe = options.subscribe?.(updateComments) ?? (() => {});
-  }
-
-  destroy = () => {
-    this.unsubscribe();
-  };
-}
 
 //
 // Utils.

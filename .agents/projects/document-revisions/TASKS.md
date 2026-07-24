@@ -39,12 +39,21 @@ marks current) instead of a bare `setSelection({current})`. Verified: `react-ui-
 
 ## Tracked follow-ups
 
-- [ ] **Rename the `threads` extension / reconsider comment decoration as an overlay.** Ask why
-      [`threads.ts`](../../../packages/plugins/plugin-comments/src/extensions/threads.ts) is named
-      "threads" (it wires comment-anchor sync + the `comments()` editor extension; "threads" reads as
-      the data model, not the editor integration). Separately, evaluate implementing the comment
-      decoration as an overlay (like the ambient suggestions overlay / `commentsHighlightLayer`) rather
-      than inline `Decoration.mark`s — may simplify click routing and the proximity/selection coupling.
+- [ ] **Popover obscured by R0 (z-index/stacking).** An editor popover (e.g. the AI translate-selection
+      popover) renders behind the `R0` plank/region — it should stack above. Likely a z-index or portal
+      container issue in the deck/plank stacking context.
+- [x] **Rename `threads` → `commentSync` + fix the `comments()` port seams.** Done: renamed
+      `threads.ts`→`comment-sync.ts` (`commentSync`/`CommentSyncStore`/`CommentSyncOptions`); primitive
+      now owns the initial decoration read (ViewPlugin primes `updateComments()` after subscribe → no
+      manual `sink()` in adapters); added an `onActivate` callback to `CommentsOptions` so click-reveal
+      flows through the port instead of the raw `commentClickedEffect` (effect + the markdown-extension
+      updateListener removed); `handleCommentClick` now selects in-editor via `scrollCommentIntoView` +
+      fires `onActivate`; deleted dead `ExternalCommentSync`. Verified: ui-editor 305✓, plugin-comments
+      21✓, Comments storybook 3✓, WithComments renders 3 marks.
+- [ ] **Consider redoing comment decoration as a layer (overlay).** The highlight is already a
+      `layer()`; the inline `.cm-comment` mark now only carries text color + cursor (click routing is
+      position-based). Option: drop inline marks → background-only (selection-style, no text recolor).
+      Design/visual call — pending.
 - [ ] **Root-cause the `Relation.getSource` mitigation (follow-up with Dima).** `threads.ts` `getAnchors`
       now try/catches `Relation.getSource` (crash: "Relation source could not be resolved" when the query
       surfaces a relation whose source proxy isn't yet resolved — e.g. a just-persisted comment). The real

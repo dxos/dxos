@@ -6,15 +6,14 @@ import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { log } from '@dxos/log';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
+import { type EditorState, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
-import { CommentCapabilities, CommentOperation } from '#types';
+import { CommentCapabilities } from '#types';
 
 import { SuggestionSourcesProvider } from '../components';
-import { threads } from '../extensions';
+import { commentSync } from '../extensions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -44,7 +43,7 @@ export default Capability.makeModule(
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
 
-        return threads({ registry, stateAtom }, doc, invokePromise, {
+        return commentSync({ registry, stateAtom }, doc, invokePromise, {
           reviewBranch,
           branchText,
           suggestionBranch,
@@ -70,28 +69,6 @@ export default Capability.makeModule(
               toolbar: { ...current.toolbar, [id]: overlaps },
             });
           }
-        });
-      },
-      ({ document: doc }) => {
-        if (!doc) {
-          return [];
-        }
-
-        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
-
-        return EditorView.updateListener.of((update) => {
-          update.transactions.forEach((transaction) => {
-            transaction.effects.forEach((effect) => {
-              if (effect.is(commentClickedEffect)) {
-                log('comment selected', { thread: effect.value });
-                // Select the clicked comment's thread (its id is the thread URI) AND reveal it: `reveal`
-                // makes the Select handler open the comments companion via a nested operation, which
-                // opens reliably where a top-level `invokePromise(UpdateCompanion)` from this listener
-                // did not.
-                void invokePromise(CommentOperation.Select, { current: effect.value, reveal: true });
-              }
-            });
-          });
         });
       },
     ]);

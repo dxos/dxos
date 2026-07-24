@@ -19,7 +19,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   Cursor,
   EditorView,
-  commentClickedEffect,
   comments,
   createBasicExtensions,
   createComment,
@@ -67,24 +66,6 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
           setDocVersion((version) => version + 1);
         }
       }),
-      // Consume `commentClickedEffect` (dispatched by the comment click handler) to select the clicked
-      // thread — mirrors what plugin-comments does in the app, minus the companion, so this isolated
-      // story reproduces the click→select behaviour (and surfaces click-detection regressions).
-      EditorView.updateListener.of((update) => {
-        for (const transaction of update.transactions) {
-          for (const effect of transaction.effects) {
-            if (effect.is(commentClickedEffect)) {
-              // Select the clicked thread via `scrollCommentIntoView`: it moves the caret INTO the comment
-              // range and marks it current, so the proximity tracker keeps it selected (a bare
-              // `setSelection({current})` is immediately overwritten by the tracker with `closest`, since
-              // `handleCommentClick` returns true and CodeMirror never places the caret in the range).
-              // Deferred: dispatching from within an update listener is disallowed by CodeMirror.
-              const current = effect.value;
-              queueMicrotask(() => scrollCommentIntoView(update.view, current));
-            }
-          }
-        }
-      }),
       comments({
         id: DOCUMENT_ID,
         // Append the new thread to the atom; the extension re-reads it via `getComments`/`subscribe`.
@@ -100,6 +81,9 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
             closest: selection.closest?.slice(0, 8),
           });
         },
+        // A deliberate click selects the thread in the editor (handled internally); reflect it in the
+        // list immediately (mirrors plugin-comments revealing the companion on click).
+        onActivate: (id) => setActiveComment(id),
         getComments: () => registry.get(commentsAtom),
         subscribe: (sink) => {
           sink();
