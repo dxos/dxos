@@ -14,7 +14,7 @@ An implementation already exists:
 `packages/devtools/devtools/src/components/performance/panels/LoggingPanel.tsx`.
 It is a good base (filter via `log.config`, per-row copy, level colors,
 `shortLevelName`) but is trapped inside the devtools `Panel` wrapper and has two
-limits: it keeps the *oldest* `maxLines` (`slice(0, maxLines)`) and only records
+limits: it keeps the _oldest_ `maxLines` (`slice(0, maxLines)`) and only records
 behind an `active` switch. We **factor it out** into a reusable
 `@dxos/react-ui-debug` component, fix the buffer, and consume it from both
 devtools and a new `plugin-debug` R0 surface.
@@ -72,12 +72,12 @@ Presentational, self-contained. Deps: `@dxos/log`, `@dxos/react-ui`,
     record/pause toggle; reset (clear); copy-all `IconButton`.
   - Capture effect (only while recording): `log.config({ filter })` +
     `log.addProcessor((config, entry) => shouldLog(entry, config.filters) &&
-    setEntries((prev) => [...prev, entry].slice(-maxLines)))`, disposing on
+setEntries((prev) => [...prev, entry].slice(-maxLines)))`, disposing on
     cleanup. Note: keeps **most recent** lines (fixes the `slice(0, …)` bug).
   - Rows: compact colored level letter (`text-{error,warning,info,success}-text`
     per the existing thresholds) · short file · message; click toggles an
     expanded JSON view of `{ timestamp, level, file, line, message, context,
-    error }`; hover reveals a per-row copy button.
+error }`; hover reveals a per-row copy button.
   - Pure helper `formatLogEntry(entry): LogRecord` (serializable) shared by
     expand + copy — unit-testable without React.
   - `translations.ts` (namespace `@dxos/react-ui-debug`) + `LogPanel.stories.tsx`
@@ -92,7 +92,7 @@ Package shape mirrors `@dxos/react-ui-card`: `moon.yml`
 
 - **`components/performance/panels/LoggingPanel.tsx`** becomes a thin wrapper:
   `<Panel {...props} icon='ph--list--regular' title='Logging' maxHeight={0}>
-  <LogPanel /></Panel>` importing `LogPanel` from `@dxos/react-ui-debug`. The old
+<LogPanel /></Panel>` importing `LogPanel` from `@dxos/react-ui-debug`. The old
   inline implementation is deleted (no shim). Add the `workspace:*` dep +
   tsconfig reference.
 - **`components/performance/Panel.tsx`** reimplemented on the `@dxos/react-ui`

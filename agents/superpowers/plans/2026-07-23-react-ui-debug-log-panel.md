@@ -15,7 +15,7 @@
 - Copyright header `// Copyright 2026 DXOS.org //` at top of every new file.
 - TypeScript single quotes; named exports; arrow-function components; named React imports (`useMemo`, not `React.useMemo`); ref param named `forwardedRef`.
 - No casts to silence the type-checker (`as any`, `as unknown as T`, non-null `!`). `as const` is fine.
-- Comments state *why* in one clause, ending with a period. No history/narration.
+- Comments state _why_ in one clause, ending with a period. No history/narration.
 - Never leave compatibility re-exports/shims when moving code — update every call site.
 - Import order groups (blank line between): builtin → external → @dxos → internal → parent → sibling.
 - Run `pnpm format` (oxfmt) and stage before every commit.
@@ -24,6 +24,7 @@
 ## File Structure
 
 **Create — `packages/ui/react-ui-debug/`:**
+
 - `package.json` — private package manifest.
 - `moon.yml` — library tags.
 - `tsconfig.json` — project references.
@@ -39,12 +40,14 @@
 - `src/components/LogPanel/LogPanel.stories.tsx` — storybook + interaction test.
 
 **Modify — devtools:**
+
 - `packages/devtools/devtools/package.json` — add `@dxos/react-ui-debug` dep.
 - `packages/devtools/devtools/tsconfig.json` — add project reference.
 - `packages/devtools/devtools/src/components/performance/panels/LoggingPanel.tsx` — thin wrapper.
 - `packages/devtools/devtools/src/components/performance/Panel.tsx` — reimplement on `@dxos/react-ui` `Panel`.
 
 **Modify — plugin-debug:**
+
 - `packages/plugins/plugin-debug/package.json` — add `@dxos/react-ui-debug` dep.
 - `packages/plugins/plugin-debug/tsconfig.json` — add project reference.
 - `packages/plugins/plugin-debug/src/capabilities/app-graph-builder.ts` — `logs` deck companion.
@@ -58,6 +61,7 @@
 ### Task 1: Scaffold `@dxos/react-ui-debug` package
 
 **Files:**
+
 - Create: `packages/ui/react-ui-debug/package.json`
 - Create: `packages/ui/react-ui-debug/moon.yml`
 - Create: `packages/ui/react-ui-debug/tsconfig.json`
@@ -69,6 +73,7 @@
 - Create: `packages/ui/react-ui-debug/src/components/index.ts`
 
 **Interfaces:**
+
 - Produces: package `@dxos/react-ui-debug` with exports `.` and `./translations`; `translationKey = '@dxos/react-ui-debug'`; `translations` array.
 
 - [ ] **Step 1: Write `package.json`**
@@ -144,11 +149,7 @@ tags:
     "types": ["node"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
-  "references": [
-    { "path": "../../common/log" },
-    { "path": "../react-ui" },
-    { "path": "../ui-theme" }
-  ]
+  "references": [{ "path": "../../common/log" }, { "path": "../react-ui" }, { "path": "../ui-theme" }]
 }
 ```
 
@@ -174,6 +175,7 @@ export default defineConfig({
 - [ ] **Step 5: Write `.storybook/main.mts` and `.storybook/preview.mts`**
 
 `.storybook/main.mts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -187,6 +189,7 @@ export default createConfig({ stories });
 ```
 
 `.storybook/preview.mts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -235,14 +238,17 @@ export const translations = [
 - [ ] **Step 7: Write `src/components/index.ts` and `src/index.ts`**
 
 `src/components/index.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
 //
 ```
+
 (empty barrel for now — LogPanel export added in Task 2.)
 
 `src/index.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -270,6 +276,7 @@ git commit -m "react-ui-debug: scaffold package"
 ### Task 2: Implement `<LogPanel>` + `formatLogEntry`
 
 **Files:**
+
 - Create: `packages/ui/react-ui-debug/src/components/LogPanel/format.ts`
 - Create: `packages/ui/react-ui-debug/src/components/LogPanel/format.test.ts`
 - Create: `packages/ui/react-ui-debug/src/components/LogPanel/LogPanel.tsx`
@@ -278,6 +285,7 @@ git commit -m "react-ui-debug: scaffold package"
 - Modify: `packages/ui/react-ui-debug/src/components/index.ts`
 
 **Interfaces:**
+
 - Consumes: from `@dxos/log` — `log`, `shouldLog`, `shortLevelName`, `LogLevel`, `LogEntry`, `type LogConfig`. From `@dxos/react-ui` — `Panel`, `Toolbar`, `Input`, `Select`, `IconButton`, `ScrollArea`, `useTranslation`, `type ThemedClassName`. From `@dxos/ui-theme` — `mx`.
 - Produces: `formatLogEntry(entry: LogEntry): LogRecord`; `type LogRecord`; `<LogPanel>` with `type LogPanelProps = ThemedClassName<{ maxLines?: number; initialFilter?: string; defaultRecording?: boolean }>`.
 
@@ -547,6 +555,7 @@ export const LogPanel = ({
 - [ ] **Step 6: Write `LogPanel/index.ts` and update `components/index.ts`**
 
 `LogPanel/index.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -557,6 +566,7 @@ export * from './format';
 ```
 
 `components/index.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -637,20 +647,24 @@ git commit -m "react-ui-debug: implement LogPanel"
 ### Task 3: Rewire devtools performance `LoggingPanel` to `<LogPanel>`
 
 **Files:**
+
 - Modify: `packages/devtools/devtools/package.json` (add dep)
 - Modify: `packages/devtools/devtools/tsconfig.json` (add reference)
 - Modify: `packages/devtools/devtools/src/components/performance/panels/LoggingPanel.tsx`
 
 **Interfaces:**
+
 - Consumes: `LogPanel` from `@dxos/react-ui-debug`; `Panel`, `type CustomPanelProps` from `../Panel`.
 
 - [ ] **Step 1: Add the workspace dependency**
 
 Run: `pnpm add --filter "@dxos/devtools" "@dxos/react-ui-debug@workspace:*"`
 Then add to `packages/devtools/devtools/tsconfig.json` `references` array:
+
 ```json
 { "path": "../../ui/react-ui-debug" }
 ```
+
 (Insert in existing alphabetical-ish position among the `../../ui/*` references.)
 
 - [ ] **Step 2: Replace `LoggingPanel.tsx` with the thin wrapper**
@@ -693,9 +707,11 @@ git commit -m "devtools: reuse react-ui-debug LogPanel in performance LoggingPan
 ### Task 4: Reimplement devtools performance `Panel.tsx` on the react-ui `Panel` primitive
 
 **Files:**
+
 - Modify: `packages/devtools/devtools/src/components/performance/Panel.tsx`
 
 **Interfaces:**
+
 - Consumes: `Panel as PanelPrimitive`, `Icon`, `type ThemedClassName` from `@dxos/react-ui`; `mx` from `@dxos/ui-theme`.
 - Produces: unchanged `Panel`, `type PanelProps`, `type CustomPanelProps<T>` (API preserved — all ~10 consumers unaffected).
 
@@ -791,6 +807,7 @@ git commit -m "devtools: reimplement performance Panel on react-ui Panel primiti
 ### Task 5: Wire `plugin-debug` R0 companion + status popover
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-debug/package.json` (add dep)
 - Modify: `packages/plugins/plugin-debug/tsconfig.json` (add reference)
 - Modify: `packages/plugins/plugin-debug/src/capabilities/app-graph-builder.ts`
@@ -801,12 +818,14 @@ git commit -m "devtools: reimplement performance Panel on react-ui Panel primiti
 - Modify: `packages/plugins/plugin-debug/src/translations.ts`
 
 **Interfaces:**
+
 - Consumes: `LogPanel` from `@dxos/react-ui-debug`; `AppNode`, `AppSurface`, `Surface` helpers already imported in the plugin; `Popover`, `useTranslation` from `@dxos/react-ui`; `StatusBar` from `@dxos/plugin-status-bar/components`.
 
 - [ ] **Step 1: Add the workspace dependency + tsconfig reference**
 
 Run: `pnpm add --filter "@dxos/plugin-debug" "@dxos/react-ui-debug@workspace:*"`
 Add to `packages/plugins/plugin-debug/tsconfig.json` `references`:
+
 ```json
 { "path": "../../ui/react-ui-debug" }
 ```
@@ -814,6 +833,7 @@ Add to `packages/plugins/plugin-debug/tsconfig.json` `references`:
 - [ ] **Step 2: Add translations**
 
 In `packages/plugins/plugin-debug/src/translations.ts`, add to the `meta.profile.key` block:
+
 ```ts
         'logs.label': 'Logs',
         'open-logs.label': 'Show logs',
@@ -822,6 +842,7 @@ In `packages/plugins/plugin-debug/src/translations.ts`, add to the `meta.profile
 - [ ] **Step 3: Add the `logs` deck companion in `app-graph-builder.ts`**
 
 Add another `GraphBuilder.createExtension` to the `Effect.all([...])` array (sibling of `spaceObjects`):
+
 ```ts
       // Log panel deck companion.
       GraphBuilder.createExtension({
@@ -843,6 +864,7 @@ Add another `GraphBuilder.createExtension` to the `Effect.all([...])` array (sib
 - [ ] **Step 4: Create `LogStatus` container**
 
 `packages/plugins/plugin-debug/src/containers/LogStatus/LogStatus.tsx`:
+
 ```tsx
 //
 // Copyright 2026 DXOS.org
@@ -880,6 +902,7 @@ export const LogStatus = () => {
 ```
 
 `packages/plugins/plugin-debug/src/containers/LogStatus/index.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -889,6 +912,7 @@ export * from './LogStatus';
 ```
 
 Add to `packages/plugins/plugin-debug/src/containers/index.ts`:
+
 ```ts
 export * from './LogStatus';
 ```
@@ -898,10 +922,13 @@ Note: verify `StatusBar.Button` accepts children + `aria-label` (see `plugin-sta
 - [ ] **Step 5: Add the two surfaces in `react-surface.tsx`**
 
 Add `LogStatus` to the `#containers` import list and `LogPanel` import:
+
 ```ts
 import { LogPanel } from '@dxos/react-ui-debug';
 ```
+
 Add these `Surface.create` entries to the contributed array:
+
 ```tsx
       Surface.create({
         id: 'logs',
