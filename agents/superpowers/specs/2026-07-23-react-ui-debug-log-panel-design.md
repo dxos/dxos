@@ -1,4 +1,4 @@
-# Design: `@dxos/react-ui-debug` log panel + `plugin-debug` R0 surface
+# Design: `@dxos/react-ui-debug` log panel + reuse across devtools & plugin-debug
 
 Date: 2026-07-23
 Branch: `claude/react-ui-debug-panel-55b37f`
@@ -10,134 +10,134 @@ debugging where all we need is a live view of `@dxos/log` output. We want an
 in-app logging panel that captures the log stream, is filterable, resettable,
 level-configurable, and copyable to the clipboard — no DevTools required.
 
+An implementation already exists:
+`packages/devtools/devtools/src/components/performance/panels/LoggingPanel.tsx`.
+It is a good base (filter via `log.config`, per-row copy, level colors,
+`shortLevelName`) but is trapped inside the devtools `Panel` wrapper and has two
+limits: it keeps the *oldest* `maxLines` (`slice(0, maxLines)`) and only records
+behind an `active` switch. We **factor it out** into a reusable
+`@dxos/react-ui-debug` component, fix the buffer, and consume it from both
+devtools and a new `plugin-debug` R0 surface.
+
 ## Goals
 
-- A reusable, DevTools-free view of the live `@dxos/log` stream, embeddable in
-  any app or storybook.
-- Rolling (bounded) buffer that captures **every** entry regardless of the
-  active console filter — the point is to avoid DevTools, so we must not lose
-  DEBUG lines the console would drop.
-- Toolbar: filter (level + text), reset (clear), configure logging level, copy
-  to clipboard.
-- Wire it into Composer via the existing `plugin-debug` as an R0 button +
-  popover and a companion panel.
+- A reusable, DevTools-free `<LogPanel>` embeddable in any app or storybook.
+- Rolling (bounded) buffer keeping the **most recent** N lines.
+- Toolbar: filter (LOG_FILTER syntax), configure logging level, record/pause,
+  reset, copy-to-clipboard (all visible + per-row).
+- Reuse it from the existing devtools performance panel and from `plugin-debug`
+  as an R0 button + popover and a companion panel.
+- Additionally, reimplement the devtools performance `Panel.tsx` on top of the
+  `@dxos/react-ui` `Panel` primitive (keeping its public API).
 
 ## Non-goals
 
-- Persisting logs across reloads (the IndexedDB `@dxos/log-store-idb` already
-  covers durable capture; this panel is a live, in-memory view).
+- Persisting logs across reloads (durable capture is `@dxos/log-store-idb`).
+- Replacing the RPC/service-backed `panels/client/LoggingPanel` (different data
+  source — the client `LoggingService` stream).
 - Replacing `app.log` / NDJSON file capture or `query-logs`.
-- Server/Node log capture — this is a browser UI concern.
+
+## Decisions (approved)
+
+- **Capture model:** reuse the existing **gated** approach —
+  `log.config({ filter })` + `shouldLog(entry, config.filters)`, capturing only
+  while the panel is mounted and recording. Cheap; matches proven code. Each
+  mount owns its own component-local rolling buffer (no always-on singleton).
+- **Level control:** the filter drives the global config, so it also sets the
+  global logging level. A level `Select` is a shortcut that writes a bare level
+  (`info`, `debug`, …) into the filter; the free-text filter supports the full
+  LOG_FILTER `path:level` syntax for scoping.
+- **Rows:** compact (level letter · file · message) with click-to-expand
+  context/error, plus a per-row copy affordance.
+- **plugin-debug surface:** both an R0 button + `Popover` (status indicator) and
+  an R0 **companion** panel.
+- **Panel refactor:** include now — rebuild `Panel.tsx` internals on the
+  `@dxos/react-ui` `Panel` primitive, preserving its external props so all ~10
+  consumers are unaffected.
 
 ## Architecture
 
-Two units with a clean boundary:
+### 1. `@dxos/react-ui-debug` (new, private, `packages/ui/react-ui-debug`)
 
-### 1. `@dxos/react-ui-debug` (new, private package, `packages/ui/react-ui-debug`)
+Presentational, self-contained. Deps: `@dxos/log`, `@dxos/react-ui`,
+`@dxos/ui-theme`. No app-framework/devtools deps.
 
-Headless store + presentational component. No app-framework or plugin deps.
-
-**`LogStore`** — a small class wrapping a ring buffer of captured records.
-- Registers a `LogProcessor` via `log.addProcessor(processor)` and keeps the
-  returned unsubscribe handle. The processor captures **unconditionally** (it
-  does not consult `shouldLog`), so the buffer holds everything the app logs.
-- Ring buffer with a fixed `capacity` (default 1000); oldest entries drop.
-- Derives a plain, serialization-friendly record per entry from `LogEntry`
-  (`timestamp`, `level`, `message`, `computedContext`, `computedError`,
-  `computedMeta.filename`/`line`/`context`) so the UI never holds live
-  `LogEntry` getters.
-- Reactive: exposes `subscribe(cb)` + `getSnapshot()` for React
-  `useSyncExternalStore` (no effect-atom dependency).
-- API: `start()` / `stop()` (idempotent register/unregister), `clear()`,
-  `entries` snapshot, `capacity`.
-- A module-level default singleton (`logStore`) that starts capture on import,
-  so consumers (the plugin) capture from activation without wiring a processor
-  themselves. Explicit `createLogStore({ capacity })` is also exported for
-  isolated use (storybook, tests).
-
-**`<LogPanel>`** — presentational, built from `@dxos/react-ui` primitives and
-`@dxos/ui-theme` tokens (per `composer-ui`). Props: `store?` (defaults to the
-singleton), `classNames`.
-- **Toolbar** (`@dxos/react-ui` Toolbar + IconButton):
-  - **Level `Select`** — sets the display threshold AND calls
-    `log.config({ filter: <level> })` so the global console/logging level tracks
-    the panel. Capture is unaffected (processor ignores filters), so raising the
-    level never loses buffered lines; the display re-filters live.
-  - **Text filter** `Input` — substring match over message + file path +
-    context.
-  - **Reset** IconButton — `store.clear()`.
-  - **Copy** IconButton — serialize visible (filtered) entries to text and
-    `navigator.clipboard.writeText`.
-  - **Autoscroll/pause** toggle IconButton — pause pins the scroll position;
-    resume sticks to the tail.
-- **List** — rolling, newest at the bottom, autoscrolls to tail unless paused.
-  Each row is **compact** (timestamp · level badge · `file:line` · message);
-  clicking a row **expands** its `context`/`error` JSON inline. Level badge
-  colored via theme tones (map WARN/ERROR to the warning/error tones).
-- Empty state when the buffer is empty.
-- `translations.ts` with a namespace for all labels; storybook story that emits
-  synthetic `log.info`/`warn`/`error` lines to drive the panel.
+- **`<LogPanel>`** — factored + enhanced from the devtools `LoggingPanel`.
+  - Props (`ThemedClassName`): `maxLines?` (default 1000), `initialFilter?`
+    (default `'info'`), `defaultRecording?` (default `true`).
+  - Layout via the `@dxos/react-ui` `Panel` primitive (`Panel.Root` +
+    `Panel.Toolbar` + `Panel.Content` scroll body).
+  - Toolbar: filter `Input` (LOG_FILTER syntax) → `log.config({ filter })`;
+    level `Select` (trace…error) that writes a bare level into the filter;
+    record/pause toggle; reset (clear); copy-all `IconButton`.
+  - Capture effect (only while recording): `log.config({ filter })` +
+    `log.addProcessor((config, entry) => shouldLog(entry, config.filters) &&
+    setEntries((prev) => [...prev, entry].slice(-maxLines)))`, disposing on
+    cleanup. Note: keeps **most recent** lines (fixes the `slice(0, …)` bug).
+  - Rows: compact colored level letter (`text-{error,warning,info,success}-text`
+    per the existing thresholds) · short file · message; click toggles an
+    expanded JSON view of `{ timestamp, level, file, line, message, context,
+    error }`; hover reveals a per-row copy button.
+  - Pure helper `formatLogEntry(entry): LogRecord` (serializable) shared by
+    expand + copy — unit-testable without React.
+  - `translations.ts` (namespace `@dxos/react-ui-debug`) + `LogPanel.stories.tsx`
+    (buttons emit sample `log.info/warn/error`).
 
 Package shape mirrors `@dxos/react-ui-card`: `moon.yml`
 (`ts-vite-build`/`ts-test`/`ts-test-storybook`/`pack`/`storybook`),
-`package.json` with `"private": true`, `src/{components,index.ts,translations.ts}`,
-`.storybook/`, `vite.config.ts`, `tsconfig.json`. Deps: `@dxos/log`,
-`@dxos/react-ui`, `@dxos/ui-theme`, `@dxos/util`, `@dxos/react-ui-syntax-highlighter`
-(for expanded JSON, optional). Dev: `@dxos/storybook-utils`, react, vite.
+`package.json` with `"private": true`, `.storybook/`, `vite.config.ts`,
+`tsconfig.json`.
 
-### 2. `plugin-debug` (existing) — R0 wiring
+### 2. devtools consumption + Panel refactor
 
-Reuse the panel; add capture-from-startup + two surfaces.
+- **`components/performance/panels/LoggingPanel.tsx`** becomes a thin wrapper:
+  `<Panel {...props} icon='ph--list--regular' title='Logging' maxHeight={0}>
+  <LogPanel /></Panel>` importing `LogPanel` from `@dxos/react-ui-debug`. The old
+  inline implementation is deleted (no shim). Add the `workspace:*` dep +
+  tsconfig reference.
+- **`components/performance/Panel.tsx`** reimplemented on the `@dxos/react-ui`
+  `Panel` primitive, preserving the `PanelProps`/`CustomPanelProps` API
+  (`id/icon/title/info/padding/maxHeight/open/onToggle`). Header → `Panel.Toolbar`
+  (clickable, toggles), body → `Panel.Content` with the existing
+  `maxHeight`/collapse behavior. All consumers unchanged.
 
-- Add `@dxos/react-ui-debug` (`workspace:*`) dep; import the singleton `logStore`
-  (import side-effect starts capture at plugin activation).
-- **Companion panel (R0)**: `app-graph-builder.ts` adds
+### 3. `plugin-debug` — R0 wiring
+
+- Add `@dxos/react-ui-debug` (`workspace:*`) dep + tsconfig ref + translations
+  (`logs.label`, `open-logs.label`).
+- **Companion (R0):** `app-graph-builder.ts` adds
   `AppNode.makeDeckCompanion({ id: 'logs', label, icon: 'ph--list-magnifying-glass--regular', data: 'logs' })`
-  (mirrors the existing `spaceObjects` companion). `react-surface.tsx` adds a
-  `Surface` with `filter: Surface.makeFilter(AppSurface.deckCompanion('logs'))`
-  rendering `<LogPanel />`. This is the "R0 button" (companion tab button in the
-  R0 strip) + full companion panel.
-- **Popover quick-view**: a status-bar surface
-  (`filter: AppSurface.StatusIndicator`, like `DebugStatus`) rendering a small
-  button (log/error count) that opens `<LogPanel>` in a `@dxos/react-ui`
-  `Popover` for a glance without switching the companion.
-- Add translation keys for the new labels; register in `translations.ts`.
+  (mirrors `spaceObjects`). `react-surface.tsx` adds a `Surface`
+  (`filter: Surface.makeFilter(AppSurface.deckCompanion('logs'))`) rendering
+  `<LogPanel />` — the R0 button (companion tab) + full panel.
+- **Popover quick-view:** a new `LogStatus` container rendered in an
+  `AppSurface.StatusIndicator` surface — a `StatusBar` button that opens
+  `<LogPanel>` in a `@dxos/react-ui` `Popover`.
 
 ## Data flow
 
-`log('…', ctx)` → `processLog` runs **all** processors →
-`LogStore` processor pushes a derived record into the ring buffer → `subscribe`
-notifies → `<LogPanel>` re-renders via `useSyncExternalStore`, applying the
-level + text display filter. Level `Select` change → `log.config({ filter })`
-(console threshold) + display threshold state.
+`log('…', ctx)` → `processLog` runs all processors → `<LogPanel>`'s processor
+applies `shouldLog(entry, config.filters)` and appends to the component-local
+ring buffer (most-recent N) → React re-renders. Changing the filter/level calls
+`log.config({ filter })`, updating the global console/logging threshold too.
 
 ## Error handling / edge cases
 
-- Clipboard: guard `navigator.clipboard` absence; surface a toast/inline note on
-  failure (no throw).
-- Capacity overflow: ring buffer drops oldest silently; buffer count shown so
-  truncation is visible.
-- High log volume: cap re-render rate — coalesce processor pushes into a batched
-  notify (e.g. microtask/animation-frame flush) so a burst doesn't thrash React.
-- Function-valued contexts are resolved by `LogEntry.computedContext`; the store
-  only keeps the computed record, never the raw closure.
-- Idempotent `start()`/`stop()`; `addProcessor` already dedups identical
-  processor refs.
+- Clipboard: guard `navigator.clipboard` absence; no throw.
+- Buffer overflow: `slice(-maxLines)` drops oldest; count shown.
+- Recording off: no processor registered → zero cost.
+- `log.config({ filter })` resets `captureFilter` to default; acceptable for a
+  dev tool. The panel must never call `log(...)` in its own processor (feedback
+  loop).
+- Function-valued contexts resolved via `LogEntry.computedContext`; the panel
+  serializes the computed record, never the raw closure.
 
 ## Testing
 
-- `react-ui-debug`: unit tests for `LogStore` — capture appends, ring-buffer
-  eviction at capacity, `clear()`, subscribe/notify, start/stop unregisters the
-  processor. Drive via real `log.info(...)` calls.
-- Storybook story renders `<LogPanel>` with a button that emits sample lines;
-  verify visually + `ts-test-storybook`.
-- `plugin-debug`: existing `DebugPlugin.test.ts` continues to pass; the new
-  surfaces are thin.
-
-## Open questions (resolved)
-
-- Level control → **sets global filter** (`log.config`) in addition to display
-  filter.
-- plugin-debug surface → **both** R0 button + popover (status indicator) and R0
-  companion panel.
-- Row detail → **compact with click-to-expand**.
+- `react-ui-debug`: unit test `formatLogEntry` (level letter, file basename,
+  context/error extraction); storybook story + `ts-test-storybook` for the
+  panel; a light interaction test (emit a log, assert a row appears, clear
+  empties it).
+- devtools: `moon run devtools:build`; visual check that StatsPanel + collapsible
+  panels still render after the `Panel` refactor.
+- `plugin-debug`: existing `DebugPlugin.test.ts` passes; new surfaces are thin.
