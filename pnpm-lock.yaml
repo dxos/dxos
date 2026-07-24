@@ -20159,6 +20159,9 @@ importers:
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../../plugins/plugin-transcription
+      '@dxos/plugin-versioning':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-versioning
       '@dxos/plugin-wnfs':
         specifier: workspace:*
         version: link:../../plugins/plugin-wnfs

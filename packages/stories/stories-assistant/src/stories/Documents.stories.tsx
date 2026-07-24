@@ -79,13 +79,15 @@ export const WithMarkdown: Story = {
     lazyPlugins: async () => {
       // SpacePlugin contributes the `versioning-state` capability that the Comments article surface
       // (and the versioning UI) reads; without it the story throws "No capability found".
-      const [{ MarkdownPlugin }, { CommentsPlugin }, { SpacePlugin }] = await Promise.all([
+      // VersioningPlugin contributes the `history` companion surface the HistoryModule renders into.
+      const [{ MarkdownPlugin }, { CommentsPlugin }, { SpacePlugin }, { VersioningPlugin }] = await Promise.all([
         import('@dxos/plugin-markdown/plugin'),
         import('@dxos/plugin-comments/plugin'),
         import('@dxos/plugin-space/plugin'),
+        import('@dxos/plugin-versioning/plugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), CommentsPlugin(), SpacePlugin({})],
+        plugins: [MarkdownPlugin(), CommentsPlugin(), SpacePlugin({}), VersioningPlugin()],
       };
     },
     config: config.remote,

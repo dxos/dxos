@@ -67,6 +67,7 @@
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
+    "@dxos/plugin-versioning": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",

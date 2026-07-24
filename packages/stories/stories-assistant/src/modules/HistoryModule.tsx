@@ -9,7 +9,7 @@ import { Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ModuleProps } from '@dxos/story-modules';
 
-import { useCurrentObject } from '../testing';
+import { useActiveObject } from '../testing';
 
 /**
  * Renders the current document's history companion — plugin-space's version timeline (checkpoints,
@@ -17,7 +17,7 @@ import { useCurrentObject } from '../testing';
  * in {@link DocumentModule}) via the shared versioning state.
  */
 export const HistoryModule = ({ space }: ModuleProps) => {
-  const object = useCurrentObject(space);
+  const object = useActiveObject(space);
   const attendableId = object ? Paths.getCollectionsPath(space.id, object.id) : undefined;
   const data = useMemo(() => ({ attendableId, subject: 'history', companionTo: object }), [attendableId, object]);
   if (!object) {

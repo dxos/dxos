@@ -20,7 +20,7 @@ import { ObjectHistory } from '@dxos/plugin-versioning/containers';
 import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
 import { translations as versioningTranslations } from '@dxos/plugin-versioning/translations';
 import { useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch, Version } from '@dxos/versioning';
 
@@ -48,7 +48,7 @@ const DefaultStory = () => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   if (!doc) {
-    return <></>;
+    return <Loading />;
   }
 
   return <ObjectHistory role='article' subject={doc} attendableId={Obj.getURI(doc)} />;
