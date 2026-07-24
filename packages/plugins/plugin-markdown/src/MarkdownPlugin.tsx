@@ -9,6 +9,7 @@ import { translations as editorTranslations } from '@dxos/react-ui-editor/transl
 import { Text } from '@dxos/schema';
 
 import {
+  AnchorResolver,
   AnchorSort,
   CommentConfig,
   CreateObject,
@@ -56,6 +57,10 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): More relevant event?
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
+  }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.AppGraphReady,
+    activate: AnchorResolver,
   }),
   Plugin.make,
 );
