@@ -5,7 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
-import { List, addList, removeList } from '@dxos/ui-editor';
+import { List, toggleList } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
 
@@ -45,11 +45,7 @@ export const addLists =
 
               const listType =
                 listStyle === 'ordered' ? List.Ordered : listStyle === 'bullet' ? List.Bullet : List.Task;
-              if (checked) {
-                removeList(listType)(view);
-              } else {
-                addList(listType)(view);
-              }
+              toggleList(listType)(view);
             },
           );
         }

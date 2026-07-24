@@ -30,7 +30,9 @@ export const formattingStyles = EditorView.theme({
    */
   '& .cm-list-item': {},
   '& .cm-list-mark': {
-    display: 'inline',
+    // Must be inline-block so the fixed width applies and the first-line text start matches the
+    // hanging indent (`text-indent: -width`) set on `.cm-list-item`.
+    display: 'inline-block',
     textAlign: 'right',
     paddingRight: '0.5em',
     fontVariant: 'tabular-nums',
