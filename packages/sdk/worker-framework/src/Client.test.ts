@@ -169,6 +169,8 @@ describe('Connection multi-client', () => {
       onPersistentFailure: (error) => {
         calls++;
         failure.wake(error);
+        // A throwing callback must not break the retry loop (exercises the escalation guard).
+        throw new Error('TEST: callback failure');
       },
       onConnect: async () => ({ close: async () => {} }),
     });
@@ -188,8 +190,24 @@ describe('Connection multi-client', () => {
 
     const error = await asyncTimeout(failure.wait(), 5_000);
     expect(error).toBeInstanceOf(Error);
+    // The connection survived the throwing callback and kept electing (close() below still works).
     // Failures keep accruing past the threshold; the escalation fires once per streak.
     await sleep(200);
     expect(calls).toBe(1);
+  });
+
+  test('rejects a non-positive maxLeaderFailures', () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    expect(
+      () =>
+        new Client.Connection({
+          createWorker: createWorkerFactory(keys.storageLockKey),
+          createCoordinator: () => hub.connect(),
+          leaderLockKey: keys.leaderLockKey,
+          maxLeaderFailures: 0,
+          onConnect: async () => ({ close: async () => {} }),
+        }),
+    ).toThrow('maxLeaderFailures must be a positive integer');
   });
 });
