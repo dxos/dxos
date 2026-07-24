@@ -141,6 +141,7 @@
     "@dxos/plugin-wnfs": "workspace:*",
     "@dxos/plugin-zen": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",

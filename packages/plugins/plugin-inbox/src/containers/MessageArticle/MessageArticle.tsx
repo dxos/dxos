@@ -5,7 +5,7 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
@@ -115,12 +115,12 @@ export const MessageArticle = ({
 
   // View options shared across the thread (render mode + image loading). `viewMode` is ephemeral;
   // `loadRemoteImages` is seeded from and mirrored back to the persisted inbox setting.
-  const settingsAtom = useCapabilities(InboxCapabilities.Settings)[0] ?? FALLBACK_SETTINGS_ATOM;
-  const persistedImages = useAtomValue(settingsAtom).loadRemoteImages ?? false;
+  const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
   const setSettings = useAtomSet(settingsAtom);
+  const loadRemoteImagesAtom = useAtomValue(settingsAtom).loadRemoteImages ?? false;
   const optionsAtom = useMemo(
     // Seed once from the persisted setting; subsequent edits flow back via the effect below.
-    () => Atom.make<MessageOptions>({ viewMode: DEFAULT_VIEW_MODE, loadRemoteImages: persistedImages }),
+    () => Atom.make<MessageOptions>({ viewMode: DEFAULT_VIEW_MODE, loadRemoteImages: loadRemoteImagesAtom }),
     [],
   );
   const loadRemoteImages = useAtomValue(optionsAtom).loadRemoteImages ?? false;

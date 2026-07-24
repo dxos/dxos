@@ -24,6 +24,7 @@ import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
+import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -450,18 +451,33 @@ const main = async () => {
     }, [services]);
 
     return (
-      <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
-        <Tooltip.Provider>
-          <ResetDialog
-            error={error}
-            logStore={logStore}
-            observability={observability}
-            needRefresh={needRefresh}
-            onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-            onReset={import.meta.env.DEV ? handleReset : undefined}
-          />
-        </Tooltip.Provider>
-      </ThemeProvider>
+      // Double-fault guard: the themed dialog can itself fail to render (e.g. a
+      // vite dev mid-optimization module split breaks the ThemeContext/i18n
+      // identity), which would otherwise loop the outer 'app' boundary forever
+      // instead of reporting the original error. Falls back to the
+      // theme-independent ErrorFallback showing the startup error, and logs the
+      // dialog's own failure with the `fatal_dialog` tag (ResetDialog's tagged
+      // log never runs when its render crashes).
+      <ErrorBoundary
+        name='fatal-dialog'
+        onError={(dialogError) =>
+          log.error('fatal dialog failed to render', { error: dialogError, fatal_dialog: true })
+        }
+        fallbackRender={(props) => <ErrorFallback {...props} error={error} />}
+      >
+        <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
+          <Tooltip.Provider>
+            <ResetDialog
+              error={error}
+              logStore={logStore}
+              observability={observability}
+              needRefresh={needRefresh}
+              onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+              onReset={import.meta.env.DEV ? handleReset : undefined}
+            />
+          </Tooltip.Provider>
+        </ThemeProvider>
+      </ErrorBoundary>
     );
   };
 
