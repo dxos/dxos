@@ -497,3 +497,21 @@ Workstream folded in from `claude/markdown-selection-assistant-visibility-833995
       free port, driving stories + play tests via the browser pane, live-instrumentation debugging
       (the keepAlive/selection hunt pattern), automated `test-storybook` battery, and the guided
       manual walkthrough format used in TEST-PLAN.md §3 (agent drives, user tests).
+
+## Review walkthrough issues (2026-07-24)
+
+Reported by the user during the storybook walkthrough (§3b). **Log only — no fixes until S1–S6 are done.**
+
+### S1 — Suggesting (`DocumentVersioning / Suggesting`)
+
+- [ ] **S1.1 Clicking a suggestion line makes it flicker.** Click on overlaid/tracked suggestion text →
+      visible flicker (decoration rebuild on selection change?).
+- [ ] **S1.2 Suggestion disappears on Markdown → Suggesting → Markdown.** Round-tripping the view mode
+      hides the suggestion instead of restoring it (S1.5 mode-switch matrix: not recoverable).
+- [ ] **S1.3 Suggesting mode: every keystroke loses focus.** Editor drops focus per key — likely a remount
+      per change on the branch binding.
+- [ ] **S1.4 Markdown (Editing) mode: every keystroke renders a strikethrough AND loses focus.** Typing on
+      main is being tracked as a deletion/suggestion; related to S1.3 but on the ambient path, and the
+      regression `EditingTypingTest` claims to guard.
+- [ ] **S1.5 Caret cannot move past a suggestion.** A suggestion at the document end leaves nowhere to go —
+      needs a trailing editable line after the final suggestion block in both modes.
