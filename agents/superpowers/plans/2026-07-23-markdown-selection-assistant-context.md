@@ -28,10 +28,12 @@
 ### Task 1: `Selection.toAnchors` (react-ui-attention)
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-attention/src/types/Selection.ts`
 - Test: `packages/ui/react-ui-attention/src/types/Selection.test.ts`
 
 **Interfaces:**
+
 - Produces: `Selection.toAnchors(selection: Selection | undefined): string[]` — anchor strings: `id`s for single/multi modes, `"${from}:${to}"` for range/multi-range. Imported later as `Selection.toAnchors` from `@dxos/react-ui-attention` (Task 7).
 
 - [ ] **Step 1: Write the failing tests**
@@ -122,10 +124,12 @@ git commit -m "react-ui-attention: Selection.toAnchors selection→anchor normal
 ### Task 2: `AnchorResolver` capability (app-toolkit) + `getTextInAnchorRange` (echo-client)
 
 **Files:**
+
 - Modify: `packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts` (after the `AnchorSort` block, ~line 246)
 - Modify: `packages/core/echo/echo-client/src/text.ts`
 
 **Interfaces:**
+
 - Produces: `AppCapabilities.AnchorResolver` — `{ key: string; getText: (obj: any, anchor: string) => string | undefined }` capability, id `org.dxos.app-framework.capability.anchorResolver`. Consumed in Tasks 3, 4, 7.
 - Produces: `getTextInAnchorRange(accessor: Doc.Accessor, anchor: string): string | undefined` exported from `@dxos/echo-client` (barrel already re-exports `./text`). Consumed in Task 3.
 
@@ -186,12 +190,14 @@ git commit -m "app-toolkit: AnchorResolver capability; echo-client: getTextInAnc
 ### Task 3: markdown contributes `AnchorResolver`
 
 **Files:**
+
 - Create: `packages/plugins/plugin-markdown/src/capabilities/anchor-resolver.ts`
 - Test: `packages/plugins/plugin-markdown/src/capabilities/anchor-resolver.test.ts`
 - Modify: `packages/plugins/plugin-markdown/src/capabilities/index.ts`
 - Modify: `packages/plugins/plugin-markdown/src/MarkdownPlugin.tsx`
 
 **Interfaces:**
+
 - Consumes: `AppCapabilities.AnchorResolver`, `getTextInAnchorRange` (Task 2).
 - Produces: `getMarkdownAnchorText(doc: Markdown.Document, anchor: string): string | undefined` (exported for tests) and the contributed capability keyed by `Type.getTypename(Markdown.Document)`.
 
@@ -340,11 +346,13 @@ git commit -m "plugin-markdown: contribute AnchorResolver capability"
 ### Task 4: comments consume `AnchorResolver`; drop `getAnchorLabel`
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-comments/src/capabilities/app-graph-builder.ts:35,98-103`
 - Modify: `packages/plugins/plugin-markdown/src/capabilities/comment-config.ts`
 - Modify: `packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts:264`
 
 **Interfaces:**
+
 - Consumes: `AppCapabilities.AnchorResolver` (Tasks 2–3).
 - Produces: `CommentConfig` type without `getAnchorLabel` (final shape: `{ id, comments, selectionMode?, scrollToAnchor? }`).
 
@@ -353,38 +361,40 @@ git commit -m "plugin-markdown: contribute AnchorResolver capability"
 In `packages/plugins/plugin-comments/src/capabilities/app-graph-builder.ts`, next to the existing `getCommentConfig` helper (line 35) add:
 
 ```ts
-    const getAnchorResolver = (typename: string) =>
-      capabilities.getAll(AppCapabilities.AnchorResolver).find(({ key }) => key === typename);
+const getAnchorResolver = (typename: string) =>
+  capabilities.getAll(AppCapabilities.AnchorResolver).find(({ key }) => key === typename);
 ```
 
 Then in the `comment` action (lines 96–105), replace the label derivation: the current code reads
 
 ```ts
-                // Fallback (non-editor objects): anchor to the current selection, or create an
-                // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
-                // placeholder is not a cursor range and would throw in `getAnchorLabel`.
-                const selection = viewState.get(Selection.aspect, objectUri);
-                const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
-                yield* Operation.invoke(CommentOperation.Create, {
-                  anchor: cursorAnchor ?? Date.now().toString(),
-                  name: cursorAnchor ? config.getAnchorLabel?.(object, cursorAnchor) : undefined,
-                  subject: object,
-                });
+// Fallback (non-editor objects): anchor to the current selection, or create an
+// unanchored thread. Only derive a label from a real cursor anchor — the unanchored
+// placeholder is not a cursor range and would throw in `getAnchorLabel`.
+const selection = viewState.get(Selection.aspect, objectUri);
+const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
+yield *
+  Operation.invoke(CommentOperation.Create, {
+    anchor: cursorAnchor ?? Date.now().toString(),
+    name: cursorAnchor ? config.getAnchorLabel?.(object, cursorAnchor) : undefined,
+    subject: object,
+  });
 ```
 
 becomes
 
 ```ts
-                // Fallback (non-editor objects): anchor to the current selection, or create an
-                // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
-                // placeholder is not a cursor range the resolver could span.
-                const selection = viewState.get(Selection.aspect, objectUri);
-                const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
-                yield* Operation.invoke(CommentOperation.Create, {
-                  anchor: cursorAnchor ?? Date.now().toString(),
-                  name: cursorAnchor && typename ? getAnchorResolver(typename)?.getText(object, cursorAnchor) : undefined,
-                  subject: object,
-                });
+// Fallback (non-editor objects): anchor to the current selection, or create an
+// unanchored thread. Only derive a label from a real cursor anchor — the unanchored
+// placeholder is not a cursor range the resolver could span.
+const selection = viewState.get(Selection.aspect, objectUri);
+const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
+yield *
+  Operation.invoke(CommentOperation.Create, {
+    anchor: cursorAnchor ?? Date.now().toString(),
+    name: cursorAnchor && typename ? getAnchorResolver(typename)?.getText(object, cursorAnchor) : undefined,
+    subject: object,
+  });
 ```
 
 (`typename` is already in scope from line 79; it is `string | undefined`.)
@@ -394,12 +404,12 @@ becomes
 In `packages/plugins/plugin-markdown/src/capabilities/comment-config.ts`: delete the `getAnchorLabel` property (lines 21–28), then delete the now-unused imports `getTextInRange` (`@dxos/echo-client`) and `Doc` (`@dxos/echo-doc`), and the `// TODO(burdon): Wrap this.` goes with it. Resulting config:
 
 ```ts
-  const config: AppCapabilities.CommentConfig = {
-    id: Type.getTypename(Markdown.Document),
-    comments: 'anchored',
-    selectionMode: 'multi-range',
-    scrollToAnchor: MarkdownOperation.ScrollToAnchor,
-  };
+const config: AppCapabilities.CommentConfig = {
+  id: Type.getTypename(Markdown.Document),
+  comments: 'anchored',
+  selectionMode: 'multi-range',
+  scrollToAnchor: MarkdownOperation.ScrollToAnchor,
+};
 ```
 
 - [ ] **Step 3: Remove the field from the type**
@@ -447,12 +457,14 @@ git commit -m "plugin-comments: resolve anchor labels via AnchorResolver, drop C
 ### Task 5: widen `submitPrompt` to accept content blocks
 
 **Files:**
+
 - Modify: `packages/core/compute/compute/src/AgentService.ts:57`
 - Modify: `packages/core/compute/agent-runtime/src/agent-service/AgentService.ts:235`
 - Modify: `packages/core/compute/agent-runtime/src/agent-service/agent-process.ts:81,198-206`
 - Modify: `packages/core/compute/compute/package.json` (add `@dxos/types`)
 
 **Interfaces:**
+
 - Produces: `Session.submitPrompt(prompt: string | ContentBlock.Any[])` — consumed by Task 6. String behaves exactly as before; a block array is enqueued verbatim as the turn's prompt content.
 
 - [ ] **Step 1: Add the `@dxos/types` dependency to `@dxos/compute`**
@@ -468,14 +480,14 @@ pnpm add --filter "@dxos/compute" "@dxos/types@workspace:*"
 In `packages/core/compute/compute/src/AgentService.ts`: add `import type { ContentBlock } from '@dxos/types';` to the imports, and change
 
 ```ts
-  submitPrompt: (prompt: string) => Effect.Effect<void>;
+submitPrompt: (prompt: string) => Effect.Effect<void>;
 ```
 
 to
 
 ```ts
-  /** Submit a turn: a plain user prompt, or pre-built content blocks (e.g. synthetic context + prompt). */
-  submitPrompt: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>;
+/** Submit a turn: a plain user prompt, or pre-built content blocks (e.g. synthetic context + prompt). */
+submitPrompt: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>;
 ```
 
 - [ ] **Step 3: Widen the implementation and process input schema**
@@ -541,12 +553,14 @@ git commit -m "compute: submitPrompt accepts prepared content blocks"
 ### Task 6: processor request context → synthetic prompt block
 
 **Files:**
+
 - Create: `packages/plugins/plugin-assistant/src/processor/prompt.ts`
 - Test: `packages/plugins/plugin-assistant/src/processor/prompt.test.ts`
 - Modify: `packages/plugins/plugin-assistant/src/processor/processor.ts:84-87,304`
 - Modify: `packages/plugins/plugin-assistant/src/processor/index.ts` (if it exists — re-export `prompt.ts` types alongside the processor; otherwise export from wherever `ProcessorRequest` is re-exported)
 
 **Interfaces:**
+
 - Consumes: `Session.submitPrompt(string | ContentBlock.Any[])` (Task 5).
 - Produces: `ProcessorRequestContext = { selection?: { anchors: string[]; text: string } }`; `createPromptContent(request: { message: string; context?: ProcessorRequestContext }): string | ContentBlock.Any[]`; `ProcessorRequest` gains `context?: ProcessorRequestContext`. Consumed by Task 7.
 
@@ -676,7 +690,7 @@ export type ProcessorRequest = {
 Replace line 304:
 
 ```ts
-        yield* session.submitPrompt(createPromptContent(requestProp));
+yield * session.submitPrompt(createPromptContent(requestProp));
 ```
 
 (The adjacent `log('chat processor submitting prompt', ...)` and `#updateChatName(requestProp.message)` keep using `requestProp.message`.) Check whether `src/processor/index.ts` exists and re-exports `processor.ts`; if so add `export * from './prompt';` (or the file's export style) so Task 7 can import `ProcessorRequestContext` via the same path other files use.
@@ -707,6 +721,7 @@ git commit -m "plugin-assistant: per-request selection context as synthetic prom
 ### Task 7: submit-time selection capture in the companion chat
 
 **Files:**
+
 - Create: `packages/plugins/plugin-assistant/src/hooks/useSelectionContext.ts`
 - Test: `packages/plugins/plugin-assistant/src/hooks/useSelectionContext.test.ts`
 - Modify: `packages/plugins/plugin-assistant/src/hooks/index.ts`
@@ -714,6 +729,7 @@ git commit -m "plugin-assistant: per-request selection context as synthetic prom
 - Modify: `packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.tsx`
 
 **Interfaces:**
+
 - Consumes: `Selection.toAnchors` (Task 1), `AppCapabilities.AnchorResolver` (Task 2), `ProcessorRequestContext` (Task 6), `AttentionCapabilities.ViewState` (existing).
 - Produces: `getSelectionContext({ object, selection, resolvers }): ProcessorRequestContext | undefined` (pure, exported for tests); `useSelectionContext(companionTo): () => ProcessorRequestContext | undefined`; `ChatRootProps.getContext?: () => ProcessorRequestContext | undefined`.
 
@@ -908,7 +924,7 @@ import { useChatProcessor, useChatServices, usePresets, useSelectionContext } fr
 (match the existing `#hooks` import on line 19). Inside the component:
 
 ```ts
-    const getContext = useSelectionContext(companionTo);
+const getContext = useSelectionContext(companionTo);
 ```
 
 and pass it to the root (line 81):

@@ -29,9 +29,7 @@ export type AnchorResolver = Readonly<{
   key: string; // typename
   getText: (obj: any, anchor: string) => string | undefined;
 }>;
-export const AnchorResolver = Capability$.make<AnchorResolver>(
-  'org.dxos.app-framework.capability.anchorResolver',
-);
+export const AnchorResolver = Capability$.make<AnchorResolver>('org.dxos.app-framework.capability.anchorResolver');
 ```
 
 - `CommentConfig` drops `getAnchorLabel`; the sole consumer
