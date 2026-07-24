@@ -3,10 +3,13 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
 
 import { meta } from '#meta';
 
 export const translations = [
+  // The R0 log companion and status popover render `@dxos/react-ui-debug`, so its namespace must be registered.
+  ...logPanelTranslations,
   {
     'en-US': {
       [meta.profile.key]: {
