@@ -14,7 +14,7 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
 
-import { STORY_AGENTS, seedAgentSuggestions } from '../../containers/CommentsArticle/CommentsArticle.stories';
+import { STORY_AGENTS, seedAgentSuggestions } from '../../testing';
 import { SuggestionSources, type SuggestionSourcesProps } from './SuggestionSources';
 
 type StoryArgs = Pick<SuggestionSourcesProps, 'onResolved'>;

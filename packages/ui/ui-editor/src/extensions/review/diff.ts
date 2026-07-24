@@ -136,8 +136,15 @@ export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolic
  * `from` to its start, the `to` to its end). Without this, a proposal diffed against `base` would
  * render at stale offsets over the diverged `doc`.
  */
-export const rebaseHunks = (base: string, doc: string, hunks: DiffHunk[]): DiffHunk[] => {
-  const charHunks = computeCharHunks(base, doc);
+export const rebaseHunks = (base: string, doc: string, hunks: DiffHunk[]): DiffHunk[] =>
+  rebaseHunksWith(computeCharHunks(base, doc), hunks);
+
+/**
+ * {@link rebaseHunks} with a precomputed `base`↔`doc` character diff. Callers rebasing MANY hunk sets
+ * against the same pair — e.g. every author's proposal over one branch (see {@link suggestions}) —
+ * compute {@link computeCharHunks} once and reuse it, rather than re-diffing the whole document per set.
+ */
+export const rebaseHunksWith = (charHunks: Hunk[], hunks: DiffHunk[]): DiffHunk[] => {
   const mapPos = (pos: number, side: -1 | 1): number => {
     let delta = 0;
     for (const hunk of charHunks) {
@@ -159,7 +166,17 @@ export const rebaseHunks = (base: string, doc: string, hunks: DiffHunk[]): DiffH
     }
     return pos + delta;
   };
-  return hunks.map((hunk) => ({ ...hunk, from: mapPos(hunk.from, -1), to: mapPos(hunk.to, 1) }));
+  return hunks.map((hunk) => {
+    // A zero-width hunk (pure insertion, from === to) must map both endpoints with the SAME side —
+    // otherwise, at a doc-edit boundary, the lower edge (side -1) and upper edge (side +1) can resolve
+    // to different offsets and invert the range (from > to). Non-zero hunks keep the asymmetric mapping
+    // so an exclusive upper edge never crosses into an adjacent doc edit.
+    if (hunk.from === hunk.to) {
+      const at = mapPos(hunk.from, -1);
+      return { ...hunk, from: at, to: at };
+    }
+    return { ...hunk, from: mapPos(hunk.from, -1), to: mapPos(hunk.to, 1) };
+  });
 };
 
 /** A changed hunk between two documents as character ranges in each (A = original, B = modified). */
