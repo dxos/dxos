@@ -22,6 +22,7 @@ import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { ContentBlock } from '@dxos/types';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
 import { type DelegationStrategy } from './delegation-strategy';
@@ -30,7 +31,7 @@ import { type DelegationStrategy } from './delegation-strategy';
 type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
 
 /** Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface. */
-type AgentHandle = ProcessManager.Handle<string, void, AgentRpcs>;
+type AgentHandle = ProcessManager.Handle<string | ContentBlock.Any[], void, AgentRpcs>;
 
 const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
@@ -232,7 +233,7 @@ const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () =
         }),
       );
     }).pipe(Effect.scoped),
-  submitPrompt: (prompt: string) => process.submitInput(prompt),
+  submitPrompt: (prompt: string | ContentBlock.Any[]) => process.submitInput(prompt),
   // Settle when the turn's reply is complete; do NOT block on background sub-agents
   // (a supervisor delegates work that runs after the turn and reports back out of band).
   waitForCompletion: () => process.runUntilSettled(),
