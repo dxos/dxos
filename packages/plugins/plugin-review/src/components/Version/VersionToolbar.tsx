@@ -9,9 +9,9 @@ import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { Branch, Version } from '@dxos/versioning';
 
-import { type ReviewCapabilities } from '../types';
-import { authorHue } from './author-hue';
-import { type UseVersioningResult } from './useVersioning';
+import { type UseVersioningResult } from '../../hooks';
+import { type ReviewCapabilities } from '../../types';
+import { authorHue } from '../../util';
 import { VersionBanner } from './VersionBanner';
 
 export type VersionToolbarProps = {

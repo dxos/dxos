@@ -25,10 +25,10 @@ import {
 } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { authorHue, hueColour } from './author-hue';
+import { versionDiff } from '../extensions';
+import { authorHue, hueColour } from '../util';
 import { type VersionedEditor } from './useVersionedEditor';
 import { type useVersioning } from './useVersioning';
-import { versionDiff } from './version-diff';
 
 export type ReviewExtensionsProps = {
   object: Markdown.Document | Text.Text;

@@ -13,11 +13,10 @@ import { useEditorContext } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { type SuggestionSource, type suggestionsOverlay } from '@dxos/ui-editor';
 
-import { SuggestionSourcesProvider } from '../components';
+import { SuggestionSourcesProvider, VersionToolbar } from '../components';
 import { useReviewExtensions } from './useReviewExtensions';
 import { useVersionedEditor } from './useVersionedEditor';
 import { useVersioning } from './useVersioning';
-import { VersionToolbar } from './VersionToolbar';
 
 // The compare/diff overlay is swapped in and out through a compartment so toggling Compare
 // reconfigures the live editor rather than remounting it (which would rebind automerge and lose

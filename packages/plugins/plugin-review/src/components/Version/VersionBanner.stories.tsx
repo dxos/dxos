@@ -8,7 +8,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
 import { VersionBanner } from './VersionBanner';
 
 const meta = {

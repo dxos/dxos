@@ -69,18 +69,14 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return (
-    <div className='is-[24rem] bs-full mli-auto border-is border-ie border-separator'>
-      <ObjectHistory role='article' attendableId={doc.id} subject={doc} />
-    </div>
-  );
+  return <ObjectHistory role='article' attendableId={doc.id} subject={doc} />;
 };
 
 const meta = {
   title: 'plugins/plugin-review/ObjectHistory',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column' }),
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),
