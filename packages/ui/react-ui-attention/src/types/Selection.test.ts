@@ -41,6 +41,38 @@ describe('selection helpers', () => {
   });
 });
 
+describe('toAnchors', () => {
+  test('undefined selection yields no anchors', ({ expect }) => {
+    expect(Selection.toAnchors(undefined)).toEqual([]);
+  });
+
+  test('single mode yields the id when set', ({ expect }) => {
+    expect(Selection.toAnchors({ mode: 'single', id: 'a' })).toEqual(['a']);
+    expect(Selection.toAnchors({ mode: 'single' })).toEqual([]);
+  });
+
+  test('multi mode yields all ids', ({ expect }) => {
+    expect(Selection.toAnchors({ mode: 'multi', ids: ['a', 'b'] })).toEqual(['a', 'b']);
+  });
+
+  test('range mode yields a cursor-pair anchor when complete', ({ expect }) => {
+    expect(Selection.toAnchors({ mode: 'range', from: 'x', to: 'y' })).toEqual(['x:y']);
+    expect(Selection.toAnchors({ mode: 'range', from: 'x' })).toEqual([]);
+  });
+
+  test('multi-range mode yields one anchor per range', ({ expect }) => {
+    expect(
+      Selection.toAnchors({
+        mode: 'multi-range',
+        ranges: [
+          { from: 'a', to: 'b' },
+          { from: 'c', to: 'd' },
+        ],
+      }),
+    ).toEqual(['a:b', 'c:d']);
+  });
+});
+
 describe('getValue', () => {
   const makeManager = () => {
     const registry = Registry.make();

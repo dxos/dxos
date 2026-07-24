@@ -18,7 +18,10 @@ export class MemoryBackend implements ViewState.Backend {
     const key = cacheKey(aspect, contextId);
     let atom = this.#atoms.get(key);
     if (!atom) {
-      atom = Atom.make<unknown>(aspect.defaultValue());
+      // `keepAlive` pins the node so a written value survives for the session; without it the registry
+      // sweeps the unsubscribed atom back to its default, dropping state that no UI happens to observe
+      // (e.g. a selection read on-demand by an agent tool rather than a live subscriber).
+      atom = Atom.make<unknown>(aspect.defaultValue()).pipe(Atom.keepAlive);
       this.#atoms.set(key, atom);
     }
     // Cast bridges the per-aspect value type erased by the shared atom map; safe by construction.
@@ -85,7 +88,9 @@ export class LocalBackend implements ViewState.Backend {
     let atom = this.#atoms.get(key);
     if (!atom) {
       const storageKey = storageKeyFor(aspect, contextId);
-      atom = Atom.make<unknown>(this.#read(aspect, storageKey));
+      // `keepAlive` pins the node so the in-memory value stays consistent with storage without a live
+      // subscriber; otherwise the registry sweeps the unsubscribed atom back to its creation-time seed.
+      atom = Atom.make<unknown>(this.#read(aspect, storageKey)).pipe(Atom.keepAlive);
       this.#atoms.set(key, atom);
       // Cast erases the per-aspect value type so the reverse map can hold aspects of any `T`; the
       // stored aspect is only used to re-read/decode its own value, so the erasure is safe.

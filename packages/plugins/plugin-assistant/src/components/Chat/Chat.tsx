@@ -31,7 +31,7 @@ import { Message } from '@dxos/types';
 import { useChatKeymapExtensions, useChatToolbarActions, useDebug, useTraceMessages } from '#hooks';
 import { meta } from '#meta';
 
-import { AiUsageQuotaError } from '../../processor';
+import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
 import {
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
@@ -60,10 +60,21 @@ type ChatRootProps = PropsWithChildren<
      * persist and flush its conversation feed so the agent can resolve it.
      */
     onSubmit?: (text: string) => Promise<void> | void;
+    /** Called at submit time to capture ephemeral request context (e.g. companion selection). */
+    getContext?: () => ProcessorRequestContext | undefined;
   }
 >;
 
-const ChatRoot = ({ children, chat, processor, db: dbFallback, onEvent, onSubmit, ...props }: ChatRootProps) => {
+const ChatRoot = ({
+  children,
+  chat,
+  processor,
+  db: dbFallback,
+  onEvent,
+  onSubmit,
+  getContext,
+  ...props
+}: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
@@ -124,9 +135,10 @@ const ChatRoot = ({ children, chat, processor, db: dbFallback, onEvent, onSubmit
           const text = ev.text.trim();
           if (!streaming && text.length) {
             lastPrompt.current = ev.text;
+            const context = getContext?.();
             // Await persistence (transient chat) before requesting so the agent resolves the
             // now-durable conversation feed; resolves immediately when there is no hook.
-            void Promise.resolve(onSubmit?.(text)).then(() => processor.request({ message: text }));
+            void Promise.resolve(onSubmit?.(text)).then(() => processor.request({ message: text, context }));
           }
           break;
         }
@@ -151,7 +163,7 @@ const ChatRoot = ({ children, chat, processor, db: dbFallback, onEvent, onSubmit
 
       onEvent?.(ev);
     });
-  }, [event, dump, processor, streaming, onEvent, onSubmit]);
+  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext]);
 
   return (
     <ChatContextProvider

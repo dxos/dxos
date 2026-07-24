@@ -49,6 +49,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/vendor-kbn-handlebars": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect/platform": "catalog:",

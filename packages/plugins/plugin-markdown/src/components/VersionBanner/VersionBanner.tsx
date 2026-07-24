@@ -90,9 +90,7 @@ export const VersionBanner = ({
     <Toolbar.Root data-testid={`version-banner-${mode}`} aria-live='polite'>
       <div className='flex items-center gap-1 px-2 truncate'>
         <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
-        <Tag hue={hue} classNames='flex gap-2'>
-          {name}
-        </Tag>
+        <Tag hue={hue}>{name}</Tag>
         {timestamp && (
           <TextTooltip text={new Date(timestamp).toLocaleString()} side='bottom'>
             <Tag hue='sky'>{relativeTime(timestamp)}</Tag>

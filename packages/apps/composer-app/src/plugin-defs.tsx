@@ -52,7 +52,6 @@ import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
@@ -190,7 +189,6 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     CommercePlugin(),
     CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
-    RoutinePlugin(),
     isLocal && SamplePlugin(),
     SandboxPlugin(),
     ScriptPlugin(),

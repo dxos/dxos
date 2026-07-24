@@ -39,7 +39,7 @@ export const addToRootCollection = (space: Space, objects: Obj.Unknown[]): void 
  * content (the root collection) rather than an invented parallel context. Collection order is stable
  * (insertion order), so this deterministically resolves the primary document.
  */
-export const useCurrentObject = (space: Space): Obj.Unknown | undefined => {
+export const useActiveObject = (space: Space): Obj.Unknown | undefined => {
   const [collection] = useQuery(space.db, Filter.type(Collection.Collection));
   const objects = (collection?.objects ?? []).map((ref) => ref.target).filter(isNonNullable);
   return objects.find((object) => Obj.instanceOf(Markdown.Document, object));

@@ -22,6 +22,7 @@ const make = () =>
         // AgentIdentity (deferred), it would die for lack of a creator. Add it back with that wiring.
         MarkdownOperation.MergeBranch,
         MarkdownOperation.CreateCheckpoint,
+        MarkdownOperation.GetSelection,
       ],
     }),
     instructions: Template.make({
@@ -47,6 +48,11 @@ const make = () =>
           branchId. Leave the branch unmerged so the changes can be reviewed. Do not merge unless asked.
         - Merge a branch back into the document with the merge-branch tool once its changes are approved.
         - Record a named checkpoint of the current content with the create-checkpoint tool.
+
+        When the user refers to "the selection" or "the selected text", call the get-selection tool
+        once (no arguments) to retrieve exactly what they have selected before acting on it; it
+        already reports the current selection across open documents, so do not call it per document.
+        An empty result means nothing is selected — ask what text they mean rather than guessing.
       `,
     }),
     agentCanEnable: true,
