@@ -62,7 +62,8 @@ export interface SubscribeToCredentialMessagesResponse extends Schema.Schema.Typ
 > {}
 
 export const SubscribeToSpacesRequest = Schema.Struct({
-  spaceKeys: mutableArray(publicKey),
+  // Optional: an empty payload subscribes to all spaces (the handler treats absent spaceKeys as no filter).
+  spaceKeys: Schema.optional(mutableArray(publicKey)),
 });
 export interface SubscribeToSpacesRequest extends Schema.Schema.Type<typeof SubscribeToSpacesRequest> {}
 
@@ -76,7 +77,8 @@ export const SubscribeToItemsResponse = Schema.Struct({
 export interface SubscribeToItemsResponse extends Schema.Schema.Type<typeof SubscribeToItemsResponse> {}
 
 export const SubscribeToFeedsRequest = Schema.Struct({
-  feedKeys: mutableArray(publicKey),
+  // Optional: an empty payload subscribes to all feeds (the handler treats absent feedKeys as no filter).
+  feedKeys: Schema.optional(mutableArray(publicKey)),
 });
 export interface SubscribeToFeedsRequest extends Schema.Schema.Type<typeof SubscribeToFeedsRequest> {}
 
