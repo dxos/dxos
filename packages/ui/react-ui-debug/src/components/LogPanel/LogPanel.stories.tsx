@@ -20,7 +20,15 @@ const DefaultStory = () => (
   <Panel.Root classNames='bs-full'>
     <Panel.Toolbar asChild>
       <Toolbar.Root>
-        <Toolbar.Button onClick={() => log.info(random.lorem.sentences(), { meta: { label: random.lorem.word() } })}>
+        <Toolbar.Button
+          onClick={() =>
+            log.info(random.lorem.sentences(), {
+              meta: {
+                label: random.lorem.word(),
+              },
+            })
+          }
+        >
           Info
         </Toolbar.Button>
         <Toolbar.Button onClick={() => log.warn(random.lorem.sentences())}>Warn</Toolbar.Button>
