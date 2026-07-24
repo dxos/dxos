@@ -525,3 +525,12 @@ Reported by the user during the storybook walkthrough (§3b). **Log only — no 
       bridge between the decoration and the popover — pointer-leave fires while crossing the gap.
 - [ ] **S2.2 Story should mount the comments/suggestions companion** as the accept/reject surface, not just
       the inline popover — the companion is the primary mechanism and is currently untested here.
+
+### S4 — CommentsArticle / WithAgentSuggestions (companion accept/reject)
+
+- [ ] **S4.1 Clicking a suggestion card does not reveal it in the document.** Should highlight (and scroll
+      to when off-screen) the matching range, reusing the comment click-reveal mechanism. Also: style each
+      suggestion as its own card, as comment threads are.
+- [ ] **S4.2 Accept / Reject in the companion have no effect.** Buttons are inert — the document is
+      unchanged and the card stays. Note `A3` asserts these "route to ops", so the assertion stops short of
+      the resulting mutation (see also S2.2: the companion is the primary accept/reject surface).
