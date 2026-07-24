@@ -77,23 +77,21 @@ const Render = () => {
   );
 
   return (
-    <div className='w-96 border-ie border-separator'>
-      <CommentThread
-        anchor={anchor}
-        components={{}}
-        getMetadata={getMetadata}
-        authorMetadata={authorMetadata}
-        onComment={onComment}
-        onResolve={onResolve}
-      />
-    </div>
+    <CommentThread
+      anchor={anchor}
+      components={{}}
+      getMetadata={getMetadata}
+      authorMetadata={authorMetadata}
+      onComment={onComment}
+      onResolve={onResolve}
+    />
   );
 };
 
 const meta = {
   title: 'plugins/plugin-review/components/CommentThread',
   render: Render,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

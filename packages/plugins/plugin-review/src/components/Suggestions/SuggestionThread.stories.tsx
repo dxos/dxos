@@ -19,8 +19,14 @@ import { SuggestionThread } from './SuggestionThread';
 const BASE = 'The quick brown fox jumps over the lazy dog.';
 
 const SOURCES: SuggestionSource[] = buildSuggestionSources([
-  { author: 'did:alice', content: 'The fast brown fox jumps over the sleepy dog.' },
-  { author: 'did:bob', content: 'The swift brown fox leaps over the lazy dog.' },
+  {
+    author: 'did:alice',
+    content: 'The fast brown fox jumps over the sleepy dog.',
+  },
+  {
+    author: 'did:bob',
+    content: 'The swift brown fox leaps over the lazy dog.',
+  },
 ]);
 
 const AUTHOR_LABELS = { 'did:alice': 'Alice', 'did:bob': 'Bob' };

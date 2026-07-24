@@ -20,7 +20,7 @@ import { translations as spaceTranslations } from '@dxos/plugin-space/translatio
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Form } from '@dxos/react-ui-form';
-import { withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch, Version } from '@dxos/versioning';
 
@@ -45,7 +45,7 @@ const DefaultStory = () => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   if (!doc) {
-    return <></>;
+    return <Loading />;
   }
 
   return (
@@ -60,7 +60,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-review/MarkdownProperties',
+  title: 'plugins/plugin-review/components/MarkdownProperties',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),

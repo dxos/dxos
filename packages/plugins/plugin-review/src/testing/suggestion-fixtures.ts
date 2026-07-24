@@ -12,22 +12,24 @@ random.seed(1);
 
 export const STORY_AGENT_NAME = 'Kai';
 
-const LINE_1 =
+const KAI_1 = 'This document has comment threads attached to it.';
+const KAI_2 =
   'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.';
-const LINE_2 = 'Select text in the editor to add a new comment, or view existing threads in the companion.';
+
+const NOVA_1 = 'Select text in the editor to add a new comment, or view existing threads in the companion.';
 
 export const SAMPLE_CONTENT = [
   '# Sample',
   '',
-  'This document has comment threads attached to it.',
+  KAI_1,
   '',
   'Comments are anchored to ranges of text using an Effect schema relation, so they survive edits to the surrounding prose.',
   '',
-  'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.',
+  KAI_2,
   '',
   random.lorem.paragraphs(1),
   '',
-  'Select text in the editor to add a new comment, or view existing threads in the companion.',
+  NOVA_1,
   '',
   random.lorem.paragraphs(1),
   '',
@@ -37,14 +39,15 @@ export const SAMPLE_CONTENT = [
 // Each proposes a different revision of the document;
 // edits in distinct paragraphs diff as separate reviewable cards, colour-coded per author.
 const KAI_SUGGESTION = SAMPLE_CONTENT.replace(
-  'This document has comment threads attached to it.',
+  KAI_1,
   'This document has comment threads and inline suggestions attached to it.',
 ).replace(
-  'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.',
+  KAI_2,
   'The companion renders each thread and suggestion on a shared virtual stack, mirroring the chat experience while keeping the editor in sync.',
 );
+
 const NOVA_SUGGESTION = SAMPLE_CONTENT.replace(
-  'Select text in the editor to add a new comment, or view existing threads in the companion.',
+  NOVA_1,
   'Select text in the editor to add a comment, or open the companion to review threads and suggestions.',
 );
 

@@ -73,7 +73,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-review/ObjectHistory',
+  title: 'plugins/plugin-review/components/ObjectHistory',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),

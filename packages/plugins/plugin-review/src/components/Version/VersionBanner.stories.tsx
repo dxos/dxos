@@ -6,15 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { VersionBanner } from './VersionBanner';
 
 const meta = {
-  title: 'plugins/plugin-review/VersionBanner',
+  title: 'plugins/plugin-review/components/VersionBanner',
   component: VersionBanner,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     translations: [...translations, ...spaceTranslations],
   },

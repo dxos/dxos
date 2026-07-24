@@ -10,23 +10,66 @@ import { Text as EchoText, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Markdown } from '@dxos/plugin-markdown';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Loading, withTheme } from '@dxos/react-ui/testing';
+import { Panel, Toolbar } from '@dxos/react-ui';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
 
 import { STORY_AGENTS, seedAgentSuggestions } from '../../testing';
 import { SuggestionSources, type SuggestionSourcesProps } from './SuggestionSources';
 
-type StoryArgs = Pick<SuggestionSourcesProps, 'onResolved'>;
+// A single, deliberately distinct author/content for the second document — neither this DID nor this
+// text overlaps `STORY_AGENTS`, so any trace of it (or of `STORY_AGENTS`' content) on the wrong side
+// of a swap is unambiguous.
+const SECOND_DOC_DID = 'did:agent:zephyr';
+const SECOND_DOC_CONTENT = 'Zephyr proposes an entirely different rewrite of the second document.';
+
+/**
+ * Seeds a single `kind:'suggestion'` branch with an arbitrary author/content, mirroring
+ * `seedAgentSuggestions`'s internals but for one caller-supplied branch rather than the fixed
+ * `STORY_AGENTS` pair — gives the second document content that can't be confused with the first's.
+ */
+const seedSingleSuggestion = async (doc: Markdown.Document, parent: Text.Text, did: string, content: string) => {
+  const branch = await Branch.suggestion(doc, parent, did);
+  const binding = await Branch.bind(doc, branch);
+  Obj.update(binding.object, () => {
+    EchoText.update(binding.object, 'content', content);
+  });
+  binding.dispose();
+};
+
+const seedDocument = async (
+  space: NonNullable<ReturnType<typeof useClientStory>['space']>,
+  name: string,
+  content: string,
+  seed: (doc: Markdown.Document, text: Text.Text) => Promise<void>,
+): Promise<Markdown.Document> => {
+  const doc = Markdown.make({ name, content });
+  space.db.add(doc);
+  await space.db.flush({ indexes: true });
+  const text = await doc.content.load();
+  invariant(text, 'document content not loaded');
+  await seed(doc, text);
+  await space.db.flush({ indexes: true });
+  return doc;
+};
+
+type StoryArgs = Pick<SuggestionSourcesProps, 'onResolved'> & {
+  /** Seeds a second document and a Swap button that toggles which one is passed as `document`. */
+  swap?: boolean;
+};
 
 /**
  * Seeds a document with two agent-authored suggestion branches (reusing `seedAgentSuggestions` from
  * the `CommentsArticle` story) in a real ECHO space, then mounts `SuggestionSources` against it — the
- * seeding is async/DB-backed, so this is exercised via a play test rather than a static render.
+ * seeding is async/DB-backed, so this is exercised via a play test rather than a static render. With
+ * `swap`, a second document (one distinct author) and a Swap button are added so the same mounted
+ * instance can be pointed at a different document.
  */
-const StorySources = ({ onResolved }: StoryArgs) => {
+const DefaultStory = ({ onResolved, swap }: StoryArgs) => {
   const { space } = useClientStory();
-  const [document, setDocument] = useState<Markdown.Document>();
+  const [documents, setDocuments] = useState<Markdown.Document[]>();
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
     if (!space) {
@@ -35,41 +78,71 @@ const StorySources = ({ onResolved }: StoryArgs) => {
 
     let disposed = false;
     void (async () => {
-      const doc = Markdown.make({ name: 'Sample', content: 'Sample content.' });
-      space.db.add(doc);
-      await space.db.flush({ indexes: true });
-
-      const text = await doc.content.load();
-      invariant(text, 'document content not loaded');
-      await seedAgentSuggestions(doc, text);
-      await space.db.flush({ indexes: true });
+      const first = await seedDocument(space, 'Doc A', 'First document content.', (doc, text) =>
+        seedAgentSuggestions(doc, text),
+      );
+      const second = swap
+        ? await seedDocument(space, 'Doc B', 'Second document content.', (doc, text) =>
+            seedSingleSuggestion(doc, text, SECOND_DOC_DID, SECOND_DOC_CONTENT),
+          )
+        : undefined;
 
       if (!disposed) {
-        setDocument(doc);
+        setDocuments(second ? [first, second] : [first]);
       }
     })();
 
     return () => {
       disposed = true;
     };
-  }, [space]);
+  }, [space, swap]);
 
-  if (!document) {
+  if (!documents) {
     return <Loading />;
   }
 
-  return <SuggestionSources document={document} onResolved={onResolved} />;
+  return (
+    <Panel.Root>
+      {swap && (
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Toolbar.Button
+              data-testid='swap-document'
+              onClick={() => setActive((current) => (current + 1) % documents.length)}
+            >
+              Swap
+            </Toolbar.Button>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+      )}
+      <Panel.Content>
+        <SuggestionSources document={documents[active]} onResolved={onResolved}>
+          {(resolved) => (
+            <div data-testid='resolved-content'>
+              {resolved.map((source) => (
+                <div key={source.author}>{source.content}</div>
+              ))}
+            </div>
+          )}
+        </SuggestionSources>
+      </Panel.Content>
+    </Panel.Root>
+  );
 };
 
 const meta = {
   title: 'plugins/plugin-review/components/SuggestionSources',
-  render: StorySources,
+  render: DefaultStory,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'column' }),
     withClientProvider({ types: [Markdown.Document, Text.Text], createIdentity: true, createSpace: true }),
   ],
-  parameters: { layout: 'fullscreen', controls: { disable: true } },
-} satisfies Meta<typeof StorySources>;
+  parameters: {
+    layout: 'fullscreen',
+    controls: { disable: true },
+  },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -90,98 +163,6 @@ export const Default: Story = {
   },
 };
 
-// A single, deliberately distinct author/content for the second document in `SwapDocument` — neither
-// this DID nor this text overlaps `STORY_AGENTS`, so any trace of it (or of `STORY_AGENTS`' content)
-// on the wrong side of the swap is unambiguous.
-const SECOND_DOC_DID = 'did:agent:zephyr';
-const SECOND_DOC_CONTENT = 'Zephyr proposes an entirely different rewrite of the second document.';
-
-/**
- * Seeds a single `kind:'suggestion'` branch with an arbitrary author/content, mirroring
- * `seedAgentSuggestions`'s internals but for one caller-supplied branch rather than the fixed
- * `STORY_AGENTS` pair — used to give the `SwapDocument` story's second document content that can't be
- * confused with the first document's.
- */
-const seedSingleSuggestion = async (doc: Markdown.Document, parent: Text.Text, did: string, content: string) => {
-  const branch = await Branch.suggestion(doc, parent, did);
-  const binding = await Branch.bind(doc, branch);
-  Obj.update(binding.object, () => {
-    EchoText.update(binding.object, 'content', content);
-  });
-  binding.dispose();
-};
-
-/**
- * Mounts `SuggestionSources` via its render-prop against two already-seeded documents, toggling
- * which one is passed as `document` on a button click — reproduces the swap the review companion
- * performs when the user switches which document it shows on an already-mounted instance.
- */
-const StorySwap = () => {
-  const { space } = useClientStory();
-  const [docA, setDocA] = useState<Markdown.Document>();
-  const [docB, setDocB] = useState<Markdown.Document>();
-  const [active, setActive] = useState<'a' | 'b'>('a');
-
-  useEffect(() => {
-    if (!space) {
-      return;
-    }
-
-    let disposed = false;
-    void (async () => {
-      const a = Markdown.make({ name: 'Doc A', content: 'First document content.' });
-      space.db.add(a);
-      await space.db.flush({ indexes: true });
-      const textA = await a.content.load();
-      invariant(textA, 'document content not loaded');
-      await seedAgentSuggestions(a, textA);
-      await space.db.flush({ indexes: true });
-
-      const b = Markdown.make({ name: 'Doc B', content: 'Second document content.' });
-      space.db.add(b);
-      await space.db.flush({ indexes: true });
-      const textB = await b.content.load();
-      invariant(textB, 'document content not loaded');
-      await seedSingleSuggestion(b, textB, SECOND_DOC_DID, SECOND_DOC_CONTENT);
-      await space.db.flush({ indexes: true });
-
-      if (!disposed) {
-        setDocA(a);
-        setDocB(b);
-      }
-    })();
-
-    return () => {
-      disposed = true;
-    };
-  }, [space]);
-
-  if (!docA || !docB) {
-    return <Loading />;
-  }
-
-  return (
-    <>
-      <button
-        type='button'
-        data-testid='swap-document'
-        onClick={() => setActive((current) => (current === 'a' ? 'b' : 'a'))}
-      >
-        Swap
-      </button>
-      <SuggestionSources document={active === 'a' ? docA : docB}>
-        {(resolved) => (
-          <div data-testid='resolved-content'>
-            {resolved.map((source) => (
-              <div key={source.author}>{source.content}</div>
-            ))}
-          </div>
-        )}
-      </SuggestionSources>
-    </>
-  );
-};
-
 /**
  * Regression test for the render-prop's core guarantee — no stale frame on document swap:
  * - Swapping `document` on an already-mounted instance must never paint a frame showing the PREVIOUS
@@ -192,7 +173,7 @@ const StorySwap = () => {
  *   next render after the swap is synchronously correct.
  */
 export const SwapDocument: Story = {
-  render: () => <StorySwap />,
+  args: { swap: true },
   play: async ({ canvasElement }) => {
     const text = () => canvasElement.textContent ?? '';
     const swapButton = () => canvasElement.querySelector<HTMLButtonElement>('[data-testid="swap-document"]');
