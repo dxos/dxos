@@ -515,3 +515,13 @@ Reported by the user during the storybook walkthrough (§3b). **Log only — no 
       regression `EditingTypingTest` claims to guard.
 - [ ] **S1.5 Caret cannot move past a suggestion.** A suggestion at the document end leaves nowhere to go —
       needs a trailing editable line after the final suggestion block in both modes.
+
+### S2 — AmbientReview (`DocumentVersioning / AmbientReview`)
+
+- [ ] **S2.0 Story fixture: seeded comment highlight never renders** (agent-found). Zero `.cm-comment`
+      marks; `storyCommentsExtension` reads the doc once on `ViewPlugin` construction, which now happens
+      before the content loads, so it never dispatches `setComments`. Blocks the comment click-through step.
+- [ ] **S2.1 Accept/Reject popover flickers and disappears when the pointer moves toward it.** No hover
+      bridge between the decoration and the popover — pointer-leave fires while crossing the gap.
+- [ ] **S2.2 Story should mount the comments/suggestions companion** as the accept/reject surface, not just
+      the inline popover — the companion is the primary mechanism and is currently untested here.
