@@ -36,7 +36,7 @@ import { Message } from '@dxos/types';
 import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause';
-import { createPromptContent, type ProcessorRequestContext } from './prompt';
+import { type ProcessorRequestContext, createPromptContent } from './prompt';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
