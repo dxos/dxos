@@ -385,6 +385,9 @@
       "path": "../../plugins/plugin-progress"
     },
     {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
       "path": "../../plugins/plugin-pwa"
     },
     {

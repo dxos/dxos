@@ -51,6 +51,7 @@ import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
@@ -186,6 +187,7 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     PresenterPlugin(),
     PreviewPlugin(),
     ProgressPlugin(),
+    ProjectsPlugin(),
     CommercePlugin(),
     CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
