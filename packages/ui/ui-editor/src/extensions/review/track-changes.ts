@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EditorState, type Extension, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, WidgetType, keymap } from '@codemirror/view';
+import { type EditorState, type Extension, RangeSet, StateEffect, StateField } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, type GutterMarker, WidgetType, keymap } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
+import { ChangeBarMarker, changeBars } from './change-bar';
 import { computeCharHunks } from './diff';
 
 export type TrackChangesOptions = {
@@ -43,11 +44,32 @@ export const trackChanges = ({ main, colour }: TrackChangesOptions): Extension =
     attributes: { style: `color:${colour};text-decoration-color:${colour}` },
   });
 
+  // One-entry memo of the last (base, doc) → decorations. Rebuilding is a whole-document char diff, so
+  // reuse it when the same state recurs (undo/redo to a prior revision, or a doc-changing transaction
+  // that lands back on a cached buffer). The key is length-prefixed so no base/doc pair is ambiguous.
+  let cache: { base: string; doc: string; state: TrackState } | undefined;
+
   const build = (base: string, state: EditorState): TrackState => {
     const doc = state.doc.toString();
+    if (cache && cache.base === base && cache.doc === doc) {
+      return cache.state;
+    }
     const decorations = [];
     const phantomRanges = [];
     const phantomPositions: number[] = [];
+    // Line starts carrying a change, for the gutter change-bar (deduped, one bar per line).
+    const changedLines = new Set<number>();
+    const markLines = (from: number, to: number) => {
+      // Trim a trailing newline so an inserted/removed paragraph break does not tag the following
+      // (empty) line — otherwise a new-paragraph suggestion draws a bar two lines deep.
+      let end = to;
+      while (end > from && state.doc.sliceString(end - 1, end) === '\n') {
+        end--;
+      }
+      for (let line = state.doc.lineAt(from).number; line <= state.doc.lineAt(end).number; line++) {
+        changedLines.add(state.doc.line(line).from);
+      }
+    };
     for (const hunk of computeCharHunks(base, doc)) {
       // Deletion: base text absent from the branch. Anchor the phantom at `fromB` with `side: -1` so it
       // renders before a co-located insertion (giving `~~old~~new`).
@@ -59,19 +81,26 @@ export const trackChanges = ({ main, colour }: TrackChangesOptions): Extension =
         decorations.push(widget);
         phantomRanges.push(widget);
         phantomPositions.push(hunk.fromB);
+        markLines(hunk.fromB, hunk.fromB);
       }
       // Insertion: branch text absent from the base.
       if (hunk.toB > hunk.fromB) {
         decorations.push(insertMark.range(hunk.fromB, hunk.toB));
+        markLines(hunk.fromB, hunk.toB);
       }
     }
-    return {
+    const result: TrackState = {
       base,
       // `sort: true` orders the interleaved widget/mark ranges (co-located phantom before its mark).
       decorations: Decoration.set(decorations, true),
       atomic: Decoration.set(phantomRanges, true),
       phantoms: phantomPositions,
+      changeBars: RangeSet.of(
+        [...changedLines].sort((a, b) => a - b).map((from) => new ChangeBarMarker(colour).range(from)),
+      ),
     };
+    cache = { base, doc, state: result };
+    return result;
   };
 
   const field = StateField.define<TrackState>({
@@ -93,7 +122,13 @@ export const trackChanges = ({ main, colour }: TrackChangesOptions): Extension =
     provide: (self) => EditorView.decorations.from(self, (value) => value.decorations),
   });
 
-  return [field, trackChangesKeymap(field), trackChangesAtomic(field), trackChangesTheme];
+  return [
+    field,
+    trackChangesKeymap(field),
+    trackChangesAtomic(field),
+    changeBars((state) => state.field(field).changeBars),
+    trackChangesTheme,
+  ];
 };
 
 type TrackState = {
@@ -103,6 +138,8 @@ type TrackState = {
   atomic: DecorationSet;
   /** Document offsets carrying a phantom, for the keymap guard. */
   phantoms: readonly number[];
+  /** Per-changed-line gutter change-bar markers, tinted with the author colour. */
+  changeBars: RangeSet<GutterMarker>;
 };
 
 /**

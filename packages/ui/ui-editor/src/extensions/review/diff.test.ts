@@ -4,7 +4,17 @@
 
 import { describe, test } from 'vitest';
 
-import { type DiffHunk, cherryPickHunk, computeHunks, diffHunks, groupHunks, rebaseHunks, revertHunk } from './diff';
+import {
+  type DiffHunk,
+  cherryPickHunk,
+  computeCharHunks,
+  computeHunks,
+  diffHunks,
+  groupHunks,
+  rebaseHunks,
+  rebaseHunksWith,
+  revertHunk,
+} from './diff';
 
 describe('diff hunks', () => {
   const original = ['# Title', '', 'Line one.', 'Line two.', ''].join('\n');
@@ -166,6 +176,18 @@ describe('rebaseHunks', () => {
     expect(doc.slice(rebased.from, rebased.to)).toBe(hunks[0].removed);
   });
 
+  test('a zero-width (pure-insertion) hunk at a doc-edit boundary never inverts (from <= to)', ({ expect }) => {
+    // Bob inserts "!" right after "one" (a zero-width hunk at base offset 3); the user also inserts "X"
+    // at that same offset. Both endpoints of the zero-width hunk must map to the same doc offset, so the
+    // rebased range stays collapsed (from === to) rather than inverting.
+    const base = 'one two';
+    const doc = 'oneX two';
+    const hunks = diffHunks(base, 'one! two'); // Bob inserts "!" at offset 3 (from === to).
+    const [rebased] = rebaseHunks(base, doc, hunks);
+    expect(rebased.from).toBe(rebased.to);
+    expect(rebased.to).toBeGreaterThanOrEqual(rebased.from);
+  });
+
   test('a foreign hunk ending exactly where a doc edit begins does not absorb the user text', ({ expect }) => {
     // Bob deletes "one " (base offsets [0,4)); the user inserts "X" at offset 4, immediately after.
     // The rebased strike must cover only "one ", never "one X" (the user's own adjacent character).
@@ -174,6 +196,19 @@ describe('rebaseHunks', () => {
     const hunks = diffHunks(base, 'two'); // Bob removes the leading "one ".
     const [rebased] = rebaseHunks(base, doc, hunks);
     expect(doc.slice(rebased.from, rebased.to)).toBe('one ');
+  });
+
+  test('rebaseHunksWith with a precomputed char diff equals rebaseHunks (hoist parity)', ({ expect }) => {
+    // The hoisted path (compute the base↔doc char diff once, reuse across sources) must produce
+    // identical results to the per-call rebaseHunks — several sources over the same diverged doc.
+    const base = 'The quick brown fox jumps over the lazy dog.';
+    const doc = 'The very quick brown fox leaps over the lazy dog.';
+    const sources = ['The quick brown cat jumps over the lazy dog.', 'The quick brown fox jumps over the tired dog.'];
+    const charHunks = computeCharHunks(base, doc);
+    for (const source of sources) {
+      const hunks = diffHunks(base, source);
+      expect(rebaseHunksWith(charHunks, hunks)).toEqual(rebaseHunks(base, doc, hunks));
+    }
   });
 });
 

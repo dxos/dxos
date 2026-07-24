@@ -3,10 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useCapabilities, useCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -118,8 +118,6 @@ const Container = forwardRef<
   const viewState = useCapability(AttentionCapabilities.ViewState);
   const settings = useAtomCapability(MarkdownCapabilities.Settings);
   const editorState = useCapability(MarkdownCapabilities.EditorState);
-  const extensions = useCapabilities(MarkdownCapabilities.ExtensionProvider);
-  const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
   // Per-document view mode is durable UI state (ViewState, keyed by document id); it overrides the
   // `defaultViewMode` setting when the user has picked a mode for this document.
@@ -139,7 +137,6 @@ const Container = forwardRef<
       attendableId={attendableId}
       settings={settings}
       viewState={viewState}
-      extensionProviders={extensionProviders}
       editorStateStore={editorState}
       viewMode={viewMode}
       onViewModeChange={handleViewModeChange}

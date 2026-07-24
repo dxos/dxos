@@ -28,6 +28,7 @@ export const translations = [
         'show-unresolved.label': 'Active comments',
         'show-all.label': 'All comments',
         'add-comment.label': 'Add comment',
+        'view-mode.suggesting.label': 'Suggesting',
       },
     },
   },
