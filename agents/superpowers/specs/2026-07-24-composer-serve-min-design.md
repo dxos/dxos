@@ -29,16 +29,22 @@ server frequently hangs during heavy edit bursts and must be killed.
 
 ### Workstream 1: `serve-min`
 
+**`packages/apps/composer-app/src/plugin-defs.core.tsx`** (added post-review)
+
+- Single source of truth for the infrastructure plugins shared by both sets:
+  Client, Space, Graph, Attention, Theme, layout (Deck / SimpleLayout /
+  Spotlight per platform flags), NavTree, Settings, Registry, Observability,
+  Onboarding, ProcessManager, StatusBar — including full-fidelity options
+  (`ClientPlugin.onReset` target handling, Tauri link origin). Also owns the
+  `State` / `PluginConfig` types; both defs files re-export them.
+
 **`packages/apps/composer-app/src/plugin-defs.minimal.tsx`**
 
 - Exports the same surface as `plugin-defs.tsx`: `getPlugins`, `getDefaults`,
-  `PluginConfig`, `State` (types re-exported from `plugin-defs.tsx` — no
-  restructuring of the full file).
-- Plugin set: Client, Space, Graph, Attention, Theme, layout (Deck /
-  SimpleLayout / Spotlight per platform flags), NavTree, Settings, Registry,
-  Observability, ProcessManager, StatusBar, plus Markdown and Assistant and
-  any plugins Assistant functionally requires (e.g. Thread) — resolved during
-  implementation by booting the app.
+  `PluginConfig`, `State`.
+- `getPlugins` = `[...getCorePlugins(config), Assistant, Comments, Markdown,
+  Thread]`. Content additions here must also be added to the minimal
+  `optimizeDeps.entries` brace glob in vite.config.ts.
 
 **`packages/apps/composer-app/vite.config.ts`**
 
