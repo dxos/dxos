@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sequencer",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Music sequencer plugin (Score / Track / Sequence / Note) with a canvas-based step grid.",
   "homepage": "https://dxos.org",

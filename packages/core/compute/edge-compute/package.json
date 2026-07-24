@@ -1,6 +1,6 @@
 {
   "name": "@dxos/edge-compute",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "EDGE compute: function deploy, scripts, and Edge implementations of Remote* runtime interfaces.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

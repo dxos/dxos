@@ -1,6 +1,6 @@
 {
   "name": "@dxos/halo-e2e",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Public-API and integration tests for the @dxos/halo services via the client adapter.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/halo/halo-e2e#readme",

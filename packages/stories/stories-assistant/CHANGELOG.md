@@ -1,0 +1,162 @@
+# @dxos/stories-assistant
+
+## 0.11.0
+
+### Patch Changes
+
+- Updated dependencies [4e64123]
+- Updated dependencies [c035062]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [48d168e]
+- Updated dependencies [e0e1a9f]
+- Updated dependencies [31fe0b8]
+- Updated dependencies [46ec569]
+- Updated dependencies [a77e1a2]
+- Updated dependencies [a256a87]
+- Updated dependencies [e0e1a9f]
+- Updated dependencies [a31ef40]
+- Updated dependencies [eec72c5]
+- Updated dependencies [1a9bca1]
+- Updated dependencies [68e61ca]
+- Updated dependencies [bf013a1]
+- Updated dependencies [a19443b]
+- Updated dependencies [dd190a0]
+- Updated dependencies [3f1fc67]
+- Updated dependencies [6df314a]
+- Updated dependencies [962c8cd]
+- Updated dependencies [2048cb3]
+- Updated dependencies [856c4f0]
+- Updated dependencies [46ec569]
+- Updated dependencies [b8c0825]
+- Updated dependencies [4e64123]
+- Updated dependencies [717edc0]
+- Updated dependencies [6a03a30]
+- Updated dependencies [77fff35]
+- Updated dependencies [2fe5a7a]
+- Updated dependencies [b602d44]
+- Updated dependencies [6439417]
+- Updated dependencies [410a019]
+- Updated dependencies [d958118]
+- Updated dependencies [2a68c3b]
+- Updated dependencies [30ae5eb]
+- Updated dependencies [3b4a7c8]
+- Updated dependencies [6dd1aa8]
+- Updated dependencies [2543b63]
+- Updated dependencies [33e1a3d]
+- Updated dependencies [6d2afe0]
+- Updated dependencies [a2447cd]
+- Updated dependencies [9cde1c6]
+- Updated dependencies [0afbf15]
+- Updated dependencies [0d1f866]
+- Updated dependencies [923d5be]
+- Updated dependencies [85893fe]
+- Updated dependencies [9f7d5ad]
+- Updated dependencies [9ded6b9]
+- Updated dependencies [717edc0]
+- Updated dependencies [12fd785]
+- Updated dependencies [801b77f]
+- Updated dependencies [1a989ed]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [717edc0]
+- Updated dependencies [114fb98]
+- Updated dependencies [b591791]
+- Updated dependencies [f15c632]
+- Updated dependencies [b752581]
+- Updated dependencies [4df6cf3]
+- Updated dependencies [41141d8]
+- Updated dependencies [77fff35]
+- Updated dependencies [6e624bd]
+- Updated dependencies [cb14d6e]
+- Updated dependencies [105dac4]
+- Updated dependencies [96109be]
+- Updated dependencies [3400dc1]
+- Updated dependencies [f0ec728]
+- Updated dependencies [08a3eea]
+- Updated dependencies [bb63d91]
+- Updated dependencies [392c700]
+- Updated dependencies [20153c0]
+- Updated dependencies [a49131a]
+- Updated dependencies [31fe0b8]
+  - @dxos/echo@0.11.0
+  - @dxos/plugin-markdown@0.11.0
+  - @dxos/ui-editor@0.11.0
+  - @dxos/plugin-space@0.11.0
+  - @dxos/plugin-comments@0.11.0
+  - @dxos/async@0.11.0
+  - @dxos/link@0.11.0
+  - @dxos/plugin-inbox@0.11.0
+  - @dxos/plugin-connector@0.11.0
+  - @dxos/react-ui@0.11.0
+  - @dxos/plugin-client@0.11.0
+  - @dxos/plugin-assistant@0.11.0
+  - @dxos/client@0.11.0
+  - @dxos/compute-runtime@0.11.0
+  - @dxos/compute@0.11.0
+  - @dxos/util@0.11.0
+  - @dxos/protocols@0.11.0
+  - @dxos/app-framework@0.11.0
+  - @dxos/keys@0.11.0
+  - @dxos/plugin-versioning@0.11.0
+  - @dxos/react-ui-form@0.11.0
+  - @dxos/react-ui-list@0.11.0
+  - @dxos/app-toolkit@0.11.0
+  - @dxos/react-ui-attention@0.11.0
+  - @dxos/types@0.11.0
+  - @dxos/react-ui-mosaic@0.11.0
+  - @dxos/react-ui-masonry@0.11.0
+  - @dxos/react-ui-components@0.11.0
+  - @dxos/plugin-sketch@0.11.0
+  - @dxos/ui-theme@0.11.0
+  - @dxos/config@0.11.0
+  - @dxos/react-ui-tabs@0.11.0
+  - @dxos/schema@0.11.0
+  - @dxos/plugin-theme@0.11.0
+  - @dxos/edge-client@0.11.0
+  - @dxos/react-ui-menu@0.11.0
+  - @dxos/graph@0.11.0
+  - @dxos/ai@0.11.0
+  - @dxos/assistant@0.11.0
+  - @dxos/assistant-toolkit@0.11.0
+  - @dxos/conductor@0.11.0
+  - @dxos/echo-client@0.11.0
+  - @dxos/echo-doc@0.11.0
+  - @dxos/echo-query@0.11.0
+  - @dxos/devtools@0.11.0
+  - @dxos/plugin-board@0.11.0
+  - @dxos/plugin-chess@0.11.0
+  - @dxos/plugin-crm@0.11.0
+  - @dxos/plugin-deck@0.11.0
+  - @dxos/plugin-explorer@0.11.0
+  - @dxos/plugin-game@0.11.0
+  - @dxos/plugin-map@0.11.0
+  - @dxos/plugin-pipeline@0.11.0
+  - @dxos/plugin-preview@0.11.0
+  - @dxos/plugin-routine@0.11.0
+  - @dxos/plugin-script@0.11.0
+  - @dxos/plugin-table@0.11.0
+  - @dxos/plugin-thread@0.11.0
+  - @dxos/plugin-transcription@0.11.0
+  - @dxos/plugin-wnfs@0.11.0
+  - @dxos/react-client@0.11.0
+  - @dxos/react-ui-canvas-compute@0.11.0
+  - @dxos/react-ui-canvas-editor@0.11.0
+  - @dxos/react-ui-chat@0.11.0
+  - @dxos/react-ui-editor@0.11.0
+  - @dxos/react-ui-table@0.11.0
+  - @dxos/plugin-attention@0.11.0
+  - @dxos/react-ui-graph@0.11.0
+  - @dxos/plugin-testing@0.11.0
+  - @dxos/story-modules@0.11.0
+  - @dxos/react-ui-debug@0.11.0
+  - @dxos/react-ui-experimental@0.11.0
+  - @dxos/react-ui-syntax-highlighter@0.11.0
+  - @dxos/react-edge-client@0.11.0
+  - @dxos/plugin-graph@0.11.0
+  - @dxos/context@0.11.0
+  - @dxos/effect@0.11.0
+  - @dxos/log@0.11.0
+  - @dxos/random@0.11.0
+  - @dxos/echo-protocol@0.11.0
+  - @dxos/lit-ui@0.11.0
+  - @dxos/debug@0.11.0
+  - @dxos/invariant@0.11.0

@@ -1,0 +1,96 @@
+# @dxos/plugin-comments
+
+## 0.11.0
+
+### Minor Changes
+
+- c035062: Ambient (Google-Docs-style) document review. The default document view now overlays every author's suggestions plus comments on main, with a per-user Editing/Viewing mode governed by a product-level `ReviewRenderPolicy`; the explicit branch switcher / diff selector remains as the advanced path. Also fixes a crash when adding a comment while viewing a branch (comment anchors now resolve against the editor-bound document) and prohibits inline comments on suggestion branches. `@dxos/ui-editor` gains `suggestionsOverlay` and a `readonly` option on `comments()`.
+
+### Patch Changes
+
+- e0e1a9f: export CommentsArticle for embedding the comments panel in other plugins' companions
+- Updated dependencies [4e64123]
+- Updated dependencies [c035062]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [e0e1a9f]
+- Updated dependencies [31fe0b8]
+- Updated dependencies [46ec569]
+- Updated dependencies [a77e1a2]
+- Updated dependencies [a256a87]
+- Updated dependencies [a31ef40]
+- Updated dependencies [eec72c5]
+- Updated dependencies [a19443b]
+- Updated dependencies [dd190a0]
+- Updated dependencies [3f1fc67]
+- Updated dependencies [2048cb3]
+- Updated dependencies [46ec569]
+- Updated dependencies [b8c0825]
+- Updated dependencies [4e64123]
+- Updated dependencies [717edc0]
+- Updated dependencies [6a03a30]
+- Updated dependencies [77fff35]
+- Updated dependencies [2fe5a7a]
+- Updated dependencies [b602d44]
+- Updated dependencies [6439417]
+- Updated dependencies [d958118]
+- Updated dependencies [30ae5eb]
+- Updated dependencies [6d2afe0]
+- Updated dependencies [9cde1c6]
+- Updated dependencies [923d5be]
+- Updated dependencies [85893fe]
+- Updated dependencies [9f7d5ad]
+- Updated dependencies [717edc0]
+- Updated dependencies [12fd785]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [717edc0]
+- Updated dependencies [4df6cf3]
+- Updated dependencies [77fff35]
+- Updated dependencies [6e624bd]
+- Updated dependencies [105dac4]
+- Updated dependencies [96109be]
+- Updated dependencies [f0ec728]
+- Updated dependencies [08a3eea]
+- Updated dependencies [392c700]
+- Updated dependencies [20153c0]
+- Updated dependencies [a49131a]
+- Updated dependencies [31fe0b8]
+  - @dxos/echo@0.11.0
+  - @dxos/plugin-markdown@0.11.0
+  - @dxos/ui-editor@0.11.0
+  - @dxos/plugin-space@0.11.0
+  - @dxos/async@0.11.0
+  - @dxos/react-ui@0.11.0
+  - @dxos/plugin-client@0.11.0
+  - @dxos/compute@0.11.0
+  - @dxos/versioning@0.11.0
+  - @dxos/util@0.11.0
+  - @dxos/app-framework@0.11.0
+  - @dxos/keys@0.11.0
+  - @dxos/plugin-versioning@0.11.0
+  - @dxos/react-ui-form@0.11.0
+  - @dxos/halo@0.11.0
+  - @dxos/app-toolkit@0.11.0
+  - @dxos/react-ui-attention@0.11.0
+  - @dxos/types@0.11.0
+  - @dxos/echo-react@0.11.0
+  - @dxos/react-ui-mosaic@0.11.0
+  - @dxos/ui-theme@0.11.0
+  - @dxos/react-ui-tabs@0.11.0
+  - @dxos/schema@0.11.0
+  - @dxos/ai@0.11.0
+  - @dxos/assistant@0.11.0
+  - @dxos/operation@0.11.0
+  - @dxos/echo-client@0.11.0
+  - @dxos/echo-doc@0.11.0
+  - @dxos/react-client@0.11.0
+  - @dxos/react-ui-editor@0.11.0
+  - @dxos/react-ui-thread@0.11.0
+  - @dxos/plugin-attention@0.11.0
+  - @dxos/plugin-observability@0.11.0
+  - @dxos/plugin-graph@0.11.0
+  - @dxos/effect@0.11.0
+  - @dxos/log@0.11.0
+  - @dxos/random@0.11.0
+  - @dxos/display-name@0.11.0
+  - @dxos/halo-react@0.11.0
+  - @dxos/invariant@0.11.0
