@@ -173,7 +173,7 @@ describe('createProgressTraceSink', () => {
   });
 });
 
-describe('cancel tombstone', () => {
+describe('cancel tombstone (pid scope, default)', () => {
   // After a cancel, the dying run's tail keeps broadcasting for a moment (edge abort is not
   // instantaneous) — those events must not resurrect the meter. A genuinely new run (new pid) must
   // still register, so a failed cancel stays visible.
@@ -196,6 +196,59 @@ describe('cancel tombstone', () => {
     const task = registry.get(progress.monitorAtom(key));
     expect(task?.current).toBe(0);
     expect(task?.status).toBe('running');
+  });
+});
+
+describe('cancel tombstone (run scope)', () => {
+  // An edge run is a chain of bounded invocations, each with a fresh pid. A pid tombstone would only
+  // mask the link in-flight at cancel; the next link (new pid) would resurrect the meter. `run` scope
+  // suppresses the key until the run's terminal status, so the whole chain's tail stays hidden and a
+  // later run re-shows — matching the local, single-pid cancel behaviour.
+  test('suppresses the whole cancelled chain (any pid) until a terminal status; a later run re-shows', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress, { cancelProcess: () => {}, cancelScope: 'run' });
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }, { pid: 'link-1' }));
+    progress.cancel(key);
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+
+    // Tail of the in-flight link — same pid — stays suppressed.
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 2, total: 5 } }, { pid: 'link-1' }));
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+
+    // Next chain link — a fresh pid — must NOT resurrect (this is what a pid tombstone would miss).
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 3, total: 5 } }, { pid: 'link-2' }));
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+
+    // The run ends (edge abort emits a terminal Cancelled) — releases the tombstone, still hidden.
+    sink.write(statusMessage({ message: PROGRESS_STATUS_CANCELLED, progress: { key } }, { pid: 'link-2' }));
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+
+    // A genuinely later run (next cron fire) re-shows.
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 0, total: 5 } }, { pid: 'run-2' }));
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.current).toBe(0);
+    expect(task?.status).toBe('running');
+  });
+
+  test('a COMPLETE terminal after cancel also releases the tombstone', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress, { cancelProcess: () => {}, cancelScope: 'run' });
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }, { pid: 'link-1' }));
+    progress.cancel(key);
+
+    // The run drains and completes naturally before the abort lands — suppressed, but released.
+    sink.write(statusMessage({ message: PROGRESS_STATUS_COMPLETE, progress: { key } }, { pid: 'link-2' }));
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+
+    // Later run re-shows.
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 0, total: 3 } }, { pid: 'run-2' }));
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('running');
   });
 });
 

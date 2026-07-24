@@ -16,6 +16,10 @@ export const PROGRESS_STATUS_FAILED = 'Sync failed';
 /** Terminal status message — reducer calls `note()` then `remove()`. */
 export const PROGRESS_STATUS_CANCELLED = 'Cancelled';
 
+/** A terminal status message ends a run — the reducer removes or fails the keyed monitor. */
+const isTerminalMessage = (message: string | undefined): boolean =>
+  message === PROGRESS_STATUS_COMPLETE || message === PROGRESS_STATUS_FAILED || message === PROGRESS_STATUS_CANCELLED;
+
 type StatusPayload = Trace.PayloadType<typeof Trace.StatusUpdate>;
 type ProgressMonitor = ReturnType<AppCapabilities.ProgressRegistry['register']>;
 
@@ -49,9 +53,23 @@ type MonitorEntry = {
   target: CancelTarget;
 };
 
+/**
+ * A cancelled key's tombstone (see {@link ProgressTraceSinkOptions.cancelScope}). `pid` scope
+ * releases when a different pid arrives (the next local run); `run` scope releases on the run's
+ * terminal status (an edge chain spans many pids, so pid identity cannot bound it).
+ */
+type Tombstone = { scope: 'pid'; pid: string } | { scope: 'run' };
+
 export type ProgressTraceSinkOptions = {
   /** Cancels the process/trigger that emitted progress for a keyed monitor (wired from the process manager). */
   cancelProcess?: (target: CancelTarget) => void;
+  /**
+   * How a cancel tombstone bounds "the cancelled run" so its dying tail cannot resurrect the meter
+   * while a genuinely later run still can. `pid` (default) suits a local process — one pid per run,
+   * released by a different pid; `run` suits an edge trigger, whose run is a chain of bounded
+   * invocations each with a fresh pid, so the key is suppressed until the run's terminal status.
+   */
+  cancelScope?: 'pid' | 'run';
 };
 
 /**
@@ -80,10 +98,10 @@ export const createProgressTraceSink = (
     typeof progressRegistry === 'function' ? progressRegistry() : progressRegistry;
 
   const monitors = new Map<string, MonitorEntry>();
-  // Pid whose events are ignored for a key after the user cancelled it: the dying run's tail keeps
-  // broadcasting until the edge abort lands, and must not resurrect the removed monitor. A new run
-  // (different pid) clears the tombstone, so a failed cancel stays visible.
-  const cancelledPids = new Map<string, string>();
+  // Keys the user cancelled, tombstoned so the dying run's tail (which keeps broadcasting until the
+  // process/edge abort lands) cannot resurrect the removed monitor. Release is scoped so a genuinely
+  // later run still shows — see {@link ProgressTraceSinkOptions.cancelScope}.
+  const cancelled = new Map<string, Tombstone>();
 
   const dropMonitor = (key: string) => {
     monitors.delete(key);
@@ -100,8 +118,10 @@ export const createProgressTraceSink = (
   };
 
   const makeOnCancel = (key: string, target: CancelTarget) => () => {
-    if (target.pid) {
-      cancelledPids.set(key, target.pid);
+    if (options.cancelScope === 'run') {
+      cancelled.set(key, { scope: 'run' });
+    } else if (target.pid) {
+      cancelled.set(key, { scope: 'pid', pid: target.pid });
     }
     options.cancelProcess?.(target);
     cancelMonitor(key);
@@ -137,12 +157,22 @@ export const createProgressTraceSink = (
       return;
     }
 
-    const tombstonedPid = cancelledPids.get(key);
-    if (tombstonedPid !== undefined) {
-      if (target.pid === tombstonedPid) {
+    const tombstone = cancelled.get(key);
+    if (tombstone) {
+      if (tombstone.scope === 'run') {
+        // Suppress the whole cancelled run (any pid in its chain); the run's terminal status
+        // releases the tombstone so a later run re-shows. The terminal is itself suppressed — the
+        // monitor was already removed on cancel.
+        if (isTerminalMessage(data.message)) {
+          cancelled.delete(key);
+        }
         return;
       }
-      cancelledPids.delete(key);
+      // `pid` scope: the cancelled run's tail shares its pid; a different pid is the next run.
+      if (target.pid === tombstone.pid) {
+        return;
+      }
+      cancelled.delete(key);
     }
 
     const handle = monitorFor(registry, key, data.message, target);
