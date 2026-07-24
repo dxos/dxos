@@ -113,6 +113,28 @@ during the stall — that distinguishes transform load from optimizer
 deadlock. A speculative optimizer pin (`optimizeDeps.noDiscovery` + explicit
 include list) was deliberately not applied without a direct full-app repro.
 
+#### Follow-up fixes (2026-07-24)
+
+A third "hang" mechanism surfaced during verification: after a vite restart,
+the coordinator SharedWorker (keyed by URL + name, outliving the server) and
+any stale tab's dedicated worker keep running previous-generation code; the
+reloaded page retries leader election against them forever (endless boot
+spinner, console-only warnings). Implemented:
+
+- **Dev coordinator generation fix:** vite `define`s a per-server-instance
+  `__DX_DEV_SERVER_BOOT_ID__`; main.tsx suffixes the coordinator SharedWorker
+  _name_ with it, so a restarted server spawns a fresh coordinator (name is
+  stable/unsuffixed in production builds).
+- **Escalation hook:** `@dxos/worker-framework` `Connection` gains
+  `onPersistentFailure` + `maxLeaderFailures` (default 4, unit-tested),
+  threaded through `createClientServices` as `onPersistentWorkerFailure`.
+  Composer's dev handler broadcasts a one-shot cross-tab reload
+  (sessionStorage-guarded against loops); production logs the error for the
+  fatal-dialog telemetry path (PR #11758).
+- The durable generation-handshake design (coordinator exchanges a build id,
+  older generation steps down and self-closes) is documented as a TODO on
+  `Options.onPersistentFailure` in worker-framework `Client.ts`.
+
 ## Verification
 
 - `moon run composer-app:serve-min` on an alternate port boots to a usable
