@@ -243,3 +243,16 @@ Exit criteria: automated suite green + M1–M10 checked; then §2 App script in 
 Notes: first story load after a storybook restart can 404 the dynamic import (optimize-deps race) — reload once;
 smoke-load each story before handing over. Per-story manual scripts now live as `Test:` bullets in each story's
 JSDoc (CommentsArticle: add/delete comments, click-thread ↔ highlight sync, overlay click-through).
+
+### 3b. Storybook-driven suggest/review walkthrough (interactive, after play settles)
+
+Numbered scripts live in each story's JSDoc (`Test:` blocks). Order:
+
+| #   | Story (plugins/plugin-review/…)                  | Flow (maps §2 app script onto storybook)                                                  |
+| --- | ------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| S1  | DocumentVersioning / **Suggesting**              | own edits: insert/delete phantoms, hover-restore, block deletion, mode-switch matrix (§0) |
+| S2  | DocumentVersioning / **AmbientReview**           | other-author overlay, Accept/Reject popover, comment click-through                        |
+| S3  | DocumentVersioning / **EditingTyping**           | typing stability on ambient path                                                          |
+| S4  | CommentsArticle / **WithAgentSuggestions**       | change-block cards: Accept folds / Reject reverts, author hues                            |
+| S5  | CommentsArticle / **WithCommentsAndSuggestions** | comments + suggestions coexistence, click-through                                         |
+| S6  | DocumentVersioning / **Default**                 | no-review baseline (default binding)                                                      |

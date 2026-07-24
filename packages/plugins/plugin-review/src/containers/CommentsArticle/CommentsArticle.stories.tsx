@@ -308,10 +308,10 @@ type Story = StoryObj<typeof meta>;
  * - No seeded comments or suggestions; empty-state review surface.
  *
  * Test:
- * 1. Select text in the doc; click Add comment; type + Enter: thread appears, anchor label = selection, highlight in doc.
- * 2. Add a second comment on another range; both threads listed in document order.
- * 3. Delete a thread (thread menu): highlight clears from the editor.
- * 4. Click a thread card: editor scrolls and the anchored range highlights (active state).
+ * - Select text in the doc; click Add comment; type + Enter: thread appears, anchor label = selection, highlight in doc.
+ * - Add a second comment on another range; both threads listed in document order.
+ * - Delete a thread (thread menu): highlight clears from the editor.
+ * - Click a thread card: editor scrolls and the anchored range highlights (active state).
  */
 export const Default: Story = {};
 
@@ -322,7 +322,7 @@ export const Default: Story = {};
  * - Plain (non-mention) messages are ignored.
  *
  * Test:
- * - Post `@Kai hello`: stub agent replies; plain message: no reply.
+ * 1. Post `@Kai hello`: stub agent replies; plain message: no reply.
  */
 export const WithMentionAgent: Story = {
   args: {

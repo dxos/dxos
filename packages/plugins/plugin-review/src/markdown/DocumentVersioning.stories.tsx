@@ -281,6 +281,10 @@ type Story = StoryObj<typeof meta>;
  * Baseline:
  * - Plain document on main, no branches or checkpoints.
  * - The versioning affordances are present but inactive.
+ *
+ * Test:
+ * 1. Plain doc on main: no banner, no review chrome (default binding).
+ * 2. Type text: edits land live; caret/scroll stable.
  */
 export const Default: Story = {
   args: {
@@ -661,6 +665,13 @@ const selectViewMode = async (canvasElement: HTMLElement, label: string) => {
  * - Viewing: suggestions hide, the comment stays, the editor goes read-only.
  * - Suggestion sources + comments are stood in by story-local `@dxos/ui-editor` fixtures
  *   (plugin-markdown cannot depend on plugin-comments).
+ *
+ * Test:
+ * (after play: Bob's suggestion overlays in Editing view)
+ * 1. Bob's change overlays inline in his colour with a gutter bar; the seeded comment highlight coexists.
+ * 2. Hover the overlaid change: Accept/Reject popover appears, unclipped.
+ * 3. Accept: change folds into main, overlay clears. (Re-run story) Reject: overlay clears, main unchanged.
+ * 4. Click the comment highlight under the overlay: comment activates (overlay must not eat the click).
  */
 export const AmbientReview: Story = {
   args: {
@@ -716,6 +727,10 @@ export const AmbientReview: Story = {
 /**
  * Regression: in the default **Editing** mode (not Suggesting) ordinary typing must write to main and
  * must NOT create a suggestion branch. Guards the reported "each keypress creates a new suggestion" bug.
+ *
+ * Test:
+ * 1. Type steadily at the caret: no remount, no caret jump, no dropped keys (ambient path stability).
+ * 2. Toggle view modes while typing pauses: content stable.
  */
 export const EditingTyping: Story = {
   args: {
@@ -762,6 +777,15 @@ export const EditingTyping: Story = {
   },
 };
 
+/***
+ * Test:
+ * (after play seeds Bob's suggestion + own Suggesting mode)
+ * 1. Insert a sentence mid-paragraph: renders in your colour, underlined; change-bar in gutter.
+ * 2. Delete a few words: strikethrough phantom; hover -> restore returns them.
+ * 3. Delete a whole line/list item: phantom preserves the line break (block deletion).
+ * 4. Mode-switch matrix: Suggesting -> Source -> Preview -> Read-only -> Suggesting; edit hidden in Preview/Read-only, visible in Source/Suggesting, always recoverable (see TEST-PLAN section 0).
+ * 5. Timeline: your suggestion branch and Bob's each lane in author colour.
+ */
 export const Suggesting: Story = {
   args: {
     content: '# Hello World\n',
