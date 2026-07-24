@@ -49,7 +49,7 @@ server frequently hangs during heavy edit bursts and must be killed.
 **`packages/apps/composer-app/moon.yml`**
 
 - New task `serve-min`: `DX_PLUGIN_SET=minimal pnpm exec vite dev`, `preset:
-  server`, deps = explicit narrow list instead of `^:build`:
+server`, deps = explicit narrow list instead of `^:build`:
   - Builds for the `importSource` exclude list (`@dxos/config`,
     `@dxos/client-services`, `@dxos/observability`, `@dxos/network-manager`,
     `@dxos/teleport`, `@dxos/random-access-storage`, `@dxos/lock-file`,

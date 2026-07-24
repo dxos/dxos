@@ -21,9 +21,11 @@
 ### Task 1: `plugin-defs.minimal.tsx`
 
 **Files:**
+
 - Create: `packages/apps/composer-app/src/plugin-defs.minimal.tsx`
 
 **Interfaces:**
+
 - Produces: `getPlugins(config: PluginConfig): Plugin.Plugin[]`, `getDefaults(config: PluginConfig): string[]` — same runtime surface as `plugin-defs.tsx` (types come from `plugin-defs.tsx` via type-only import, erased at transform time so the vite alias cannot self-loop).
 
 - [ ] **Step 1: Write the file**
@@ -112,9 +114,11 @@ git add -A && git commit -m "composer-app: minimal plugin defs for serve-min"
 ### Task 2: vite alias + warmup gating
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/vite.config.ts` (`resolve.alias` array ~line 286; `server.warmup.clientFiles` ~line 120)
 
 **Interfaces:**
+
 - Consumes: `plugin-defs.minimal.tsx` from Task 1.
 - Produces: `DX_PLUGIN_SET=minimal` env contract used by Task 3.
 
@@ -149,37 +153,39 @@ git add -A && git commit -m "composer-app: DX_PLUGIN_SET=minimal vite alias"
 ### Task 3: moon `serve-min` task
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/moon.yml`
 
 **Interfaces:**
+
 - Consumes: `DX_PLUGIN_SET` contract from Task 2.
 - Produces: `moon run composer-app:serve-min`.
 
 - [ ] **Step 1: Add task** (verify `plugin-sketch` build produces `dist/assets` first — `composer-app:prebuild` copies from it)
 
 ```yaml
-  # Minimal-plugin dev server: skips `^:build` — vite dev resolves @dxos/* from
-  # source (importSource) — and builds only packages whose dist is consumed.
-  # Keep the dep list in sync with the importSource `exclude` list in
-  # vite.config.ts. DX_PLUGIN_SET=minimal swaps in plugin-defs.minimal.tsx.
-  serve-min:
-    command: pnpm exec vite dev
-    env:
-      DX_PLUGIN_SET: minimal
-    preset: server
-    deps:
-      - prebuild
-      - plugin-sketch:build
-      - client-services:build
-      - config:build
-      - lit-grid:build
-      - lit-ui:build
-      - lock-file:build
-      - network-manager:build
-      - observability:build
-      - protocols:build
-      - random-access-storage:build
-      - teleport:build
+# Minimal-plugin dev server: skips `^:build` — vite dev resolves @dxos/* from
+# source (importSource) — and builds only packages whose dist is consumed.
+# Keep the dep list in sync with the importSource `exclude` list in
+# vite.config.ts. DX_PLUGIN_SET=minimal swaps in plugin-defs.minimal.tsx.
+serve-min:
+  command: pnpm exec vite dev
+  env:
+    DX_PLUGIN_SET: minimal
+  preset: server
+  deps:
+    - prebuild
+    - plugin-sketch:build
+    - client-services:build
+    - config:build
+    - lit-grid:build
+    - lit-ui:build
+    - lock-file:build
+    - network-manager:build
+    - observability:build
+    - protocols:build
+    - random-access-storage:build
+    - teleport:build
 ```
 
 - [ ] **Step 2: Verify graph excludes plugins**
@@ -196,6 +202,7 @@ git add -A && git commit -m "composer-app: serve-min task with narrow build deps
 ### Task 4: Boot verification
 
 **Files:**
+
 - Possibly modify: `plugin-defs.minimal.tsx` (add missing plugins), `.claude/launch.json` (worktree copy) for preview.
 
 - [ ] **Step 1:** `moon run composer-app:serve-min` (background/preview, free port via `-- --port 5273`). Time the run; note build count vs full `serve`.
