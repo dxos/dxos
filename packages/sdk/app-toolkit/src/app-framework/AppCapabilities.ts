@@ -273,7 +273,6 @@ export type CommentConfig = Readonly<{
   id: string;
   comments: 'anchored' | 'unanchored';
   selectionMode?: string;
-  getAnchorLabel?: (obj: any, anchor: string) => string | undefined;
   scrollToAnchor?: Operation.Definition.Any;
 }>;
 
