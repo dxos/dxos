@@ -163,11 +163,16 @@ const editorContent = (canvasElement: HTMLElement): string => {
   return content?.textContent ?? '';
 };
 
+/** A foreign author's proposed rewrite of the whole document, seeded as a suggestion branch. */
+type SuggestionSpec = { creator: string; content: string };
+
 // Find-or-create a per-author suggestion branch and set its content (splice, as the editor would),
 // so the ambient overlay diffs it against main into an attributable suggestion.
 const seedSuggestion = async (creator: string, content: string) => {
   const doc = getDoc();
-  const parent = doc.content.target;
+  // Seeding runs both from plays (root already resolved) and from the decorator right after the doc
+  // is created, where the ref still needs loading.
+  const parent = doc.content.target ?? (await doc.content.load());
   invariant(parent, 'root text not loaded');
   const branch = await Branch.suggestion(doc, parent, creator);
   const binding = await Branch.bind(doc, branch);
@@ -242,7 +247,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<{ content?: string }>((context) => ({
+    withPluginManager<{ content?: string; suggestions?: SuggestionSpec[] }>((context) => ({
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
@@ -258,6 +263,13 @@ const meta = {
               currentDoc = personalSpace.db.add(
                 Markdown.make({ name: 'Versioning', content: context.args.content ?? '' }),
               );
+              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+
+              // Seeded before mount so a manual story opens already reviewable — the same state the
+              // play-driven stories build up step by step, without a play mutating it first.
+              for (const { creator, content } of context.args.suggestions ?? []) {
+                yield* Effect.promise(() => seedSuggestion(creator, content));
+              }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
@@ -666,13 +678,6 @@ const selectViewMode = async (canvasElement: HTMLElement, label: string) => {
  * - Viewing: suggestions hide, the comment stays, the editor goes read-only.
  * - Suggestion sources + comments are stood in by story-local `@dxos/ui-editor` fixtures
  *   (plugin-markdown cannot depend on plugin-comments).
- *
- * Test:
- * (after play: Bob's suggestion overlays in Editing view)
- * 1. Bob's change overlays inline in his colour with a gutter bar; the seeded comment highlight coexists.
- * 2. Hover the overlaid change: Accept/Reject popover appears, unclipped.
- * 3. Accept: change folds into main, overlay clears. (Re-run story) Reject: overlay clears, main unchanged.
- * 4. Click the comment highlight under the overlay: comment activates (overlay must not eat the click).
  */
 export const AmbientReview: Story = {
   args: {
@@ -728,10 +733,6 @@ export const AmbientReview: Story = {
 /**
  * Regression: in the default **Editing** mode (not Suggesting) ordinary typing must write to main and
  * must NOT create a suggestion branch. Guards the reported "each keypress creates a new suggestion" bug.
- *
- * Test:
- * 1. Type steadily at the caret: no remount, no caret jump, no dropped keys (ambient path stability).
- * 2. Toggle view modes while typing pauses: content stable.
  */
 export const EditingTyping: Story = {
   args: {
@@ -778,15 +779,6 @@ export const EditingTyping: Story = {
   },
 };
 
-/***
- * Test:
- * (after play seeds Bob's suggestion + own Suggesting mode)
- * 1. Insert a sentence mid-paragraph: renders in your colour, underlined; change-bar in gutter.
- * 2. Delete a few words: strikethrough phantom; hover -> restore returns them.
- * 3. Delete a whole line/list item: phantom preserves the line break (block deletion).
- * 4. Mode-switch matrix: Suggesting -> Source -> Preview -> Read-only -> Suggesting; edit hidden in Preview/Read-only, visible in Source/Suggesting, always recoverable (see TEST-PLAN section 0).
- * 5. Timeline: your suggestion branch and Bob's each lane in author colour.
- */
 export const Suggesting: Story = {
   args: {
     content: '# Hello World\n',
@@ -830,5 +822,72 @@ export const Suggesting: Story = {
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'));
     await expect(suggestInserts(canvasElement)).not.toContain('really');
     await expect(suggestDeletes(canvasElement)).not.toContain('really');
+  },
+};
+
+//
+// Manual walkthroughs. Setup is declared in `args` (suggestions are seeded before mount) and there
+// is deliberately no play function — a play would leave the story in a post-assertion state, so the
+// numbered scripts below would start from something other than what they describe.
+//
+
+/**
+ * Manual: another author's suggestion overlaid on main.
+ *
+ * Test:
+ * 1. Bob's change overlays inline in his colour with a gutter bar; the seeded comment highlight coexists.
+ * 2. Hover the overlaid change: Accept/Reject popover appears, unclipped.
+ * 3. Accept: change folds into main, overlay clears. (Reload the story) Reject: overlay clears, main unchanged.
+ * 4. Click the comment highlight under the overlay: comment activates (overlay must not eat the click).
+ */
+export const AmbientReviewManual: Story = {
+  args: {
+    content: concat('# Hello World', ''),
+    suggestions: [
+      { creator: 'did:alice', content: concat('# Hello World', '', 'Alice: nice intro.', '') },
+      { creator: 'did:bob', content: concat('# Hello World', '', 'Bob: add an example.', '') },
+    ],
+  },
+  parameters: {
+    ambientReview: true,
+  },
+};
+
+/**
+ * Manual: your own suggestions, written to your suggestion branch.
+ *
+ * Test:
+ * 1. Switch the view-mode dropdown to Suggesting: the editor rebinds to your branch; Bob still overlays.
+ * 2. Insert a sentence mid-paragraph: renders in your colour, underlined; change-bar in gutter.
+ * 3. Delete a few words: strikethrough phantom; hover -> restore returns them.
+ * 4. Delete a whole line/list item: phantom preserves the line break (block deletion).
+ * 5. Mode-switch matrix: Suggesting -> Source -> Preview -> Read-only -> Suggesting; edit hidden in Preview/Read-only, visible in Source/Suggesting, always recoverable (see TEST-PLAN section 0).
+ * 6. Timeline: your suggestion branch and Bob's each lane in author colour.
+ */
+export const SuggestingManual: Story = {
+  args: {
+    content: concat('# Hello World', ''),
+    suggestions: [{ creator: 'did:bob', content: concat('# Hello World', '', 'Bob: add an example.', '') }],
+  },
+  parameters: {
+    ambientReview: true,
+  },
+};
+
+/**
+ * Manual: ordinary typing on the ambient path (Editing mode, bound to main).
+ *
+ * Test:
+ * 1. Type steadily at the caret: no remount, no caret jump, no dropped keys.
+ * 2. Toggle view modes between bursts: content stable, no suggestion branch created for your keystrokes.
+ * 3. Bob's overlay stays anchored to main and never strikes the text you just typed.
+ */
+export const EditingTypingManual: Story = {
+  args: {
+    content: concat('# Hello World', '', 'Body paragraph.', ''),
+    suggestions: [{ creator: 'did:bob', content: concat('# Hello World', '', 'Bob: add an example.', '') }],
+  },
+  parameters: {
+    ambientReview: true,
   },
 };
