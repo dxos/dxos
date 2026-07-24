@@ -20,11 +20,11 @@ const DefaultStory = () => (
   <Panel.Root classNames='bs-full'>
     <Panel.Toolbar asChild>
       <Toolbar.Root>
-        {/* Static log.info/warn/error call sites (rather than a shared `log[level]` helper) so the
-            vite-plugin-log transform can still inject file/line meta for each button's call site. */}
-        <Toolbar.Button onClick={() => log.info(random.lorem.sentences(), { at: Date.now() })}>Info</Toolbar.Button>
-        <Toolbar.Button onClick={() => log.warn(random.lorem.sentences(), { at: Date.now() })}>Warn</Toolbar.Button>
-        <Toolbar.Button onClick={() => log.error(random.lorem.sentences(), { at: Date.now() })}>Error</Toolbar.Button>
+        <Toolbar.Button onClick={() => log.info(random.lorem.sentences(), { meta: { label: random.lorem.word() } })}>
+          Info
+        </Toolbar.Button>
+        <Toolbar.Button onClick={() => log.warn(random.lorem.sentences())}>Warn</Toolbar.Button>
+        <Toolbar.Button onClick={() => log.error(random.lorem.sentences())}>Error</Toolbar.Button>
       </Toolbar.Root>
     </Panel.Toolbar>
     <Panel.Content>

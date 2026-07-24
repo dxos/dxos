@@ -102,11 +102,13 @@ export const LogPanel = ({
             <Input.TextInput
               placeholder={t('filter.placeholder')}
               value={filter}
+              autoComplete='off'
+              spellCheck={false}
               onChange={(ev) => setFilter(ev.target.value)}
             />
           </Input.Root>
           <Select.Root value={selectedLevel} onValueChange={setFilter}>
-            <Select.TriggerButton classNames='text-sm' placeholder={t('level.label')} />
+            <Select.TriggerButton classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
             <Select.Portal>
               <Select.Content>
                 <Select.ScrollUpButton />
