@@ -35,7 +35,7 @@ export class EdgeReplicant {
 
   constructor(private readonly _env: ReplicantEnv) {}
 
-  @trace.span()
+  @trace.span({ name: 'EdgeReplicant.initClient' })
   async initClient({ config, indexing }: { config: ConfigProto; indexing?: IndexConfig }): Promise<void> {
     log.trace('dxos.edge-replicant.initClient');
 
@@ -61,13 +61,13 @@ export class EdgeReplicant {
     await this.initClient({ config, indexing });
   }
 
-  @trace.span()
+  @trace.span({ name: 'EdgeReplicant.destroyClient' })
   async destroyClient(): Promise<void> {
     log.trace('dxos.edge-replicant.destroyClient');
     await this._client?.destroy();
   }
 
-  @trace.span()
+  @trace.span({ name: 'EdgeReplicant.createIdentity' })
   async createIdentity(): Promise<Identity> {
     invariant(this._client, 'no client');
     const identity = await this._client.halo.createIdentity();
@@ -75,7 +75,7 @@ export class EdgeReplicant {
     return identity;
   }
 
-  @trace.span()
+  @trace.span({ name: 'EdgeReplicant.startAgent' })
   async startAgent(): Promise<void> {
     log.trace('dxos.edge-replicant.startAgent');
     invariant(this._client, 'no client');
@@ -89,7 +89,7 @@ export class EdgeReplicant {
     log.info('agent created');
   }
 
-  @trace.span()
+  @trace.span({ name: 'EdgeReplicant.getAgentKey' })
   async getAgentKey(): Promise<string | undefined> {
     invariant(this._client, 'no client');
     const agentDevice = this._client.halo.devices
@@ -98,7 +98,7 @@ export class EdgeReplicant {
     return agentDevice?.deviceKey.toHex();
   }
 
-  @trace.span()
+  @trace.span({ name: 'EdgeReplicant.createSpace' })
   async createSpace({ waitForSpace = false }: { waitForSpace?: boolean } = {}): Promise<SpaceId> {
     log.info('creating space');
     invariant(this._client, 'no client');
@@ -122,7 +122,7 @@ export class EdgeReplicant {
     return response.spaceId as SpaceId;
   }
 
-  @trace.span()
+  @trace.span({ name: 'EdgeReplicant.deployFunction' })
   async deployFunction({ source }: { source?: string } = {}): Promise<{ functionId: string; version: string }> {
     const buildResult = await bundleFunction({ source: source ?? dataGenerator });
 
@@ -146,7 +146,7 @@ export class EdgeReplicant {
     return result;
   }
 
-  @trace.span()
+  @trace.span({ name: 'EdgeReplicant.invokeFunction' })
   async invokeFunction({
     functionId,
     spaceId,
@@ -166,7 +166,7 @@ export class EdgeReplicant {
     return response.text();
   }
 
-  @trace.span()
+  @trace.span({ name: 'EdgeReplicant.waitForReplication' })
   async waitForReplication({ spaceId, minDocuments }: { spaceId: SpaceId; minDocuments?: number }) {
     log.info('waiting for replication', { spaceId, minDocuments });
     invariant(this._client, 'no client');

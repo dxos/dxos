@@ -178,7 +178,19 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
         this._closeReplacedConnection(spaceId, connection);
       }
       if (this._context !== null && this._connectedSpaces.has(spaceId)) {
-        await this._openConnection(spaceId);
+        // Reconnect handshakes must not parent under the long-ended connect-time span — detach
+        // demotes it to a link so each reconnect starts an operation-sized trace (SC-1). The
+        // derived ctx is disposed immediately: derive() hooks the long-lived `_ctx`, and its
+        // attributes stay readable after dispose (the handshake frame sends asynchronously).
+        const baseCtx = this._ctx ?? Context.default();
+        const handshakeCtx = trace.detach(baseCtx);
+        try {
+          await this._openConnection(handshakeCtx, spaceId);
+        } finally {
+          if (handshakeCtx !== baseCtx) {
+            void handshakeCtx.dispose();
+          }
+        }
       }
     }
   }
@@ -219,7 +231,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     this._closingConnections.clear();
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ name: 'EchoEdgeSubductionReplicator.connectToSpace', showInBrowserTimeline: true })
   async connectToSpace(ctx: Context, spaceId: SpaceId): Promise<void> {
     log('connectToSpace', { spaceId });
     using _guard = await this._spaceMutex(spaceId).acquire();
@@ -230,7 +242,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     this._connectedSpaces.add(spaceId);
 
     if (this._context !== null) {
-      await this._openConnection(spaceId);
+      await this._openConnection(ctx, spaceId);
     }
   }
 
@@ -251,7 +263,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     // residual cost is one Mutex per ever-connected space.
   }
 
-  private async _openConnection(spaceId: SpaceId, reconnects: number = 0): Promise<void> {
+  private async _openConnection(ctx: Context, spaceId: SpaceId, reconnects: number = 0): Promise<void> {
     invariant(this._context);
     invariant(!this._connections.has(spaceId));
 
@@ -273,6 +285,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       edgeConnection: this._edgeConnection,
       spaceId,
       context: this._context,
+      handshakeCtx: ctx,
       sharedPolicyEnabled: !this._disableSharePolicy,
       frameBatching: this._frameBatching,
       onRemoteConnected: async () => {
@@ -313,7 +326,16 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
               return;
             }
             log.trace('dxos.echo.edge.subduction-replicator.restart', { spaceId, reconnects, restartDelay });
-            await this._openConnection(spaceId, reconnects + 1);
+            // Detached + disposed for the same reasons as `_handleReconnect` above.
+            const baseCtx = ctx ?? Context.default();
+            const handshakeCtx = trace.detach(baseCtx);
+            try {
+              await this._openConnection(handshakeCtx, spaceId, reconnects + 1);
+            } finally {
+              if (handshakeCtx !== baseCtx) {
+                void handshakeCtx.dispose();
+              }
+            }
           },
           restartDelay,
         );
@@ -329,6 +351,14 @@ type EdgeSubductionReplicatorConnectionProps = {
   edgeConnection: EdgeConnection;
   spaceId: SpaceId;
   context: AutomergeReplicatorContext;
+  /**
+   * Trace context of the operation that opened this connection (`connectToSpace` or a
+   * reconnect). Attached ONLY to the handshake frame so the edge parents session
+   * establishment under the initiating operation; steady-state frames are deliberately
+   * context-free — the edge links them to the connection trace instead (SC-1 in
+   * docs/design/tracing-improvement-spec.md), which keeps traces operation-sized.
+   */
+  handshakeCtx: Context;
   sharedPolicyEnabled: boolean;
   frameBatching: boolean;
   onRemoteConnected: () => Promise<void>;
@@ -346,6 +376,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   private readonly _subductionServiceId: string;
   private readonly _spaceId: SpaceId;
   private readonly _context: AutomergeReplicatorContext;
+  private readonly _handshakeCtx: Context;
   private readonly _sharedPolicyEnabled: boolean;
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
@@ -371,6 +402,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     edgeConnection,
     spaceId,
     context,
+    handshakeCtx,
     sharedPolicyEnabled,
     frameBatching,
     onRemoteConnected,
@@ -381,6 +413,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     this._edgeConnection = edgeConnection;
     this._spaceId = spaceId;
     this._context = context;
+    this._handshakeCtx = handshakeCtx;
     this._sharedPolicyEnabled = sharedPolicyEnabled;
     this._frameBatching = frameBatching;
     // Generate a unique peer id for every connection so sync-state is fresh on reconnect.
@@ -599,24 +632,36 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     switch (message.type) {
       case MESSAGE_TYPE_SUBDUCTION_CONNECTION: {
         message.targetId = this._subductionServiceId as PeerId;
+        // The first frame (the handshake) carries the opening operation's trace context so
+        // session establishment is parented under `connectToSpace` on the edge; all later
+        // frames are steady-state and deliberately context-free (SC-1).
+        const isHandshake = !this.#firstFrameSent;
+        this.#firstFrameSent = true;
         if (!this._frameBatching) {
-          await this.#sendEnveloped({
-            type: MESSAGE_TYPE_SUBDUCTION_FRAME,
-            connectionId: this._connectionId,
-            subductionFrame: message,
-          });
+          await this.#sendEnveloped(
+            {
+              type: MESSAGE_TYPE_SUBDUCTION_FRAME,
+              connectionId: this._connectionId,
+              subductionFrame: message,
+            },
+            1,
+            isHandshake ? this._handshakeCtx : undefined,
+          );
           return;
         }
-        // The first frame of a connection (the handshake) is sent alone so the edge can
-        // establish the session before any batched data arrives, keeping session setup
-        // independent of whether the peer understands batches.
-        if (!this.#firstFrameSent) {
-          this.#firstFrameSent = true;
-          await this.#sendEnveloped({
-            type: MESSAGE_TYPE_SUBDUCTION_FRAME,
-            connectionId: this._connectionId,
-            subductionFrame: message,
-          });
+        // The handshake is also sent alone so the edge can establish the session before any
+        // batched data arrives, keeping session setup independent of whether the peer
+        // understands batches.
+        if (isHandshake) {
+          await this.#sendEnveloped(
+            {
+              type: MESSAGE_TYPE_SUBDUCTION_FRAME,
+              connectionId: this._connectionId,
+              subductionFrame: message,
+            },
+            1,
+            this._handshakeCtx,
+          );
           return;
         }
         this.#enqueueFrame(message);
@@ -691,7 +736,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   }
 
   /** Encode one wire envelope and send it as a single router message. */
-  async #sendEnveloped(wire: SubductionProtocolMessageEnveloped, frameCount = 1): Promise<void> {
+  async #sendEnveloped(wire: SubductionProtocolMessageEnveloped, frameCount = 1, sendCtx?: Context): Promise<void> {
     if (wire.type === MESSAGE_TYPE_COLLECTION_QUERY || wire.type === MESSAGE_TYPE_COLLECTION_STATE) {
       log.verbose(`sending ${wire.type}`, {
         collectionId: wire.collectionId,
@@ -705,7 +750,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     const encoded = cbor.encode(wire);
     try {
       await this._edgeConnection.send(
-        this._ctx,
+        sendCtx ?? this._ctx,
         buf.create(RouterMessageSchema, {
           serviceId: this._subductionServiceId,
           source: {

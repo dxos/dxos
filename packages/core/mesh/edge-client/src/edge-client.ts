@@ -15,8 +15,10 @@ import {
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
+import { EDGE_SESSION_ID_QUERY_PARAM } from '@dxos/protocols';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SESSION_ID } from '@dxos/util';
 
 import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -248,6 +250,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
 
     const restartRequired = new Trigger();
     const url = new URL(path, this._baseWsUrl);
+    // Session correlation across telemetry (SC-2): same value as the client OTEL
+    // `session.id` resource attribute; edge stamps it on every span of this connection.
+    url.searchParams.set(EDGE_SESSION_ID_QUERY_PARAM, SESSION_ID);
     log('Opening websocket', { url: url.toString(), protocolHeader });
     const connection = new EdgeWsConnection(
       identity,

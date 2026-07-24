@@ -22,6 +22,7 @@ import {
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EDGE_CLIENT_TAG_HEADER,
+  EDGE_SESSION_ID_HEADER,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -47,9 +48,9 @@ import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import { createUrl } from '@dxos/util';
+import { SESSION_ID, createUrl } from '@dxos/util';
 
-import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';
+import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs, getTraceHeaders } from './base-http-client';
 import { proxyFetchLegacy } from './cors-proxy';
 import { HttpConfig, withLogging, withRetryConfig } from './http-client';
 
@@ -583,7 +584,7 @@ export class EdgeHttpClient extends BaseHttpClient {
    */
   // TODO(mykola): Merge into `BaseHttpClient._call` once it can return a streaming/raw `Response`;
   // the auth/retry loop below duplicates the one in `_call`.
-  public async anthropicAiRequest(request: Request): Promise<Response> {
+  public async anthropicAiRequest(ctx: Context, request: Request): Promise<Response> {
     const incoming = new URL(request.url);
     const base = this.baseUrl.replace(/\/$/, '');
     const target = new URL(`${base}/ai/generate/anthropic${incoming.pathname}${incoming.search}`);
@@ -601,12 +602,23 @@ export class EdgeHttpClient extends BaseHttpClient {
       }
 
       const headers = new Headers(request.headers);
+      // Effect's HttpClient injects `traceparent` for fiber spans that are never exported,
+      // leaving edge server spans with dangling parents. Drop the inherited headers and set
+      // them deliberately from `ctx` (DX-T3 in docs/design/tracing-improvement-spec.md).
+      headers.delete('traceparent');
+      headers.delete('tracestate');
+      for (const [key, value] of Object.entries(getTraceHeaders(ctx) ?? {})) {
+        headers.set(key, value);
+      }
       if (this._authHeader) {
         headers.set('Authorization', this._authHeader);
       }
       if (this._clientTag) {
         headers.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
       }
+      // SC-2 invariant: the session id rides EVERY edge HTTP request (this path duplicates
+      // `_call`'s header assembly — see the merge TODO above).
+      headers.set(EDGE_SESSION_ID_HEADER, SESSION_ID);
 
       const response = await fetch(target, { method, headers, body, signal: request.signal });
       // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets

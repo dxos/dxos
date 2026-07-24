@@ -113,7 +113,7 @@ export class ControlPipeline {
     this._pipeline.setWriteFeed(feed);
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'ControlPipeline.start', showInBrowserTimeline: true, op: 'lifecycle' })
   async start(ctx: Context): Promise<void> {
     const snapshot = this._metadata.getSpaceControlPipelineSnapshot(this._spaceKey);
     log('load snapshot', { key: this._spaceKey, present: !!snapshot, tf: snapshot?.timeframe });
@@ -170,7 +170,7 @@ export class ControlPipeline {
     }
   }
 
-  @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
+  @trace.span({ name: 'ControlPipeline._processMessage', showInBrowserTimeline: true, showInRemoteTracing: false })
   private async _processMessage(ctx: Context, msg: FeedMessageBlock): Promise<void> {
     log('processing', { key: msg.feedKey, seq: msg.seq });
     if (msg.data.payload.credential) {

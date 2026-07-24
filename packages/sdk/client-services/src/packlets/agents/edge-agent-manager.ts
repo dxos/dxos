@@ -18,12 +18,16 @@ import { EdgeAgentStatus, EdgeCallFailedError } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { trace } from '@dxos/tracing';
 
 import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity';
 import { type DataSpaceManager, DataSpaceManagerService } from '../spaces';
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
 const AGENT_FEED_ADDED_CHECK_INTERVAL_MS = 3000;
+
+/** Uniquifies per-round manual span ids. */
+let agentStatusFetchRound = 0;
 
 export type EdgeAgentManagerConfig = {};
 
@@ -109,7 +113,31 @@ export class EdgeAgentManager extends Resource {
 
     this._lastKnownDeviceCount = this.identity.authorizedDeviceKeys.size;
     this._fetchAgentStatusTask = new DeferredTask(this._ctx, async () => {
-      await this._fetchAgentStatus(this._ctx);
+      // Per-round root span (DX-T8): recurring status polls start their own
+      // operation-sized traces; the HTTP call carries this span as `traceparent`,
+      // parenting the edge `GET /users/:identity/agent/status` server span.
+      const spanId = `agent-status-fetch-${++agentStatusFetchRound}`;
+      // Detached per-round ctx MUST be disposed after the round: derive() registers a
+      // dispose hook on the long-lived `_ctx`, and an undisposed hook per poll round is
+      // an unbounded leak (Context warns at 300 callbacks).
+      const detachedCtx = trace.detach(this._ctx);
+      const roundCtx =
+        trace.spanStart({
+          name: 'EdgeAgentManager._fetchAgentStatus',
+          id: spanId,
+          instance: this,
+          methodName: '_fetchAgentStatus',
+          parentCtx: detachedCtx,
+          op: 'agent.status',
+        }) ?? detachedCtx;
+      try {
+        await this._fetchAgentStatus(roundCtx);
+      } finally {
+        trace.spanEnd(spanId);
+        if (detachedCtx !== this._ctx) {
+          void detachedCtx.dispose();
+        }
+      }
     });
     this._fetchAgentStatusTask.schedule();
 

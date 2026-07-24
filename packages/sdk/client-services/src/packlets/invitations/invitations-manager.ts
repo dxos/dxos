@@ -78,7 +78,7 @@ export class InvitationsManager {
     return this._invitationHandlerFactory(invitation);
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'InvitationsManager.createInvitation', showInBrowserTimeline: true, op: 'lifecycle' })
   async createInvitation(
     ctx: Context,
     options: Partial<Invitation> & Pick<Invitation, 'kind'>,

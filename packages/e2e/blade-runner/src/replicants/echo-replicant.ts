@@ -40,21 +40,21 @@ export class EchoReplicant {
 
   constructor(private readonly env: ReplicantEnv) {}
 
-  @trace.span()
+  @trace.span({ name: 'EchoReplicant.open' })
   async open(): Promise<void> {
     log.trace('dxos.echo-replicant.open');
     this._testPeer = new EchoTestPeer({ kv: createTestLevel(this.env.params.planRunDir) });
     await this._testPeer.open();
   }
 
-  @trace.span()
+  @trace.span({ name: 'EchoReplicant.close' })
   async close(): Promise<void> {
     log.trace('dxos.echo-replicant.close');
     void this._ctx.dispose();
     await this._testPeer!.close();
   }
 
-  @trace.span()
+  @trace.span({ name: 'EchoReplicant.createDatabase' })
   async createDatabase({ spaceKey = PublicKey.random().toHex() }: { spaceKey?: string } = {}) {
     this._db = await this._testPeer!.createDatabase(PublicKey.fromHex(spaceKey));
     this._db.graph.registry.add([Text]);
@@ -66,7 +66,7 @@ export class EchoReplicant {
     };
   }
 
-  @trace.span()
+  @trace.span({ name: 'EchoReplicant.openDatabase' })
   async openDatabase({ spaceKey, rootUrl }: { spaceKey: string; rootUrl: AutomergeUrl }) {
     this._db = await this._testPeer!.openDatabase(PublicKey.fromHex(spaceKey), rootUrl);
     this._db.graph.registry.add([Text]);
@@ -78,7 +78,7 @@ export class EchoReplicant {
     };
   }
 
-  @trace.span()
+  @trace.span({ name: 'EchoReplicant.createDocuments' })
   async createDocuments({
     amount,
     size,
@@ -131,7 +131,7 @@ export class EchoReplicant {
     });
   }
 
-  @trace.span()
+  @trace.span({ name: 'EchoReplicant.queryDocuments' })
   async queryDocuments({
     expectedAmount,
     queryResolution,
@@ -177,7 +177,7 @@ export class EchoReplicant {
   /**
    * Initialize stack for ECHO replication.
    */
-  @trace.span()
+  @trace.span({ name: 'EchoReplicant.initializeNetwork' })
   async initializeNetwork() {
     log.trace('dxos.echo-replicant.initializeNetwork');
     this._replicator = new TestReplicator({
@@ -202,7 +202,7 @@ export class EchoReplicant {
   /**
    * It will create a connection, and advertize everything to the other peer.
    */
-  @trace.span()
+  @trace.span({ name: 'EchoReplicant.connect' })
   async connect({
     otherPeerId,
     readQueue,
@@ -230,7 +230,7 @@ export class EchoReplicant {
     this._replicator.context.onConnectionOpen(connection);
   }
 
-  @trace.span()
+  @trace.span({ name: 'EchoReplicant.disconnect' })
   async disconnect({ otherPeerId }: { otherPeerId: string }): Promise<void> {
     log.trace('dxos.echo-replicant.disconnect', { otherPeerId });
     invariant(this._replicator?.context, 'Replicator not connected.');

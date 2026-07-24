@@ -251,7 +251,7 @@ export class HaloProxy implements Halo {
     return this._createIdentityInternal(Context.default(), profile, deviceProfile);
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'HaloProxy._createIdentityInternal', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _createIdentityInternal(
     ctx: Context,
     profile: ProfileDocument = {},
@@ -293,7 +293,7 @@ export class HaloProxy implements Halo {
     return this._updateProfileInternal(Context.default(), profile);
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'HaloProxy._updateProfileInternal', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _updateProfileInternal(ctx: Context, profile: ProfileDocument): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,

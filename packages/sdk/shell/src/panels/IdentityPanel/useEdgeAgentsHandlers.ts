@@ -71,7 +71,7 @@ export const useEdgeAgentHandlers = ({
     setAgentStatus('creating');
     setValidationMessage('');
     try {
-      await service.createAgent(null as any, { timeout: 7_500 });
+      await service.createAgent(undefined, { timeout: 7_500 });
       await Promise.all(
         client.spaces
           .get()
