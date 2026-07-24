@@ -19,3 +19,4 @@ Desktop projects. Obviates stalled plugin-sidekick. Rename name-squatting
 - [ ] **Review CompanionTo reuse for project chats** — decided Chat→Project uses the existing `org.dxos.relation.assistant.companionTo`; revisit vs a dedicated relation once the design is complete.
 - [ ] **Remove plugin-sidekick** — obviated by plugin-projects; this pass only notes the obviation in packages/plugins/AUDIT.md, deletion is a separate change.
 - [ ] **Consider merging plugin-routine into plugin-projects** — revisit once plugin-projects settles; Routine schema already moves to @dxos/compute, so the plugin boundary is thin.
+- [ ] **"/" completion of commands (and "@", "$")** — extend chat-prompt autocomplete beyond the `$` sentinel trigger: slash-command style completion plus `@` (references) and `$` unified.
