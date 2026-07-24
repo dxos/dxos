@@ -689,12 +689,18 @@ const styles = EditorView.theme({
   // `box-shadow` with a 1px spread extends the block 1px on every side in the same colour — visual
   // padding without changing layout. Vertically adjacent line rectangles paint into each other's gap
   // with the same colour, so a multi-line comment stays seamless.
+  // 2px horizontal breathing room around the text: `padding-inline` widens the background box and the
+  // compensating negative `margin-inline` keeps it aligned to the text; `content-box` makes the padding
+  // grow the box (rather than shrink the content) so the fill and border-radius extend with it.
   // `pointer-events: none` on the rectangles themselves (not only the layer wrapper) so a click over a
   // comment passes through to the `.cm-comment` mark's `data-comment-id` (and reaches `handleCommentClick`)
   // instead of landing on a highlight rectangle that carries no id.
   '.cm-comment-highlight': {
     backgroundColor: 'var(--color-teal-bg)',
     boxShadow: '0 0 0 1px var(--color-teal-bg)',
+    boxSizing: 'content-box',
+    marginInline: '-2px',
+    paddingInline: '2px',
     pointerEvents: 'none',
   },
   '.cm-comment-highlight-current': {
