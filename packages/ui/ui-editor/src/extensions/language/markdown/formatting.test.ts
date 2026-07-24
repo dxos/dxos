@@ -3,7 +3,7 @@
 //
 
 import { markdownLanguage } from '@codemirror/lang-markdown';
-import { EditorState, type StateCommand } from '@codemirror/state';
+import { EditorSelection, EditorState, type StateCommand } from '@codemirror/state';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -414,6 +414,20 @@ describe('toggleList', () => {
   testCommand('removes only the tasks of a mixed list', '- [x] {one\n- two}', removeList(List.Task), 'one\n- two');
 
   testCommand("doesn't remove plain bullets after a task item", '- [x] one\n- {two}', removeList(List.Task), null);
+
+  // Disjoint multi-cursor ranges in the same ordered list: renumbering from the first range must not
+  // produce specs overlapping the second range's marker edits (state.changes rejects overlaps);
+  // resulting numbering is best-effort.
+  test('handles disjoint ranges in the same ordered list', () => {
+    let state = EditorState.create({
+      doc: '1. a\n2. b\n3. c\n4. d',
+      selection: EditorSelection.create([EditorSelection.cursor(3), EditorSelection.cursor(13)]),
+      extensions: [markdownLanguage, EditorState.allowMultipleSelections.of(true)],
+    });
+    const status = removeList(List.Ordered)({ state, dispatch: (tr) => (state = tr.state) });
+    expect(status).to.equal(true);
+    expect(state.doc.toString()).to.equal('a\n1. b\nc\n3. d');
+  });
 });
 
 describe('addBlockquote', () => {

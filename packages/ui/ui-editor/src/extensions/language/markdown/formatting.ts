@@ -675,7 +675,7 @@ export const addList = (type: List): StateCommand => {
       return false;
     }
 
-    const changes: ChangeSpec[] = [];
+    const changes: SimpleChange[] = [];
     for (let i = 0; i < blocks.length; i++) {
       const { node, counter, parentColumn } = blocks[i];
       const nodeFrom = node.name === 'CodeBlock' ? node.from - 4 : node.from;
@@ -811,9 +811,28 @@ const forEachListItem = (state: EditorState, type: List, callback: (item: ListIt
   }
 };
 
+type SimpleChange = { from: number; to?: number; insert?: string };
+
+/**
+ * Changes from `candidates` that overlap neither `changes` nor an earlier kept candidate.
+ * Renumbering walks siblings on the original doc, so disjoint multi-cursor ranges in the same
+ * ordered list can otherwise produce overlapping specs, which `state.changes` rejects.
+ */
+const nonOverlappingChanges = (candidates: SimpleChange[], changes: SimpleChange[]): SimpleChange[] => {
+  const kept: SimpleChange[] = [];
+  const overlaps = (a: SimpleChange, b: SimpleChange) => a.from < (b.to ?? b.from) && b.from < (a.to ?? a.from);
+  for (const candidate of candidates) {
+    if (![...changes, ...kept].some((change) => overlaps(candidate, change))) {
+      kept.push(candidate);
+    }
+  }
+  return kept;
+};
+
 export const removeList = (type: List): StateCommand => {
   return ({ state, dispatch }) => {
-    const changes: ChangeSpec[] = [];
+    const changes: SimpleChange[] = [];
+    const renumbers: SimpleChange[] = [];
     forEachListItem(state, type, ({ node, line: startLine, markLength, endOfRange }) => {
       const column = node.from - startLine.from;
       // Delete the marker on the first line.
@@ -828,7 +847,7 @@ export const removeList = (type: List): StateCommand => {
         }
       }
       if (endOfRange) {
-        renumberListItems(node.nextSibling, 1, changes, state.doc);
+        renumberListItems(node.nextSibling, 1, renumbers, state.doc);
       }
     });
     if (!changes.length) {
@@ -837,7 +856,7 @@ export const removeList = (type: List): StateCommand => {
 
     dispatch(
       state.update({
-        changes,
+        changes: [...changes, ...nonOverlappingChanges(renumbers, changes)],
         userEvent: 'format.list.remove',
         scrollIntoView: true,
       }),
@@ -870,7 +889,8 @@ export const toggleList = (type: List): StateCommand => {
  */
 export const convertList = (from: List, to: List): StateCommand => {
   return ({ state, dispatch }) => {
-    const changes: ChangeSpec[] = [];
+    const changes: SimpleChange[] = [];
+    const renumbers: SimpleChange[] = [];
     forEachListItem(state, from, ({ node, line: startLine, markLength, ordinal, endOfRange }) => {
       const newMark = to === List.Ordered ? `${ordinal}. ` : to === List.Task ? '- [ ] ' : '- ';
       changes.push({ from: node.from, to: node.from + markLength, insert: newMark });
@@ -891,7 +911,7 @@ export const convertList = (from: List, to: List): StateCommand => {
         }
       }
       if (from === List.Ordered && endOfRange) {
-        renumberListItems(node.nextSibling, 1, changes, state.doc);
+        renumberListItems(node.nextSibling, 1, renumbers, state.doc);
       }
     });
 
@@ -899,7 +919,7 @@ export const convertList = (from: List, to: List): StateCommand => {
       return false;
     }
 
-    const changeSet = state.changes(changes);
+    const changeSet = state.changes([...changes, ...nonOverlappingChanges(renumbers, changes)]);
     dispatch(
       state.update({
         changes: changeSet,
@@ -912,7 +932,7 @@ export const convertList = (from: List, to: List): StateCommand => {
   };
 };
 
-const renumberListItems = (item: SyntaxNode | null, counter: number, changes: ChangeSpec[], doc: Text) => {
+const renumberListItems = (item: SyntaxNode | null, counter: number, changes: SimpleChange[], doc: Text) => {
   for (; item; item = item.nextSibling) {
     if (item.name === 'ListItem') {
       const number = /(\s*)(\d+)[.)]/.exec(doc.sliceString(item.from, item.from + 10));
