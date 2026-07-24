@@ -126,6 +126,18 @@ export const LogPanel = ({
     }
   }, [rows]);
 
+  // Drop expansion state for evicted rows so the set stays bounded (no-op while nothing is expanded).
+  useEffect(() => {
+    setExpanded((prev) => {
+      if (prev.size === 0) {
+        return prev;
+      }
+      const ids = new Set(rows.map((row) => row.id));
+      const next = new Set([...prev].filter((id) => ids.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [rows]);
+
   const handleClear = useCallback(() => {
     setRows([]);
     setExpanded(new Set());
