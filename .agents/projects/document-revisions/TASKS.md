@@ -1,6 +1,6 @@
 # Document Revisions & Branches — Tasks
 
-_Resume: PR #12315 OPEN for eval. Comment-render regression FIXED (see below). Morning: run [`TEST-PLAN.md`](TEST-PLAN.md) (storybooks + app script), then DECIDE the §0 open design issue (view-mode↔review-mode coupling: Preview/Read-only map to `viewing` which hides suggestions — the reported "edit disappears" is this; not data loss). Uncommitted: none._
+_Resume: PR #12315 OPEN for eval. Comment-click bugs FIXED + comments() seam refactored (dedupe extension, posAtCoords hit-test, threads→commentSync port, 2px highlight padding — all pushed). Uncommitted: none. NEXT: address PR #12315 review comments; then user evals + merges. Autonomous-debug note: mcp browser pane has a 0-viewport (no positioned clicks) — use the vitest storybook chromium harness; storybook running on :9009. Then DECIDE §0 (view-mode↔review-mode coupling) and the comment-decoration-as-layer question (recommended NO full rewrite)._
 
 Design: [`packages/plugins/plugin-comments/DESIGN.md`](../../../packages/plugins/plugin-comments/DESIGN.md).
 Test plan + follow-along script: [`TEST-PLAN.md`](TEST-PLAN.md).
