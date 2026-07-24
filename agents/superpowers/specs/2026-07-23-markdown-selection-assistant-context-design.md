@@ -89,6 +89,26 @@ export const AnchorResolver = Capability$.make<AnchorResolver>('org.dxos.app-fra
   request when provided and omitted when absent.
 - Manual: storybook end-to-end check of the markdown + companion chat flow.
 
+## Increment 2: `GetSelection` tool (approved 2026-07-24)
+
+Pull-based complement to the push-based context: an agent tool that retrieves
+the current selection on demand ("translate the selection to french"), covering
+multi-turn follow-ups where the selection may have changed since submit.
+
+- **`MarkdownOperation.GetSelection`** — input `{ doc: Ref<Markdown.Document> }`;
+  output `{ ranges: [{ anchor, text }] }` (anchors enable follow-up in-place
+  edits). Markdown-specific for now; a generic plugin-attention variant via
+  `AnchorResolver` is possible later.
+- **Handler**: load doc → read `Selection.aspect` for `Obj.getURI(doc)` via
+  `AttentionCapabilities.ViewState` (non-throwing `getAll` lookup — no
+  ViewState, e.g. node/workerd, → empty ranges, never an error) → resolve
+  anchors via the shared markdown anchor resolution, skipping failures.
+- **Structure**: `getMarkdownAnchorText` moves to `src/model/selection.ts`
+  (no shim; anchor-resolver capability imports it) joined by pure
+  `getSelectionRanges(doc, selection)`; the operation handler is thin glue.
+- **Skill**: tool added to `MarkdownSkill` with an instruction line telling the
+  agent to call it when the user refers to "the selection"/"selected text".
+
 ## Out of scope
 
 - Folding `AnchorSort` into `AnchorResolver` (possible later; YAGNI now).

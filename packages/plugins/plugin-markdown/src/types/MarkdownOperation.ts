@@ -87,6 +87,32 @@ export const Open = Operation.make({
   services: [Database.Service],
 });
 
+export const GetSelection = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.markdown.getSelection'),
+    name: 'Get Selection',
+    description:
+      "Returns the user's current text selection in the markdown document as anchor/text pairs (empty when nothing is selected).",
+    icon: 'ph--selection--regular',
+  },
+  input: Schema.Struct({
+    doc: Ref.Ref(Markdown.Document).annotations({
+      description: 'The ID of the markdown document.',
+    }),
+  }),
+  output: Schema.Struct({
+    ranges: Schema.Array(
+      Schema.Struct({
+        anchor: Schema.String.annotations({
+          description: 'Anchor of the selected range, usable to target follow-up edits.',
+        }),
+        text: Schema.String.annotations({ description: 'The selected text.' }),
+      }),
+    ),
+  }),
+  services: [Database.Service, Capability.Service],
+});
+
 export const ScrollToAnchor = Operation.make({
   meta: {
     key: makeKey('scrollToAnchor'),
