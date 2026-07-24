@@ -15,6 +15,8 @@ export const translations = [
         'generate-objects.label': 'Generate Objects',
         'space-objects.label': 'Database',
         'open-debug-panel.label': 'Show Debug',
+        'logs.label': 'Logs',
+        'open-logs.label': 'Show logs',
 
         'settings.wireframe.label': 'Show wireframes.',
         'settings.wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',
