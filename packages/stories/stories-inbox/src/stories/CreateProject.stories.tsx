@@ -12,8 +12,7 @@ import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-fr
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { LayerSpec } from '@dxos/compute';
-import { Topic } from '@dxos/compute';
+import { LayerSpec, Project } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
@@ -28,7 +27,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { AnchoredTo, Message } from '@dxos/types';
 
-// Story-only mock AiService so `CreateTopicFromMessage`'s LLM summary step runs without a real provider.
+// Story-only mock AiService so `CreateProjectFromMessage`'s LLM summary step runs without a real provider.
 const MockAiServicePlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('story.inbox.mockAiService'), name: 'Story Mock AI Service' }),
 ).pipe(
@@ -51,7 +50,7 @@ const MockAiServicePlugin = Plugin.define(
 const Story = () => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
-  const topics = useQuery(space?.db, Filter.type(Topic.Topic));
+  const projects = useQuery(space?.db, Filter.type(Project.Project));
   const { invokePromise } = useOperationInvoker();
 
   const handleCreate = useCallback(() => {
@@ -65,7 +64,7 @@ const Story = () => {
       properties: { subject: 'Project kickoff', messageId: '<kickoff>' },
     });
     void invokePromise(
-      InboxOperation.CreateTopicFromMessage,
+      InboxOperation.CreateProjectFromMessage,
       { mailbox: Ref.make(mailbox), message },
       { spaceId: space.id },
     );
@@ -77,16 +76,16 @@ const Story = () => {
 
   return (
     <div className='flex flex-col bs-full'>
-      <Button onClick={handleCreate}>Create Topic</Button>
-      {/* Accepted/created topics render in the space-level Topics section (plugin-brain); this story
+      <Button onClick={handleCreate}>Create Project</Button>
+      {/* Accepted/created projects render in the space-level Projects section (plugin-brain); this story
           asserts creation via the space db count rather than an inbox list. */}
-      <div className='grow' data-testid='topic-count' data-count={topics.length} />
+      <div className='grow' data-testid='project-count' data-count={projects.length} />
     </div>
   );
 };
 
 const meta = {
-  title: 'stories/stories-inbox/CreateTopic',
+  title: 'stories/stories-inbox/CreateProject',
   render: Story,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -96,7 +95,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Mailbox.Mailbox, Topic.Topic, AnchoredTo.AnchoredTo, Message.Message],
+          types: [Mailbox.Mailbox, Project.Project, AnchoredTo.AnchoredTo, Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
@@ -125,18 +124,18 @@ type StoryType = StoryObj<typeof meta>;
 
 export const Default: StoryType = {};
 
-/** Clicking "Create Topic" invokes the operation and materializes a `Topic` in the space db. */
+/** Clicking "Create Project" invokes the operation and materializes a `Project` in the space db. */
 export const Test: StoryType = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const button = await waitFor(() => canvas.getByRole('button', { name: /create topic/i }));
-    // No topics initially.
-    void expect(canvas.getByTestId('topic-count').getAttribute('data-count')).toBe('0');
+    const button = await waitFor(() => canvas.getByRole('button', { name: /create project/i }));
+    // No projects initially.
+    void expect(canvas.getByTestId('project-count').getAttribute('data-count')).toBe('0');
 
     await userEvent.click(button);
 
-    // The operation clusters the single thread and materializes one Topic.
-    await waitFor(() => expect(canvas.getByTestId('topic-count').getAttribute('data-count')).toBe('1'), {
+    // The operation clusters the single thread and materializes one Project.
+    await waitFor(() => expect(canvas.getByTestId('project-count').getAttribute('data-count')).toBe('1'), {
       timeout: 10_000,
     });
   },

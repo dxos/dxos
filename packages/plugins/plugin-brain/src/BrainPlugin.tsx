@@ -4,7 +4,7 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Topic } from '@dxos/compute';
+import { Project } from '@dxos/compute';
 
 import {
   AppGraphBuilder,
@@ -26,7 +26,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const BrainPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addSchemaModule({ schema: [Topic.Topic] }),
+  AppPlugin.addSchemaModule({ schema: [Project.Project] }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),

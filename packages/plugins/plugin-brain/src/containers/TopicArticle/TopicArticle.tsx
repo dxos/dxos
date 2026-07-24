@@ -5,16 +5,16 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Topic } from '@dxos/compute';
+import { Project } from '@dxos/compute';
 import { Card, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-export type TopicArticleProps = AppSurface.ObjectArticleProps<Topic.Topic>;
+export type TopicArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 /**
- * Detail view for one `Topic`: its label, summary, keyword chips, participants, and rolled-up
- * questions / tasks / member-thread subjects. Renders the topic's own stored fields (self-contained —
+ * Detail view for one `Project`: its label, summary, keyword chips, participants, and rolled-up
+ * questions / tasks / member-thread subjects. Renders the project's own stored fields (self-contained —
  * no cross-object resolution); resolving `threadIds` to live messages with click-to-open is a follow-up.
  */
 export const TopicArticle = ({ role, subject: topic }: TopicArticleProps) => {

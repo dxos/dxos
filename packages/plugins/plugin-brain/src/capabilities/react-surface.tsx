@@ -8,12 +8,12 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Topic } from '@dxos/compute';
+import { Project } from '@dxos/compute';
 
 import { FactsCompanion, TopicArticle } from '#containers';
 import { BrainSurface } from '#types';
 
-/** React surfaces contributed by plugin-brain — the per-space facts panel and the Topic detail article. */
+/** React surfaces contributed by plugin-brain — the per-space facts panel and the Project detail article. */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'brain.topic',
-        filter: AppSurface.object(AppSurface.Article, Topic.Topic),
+        filter: AppSurface.object(AppSurface.Article, Project.Project),
         component: ({ data, role }) => <TopicArticle role={role} subject={data.subject} />,
       }),
     ]),

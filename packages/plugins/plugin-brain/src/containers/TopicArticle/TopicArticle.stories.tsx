@@ -8,7 +8,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Topic } from '@dxos/compute';
+import { Project } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -22,7 +22,7 @@ import { TopicArticle } from './TopicArticle';
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const topics = useQuery(space?.db, Filter.type(Topic.Topic));
+  const topics = useQuery(space?.db, Filter.type(Project.Project));
   const topic = topics.find((entry) => entry.name === name);
   if (!space?.db || !topic) {
     return <Loading data={{ db: !!space?.db, topic: !!topic }} />;
@@ -42,13 +42,13 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Topic.Topic],
+          types: [Project.Project],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
                 personalSpace.db.add(
-                  Topic.make({
+                  Project.make({
                     name: 'Topic 1',
                   }),
                 );
