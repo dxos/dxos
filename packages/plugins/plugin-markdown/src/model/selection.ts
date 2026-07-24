@@ -4,7 +4,7 @@
 
 import { getTextInAnchorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 
 import { type Markdown } from '#types';
 

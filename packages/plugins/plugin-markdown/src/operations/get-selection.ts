@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 
 import { getSelectionRanges } from '../model/selection';
 import { MarkdownOperation } from '../types';
