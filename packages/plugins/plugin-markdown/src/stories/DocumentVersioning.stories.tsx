@@ -263,6 +263,7 @@ const DefaultStory = () => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const id = doc ? Obj.getURI(doc) : undefined;
+
   // Establish the attention scope for `id` so the editor toolbar's attendable-scoped menu actions
   // resolve (a bare Surface has no attended element for the toolbar's `Menu.Root` to bind to).
   const attentionAttrs = useAttentionAttributes(id);

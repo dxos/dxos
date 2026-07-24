@@ -55,7 +55,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-markdown/containers/DocumentHistory',
+  title: 'plugins/plugin-markdown/stories/DocumentHistory',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),

@@ -47,8 +47,8 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
     selection.kind === 'branch'
       ? subject.history?.branches.find((branch) => branch.id === selection.branchId && branch.status === 'active')
       : undefined;
-  // The checkpoint being viewed (selection.kind === 'checkpoint'). A new branch created while
-  // viewing a checkpoint forks from THAT revision, not the live tip.
+  // The checkpoint being viewed (selection.kind === 'checkpoint').
+  // A new branch created while viewing a checkpoint forks from THAT revision, not the live tip.
   const activeVersion =
     selection.kind === 'checkpoint'
       ? subject.history?.versions.find((version) => version.id === selection.versionId)
