@@ -2,15 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
-import { NativePasskey } from '@dxos/app-toolkit';
-import { type ClientServicesProvider, type Config } from '@dxos/client';
-import { type IdbLogStore } from '@dxos/log-store-idb';
-import { type Observability } from '@dxos/observability';
+import { type Plugin } from '@dxos/app-framework';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
 import { BloggerPlugin } from '@dxos/plugin-blogger/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
@@ -19,7 +12,6 @@ import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessComPlugin } from '@dxos/plugin-chess-com/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
 import { CommentsPlugin } from '@dxos/plugin-comments/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
@@ -28,7 +20,6 @@ import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
-import { DeckPlugin } from '@dxos/plugin-deck/plugin';
 import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';
 import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
@@ -38,7 +29,6 @@ import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
-import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { HeyGenPlugin } from '@dxos/plugin-heygen/plugin';
 import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
 import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
@@ -54,9 +44,6 @@ import { MeetingPlugin } from '@dxos/plugin-meeting/plugin';
 import { MermaidPlugin } from '@dxos/plugin-mermaid/plugin';
 import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
 import { NativePlugin } from '@dxos/plugin-native/plugin';
-import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
-import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
-import { OnboardingPlugin } from '@dxos/plugin-onboarding/plugin';
 import { OsrmPlugin } from '@dxos/plugin-osrm/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PaymentsPlugin } from '@dxos/plugin-payments/plugin';
@@ -65,28 +52,21 @@ import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
-import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
 import { SearchPlugin } from '@dxos/plugin-search/plugin';
 import { SequencerPlugin } from '@dxos/plugin-sequencer/plugin';
-import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
 import { SheetPlugin } from '@dxos/plugin-sheet/plugin';
 import { SidekickPlugin } from '@dxos/plugin-sidekick/plugin';
-import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout/plugin';
 import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
 import { SlackPlugin } from '@dxos/plugin-slack/plugin';
-import { SpacePlugin } from '@dxos/plugin-space/plugin';
 import { SpacetimePlugin } from '@dxos/plugin-spacetime/plugin';
-import { SpotlightPlugin } from '@dxos/plugin-spotlight/plugin';
 import { StackPlugin } from '@dxos/plugin-stack/plugin';
-import { StatusBarPlugin } from '@dxos/plugin-status-bar/plugin';
 import { StudioPlugin } from '@dxos/plugin-studio/plugin';
 import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
-import { ThemePlugin } from '@dxos/plugin-theme/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
@@ -100,29 +80,14 @@ import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
 import { ZenPlugin } from '@dxos/plugin-zen/plugin';
 import { isTruthy } from '@dxos/util';
 
-import { downloadLogs, steps } from './util';
+import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
+import { steps } from './util';
 
-const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
+export type { PluginConfig, State } from './plugin-defs.core';
 
-export type State = {
-  appKey: string;
-  config: Config;
-  services: ClientServicesProvider;
-  observability: Promise<Observability.Observability>;
-  logStore: IdbLogStore;
-};
-
-export type PluginConfig = State & {
-  isDev?: boolean;
-  isLocal?: boolean;
-  isPwa?: boolean;
-  isTauri?: boolean;
-  isLabs?: boolean;
-  isStrict?: boolean;
-  isPopover?: boolean;
-  isMobile?: boolean;
-};
-
+/**
+ * Plugin keys enabled by default for new users, per environment (dev/local/labs).
+ */
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
@@ -176,25 +141,14 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     .filter(isTruthy)
     .flat();
 
-export const getPlugins = ({
-  appKey,
-  config,
-  services,
-  observability,
-  logStore,
-  isDev,
-  isLocal,
-  isLabs,
-  isPwa,
-  isTauri,
-  isPopover,
-  isMobile,
-}: PluginConfig): Plugin.Plugin[] => {
-  const layoutPlugin = isPopover ? SpotlightPlugin() : isMobile ? SimpleLayoutPlugin({}) : DeckPlugin();
-  const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
+/**
+ * Full Composer plugin registry: shared core infrastructure plus every content plugin.
+ */
+export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
+  const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = conf;
   return [
+    ...getCorePlugins(conf),
     AssistantPlugin(),
-    AttentionPlugin(),
     BoardPlugin(),
     BookmarksPlugin(),
     BrainPlugin(),
@@ -202,22 +156,6 @@ export const getPlugins = ({
     ChessPlugin(),
     ChessComPlugin(),
     CommentsPlugin(),
-    ClientPlugin({
-      config,
-      services,
-      shareableLinkOrigin: origin,
-      onReset: ({ target }) =>
-        Effect.sync(() => {
-          localStorage.clear();
-          if (target === 'deviceInvitation') {
-            window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-          } else if (target === 'recoverIdentity') {
-            window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-          } else {
-            window.location.pathname = '/';
-          }
-        }),
-    }),
     ConductorPlugin(),
     ConnectorPlugin(),
     !isTauri && CrxPlugin(),
@@ -233,10 +171,8 @@ export const getPlugins = ({
     ExplorerPlugin(),
     MagazinePlugin(),
     GamePlugin(),
-    GraphPlugin(),
     InboxPlugin(),
     KanbanPlugin(),
-    layoutPlugin,
     MapPlugin(),
     isLocal && MapPluginSolid(),
     MarkdownPlugin(),
@@ -244,51 +180,31 @@ export const getPlugins = ({
     MermaidPlugin(),
     isTauri && !isMobile && !isPopover && NativePlugin(),
     isTauri && !isMobile && !isPopover && NativeFilesystemPlugin(),
-    NavTreePlugin(),
-    ObservabilityPlugin({
-      namespace: appKey,
-      observability: () => observability,
-      downloadLogs: () => downloadLogs(logStore),
-    }),
     OsrmPlugin(),
     OutlinerPlugin(),
     PaymentsPlugin(),
     PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
-    ProcessManagerPlugin(),
     ProgressPlugin(),
     CommercePlugin(),
     CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
-    RegistryPlugin(),
     RoutinePlugin(),
     isLocal && SamplePlugin(),
     SandboxPlugin(),
     ScriptPlugin(),
     SearchPlugin(),
     (isDev || isLabs) && SidekickPlugin(),
-    SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
-    SpacePlugin({
-      observability: true,
-      shareableLinkOrigin: origin,
-    }),
     VersioningPlugin(),
     CodePlugin(),
     StackPlugin(),
-    StatusBarPlugin(),
     SupportPlugin({ helpSteps: steps }),
     TablePlugin(),
-    ThemePlugin({
-      appName: 'Composer',
-      noCache: isDev,
-      platform: isMobile ? 'mobile' : 'desktop',
-    }),
     ThreadPlugin(),
     TranscriptionPlugin(),
-    OnboardingPlugin({ generateExemplarSpace: !isLocal }),
 
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BloggerPlugin(),

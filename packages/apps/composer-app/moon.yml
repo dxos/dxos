@@ -45,6 +45,38 @@ tasks:
   serve:
     deps:
       - prebuild
+  # Minimal-plugin dev server: skips `^:build` — vite dev resolves @dxos/* from
+  # source (importSource) — and builds only packages whose dist is consumed.
+  # Keep the dep list in sync with the importSource `exclude` list in
+  # vite.config.ts. DX_PLUGIN_SET=minimal swaps in plugin-defs.minimal.tsx.
+  serve-min:
+    command: pnpm exec vite dev
+    env:
+      DX_PLUGIN_SET: minimal
+    preset: server
+    deps:
+      - prebuild
+      # dist consumed at runtime (importSource exclude list).
+      - client-services:build
+      - config:build
+      - lit-grid:build
+      - lit-ui:build
+      - lock-file:build
+      - network-manager:build
+      - observability:build
+      - protocols:build
+      - random-access-storage:build
+      - teleport:build
+      # No `source` export condition — dist is the only entry.
+      - shell:build
+      # dist consumed at config-load time (vite.config.ts imports).
+      - app-framework:build
+      - ui-theme:build
+      - util:build
+      - vite-plugin-icons:build
+      - vite-plugin-import-source:build
+      - vite-plugin-log:build
+      - vite-plugin-shutdown:build
   # Dev-server startup harness — measures `vite serve` against the shared
   # `dev-startup.spec.ts`. Distinct from `e2e` (which inherits from `ts-test`'s
   # default playwright config and runs the production preview harness).
