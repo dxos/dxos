@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vite-plugin-shutdown",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Vite dev plugin: close the server and exit on SIGINT/SIGTERM so Ctrl-C reliably stops `vite dev` even when launched through pnpm/moon.",
   "homepage": "https://dxos.org",

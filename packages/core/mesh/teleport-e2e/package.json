@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport-e2e",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Teleport public-API and integration tests.",
   "homepage": "https://dxos.org",

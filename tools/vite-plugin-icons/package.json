@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vite-plugin-icons",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Vite plugin for generating icon sprites.",
   "homepage": "https://dxos.org",

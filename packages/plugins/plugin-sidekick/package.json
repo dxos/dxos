@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sidekick",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Personal companion agent plugin",
   "homepage": "https://dxos.org",

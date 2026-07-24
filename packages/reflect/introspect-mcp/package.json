@@ -1,6 +1,6 @@
 {
   "name": "@dxos/introspect-mcp",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "MCP server exposing DXOS monorepo introspection.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

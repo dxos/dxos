@@ -1,6 +1,6 @@
 {
   "name": "@dxos/story-modules",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Surface-grid container for driving storybook layouts from a 2D array of module role tokens.",
   "homepage": "https://dxos.org",

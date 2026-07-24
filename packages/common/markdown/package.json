@@ -1,6 +1,6 @@
 {
   "name": "@dxos/markdown",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "HTML to Markdown conversion and text normalization utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
