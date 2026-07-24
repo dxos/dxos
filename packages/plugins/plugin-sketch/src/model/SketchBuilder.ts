@@ -3,14 +3,13 @@
 //
 
 //
-// A minimal, chainable builder for tldraw (`tldraw.com/2`) canvas snapshots.
-// Produces the record map stored in `Sketch.Canvas.content`, suitable for
-// seeding stories/tests without hand-writing verbose tldraw records.
+// A minimal, chainable builder for tldraw (`tldraw.com/2`) canvas records.
+// Produces the record map stored in `Sketch.Canvas.content`. Used directly to seed
+// stories/tests (`build()`), and by the scene renderer (`render.ts`) to compile the
+// neutral scene DSL into records merged into an existing canvas (`records()`).
 //
 
 import { invariant } from '@dxos/invariant';
-
-// TODO(burdon): Factor out and create a formal API.
 
 export type Color =
   | 'black'
@@ -84,11 +83,29 @@ export type ConnectorProps = Omit<StyleProps, 'align'> & {
   end?: Point;
 };
 
+/** Open or closed path through explicit points. */
+export type PathProps = Omit<StyleProps, 'align'> & {
+  id?: string;
+  points: readonly Point[];
+  /** Smooth (cubic spline) instead of straight segments. */
+  smooth?: boolean;
+  /** Close the path back to the first point. */
+  closed?: boolean;
+};
+
 export type Point = { x: number; y: number };
 
 export type CanvasContent = Record<string, any>;
 
-const PAGE_ID = 'page:page';
+export const PAGE_ID = 'page:page';
+export const DOCUMENT_ID = 'document:document';
+
+export type BuilderOptions = {
+  /** Fractional-index counter seed; pass a value past existing content when merging. */
+  indexStart?: number;
+  /** Per-shape meta, keyed by handle; merged into each generated record's `meta`. */
+  metaFor?: (handle: string) => Record<string, any>;
+};
 
 const DEFAULTS: {
   color: Color;
@@ -127,9 +144,25 @@ type Box = { id: string; x: number; y: number; w: number; h: number };
 export class SketchBuilder {
   readonly #records: CanvasContent = {};
   readonly #boxes = new Map<string, Box>();
+  readonly #metaFor?: (handle: string) => Record<string, any>;
   #shapeCount = 0;
   #bindingCount = 0;
-  #indexCount = 0;
+  #indexCount: number;
+
+  constructor(options: BuilderOptions = {}) {
+    this.#indexCount = options.indexStart ?? 0;
+    this.#metaFor = options.metaFor;
+  }
+
+  /**
+   * Register a shape that already exists on the canvas (its bounding box in canvas px)
+   * so connectors added by this builder can bind to it.
+   */
+  external(handle: string, box: { x: number; y: number; w: number; h: number }, shapeId?: string): this {
+    invariant(!this.#boxes.has(handle), `duplicate shape id: ${handle}`);
+    this.#boxes.set(handle, { id: shapeId ?? `shape:${handle}`, ...box });
+    return this;
+  }
 
   /** Add a rectangle. */
   rectangle(props: ShapeProps = {}): this {
@@ -162,7 +195,7 @@ export class SketchBuilder {
       parentId: PAGE_ID,
       isLocked: false,
       opacity: 1,
-      meta: {},
+      meta: this.#meta(id),
       props: {
         geo,
         w,
@@ -200,7 +233,7 @@ export class SketchBuilder {
       parentId: PAGE_ID,
       isLocked: false,
       opacity: 1,
-      meta: {},
+      meta: this.#meta(id),
       props: {
         color: props.color ?? DEFAULTS.color,
         size: props.size ?? DEFAULTS.size,
@@ -226,13 +259,63 @@ export class SketchBuilder {
     return this.#connector('line', props);
   }
 
-  /** Build the canvas content record map. */
+  /** Add a path (open or closed, straight or smooth) through explicit points. */
+  path(props: PathProps): this {
+    const { id, smooth, closed } = props;
+    const source = closed && props.points.length > 1 ? [...props.points, props.points[0]] : [...props.points];
+    invariant(source.length >= 2, 'path requires at least two points');
+    const origin = source[0];
+    const xs = source.map((point) => point.x);
+    const ys = source.map((point) => point.y);
+    const shapeId = this.#registerShape({
+      id,
+      x: Math.min(...xs),
+      y: Math.min(...ys),
+      w: Math.max(...xs) - Math.min(...xs),
+      h: Math.max(...ys) - Math.min(...ys),
+    });
+    this.#records[shapeId] = {
+      id: shapeId,
+      typeName: 'shape',
+      type: 'line',
+      x: origin.x,
+      y: origin.y,
+      rotation: 0,
+      index: this.#nextIndex(),
+      parentId: PAGE_ID,
+      isLocked: false,
+      opacity: 1,
+      meta: this.#meta(id),
+      props: {
+        color: props.color ?? DEFAULTS.color,
+        dash: props.dash ?? DEFAULTS.dash,
+        size: props.size ?? DEFAULTS.size,
+        spline: smooth ? 'cubic' : 'line',
+        points: Object.fromEntries(
+          source.map((point, i) => [
+            `a${i + 1}`,
+            { id: `a${i + 1}`, index: `a${i + 1}`, x: point.x - origin.x, y: point.y - origin.y },
+          ]),
+        ),
+        scale: 1,
+      },
+    };
+
+    return this;
+  }
+
+  /** Build the full canvas snapshot (document + page + records). */
   build(): CanvasContent {
     return {
-      'document:document': { gridSize: 10, name: '', meta: {}, id: 'document:document', typeName: 'document' },
+      [DOCUMENT_ID]: { gridSize: 10, name: '', meta: {}, id: DOCUMENT_ID, typeName: 'document' },
       [PAGE_ID]: { meta: {}, id: PAGE_ID, name: 'Page 1', index: 'a1', typeName: 'page' },
       ...this.#records,
     };
+  }
+
+  /** Return only the generated records (for merging into an existing canvas). */
+  records(): CanvasContent {
+    return { ...this.#records };
   }
 
   #connector(type: 'arrow' | 'line', props: ConnectorProps): this {
@@ -264,7 +347,7 @@ export class SketchBuilder {
         parentId: PAGE_ID,
         isLocked: false,
         opacity: 1,
-        meta: {},
+        meta: this.#meta(props.id),
         props: {
           ...style,
           labelColor: DEFAULTS.color,
@@ -300,7 +383,7 @@ export class SketchBuilder {
         parentId: PAGE_ID,
         isLocked: false,
         opacity: 1,
-        meta: {},
+        meta: this.#meta(props.id),
         props: {
           ...style,
           spline: 'line',
@@ -317,7 +400,8 @@ export class SketchBuilder {
   }
 
   #binding(arrowId: string, shapeId: string, terminal: 'start' | 'end'): void {
-    const bindingId = `binding:b${++this.#bindingCount}`;
+    // Deterministic per-terminal id so re-rendering an arrow overwrites its own bindings.
+    const bindingId = `binding:${arrowId.slice('shape:'.length)}/${terminal}-${++this.#bindingCount}`;
     this.#records[bindingId] = {
       id: bindingId,
       typeName: 'binding',
@@ -332,6 +416,10 @@ export class SketchBuilder {
         isPrecise: false,
       },
     };
+  }
+
+  #meta(handle: string | undefined): Record<string, any> {
+    return handle && this.#metaFor ? this.#metaFor(handle) : {};
   }
 
   #registerShape(box: { id?: string; x: number; y: number; w: number; h: number }): string {

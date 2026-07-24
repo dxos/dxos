@@ -16,7 +16,7 @@ const EASING = 'cubic-bezier(0.2, 0, 0, 1)';
  */
 const ANIMATE_MAX_DELTA = 8;
 
-const prefersReducedMotion = () =>
+export const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /**
@@ -63,6 +63,9 @@ export const useFlip = ({ nodes, ids, rects, columnCount, containerWidth, enable
   const previousLayout = useRef<{ columnCount: number; containerWidth: number } | null>(null);
 
   useLayoutEffect(() => {
+    // Without committed positions this is the first non-empty layout — snap it (the initial
+    // render), even for a small set that would otherwise read as a handful of added tiles.
+    const hasPriorPositions = previous.current.size > 0;
     // Classify the reflow before recording new positions: added/removed relative to
     // the last rendered id set, and whether the container dimensions changed (resize).
     const idSet = new Set(ids);
@@ -83,7 +86,8 @@ export const useFlip = ({ nodes, ids, rects, columnCount, containerWidth, enable
       (previousLayout.current.columnCount !== columnCount || previousLayout.current.containerWidth !== containerWidth);
     previousLayout.current = { columnCount, containerWidth };
 
-    const animate = enabled && !prefersReducedMotion() && shouldAnimateReflow({ added, removed, resized });
+    const animate =
+      hasPriorPositions && enabled && !prefersReducedMotion() && shouldAnimateReflow({ added, removed, resized });
     const seen = new Set<string>();
 
     ids.forEach((id, index) => {

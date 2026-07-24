@@ -15959,6 +15959,9 @@ importers:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-runtime
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -15977,6 +15980,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.21.4)(vitest@4.1.10)
       '@types/lodash.defaultsdeep':
         specifier: 'catalog:'
         version: 4.6.7

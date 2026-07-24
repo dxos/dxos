@@ -17,24 +17,92 @@ export const cellRect = (
   { x, y, w, h }: { x: number; y: number; w: number; h: number },
   cellSize: GridCellSize,
   gap: number,
+  // Perimeter breathing room around the grid, in cell units (a cell = its size + one gap). Offsets
+  // every cell so the grid isn't flush to the board edges; 0 leaves the grid flush.
+  margin = 0,
 ): Rect => ({
-  left: gap + x * (cellSize.width + gap),
-  top: gap + y * (cellSize.height + gap),
+  left: margin * (cellSize.width + gap) + gap + x * (cellSize.width + gap),
+  top: margin * (cellSize.height + gap) + gap + y * (cellSize.height + gap),
   width: w * cellSize.width + Math.max(0, w - 1) * gap,
   height: h * cellSize.height + Math.max(0, h - 1) * gap,
 });
 
 /**
- * Overall pixel size of a grid with the given column/row count.
+ * Overall pixel size of a grid with the given column/row count, plus `margin` cells of perimeter
+ * breathing room on each side (see {@link cellRect}).
  */
 export const gridBounds = (
   columns: number,
   rows: number,
   cellSize: GridCellSize,
   gap: number,
+  margin = 0,
 ): { width: number; height: number } => ({
-  width: columns * (cellSize.width + gap) + gap,
-  height: rows * (cellSize.height + gap) + gap,
+  width: (columns + 2 * margin) * (cellSize.width + gap) + gap,
+  height: (rows + 2 * margin) * (cellSize.height + gap) + gap,
+});
+
+type Size = { width: number; height: number };
+export type Point = { x: number; y: number };
+export type Scroll = { left: number; top: number };
+
+/**
+ * The board's top-left offset (px) within the scroll content. Under overscroll it is half the
+ * viewport (so any cell can reach the centre); otherwise it is the margin that centres a board
+ * smaller than the viewport, and 0 once the scaled board overflows. Board.Viewport applies this as
+ * the board's margin, and the scroll/zoom math below assumes a content point maps to
+ * `pad + point * zoom`, so all three must use this single definition to stay consistent.
+ */
+export const boardPad = ({
+  viewport,
+  board,
+  zoom,
+  overscroll,
+}: {
+  viewport: Size;
+  board: Size;
+  zoom: number;
+  overscroll: boolean;
+}): Point => ({
+  x: overscroll ? viewport.width / 2 : Math.max(0, (viewport.width - board.width * zoom) / 2),
+  y: overscroll ? viewport.height / 2 : Math.max(0, (viewport.height - board.height * zoom) / 2),
+});
+
+/** The unscaled content point currently at the viewport centre (inverse of {@link anchoredScroll}). */
+export const viewportCenterAnchor = ({
+  scroll,
+  viewport,
+  pad,
+  zoom,
+}: {
+  scroll: Scroll;
+  viewport: Size;
+  pad: Point;
+  zoom: number;
+}): Point => ({
+  x: (scroll.left + viewport.width / 2 - pad.x) / zoom,
+  y: (scroll.top + viewport.height / 2 - pad.y) / zoom,
+});
+
+/**
+ * Scroll offset that places the unscaled content point `anchor` at the viewport centre. The result
+ * may fall outside the scroll range (e.g. negative once the scaled board fits the viewport and an
+ * off-centre anchor can no longer be scrolled to the middle); the browser clamps it and the `pad`
+ * margin then centres the fitting board — the intended fallback.
+ */
+export const anchoredScroll = ({
+  anchor,
+  viewport,
+  pad,
+  zoom,
+}: {
+  anchor: Point;
+  viewport: Size;
+  pad: Point;
+  zoom: number;
+}): Scroll => ({
+  left: pad.x + anchor.x * zoom - viewport.width / 2,
+  top: pad.y + anchor.y * zoom - viewport.height / 2,
 });
 
 /** A tile position (span optional, defaulting to 1×1) as stored in a layout keyed by id. */

@@ -17,9 +17,8 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { Sketch } from '@dxos/plugin-sketch';
+import { Sketch, SketchModel } from '@dxos/plugin-sketch';
 import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
-import { SketchBuilder } from '@dxos/plugin-sketch/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -42,7 +41,7 @@ random.seed(1);
 const generator: ValueGenerator = random as any;
 
 // A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test sketch.
-const SKETCH_CONTENT = new SketchBuilder()
+const SKETCH_CONTENT = new SketchModel.SketchBuilder()
   .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
   .build();
 
