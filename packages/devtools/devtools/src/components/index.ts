@@ -9,7 +9,6 @@ export * from './BooleanIcon';
 export * from './ControlledSelector';
 export * from './JsonView';
 export * from './MasterDetailTable';
-export * from './PanelContainer';
 export * from './Placeholder';
 export * from './PropertiesTable';
 export * from './PublicKeySelector';

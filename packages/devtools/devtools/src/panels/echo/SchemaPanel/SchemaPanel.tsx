@@ -9,11 +9,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DXN, Entity, Format, Type } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
-import { ObjectViewer, PanelContainer, Placeholder, Searchbar } from '../../../components';
+import { ObjectViewer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
@@ -127,47 +127,48 @@ export const SchemaPanel = (props: { space?: Space }) => {
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root classNames='bs-full'>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
-      }
-    >
-      <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
-        <div className='flex flex-col w-full overflow-hidden'>
-          <DynamicTable
-            properties={dataProperties}
-            rows={dataRows}
-            features={features}
-            onRowClick={handleObjectRowClicked}
-          />
-          <div
-            className={mx(
-              'h-(--dx-statusbar-size)',
-              'flex shrink-0 justify-end items-center gap-2',
-              'bg-base-surface text-description',
-            )}
-          >
-            <div className='text-sm pe-2'>Objects: {dataRows.length}</div>
+      </Panel.Toolbar>
+      <Panel.Content classNames='overflow-auto'>
+        <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
+          <div className='flex flex-col w-full overflow-hidden'>
+            <DynamicTable
+              properties={dataProperties}
+              rows={dataRows}
+              features={features}
+              onRowClick={handleObjectRowClicked}
+            />
+            <div
+              className={mx(
+                'h-(--dx-statusbar-size)',
+                'flex shrink-0 justify-end items-center gap-2',
+                'bg-base-surface text-description',
+              )}
+            >
+              <div className='text-sm pe-2'>Objects: {dataRows.length}</div>
+            </div>
           </div>
-        </div>
 
-        <div className='min-h-0 h-full border-s border-t border-separator'>
-          <div className={mx('p-1 min-h-0 h-full overflow-auto')}>
-            {selected ? (
-              <ObjectViewer
-                object={selected.jsonSchema}
-                id={Type.getURI(selected)?.toString()}
-                onNavigate={onNavigate}
-              />
-            ) : (
-              <Placeholder label='Data' />
-            )}
+          <div className='min-h-0 h-full border-s border-t border-separator'>
+            <div className={mx('p-1 min-h-0 h-full overflow-auto')}>
+              {selected ? (
+                <ObjectViewer
+                  object={selected.jsonSchema}
+                  id={Type.getURI(selected)?.toString()}
+                  onNavigate={onNavigate}
+                />
+              ) : (
+                <Placeholder label='Data' />
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </PanelContainer>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

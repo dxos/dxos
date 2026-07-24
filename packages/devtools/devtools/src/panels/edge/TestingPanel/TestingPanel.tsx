@@ -11,9 +11,8 @@ import { Context } from '@dxos/context';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { IconButton, Toolbar } from '@dxos/react-ui';
+import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 
-import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks';
 import { SyncStateInfo } from '../../echo';
@@ -65,17 +64,17 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
   };
 
   return (
-    <PanelContainer
-      classNames='flex flex-col gap-4 p-4'
-      toolbar={
+    <Panel.Root classNames='bs-full'>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           <DataSpaceSelector />
           <Toolbar.IconButton icon='ph--plus--regular' label='Create Space' onClick={handleSpaceCreate} />
         </Toolbar.Root>
-      }
-    >
-      <IconButton icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
-      <div className='border-t border-separator'>{space && <SyncStateInfo space={space} />}</div>
-    </PanelContainer>
+      </Panel.Toolbar>
+      <Panel.Content classNames='overflow-auto flex flex-col gap-4 p-4'>
+        <IconButton icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
+        <div className='border-t border-separator'>{space && <SyncStateInfo space={space} />}</div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

@@ -12,10 +12,9 @@ import { log } from '@dxos/log';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { useFileDownload } from '@dxos/react-ui';
+import { Panel, useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
 import { importData } from './backup';
 import { DialogRestoreSpace } from './DialogRestoreSpace';
@@ -175,34 +174,36 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <PanelContainer classNames='overflow-auto flex-1'>
-      {/* TODO(burdon): This should not be a dialog. */}
-      <DialogRestoreSpace
-        {...(importTargetSpaceId !== null
-          ? {
-              open: true,
-              onOpenChange: (nextOpen: boolean) => {
-                if (!nextOpen) {
-                  setImportTargetSpaceId(null);
-                }
-              },
-              spaceName: importTargetSpace?.isOpen
-                ? (importTargetSpace.properties.name ?? importTargetSpace.id)
-                : undefined,
-              handleFile: handleImportIntoSpace,
-            }
-          : {
-              handleFile: handleImport,
-            })}
-      />
-      <DynamicTable
-        properties={properties}
-        rows={rows}
-        features={features}
-        rowActions={rowActions}
-        onRowClick={handleRowClicked}
-        onRowAction={handleRowAction}
-      />
-    </PanelContainer>
+    <Panel.Root classNames='bs-full'>
+      <Panel.Content classNames='overflow-auto flex-1'>
+        {/* TODO(burdon): This should not be a dialog. */}
+        <DialogRestoreSpace
+          {...(importTargetSpaceId !== null
+            ? {
+                open: true,
+                onOpenChange: (nextOpen: boolean) => {
+                  if (!nextOpen) {
+                    setImportTargetSpaceId(null);
+                  }
+                },
+                spaceName: importTargetSpace?.isOpen
+                  ? (importTargetSpace.properties.name ?? importTargetSpace.id)
+                  : undefined,
+                handleFile: handleImportIntoSpace,
+              }
+            : {
+                handleFile: handleImport,
+              })}
+        />
+        <DynamicTable
+          properties={properties}
+          rows={rows}
+          features={features}
+          rowActions={rowActions}
+          onRowClick={handleRowClicked}
+          onRowAction={handleRowAction}
+        />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

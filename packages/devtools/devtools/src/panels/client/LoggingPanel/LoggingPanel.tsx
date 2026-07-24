@@ -9,10 +9,10 @@ import { levels, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
-import { Toolbar, useFileDownload } from '@dxos/react-ui';
+import { Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { MasterDetailTable, PanelContainer, Searchbar, Select } from '../../../components';
+import { MasterDetailTable, Searchbar, Select } from '../../../components';
 
 const MAX_LOGS = 2_000;
 
@@ -130,17 +130,18 @@ export const LoggingPanel = () => {
   }, [logs, text, fileDownload]);
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root classNames='bs-full'>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Select items={presets} onValueChange={handleSearchChange} />
           <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={handleSearchChange} />
           <Toolbar.IconButton icon='ph--download--regular' iconOnly onClick={handleDownload} label='Download logs' />
           <Toolbar.IconButton icon='ph--x--regular' iconOnly onClick={() => setLogs([])} label='Clear logs' />
         </Toolbar.Root>
-      }
-    >
-      <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
-    </PanelContainer>
+      </Panel.Toolbar>
+      <Panel.Content classNames='overflow-auto'>
+        <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

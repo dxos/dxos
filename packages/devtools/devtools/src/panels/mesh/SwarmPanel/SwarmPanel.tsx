@@ -10,10 +10,9 @@ import { PublicKey } from '@dxos/keys';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { ComplexMap } from '@dxos/util';
-
-import { PanelContainer } from '../../../components';
 
 // Extend with table-specific properties
 type TableSwarmConnection = {
@@ -148,9 +147,11 @@ export const SwarmPanel = () => {
   }, [swarms, identityMap]);
 
   return (
-    <PanelContainer>
-      <DynamicTable properties={properties} rows={rows} />
-    </PanelContainer>
+    <Panel.Root classNames='bs-full'>
+      <Panel.Content classNames='overflow-auto'>
+        <DynamicTable properties={properties} rows={rows} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

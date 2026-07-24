@@ -10,10 +10,8 @@ import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type StorageInfo } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Icon, Input, ScrollArea, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { Icon, Input, Panel, ScrollArea, Toolbar, useFileDownload } from '@dxos/react-ui';
 import { arrayToString, decodeUint8ArrayFromJson, isEncodedUint8Array } from '@dxos/util';
-
-import { PanelContainer } from '../../../components';
 
 const TABLES_QUERY = "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;";
 const DATABASE_LIST_QUERY = 'PRAGMA database_list';
@@ -273,9 +271,8 @@ export const SqlitePanel = () => {
   }, [databaseInfo]);
 
   return (
-    <PanelContainer
-      classNames='grid grid-cols-[240px_1fr] divide-x divide-separator h-full'
-      toolbar={
+    <Panel.Root classNames='bs-full'>
+      <Panel.Toolbar asChild>
         <Toolbar.Root className='col-span-2'>
           <Toolbar.Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
             Run Query
@@ -290,120 +287,121 @@ export const SqlitePanel = () => {
             disabled={isExporting}
           />
         </Toolbar.Root>
-      }
-    >
-      <div className='flex flex-col h-full overflow-hidden'>
-        <div className='p-2 border-b border-separator'>
-          <div className='text-xs font-medium mb-2'>Database</div>
-          {databaseInfo ? (
-            <dl className='grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs font-mono'>
-              <InfoItem label='Version' value={databaseInfo.version} />
-              <InfoItem label='Backing' value={databaseInfo.backing} />
-              <InfoItem label='File' value={databaseInfo.databaseFile} />
-              <InfoItem label='Services' value={formatServicesMode(databaseInfo.servicesMode)} />
-              {configStaleInfo && <InfoItem label='Config' value={configStaleInfo} />}
-              <InfoItem label='Journal' value={databaseInfo.journalMode} />
-              <InfoItem label='Size' value={databaseSize != null ? bytes.format(databaseSize) : undefined} />
-              <InfoItem label='Free' value={freeSpace != null ? bytes.format(freeSpace) : undefined} />
-              <InfoItem label='Pages' value={formatPages(databaseInfo.pageCount, databaseInfo.pageSize)} />
-              <InfoItem label='Tables' value={tables.length > 0 ? String(tables.length) : undefined} />
-              <InfoItem
-                label='Origin'
-                value={
-                  databaseInfo.storageInfo
-                    ? `${bytes.format(databaseInfo.storageInfo.originUsage)} / ${bytes.format(databaseInfo.storageInfo.usageQuota)}`
-                    : undefined
-                }
-              />
-            </dl>
-          ) : (
-            <div className='text-sm text-neutral-400'>{isRefreshing ? 'Loading database info...' : 'No info.'}</div>
-          )}
-        </div>
-
-        <ScrollArea.Root thin>
-          <ScrollArea.Viewport classNames='p-2'>
-            <div className='text-xs font-medium mb-2'>Tables</div>
-            {tables.length === 0 ? (
-              <div className='text-sm text-neutral-400'>{isRefreshing ? 'Loading tables...' : 'No tables.'}</div>
+      </Panel.Toolbar>
+      <Panel.Content classNames='overflow-auto grid grid-cols-[240px_1fr] divide-x divide-separator h-full'>
+        <div className='flex flex-col h-full overflow-hidden'>
+          <div className='p-2 border-b border-separator'>
+            <div className='text-xs font-medium mb-2'>Database</div>
+            {databaseInfo ? (
+              <dl className='grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs font-mono'>
+                <InfoItem label='Version' value={databaseInfo.version} />
+                <InfoItem label='Backing' value={databaseInfo.backing} />
+                <InfoItem label='File' value={databaseInfo.databaseFile} />
+                <InfoItem label='Services' value={formatServicesMode(databaseInfo.servicesMode)} />
+                {configStaleInfo && <InfoItem label='Config' value={configStaleInfo} />}
+                <InfoItem label='Journal' value={databaseInfo.journalMode} />
+                <InfoItem label='Size' value={databaseSize != null ? bytes.format(databaseSize) : undefined} />
+                <InfoItem label='Free' value={freeSpace != null ? bytes.format(freeSpace) : undefined} />
+                <InfoItem label='Pages' value={formatPages(databaseInfo.pageCount, databaseInfo.pageSize)} />
+                <InfoItem label='Tables' value={tables.length > 0 ? String(tables.length) : undefined} />
+                <InfoItem
+                  label='Origin'
+                  value={
+                    databaseInfo.storageInfo
+                      ? `${bytes.format(databaseInfo.storageInfo.originUsage)} / ${bytes.format(databaseInfo.storageInfo.usageQuota)}`
+                      : undefined
+                  }
+                />
+              </dl>
             ) : (
-              <div className='flex flex-col gap-1'>
-                {tables.map((tableName) => (
-                  <button
-                    key={tableName}
-                    type='button'
-                    className={[
-                      'flex items-center gap-2 rounded px-2 py-1 text-left text-xs font-mono hover:bg-hoverOverlay',
-                      selectedTable === tableName ? 'bg-hoverOverlay' : '',
-                    ].join(' ')}
-                    onClick={() => handleSelectTable(tableName)}
-                    disabled={isRunning}
-                  >
-                    <Icon icon='ph--table--regular' size={4} />
-                    {tableName}
-                  </button>
-                ))}
-              </div>
+              <div className='text-sm text-neutral-400'>{isRefreshing ? 'Loading database info...' : 'No info.'}</div>
             )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </div>
+          </div>
 
-      <div className='flex flex-col h-full overflow-hidden'>
-        <div className='flex flex-col gap-2 p-2 border-b border-separator'>
-          <Input.Root>
-            <Input.Label>SQL</Input.Label>
-            <Input.TextArea
-              value={query}
-              onChange={({ target }) => setQuery(target.value)}
-              classNames='min-h-24 font-mono text-xs'
-            />
-          </Input.Root>
-          <Input.Root>
-            <Input.Label>Params (JSON array)</Input.Label>
-            <Input.TextInput
-              value={params}
-              onChange={({ target }) => setParams(target.value)}
-              placeholder='[]'
-              classNames='font-mono text-xs'
-            />
-          </Input.Root>
+          <ScrollArea.Root thin>
+            <ScrollArea.Viewport classNames='p-2'>
+              <div className='text-xs font-medium mb-2'>Tables</div>
+              {tables.length === 0 ? (
+                <div className='text-sm text-neutral-400'>{isRefreshing ? 'Loading tables...' : 'No tables.'}</div>
+              ) : (
+                <div className='flex flex-col gap-1'>
+                  {tables.map((tableName) => (
+                    <button
+                      key={tableName}
+                      type='button'
+                      className={[
+                        'flex items-center gap-2 rounded px-2 py-1 text-left text-xs font-mono hover:bg-hoverOverlay',
+                        selectedTable === tableName ? 'bg-hoverOverlay' : '',
+                      ].join(' ')}
+                      onClick={() => handleSelectTable(tableName)}
+                      disabled={isRunning}
+                    >
+                      <Icon icon='ph--table--regular' size={4} />
+                      {tableName}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </div>
 
-        {error && <div className='p-2 text-sm text-red-500 font-mono'>{error}</div>}
+        <div className='flex flex-col h-full overflow-hidden'>
+          <div className='flex flex-col gap-2 p-2 border-b border-separator'>
+            <Input.Root>
+              <Input.Label>SQL</Input.Label>
+              <Input.TextArea
+                value={query}
+                onChange={({ target }) => setQuery(target.value)}
+                classNames='min-h-24 font-mono text-xs'
+              />
+            </Input.Root>
+            <Input.Root>
+              <Input.Label>Params (JSON array)</Input.Label>
+              <Input.TextInput
+                value={params}
+                onChange={({ target }) => setParams(target.value)}
+                placeholder='[]'
+                classNames='font-mono text-xs'
+              />
+            </Input.Root>
+          </div>
 
-        <ScrollArea.Root thin>
-          <ScrollArea.Viewport>
-            {rows.length === 0 && !error ? (
-              <div className='p-2 text-sm text-neutral-400'>No rows.</div>
-            ) : (
-              <table className='w-full text-xs font-mono'>
-                <thead>
-                  <tr className='border-b border-separator text-left'>
-                    {columns.map((column) => (
-                      <th key={column} className='p-2 font-medium'>
-                        {column}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, rowIndex) => (
-                    <tr key={rowIndex} className='border-b border-separator align-top'>
+          {error && <div className='p-2 text-sm text-red-500 font-mono'>{error}</div>}
+
+          <ScrollArea.Root thin>
+            <ScrollArea.Viewport>
+              {rows.length === 0 && !error ? (
+                <div className='p-2 text-sm text-neutral-400'>No rows.</div>
+              ) : (
+                <table className='w-full text-xs font-mono'>
+                  <thead>
+                    <tr className='border-b border-separator text-left'>
                       {columns.map((column) => (
-                        <td key={column} className='p-2 whitespace-pre-wrap break-all'>
-                          <CellValue value={row[column]} />
-                        </td>
+                        <th key={column} className='p-2 font-medium'>
+                          {column}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </div>
-    </PanelContainer>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, rowIndex) => (
+                      <tr key={rowIndex} className='border-b border-separator align-top'>
+                        {columns.map((column) => (
+                          <td key={column} className='p-2 whitespace-pre-wrap break-all'>
+                            <CellValue value={row[column]} />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

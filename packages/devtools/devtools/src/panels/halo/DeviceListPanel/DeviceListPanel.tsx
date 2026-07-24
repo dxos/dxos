@@ -6,9 +6,10 @@ import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
 import { Device, DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
+import { Panel } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { MasterDetailTable, PanelContainer } from '../../../components';
+import { MasterDetailTable } from '../../../components';
 
 export const DeviceListPanel = () => {
   const devices = useDevices();
@@ -57,13 +58,15 @@ export const DeviceListPanel = () => {
   );
 
   return (
-    <PanelContainer>
-      <MasterDetailTable
-        properties={properties}
-        data={data}
-        detailsTransform={(d) => d._original}
-        detailsPosition='bottom'
-      />
-    </PanelContainer>
+    <Panel.Root classNames='bs-full'>
+      <Panel.Content classNames='overflow-auto'>
+        <MasterDetailTable
+          properties={properties}
+          data={data}
+          detailsTransform={(d) => d._original}
+          detailsPosition='bottom'
+        />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

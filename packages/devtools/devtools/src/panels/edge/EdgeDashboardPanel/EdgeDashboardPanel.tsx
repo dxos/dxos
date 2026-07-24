@@ -5,10 +5,9 @@
 import React from 'react';
 
 import { PublicKey, useClient, useMulticastObservable } from '@dxos/react-client';
+import { Panel } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToString, deepMapValues } from '@dxos/util';
-
-import { PanelContainer } from '../../../components';
 
 export const EdgeDashboardPanel = () => {
   const client = useClient();
@@ -19,9 +18,11 @@ export const EdgeDashboardPanel = () => {
   );
 
   return (
-    <PanelContainer classNames='flex-1 flex-row'>
-      <JsonHighlighter data={formatData(serviceCredentials)} />
-    </PanelContainer>
+    <Panel.Root classNames='bs-full'>
+      <Panel.Content classNames='overflow-auto flex-1 flex-row'>
+        <JsonHighlighter data={formatData(serviceCredentials)} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

@@ -6,9 +6,9 @@ import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Icon, Input, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { Icon, Input, Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
 
-import { JsonView, PanelContainer, Tree } from '../../../components';
+import { JsonView, Tree } from '../../../components';
 
 export const DiagnosticsPanel = () => {
   const client = useClient();
@@ -57,8 +57,8 @@ export const DiagnosticsPanel = () => {
   };
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root classNames='bs-full'>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Input.Root>
             <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
@@ -69,9 +69,12 @@ export const DiagnosticsPanel = () => {
           <Toolbar.IconButton icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
           <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
         </Toolbar.Root>
-      }
-      footer={
-        info && (
+      </Panel.Toolbar>
+      <Panel.Content classNames='overflow-auto'>
+        {(true && <JsonView data={data} />) || <Tree data={data} />}
+      </Panel.Content>
+      {info && (
+        <Panel.Statusbar asChild>
           <div className='flex p-2 items-center text-sm font-mono gap-2'>
             {info.map((text, i) => (
               <button
@@ -84,10 +87,8 @@ export const DiagnosticsPanel = () => {
               </button>
             ))}
           </div>
-        )
-      }
-    >
-      {(true && <JsonView data={data} />) || <Tree data={data} />}
-    </PanelContainer>
+        </Panel.Statusbar>
+      )}
+    </Panel.Root>
   );
 };
