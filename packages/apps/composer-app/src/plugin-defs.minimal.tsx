@@ -36,4 +36,5 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
 export const getDefaults = (_: PluginConfig): string[] => [
   AssistantPlugin.meta.profile.key,
   MarkdownPlugin.meta.profile.key,
+  ReviewPlugin.meta.profile.key,
 ];

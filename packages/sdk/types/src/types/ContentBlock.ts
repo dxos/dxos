@@ -376,7 +376,7 @@ export type Suggestion = Schema.Schema.Type<typeof Suggestion>;
 /**
  * A suggested edit to a document: replace `before` with `after` at an anchored range. Rendered as a
  * review tile (struck original → proposed text) with Accept/Reject; the surrounding container maps it
- * back to the author's suggestion branch (see plugin-comments / `@dxos/versioning`).
+ * back to the author's suggestion branch (see plugin-review / `@dxos/versioning`).
  */
 export const Change = Schema.TaggedStruct('change', {
   /** The original text being replaced (empty for a pure insertion). */

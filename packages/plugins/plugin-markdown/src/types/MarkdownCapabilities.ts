@@ -51,7 +51,7 @@ export const EditorBindingHook = Capability.make<UseEditorBinding>(`${meta.profi
  * A contributed entry for the editor's view-mode dropdown: surfaces a per-document review mode (e.g.
  * "Suggesting") as a view-mode option beside the built-in preview/source/readonly. Selecting it sets
  * the document's review mode to {@link reviewMode}; it is checked when that mode is active. Contributed
- * by plugin-comments (which owns the suggestion/review feature) and consumed by the markdown toolbar,
+ * by plugin-review (which owns the suggestion/review feature) and consumed by the markdown toolbar,
  * so the option appears only when that plugin is present.
  */
 export type ViewModeExtension = {

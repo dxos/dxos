@@ -16,7 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       // The markdown editor's version-aware subject binding + review affordances — markdown owns the
-      // socket, versioning owns the behaviour (same inversion as plugin-comments' extension).
+      // socket, versioning owns the behaviour (same inversion as the comment-sync extension).
       Capability.contributes(MarkdownCapabilities.EditorBindingHook, useMarkdownEditorBinding),
       // Gates the History companion for markdown documents.
       Capability.contributes(ReviewCapabilities.HistoryProvider, {

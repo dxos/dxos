@@ -191,7 +191,7 @@ const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { 
     );
 
     // View-mode dropdown entries: the built-in editor modes plus any contributed review modes (e.g.
-    // Suggesting from plugin-comments). On the ambient path the dropdown is the single GDocs-style mode
+    // Suggesting from plugin-review). On the ambient path the dropdown is the single GDocs-style mode
     // control — selecting a built-in also sets the review posture (source→editing, preview/readonly→
     // viewing) so leaving a contributed mode works; a contributed entry sets its review mode directly.
     // Off the ambient path (an explicit branch/checkpoint is selected) the review mode has no effect, so
