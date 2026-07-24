@@ -283,7 +283,14 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
-      path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      // Under DX_PLUGIN_SET=minimal only the plugins registered in
+      // plugin-defs.minimal.tsx are scanned — keep the brace list in sync.
+      isMinimalPluginSet
+        ? path.resolve(
+            rootDir,
+            'packages/plugins/plugin-{assistant,attention,client,deck,graph,markdown,navtree,observability,onboarding,registry,settings,space,status-bar,theme,thread}/src/index.{ts,tsx}',
+          )
+        : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
