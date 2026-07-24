@@ -138,15 +138,25 @@ const main = async () => {
     process.exit(1);
   }
 
-  // Fail early with a clear message rather than a cryptic npm error (a dry run needs no auth).
+  // Ensure npm auth before publishing (a dry run needs none). If not logged in, run `npm login`
+  // interactively — npm opens its own browser flow; credentials never pass through this script.
   if (!dryRun) {
+    const whoami = () => execFileSync('npm', ['whoami'], { encoding: 'utf8' }).trim();
+    let user;
     try {
-      const whoami = execFileSync('npm', ['whoami'], { encoding: 'utf8' }).trim();
-      console.log(`npm user: ${whoami}`);
+      user = whoami();
     } catch {
-      console.error('ERROR: not authenticated to npm. Run `npm login` (needs publish rights to the package scope).');
-      process.exit(1);
+      console.log('\nNot authenticated to npm — starting `npm login` (browser flow).');
+      console.log(`The account needs publish rights to the ${pkg.name.split('/')[0]} scope.\n`);
+      try {
+        execFileSync('npm', ['login'], { stdio: 'inherit' });
+        user = whoami();
+      } catch {
+        console.error('ERROR: npm login did not complete; re-run this script once authenticated.');
+        process.exit(1);
+      }
     }
+    console.log(`npm user: ${user}`);
   }
 
   if (build) {
@@ -173,9 +183,16 @@ const main = async () => {
   const settingsUrl = `https://www.npmjs.com/package/${pkg.name}/access`;
   if (dryRun) {
     console.log('\nDry run complete — nothing was published.');
+    console.log(`Publish for real with: node scripts/publish-package.mjs ${pkg.name}`);
   } else {
     console.log(`\nPublished ${pkg.name}@${pkg.version}.`);
-    console.log(`Configure trusted publishing at: ${settingsUrl}`);
+    console.log('\nNext steps:');
+    console.log(`  1. Configure trusted publishing (OIDC) so CI can release future versions:`);
+    console.log(`     ${settingsUrl}`);
+    console.log('     → Trusted Publisher → GitHub Actions → repo dxos/dxos, workflow release.yml.');
+    console.log(`  2. Verify the publish: npm view ${pkg.name} version`);
+    console.log("  3. CI's check-packages-published now passes for this package; release automation");
+    console.log('     takes over from the next changeset release.');
     if (open) {
       openUrl(settingsUrl);
     }
