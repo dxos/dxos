@@ -42,4 +42,10 @@ describe('getMarkdownAnchorText', () => {
     const { doc } = await setup('hello');
     expect(getMarkdownAnchorText(doc, 'not-an-anchor')).toBeUndefined();
   });
+
+  test('returns undefined for an anchor with extra delimiters', async ({ expect }) => {
+    const { doc, accessor } = await setup('hello brave world');
+    const anchor = toCursorRange(accessor, 6, 11);
+    expect(getMarkdownAnchorText(doc, `${anchor}:extra`)).toBeUndefined();
+  });
 });

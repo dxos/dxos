@@ -72,6 +72,22 @@ describe('getSelectionContext', () => {
       resolvers: [throwingResolver],
     });
     expect(context?.selection?.text).toBe('brave');
-    expect(context?.selection?.anchors).toEqual(['stale:cursor', 'a:b']);
+    expect(context?.selection?.anchors).toEqual(['a:b']);
+  });
+
+  test('drops an unresolvable range from anchors so anchors stay aligned with text', ({ expect }) => {
+    const context = getSelectionContext({
+      object,
+      selection: {
+        mode: 'multi-range',
+        ranges: [
+          { from: 'x', to: 'y' },
+          { from: 'a', to: 'b' },
+        ],
+      },
+      resolvers: [resolver],
+    });
+    expect(context?.selection?.text).toBe('brave');
+    expect(context?.selection?.anchors).toEqual(['a:b']);
   });
 });

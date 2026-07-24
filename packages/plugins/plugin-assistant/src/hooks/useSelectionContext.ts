@@ -37,15 +37,21 @@ export const getSelectionContext = ({
     }
   };
 
-  const anchors = Selection.toAnchors(selection);
-  const parts = anchors
-    .map((anchor) => resolveAnchorText(anchor))
-    .filter((text): text is string => text != null && text.length > 0);
-  if (parts.length === 0) {
+  // Anchors and text stay pairwise-aligned: a range that fails to resolve is dropped from both.
+  const resolved = Selection.toAnchors(selection).flatMap((anchor) => {
+    const text = resolveAnchorText(anchor);
+    return text != null && text.length > 0 ? [{ anchor, text }] : [];
+  });
+  if (resolved.length === 0) {
     return undefined;
   }
 
-  return { selection: { anchors, text: parts.join('\n…\n') } };
+  return {
+    selection: {
+      anchors: resolved.map(({ anchor }) => anchor),
+      text: resolved.map(({ text }) => text).join('\n…\n'),
+    },
+  };
 };
 
 /** Submit-time provider of the companion object's current selection as request context. */

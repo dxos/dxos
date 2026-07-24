@@ -64,8 +64,9 @@ export const getTextInRange = (accessor: Doc.Accessor, start: string, end: strin
 
 /** Return the text spanned by an anchor string (`"${fromCursor}:${toCursor}"`). */
 export const getTextInAnchorRange = (accessor: Doc.Accessor, anchor: string): string | undefined => {
-  const [start, end] = anchor.split(':');
-  if (start === undefined || end === undefined) {
+  // Reject extra delimiters; empty tokens stay accepted as the defined ''/'end' cursor sentinels.
+  const [start, end, ...rest] = anchor.split(':');
+  if (start === undefined || end === undefined || rest.length > 0) {
     return undefined;
   }
   return getTextInRange(accessor, start, end);
