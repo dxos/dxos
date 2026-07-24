@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: web-components
+    status: active
+    user: root
+    host: vm
+    created: 2026-07-24
+    summary: Migrate Surface rendering from a single React tree to web-component boundaries (dx-surface) hosting per-root React trees, enabling framework-neutral surfaces and a gradual move off React. Patchwork integration is explicitly out of scope (a future thing this enables).
+    tasks: .agents/projects/web-components/TASKS.md
+    design: .agents/projects/web-components/DESIGN.md
+    prs: []
+    resume: 'Phase 0 not started. Next: extract composeContexts + kernel providers from App.tsx into a SurfaceRootProviders root factory in app-framework.'
+
   - name: sketch-scene-dsl
     status: active
     user: burdon
