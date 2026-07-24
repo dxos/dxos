@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Trigger from './types/Trigger';
@@ -329,15 +330,27 @@ export const encodeTraceMessage = (message: Pick<MessageData, 'meta' | 'isEpheme
   );
 
 /**
- * Decode a broadcast trace message back into a {@link Message} object (DX-1125).
+ * Decode a broadcast trace message back into a {@link Message} object (DX-1125). The wire payload
+ * drops ref meta fields, so `tags` — the broadcast envelope's tag list — is required to restore
+ * `meta.trigger` for consumers that address work by trigger (e.g. cancelling an edge run). The
+ * restored ref is address-only (`.uri`); it is never resolved.
  */
-export const decodeTraceMessage = (bytes: Uint8Array): Message => {
+export const decodeTraceMessage = (bytes: Uint8Array, tags?: readonly string[]): Message => {
   const parsed = JSON.parse(new TextDecoder().decode(bytes)) as Partial<MessageData>;
+  const meta = parsed.meta ?? {};
+  const trigger = meta.trigger ?? triggerFromTags(tags);
   return Obj.make(Message, {
-    meta: parsed.meta ?? {},
+    meta: { ...meta, ...(trigger ? { trigger } : {}) },
     isEphemeral: parsed.isEphemeral ?? true,
     events: parsed.events ?? [],
   });
+};
+
+/** The trigger ref carried on a broadcast envelope's `trigger:<uri>` tag, when present and parseable. */
+const triggerFromTags = (tags: readonly string[] | undefined): Ref.Ref<Trigger.Trigger> | undefined => {
+  const uri = tags?.find((tag) => tag.startsWith('trigger:'))?.slice('trigger:'.length);
+  const eid = uri !== undefined ? EID.tryParse(uri) : undefined;
+  return eid !== undefined ? Ref.fromURI(eid) : undefined;
 };
 
 /**

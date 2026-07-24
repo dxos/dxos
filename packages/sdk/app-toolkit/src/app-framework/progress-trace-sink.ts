@@ -80,6 +80,10 @@ export const createProgressTraceSink = (
     typeof progressRegistry === 'function' ? progressRegistry() : progressRegistry;
 
   const monitors = new Map<string, MonitorEntry>();
+  // Pid whose events are ignored for a key after the user cancelled it: the dying run's tail keeps
+  // broadcasting until the edge abort lands, and must not resurrect the removed monitor. A new run
+  // (different pid) clears the tombstone, so a failed cancel stays visible.
+  const cancelledPids = new Map<string, string>();
 
   const dropMonitor = (key: string) => {
     monitors.delete(key);
@@ -96,6 +100,9 @@ export const createProgressTraceSink = (
   };
 
   const makeOnCancel = (key: string, target: CancelTarget) => () => {
+    if (target.pid) {
+      cancelledPids.set(key, target.pid);
+    }
     options.cancelProcess?.(target);
     cancelMonitor(key);
   };
@@ -128,6 +135,14 @@ export const createProgressTraceSink = (
     const registry = resolveRegistry();
     if (!registry) {
       return;
+    }
+
+    const tombstonedPid = cancelledPids.get(key);
+    if (tombstonedPid !== undefined) {
+      if (target.pid === tombstonedPid) {
+        return;
+      }
+      cancelledPids.delete(key);
     }
 
     const handle = monitorFor(registry, key, data.message, target);

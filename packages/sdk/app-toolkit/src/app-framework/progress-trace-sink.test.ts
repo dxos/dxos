@@ -173,6 +173,32 @@ describe('createProgressTraceSink', () => {
   });
 });
 
+describe('cancel tombstone', () => {
+  // After a cancel, the dying run's tail keeps broadcasting for a moment (edge abort is not
+  // instantaneous) — those events must not resurrect the meter. A genuinely new run (new pid) must
+  // still register, so a failed cancel stays visible.
+  test('events from the cancelled pid do not resurrect the monitor; a new run does', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress, { cancelProcess: () => {} });
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }, { pid: 'run-1' }));
+    progress.cancel(key);
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+
+    // Tail of the cancelled run.
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 2, total: 5 } }, { pid: 'run-1' }));
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+
+    // Fresh run — new pid — registers normally.
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 0, total: 5 } }, { pid: 'run-2' }));
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.current).toBe(0);
+    expect(task?.status).toBe('running');
+  });
+});
+
 describe('resolveTriggerId', () => {
   test('extracts the trigger object id from an echo ref', () => {
     const trigger = Ref.fromURI(EID.make({ entityId: 'TRIGGER1' }));
