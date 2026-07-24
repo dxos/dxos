@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-projects
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-07-24
+    summary: New core plugin for interactive long-running processes (Routines, Agents, artifacts); Project type succeeds Topic; obviates plugin-sidekick.
+    tasks: .agents/projects/plugin-projects/TASKS.md
+    design: agents/superpowers/specs/2026-07-24-plugin-projects-design.md
+    prs: []
+    resume: 'Design approved + spec written. Next: user reviews spec, then writing-plans -> implementation (milestone 1: type + plugin + chat binding + migrations).'
+
   - name: sketch-scene-dsl
     status: active
     user: burdon
