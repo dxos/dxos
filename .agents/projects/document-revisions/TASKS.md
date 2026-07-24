@@ -493,3 +493,7 @@ Workstream folded in from `claude/markdown-selection-assistant-visibility-833995
 - [ ] Later arcs (consolidation doc): per-media diff seam in `@dxos/versioning`; sheet/sketch adapters;
       `react-ui-review` extraction; ExtensionProvider props → review-context facet; `useCapabilityMaybe`
       (`packages/sdk/app-framework/TASKS.md`).
+- [ ] **Write a skill for storybook test/debug workflows** (`.agents/skills/`): worktree storybook on a
+      free port, driving stories + play tests via the browser pane, live-instrumentation debugging
+      (the keepAlive/selection hunt pattern), automated `test-storybook` battery, and the guided
+      manual walkthrough format used in TEST-PLAN.md §3 (agent drives, user tests).
