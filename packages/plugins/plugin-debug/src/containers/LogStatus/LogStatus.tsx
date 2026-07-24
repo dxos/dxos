@@ -16,11 +16,12 @@ export const LogStatus = () => {
 
   return (
     <Popover.Root>
-      <Popover.Trigger asChild>
-        <StatusBar.Item>
+      {/* IconButton is the direct trigger child so the trigger ref/handlers/ARIA attach to the button, not the container. */}
+      <StatusBar.Item>
+        <Popover.Trigger asChild>
           <IconButton variant='ghost' icon='ph--list-magnifying-glass--regular' iconOnly label={t('open-logs.label')} />
-        </StatusBar.Item>
-      </Popover.Trigger>
+        </Popover.Trigger>
+      </StatusBar.Item>
       <Popover.Portal>
         <Popover.Content side='top'>
           <Popover.Viewport classNames='is-[40rem] bs-[24rem]'>

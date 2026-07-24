@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type LogConfig, type LogEntry, LogLevel, type LogOptions, log, shouldLog } from '@dxos/log';
 import {
@@ -23,6 +23,8 @@ import { formatLogEntry } from './format';
 
 const LEVELS = ['trace', 'debug', 'verbose', 'info', 'warn', 'error'] as const;
 
+const DEFAULT_MAX_LINES = 1000;
+
 const levelColor = (level: LogLevel) =>
   level > LogLevel.WARN
     ? 'text-error-text'
@@ -31,6 +33,30 @@ const levelColor = (level: LogLevel) =>
       : level > LogLevel.VERBOSE
         ? 'text-info-text'
         : 'text-success-text';
+
+// Ref-counted global-config ownership so concurrent panels restore the original config only after the last stops.
+let activeRecorders = 0;
+let sharedSavedOptions: LogOptions | undefined;
+
+const acquireLogConfig = (): void => {
+  if (activeRecorders === 0) {
+    sharedSavedOptions = log.runtimeConfig.options;
+  }
+  activeRecorders += 1;
+};
+
+const releaseLogConfig = (): void => {
+  activeRecorders = Math.max(0, activeRecorders - 1);
+  if (activeRecorders === 0 && sharedSavedOptions) {
+    log.config(sharedSavedOptions);
+    sharedSavedOptions = undefined;
+  }
+};
+
+// Guard clipboard writes so rejected or unavailable writes surface rather than dangling as unhandled rejections.
+const copyToClipboard = (text: string): void => {
+  void navigator.clipboard?.writeText(text)?.catch((err) => console.warn('clipboard write failed', err));
+};
 
 export type LogPanelProps = ThemedClassName<{
   maxLines?: number;
@@ -46,7 +72,7 @@ type LogRow = { id: number; entry: LogEntry };
  */
 export const LogPanel = ({
   classNames,
-  maxLines = 1000,
+  maxLines = DEFAULT_MAX_LINES,
   initialFilter = 'info',
   defaultRecording = true,
 }: LogPanelProps) => {
@@ -56,50 +82,40 @@ export const LogPanel = ({
   const [rows, setRows] = useState<LogRow[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
-  // Monotonic id so list keys stay stable once `slice(-maxLines)` drops older rows.
+  // Normalize the public prop: a non-positive or non-finite bound would defeat `slice(-capacity)`.
+  const capacity = useMemo(
+    () => (Number.isFinite(maxLines) && maxLines >= 1 ? Math.floor(maxLines) : DEFAULT_MAX_LINES),
+    [maxLines],
+  );
+
+  // Monotonic id so list keys stay stable once `slice(-capacity)` drops older rows.
   const nextRowId = useRef(0);
 
-  // Snapshot the prior global log config so recording can be reverted without disturbing the app.
-  const savedOptions = useRef<LogOptions | undefined>(undefined);
-
-  // Register a processor while recording; the filter drives the global config so it also sets the logging level.
+  // Acquire/release the shared global-config ownership across the recording lifetime (ref-counted across panels).
   useEffect(() => {
     if (!recording) {
       return;
     }
 
-    savedOptions.current ??= log.runtimeConfig.options;
+    acquireLogConfig();
+    return () => releaseLogConfig();
+  }, [recording]);
+
+  // Apply the filter and capture entries while recording; the filter also drives the global logging level.
+  useEffect(() => {
+    if (!recording) {
+      return;
+    }
+
     log.config({ filter });
     const dispose = log.addProcessor((config: LogConfig, entry: LogEntry) => {
       if (shouldLog(entry, config.filters)) {
-        setRows((prev) => [...prev, { id: nextRowId.current++, entry }].slice(-maxLines));
+        setRows((prev) => [...prev, { id: nextRowId.current++, entry }].slice(-capacity));
       }
     });
 
     return () => dispose();
-  }, [recording, filter, maxLines]);
-
-  // Restore the prior global config when recording is paused.
-  useEffect(() => {
-    if (recording) {
-      return;
-    }
-
-    if (savedOptions.current) {
-      log.config(savedOptions.current);
-      savedOptions.current = undefined;
-    }
-  }, [recording]);
-
-  // Restore the prior global config on unmount while still recording.
-  useEffect(
-    () => () => {
-      if (savedOptions.current) {
-        log.config(savedOptions.current);
-      }
-    },
-    [],
-  );
+  }, [recording, filter, capacity]);
 
   // Keep the viewport pinned to the newest entry.
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -110,9 +126,12 @@ export const LogPanel = ({
     }
   }, [rows]);
 
-  const handleClear = useCallback(() => setRows([]), []);
+  const handleClear = useCallback(() => {
+    setRows([]);
+    setExpanded(new Set());
+  }, []);
   const handleCopyAll = useCallback(() => {
-    void navigator.clipboard?.writeText(
+    copyToClipboard(
       JSON.stringify(
         rows.map(({ entry }) => formatLogEntry(entry)),
         null,
@@ -180,18 +199,21 @@ export const LogPanel = ({
             {rows.length === 0 && <div className='p-2 text-subdued'>{t('empty.message')}</div>}
             {rows.map(({ id, entry }) => {
               const record = formatLogEntry(entry);
+              const expandable = Boolean(record.context || record.error);
               return (
                 <div key={id} className='group px-1'>
                   <div className='grid grid-cols-[1rem_8rem_1fr_min-content] items-center gap-1'>
                     <div className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</div>
                     <div className='truncate text-subdued'>{record.file}</div>
-                    <div
-                      className='truncate cursor-pointer'
+                    <button
+                      type='button'
+                      aria-expanded={expandable ? expanded.has(id) : undefined}
+                      className='truncate text-start cursor-pointer'
                       title={record.message}
                       onClick={() => handleToggleExpand(id)}
                     >
                       {record.message}
-                    </div>
+                    </button>
                     <IconButton
                       icon='ph--clipboard--regular'
                       iconOnly
@@ -199,10 +221,10 @@ export const LogPanel = ({
                       label={t('copy-entry.label')}
                       variant='ghost'
                       classNames='p-0 opacity-50 group-hover:opacity-100'
-                      onClick={() => void navigator.clipboard?.writeText(JSON.stringify(record, null, 2))}
+                      onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
                     />
                   </div>
-                  {expanded.has(id) && (record.context || record.error) && (
+                  {expanded.has(id) && expandable && (
                     <pre className='px-4 py-1 whitespace-pre-wrap text-subdued'>
                       {JSON.stringify({ context: record.context, error: record.error }, null, 2)}
                     </pre>

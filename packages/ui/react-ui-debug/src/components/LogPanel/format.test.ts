@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { LogEntry, LogLevel } from '@dxos/log';
 
 import { formatLogEntry } from './format';
 
 describe('formatLogEntry', () => {
-  test('extracts level letter, file basename, message and context', () => {
+  test('extracts level letter, file basename, message and context', ({ expect }) => {
     const entry = new LogEntry({
       level: LogLevel.INFO,
       message: 'hello',
@@ -27,7 +27,7 @@ describe('formatLogEntry', () => {
     expect(record.error).to.be.undefined;
   });
 
-  test('omits empty context', () => {
+  test('omits empty context', ({ expect }) => {
     const entry = new LogEntry({ level: LogLevel.DEBUG, message: 'x', context: {}, timestamp: 0 });
     expect(formatLogEntry(entry).context).to.be.undefined;
   });

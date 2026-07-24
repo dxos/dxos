@@ -39,6 +39,7 @@ export const Panel = ({
       <PanelPrimitive.Toolbar asChild classNames='px-2 text-sm text-fine cursor-pointer'>
         <div
           role='button'
+          aria-expanded={open}
           tabIndex={0}
           className='flex items-center justify-between'
           onClick={() => onToggle?.(id, !open)}
@@ -55,7 +56,8 @@ export const Panel = ({
             <Icon icon={icon} />
             <span className='truncate'>{title}</span>
           </div>
-          {info}
+          {/* Stop info-control clicks (e.g. the Stats play/pause toggle) from also toggling the panel. */}
+          {info && <div onClick={(event) => event.stopPropagation()}>{info}</div>}
         </div>
       </PanelPrimitive.Toolbar>
       {children && (
