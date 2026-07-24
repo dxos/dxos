@@ -465,3 +465,31 @@ label:'view-mode.suggesting.label', reviewMode:'suggesting', order:3 }` — no p
   [`agents/superpowers/specs/2026-07-17-nested-branches-design.md`](../../../agents/superpowers/specs/2026-07-17-nested-branches-design.md).
 - Generalize `@dxos/versioning` record refs over `Ref(Obj.Any)` so non-Text objects (sketches,
   sheets) can be versioned; branch-level access control; subduction fragment compaction alignment.
+
+## 2026-07-24 — selection→assistant, markdown inversion, plugin-review merge (session hydrate)
+
+Workstream folded in from `claude/markdown-selection-assistant-visibility-833995`. Specs:
+`agents/superpowers/specs/2026-07-23-markdown-selection-assistant-context-design.md`,
+`2026-07-24-markdown-versioning-decoupling-design.md`, `2026-07-24-plugin-review-consolidation-design.md`.
+
+- [x] **Selection → assistant context — MERGED (PR #12328, squash `9f7d5ad`).** `AppCapabilities.AnchorResolver`
+      (replaces `CommentConfig.getAnchorLabel`); submit-time synthetic-block context; `get-selection` tool
+      (single-call, doc optional); root-caused empty-selection bug → effect-atom GC swept unsubscribed
+      memory view-state atoms → `Atom.keepAlive` in react-ui-attention backends.
+- [x] **markdown↔versioning inversion (PR #12333, open).** `MarkdownCapabilities.EditorBindingHook` socket
+      (hook-shaped contribution via keyed `BindingBoundary`; hardened: per-fn WeakMap key, >1 warn,
+      app-lifetime contract). Markdown carries zero review vocabulary beyond the neutral binding contract +
+      ExtensionProvider props.
+- [x] **plugin-review merge (same PR, `ecbc823`).** plugin-comments + plugin-versioning → `plugin-review`
+      (key `org.dxos.plugin.review`); `VersioningCapabilities`→`ReviewCapabilities`; SuggestionSourcesProvider
+      bridge → direct import (markdown slot removed); six dependents re-pointed; DocumentVersioning battery
+      green via real provider; serve-min live-verified (Comments companion; Review added to minimal defaults).
+- [x] **Publish prep.** plugin-review publishable (publishConfig public, peers `workspace:^`); stale
+      changesets rewritten (status/version/publish scripts un-broken); `publish-package.mjs` → `pnpm publish`
+      (resolves workspace/catalog specifiers; dry-run verified 0 unresolved). User to run first publish.
+- [ ] **PR #12333 land** (CI deliberately unwatched until confirmed working; re-arm via land skill).
+- [ ] History companion walkthrough in serve-min (story battery covers it; in-app pass pending).
+- [ ] PLUGIN.mdl rewrite for merged plugin-review; plugin-key settings migration decision (users re-enable once).
+- [ ] Later arcs (consolidation doc): per-media diff seam in `@dxos/versioning`; sheet/sketch adapters;
+      `react-ui-review` extraction; ExtensionProvider props → review-context facet; `useCapabilityMaybe`
+      (`packages/sdk/app-framework/TASKS.md`).
