@@ -80,6 +80,18 @@ export const toggle = (selection: Selection | undefined, id: string): Selection 
   return { mode: 'multi', ids: ids.includes(id) ? ids.filter((existing) => existing !== id) : [...ids, id] };
 };
 
+/** Anchor strings for a selection: ids for single/multi modes, `"${from}:${to}"` cursor pairs for range modes. */
+export const toAnchors = (selection: Selection | undefined): string[] =>
+  selection == null
+    ? []
+    : Match.type<Selection>().pipe(
+        Match.when({ mode: 'single' }, (value) => (value.id ? [value.id] : [])),
+        Match.when({ mode: 'multi' }, (value) => [...value.ids]),
+        Match.when({ mode: 'range' }, (value) => (value.from && value.to ? [`${value.from}:${value.to}`] : [])),
+        Match.when({ mode: 'multi-range' }, (value) => value.ranges.map((range) => `${range.from}:${range.to}`)),
+        Match.exhaustive,
+      )(selection);
+
 /** Union of all multi-selected ids across every selection context, plus an optional explicit id. */
 export const getValue = (manager: Manager, contextId?: string): Set<string> => {
   const ids = new Set<string>(contextId ? [contextId] : []);
