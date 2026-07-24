@@ -6,11 +6,10 @@
 
 import { type EditorView } from '@codemirror/view';
 import { type Atom } from '@effect-atom/atom-react';
-import { type ComponentType } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { type ViewModeItem } from '@dxos/react-ui-editor';
-import { type EditorStateStore, type SuggestionSource } from '@dxos/ui-editor';
+import { type EditorStateStore } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
@@ -42,29 +41,11 @@ export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(
 
 /**
  * Hook-shaped contribution computing the editor's subject binding and review affordances (see
- * {@link UseEditorBinding}). Contributed by plugin-versioning; absent, the article binds the object
- * directly with no review affordances.
+ * {@link UseEditorBinding}). Absent, the article binds the object directly with no review
+ * affordances. Contributions are app-lifetime: replacing the hook remounts the article (scroll and
+ * selection reset), so contributors must register once at activation, not per render.
  */
 export const EditorBindingHook = Capability.make<UseEditorBinding>(`${meta.profile.key}.capability.editor-binding`);
-
-export type SuggestionSourcesProviderProps = {
-  /** The versioned document whose active `kind:'suggestion'` branches are enumerated. */
-  document?: Markdown.Document;
-  /** Author palette hues keyed by DID, forwarded so each source keeps its author's colour. */
-  authorHues?: Record<string, string>;
-  /** Emits the aggregated per-author suggestion sources whenever the resolved set changes. */
-  onSources: (sources: SuggestionSource[]) => void;
-};
-
-/**
- * Slot for a headless component that enumerates a document's active suggestion branches and emits
- * their aggregated {@link SuggestionSource}s for the ambient review overlay. Contributed by
- * plugin-comments (which owns branch resolution) and consumed here — the inverted dependency
- * (comments → markdown) is bridged through this capability rather than a direct import.
- */
-export const SuggestionSourcesProvider = Capability.make<ComponentType<SuggestionSourcesProviderProps>>(
-  `${meta.profile.key}.capability.suggestion-sources-provider`,
-);
 
 /**
  * A contributed entry for the editor's view-mode dropdown: surfaces a per-document review mode (e.g.

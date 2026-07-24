@@ -12,12 +12,14 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { Panel } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 import { Editor, type ViewModeItem, defaultViewModeItems, useEditorContext } from '@dxos/react-ui-editor';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
+import { Merge } from '@dxos/util';
 
 import {
   MarkdownEditor,
@@ -73,34 +75,51 @@ const BindingBoundary = ({
   children: (binding: EditorBinding) => React.ReactNode;
 }) => <>{children(useBinding(props))}</>;
 
+// Mints a stable boundary key per hook identity: a REPLACED contribution (not just added/removed)
+// must also remount the boundary, or the new hook would run against the old hook's state order.
+const bindingKeys = new WeakMap<UseEditorBinding, number>();
+let nextBindingKey = 0;
+const bindingKeyOf = (hook: UseEditorBinding): string => {
+  let key = bindingKeys.get(hook);
+  if (key === undefined) {
+    key = ++nextBindingKey;
+    bindingKeys.set(hook, key);
+  }
+  return `binding-${key}`;
+};
+
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
-  {
-    id: string;
-    settings: Markdown.Settings;
-    viewState?: ViewState.Manager;
-  } & Pick<MarkdownPluginState, 'extensionProviders'> &
-    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
+  Merge<
+    {
+      id: string;
+      settings: Markdown.Settings;
+      viewState?: ViewState.Manager;
+    },
+    Pick<MarkdownPluginState, 'extensionProviders'>,
+    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'>,
     Pick<MarkdownEditorContentProps, 'editorStateStore'>
+  >
 >;
 
 export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>((props, forwardedRef) => {
   const { subject: object, id, settings, viewMode } = props;
-  // At most one contributed binding hook is honored (versioning); the boundary key remounts the
-  // subtree if the contribution set changes, keeping hook order legal.
+  // At most one contributed binding hook is honored; the boundary key remounts the subtree
+  // whenever the effective hook's identity changes, keeping hook order legal.
   const bindingHooks = useCapabilities(MarkdownCapabilities.EditorBindingHook);
-  const contributedBinding = bindingHooks.length > 0 ? bindingHooks[0] : undefined;
+  if (bindingHooks.length > 1) {
+    log.warn('multiple EditorBindingHook contributions; only the first is honored', {
+      count: bindingHooks.length,
+    });
+  }
+  const useBinding = bindingHooks.length > 0 ? bindingHooks[0] : useDefaultEditorBinding;
   const bindingProps = useMemo(
     () => ({ object, id, viewMode, diffView: settings.diffView }),
     [object, id, viewMode, settings.diffView],
   );
 
   return (
-    <BindingBoundary
-      key={contributedBinding ? 'contributed' : 'default'}
-      useBinding={contributedBinding ?? useDefaultEditorBinding}
-      props={bindingProps}
-    >
+    <BindingBoundary key={bindingKeyOf(useBinding)} useBinding={useBinding} props={bindingProps}>
       {(binding) => <MarkdownArticleImpl {...props} binding={binding} ref={forwardedRef} />}
     </BindingBoundary>
   );
@@ -195,8 +214,8 @@ const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { 
       const contributedActive = contributed.some((item) => item.checked);
       const builtin: ViewModeItem[] = defaultViewModeItems.map((item) => ({
         ...item,
-        // A contributed mode owns the single checked slot when active; otherwise the built-in matching
-        // the current editor view mode is checked.
+        // A contributed mode owns the single checked slot when active;
+        // otherwise the built-in matching the current editor view mode is checked.
         checked: !contributedActive && item.id === current,
         onSelect: () => {
           onViewModeChange?.(item.id);

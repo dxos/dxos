@@ -9,7 +9,7 @@ single `plugin-review`, executed **in PR #12333** on top of the markdown↔versi
   recent feature (suggestions, ambient review, branch-scoped threads, review modes) lives in the
   intersection. A suggestion IS a `Branch(kind:'suggestion')` rendered as a comment thread;
   accept/reject IS merge/discard.
-- The package boundary is the *cause* of the socket sprawl: `SuggestionSourcesProvider`, the
+- The package boundary is the _cause_ of the socket sprawl: `SuggestionSourcesProvider`, the
   review-context `extensionProps` switchboard, and `ReviewRenderPolicy` exist only to route data
   across it. The merge turns all three into function calls / module state.
 - Review is an inherent capability of the ECHO/automerge data model (core branches are
@@ -33,17 +33,17 @@ single `plugin-review`, executed **in PR #12333** on top of the markdown↔versi
 `git mv packages/plugins/plugin-comments → packages/plugins/plugin-review` (larger package keeps
 history), rename identity, then fold plugin-versioning's src in:
 
-| Source | Destination |
-| --- | --- |
-| comments src (threads, suggestions, operations, skills, state) | stays (now `plugin-review/src`) |
-| versioning `types/` (viewAspect, selection, ReviewMode, HistoryProvider, policy) | `src/types/` — namespace renamed `VersioningCapabilities` → `ReviewCapabilities` |
-| versioning `containers/ObjectHistory` | `src/containers/ObjectHistory` |
-| versioning `model/` (timeline) | `src/model/` |
-| versioning `src/markdown/` (binding hook, banners, version-diff, stories) | `src/markdown/` — merged with comments' `capabilities/markdown-extension.ts` into ONE markdown adapter module |
-| versioning capabilities (app-graph-builder, react-surface, state) | `src/capabilities/` under history-/review- prefixed names (comments' files keep names) |
-| both plugin definitions (browser/node/workerd) | one `ReviewPlugin` per variant, module union |
-| both translations | one file under the review key |
-| both PLUGIN.mdl | one, rewritten after implementation settles |
+| Source                                                                           | Destination                                                                                                   |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| comments src (threads, suggestions, operations, skills, state)                   | stays (now `plugin-review/src`)                                                                               |
+| versioning `types/` (viewAspect, selection, ReviewMode, HistoryProvider, policy) | `src/types/` — namespace renamed `VersioningCapabilities` → `ReviewCapabilities`                              |
+| versioning `containers/ObjectHistory`                                            | `src/containers/ObjectHistory`                                                                                |
+| versioning `model/` (timeline)                                                   | `src/model/`                                                                                                  |
+| versioning `src/markdown/` (binding hook, banners, version-diff, stories)        | `src/markdown/` — merged with comments' `capabilities/markdown-extension.ts` into ONE markdown adapter module |
+| versioning capabilities (app-graph-builder, react-surface, state)                | `src/capabilities/` under history-/review- prefixed names (comments' files keep names)                        |
+| both plugin definitions (browser/node/workerd)                                   | one `ReviewPlugin` per variant, module union                                                                  |
+| both translations                                                                | one file under the review key                                                                                 |
+| both PLUGIN.mdl                                                                  | one, rewritten after implementation settles                                                                   |
 
 Kept as-is: `@dxos/versioning` SDK; app-toolkit registries (`CommentConfig`, `AnchorResolver`,
 `AnchorSort` — contributors sheet/bookmarks/table/sketch/video unaffected); `@dxos/react-ui-thread`;

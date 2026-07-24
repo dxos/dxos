@@ -379,9 +379,6 @@
       "path": "packages/plugins/plugin-code/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-comments/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-commerce/tsconfig.json"
     },
     {
@@ -514,6 +511,9 @@
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-review/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-routine/tsconfig.json"
     },
     {
@@ -602,9 +602,6 @@
     },
     {
       "path": "packages/plugins/plugin-typefully/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-versioning/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-video/tsconfig.json"
