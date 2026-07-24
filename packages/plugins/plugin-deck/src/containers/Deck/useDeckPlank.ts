@@ -11,7 +11,14 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node, useActionRunner, useActions, useNode } from '@dxos/plugin-graph';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 
-import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion, useSelectedCompanionVariant } from '#hooks';
+import {
+  useBreadcrumbs,
+  useBreakpoints,
+  useCompanions,
+  useDeckState,
+  useSelectedCompanion,
+  useSelectedCompanionVariant,
+} from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
@@ -42,6 +49,8 @@ export type UseDeckPlankOptions = {
 
 export type DeckPlank = {
   node: Node.Node | undefined;
+  /** Ancestor chain (outermost → leaf) for the plank's toolbar breadcrumbs. */
+  breadcrumbs: Node.Node[];
   companions: Node.Node[];
   resolvedCompanionId: string | undefined;
   currentCompanion: Node.Node | undefined;
@@ -54,6 +63,8 @@ export type DeckPlank = {
   popoverAnchorId?: string;
   scrollIntoView?: string;
   onAction: (action: AttentionSigilAction) => void;
+  /** Navigate to an ancestor breadcrumb, opening it in the main content area. */
+  onNavigate: (id: string) => void;
   onAdjust: (type: DeckOperation.PartAdjustment) => void;
   onResize: (size: number) => void;
   onScrollIntoView: (subject?: string) => void;
@@ -79,6 +90,7 @@ export const useDeckPlank = ({
   const runAction = useActionRunner();
   const breakpoint = useBreakpoints();
   const node = useNode(graph, id);
+  const breadcrumbs = useBreadcrumbs(graph, id);
   // Subscribe reactively to the node's actions: they are loaded asynchronously by `Graph.expand`
   // below, and the node atom does not re-emit when action edges arrive, so a one-shot read would
   // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
@@ -164,6 +176,11 @@ export const useDeckPlank = ({
     [node, runAction],
   );
 
+  const onNavigate = useCallback(
+    (navId: string) => invokePromise(LayoutOperation.Open, { subject: [navId] }),
+    [invokePromise],
+  );
+
   const onAdjust = useCallback(
     (type: DeckOperation.PartAdjustment) => {
       if (type === 'close') {
@@ -201,6 +218,7 @@ export const useDeckPlank = ({
 
   return {
     node,
+    breadcrumbs,
     companions,
     resolvedCompanionId,
     currentCompanion,
@@ -211,6 +229,7 @@ export const useDeckPlank = ({
     popoverAnchorId: state.popoverAnchorId,
     scrollIntoView: state.scrollIntoView,
     onAction,
+    onNavigate,
     onAdjust,
     onResize,
     onScrollIntoView,
