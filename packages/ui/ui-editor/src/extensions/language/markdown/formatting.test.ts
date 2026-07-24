@@ -3,7 +3,7 @@
 //
 
 import { markdownLanguage } from '@codemirror/lang-markdown';
-import { EditorState, type StateCommand } from '@codemirror/state';
+import { EditorSelection, EditorState, type StateCommand } from '@codemirror/state';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -15,6 +15,7 @@ import {
   addLink,
   addList,
   addStyle,
+  convertList,
   getFormatting,
   removeBlockquote,
   removeCodeblock,
@@ -22,6 +23,7 @@ import {
   removeList,
   removeStyle,
   setHeading,
+  toggleList,
 } from './formatting';
 
 export const emptyFormatting: Formatting = {
@@ -310,6 +312,8 @@ describe('removeList', () => {
 
   testCommand('can remove a task list', '- [x] Hi{}', removeList(List.Task), 'Hi');
 
+  testCommand('can remove a task list with an uppercase check', '- [X] Hi{}', removeList(List.Task), 'Hi');
+
   testCommand(
     'can remove a bullet list from multiple blocks',
     '- {One\n\n- # Two\n\n- Three}',
@@ -341,6 +345,89 @@ describe('removeList', () => {
     ordered,
     '1. one\n\ntwo\n\nthree\n\n1. four\n\n2. five',
   );
+});
+
+describe('toggleList', () => {
+  testCommand('can add a bullet list', 'Hi{}', toggleList(List.Bullet), '- Hi');
+
+  testCommand('can remove a bullet list', '- Hi{}', toggleList(List.Bullet), 'Hi');
+
+  testCommand('can remove a task list', '- [ ] Hi{}', toggleList(List.Task), 'Hi');
+
+  testCommand('converts a bullet list to a task list', '- Hi{}', toggleList(List.Task), '- [ ] Hi');
+
+  testCommand('converts a task list to a bullet list', '- [ ] Hi{}', toggleList(List.Bullet), '- Hi');
+
+  testCommand('converts a checked task list to a bullet list', '- [x] Hi{}', toggleList(List.Bullet), '- Hi');
+
+  testCommand('converts an ordered list to a bullet list', '1. Hi{}', toggleList(List.Bullet), '- Hi');
+
+  testCommand('converts an ordered list to a task list', '1. Hi{}', toggleList(List.Task), '- [ ] Hi');
+
+  testCommand('converts a bullet list to an ordered list', '- Hi{}', toggleList(List.Ordered), '1. Hi');
+
+  testCommand(
+    'converts multiple bullet items to a task list',
+    '- {one\n- two}',
+    toggleList(List.Task),
+    '- [ ] one\n- [ ] two',
+  );
+
+  testCommand('converts an empty bullet item to a task item', '- {}', toggleList(List.Task), '- [ ] ');
+
+  testCommand(
+    'reindents continuation lines when converting a multi-line item',
+    '- [ ] Hello this\n      is wrapped{}',
+    toggleList(List.Bullet),
+    '- Hello this\n  is wrapped',
+  );
+
+  testCommand(
+    'numbers items when converting to an ordered list',
+    '- {one\n- two\n- three}',
+    toggleList(List.Ordered),
+    '1. one\n2. two\n3. three',
+  );
+
+  testCommand(
+    'renumbers following items when converting from an ordered list',
+    '1. {one}\n2. two\n3. three',
+    toggleList(List.Bullet),
+    '- one\n1. two\n2. three',
+  );
+
+  // Mixed lists resolve task-ness per item, independent of document order.
+  testCommand(
+    'converts only the plain bullets of a mixed list to tasks',
+    '- [x] {one\n- two\n- three}',
+    convertList(List.Bullet, List.Task),
+    '- [x] one\n- [ ] two\n- [ ] three',
+  );
+
+  testCommand(
+    'converts only the tasks of a mixed list to bullets',
+    '- {one\n- [ ] two\n- three}',
+    convertList(List.Task, List.Bullet),
+    '- one\n- two\n- three',
+  );
+
+  testCommand('removes only the tasks of a mixed list', '- [x] {one\n- two}', removeList(List.Task), 'one\n- two');
+
+  testCommand("doesn't remove plain bullets after a task item", '- [x] one\n- {two}', removeList(List.Task), null);
+
+  // Disjoint multi-cursor ranges in the same ordered list: renumbering from the first range must not
+  // produce specs overlapping the second range's marker edits (state.changes rejects overlaps);
+  // resulting numbering is best-effort.
+  test('handles disjoint ranges in the same ordered list', () => {
+    let state = EditorState.create({
+      doc: '1. a\n2. b\n3. c\n4. d',
+      selection: EditorSelection.create([EditorSelection.cursor(3), EditorSelection.cursor(13)]),
+      extensions: [markdownLanguage, EditorState.allowMultipleSelections.of(true)],
+    });
+    const status = removeList(List.Ordered)({ state, dispatch: (tr) => (state = tr.state) });
+    expect(status).to.equal(true);
+    expect(state.doc.toString()).to.equal('a\n1. b\nc\n3. d');
+  });
 });
 
 describe('addBlockquote', () => {

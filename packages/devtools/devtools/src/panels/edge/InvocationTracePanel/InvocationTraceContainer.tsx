@@ -15,14 +15,13 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/Format';
 import { type URI } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
-import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { ExceptionPanel } from './ExceptionPanel';
 import { ExecutionGraphPanel } from './ExecutionGraphPanel';
@@ -170,25 +169,25 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       [],
     );
 
-    // TODO(burdon): Use Panel.Root
     return (
       <div {...composableProps(props, { classNames: ['h-full'] })} ref={forwardedRef}>
-        <PanelContainer
-          toolbar={
-            showSpaceSelector ? (
+        <Panel.Root>
+          {showSpaceSelector && (
+            <Panel.Toolbar asChild>
               <Toolbar.Root classNames='border-b border-subdued-separator'>
                 <DataSpaceSelector />
               </Toolbar.Root>
-            ) : undefined
-          }
-        >
-          <div className='relative flex-1 min-h-0'>
-            <div className={mx('absolute inset-0 overflow-hidden', gridLayout)}>
-              <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
-              {selectedInvocation && <Selected span={selectedInvocation} />}
+            </Panel.Toolbar>
+          )}
+          <Panel.Content>
+            <div className='relative flex-1 min-h-0'>
+              <div className={mx('absolute inset-0 overflow-hidden', gridLayout)}>
+                <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
+                {selectedInvocation && <Selected span={selectedInvocation} />}
+              </div>
             </div>
-          </div>
-        </PanelContainer>
+          </Panel.Content>
+        </Panel.Root>
       </div>
     );
   },

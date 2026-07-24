@@ -113,6 +113,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/react-ui-canvas-editor": "workspace:*",
+    "@dxos/react-ui-debug": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",

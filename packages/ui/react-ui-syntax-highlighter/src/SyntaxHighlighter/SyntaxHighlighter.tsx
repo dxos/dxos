@@ -7,8 +7,8 @@ import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 're
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { Clipboard, useThemeContext } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Clipboard, composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 const zeroWidthSpace = '\u200b';
 
@@ -73,7 +73,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           { classNames, className, role, style },
           {
             role: 'none',
-            classNames: copyButton && 'relative group',
+            classNames: mx('dx-expander p-1 overflow-auto', copyButton && 'relative group'),
           },
         )}
         ref={forwardedRef}
