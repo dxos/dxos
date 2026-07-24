@@ -30,9 +30,9 @@ export const SAMPLE_CONTENT = [
   '',
 ].join('\n');
 
-// Two story agents, each with a fixed synthetic DID so their authored suggestions are deterministic
-// (no LLM). Each proposes a different revision of the document; edits in distinct paragraphs diff as
-// separate reviewable cards, colour-coded per author.
+// Two story agents, each with a fixed synthetic DID so their authored suggestions are deterministic (no LLM).
+// Each proposes a different revision of the document;
+// edits in distinct paragraphs diff as separate reviewable cards, colour-coded per author.
 const KAI_SUGGESTION = SAMPLE_CONTENT.replace(
   'This document has comment threads attached to it.',
   'This document has comment threads and inline suggestions attached to it.',
@@ -47,8 +47,16 @@ const NOVA_SUGGESTION = SAMPLE_CONTENT.replace(
 
 /** Two deterministic synthetic-DID authors, each proposing a distinct revision. */
 export const STORY_AGENTS = [
-  { did: 'did:agent:kai', name: STORY_AGENT_NAME, content: KAI_SUGGESTION },
-  { did: 'did:agent:nova', name: 'Nova', content: NOVA_SUGGESTION },
+  {
+    did: 'did:agent:kai',
+    name: STORY_AGENT_NAME,
+    content: KAI_SUGGESTION,
+  },
+  {
+    did: 'did:agent:nova',
+    name: 'Nova',
+    content: NOVA_SUGGESTION,
+  },
 ];
 
 /**
