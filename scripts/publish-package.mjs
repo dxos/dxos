@@ -189,7 +189,7 @@ const main = async () => {
     console.log('\nNext steps:');
     console.log(`  1. Configure trusted publishing (OIDC) so CI can release future versions:`);
     console.log(`     ${settingsUrl}`);
-    console.log('     → Trusted Publisher → GitHub Actions → repo dxos/dxos, workflow release.yml.');
+    console.log('     → Trusted Publisher → GitHub Actions → repo dxos/dxos, workflow publish-all.yml.');
     console.log(`  2. Verify the publish: npm view ${pkg.name} version`);
     console.log("  3. CI's check-packages-published now passes for this package; release automation");
     console.log('     takes over from the next changeset release.');
