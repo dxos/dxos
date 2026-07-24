@@ -7,10 +7,10 @@ import React, { useMemo } from 'react';
 import { Format } from '@dxos/echo/Format';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Space } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { MasterDetailTable, PanelContainer } from '../../../components';
+import { MasterDetailTable } from '../../../components';
 import { SpaceSelector } from '../../../containers';
 import { useCredentials, useDevtoolsState } from '../../../hooks';
 
@@ -42,21 +42,22 @@ export const CredentialsPanel = (props: { space?: Space }) => {
   );
 
   return (
-    <PanelContainer
-      toolbar={
-        props.space ? undefined : (
+    <Panel.Root>
+      {!props.space && (
+        <Panel.Toolbar asChild>
           <Toolbar.Root>
             <SpaceSelector />
           </Toolbar.Root>
-        )
-      }
-    >
-      <MasterDetailTable
-        properties={properties}
-        data={data}
-        detailsTransform={(d) => d._original}
-        detailsPosition='bottom'
-      />
-    </PanelContainer>
+        </Panel.Toolbar>
+      )}
+      <Panel.Content>
+        <MasterDetailTable
+          properties={properties}
+          data={data}
+          detailsTransform={(d) => d._original}
+          detailsPosition='bottom'
+        />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

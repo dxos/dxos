@@ -7834,6 +7834,9 @@ importers:
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
+      '@dxos/react-ui-debug':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-debug
       '@dxos/react-ui-graph':
         specifier: workspace:*
         version: link:../../ui/react-ui-graph
@@ -10748,6 +10751,9 @@ importers:
       '@dxos/react-ui-canvas-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-editor
+      '@dxos/react-ui-debug':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-debug
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -22064,6 +22070,40 @@ importers:
         specifier: '>=8.1.4'
         version: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
+  packages/ui/react-ui-debug:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.1.4'
+        version: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/ui/react-ui-dnd:
     dependencies:
       '@atlaskit/pragmatic-drag-and-drop':
@@ -23603,6 +23643,9 @@ importers:
 
   packages/ui/react-ui-syntax-highlighter:
     dependencies:
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types

@@ -145,6 +145,7 @@
       "@dxos/react-ui-chat",
       "@dxos/react-ui-components",
       "@dxos/react-ui-dashboard",
+      "@dxos/react-ui-debug",
       "@dxos/react-ui-dnd",
       "@dxos/react-ui-editor",
       "@dxos/react-ui-experimental",
