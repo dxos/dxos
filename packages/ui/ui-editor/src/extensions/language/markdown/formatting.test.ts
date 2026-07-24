@@ -15,6 +15,7 @@ import {
   addLink,
   addList,
   addStyle,
+  convertList,
   getFormatting,
   removeBlockquote,
   removeCodeblock,
@@ -394,6 +395,25 @@ describe('toggleList', () => {
     toggleList(List.Bullet),
     '- one\n1. two\n2. three',
   );
+
+  // Mixed lists resolve task-ness per item, independent of document order.
+  testCommand(
+    'converts only the plain bullets of a mixed list to tasks',
+    '- [x] {one\n- two\n- three}',
+    convertList(List.Bullet, List.Task),
+    '- [x] one\n- [ ] two\n- [ ] three',
+  );
+
+  testCommand(
+    'converts only the tasks of a mixed list to bullets',
+    '- {one\n- [ ] two\n- three}',
+    convertList(List.Task, List.Bullet),
+    '- one\n- two\n- three',
+  );
+
+  testCommand('removes only the tasks of a mixed list', '- [x] {one\n- two}', removeList(List.Task), 'one\n- two');
+
+  testCommand("doesn't remove plain bullets after a task item", '- [x] one\n- {two}', removeList(List.Task), null);
 });
 
 describe('addBlockquote', () => {
