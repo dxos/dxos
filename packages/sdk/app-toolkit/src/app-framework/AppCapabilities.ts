@@ -245,6 +245,18 @@ export type AnchorSort = {
  */
 export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchorSort');
 
+/** Anchor→text resolution contributed per typename by plugins whose objects support cursor-range anchors. */
+export type AnchorResolver = Readonly<{
+  key: string;
+  /** Resolve an anchor (`"${fromCursor}:${toCursor}"`) to the text it spans, or `undefined` when unresolvable. */
+  getText: (obj: any, anchor: string) => string | undefined;
+}>;
+
+/**
+ * @category Capability
+ */
+export const AnchorResolver = Capability$.make<AnchorResolver>('org.dxos.app-framework.capability.anchorResolver');
+
 /** Text content extractor contributed per typename by plugins that support text extraction. */
 export type TextContent = Readonly<{
   id: string;
