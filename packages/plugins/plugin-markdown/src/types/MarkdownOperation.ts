@@ -96,9 +96,12 @@ export const GetSelection = Operation.make({
     icon: 'ph--selection--regular',
   },
   input: Schema.Struct({
-    doc: Ref.Ref(Markdown.Document).annotations({
-      description: 'The ID of the markdown document.',
-    }),
+    doc: Schema.optional(
+      Ref.Ref(Markdown.Document).annotations({
+        description:
+          'Optional document to read the selection from. Omit to return the current selection wherever it is — there is no need to call this once per open document.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     ranges: Schema.Array(
