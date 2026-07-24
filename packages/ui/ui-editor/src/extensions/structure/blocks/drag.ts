@@ -228,6 +228,12 @@ class PlaceholderWidget extends WidgetType {
     );
   }
 
+  // Without this the height map assumes a default-height widget until the async measure pass corrects
+  // it, and the correction can shift scroll bookkeeping for a frame at drag start.
+  override get estimatedHeight(): number {
+    return this.totalHeight;
+  }
+
   override toDOM(): HTMLElement {
     const element = document.createElement('div');
     element.className = 'cm-blockDropPlaceholder';
@@ -793,6 +799,12 @@ const dragTheme = EditorView.theme({
   },
   '.cm-scroller.cm-blockDragging': {
     cursor: 'grabbing',
+  },
+  // Hide the static overlay grips synchronously at drag start (they are children of the scroller; the
+  // preview grip rides on `view.dom`): the overlay only removes them in the async measure pass, which
+  // would leave both grips visible for a frame.
+  '.cm-scroller.cm-blockDragging .cm-blockDragHandle': {
+    display: 'none',
   },
   '.cm-scroller.cm-blockDragging .cm-content': {
     userSelect: 'none',
