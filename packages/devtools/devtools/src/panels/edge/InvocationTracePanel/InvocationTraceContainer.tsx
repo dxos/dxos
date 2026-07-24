@@ -171,7 +171,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
 
     return (
       <div {...composableProps(props, { classNames: ['h-full'] })} ref={forwardedRef}>
-        <Panel.Root classNames='bs-full'>
+        <Panel.Root>
           {showSpaceSelector && (
             <Panel.Toolbar asChild>
               <Toolbar.Root classNames='border-b border-subdued-separator'>
@@ -179,7 +179,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
               </Toolbar.Root>
             </Panel.Toolbar>
           )}
-          <Panel.Content classNames='overflow-auto'>
+          <Panel.Content>
             <div className='relative flex-1 min-h-0'>
               <div className={mx('absolute inset-0 overflow-hidden', gridLayout)}>
                 <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />

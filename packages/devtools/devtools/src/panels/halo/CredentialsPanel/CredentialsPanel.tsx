@@ -42,7 +42,7 @@ export const CredentialsPanel = (props: { space?: Space }) => {
   );
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       {!props.space && (
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -50,7 +50,7 @@ export const CredentialsPanel = (props: { space?: Space }) => {
           </Toolbar.Root>
         </Panel.Toolbar>
       )}
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         <MasterDetailTable
           properties={properties}
           data={data}

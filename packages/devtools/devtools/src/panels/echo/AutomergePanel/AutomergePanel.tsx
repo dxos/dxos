@@ -96,14 +96,14 @@ export const AutomergePanel = (props: { space?: Space }) => {
   }, [handles, filter]);
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar onChange={setFilter} />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         <MasterDetailTable properties={properties} data={data} detailsTransform={({ accessor }) => accessor()} />
       </Panel.Content>
     </Panel.Root>

@@ -74,7 +74,7 @@ export const NetworkPanel = (props: { space?: Space }) => {
   // TODO(dmaretskyi): Visualize data flowing: line thickness, running ticks, text stats.
   // TODO(dmaretskyi): Show connections that are forming.
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       {!props.space && (
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -82,7 +82,7 @@ export const NetworkPanel = (props: { space?: Space }) => {
           </Toolbar.Root>
         </Panel.Toolbar>
       )}
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         <SVG.Root ref={context}>
           <SVG.Markers />
           <SVG.Graph

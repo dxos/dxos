@@ -271,7 +271,7 @@ export const SqlitePanel = () => {
   }, [databaseInfo]);
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root className='col-span-2'>
           <Toolbar.Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
@@ -288,7 +288,7 @@ export const SqlitePanel = () => {
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto grid grid-cols-[240px_1fr] divide-x divide-separator h-full'>
+      <Panel.Content classNames='grid grid-cols-[240px_1fr] divide-x divide-separator h-full'>
         <div className='flex flex-col h-full overflow-hidden'>
           <div className='p-2 border-b border-separator'>
             <div className='text-xs font-medium mb-2'>Database</div>

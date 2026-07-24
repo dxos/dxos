@@ -127,14 +127,14 @@ export const SchemaPanel = (props: { space?: Space }) => {
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
           <div className='flex flex-col w-full overflow-hidden'>
             <DynamicTable

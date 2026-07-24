@@ -59,14 +59,14 @@ export const QueuesPanel = () => {
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {/* <DataSpaceSelector /> */}
           <Searchbar onChange={setQueueInput} />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         {/* TODO(burdon): Convert to MasterDetailTable. */}
         <div className='flex grow flex-col overflow-hidden divide-y divide-separator'>
           <DynamicTable rows={rows} properties={properties} features={features} onRowClick={handleRowClicked} />

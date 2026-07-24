@@ -13,8 +13,8 @@ export const MetadataPanel = () => {
   const metadata = useMetadata();
 
   return (
-    <Panel.Root classNames='bs-full'>
-      <Panel.Content classNames='overflow-auto'>
+    <Panel.Root>
+      <Panel.Content>
         <JsonView data={metadata} />
       </Panel.Content>
     </Panel.Root>

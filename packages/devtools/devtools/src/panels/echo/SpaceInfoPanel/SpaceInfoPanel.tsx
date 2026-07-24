@@ -77,9 +77,9 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
   );
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         {space && metadata && (
           <div>
             <SpaceProperties space={space} metadata={metadata} />

@@ -147,8 +147,8 @@ export const SwarmPanel = () => {
   }, [swarms, identityMap]);
 
   return (
-    <Panel.Root classNames='bs-full'>
-      <Panel.Content classNames='overflow-auto'>
+    <Panel.Root>
+      <Panel.Content>
         <DynamicTable properties={properties} rows={rows} />
       </Panel.Content>
     </Panel.Root>

@@ -174,8 +174,8 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <Panel.Root classNames='bs-full'>
-      <Panel.Content classNames='overflow-auto flex-1'>
+    <Panel.Root>
+      <Panel.Content classNames='flex-1'>
         {/* TODO(burdon): This should not be a dialog. */}
         <DialogRestoreSpace
           {...(importTargetSpaceId !== null

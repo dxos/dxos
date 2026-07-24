@@ -205,7 +205,7 @@ export const StoragePanel = () => {
   const selectedValue = selected?.value as SelectionValue | undefined;
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
@@ -234,7 +234,7 @@ export const StoragePanel = () => {
           </DropdownMenu.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto grid grid-cols-2 divide-x divide-separator'>
+      <Panel.Content classNames='grid grid-cols-2 divide-x divide-separator'>
         <DataTree items={items} onSelect={setSelected} />
 
         {selectedValue && (

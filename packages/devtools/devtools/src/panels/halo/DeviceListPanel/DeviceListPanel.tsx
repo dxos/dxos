@@ -58,8 +58,8 @@ export const DeviceListPanel = () => {
   );
 
   return (
-    <Panel.Root classNames='bs-full'>
-      <Panel.Content classNames='overflow-auto'>
+    <Panel.Root>
+      <Panel.Content>
         <MasterDetailTable
           properties={properties}
           data={data}

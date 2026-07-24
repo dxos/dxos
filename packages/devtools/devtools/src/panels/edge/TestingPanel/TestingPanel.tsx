@@ -64,14 +64,14 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
   };
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <DataSpaceSelector />
           <Toolbar.IconButton icon='ph--plus--regular' label='Create Space' onClick={handleSpaceCreate} />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto flex flex-col gap-4 p-4'>
+      <Panel.Content classNames='flex flex-col gap-4 p-4'>
         <IconButton icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
         <div className='border-t border-separator'>{space && <SyncStateInfo space={space} />}</div>
       </Panel.Content>

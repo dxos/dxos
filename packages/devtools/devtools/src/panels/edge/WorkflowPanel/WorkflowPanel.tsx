@@ -71,7 +71,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
   }, [loader, displayMode]);
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
@@ -83,7 +83,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         <div className={'h-full grid grid-rows-[4fr_3fr]'}>
           <MasterDetailTable
             properties={properties}

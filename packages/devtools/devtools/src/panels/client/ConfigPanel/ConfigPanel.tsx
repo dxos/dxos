@@ -24,7 +24,7 @@ export const ConfigPanel = ({
   const config = useConfig();
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {vaultSelector && <VaultSelector />}
@@ -32,7 +32,7 @@ export const ConfigPanel = ({
           {subductionSelector && <SubductionSelector />}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         <JsonView data={config.values} />
       </Panel.Content>
     </Panel.Root>

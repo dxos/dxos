@@ -100,7 +100,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
   }, [tableRows]);
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
@@ -115,7 +115,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
           <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         <div className='h-full'>
           <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
           <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />

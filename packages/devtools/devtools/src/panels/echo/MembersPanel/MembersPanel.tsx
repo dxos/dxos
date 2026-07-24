@@ -61,7 +61,7 @@ export const MembersPanel = (props: { space?: Space }) => {
   }, [members]);
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       {!props.space && (
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -69,7 +69,7 @@ export const MembersPanel = (props: { space?: Space }) => {
           </Toolbar.Root>
         </Panel.Toolbar>
       )}
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         <MasterDetailTable
           properties={properties}
           data={data}

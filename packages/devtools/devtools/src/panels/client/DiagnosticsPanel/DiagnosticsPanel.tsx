@@ -57,7 +57,7 @@ export const DiagnosticsPanel = () => {
   };
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Input.Root>
@@ -70,9 +70,7 @@ export const DiagnosticsPanel = () => {
           <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
-        {(true && <JsonView data={data} />) || <Tree data={data} />}
-      </Panel.Content>
+      <Panel.Content>{(true && <JsonView data={data} />) || <Tree data={data} />}</Panel.Content>
       {info && (
         <Panel.Statusbar asChild>
           <div className='flex p-2 items-center text-sm font-mono gap-2'>

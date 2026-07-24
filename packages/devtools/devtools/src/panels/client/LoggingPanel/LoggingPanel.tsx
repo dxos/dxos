@@ -130,7 +130,7 @@ export const LoggingPanel = () => {
   }, [logs, text, fileDownload]);
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Select items={presets} onValueChange={handleSearchChange} />
@@ -139,7 +139,7 @@ export const LoggingPanel = () => {
           <Toolbar.IconButton icon='ph--x--regular' iconOnly onClick={() => setLogs([])} label='Clear logs' />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
       </Panel.Content>
     </Panel.Root>

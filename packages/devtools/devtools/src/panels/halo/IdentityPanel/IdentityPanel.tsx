@@ -15,13 +15,13 @@ export const IdentityPanel = () => {
   const devices = useDevices();
 
   return (
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <VaultSelector />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      <Panel.Content>
         <JsonView data={{ ...identity, devices }} />
       </Panel.Content>
     </Panel.Root>
