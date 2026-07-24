@@ -79,7 +79,9 @@
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
@@ -88,6 +90,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@types/react": "catalog:",
     "react": "catalog:",
     "vite": "catalog:"

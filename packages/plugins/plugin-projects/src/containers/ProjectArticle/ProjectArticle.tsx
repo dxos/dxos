@@ -2,70 +2,86 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import * as Schema from 'effect/Schema';
+import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/compute';
-import { Card, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import { InstructionsEditor } from '@dxos/plugin-routine/components';
+import { Card, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
+// Pick the editable header fields from the Project schema rather than redeclaring them.
+const HeaderSchema = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));
+type HeaderValues = Schema.Schema.Type<typeof HeaderSchema>;
+
 /**
- * Detail view for one `Project`: its label, summary, keyword chips, participants, and rolled-up
- * questions / tasks / member-thread subjects. Renders the project's own stored fields (self-contained —
- * no cross-object resolution); resolving `threadIds` to live messages with click-to-open is a follow-up.
+ * Article surface for a {@link Project}: an editable header (name/description), the project's owned
+ * instructions, and read-only rows for its linked routines and artifacts. Creating routines/artifacts
+ * from this article is milestone 2 — here they are only listed.
  */
-export const ProjectArticle = ({ role, subject: project }: ProjectArticleProps) => {
+export const ProjectArticle = ({ role, subject }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const [project, updateProject] = useObject(subject);
+  const db = Obj.getDatabase(subject);
+  const instructions = project.instructions?.target;
+  const [artifacts] = useObject(project.artifacts);
+
+  // Read once per project identity; the uncontrolled form owns edits after mount.
+  const defaultValues = useMemo<Partial<HeaderValues>>(
+    () => ({ name: project.name, description: project.description }),
+    [subject],
+  );
+
+  const handleValuesChanged = useCallback(
+    (values: Partial<HeaderValues>) => {
+      updateProject((project) => {
+        project.name = values.name;
+        project.description = values.description;
+      });
+    },
+    [updateProject],
+  );
+
+  if (!db) {
+    return null;
+  }
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Toolbar.Root classNames='dx-document' />
-      </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical' padding thin>
           <ScrollArea.Viewport classNames='dx-document'>
-            {/* <Card.Root fullWidth border={false}>
-              <Card.Header>
-                <Card.Block>
-                  <Icon icon='ph--stack--regular' />
-                </Card.Block>
-                <Card.Title>{project.name}</Card.Title>
-              </Card.Header>
+            <Form.Root schema={HeaderSchema} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+              <Form.FieldSet />
+            </Form.Root>
+
+            {instructions && (
+              <Section title={t('instructions.label')}>
+                <InstructionsEditor db={db} instructions={instructions} />
+              </Section>
+            )}
+
+            <Card.Root fullWidth border={false}>
               <Card.Body>
-                {project.summary.length > 0 && (
-                  <Card.Row>
-                    <Card.Text variant='description'>{project.summary}</Card.Text>
-                  </Card.Row>
-                )}
-                {project.keywords.length > 0 && (
-                  <Card.Row>
-                    <Card.Block>
-                      <Icon icon='ph--tag--regular' />
-                    </Card.Block>
-                    <div className='flex flex-wrap gap-1 py-1 -mx-0.5'>
-                      {project.keywords.map((keyword) => (
-                        <Tag key={keyword}>{keyword}</Tag>
-                      ))}
-                    </div>
-                  </Card.Row>
-                )}
-                {project.participants.length > 0 && (
-                  <Card.Row>
-                    <Card.Block>
-                      <Icon icon='ph--users--regular' />
-                    </Card.Block>
-                    <Card.Text variant='description'>{project.participants.join(', ')}</Card.Text>
-                  </Card.Row>
-                )}
-                <ListSection icon='ph--tree-view--regular' label={t('project.threads.label')} items={project.threadIds} />
-                <ListSection icon='ph--question--regular' label={t('project.questions.label')} items={project.questions} />
-                <ListSection icon='ph--check-square--regular' label={t('project.tasks.label')} items={project.tasks} />
+                <Card.Section title={t('routines.label')}>
+                  {project.routines.map((ref) => (
+                    <ObjectLabelRow key={ref.uri} objectRef={ref} />
+                  ))}
+                </Card.Section>
+                <Card.Section title={t('artifacts.label')}>
+                  {(artifacts?.objects ?? []).map((ref) => (
+                    <ObjectLabelRow key={ref.uri} objectRef={ref} />
+                  ))}
+                </Card.Section>
               </Card.Body>
-            </Card.Root> */}
+            </Card.Root>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>
@@ -75,31 +91,28 @@ export const ProjectArticle = ({ role, subject: project }: ProjectArticleProps) 
 
 ProjectArticle.displayName = 'ProjectArticle';
 
-type ListSectionProps = {
-  icon: string;
-  label: string;
-  items: readonly string[];
+/** Lightweight labelled grouping, matching the routine form's section idiom. */
+const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
+  <div className='flex flex-col mbs-4'>
+    <Form.Label standalone label={title} />
+    {children}
+  </div>
+);
+
+type ObjectLabelRowProps = {
+  objectRef: Ref.Ref<Obj.Unknown>;
 };
 
-/** A single labelled list section (questions / tasks / thread subjects); omitted when empty. */
-const ListSection = ({ icon, label, items }: ListSectionProps) => {
-  if (items.length === 0) {
+/** Read-only label row for a resolved routine/artifact reference; omitted while still unresolved. */
+const ObjectLabelRow = ({ objectRef }: ObjectLabelRowProps) => {
+  const [object] = useObject(objectRef);
+  if (!object) {
     return null;
   }
 
   return (
-    <Card.Section>
-      <Card.Row>
-        <Card.Block>
-          <Icon icon={icon} />
-        </Card.Block>
-        <Card.Text classNames='font-medium'>{label}</Card.Text>
-      </Card.Row>
-      {items.map((item, index) => (
-        <Card.Row key={index}>
-          <Card.Text variant='description'>{item}</Card.Text>
-        </Card.Row>
-      ))}
-    </Card.Section>
+    <Card.Row>
+      <Card.Text>{Obj.getLabel(object) ?? object.id}</Card.Text>
+    </Card.Row>
   );
 };

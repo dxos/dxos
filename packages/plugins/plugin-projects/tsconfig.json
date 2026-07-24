@@ -40,10 +40,19 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-space"
