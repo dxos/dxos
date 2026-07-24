@@ -43,7 +43,7 @@ server frequently hangs during heavy edit bursts and must be killed.
 - Exports the same surface as `plugin-defs.tsx`: `getPlugins`, `getDefaults`,
   `PluginConfig`, `State`.
 - `getPlugins` = `[...getCorePlugins(config), Assistant, Comments, Markdown,
-  Thread]`. Content additions here must also be added to the minimal
+Thread]`. Content additions here must also be added to the minimal
   `optimizeDeps.entries` brace glob in vite.config.ts.
 
 **`packages/apps/composer-app/vite.config.ts`**

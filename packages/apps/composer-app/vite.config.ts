@@ -85,6 +85,13 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
  */
 export default defineConfig((env) => ({
   root: dirname,
+  define: {
+    // Per-dev-server-instance id (config re-evaluates on every server start/restart). main.tsx
+    // suffixes the coordinator SharedWorker *name* with it so a restarted server gets a fresh
+    // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
+    // URL + name). Empty in production builds — the name must stay stable across deploys.
+    __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+  },
   server: {
     host: true,
     https:

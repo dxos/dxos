@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event, Trigger, asyncTimeout } from '@dxos/async';
+import { Event, Trigger, asyncTimeout, sleep } from '@dxos/async';
 
 import * as Client from './Client';
 import * as Worker from './Worker';
@@ -150,5 +150,37 @@ describe('Connection multi-client', () => {
     });
     const followerInfo = await asyncTimeout(follower.connected, 5_000);
     expect(followerInfo.isOwner).toBe(false);
+  });
+
+  test('onPersistentFailure fires once after consecutive leader-session failures', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const failure = new Trigger<unknown>();
+    let calls = 0;
+    const connection = new Client.Connection({
+      createWorker: () => {
+        throw new Error('TEST: worker creation failed');
+      },
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000, retryBackoff: 10 },
+      maxLeaderFailures: 2,
+      onPersistentFailure: (error) => {
+        calls++;
+        failure.wake(error);
+      },
+      onConnect: async () => ({ close: async () => {} }),
+    });
+    void connection.open().catch(() => {});
+    onTestFinished(async () => {
+      await connection.close().catch(() => {});
+    });
+
+    const error = await asyncTimeout(failure.wait(), 5_000);
+    expect(error).toBeInstanceOf(Error);
+    // Failures keep accruing past the threshold; the escalation fires once per streak.
+    await sleep(200);
+    expect(calls).toBe(1);
   });
 });
