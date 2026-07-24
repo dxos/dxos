@@ -534,3 +534,10 @@ Reported by the user during the storybook walkthrough (§3b). **Log only — no 
 - [ ] **S4.2 Accept / Reject in the companion have no effect.** Buttons are inert — the document is
       unchanged and the card stays. Note `A3` asserts these "route to ops", so the assertion stops short of
       the resulting mutation (see also S2.2: the companion is the primary accept/reject surface).
+
+### S3 / S5 — status
+
+- S3 (EditingTyping) deferred during the walkthrough: with S1.3/S1.4 outstanding it only restates the
+  focus-loss defect.
+- **S5 (CommentsArticle / WithCommentsAndSuggestions): PASS** — comments and suggestions coexist,
+  click-reveal works both directions, author colours consistent across editor/companion/timeline.
