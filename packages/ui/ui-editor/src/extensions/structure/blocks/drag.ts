@@ -636,13 +636,20 @@ const createDragPlugin = (
       }
 
       // The slot the pointer is over: the first non-source block whose vertical midpoint is below the
-      // pointer. The dragged (collapsed) blocks are skipped, so the drop gap — and thus the placeholder —
-      // always lands on a visible block, above or below the pointer, never inside the lifted group.
+      // pointer. The dragged (collapsed) blocks are skipped — including blocks inside a dragged extent
+      // (a parent's children share its collapse but are not source indices) — so the drop gap, and thus
+      // the placeholder, always lands on a visible block, never inside the lifted group where the
+      // collapse decoration would absorb it.
       #dropIndexAt(clientY: number): number {
         const blocks = getBlocks(this.view.state);
         const sources = new Set(this.#sourceIndices ?? []);
+        const extents = [...sources]
+          .map((sourceIndex) => this.#extentOf(sourceIndex))
+          .filter((extent): extent is Block => extent != null);
+        const collapsed = (block: Block) =>
+          extents.some((extent) => block.from >= extent.from && block.from <= extent.to);
         for (let index = 0; index < blocks.length; index++) {
-          if (sources.has(index)) {
+          if (sources.has(index) || collapsed(blocks[index])) {
             continue;
           }
           const top = this.view.coordsAtPos(blocks[index].from);
@@ -744,13 +751,14 @@ const createDragPlugin = (
           return;
         }
 
-        // A side:-1 block widget sitting at a collapse's END is absorbed by the block-replace and renders
-        // nothing (dropping onto the block right after a source). Snap such positions to that collapse's
-        // START, which renders before it — the source's own slot, a no-op drop, so the position is right.
+        // A side:-1 block widget sitting inside a collapse (including at its end) is absorbed by the
+        // block-replace and renders nothing — the gap would vanish for that update. Snap such positions
+        // to that collapse's START, which renders before it — the source's own slot, a no-op drop, so
+        // the position is right.
         let placeholderPos = dropIndex < blocks.length ? blocks[dropIndex].from : this.view.state.doc.length;
-        const atCollapseEnd = collapses.find((range) => range.to === placeholderPos);
-        if (atCollapseEnd) {
-          placeholderPos = atCollapseEnd.from;
+        const atCollapse = collapses.find((range) => placeholderPos > range.from && placeholderPos <= range.to);
+        if (atCollapse) {
+          placeholderPos = atCollapse.from;
         }
         // The drop level (quantized to indent units) shifts the placeholder so it aligns with the content.
         const indentOffset = this.#dropIndent?.offset ?? 0;
