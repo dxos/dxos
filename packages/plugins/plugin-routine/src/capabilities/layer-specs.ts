@@ -15,13 +15,14 @@ import {
   FeedTraceSink,
   ProcessManager,
   RemoteOperationInvoker,
+  RemoteProcessManager,
   RemoteTriggerManager,
   TriggerDispatcher,
   TriggerMonitor,
   TriggerStateStore,
 } from '@dxos/compute-runtime';
 import { Database, Registry } from '@dxos/echo';
-import { EdgeOperationInvoker, EdgeTriggerManager } from '@dxos/edge-compute';
+import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
 import { invariant } from '@dxos/invariant';
 
 //
@@ -192,6 +193,28 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
     ),
 );
 
+/**
+ * Application-scoped remote (EDGE) process manager, providing the progress meter's cancel control.
+ * Uses the EDGE implementation whenever an edge service is configured — cancel is addressed by trigger
+ * id + space, so it is not space-scoped — otherwise a read-only no-op. Resolved by the progress trace
+ * sink to route an edge-run trigger's cancel; the aggregate {@link TriggerMonitor} view is unaffected.
+ */
+const RemoteProcessManagerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService, AtomRegistry.AtomRegistry],
+    provides: [RemoteProcessManager.Service],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        return edgeUrl ? EdgeProcessManager.fromClient(client) : RemoteProcessManager.layerNoop;
+      }),
+    ),
+);
+
 const TriggerDispatcherSpec = LayerSpec.make(
   {
     affinity: 'space',
@@ -227,6 +250,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.LayerSpec, RemoteTriggerManagerSpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerMonitorSpec),
     Capability.contributes(Capabilities.LayerSpec, RemoteOperationInvokerSpec),
+    Capability.contributes(Capabilities.LayerSpec, RemoteProcessManagerSpec),
     Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),
 );

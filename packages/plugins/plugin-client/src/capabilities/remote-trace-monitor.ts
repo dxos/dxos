@@ -43,8 +43,12 @@ export default Capability.makeModule(
                     client.halo.device?.deviceKey.toHex() ?? client.halo.identity.get()?.identityKey.toHex() ?? '',
                 };
                 return client.services.rpc.NetworkService.subscribeMessages({ peer, tags }).pipe(
+                  // Carry the envelope tags with the payload — the wire payload drops ref meta
+                  // (`trigger`), and decode restores it from the tags for cancel addressing.
                   Stream.filterMap((message) =>
-                    message.payload?.value ? Option.some(message.payload.value) : Option.none(),
+                    message.payload?.value
+                      ? Option.some({ payload: message.payload.value, tags: message.tags })
+                      : Option.none(),
                   ),
                   // Never fail the aggregate monitor stream on a transient network error.
                   Stream.catchAll(() => Stream.empty),

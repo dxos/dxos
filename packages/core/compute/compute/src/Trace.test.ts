@@ -4,6 +4,9 @@
 
 import { describe, test } from 'vitest';
 
+import { Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
+
 import * as Trace from './Trace';
 
 // DX-1125: the swarm broadcast tag/filter/wire helpers. The tag format is a cross-repo contract —
@@ -110,5 +113,28 @@ describe('Trace.encodeTraceMessage / decodeTraceMessage', () => {
     const original = message({ pid: 'p9', space: 'SPACE9' }, [{ type: 'status.update' }]);
     const decoded = Trace.decodeTraceMessage(Trace.encodeTraceMessage(original));
     expect(Trace.messageToTags(decoded)).toEqual(['type:status.update', 'pid:p9', 'space:SPACE9']);
+  });
+
+  // The wire payload deliberately drops ref meta fields (`trigger`) — they travel only as envelope
+  // tags. A consumer that needs the trigger (e.g. cancel addressing) must get it back at decode, or
+  // downstream guards silently no-op (the mailbox-sync cancel bug).
+  test('restores meta.trigger from the envelope tags the payload encoding drops', ({ expect }) => {
+    const trigger = Ref.fromURI(EID.make({ entityId: 'TRIGGER1' }));
+    const original = message({ pid: 'p1', space: 'SPACE1', trigger }, [{ type: 'status.update' }]);
+    const tags = Trace.messageToTags(original);
+
+    // Payload alone loses the trigger (by design)…
+    expect(Trace.decodeTraceMessage(Trace.encodeTraceMessage(original)).meta.trigger).toBeUndefined();
+
+    // …the envelope tags restore it.
+    const decoded = Trace.decodeTraceMessage(Trace.encodeTraceMessage(original), tags);
+    expect(decoded.meta.trigger?.uri.toString()).toBe(trigger.uri.toString());
+    expect(Trace.matchesFilter(decoded, { trigger: trigger.uri.toString() })).toBe(true);
+  });
+
+  test('decode without a trigger tag leaves meta.trigger undefined', ({ expect }) => {
+    const original = message({ pid: 'p1', space: 'SPACE1' }, [{ type: 'status.update' }]);
+    const decoded = Trace.decodeTraceMessage(Trace.encodeTraceMessage(original), Trace.messageToTags(original));
+    expect(decoded.meta.trigger).toBeUndefined();
   });
 });

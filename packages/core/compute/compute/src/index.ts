@@ -7,6 +7,7 @@ export * from './types';
 
 export * as AgentIdentity from './AgentIdentity';
 export * as AgentService from './AgentService';
+export * as Cancellation from './Cancellation';
 export * as Credential from './Credential';
 export * as Header from './Header';
 export * as LayerSpec from './LayerSpec';
