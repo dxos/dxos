@@ -48,4 +48,30 @@ describe('getSelectionContext', () => {
   test('returns undefined for an empty selection', ({ expect }) => {
     expect(getSelectionContext({ object, selection: undefined, resolvers: [resolver] })).toBeUndefined();
   });
+
+  test('skips a range whose cursor throws and keeps the ranges that resolve', ({ expect }) => {
+    const throwingResolver = {
+      key: typename ?? '',
+      getText: (_obj: unknown, anchor: string) => {
+        if (anchor === 'stale:cursor') {
+          throw new Error('unparseable cursor');
+        }
+        return anchor === 'a:b' ? 'brave' : undefined;
+      },
+    };
+
+    const context = getSelectionContext({
+      object,
+      selection: {
+        mode: 'multi-range',
+        ranges: [
+          { from: 'stale', to: 'cursor' },
+          { from: 'a', to: 'b' },
+        ],
+      },
+      resolvers: [throwingResolver],
+    });
+    expect(context?.selection?.text).toBe('brave');
+    expect(context?.selection?.anchors).toEqual(['stale:cursor', 'a:b']);
+  });
 });

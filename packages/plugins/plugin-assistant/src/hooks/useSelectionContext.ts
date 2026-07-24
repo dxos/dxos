@@ -28,9 +28,18 @@ export const getSelectionContext = ({
     return undefined;
   }
 
+  // A stale cursor throws in Automerge; a bad range must not abort the submit.
+  const resolveAnchorText = (anchor: string): string | undefined => {
+    try {
+      return resolver.getText(object, anchor);
+    } catch {
+      return undefined;
+    }
+  };
+
   const anchors = Selection.toAnchors(selection);
   const parts = anchors
-    .map((anchor) => resolver.getText(object, anchor))
+    .map((anchor) => resolveAnchorText(anchor))
     .filter((text): text is string => text != null && text.length > 0);
   if (parts.length === 0) {
     return undefined;

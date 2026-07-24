@@ -78,6 +78,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
   Process.make(
     {
       key: AGENT_PROCESS_KEY,
+      // String member keeps queue entries persisted before the block-array widening decodable.
       input: Schema.Union(Schema.String, Schema.Array(ContentBlock.Any)),
       output: Schema.Void,
       services: [

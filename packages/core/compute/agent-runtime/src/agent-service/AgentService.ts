@@ -22,7 +22,7 @@ import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ContentBlock } from '@dxos/types';
+import type { ContentBlock } from '@dxos/types';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
 import { type DelegationStrategy } from './delegation-strategy';
