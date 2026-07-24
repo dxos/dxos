@@ -17,7 +17,7 @@
 - New package MUST set `"private": true`.
 - Workspace deps: `workspace:*` (peerDependencies: `workspace:^`). Add external deps via catalog.
 - **No compatibility re-exports or shims** — update every call site in the same task.
-- No casts (`as any`, `as unknown as T`, non-null `!`); no single-letter variable names; comments say *why*, once, ending with a period.
+- No casts (`as any`, `as unknown as T`, non-null `!`); no single-letter variable names; comments say _why_, once, ending with a period.
 - Namespace-export type modules start with `// @import-as-namespace` and are exported `export * as Name from './Name'`.
 - `pnpm format` (oxfmt) + stage the result before EVERY commit. `git status` before every commit; include the user's concurrent edits.
 - Each task ends green: `moon run <pkg>:build` (+ tests) for every package touched in that task.
@@ -32,6 +32,7 @@
 Frees the `Project` name and the `org.dxos.type.project` typename for the new core type.
 
 **Files:**
+
 - Rename: `packages/sdk/types/src/types/Project.ts` → `packages/sdk/types/src/types/ExternalProject.ts`
 - Modify: `packages/sdk/types/src/types/index.ts:22,63`
 - Modify: `packages/plugins/plugin-linear/src/operations/sync.ts`, `sync.test.ts`, `materialize-target.ts`
@@ -40,6 +41,7 @@ Frees the `Project` name and the `org.dxos.type.project` typename for the new co
 - Modify: `packages/plugins/plugin-onboarding/scripts/build-exemplar-space.ts`
 
 **Interfaces:**
+
 - Consumes: existing `Project` class in `@dxos/types` (`{name?, description?, image?}`).
 - Produces: `ExternalProject.ExternalProject` class + `ExternalProject.make`, exported as `export * as ExternalProject from './ExternalProject'`. Later tasks rely on `org.dxos.type.project` being unclaimed.
 
@@ -102,16 +104,18 @@ pnpm format && git add -A && git commit -m "types: rename Project to ExternalPro
 ### Task 2: Move `Routine` schema into `@dxos/compute`
 
 **Files:**
+
 - Create: `packages/core/compute/compute/src/types/Routine.ts`
 - Create test: `packages/core/compute/compute/src/types/Routine.test.ts` (schema parts moved)
 - Modify: `packages/core/compute/compute/src/types/index.ts`
 - Delete: `packages/plugins/plugin-routine/src/types/Routine.ts` (+ its `Routine.test.ts` wiring parts move to util test)
 - Create: `packages/plugins/plugin-routine/src/util/wire.ts` (+ `wire.test.ts`)
 - Modify: `packages/plugins/plugin-routine/src/types/index.ts`, `packages/plugins/plugin-routine/src/util/index.ts`
-- Modify (import updates): every plugin-routine file that imports `Routine` from `#types` (capabilities/*, components/RoutineForm, TriggerEditor, containers/Routine*, operations/*, templates, translations.ts, paths.ts, RoutinePlugin*.ts*, util/routines-for-object.ts)
+- Modify (import updates): every plugin-routine file that imports `Routine` from `#types` (capabilities/_, components/RoutineForm, TriggerEditor, containers/Routine_, operations/_, templates, translations.ts, paths.ts, RoutinePlugin_.ts\*, util/routines-for-object.ts)
 - Modify (external): `packages/plugins/plugin-inbox/src/util/sync-routine.ts`, `sync-routine.test.ts`, `sync-target.ts`, `packages/plugins/plugin-inbox/src/capabilities/connector.ts`, `packages/plugins/plugin-inbox/src/hooks/useSyncTrigger.ts`, `packages/plugins/plugin-connector/src/types/connector.ts`
 
 **Interfaces:**
+
 - Consumes: `Instructions`, `Trigger`, `Runnable` modules inside compute (`./Instructions`, `./Trigger`, `../Runnable`).
 - Produces:
   - `@dxos/compute` `Routine` namespace: `Routine.Routine` (class), `Routine.Kind`, `Routine.instanceOf(value)`, `Routine.instructionsRef(routine)`, `Routine.runnableRef(routine)`, and a plain `Routine.make(props)` (`Obj.make` + `triggers` default `[]`, NO instructions/trigger wiring).
@@ -163,6 +167,7 @@ Create `packages/plugins/plugin-routine/src/util/wire.ts`: move `wireTriggers`, 
 - [ ] **Step 4: Update all Routine imports**
 
 Mechanical, guided by the compiler:
+
 - Inside plugin-routine: `import { Routine } from '#types'` (or `from '../types'`) → `import { Routine } from '@dxos/compute'`; call sites of `Routine.make(...)` that passed `instructions`/`trigger` → `makeRoutine(...)` from `#util` / `../util`; `Routine.wireTriggers` → `wireTriggers`.
 - plugin-inbox: `import { Routine, connectedRoutinesQuery } from '@dxos/plugin-routine'` → `import { Routine } from '@dxos/compute'` + `import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine'`; `Routine.make({...})` in `sync-routine.ts:67` → `makeRoutine({...})`.
 - plugin-connector / plugin-trip / plugin-script: fix whatever the compiler flags (RoutineOperation/testing imports are unaffected).
@@ -187,10 +192,12 @@ pnpm format && git add -A && git commit -m "compute: move Routine schema from pl
 ### Task 3: `Instructions.commands` — structured sentinel commands
 
 **Files:**
+
 - Modify: `packages/core/compute/compute/src/types/Instructions.ts`
 - Create test: `packages/core/compute/compute/src/types/Instructions.test.ts`
 
 **Interfaces:**
+
 - Produces: `Instructions.Command` schema (`{ sentinel: string; description?: string; prompt: string }`) and optional `commands` array on `Instructions`; `Instructions.MakeProps` gains `commands?: Command[]`. Consumed by Task 9 (binding) and Task 10 (autocomplete).
 
 - [ ] **Step 1: Write the failing test**
@@ -255,6 +262,7 @@ pnpm format && git add -A && git commit -m "compute: Instructions.commands struc
 The rename keeps every current surface compiling (plugin-brain's surfaces migrate to plugin-projects in Task 6; here they are only re-typed).
 
 **Files:**
+
 - Rename: `packages/core/compute/compute/src/types/Topic.ts` → `Project.ts`; modify `packages/core/compute/compute/src/types/index.ts`
 - Create test: `packages/core/compute/compute/src/types/Project.test.ts`
 - Modify: `packages/core/compute/pipeline-email/src/corpus/topics.ts`, `topics.test.ts`, `packages/core/compute/pipeline-email/src/testing/email-pipeline.test.ts`
@@ -263,6 +271,7 @@ The rename keeps every current surface compiling (plugin-brain's surfaces migrat
 - Modify: `packages/stories/stories-inbox/src/stories/CreateTopic.stories.tsx`
 
 **Interfaces:**
+
 - Consumes: `Routine` (Task 2), `Instructions` modules in compute; `Collection` from `@dxos/echo`.
 - Produces: `@dxos/compute` `Project` namespace — `Project.Project` (`org.dxos.type.project@0.2.0`): `{ name?, description?, instructions?: Ref(Instructions), routines: Ref(Routine)[], artifacts?: Ref(Collection) }`, plus `Project.make(props)` defaulting `routines: []`. `InboxOperation.CreateProjectFromMessage` (output `{ projectId }`).
 
@@ -382,12 +391,14 @@ pnpm format && git add -A && git commit -m "compute: Project type succeeds Topic
 ### Task 5: Scaffold `packages/plugins/plugin-projects`
 
 **Files:**
+
 - Create: `packages/plugins/plugin-projects/{package.json,moon.yml,tsconfig.json,dx.config.ts,README.md}`
 - Create: `packages/plugins/plugin-projects/src/{index.ts,meta.ts,plugin.ts,ProjectsPlugin.tsx,translations.ts,vite-env.d.ts}`
 - Create: `packages/plugins/plugin-projects/src/capabilities/index.ts`, `src/containers/index.ts`, `src/types/index.ts`
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx`
 
 **Interfaces:**
+
 - Produces: `@dxos/plugin-projects` with `ProjectsPlugin` (lazy) export from `./plugin`; plugin key `org.dxos.plugin.projects`. Registered in composer-app.
 
 - [ ] **Step 1: Package files (model on plugin-brain, trimmed)**
@@ -475,12 +486,14 @@ pnpm format && git add -A && git commit -m "plugin-projects: scaffold core plugi
 ### Task 6: Move Project surfaces from plugin-brain into plugin-projects
 
 **Files:**
+
 - Move (git mv + rename): `plugin-brain/src/containers/TopicArticle/*` → `plugin-projects/src/containers/ProjectArticle/{ProjectArticle.tsx,ProjectArticle.stories.tsx,index.ts}`
 - Move logic (re-create in plugin-projects, delete from brain): `capabilities/create-object.ts`, `capabilities/app-graph-builder.ts`, `capabilities/navigation-resolver.ts`, the `brain.topic` surface entry from `capabilities/react-surface.tsx`
 - Modify: `plugin-brain/src/BrainPlugin.tsx` (drop schema/create/graph/navigation modules + Project translations), `plugin-brain/src/translations.ts`, `plugin-brain/src/capabilities/index.ts`
 - Modify: `plugin-projects/src/ProjectsPlugin.tsx`, `capabilities/index.ts`, `containers/index.ts`, `translations.ts`
 
 **Interfaces:**
+
 - Consumes: `Project` (Task 4), plugin scaffold (Task 5), `SpaceCapabilities.CreateObjectEntry`, `TypeSection` helpers from `@dxos/app-toolkit`.
 - Produces: plugin-projects contributes CreateObject / AppGraphBuilder / NavigationResolver / ReactSurface(`project.article` → `ProjectArticle`); `createProject({name, db})` internal helper that builds the full owned graph (Project + Instructions + artifacts Collection).
 
@@ -543,10 +556,12 @@ pnpm format && git add -A && git commit -m "plugin-projects: own Project surface
 ### Task 7: `ProjectArticle` rework + story
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.tsx`
 - Modify: `packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.stories.tsx`
 
 **Interfaces:**
+
 - Consumes: `Project.Project`, `useObject` (`@dxos/echo-react`), `Form` (`@dxos/react-ui-form`), `InstructionsEditor` — reuse from plugin-routine if exported from its `./components` package export (check `packages/plugins/plugin-routine/package.json` exports map; if `./components` is exported, add dependency `@dxos/plugin-routine: workspace:*` and import it; otherwise export it there first — a real export of a shared component, not a shim).
 - Produces: article with sections: header form (name/description), Instructions (markdown editor + commands table via Form), Routines (read-only list of `project.routines` labels), Artifacts (list of `artifacts.objects` labels). Creation flows for routines/artifacts are milestone 2.
 
@@ -605,10 +620,12 @@ pnpm format && git add -A && git commit -m "plugin-projects: ProjectArticle sect
 ### Task 8: Project context binding for companion chats
 
 **Files:**
+
 - Modify: `packages/core/compute/compute/src/types/Project.ts` (+ `Project.test.ts`)
 - Modify: `packages/plugins/plugin-assistant/src/containers/ChatCompanion/ChatCompanion.tsx`
 
 **Interfaces:**
+
 - Consumes: `AiContext.Binder.bind({ skills, objects })` (existing, via `useContextBinder`); `Project.Project`.
 - Produces: `Project.contextBindings(project)` in compute:
 
@@ -633,11 +650,13 @@ Extend `Project.test.ts`:
 ```ts
 test('contextBindings exposes instructions, skills, and objects', ({ expect }) => {
   const skillRef = Ref.fromURI('dxn:echo:@:skill-1');
-  const doc = Obj.make(Expando, {});                     // any Obj.Unknown stand-in; use an existing test helper type
+  const doc = Obj.make(Expando, {}); // any Obj.Unknown stand-in; use an existing test helper type
   const instructions = Instructions.make({ text: 'Test', skills: [skillRef], objects: [Ref.make(doc)] });
   const project = Project.make({ name: 'test' });
   Obj.setParent(instructions, project);
-  Obj.update(project, (p) => { p.instructions = Ref.make(instructions); });
+  Obj.update(project, (p) => {
+    p.instructions = Ref.make(instructions);
+  });
 
   const bindings = Project.contextBindings(project);
   expect(bindings.skills.map((r) => r.uri)).toEqual([skillRef.uri]);
@@ -687,11 +706,13 @@ pnpm format && git add -A && git commit -m "assistant: bind project instructions
 ### Task 9: Commands autocomplete in the chat prompt
 
 **Files:**
+
 - Create: `packages/ui/react-ui-chat/src/components/ChatEditor/commands.ts` (+ `commands.test.ts`)
 - Modify: `packages/ui/react-ui-chat/src/components/ChatEditor/index.ts`
 - Modify: `packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatPrompt.tsx` (+ the prop chain: `ChatArticle` → `Chat` component → `ChatPrompt`, following where `companionTo` already flows)
 
 **Interfaces:**
+
 - Consumes: `Instructions.Command[]` (Task 3); `ChatEditor`'s `extensions` prop (it forwards CodeMirror `Extension[]` — verify in `ChatEditor.tsx`).
 - Produces: `commands({ getCommands })` CodeMirror extension exported from `@dxos/react-ui-chat`:
 
@@ -772,12 +793,13 @@ Run test → PASS. `moon run react-ui-chat:build`.
 
 ```tsx
 const [companion] = useObject(companionTo);
-const [instructions] = useObject(
-  Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined,
-);
+const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
 const commandsRef = useDynamicRef(instructions?.commands ?? []);
 const commandsExtension = useMemo(
-  () => commands({ getCommands: () => commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })) }),
+  () =>
+    commands({
+      getCommands: () => commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+    }),
   [commandsRef],
 );
 ```
@@ -801,6 +823,7 @@ pnpm format && git add -A && git commit -m "assistant: sentinel-command autocomp
 ### Task 10: Finalization — AUDIT note, changeset, full verification
 
 **Files:**
+
 - Modify: `packages/plugins/AUDIT.md`
 - Create: `.changeset/plugin-projects.md`
 - Modify: `.agents/projects/plugin-projects/TASKS.md`, `.agents/projects/registry.yml`

@@ -68,7 +68,7 @@ import { Sketch } from '@dxos/plugin-sketch';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Table } from '@dxos/react-ui-table/types';
 import { Tagging, TagIndex, ViewModel } from '@dxos/schema';
-import { Actor, ContentBlock, Event, Message, Organization, Person, Project, Task } from '@dxos/types';
+import { Actor, ContentBlock, Event, ExternalProject, Message, Organization, Person, Task } from '@dxos/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -135,7 +135,7 @@ const SCHEMAS: Type.AnyEntity[] = [
   Organization.Organization,
   Message.Message,
   Event.Event,
-  Project.Project,
+  ExternalProject.ExternalProject,
   Task.Task,
   Mailbox.Mailbox,
   Calendar.Calendar,
@@ -962,8 +962,10 @@ const makeCalendar = (
 // Project + tasks
 //
 
-const makeProject = (people: Record<PersonKey, Person.Person>): { project: Project.Project; tasks: Task.Task[] } => {
-  const project = Project.make({
+const makeProject = (
+  people: Record<PersonKey, Person.Person>,
+): { project: ExternalProject.ExternalProject; tasks: Task.Task[] } => {
+  const project = ExternalProject.make({
     name: 'Spring Blend Launch',
     description: 'New seasonal espresso blend targeting wholesale espresso bars. Going live in 6 weeks.',
   });
@@ -1036,7 +1038,7 @@ type NotesBundle = {
 const makeNotes = (
   people: Record<PersonKey, Person.Person>,
   organizations: Record<OrgKey, Organization.Organization>,
-  project: Project.Project,
+  project: ExternalProject.ExternalProject,
 ): NotesBundle => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
   // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.

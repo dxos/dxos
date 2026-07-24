@@ -13,7 +13,7 @@ import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Project, Task } from '@dxos/types';
+import { ExternalProject, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -33,7 +33,7 @@ import { LinearOperation } from '../types';
 // subsequent passes know exactly which fields the user touched locally.
 //
 // Mapped fields per object:
-//   Project: name, description
+//   ExternalProject: name, description
 //   Task:    title, description, status, priority, estimate
 //
 // Conflict policy is remote-wins (mirrors Trello). People are NOT synced and
@@ -123,7 +123,7 @@ const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): str
  * through three-way merge against the snapshot at `binding.spec.snapshots[id]`,
  * then the snapshot is refreshed to remote-current so the next push knows
  * exactly which fields the user has edited locally. Non-mapped fields
- * (`Project.image`, etc.) are preserved.
+ * (`ExternalProject.image`, etc.) are preserved.
  */
 export const upsertProject = Effect.fn('upsertProject')(function* (
   binding: Cursor.ExternalCursor,
@@ -133,7 +133,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
     name: remote.name,
     description: remote.description ?? '',
   };
-  const existing = yield* findByForeignId<Project.Project>(Project.Project, remote.id);
+  const existing = yield* findByForeignId<ExternalProject.ExternalProject>(ExternalProject.ExternalProject, remote.id);
 
   if (existing) {
     const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, remote.id);
@@ -163,7 +163,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
     return { project: existing, created: false };
   }
 
-  const created = Obj.make(Project.Project, {
+  const created = Obj.make(ExternalProject.ExternalProject, {
     [Obj.Meta]: { keys: [fkFor(remote.id)] },
     name: remote.name,
     description: remote.description ?? undefined,
@@ -183,7 +183,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
 export const upsertTask = Effect.fn('upsertTask')(function* (
   binding: Cursor.ExternalCursor,
   issue: LinearApi.Issue,
-  project: Project.Project | undefined,
+  project: ExternalProject.ExternalProject | undefined,
 ) {
   const status = LinearApi.stateTypeToTaskStatus(issue.state.type);
   const priority = LinearApi.priorityNumberToTaskPriority(issue.priority);
@@ -333,7 +333,7 @@ export const pushTeamUpdates: <E, R>(
     // in the database — both yield the same set, and the by-fid query keeps
     // memory bounded for spaces with thousands of unrelated tasks.
     for (const [id] of remoteProjectsById) {
-      const local = yield* findByForeignId<Project.Project>(Project.Project, id);
+      const local = yield* findByForeignId<ExternalProject.ExternalProject>(ExternalProject.ExternalProject, id);
       if (!local || Obj.isDeleted(local)) {
         continue;
       }
@@ -498,7 +498,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
               // the push pass below sees only fields the user has edited
               // locally since the last pull.
               const projects = yield* LinearApi.fetchTeamProjects(remoteTeam.id);
-              const projectByRemoteId = new Map<string, Project.Project>();
+              const projectByRemoteId = new Map<string, ExternalProject.ExternalProject>();
               const remoteProjectsById = new Map<string, LinearApi.Project>();
               let pulledProjects = 0;
               for (const project of projects) {

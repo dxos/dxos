@@ -152,7 +152,7 @@ revisit once plugin-projects settles (tracked).
 
 Full loop: `Project` type + create-object; `ProjectArticle`; companion chat
 bound via `AiContext` (instructions + skills + commands); commands autocomplete
-in the chat prompt; all call-site migrations above. Routine creation *within*
+in the chat prompt; all call-site migrations above. Routine creation _within_
 the article is deferred to milestone 2 (create via existing routine flows;
 linked via `routines`).
 
