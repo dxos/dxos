@@ -29,6 +29,9 @@ import { createConfig as createTestConfig } from '../../../vitest.base.config';
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
+// DX_PLUGIN_SET=minimal (serve-min task) swaps the full plugin registry for
+// plugin-defs.minimal.tsx without touching main.tsx.
+const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -82,6 +85,13 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
  */
 export default defineConfig((env) => ({
   root: dirname,
+  define: {
+    // Per-dev-server-instance id (config re-evaluates on every server start/restart). main.tsx
+    // suffixes the coordinator SharedWorker *name* with it so a restarted server gets a fresh
+    // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
+    // URL + name). Empty in production builds — the name must stay stable across deploys.
+    __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+  },
   server: {
     host: true,
     https:
@@ -121,7 +131,7 @@ export default defineConfig((env) => ({
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
         './src/workers/coordinator-worker.ts',
-        './src/plugin-defs.tsx',
+        isMinimalPluginSet ? './src/plugin-defs.minimal.tsx' : './src/plugin-defs.tsx',
       ],
     },
   },
@@ -280,7 +290,14 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
-      path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      // Under DX_PLUGIN_SET=minimal only the plugins registered in
+      // plugin-defs.minimal.tsx are scanned — keep the brace list in sync.
+      isMinimalPluginSet
+        ? path.resolve(
+            rootDir,
+            'packages/plugins/plugin-{assistant,attention,client,comments,deck,graph,inbox,markdown,navtree,observability,onboarding,registry,settings,simple-layout,space,spotlight,status-bar,theme,thread}/src/index.{ts,tsx}',
+          )
+        : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
@@ -289,6 +306,9 @@ export default defineConfig((env) => ({
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
+      ...(isMinimalPluginSet
+        ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, 'src/plugin-defs.minimal.tsx') }]
+        : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },

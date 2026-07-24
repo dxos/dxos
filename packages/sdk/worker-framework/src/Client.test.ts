@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event, Trigger, asyncTimeout } from '@dxos/async';
+import { Event, Trigger, asyncTimeout, sleep } from '@dxos/async';
 
 import * as Client from './Client';
 import * as Worker from './Worker';
@@ -150,5 +150,64 @@ describe('Connection multi-client', () => {
     });
     const followerInfo = await asyncTimeout(follower.connected, 5_000);
     expect(followerInfo.isOwner).toBe(false);
+  });
+
+  test('onPersistentFailure fires once after consecutive leader-session failures', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const failure = new Trigger<unknown>();
+    let calls = 0;
+    const connection = new Client.Connection({
+      createWorker: () => {
+        throw new Error('TEST: worker creation failed');
+      },
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000, retryBackoff: 10 },
+      maxLeaderFailures: 2,
+      onPersistentFailure: (error) => {
+        calls++;
+        failure.wake(error);
+        // A throwing callback must not break the retry loop (exercises the escalation guard).
+        throw new Error('TEST: callback failure');
+      },
+      onConnect: async () => ({ close: async () => {} }),
+    });
+    // open() can never complete (no leader session ever opens); it settles via the connection's
+    // internal lock/RPC timeout, whose timing differs per environment (node keeps it pending past
+    // close()), so teardown must not await it. The rejection handler keeps the expected failure
+    // from surfacing as unhandled; an unexpected resolution throws, which vitest reports.
+    void connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: no leader session can ever open in this test.');
+      },
+      () => {},
+    );
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    const error = await asyncTimeout(failure.wait(), 5_000);
+    expect(error).toBeInstanceOf(Error);
+    // The connection survived the throwing callback and kept electing (close() below still works).
+    // Failures keep accruing past the threshold; the escalation fires once per streak.
+    await sleep(200);
+    expect(calls).toBe(1);
+  });
+
+  test('rejects a non-positive maxLeaderFailures', () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    expect(
+      () =>
+        new Client.Connection({
+          createWorker: createWorkerFactory(keys.storageLockKey),
+          createCoordinator: () => hub.connect(),
+          leaderLockKey: keys.leaderLockKey,
+          maxLeaderFailures: 0,
+          onConnect: async () => ({ close: async () => {} }),
+        }),
+    ).toThrow('maxLeaderFailures must be a positive integer');
   });
 });

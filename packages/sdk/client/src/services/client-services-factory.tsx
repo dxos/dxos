@@ -20,6 +20,8 @@ export type CreateClientServicesOptions = {
   createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
   /** Path to SQLite database file for persistent indexing in Node/Bun. */
   sqlitePath?: LocalClientServicesParams['sqlitePath'];
+  /** Escalation hook for persistent worker-connection failures (dedicated worker mode). See {@link DedicatedWorkerClientServicesOptions.onPersistentFailure}. */
+  onPersistentWorkerFailure?: DedicatedWorkerClientServicesOptions['onPersistentFailure'];
 };
 
 /**
@@ -34,7 +36,8 @@ export const createClientServices = async (
   config: Config,
   options: CreateClientServicesOptions = {},
 ): Promise<ClientServicesProvider> => {
-  const { createDedicatedWorker, createCoordinatorWorker, createOpfsWorker, sqlitePath } = options;
+  const { createDedicatedWorker, createCoordinatorWorker, createOpfsWorker, sqlitePath, onPersistentWorkerFailure } =
+    options;
 
   // The legacy protobuf byte-transport remote providers (websocket `fromSocket`, unix-socket
   // `fromAgent`, iframe) have been removed; a `remote_source` endpoint is no longer supported until
@@ -79,6 +82,7 @@ export const createClientServices = async (
               ? new Coordinator.SharedWorker({ createWorker: createCoordinatorWorker })
               : raise(new TypeError('createCoordinatorWorker is required when singleClientMode is false')),
         config,
+        onPersistentFailure: onPersistentWorkerFailure,
       });
     }
 

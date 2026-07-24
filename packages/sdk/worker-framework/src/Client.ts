@@ -46,6 +46,22 @@ export type Options = {
   leaderLockKey: string;
   config?: Record<string, any>;
   leaderTimeouts?: LeaderTimeouts;
+  /**
+   * Consecutive leader-session failures before {@link Options.onPersistentFailure} fires.
+   */
+  maxLeaderFailures?: number;
+  /**
+   * Invoked once per failure streak when `maxLeaderFailures` consecutive leader-session failures
+   * have occurred. Election keeps retrying afterwards — the callback lets the app escalate (e.g.
+   * prompt or force a reload) instead of backing off silently forever. A common cause is stale
+   * mixed-generation workers: a SharedWorker coordinator or dedicated worker running code from a
+   * previous dev-server instance or app deploy alongside a freshly loaded page.
+   *
+   * TODO(burdon): Durable fix for the mixed-generation case: exchange a generation/build id in the
+   *  coordinator handshake; on mismatch the older generation steps down, the coordinator self-closes
+   *  (so the next connect spawns fresh code), and stale tabs are told to reload.
+   */
+  onPersistentFailure?: (error: unknown) => void;
   onConnect: (args: {
     clientToWorker: MessagePort;
     workerToClient: MessagePort;
@@ -66,6 +82,9 @@ const DEFAULT_LEADER_RETRY_BACKOFF = 1_000;
 // Cap on the exponential backoff below, so a worker that fails indefinitely still retries on a
 // bounded interval rather than backing off forever.
 const MAX_LEADER_RETRY_BACKOFF = 30_000;
+// Consecutive failures before onPersistentFailure fires — late enough to skip transient races,
+// early enough that a user staring at a boot spinner gets a signal within a few seconds.
+const DEFAULT_MAX_LEADER_FAILURES = 4;
 
 /**
  * Manages leader election, coordinator port exchange, and worker lifecycle for dedicated workers.
@@ -83,6 +102,8 @@ export class Connection extends Resource {
   readonly #leaderStaleTimeout: number;
   readonly #leaderPortTimeout: number;
   readonly #leaderRetryBackoff: number;
+  readonly #maxLeaderFailures: number;
+  readonly #onPersistentFailure: ((error: unknown) => void) | undefined;
 
   #connectionHandle: Handle | undefined;
   #leaderSession: LeaderSession | undefined;
@@ -116,6 +137,14 @@ export class Connection extends Resource {
     this.#leaderStaleTimeout = options.leaderTimeouts?.staleTimeout ?? DEFAULT_LEADER_STALE_TIMEOUT;
     this.#leaderPortTimeout = options.leaderTimeouts?.portTimeout ?? DEFAULT_LEADER_PORT_TIMEOUT;
     this.#leaderRetryBackoff = options.leaderTimeouts?.retryBackoff ?? DEFAULT_LEADER_RETRY_BACKOFF;
+    this.#maxLeaderFailures = options.maxLeaderFailures ?? DEFAULT_MAX_LEADER_FAILURES;
+    // The escalation fires on exact equality with the failure count, so any non-positive-integer
+    // value would silently disable it.
+    invariant(
+      Number.isInteger(this.#maxLeaderFailures) && this.#maxLeaderFailures >= 1,
+      'maxLeaderFailures must be a positive integer',
+    );
+    this.#onPersistentFailure = options.onPersistentFailure;
   }
 
   onReconnect = (callback: () => Promise<void>) => {
@@ -228,6 +257,13 @@ export class Connection extends Resource {
           failureCount: this.#leaderFailureCount,
           backoff: jitteredBackoff,
         });
+        if (this.#leaderFailureCount === this.#maxLeaderFailures) {
+          try {
+            this.#onPersistentFailure?.(error);
+          } catch (callbackError) {
+            log.catch(callbackError);
+          }
+        }
         try {
           await sleepWithContext(this._ctx, jitteredBackoff);
         } catch {
