@@ -803,9 +803,9 @@ const dragTheme = EditorView.theme({
     pointerEvents: 'none',
   },
   // Left/width are set inline per drop (they track the drop level so the box aligns with the content).
+  // Unpainted: the drop slot reads as empty space matching the anticipated dropped block.
   '.cm-blockDropPlaceholderBox': {
     boxSizing: 'border-box',
-    backgroundColor: 'color-mix(in oklch, var(--color-accent-text, #3b82f6) 25%, transparent)',
   },
   '.cm-blockDragPreview': {
     position: 'absolute',
