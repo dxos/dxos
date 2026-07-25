@@ -14,7 +14,7 @@ dedicated wrapper surface in `stories-assistant/src/testing/modules.tsx` (~28 of
    in the space root collection".
 2. Compute an `attendableId` (usually `Paths.getCollectionsPath(space.id, object.id)`).
 3. Render a **real** composer surface (`AppSurface.Article` with `{ subject, attendableId,
-   companionTo }`), or, for a few diagnostics, a bespoke panel.
+companionTo }`), or, for a few diagnostics, a bespoke panel.
 
 Consequences:
 
@@ -57,7 +57,7 @@ exported under a `Cell` namespace:
   of dispatching the plugin surface (the story-override escape hatch). `opts.variant` /
   `opts.role` narrow to a non-default article variant when needed.
 - `Cell.companion(variant, object)` → `{ type: AppSurface.Article, data: { subject: variant,
-  companionTo: object } }` for object companions (`'history'`, `'comments'`).
+companionTo: object } }` for object companions (`'history'`, `'comments'`).
 - `Cell.deckCompanion(variant)` → `{ type: AppSurface.deckCompanion(variant), data: {} }` for
   space-scoped companions (`'trace'`) whose surface reads `useActiveSpace()`.
 - `Cell.surface(token, data?)` → escape hatch for residual story-only panels registered as
@@ -94,7 +94,7 @@ holds the `AtomRegistry`). (Distinct from the existing `StorybookCapabilities.La
 holds workspace/deck state, not the cell grid.)
 
 **Harness-created objects.** The Chat (and, under `createAgent`, the Agent) is created by the
-assistant plugin's `CreateChat` operation in the harness setup module — *after* `onInit`. A story
+assistant plugin's `CreateChat` operation in the harness setup module — _after_ `onInit`. A story
 therefore cannot reference the chat object in its `onInit` layout. Such objects are addressed by a
 **custom-role** cell (`Cell.surface`) whose registered surface resolves the harness-created object
 (e.g. latest `Assistant.Chat`) and delegates to the real plugin surface (`ChatArticle`). Only

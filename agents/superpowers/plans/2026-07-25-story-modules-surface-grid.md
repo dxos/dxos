@@ -14,7 +14,7 @@
 - No casts to silence the type-checker (`as any`, `as unknown as T`, non-null `!`); fix types at source. `as const` is fine.
 - New packages are `"private": true`; workspace deps use `workspace:*`. (No new packages here.)
 - TypeScript, single quotes, arrow functions, named exports, namespace/barrel imports. Import order: builtin → external → @dxos → internal → parent → sibling.
-- Comments say *why* in one load-bearing clause, ending with a period. Audit added comments before each commit.
+- Comments say _why_ in one load-bearing clause, ending with a period. Audit added comments before each commit.
 - Prefer ES `#private`; name a forwarded ref `forwardedRef`. React imports named (`useMemo`, `type Ref`).
 - Test after every step: `moon run @dxos/storybook-testing:test` and `moon run @dxos/stories-assistant:test`. Storybook on port 9009 (reuse the user's running server; never kill it — start on another `--port` if needed).
 - Every migration step MUST keep the existing `Module.*`/`args.layout` path working until Phase 5 (both cell forms coexist).
@@ -24,12 +24,14 @@
 ## File Structure
 
 **`@dxos/storybook-testing`** (`packages/stories/story-modules/src/`)
+
 - `Cell.ts` (create) — the `Cell` namespace: `article`, `companion`, `deckCompanion`, `surface`. Pure factories returning `ModuleSpec`.
 - `ModuleContainer.tsx` (modify) — extend `ModuleSpec` with the object-bound + override forms; add the app-graph adapter (attendableId + `NotFound.expandPath`) for object cells.
 - `Cell.test.ts` (create) — unit tests for the factories.
 - `index.ts` (modify) — export `Cell`.
 
 **`@dxos/stories-assistant`** (`packages/stories/stories-assistant/src/`)
+
 - `testing/layout.ts` (create) — the writable layout-atom capability (`StoryLayout.Atom`) + a helper to build the contributing module.
 - `testing/decorators.tsx` (modify) — `onInit` returns `ModuleLayout`; capture it in `onClientInitialized`; contribute + set the layout atom from the setup module.
 - `testing/ModuleContainer.tsx` (modify) — read the layout atom and pass it as the `layout` prop to the generic container.
@@ -43,10 +45,12 @@
 ### Task 1: Extend `ModuleSpec` and add the app-graph adapter to the container
 
 **Files:**
+
 - Modify: `packages/stories/story-modules/src/ModuleContainer.tsx`
 - Test: `packages/stories/story-modules/src/ModuleContainer.test.tsx` (create)
 
 **Interfaces:**
+
 - Consumes: `AppSurface` (`@dxos/app-toolkit/ui`), `Paths`, `NotFound` (`@dxos/app-toolkit`), `useAppGraph` (`@dxos/app-toolkit/ui`), `Obj` (`@dxos/echo`).
 - Produces:
   - Extended `ModuleSpec` union adding two forms:
@@ -272,11 +276,13 @@ git commit -m "story-modules: object-bound cells + app-graph adapter in containe
 ### Task 2: `Cell` factory namespace
 
 **Files:**
+
 - Create: `packages/stories/story-modules/src/Cell.ts`
 - Create: `packages/stories/story-modules/src/Cell.test.ts`
 - Modify: `packages/stories/story-modules/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `AppSurface` (`@dxos/app-toolkit/ui`), `Role` (`@dxos/app-framework`), `Obj` (`@dxos/echo`), the `ObjectCellSpec`/`ModuleSpec`/`ResolvedCellProps` types from `./ModuleContainer`.
 - Produces the `Cell` namespace:
   - `Cell.article(object: Obj.Unknown, opts?: { component?: FC<ResolvedCellProps>; variant?: string; data?: Record<string, any> }): ObjectCellSpec`
@@ -422,10 +428,12 @@ git commit -m "story-modules: add Cell factory vocabulary"
 ### Task 3: Layout-atom capability
 
 **Files:**
+
 - Create: `packages/stories/stories-assistant/src/testing/layout.ts`
 - Modify: `packages/stories/stories-assistant/src/testing/index.ts`
 
 **Interfaces:**
+
 - Consumes: `Capability` (`@dxos/app-framework`), `Atom` (`@effect-atom/atom-react`), `ModuleLayout` (`@dxos/storybook-testing`).
 - Produces:
   - `StoryLayout.Atom: Capability.Interface<Atom.Writable<ModuleLayout | undefined>>` — the shared, writable layout atom capability.
@@ -478,10 +486,12 @@ git commit -m "stories-assistant: add StoryLayout writable atom capability"
 ### Task 4: Thread `onInit`'s returned layout through the atom
 
 **Files:**
+
 - Modify: `packages/stories/stories-assistant/src/testing/decorators.tsx`
 - Modify: `packages/stories/stories-assistant/src/testing/ModuleContainer.tsx`
 
 **Interfaces:**
+
 - Consumes: `StoryLayout.Atom` (Task 3), `Atom` (`@effect-atom/atom-react`), `ModuleLayout`, `useCapability`/`Capabilities.AtomRegistry`, `useAtomValue`.
 - Produces:
   - `DecoratorsProps.onInit?: (props: { client: Client; space: Space }) => Promise<ModuleLayout | void>` (return type widened from `void`).
@@ -506,10 +516,10 @@ Widen `onInit`'s type in `DecoratorsProps`:
 At the top of `buildPluginManagerOptions` (before the returned options object), create the shared atom + holder:
 
 ```tsx
-  // Shared per-story: `onInit` fills the holder during client-init; the setup module (which holds
-  // the AtomRegistry) copies it into `layoutAtom`, which the wrapper container reads.
-  const layoutHolder: { current?: ModuleLayout } = {};
-  const layoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
+// Shared per-story: `onInit` fills the holder during client-init; the setup module (which holds
+// the AtomRegistry) copies it into `layoutAtom`, which the wrapper container reads.
+const layoutHolder: { current?: ModuleLayout } = {};
+const layoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
 ```
 
 - [ ] **Step 2: Capture `onInit`'s return in both `onClientInitialized` paths**
@@ -517,17 +527,17 @@ At the top of `buildPluginManagerOptions` (before the returned options object), 
 In `onClientInitialized`, replace the two `onInit` call sites so they store the return value. Snapshot path:
 
 ```tsx
-              if (onInit) {
-                layoutHolder.current = (yield* Effect.promise(() => onInit({ client, space }))) || undefined;
-              }
+if (onInit) {
+  layoutHolder.current = yield * Effect.promise(() => onInit({ client, space })) || undefined;
+}
 ```
 
 Non-snapshot path (after the second flush):
 
 ```tsx
-            if (onInit) {
-              layoutHolder.current = (yield* Effect.promise(() => onInit({ client, space }))) || undefined;
-            }
+if (onInit) {
+  layoutHolder.current = yield * Effect.promise(() => onInit({ client, space })) || undefined;
+}
 ```
 
 - [ ] **Step 3: Contribute + set the atom from the StoryPlugin setup module**
@@ -563,11 +573,11 @@ Add a surfaces-time contribution of the atom, and set it in the setup module. In
 Then, inside the existing setup module (`com.example.plugin.testing.module.setup`), after the workspace switch and object/chat setup completes (end of the `Effect.fnUntraced`), write the holder into the atom:
 
 ```tsx
-      // Publish the story layout (built by `onInit`) now that the space + objects exist.
-      if (layoutAtom && layoutHolder?.current) {
-        const registry = yield* Capability.get(Capabilities.AtomRegistry);
-        registry.set(layoutAtom, layoutHolder.current);
-      }
+// Publish the story layout (built by `onInit`) now that the space + objects exist.
+if (layoutAtom && layoutHolder?.current) {
+  const registry = yield * Capability.get(Capabilities.AtomRegistry);
+  registry.set(layoutAtom, layoutHolder.current);
+}
 ```
 
 Destructure `layoutAtom`/`layoutHolder` in the setup module's factory signature: change `Plugin.addModule(({ createAgent, onChatCreated }) => ({` to `Plugin.addModule(({ createAgent, onChatCreated, layoutAtom, layoutHolder }) => ({`.
@@ -622,12 +632,14 @@ git commit -m "stories-assistant: thread onInit layout through the StoryLayout a
 ### Task 5: Add the Chat custom-role surface and migrate `WithMarkdown`
 
 **Files:**
+
 - Create: `packages/stories/stories-assistant/src/modules/roles.ts` (custom story roles that survive the migration)
 - Modify: `packages/stories/stories-assistant/src/modules/ChatModule.tsx` (register under a role that resolves the latest chat)
 - Modify: `packages/stories/stories-assistant/src/testing/modules.tsx` (register the Chat + Logging surfaces under the new roles; keep the old `Module.*` set intact for un-migrated stories)
 - Modify: `packages/stories/stories-assistant/src/stories/Documents.stories.tsx` (`WithMarkdown` uses `onInit` → layout)
 
 **Interfaces:**
+
 - Consumes: `Cell` (`@dxos/storybook-testing`), the existing `ChatModule`/`LoggingModule` components, `Role` (`@dxos/app-framework`).
 - Produces:
   - `StoryRole.Chat`, `StoryRole.Logging` role tokens (custom, object-less panels).
@@ -750,9 +762,11 @@ git commit -m "stories-assistant: migrate WithMarkdown to onInit surface-grid la
 ### Task 6: Classify modules and record the `Module.* → Cell` mapping
 
 **Files:**
+
 - Create: `packages/stories/stories-assistant/MIGRATION.md` (temporary working note; deleted in Task 9)
 
 **Interfaces:**
+
 - Produces: a table mapping each `Module.*` used by a story to its replacement: `Cell.article(object)`, `Cell.companion(variant, object)`, `Cell.deckCompanion(variant)`, or `Cell.surface(StoryRole.X)` (custom role for object-less/diagnostic panels).
 
 - [ ] **Step 1: Enumerate every `Module.*` referenced across `src/stories/*.stories.tsx`**
@@ -763,6 +777,7 @@ Record the set.
 - [ ] **Step 2: Classify each by inspecting its `*Module.tsx`**
 
 For each module component, decide the category by what it renders:
+
 - Renders `AppSurface.Article` with `{ subject: object }` for a **story-created** object → `Cell.article(object)`.
 - Renders `AppSurface.Article` with `{ subject: variant, companionTo: object }` → `Cell.companion(variant, object)`.
 - Renders `AppSurface.deckCompanion(...)` / reads `useActiveSpace()` only → `Cell.deckCompanion(variant)` or `Cell.surface(StoryRole.X)`.
@@ -782,6 +797,7 @@ git commit -m "stories-assistant: record Module→Cell migration mapping"
 **Files (one iteration per file):** `Chat.stories.tsx`, `Data.stories.tsx`, `Artifacts.stories.tsx`, `Sketch.stories.tsx`, `Automation.stories.tsx`, `Connectors.stories.tsx`, and the remaining `Documents.stories.tsx` stories (`WithSkills`, `WithScript`).
 
 **Interfaces:**
+
 - Consumes: the Task 6 mapping table; `Cell`, `StoryRole`.
 - Produces: each story's layout produced by `onInit` (return `ModuleLayout`), `args.layout` removed.
 
@@ -821,6 +837,7 @@ Repeat Task 7 for every file listed above before proceeding to Phase 5.
 ### Task 8: Remove obsolete wrappers, tokens, and `useActiveObject`
 
 **Files:**
+
 - Modify: `packages/stories/stories-assistant/src/testing/modules.tsx` — delete every `Module.*` token and `moduleSurfaces` entry whose module became a pure `Cell.article`/`Cell.companion` binding; keep only the residual custom-role (`StoryRole.*`) surfaces.
 - Delete: each `packages/stories/stories-assistant/src/modules/<X>Module.tsx` that is no longer referenced by any surface registration.
 - Modify: `packages/stories/stories-assistant/src/modules/index.ts` — drop deleted exports.
@@ -828,6 +845,7 @@ Repeat Task 7 for every file listed above before proceeding to Phase 5.
 - Modify: `packages/stories/stories-assistant/src/testing/ModuleContainer.tsx` — no `layout` arg remains; keep the atom read.
 
 **Interfaces:**
+
 - Consumes: nothing new.
 - Produces: a codebase where `onInit` is the sole layout source and no `Module.*` token exists.
 
