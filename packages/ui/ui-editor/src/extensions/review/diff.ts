@@ -239,7 +239,9 @@ export const computeWordHunks = (original: string, modified: string): Hunk[] => 
  * word rebuilt beside it.
  */
 export const computeCharHunks = (original: string, modified: string): Hunk[] =>
-  joinNearbyHunks(wordHunks(original, modified)).map((hunk) => trimCommonAffixes(original, modified, hunk));
+  joinNearbyHunks(wordHunks(original, modified))
+    .map((hunk) => trimCommonAffixes(original, modified, hunk))
+    .map((hunk) => slideToWordBoundary(original, modified, hunk));
 
 /**
  * Unchanged text shorter than this between two changed regions does not separate them: a selection
@@ -323,6 +325,47 @@ const trimCommonAffixes = (original: string, modified: string, hunk: Hunk): Hunk
     fromB: hunk.fromB + prefix,
     toB: hunk.toB - suffix,
   };
+};
+
+/**
+ * Slides a one-sided hunk (a pure deletion or insertion) to the word boundary that encloses it. Which
+ * characters a one-sided edit removed is ambiguous whenever text repeats around it: deleting
+ * `suggest change` from `suggest changes` leaves an `s` that is equally the head of the first word or
+ * the tail of the last, and the minimal-edit answer strikes `uggest changes` — keeping a letter of the
+ * word the reader deleted. Rotating the span while it still describes the same edit lets it settle
+ * where a reader would draw it.
+ */
+const slideToWordBoundary = (original: string, modified: string, hunk: Hunk): Hunk => {
+  const deletion = hunk.toB === hunk.fromB;
+  const insertion = hunk.toA === hunk.fromA;
+  if (deletion === insertion) {
+    return hunk;
+  }
+
+  const text = deletion ? original : modified;
+  const from = deletion ? hunk.fromA : hunk.fromB;
+  const to = deletion ? hunk.toA : hunk.toB;
+  const atBoundary = (offset: number) => offset === 0 || /\s/.test(text[offset - 1]);
+  if (atBoundary(from)) {
+    return hunk;
+  }
+
+  for (let shift = 1; shift <= from; shift++) {
+    // Rotating past a character only preserves the edit when it matches the span's last character.
+    if (text[from - shift] !== text[to - shift]) {
+      break;
+    }
+    if (atBoundary(from - shift)) {
+      return {
+        fromA: hunk.fromA - shift,
+        toA: hunk.toA - shift,
+        fromB: hunk.fromB - shift,
+        toB: hunk.toB - shift,
+      };
+    }
+  }
+
+  return hunk;
 };
 
 /**

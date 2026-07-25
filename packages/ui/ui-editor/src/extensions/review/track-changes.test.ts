@@ -84,4 +84,18 @@ describe('trackChanges', () => {
     // Nothing is reported as inserted: the reader only deleted.
     expect(doc.slice(hunks[0].fromB, hunks[0].toB)).toBe('');
   });
+
+  // Deleting `suggest change` from `suggest changes` leaves an `s`, and that survivor is equally the
+  // tail of `changes` or the head of `suggest`. The minimal edit is ambiguous, so the strike must be
+  // slid to the word boundary — otherwise it keeps the `s` of `suggest` and strikes `uggest changes`.
+  test('an ambiguous deletion strikes from the word boundary', ({ expect }) => {
+    const main = 'so two people can suggest changes to the same';
+    const cut = 'suggest change';
+    const doc = main.replace(cut, '');
+
+    const hunks = computeCharHunks(main, doc);
+    expect(hunks).toHaveLength(1);
+    expect(main.slice(hunks[0].fromA, hunks[0].toA)).toBe(cut);
+    expect(main[hunks[0].fromA - 1]).toBe(' ');
+  });
 });
