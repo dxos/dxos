@@ -86,12 +86,27 @@ const storyCommentsExtension = (): Extension => [
   comments({ id: 'story-comment', readonly: true }),
   ViewPlugin.fromClass(
     class {
+      #seeded = false;
+
       constructor(view: EditorView) {
+        this.seed(view);
+      }
+
+      // The editor mounts before its content loads (the document arrives through the automerge
+      // binding), so seeding only in the constructor found an empty document and never fired.
+      update(update: { view: EditorView; docChanged: boolean }): void {
+        if (!this.#seeded && update.docChanged) {
+          this.seed(update.view);
+        }
+      }
+
+      seed(view: EditorView): void {
         const from = view.state.doc.toString().indexOf('Hello');
         if (from < 0) {
           return;
         }
 
+        this.#seeded = true;
         const id = view.state.facet(documentId);
         const cursor = Cursor.getCursorFromRange(view.state, { from, to: from + 'Hello'.length });
         queueMicrotask(() =>

@@ -575,3 +575,32 @@ Reported by the user during the storybook walkthrough (§3b). **Log only — no 
 4. **S2.1** popover hover gap; **S1.1** decoration flicker on click.
 5. Story/harness: **S2.0** comment fixture never fires, **S2.2** + **S4.1** companion as the accept/reject
    surface with comment-style click-reveal and per-suggestion cards.
+
+### Second pass (2026-07-24, agent-driven headless verification)
+
+Driven through the storybook DOM (synthetic pointer/keyboard + decoration counts) rather than by hand.
+
+- [x] **S1.2 FIXED — suggestions vanished when picking "Markdown".** `view-mode.preview.label` is
+      "Markdown" and `source` is "Plain text", but `MarkdownArticle` mapped only `source` to the editing
+      posture, so choosing the default mode set `viewing` → `showSuggestions: false` + editor locked.
+      Only `readonly` is a viewing posture now. Play test: `ReviewChromeTest`.
+- [x] **S1.5 FIXED — caret could not pass a suggestion at the document end.** The inline preview is a
+      widget at `hunk.to`; at `doc.length` it owned the last line. The overlay now keeps an empty line
+      below it (verified: caret lands there and typing goes below the suggestion). Play test asserts the
+      last line never holds the widget.
+- [x] **S1.3 VERIFIED FIXED** (by the S6.1 `extensionProps` fix): typing in Suggesting keeps focus, all
+      keystrokes land, and the text renders as an own tracked change while the foreign overlay stays.
+- [ ] **S1.4 ROOT-CAUSED (strikethrough half; the focus half is fixed).** Typing on main in Editing mode
+      renders your new text struck through ONCE PER foreign suggestion. Cause: the ambient overlay only
+      passes `overlayBase` in Suggesting mode (`useReviewExtensions`), so in Editing each foreign proposal
+      is diffed against the LIVE document — text the proposal does not contain reads as its deletion.
+      Fix needs a stable per-source base (the branch's fork anchor), diffed anchor→proposal and rebased
+      into document coordinates; `SuggestionSource` carries only `content` today.
+- [ ] **S2.1 NOT REPRODUCIBLE HEADLESSLY.** Synthetic hover never opens the accept/reject tooltip over an
+      inserted preview. Suspect `SuggestionWidget.ignoreEvent()` returns `true`, so pointer events inside
+      the widget are ignored by the editor and only the surrounding mark can trigger the hover — which
+      would also explain a popover that flickers as the pointer crosses between mark and widget.
+- [ ] **S2.0 STILL OPEN.** Retried the fixture (seed on first `docChanged`, not just at construction) —
+      the comment marks still never render, and even `.cm-commentsHighlightLayer` is absent, so the
+      story's `comments()` extension appears not to reach the editor at all.
+- [ ] S1.1, S4.1, S4.3 untouched this pass.
