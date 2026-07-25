@@ -110,7 +110,13 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 <div className='flex flex-col items-center py-2 overflow-hidden'>
                   <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
                 </div>
-                <ChatComponent.Prompt {...chatProps} outline preset={preset?.id} online={online} />
+                <ChatComponent.Prompt
+                  {...chatProps}
+                  outline
+                  preset={preset?.id}
+                  online={online}
+                  companionTo={companionTo}
+                />
               </div>
             </ChatComponent.Content>
           </Panel.Content>

@@ -3,13 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo } from 'react';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ChatEditor } from './ChatEditor';
+import { ChatEditor, type ChatEditorProps } from './ChatEditor';
+import { type CommandData, commands } from './commands';
 import { type ReferenceData } from './references';
 
 const meta = {
@@ -101,5 +104,41 @@ export const WithReferences: Story = {
         },
       },
     },
+  },
+};
+
+const projectCommands: CommandData[] = [
+  { sentinel: '$track', description: 'Record a follow-up task' },
+  { sentinel: '$hydrate', description: 'Checkpoint project state' },
+];
+
+// The `commands` extension isn't JSON-serializable, so it's built in `render` rather than passed
+// through `args` (Storybook's controls addon warns on cyclic arg values).
+const WithCommandsRender = (args: ChatEditorProps) => {
+  const extensions = useMemo(() => commands({ getCommands: () => projectCommands }), []);
+  return <ChatEditor {...args} extensions={extensions} />;
+};
+
+export const WithCommands: Story = {
+  render: WithCommandsRender,
+  args: {
+    classNames,
+    placeholder: 'Type $ for commands...',
+  },
+  play: async ({ canvasElement }) => {
+    const content = await waitFor(() => {
+      const element = canvasElement.querySelector<HTMLElement>('.cm-content');
+      void expect(element).not.toBeNull();
+      return element!;
+    });
+
+    await userEvent.click(content);
+    await userEvent.type(content, '$t');
+
+    // The sentinel-command popover lists only prefix matches for the typed token. The matched
+    // prefix renders in its own span, so read the option label's full text rather than matching text nodes.
+    const optionLabels = () =>
+      Array.from(canvasElement.querySelectorAll('.cm-completionLabel')).map((node) => node.textContent);
+    await waitFor(() => expect(optionLabels()).toEqual(['$track']));
   },
 };

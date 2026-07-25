@@ -8,9 +8,17 @@ import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
-import { type Database } from '@dxos/echo';
+import { Project } from '@dxos/compute';
+import { type Database, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
-import { ChatEditor, type ChatEditorController, type ChatEditorProps, ChatStatusIndicator } from '@dxos/react-ui-chat';
+import {
+  ChatEditor,
+  type ChatEditorController,
+  type ChatEditorProps,
+  ChatStatusIndicator,
+  commands,
+} from '@dxos/react-ui-chat';
 import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
@@ -39,6 +47,8 @@ export type ChatPromptProps = Merge<
     /** Read-only indicator of whether the configured provider is the remote (online) service. */
     online?: boolean;
     placeholder?: ChatEditorProps['placeholder'];
+    /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
+    companionTo?: Obj.Unknown;
   }>,
   ChatPresetProps
 >;
@@ -56,6 +66,7 @@ export const ChatPrompt = ({
   settings = true,
   presets,
   preset,
+  companionTo,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
 
@@ -79,7 +90,23 @@ export const ChatPrompt = ({
   useChatVoiceInput(docId, editorRef);
 
   const keymapExtensions = useChatKeymapExtensions({ event });
-  const extensions = useMemo(() => [keymapExtensions, pendingText()], [keymapExtensions]);
+
+  // Sentinel-command completion is sourced from the bound project's instructions, if any.
+  const [companion] = useObject(companionTo);
+  const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
+  const commandsRef = useDynamicRef(instructions?.commands ?? []);
+  const commandsExtension = useMemo(
+    () =>
+      commands({
+        getCommands: () => commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+      }),
+    [commandsRef],
+  );
+
+  const extensions = useMemo(
+    () => [keymapExtensions, pendingText(), commandsExtension],
+    [keymapExtensions, commandsExtension],
+  );
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
