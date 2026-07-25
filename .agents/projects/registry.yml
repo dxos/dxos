@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/plugin-projects/TASKS.md
     design: agents/superpowers/specs/2026-07-24-plugin-projects-design.md
     prs: []
-    resume: 'Design approved + spec written. Next: user reviews spec, then writing-plans -> implementation (milestone 1: type + plugin + chat binding + migrations).'
+    resume: 'Milestone 1 COMPLETE on branch (19 commits; final review passed; verification green). Next: open PR (submit-pr) on user go; then PLUGIN.mdl + milestone 2 (commands UI, in-article routine creation, templates).'
 
   - name: sketch-scene-dsl
     status: active
