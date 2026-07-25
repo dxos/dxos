@@ -9,14 +9,11 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DelegationSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 
-import { StoryRole } from '../modules/roles';
-import { ModuleContainer, config, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
+import { StoryRole } from '../modules';
+import { ModuleContainer, config, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Chat',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -48,10 +45,10 @@ export const WithPlanning: Story = {
         plugins: [MarkdownPlugin()],
       };
     },
+    skills: [MarkdownSkill.key, PlanningSkill.key],
   }),
   args: {
     layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
-    skills: [MarkdownSkill.key, PlanningSkill.key],
   },
 };
 
@@ -74,10 +71,10 @@ export const WithSubAgents: Story = {
         plugins: [MarkdownPlugin()],
       };
     },
+    skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
   }),
   args: {
     layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
-    skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
   },
 };
 
@@ -124,10 +121,10 @@ export const WithExecutionGraph: Story = {
         plugins: [MarkdownPlugin()],
       };
     },
+    skills: [MarkdownSkill.key],
   }),
   args: {
     layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
-    skills: [MarkdownSkill.key],
   },
 };
 
@@ -140,9 +137,9 @@ export const WithWebSearch: Story = {
       };
     },
     config: config.remote,
+    skills: [WebSearchSkill.key],
   }),
   args: {
     layout: [[StoryRole.Chat]],
-    skills: [WebSearchSkill.key],
   },
 };

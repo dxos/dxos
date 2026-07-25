@@ -14,14 +14,11 @@ import { meta as automationMeta } from '@dxos/plugin-routine';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 
-import { StoryRole } from '../modules/roles';
-import { ModuleContainer, addToRootCollection, config, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
+import { StoryRole } from '../modules';
+import { ModuleContainer, addToRootCollection, config, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Automation',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -42,6 +39,7 @@ export const WithTriggers: Story = {
         }),
       );
     },
+    skills: [],
   }),
   args: {
     layout: [
@@ -51,7 +49,6 @@ export const WithTriggers: Story = {
         StoryRole.Invocations,
       ],
     ],
-    skills: [],
   },
 };
 
@@ -116,10 +113,8 @@ export const WithChessTrigger: Story = {
         ],
       ];
     },
-  }),
-  args: {
     skills: [],
-  },
+  }),
 };
 
 export const WithPrompt: Story = {

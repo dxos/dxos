@@ -12,14 +12,11 @@ import { Markdown } from '@dxos/plugin-markdown';
 import { ViewModel } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules/roles';
-import { ModuleContainer, config, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
+import { StoryRole } from '../modules';
+import { ModuleContainer, config, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Artifacts',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -74,10 +71,10 @@ export const WithChess: Story = {
       const objects = await space.db.query(Filter.type(Game.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
+    skills: [AssistantSkill.key, ChessSkill.key],
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Context]],
-    skills: [AssistantSkill.key, ChessSkill.key],
   },
 };
 
@@ -123,10 +120,10 @@ export const WithMap: Story = {
       const objects = await space.db.query(Filter.type(View.View)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
+    skills: [AssistantSkill.key, MapSkill.key],
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Context]],
-    skills: [AssistantSkill.key, MapSkill.key],
   },
 };
 

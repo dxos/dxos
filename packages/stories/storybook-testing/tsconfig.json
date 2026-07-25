@@ -12,7 +12,13 @@
   ],
   "references": [
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/storybook-utils"
@@ -30,6 +36,9 @@
       "path": "../../plugins/plugin-client"
     },
     {
+      "path": "../../plugins/plugin-graph"
+    },
+    {
       "path": "../../plugins/plugin-testing"
     },
     {
@@ -37,6 +46,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"

@@ -16,8 +16,8 @@ import {
   Plugin,
   PluginManager,
 } from '@dxos/app-framework';
-import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
-import { useApp } from '@dxos/app-framework/ui';
+import { type WithPluginManagerOptions } from '@dxos/app-framework/testing';
+import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import {
@@ -34,7 +34,8 @@ import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
-import { Collection, Database, Obj } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -42,6 +43,7 @@ import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
@@ -51,11 +53,21 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
-import { type ModuleLayout } from '@dxos/storybook-testing';
+import { useSpaces } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
+import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type ModuleLayout, StoryLayout } from '@dxos/storybook-testing';
+import { isNonNullable } from '@dxos/util';
 
-import { StoryLayout } from './layout';
 import { moduleSurfaces } from './modules';
 import { initClientFromSpaceSnapshot } from './snapshot';
+
+/** Shared CSF parameters for the assistant story groups (fullscreen canvas + plugin translations). */
+export const storyParameters = {
+  layout: 'fullscreen',
+  translations: [...assistantTranslations, ...debugTranslations],
+};
 
 // TODO(burdon): Factor out.
 export const config = {
@@ -93,6 +105,8 @@ type DecoratorsProps = {
   /** Import a `.dx.json` space archive instead of creating an empty space. */
   importSnapshot?: () => Promise<unknown>;
   onInit?: (props: { client: Client; space: Space }) => Promise<ModuleLayout | void>;
+  /** Skill-definition keys to clone into the space and bind into the latest chat's context. */
+  skills?: string[];
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent'>);
 
@@ -118,7 +132,8 @@ const buildPluginManagerOptions = ({
     : { config };
 
   // Shared per-story: `onInit` fills the holder during client-init; the setup module (which holds
-  // the AtomRegistry) copies it into `layoutAtom`, which the wrapper container reads.
+  // the AtomRegistry) copies it into `layoutAtom`, contributed as `StoryLayout.Atom` for the generic
+  // `ModuleContainer` to read.
   const layoutHolder: { current?: ModuleLayout } = {};
   const layoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
 
@@ -254,44 +269,96 @@ const PluginManagerHost = ({
 };
 
 /**
+ * Decorator body that binds story-declared skill keys into the latest chat's context. Lives as a
+ * decorator (owned by {@link createDecorators}) rather than a container wrapper, so stories render
+ * the generic `ModuleContainer` directly.
+ */
+const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: ReactNode }) => {
+  const atomRegistry = useCapability(Capabilities.AtomRegistry);
+  const skillDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
+  const [space] = useSpaces();
+
+  useAsyncEffect(async () => {
+    if (!space) {
+      return;
+    }
+    const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
+    const chat = chats.at(-1);
+    if (!chat) {
+      return;
+    }
+
+    const registry = makeRegistry({ initial: skillDefinitions.map((def) => def.make()) });
+    const skillObjects = skills
+      .map((key) => {
+        const skill = registry
+          .query(Filter.type(Skill.Skill))
+          .runSync()
+          .find((candidate) => Obj.getMeta(candidate).key === key);
+        return skill ? space.db.add(Obj.clone(skill)) : undefined;
+      })
+      .filter(isNonNullable);
+
+    const feed = await chat.feed.load();
+    const runtime = await EffectEx.runAndForwardErrors(
+      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
+    );
+    const binder = new AiContext.Binder({ feed, runtime, registry: atomRegistry });
+    await binder.use((binder) => binder.bind({ skills: skillObjects.map((skill) => Ref.make(skill)) }));
+  }, [space, skills, skillDefinitions]);
+
+  return <>{children}</>;
+};
+
+/**
  * Create storybook decorators.
  * Supports lazy plugin loading via the `lazyPlugins` option.
  */
 export const createDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
-  if (lazyPlugins) {
-    return [
-      ((Story: FC, context: { id: string }) => {
-        const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(null);
-        useEffect(() => {
-          void lazyPlugins().then(setLazyResult);
-        }, []);
+  // Theme + fullscreen layout are common to every story group, so the factory owns them (outermost
+  // decorators) rather than each `meta` repeating a `storyDecorators` array. The plugin manager and
+  // the optional skill binder both render via `PluginManagerHost` (lazy or not) so the binder's
+  // capability hooks always resolve inside the manager context — a trailing decorator would sit
+  // outside it.
+  const host = ((Story: FC, context: { id: string }) => {
+    // Non-lazy stories start with options ready ({ plugins: [] } is truthy); lazy stories wait.
+    const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(lazyPlugins ? null : { plugins: [] });
+    useEffect(() => {
+      if (lazyPlugins) {
+        void lazyPlugins().then(setLazyResult);
+      }
+    }, []);
 
-        const options = useMemo(
-          () =>
-            lazyResult
-              ? buildPluginManagerOptions({
-                  ...props,
-                  plugins: lazyResult.plugins,
-                  types: [...(props.types ?? []), ...(lazyResult.types ?? [])],
-                })
-              : null,
-          [lazyResult],
-        );
+    const options = useMemo(
+      () =>
+        lazyResult
+          ? buildPluginManagerOptions({
+              ...props,
+              plugins: [...(props.plugins ?? []), ...(lazyResult.plugins ?? [])],
+              types: [...(props.types ?? []), ...(lazyResult.types ?? [])],
+            })
+          : null,
+      [lazyResult],
+    );
 
-        if (!options) {
-          return null;
-        }
+    if (!options) {
+      return null;
+    }
 
-        return (
-          <PluginManagerHost options={options} contextId={context.id}>
+    return (
+      <PluginManagerHost options={options} contextId={context.id}>
+        {props.skills?.length ? (
+          <SkillBinder skills={props.skills}>
             <Story />
-          </PluginManagerHost>
-        );
-      }) as any,
-    ];
-  }
+          </SkillBinder>
+        ) : (
+          <Story />
+        )}
+      </PluginManagerHost>
+    );
+  }) as any;
 
-  return [withPluginManager(buildPluginManagerOptions(props))];
+  return [withTheme(), withLayout({ layout: 'fullscreen' }), host];
 };
 
 /**

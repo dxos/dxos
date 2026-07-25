@@ -13,14 +13,11 @@ import { type Space } from '@dxos/react-client/echo';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules/roles';
-import { ModuleContainer, addToRootCollection, config, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
+import { StoryRole } from '../modules';
+import { ModuleContainer, addToRootCollection, config, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Sketch',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -55,11 +52,8 @@ const decorators = createDecorators({
     const objects = await space.db.query(Filter.type(Sketch.Sketch)).run();
     await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
   },
-});
-
-const sharedArgs = {
   skills: [AssistantSkill.key, SketchSkill.key],
-};
+});
 
 /**
  * Submit a prompt through the chat's CodeMirror editor. Submission is dropped silently while the
@@ -137,7 +131,6 @@ const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeo
  */
 export const Reflection: Story = {
   decorators,
-  args: sharedArgs,
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     // Single line: typed newlines insert literal line breaks in the prompt editor.
@@ -164,7 +157,6 @@ export const Reflection: Story = {
  */
 export const Default: Story = {
   decorators,
-  args: sharedArgs,
 };
 
 /**
@@ -177,7 +169,6 @@ export const Default: Story = {
  */
 export const DrawAndUpdateTest: Story = {
   decorators,
-  args: sharedArgs,
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     await submitPrompt(canvasElement, 'Draw a simple smiley face as a world object with id "face".');

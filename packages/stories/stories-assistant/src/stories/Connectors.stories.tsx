@@ -15,7 +15,7 @@ import { TranscriptionSkill } from '@dxos/plugin-transcription';
 import { Cell } from '@dxos/storybook-testing';
 import { Event, Message, Person, Pipeline, Task, Transcript } from '@dxos/types';
 
-import { StoryRole } from '../modules/roles';
+import { StoryRole } from '../modules';
 import {
   ModuleContainer,
   accessTokensFromEnv,
@@ -24,13 +24,11 @@ import {
   createDecorators,
   createTestMailbox,
   createTestTranscription,
+  storyParameters,
 } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Connectors',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -67,10 +65,10 @@ export const WithMail: Story = {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
     },
+    skills: [AssistantSkill.key, MarkdownSkill.key, InboxSkill.key],
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Context]],
-    skills: [AssistantSkill.key, MarkdownSkill.key, InboxSkill.key],
   },
 };
 
@@ -107,10 +105,8 @@ export const WithGmail: Story = {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
     },
-  }),
-  args: {
     skills: [AssistantSkill.key, InboxSkill.key],
-  },
+  }),
 };
 
 /**
@@ -144,10 +140,10 @@ export const WithConnectorPrompt: Story = {
         }),
       ]);
     },
+    skills: [AssistantSkill.key, ConnectorsSkill.key],
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Context]],
-    skills: [AssistantSkill.key, ConnectorsSkill.key],
   },
 };
 
@@ -175,6 +171,7 @@ export const WithCalendar: Story = {
         await binder.bind({ objects: [Ref.make(calendar)] });
       }
     },
+    skills: [AssistantSkill.key, CalendarSkill.key],
   }),
   args: {
     layout: [
@@ -182,7 +179,6 @@ export const WithCalendar: Story = {
       [{ type: AppSurface.Article, data: { subject: `${connectorMeta.profile.key}.space-settings` } }],
       [StoryRole.Context],
     ],
-    skills: [AssistantSkill.key, CalendarSkill.key],
   },
 };
 
@@ -197,10 +193,10 @@ export const WithLinearSync: Story = {
     accessTokens: accessTokensFromEnv({
       'linear.app': VITE_LINEAR_API_KEY,
     }),
+    skills: [LinearSkill.key],
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Graph]],
-    skills: [LinearSkill.key],
   },
 };
 
@@ -227,9 +223,9 @@ export const WithTranscription: Story = {
       const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
+    skills: [AssistantSkill.key, TranscriptionSkill.key],
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Context]],
-    skills: [AssistantSkill.key, TranscriptionSkill.key],
   },
 };

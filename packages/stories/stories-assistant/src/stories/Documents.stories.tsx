@@ -16,14 +16,11 @@ import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules/roles';
-import { ModuleContainer, addToRootCollection, config, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
+import { StoryRole } from '../modules';
+import { ModuleContainer, addToRootCollection, config, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Documents',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -120,10 +117,8 @@ export const WithMarkdown: Story = {
       const objects = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
-  }),
-  args: {
     skills: [AssistantSkill.key, MarkdownSkill.key, CommentSkill.key],
-  },
+  }),
 };
 
 /**

@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type FC, useEffect, useState } from 'react';
 
 import { Capabilities, type Role } from '@dxos/app-framework';
-import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppSpace, NotFound, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
@@ -14,6 +15,8 @@ import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
+
+import { StoryLayout } from './layout';
 
 /** Props a resolved object cell's override component receives. */
 export type ResolvedCellProps = {
@@ -45,9 +48,13 @@ export type ModuleSpec =
 export type ModuleLayout = ModuleSpec[][];
 
 export type ModuleContainerProps = {
-  layout: ModuleLayout;
+  /** Static layout; omit when a harness contributes a runtime layout via {@link StoryLayout.Atom}. */
+  layout?: ModuleLayout;
   compact?: boolean;
 };
+
+/** Stable fallback so `useAtomValue` stays unconditional when no {@link StoryLayout.Atom} is contributed. */
+const emptyLayoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
 
 type NormalizedSurfaceCell = {
   kind: 'surface';
@@ -183,6 +190,10 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
   const { graph } = useAppGraph();
   const [space] = useSpaces();
 
+  // A harness may contribute a runtime layout (built by `onInit`); prefer it over the static prop.
+  const [layoutAtom] = useCapabilities(StoryLayout.Atom);
+  const resolvedLayout = useAtomValue(layoutAtom ?? emptyLayoutAtom) ?? layout ?? [];
+
   useEffect(() => {
     if (space && AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace) !== space.id) {
       atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: Paths.getSpacePath(space.id) });
@@ -192,7 +203,7 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
   // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve —
   // the work the deck's navtree normally does on navigation.
   const objectPaths = space
-    ? layout
+    ? resolvedLayout
         .flat()
         .map((spec) => normalizeCell(spec, space.id))
         .flatMap((cell) => (cell.kind === 'object' ? [cell.attendableId] : []))
@@ -210,9 +221,9 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
   return (
     <div
       className={mx('dx-container absolute inset-0 grid', !compact && 'gap-2 p-2')}
-      style={{ gridTemplateColumns: `repeat(${layout.length}, minmax(0, 1fr))` }}
+      style={{ gridTemplateColumns: `repeat(${resolvedLayout.length}, minmax(0, 1fr))` }}
     >
-      {layout.map((column, columnIndex) => (
+      {resolvedLayout.map((column, columnIndex) => (
         <div
           key={columnIndex}
           className={mx('dx-container grid', !compact && 'gap-2')}

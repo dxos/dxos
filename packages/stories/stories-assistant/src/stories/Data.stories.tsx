@@ -21,7 +21,7 @@ import { Cell } from '@dxos/storybook-testing';
 import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules/roles';
+import { StoryRole } from '../modules';
 import {
   ModuleContainer,
   ResearchInputQueue,
@@ -32,14 +32,12 @@ import {
   createTestMailbox,
   loadMockInboxSnapshot,
   organizations,
+  storyParameters,
   testTypes,
 } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Data',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -87,14 +85,14 @@ export const WithResearch: Story = {
       const documents = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
     },
-  }),
-  args: {
-    layout: [[StoryRole.Chat], [StoryRole.Graph, StoryRole.ExecutionGraph], [StoryRole.Context]],
     skills: [
       // AssistantSkill.key
       // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
       WebSearchSkill.key,
     ],
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [StoryRole.Graph, StoryRole.ExecutionGraph], [StoryRole.Context]],
   },
 };
 
@@ -160,6 +158,7 @@ export const WithResearchQueue: Story = {
         }),
       );
     },
+    skills: [WebSearchSkill.key],
   }),
   args: {
     layout: [
@@ -171,7 +170,6 @@ export const WithResearchQueue: Story = {
         StoryRole.Graph,
       ],
     ],
-    skills: [WebSearchSkill.key],
   },
 };
 
@@ -349,10 +347,8 @@ export const WithProject: Story = {
         ],
       ];
     },
-  }),
-  args: {
     skills: [],
-  },
+  }),
 };
 
 /**
@@ -403,8 +399,6 @@ export const WithCRM: Story = {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
     },
-  }),
-  args: {
     skills: [
       AssistantSkill.key,
       CrmSkill.key,
@@ -413,5 +407,5 @@ export const WithCRM: Story = {
       MarkdownSkill.key,
       WebSearchSkill.key,
     ],
-  },
+  }),
 };
