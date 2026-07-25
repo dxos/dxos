@@ -82,6 +82,7 @@
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

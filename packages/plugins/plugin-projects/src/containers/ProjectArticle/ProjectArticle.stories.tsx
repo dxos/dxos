@@ -63,8 +63,8 @@ const meta = {
   title: 'plugins/plugin-projects/containers/ProjectArticle',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
