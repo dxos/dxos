@@ -37,7 +37,9 @@ export default Capability.makeModule(
       createObject: ({ name }: Schema.Schema.Type<typeof CreateProjectSchema>, options) =>
         Effect.gen(function* () {
           const project = Project.make({ name: name ?? '' });
-          const instructions = Instructions.make({ text: DEFAULT_PROJECT_INSTRUCTIONS });
+          // Named so chat context chips and pickers read sensibly (an unnamed Instructions falls back
+          // to the typename placeholder).
+          const instructions = Instructions.make({ name: 'Instructions', text: DEFAULT_PROJECT_INSTRUCTIONS });
           Obj.setParent(instructions, project);
           const artifacts = Collection.make();
           Obj.setParent(artifacts, project);

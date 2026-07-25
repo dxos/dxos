@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { type FunctionNotFoundError, type Operation, Template } from '@dxos/compute';
-import { type Database, Obj, type Registry } from '@dxos/echo';
+import { type FunctionNotFoundError, Instructions, type Operation, Template } from '@dxos/compute';
+import { Database, Obj, type Registry } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-client';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type EntityId } from '@dxos/keys';
@@ -50,8 +50,42 @@ export const formatSystemPrompt = ({
       Effect.map((skills) => (skills.length > 0 ? ['## Skills Definitions', ...skills].join('\n\n') : undefined)),
     );
 
+    // Bound Instructions steer the session: their text (and sentinel commands) belongs in the system
+    // prompt itself — a context-object stub would force the model to tool-load them and follow nothing.
+    const instructionObjects = objects.filter((object): object is Instructions.Instructions =>
+      Obj.instanceOf(Instructions.Instructions, object),
+    );
+    const contextObjects = objects.filter((object) => !Obj.instanceOf(Instructions.Instructions, object));
+
+    const instructionDefs = yield* Function.pipe(
+      instructionObjects,
+      Effect.forEach((instructions) =>
+        Effect.gen(function* () {
+          // A broken text ref degrades to commands-only rather than failing the whole prompt.
+          const text = yield* Database.load(instructions.text).pipe(
+            Effect.map((doc) => doc.content.trim()),
+            Effect.catchTag('EntityNotFoundError', () => Effect.succeed('')),
+          );
+          const commands = (instructions.commands ?? []).map(
+            ({ sentinel, description, prompt }) =>
+              `- \`${sentinel}\`${description ? ` (${description})` : ''}: ${prompt}`,
+          );
+          const parts = [text];
+          if (commands.length > 0) {
+            parts.push(
+              ['When the user message contains one of these sentinel commands, follow its prompt:', ...commands].join(
+                '\n',
+              ),
+            );
+          }
+          return `<instructions>\n${parts.filter(Boolean).join('\n\n')}\n</instructions>`;
+        }),
+      ),
+      Effect.map((defs) => (defs.length > 0 ? ['## Instructions', ...defs].join('\n\n') : undefined)),
+    );
+
     const objectDefs = yield* Function.pipe(
-      objects,
+      contextObjects,
       Effect.forEach((object) =>
         Effect.succeed(trim`
           <object>
@@ -64,7 +98,9 @@ export const formatSystemPrompt = ({
     );
 
     return yield* Function.pipe(
-      Effect.succeed([system, skillDefs, objectDefs].filter((def): def is string => def !== undefined)),
+      Effect.succeed(
+        [system, instructionDefs, skillDefs, objectDefs].filter((def): def is string => def !== undefined),
+      ),
       Effect.map((parts) => parts.join('\n\n')),
     );
   }).pipe(Effect.withSpan('formatSystemPrompt'));

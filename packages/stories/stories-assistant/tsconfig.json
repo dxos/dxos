@@ -146,6 +146,9 @@
       "path": "../../plugins/plugin-preview"
     },
     {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
       "path": "../../plugins/plugin-routine"
     },
     {
