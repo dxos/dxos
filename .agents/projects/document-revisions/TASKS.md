@@ -604,3 +604,22 @@ Driven through the storybook DOM (synthetic pointer/keyboard + decoration counts
       the comment marks still never render, and even `.cm-commentsHighlightLayer` is absent, so the
       story's `comments()` extension appears not to reach the editor at all.
 - [ ] S1.1, S4.1, S4.3 untouched this pass.
+
+### Third pass (2026-07-24, user walkthrough on the fixed build)
+
+- [ ] **S1.5 STILL BROKEN — cannot move past the last suggestion to the end of the document.** The
+      `side: -1` anchor did not give the caret a reachable position (the blank-line approach did, but it
+      looped in the headless suite and was reverted). Needs a non-mutating mechanism that still leaves a
+      landing spot. ALSO: the gutter change-bar spans the untouched paragraph sitting BETWEEN the two
+      suggestions, so the bar range is computed too wide.
+- [ ] **S4.4 NEW — the reader's own typing appears as a suggestion card in the companion.** The inline
+      overlay no longer strikes it (fixed via per-source fork anchors) but the companion still builds its
+      groups against the live document, so the same text surfaces as somebody's suggestion. The companion
+      needs the same per-source base the overlay now uses.
+- [ ] **S1.6 NEW (tracked) — noticeable flicker when transitioning between view modes.**
+- [ ] **S1.7 NEW — deletion hunk spans are wrong.** Deleting a few words strikes a span that includes
+      unrelated characters (a stray `t` mid-span pairing with a `t` at the end), i.e. the word-level diff
+      is aligning across unchanged text. Grouping/granularity in `diffHunks`/`groupHunks`.
+- [ ] **S4.1 CONFIRMED — no selection indication.** Clicking a suggestion card highlights nothing in the
+      card or the document, so there is no way to see which change a card refers to.
+- [ ] **S1.8 NEW — timeline lanes are not in the author's colour.**
