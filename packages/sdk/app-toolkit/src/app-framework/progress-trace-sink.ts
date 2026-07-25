@@ -58,7 +58,14 @@ type MonitorEntry = {
  * releases when a different pid arrives (the next local run); `run` scope releases on the run's
  * terminal status (an edge chain spans many pids, so pid identity cannot bound it).
  */
-type Tombstone = { scope: 'pid'; pid: string } | { scope: 'run' };
+type Tombstone = { scope: 'pid'; pid: string } | { scope: 'run'; at: number };
+
+/**
+ * Backstop for a `run`-scoped tombstone whose releasing terminal never arrives — the emitting
+ * runtime's terminal broadcast is fire-and-forget, so a dropped publish must cost a late meter
+ * rather than a permanently suppressed one. Well under a sync trigger's schedule.
+ */
+const RUN_TOMBSTONE_TTL_MS = 60_000;
 
 export type ProgressTraceSinkOptions = {
   /** Cancels the process/trigger that emitted progress for a keyed monitor (wired from the process manager). */
@@ -119,7 +126,7 @@ export const createProgressTraceSink = (
 
   const makeOnCancel = (key: string, target: CancelTarget) => () => {
     if (options.cancelScope === 'run') {
-      cancelled.set(key, { scope: 'run' });
+      cancelled.set(key, { scope: 'run', at: Date.now() });
     } else if (target.pid) {
       cancelled.set(key, { scope: 'pid', pid: target.pid });
     }
@@ -160,19 +167,23 @@ export const createProgressTraceSink = (
     const tombstone = cancelled.get(key);
     if (tombstone) {
       if (tombstone.scope === 'run') {
-        // Suppress the whole cancelled run (any pid in its chain); the run's terminal status
-        // releases the tombstone so a later run re-shows. The terminal is itself suppressed — the
-        // monitor was already removed on cancel.
+        // Suppress the whole cancelled run (any pid in its chain) until its terminal status, which
+        // is itself suppressed — the monitor was already removed on cancel. Past the TTL the
+        // suppression lifts regardless, so a lost terminal cannot hide every later run.
         if (isTerminalMessage(data.message)) {
           cancelled.delete(key);
+          return;
         }
+        if (Date.now() - tombstone.at <= RUN_TOMBSTONE_TTL_MS) {
+          return;
+        }
+        cancelled.delete(key);
+      } else if (target.pid === tombstone.pid) {
+        // `pid` scope: the cancelled run's tail shares its pid; a different pid is the next run.
         return;
+      } else {
+        cancelled.delete(key);
       }
-      // `pid` scope: the cancelled run's tail shares its pid; a different pid is the next run.
-      if (target.pid === tombstone.pid) {
-        return;
-      }
-      cancelled.delete(key);
     }
 
     const handle = monitorFor(registry, key, data.message, target);

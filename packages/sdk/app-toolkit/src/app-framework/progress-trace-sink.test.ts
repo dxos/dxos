@@ -3,7 +3,7 @@
 //
 
 import { Registry } from '@effect-atom/atom-react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trace } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
@@ -231,6 +231,31 @@ describe('cancel tombstone (run scope)', () => {
     const task = registry.get(progress.monitorAtom(key));
     expect(task?.current).toBe(0);
     expect(task?.status).toBe('running');
+  });
+
+  test('the tombstone expires so a lost terminal cannot hide every later run', () => {
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress, { cancelProcess: () => {}, cancelScope: 'run' });
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }, { pid: 'link-1' }));
+    progress.cancel(key);
+
+    // The terminal broadcast never arrives (dropped swarm publish).
+    vi.advanceTimersByTime(30_000);
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 2, total: 5 } }, { pid: 'link-2' }));
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+
+    // Past the TTL the suppression lifts on its own.
+    vi.advanceTimersByTime(31_000);
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 0, total: 5 } }, { pid: 'run-2' }));
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('running');
   });
 
   test('a COMPLETE terminal after cancel also releases the tombstone', () => {
