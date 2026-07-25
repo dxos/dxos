@@ -11,7 +11,7 @@ import { useIdentity } from '@dxos/halo-react';
 import { Markdown, type UseEditorBinding } from '@dxos/plugin-markdown/types';
 import { useEditorContext } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
-import { type SuggestionSource, type suggestionsOverlay } from '@dxos/ui-editor';
+import { type SuggestionSource, changeBarGutter, type suggestionsOverlay } from '@dxos/ui-editor';
 
 import { SuggestionSourcesProvider, VersionToolbar } from '../components';
 import { useReviewExtensions } from './useReviewExtensions';
@@ -43,7 +43,7 @@ export const useMarkdownEditorBinding: UseEditorBinding = ({ object, id, viewMod
   // The compartment placeholder and the ambient overlay's base extension are baked into the mount;
   // both are reconfigured live through the overlay components below, never by remounting.
   const extensions = useMemo<Extension[]>(
-    () => [compareCompartment.of([]), review.overlay.extension, ...review.reviewExtensions],
+    () => [changeBarGutter, compareCompartment.of([]), review.overlay.extension, ...review.reviewExtensions],
     [review.overlay, review.reviewExtensions],
   );
 
