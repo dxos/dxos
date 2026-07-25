@@ -29,11 +29,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Text as EchoText, Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { Text as EchoText, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -43,15 +40,13 @@ import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-mar
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useSpaces } from '@dxos/react-client/echo';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Cursor, EditorView, comments, documentId, setComments } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { ObjectHistory } from '../containers';
 import { ReviewPlugin } from '../plugin';
+import { ReviewStoryLayout, type ReviewStoryPanel } from '../testing';
 import { translations } from '../translations';
 
 const concat = (...lines: string[]) => lines.join('\n');
@@ -252,27 +247,14 @@ const seedSuggestion = async (creator: string, content: string) => {
   binding.dispose();
 };
 
-const DefaultStory = () => {
-  const [space] = useSpaces();
-  const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const id = doc ? Obj.getURI(doc) : undefined;
-
-  // Establish the attention scope for `id` so the editor toolbar's attendable-scoped menu actions
-  // resolve (a bare Surface has no attended element for the toolbar's `Menu.Root` to bind to).
-  const attentionAttrs = useAttentionAttributes(id);
-  if (!doc || !id) {
-    return <Loading />;
-  }
-
-  return (
-    <div className='dx-container grid grid-cols-2 divide-x divide-separator'>
-      <div className='contents' {...attentionAttrs}>
-        <Surface.Surface type={AppSurface.Article} data={{ subject: doc, attendableId: id }} limit={1} />
-      </div>
-      <ObjectHistory role='article' subject={doc} attendableId={id} />
-    </div>
-  );
+/** Story args: what the decorator seeds before mount, plus which companions the layout shows. */
+type StoryArgs = {
+  content?: string;
+  suggestions?: SuggestionSpec[];
+  panels?: ReviewStoryPanel[];
 };
+
+const DefaultStory = ({ panels }: StoryArgs) => <ReviewStoryLayout panels={panels} />;
 
 // The name popover portals to document.body, outside the story canvas.
 const createRevisionViaUi = async (canvasElement: HTMLElement, name = '') => {
@@ -317,7 +299,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<{ content?: string; suggestions?: SuggestionSpec[] }>((context) => ({
+    withPluginManager<StoryArgs>((context) => ({
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
