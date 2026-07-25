@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-projects
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-07-24
+    summary: New core plugin for interactive long-running processes (Routines, Agents, artifacts); Project type succeeds Topic; obviates plugin-sidekick.
+    tasks: .agents/projects/plugin-projects/TASKS.md
+    design: agents/superpowers/specs/2026-07-24-plugin-projects-design.md
+    prs: [12335]
+    resume: 'PR #12335 GREEN + preview live, awaiting review. MS2 underway: instructions->system-prompt + stub labels + cold-load fix done (3 commits LOCAL/unpushed pending PR-strategy decision); create/edit verified live. Next: commands-authoring UI in InstructionsEditor, outliner skill design, delete-flow verify.'
+
   - name: sketch-scene-dsl
     status: active
     user: burdon

@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import { Operation, Routine } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { CreateRoutinePanel } from '#components';
-import { Routine, RoutineOperation } from '#types';
+import { RoutineOperation } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 

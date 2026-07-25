@@ -80,12 +80,7 @@ const input: ComponentFunction<InputStyleProps> = (props, ...etc) =>
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
       ? mx(...sharedStaticInputStyles(props), ...etc)
-      : mx(
-          ...sharedDefaultInputStyles(props),
-          !props.disabled && 'dx-focus-ring',
-          valence(props.validationValence),
-          ...etc,
-        );
+      : mx(...sharedDefaultInputStyles(props), valence(props.validationValence), ...etc);
 
 const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, ...etc);
 
@@ -95,8 +90,8 @@ const container: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   props.variant === 'subdued' || props.variant === 'static'
     ? mx('flex items-center w-full', props.disabled && staticDisabled, ...etc)
     : mx(
-        'flex items-center w-full dx-input',
-        !props.disabled && 'focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-focus-ring-subtle',
+        // `p-0` cancels dx-input's default padding: the inset comes from the adornments and the inner field.
+        'flex items-center w-full dx-input p-0',
         valence(props.validationValence),
         props.disabled ? staticDisabled : textInputSurfaceHover,
         ...etc,

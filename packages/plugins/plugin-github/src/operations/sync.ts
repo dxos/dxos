@@ -11,7 +11,7 @@ import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Organization, Person, Project, Task } from '@dxos/types';
+import { ExternalProject, Organization, Person, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -216,7 +216,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
     description: repo.description ?? '',
   };
   const fid = String(repo.id);
-  const existing = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
+  const existing = yield* findByForeignId<ExternalProject.ExternalProject>(ExternalProject.ExternalProject, repo.id);
 
   if (existing) {
     const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, fid);
@@ -246,7 +246,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
     return existing;
   }
 
-  const created = Obj.make(Project.Project, {
+  const created = Obj.make(ExternalProject.ExternalProject, {
     [Obj.Meta]: { keys: [fkFor(repo.id)] },
     name: repo.full_name,
     description: repo.description ?? undefined,
@@ -265,7 +265,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
   binding: Cursor.ExternalCursor,
   issue: GitHubApi.GitHubIssue,
   assignedPerson: Person.Person | undefined,
-  project: Project.Project,
+  project: ExternalProject.ExternalProject,
 ) {
   const remoteFields: Required<TaskSnapshot> = {
     title: issue.title,
@@ -384,7 +384,7 @@ export const pushRepoUpdates: <E, R>(
     // Project (repo) push — description only.
     {
       const fid = String(repo.id);
-      const local = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
+      const local = yield* findByForeignId<ExternalProject.ExternalProject>(ExternalProject.ExternalProject, repo.id);
       if (local && !Obj.isDeleted(local)) {
         const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, fid);
         if (snapshot) {
@@ -590,7 +590,10 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
 
             // Re-resolve the local Project after upsert so issue upserts and
             // pushes operate on the persisted record.
-            const localProject = yield* findByForeignId<Project.Project>(Project.Project, remoteRepo.id);
+            const localProject = yield* findByForeignId<ExternalProject.ExternalProject>(
+              ExternalProject.ExternalProject,
+              remoteRepo.id,
+            );
             if (!localProject) {
               return yield* Effect.dieMessage('Local Project missing after upsert.');
             }

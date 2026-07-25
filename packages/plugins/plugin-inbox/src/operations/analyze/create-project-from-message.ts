@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Operation, Topic } from '@dxos/compute';
+import { Operation, Project } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { buildThreads, clusterThreads, deriveThreadId, resolveModel, summarizeTopics } from '@dxos/pipeline-email';
@@ -16,18 +16,18 @@ import { AnchoredTo, Message } from '@dxos/types';
 import { InboxOperation } from '../../types';
 
 /**
- * Creates a single `Topic` seeded from one message's thread: gathers the sibling messages sharing the
+ * Creates a single `Project` seeded from one message's thread: gathers the sibling messages sharing the
  * message's derived thread id, clusters them into one topic draft (label/keywords/participants),
- * adds an LLM summary, and persists the `Topic` with an `AnchoredTo` relation to the mailbox.
+ * adds an LLM summary, and persists the `Project` with an `AnchoredTo` relation to the mailbox.
  * v1 is single-thread — cross-thread "find related" and fact extraction are follow-ups.
  */
-const handler = InboxOperation.CreateTopicFromMessage.pipe(
+const handler = InboxOperation.CreateProjectFromMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ mailbox: mailboxRef, message }) {
       const mailbox = yield* Database.load(mailboxRef);
       const db = Obj.getDatabase(mailbox);
       if (!db) {
-        return { topicId: '' };
+        return { projectId: '' };
       }
 
       const feed = yield* Database.load(mailbox.feed);
@@ -58,11 +58,11 @@ const handler = InboxOperation.CreateTopicFromMessage.pipe(
       const drafts = clusterThreads(threads);
       const [draft] = yield* Effect.promise(() => summarizeTopics(drafts, summarize));
       if (!draft) {
-        return { topicId: '' };
+        return { projectId: '' };
       }
 
-      const topic = db.add(
-        Obj.make(Topic.Topic, {
+      const project = db.add(
+        Project.make({
           name: draft.name,
           // summary: draft.summary,
           // threadIds: [...draft.threadIds],
@@ -72,10 +72,10 @@ const handler = InboxOperation.CreateTopicFromMessage.pipe(
           // tasks: [...draft.tasks],
         }),
       );
-      db.add(AnchoredTo.make({ [Relation.Source]: topic, [Relation.Target]: mailbox }));
+      db.add(AnchoredTo.make({ [Relation.Source]: project, [Relation.Target]: mailbox }));
       yield* Effect.tryPromise(() => db.flush());
 
-      return { topicId: topic.id };
+      return { projectId: project.id };
     }),
   ),
   Operation.opaqueHandler,
