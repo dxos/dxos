@@ -80,6 +80,13 @@ describe('deriveBinding', () => {
       { subject: 'snapshot', editorKey: 'checkpoint-v1', effectiveViewMode: 'readonly', loading: false },
     ],
     [
+      // F1.7: Read only sets viewMode='readonly'; picking Suggesting afterwards changes only the
+      // review mode, so the stale readonly view mode used to win and Suggesting arrived uneditable.
+      'suggesting overrides a stale readonly view mode',
+      { mode: 'suggesting', policy: SUGGESTING, ownBranchBound: true, viewMode: 'readonly' },
+      { subject: 'own-branch', effectiveViewMode: 'source', loading: false },
+    ],
+    [
       'a fork renders a read-only snapshot once resolved',
       { selection: 'fork', forkId: 'f1', forkResolved: true },
       { subject: 'snapshot', editorKey: 'fork-f1', effectiveViewMode: 'readonly', loading: false },

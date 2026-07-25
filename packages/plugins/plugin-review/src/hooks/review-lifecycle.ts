@@ -94,11 +94,21 @@ export const deriveBinding = (inputs: LifecycleInputs): BindingDescriptor => {
           ? `branch-${inputs.branchId}`
           : 'current';
 
+  // Suggesting is an editable posture by definition, but the view-mode dropdown leaves `viewMode`
+  // untouched when a contributed mode is picked — so a stale `readonly` (from a Read-only hop) would
+  // silently win and the user lands in Suggesting unable to type. The contradiction resolves here.
+  const effectiveViewMode =
+    snapshotKey || inputs.suggestActive || !ambientEditable
+      ? 'readonly'
+      : ambientSuggesting && inputs.viewMode === 'readonly'
+        ? 'source'
+        : inputs.viewMode;
+
   return {
     subject,
     snapshotKey,
     editorKey,
-    effectiveViewMode: snapshotKey || inputs.suggestActive || !ambientEditable ? 'readonly' : inputs.viewMode,
+    effectiveViewMode,
     loading,
     ambient,
     ambientSuggesting,
