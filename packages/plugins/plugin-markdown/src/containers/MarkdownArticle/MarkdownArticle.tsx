@@ -220,7 +220,10 @@ const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { 
         onSelect: () => {
           onViewModeChange?.(item.id);
           if (ambient) {
-            setReviewMode(item.id === 'source' ? 'editing' : 'viewing');
+            // Only `readonly` is a viewing posture: `preview` (labelled "Markdown") and `source`
+            // ("Plain text") are both editable, and treating preview as viewing hid every suggestion
+            // and locked the editor the moment the user picked the default mode.
+            setReviewMode(item.id === 'readonly' ? 'viewing' : 'editing');
           }
         },
       }));

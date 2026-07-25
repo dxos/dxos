@@ -735,7 +735,10 @@ const selectViewMode = async (canvasElement: HTMLElement, label: string) => {
     { timeout: 15_000 },
   );
   await userEvent.click(trigger);
-  await userEvent.click(await body.findByText(label));
+  // Scope to the open menu: the trigger renders the ACTIVE item's label too, so a body-wide text
+  // lookup matches both once that mode is selected.
+  const menu = await body.findByRole('menu');
+  await userEvent.click(await within(menu).findByText(label));
 };
 
 /**
@@ -889,5 +892,41 @@ export const SuggestingTest: Story = {
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'));
     await expect(suggestInserts(canvasElement)).not.toContain('really');
     await expect(suggestDeletes(canvasElement)).not.toContain('really');
+  },
+};
+
+/**
+ * Review chrome on the ambient path, with the suggestion seeded before mount (no play setup):
+ * - A suggestion anchored at the end of the document leaves an empty line below it, so the caret can
+ *   still reach the end (the widget renders at `doc.length` and would otherwise be the last line).
+ * - Switching to the "Markdown" view mode keeps the suggestions overlaid and the editor editable —
+ *   only "Read only" is a viewing posture, and treating preview as viewing hid every suggestion.
+ */
+export const ReviewChromeTest: Story = {
+  args: {
+    content: concat('# Hello World', ''),
+    suggestions: [{ creator: 'did:bob', content: concat('# Hello World', '', 'Bob: add an example.', '') }],
+  },
+  parameters: {
+    ambientReview: true,
+  },
+  play: async ({ canvasElement }) => {
+    const lines = () => Array.from(canvasElement.querySelectorAll('.cm-line'));
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 20_000 });
+
+    // The trailing suggestion never occupies the last line.
+    await waitFor(
+      () => {
+        const last = lines().at(-1);
+        invariant(last, 'no editor lines');
+        expect(last.querySelector('.cm-suggest-insert')).toBeNull();
+      },
+      { timeout: 15_000 },
+    );
+
+    // Preview ("Markdown") is an editing posture: suggestions stay and the editor stays editable.
+    await selectViewMode(canvasElement, 'Markdown');
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });
+    await expect(canvasElement.querySelector('.cm-content')?.getAttribute('contenteditable')).toBe('true');
   },
 };
