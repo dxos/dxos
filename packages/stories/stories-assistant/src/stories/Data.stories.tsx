@@ -396,7 +396,7 @@ export const WithCRM: Story = {
       return [
         [Cell.surface(StoryRole.Chat)],
         [Cell.article(mailbox)],
-        [Cell.companion('automation', mailbox), Cell.deckCompanion('trace')],
+        [Cell.companion(mailbox, 'automation'), Cell.deckCompanion('trace')],
         [Cell.surface(StoryRole.Database)],
       ];
     },

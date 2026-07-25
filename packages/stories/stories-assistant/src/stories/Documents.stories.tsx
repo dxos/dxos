@@ -112,7 +112,7 @@ export const WithMarkdown: Story = {
       return [
         [Cell.surface(StoryRole.Chat)],
         [Cell.article(document)],
-        [Cell.companion('history', document), Cell.companion('comments', document)],
+        [Cell.companion(document, 'history'), Cell.companion(document, 'comments')],
         [Cell.surface(StoryRole.Logging)],
       ];
     },

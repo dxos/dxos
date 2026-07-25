@@ -24,7 +24,7 @@ describe('Cell', () => {
   });
 
   test('companion sets subject + companionTo', () => {
-    const cell = Cell.companion('history', object);
+    const cell = Cell.companion(object, 'history');
     expect(cell).toMatchObject({ object, data: { subject: 'history', companionTo: object } });
   });
 
