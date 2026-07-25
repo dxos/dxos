@@ -1,6 +1,6 @@
 # Web-Component Surfaces — Tasks
 
-_Resume: Start Phase 0 — extract `composeContexts` + kernel providers from `App.tsx` into a `SurfaceRootProviders` factory in app-framework. Uncommitted: none. Last: project scaffolded (DESIGN.md written from 2026-07-24 research session)._
+_Resume: Phase 0 complete and Phase 1 mechanism landed (element + allowlist + tests, no role flipped). Next: pick the first role to flip (candidates proposed to user) and wire `Surface.registerRootElement` into composer-app startup. Uncommitted: none. Last: SurfaceRootProviders factory, `<dx-surface-root>` boundary element, DndCoordinator extraction, data-memoization sweep._
 
 ## Phase 0: Prerequisites
 
@@ -9,25 +9,16 @@ and landable on its own PR. See DESIGN.md for rationale and citations.
 
 ### Tasks
 
-- [ ] **Extract the root/provider factory (`SurfaceRootProviders`)**
-  - Pull `composeContexts` out of `packages/sdk/app-framework/src/ui/components/App/App.tsx:104-116` into a shared factory.
-  - Bake in the kernel trio non-optionally: `PluginManagerProvider`, `RegistryContext.Provider value={manager.registry}`, `SurfaceManagerProvider` (mirror `useApp.tsx:322-337`).
-  - Dev-mode invariant: root's `RegistryContext` value must be `manager.registry` (silent-staleness guard).
-  - `App.tsx` becomes the factory's first consumer; add a factory unit test.
-- [ ] **Tighten the `ReactContext` capability contract**
-  - Document contributions as stateless carriers of shared singletons (no app-state `useState` in providers).
-  - Audit the ~6 contributors (theme, client/halo, attention, devtools, transcription) for violations.
-- [ ] **De-contextualize the DnD registry**
-  - Move `Dnd.Root`'s container registry (`packages/ui/react-ui-dnd/src/dnd/Root.tsx`) into a capability-provided plain singleton; `Dnd.Root` becomes a stateless carrier binding.
-  - `Mosaic.Container`/`useDndRootContext` consumers resolve the singleton; pragmatic-dnd monitors stay DOM-scoped (unchanged).
-- [ ] **Fix unmemoized Surface `data` call sites**
-  - Known: `packages/plugins/plugin-kanban/src/components/KanbanBoard/KanbanCard.tsx:82`; sweep the other per-item sites (`BoardArticle.tsx:205`, `PipelineArticle.tsx:75`, canvas-compute `Surface.tsx:52`).
+- [x] **Extract the root/provider factory (`SurfaceRootProviders`)** — `Surface/SurfaceRootProviders.tsx`: shared `composeContexts` (deduped out of `App.tsx` and `testing/react.tsx`) + `SurfaceRootProviders` with the kernel trio hard-wired; dev-mode stale-registry warning added in `SurfaceComponent` (fires when the ambient registry ≠ `manager.registry`).
+- [x] **Tighten the `ReactContext` capability contract** — stateless-carrier contract documented on the capability (`common/capabilities.ts`); contributors audited via the 2026-07-24 inventory (theme/client/halo/attention/devtools all derive state from capability singletons — no violations).
+- [x] **De-contextualize the DnD registry** — `react-ui-dnd/src/dnd/coordinator.ts`: `DndCoordinator` plain class owns handlers + dragging state + ref-counted document monitor; `Dnd.Root` is now a stateless `useSyncExternalStore` binding over the shared default coordinator (opt-out via `coordinator` prop); consumers unchanged; unit tests added.
+- [x] **Fix unmemoized Surface `data` call sites** — all 8 per-item sites memoized (kanban, board, pipeline, canvas-compute, search, thread ×2, video ×3-literals); builds green.
 
 ## Phase 1: Prove the boundary
 
-- [ ] **`<dx-surface>` custom element** — `registerSurfaceElement({ manager })`; `role` attribute + `data`/`limit` properties (WebComponentWrapper diff protocol); light DOM; node-keyed identity; `dx-surface:mounted`/`unmounted` events.
-- [ ] **Per-role allowlist behind a feature flag** in `Surface.Surface` dispatch (prefix rule for `deckCompanion.<variant>`).
-- [ ] **Migrate first role** (`StatusIndicator` or one `deckCompanion` variant) and validate: atom + ECHO reactivity, attention styling, tooltips/portals, HMR, Storybook harness.
+- [x] **`<dx-surface-root>` custom element** (`dx-surface` was taken by the debug wrapper) — `Surface/SurfaceRootElement.tsx`: `registerSurfaceRootElement({ manager, surfaces })`; `data-role` attribute (avoids ARIA `role`) + `surfaceProps` property (live objects by reference); light DOM, `display: contents`; microtask-scheduled render; detach-safe teardown; `dx-surface-root:mounted`/`unmounted` events with connected-ancestor fallback dispatch.
+- [x] **Per-role allowlist** — `Surface/boundary.ts`: `setSurfaceBoundaryRoles` (exact or `.*` prefix patterns, default empty = off), `BoundaryScopeContext` recursion guard, renderer injection (no module cycle); dispatch branch in `SurfaceComponent`; exported as `Surface.registerRootElement`/`setBoundaryRoles`/`isBoundaryRole`/`RootProviders` + tag/event constants; 6 boundary tests (dispatch, nested in-tree, data updates by reference, scope guard, lifecycle events, allowlist-off).
+- [ ] **Migrate first role** and validate in the running app: atom + ECHO reactivity, attention styling, tooltips/portals, HMR, Storybook harness. Requires wiring `Surface.registerRootElement` + `setBoundaryRoles` into composer-app startup. (Candidate options proposed to user — awaiting pick.)
 
 ## Phase 2: Article + plank chrome
 

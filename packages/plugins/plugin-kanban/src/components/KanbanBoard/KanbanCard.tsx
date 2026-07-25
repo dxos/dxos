@@ -48,6 +48,17 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
       [objectMenuItems, onCardRemove, data, t],
     );
 
+    const cardContentData = useMemo(
+      () => ({
+        subject: data,
+        projection,
+        // Hide the pivot field: its value is already conveyed by
+        // which column the card sits in.
+        ignorePaths: columnFieldPath ? [columnFieldPath] : undefined,
+      }),
+      [data, projection, columnFieldPath],
+    );
+
     return (
       <Menu.Root>
         <Mosaic.Tile
@@ -78,19 +89,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
                 </Card.Block>
               </Card.Header>
               <Card.Body>
-                {projection && (
-                  <Surface.Surface
-                    type={AppSurface.CardContent}
-                    limit={1}
-                    data={{
-                      subject: data,
-                      projection,
-                      // Hide the pivot field: its value is already conveyed by
-                      // which column the card sits in.
-                      ignorePaths: columnFieldPath ? [columnFieldPath] : undefined,
-                    }}
-                  />
-                )}
+                {projection && <Surface.Surface type={AppSurface.CardContent} limit={1} data={cardContentData} />}
               </Card.Body>
             </Card.Root>
           </Focus.Item>

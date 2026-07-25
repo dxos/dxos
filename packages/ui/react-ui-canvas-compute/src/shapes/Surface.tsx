@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -45,12 +45,12 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
     }
   };
 
+  const data = useMemo(() => ({ subject: value }), [value]);
+
   // TODO(burdon): Subject property?
   return (
     <Box shape={shape} onAction={handleAction}>
-      <Card.Root>
-        {value !== null && <Surface.Surface type={AppSurface.CardContent} data={{ subject: value }} limit={1} />}
-      </Card.Root>
+      <Card.Root>{value !== null && <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />}</Card.Root>
     </Box>
   );
 };

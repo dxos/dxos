@@ -40,6 +40,11 @@ const normalizeCells = (cells: BoardType.Board['layout']['cells']): Layout['item
   );
 };
 
+const BoardCellContent = ({ item }: { item: Obj.Unknown }) => {
+  const data = useMemo(() => ({ subject: item, editable: true }), [item]);
+  return <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />;
+};
+
 export type BoardArticleProps = AppSurface.ObjectArticleProps<BoardType.Board>;
 
 export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticleProps) => {
@@ -202,11 +207,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
                     const itemLayout = layout.items[item.id];
                     return itemLayout ? (
                       <Board.Cell item={item} key={item.id} layout={itemLayout}>
-                        <Surface.Surface
-                          type={AppSurface.CardContent}
-                          data={{ subject: item, editable: true }}
-                          limit={1}
-                        />
+                        <BoardCellContent item={item} />
                       </Board.Cell>
                     ) : null;
                   })}

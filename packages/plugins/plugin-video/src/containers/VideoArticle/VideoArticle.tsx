@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -93,6 +93,8 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
     [video.url, handleOpenOriginal],
   );
 
+  const playerData = useMemo(() => ({ subject, attendableId, part: 'player' }), [subject, attendableId]);
+
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
@@ -100,15 +102,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           <Menu.Toolbar />
         </Panel.Toolbar>
         <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
-          <Surface.Surface
-            type={AppSurface.Section}
-            data={{
-              subject,
-              attendableId,
-              part: 'player',
-            }}
-            limit={1}
-          />
+          <Surface.Surface type={AppSurface.Section} data={playerData} limit={1} />
           <TranscriptTabs
             attendableId={attendableId}
             subject={subject}
@@ -156,6 +150,8 @@ const TranscriptTabs = ({
   onRegenerate,
 }: TranscriptTabsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const transcriptData = useMemo(() => ({ subject, attendableId, part: 'transcript' }), [subject, attendableId]);
+  const summaryData = useMemo(() => ({ subject, attendableId, part: 'summary' }), [subject, attendableId]);
   return (
     <Panel.Root asChild role={role}>
       <Tabs.Root orientation='horizontal' value={tab} attendableId={attendableId} onValueChange={onTabChange}>
@@ -182,14 +178,10 @@ const TranscriptTabs = ({
         <Panel.Content>
           <Tabs.Viewport classNames='dx-container grid grid-rows-[auto_1fr]'>
             <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface
-                type={AppSurface.Tabpanel}
-                data={{ subject, attendableId, part: 'transcript' }}
-                limit={1}
-              />
+              <Surface.Surface type={AppSurface.Tabpanel} data={transcriptData} limit={1} />
             </Tabs.Panel>
             <Tabs.Panel value='summary' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface type={AppSurface.Tabpanel} data={{ subject, attendableId, part: 'summary' }} limit={1} />
+              <Surface.Surface type={AppSurface.Tabpanel} data={summaryData} limit={1} />
             </Tabs.Panel>
           </Tabs.Viewport>
         </Panel.Content>

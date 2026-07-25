@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -71,16 +71,9 @@ const PipelineItem = ({ item, projectionModel }: ItemProps) => {
     return () => menu.removeMenuItems(OBJECT_ACTIONS_CONTRIBUTION_ID);
   }, [menu, items]);
 
-  return (
-    <Surface.Surface
-      type={AppSurface.CardContent}
-      data={{
-        subject: item,
-        projection: projectionModel,
-      }}
-      limit={1}
-    />
-  );
+  const data = useMemo(() => ({ subject: item, projection: projectionModel }), [item, projectionModel]);
+
+  return <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />;
 };
 
 PipelineArticle.displayName = 'PipelineArticle';

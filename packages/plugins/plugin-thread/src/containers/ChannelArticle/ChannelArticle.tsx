@@ -3,7 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -63,6 +63,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const inThisCall = !!id && joined && currentRoomId === id;
   const showCall = inThisCall && !chatOnly;
   const canStartCall = !!callProvider && !inThisCall;
+  const callData = useMemo(() => ({ subject: { roomId: id }, attendableId }), [id, attendableId]);
 
   const handleStartCall = useCallback(async () => {
     if (!callProvider || !id) {
@@ -114,7 +115,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
       )}
       {showCall ? (
         <Panel.Content>
-          <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
+          <Surface.Surface type={AppSurface.Article} data={callData} limit={1} />
         </Panel.Content>
       ) : (
         <Panel.Content asChild>
