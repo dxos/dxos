@@ -8,6 +8,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
+import { computeCharHunks } from './diff';
 import { trackChanges } from './track-changes';
 
 const MAIN = 'alpha\nbravo\ncharlie';
@@ -57,5 +58,15 @@ describe('trackChanges', () => {
     const view = mount('intro\n\nalpha\nbravo\ncharlie');
     expect(view.dom.querySelectorAll('.cm-change-bar')).toHaveLength(1);
     view.destroy();
+  });
+
+  // A reader deleting a run of words must strike exactly those words: character diffing used to match
+  // stray letters across the run (`t` of `it` against `t` of `two`), splitting words at both edges.
+  test('deleting a run of words strikes whole words', ({ expect }) => {
+    const main = 'the revision it was written on, so two people can suggest changes';
+    const doc = main.replace('it was written on, so ', '');
+    const hunks = computeCharHunks(main, doc);
+    expect(hunks).toHaveLength(1);
+    expect(main.slice(hunks[0].fromA, hunks[0].toA)).toBe('it was written on, so ');
   });
 });

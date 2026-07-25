@@ -287,3 +287,38 @@ describe('computeCharHunks', () => {
     expect(original.slice(hunks[0].fromA, hunks[0].toA)).toBe('it was written on, so ');
   });
 });
+
+describe('overlay hunks after the reader edits', () => {
+  const MAIN =
+    'The editor now tracks suggestions from every collaborator at once. Each proposal is diffed against the revision it was written on, so two people can suggest changes.';
+  // Alice proposes replacing a run of words further along the paragraph.
+  const ALICE = MAIN.replace('it was written on, so two people can', 'the revision it was written on, so anyone may');
+
+  /** What the overlay renders: the proposal diffed against its anchor, rebased into doc coordinates. */
+  const overlayHunks = (doc: string) => rebaseHunksWith(computeCharHunks(MAIN, doc), diffHunks(MAIN, ALICE));
+
+  /** A struck span must not cut a word in half — `written` may not render as `wri` + struck `tten`. */
+  const splitsWord = (text: string, offset: number) =>
+    offset > 0 && offset < text.length && /\w/.test(text[offset - 1]) && /\w/.test(text[offset]);
+
+  test('a foreign strike keeps whole words when the reader edits inside a nearby word', ({ expect }) => {
+    // The reader corrects a typo inside `written` — a character-level edit in the middle of a word.
+    const doc = MAIN.replace('written', 'writtten');
+    for (const hunk of overlayHunks(doc)) {
+      if (hunk.to > hunk.from) {
+        expect(splitsWord(doc, hunk.from)).toBe(false);
+        expect(splitsWord(doc, hunk.to)).toBe(false);
+      }
+    }
+  });
+
+  test('a foreign strike keeps whole words when the reader deletes words before it', ({ expect }) => {
+    const doc = MAIN.replace('from every collaborator ', '');
+    for (const hunk of overlayHunks(doc)) {
+      if (hunk.to > hunk.from) {
+        expect(splitsWord(doc, hunk.from)).toBe(false);
+        expect(splitsWord(doc, hunk.to)).toBe(false);
+      }
+    }
+  });
+});
