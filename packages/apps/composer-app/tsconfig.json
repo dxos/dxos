@@ -256,9 +256,6 @@
       "path": "../../plugins/plugin-code"
     },
     {
-      "path": "../../plugins/plugin-comments"
-    },
-    {
       "path": "../../plugins/plugin-commerce"
     },
     {
@@ -394,6 +391,9 @@
       "path": "../../plugins/plugin-registry"
     },
     {
+      "path": "../../plugins/plugin-review"
+    },
+    {
       "path": "../../plugins/plugin-routine"
     },
     {
@@ -473,9 +473,6 @@
     },
     {
       "path": "../../plugins/plugin-typefully"
-    },
-    {
-      "path": "../../plugins/plugin-versioning"
     },
     {
       "path": "../../plugins/plugin-video"

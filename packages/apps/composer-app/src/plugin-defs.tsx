@@ -13,7 +13,6 @@ import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessComPlugin } from '@dxos/plugin-chess-com/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
-import { CommentsPlugin } from '@dxos/plugin-comments/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
@@ -53,6 +52,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
+import { ReviewPlugin } from '@dxos/plugin-review/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
@@ -73,7 +73,6 @@ import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
 import { TripPlugin } from '@dxos/plugin-trip/plugin';
 import { TypefullyPlugin } from '@dxos/plugin-typefully/plugin';
-import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
 import { VideoPlugin } from '@dxos/plugin-video/plugin';
 import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
 import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
@@ -92,7 +91,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
   [
     // Default
     AssistantPlugin.meta.profile.key,
-    CommentsPlugin.meta.profile.key,
+    ReviewPlugin.meta.profile.key,
     FilePlugin.meta.profile.key,
     InboxPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
@@ -155,7 +154,7 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     CallsPlugin(),
     ChessPlugin(),
     ChessComPlugin(),
-    CommentsPlugin(),
+    ReviewPlugin(),
     ConductorPlugin(),
     ConnectorPlugin(),
     !isTauri && CrxPlugin(),
@@ -198,7 +197,6 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     (isDev || isLabs) && SidekickPlugin(),
     SheetPlugin(),
     SketchPlugin(),
-    VersioningPlugin(),
     CodePlugin(),
     StackPlugin(),
     SupportPlugin({ helpSteps: steps }),
