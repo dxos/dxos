@@ -13,7 +13,7 @@ import { ViewModel } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules';
-import { ModuleContainer, config, createDecorators, storyParameters } from '../testing';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Artifacts',
   render: ModuleContainer,
@@ -38,7 +38,6 @@ export const WithChess: Story = {
         types: [Game.Game, Chess.State],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const [{ Chess }, { Game }] = await Promise.all([import('@dxos/plugin-chess'), import('@dxos/plugin-game')]);
       // TODO(burdon): Add player DID (for user and assistant).
@@ -94,7 +93,6 @@ export const WithMap: Story = {
         types: [View.View, Map.Map, Table.Table],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const [{ Map }, { Table }, { createLocationSchema }] = await Promise.all([
         import('@dxos/plugin-map'),
@@ -140,7 +138,6 @@ export const WithTrip: Story = {
         types: [Map.Map],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const { Map } = await import('@dxos/plugin-map');
       // TODO(burdon): Table.
@@ -200,7 +197,6 @@ export const WithBoard: Story = {
         types: [Board.Board],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const { Board } = await import('@dxos/plugin-board');
       space.db.add(Board.makeBoard());

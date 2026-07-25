@@ -14,7 +14,7 @@ import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, config, createDecorators, storyParameters } from '../testing';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Sketch',
   render: ModuleContainer,
@@ -29,7 +29,6 @@ type Story = StoryObj<typeof meta>;
 let storySpace: Space | undefined;
 
 const decorators = createDecorators({
-  config: config.remote,
   lazyPlugins: async () => {
     const [{ Sketch }, { SketchPlugin }] = await Promise.all([
       import('@dxos/plugin-sketch'),

@@ -12,7 +12,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules';
-import { ModuleContainer, config, createDecorators, storyParameters } from '../testing';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Projects',
@@ -42,7 +42,6 @@ const PROJECT_COMMANDS = [
 let storySpace: Space | undefined;
 
 const decorators = createDecorators({
-  config: config.remote,
   skills: [AssistantSkill.key],
   lazyPlugins: async () => {
     const [{ Instructions, Project, Routine }, { Collection, Text }, { ProjectsPlugin }] = await Promise.all([

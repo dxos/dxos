@@ -11,6 +11,7 @@ import { MarkdownSkill } from '@dxos/plugin-markdown';
 
 import { StoryRole } from '../modules';
 import { ModuleContainer, config, createDecorators, storyParameters } from '../testing';
+
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Chat',
   render: ModuleContainer,
@@ -29,16 +30,14 @@ export const Default: Story = {
         plugins: [MarkdownPlugin()],
       };
     },
-    config: config.remote,
   }),
   args: {
-    layout: [[StoryRole.Chat]],
+    layout: [[StoryRole.Chat], [StoryRole.Logging]],
   },
 };
 
 export const WithPlanning: Story = {
   decorators: createDecorators({
-    config: config.remote,
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
       return {
@@ -59,7 +58,6 @@ export const WithPlanning: Story = {
  */
 export const WithSubAgents: Story = {
   decorators: createDecorators({
-    config: config.remote,
     // TODO(burdon): Move instructions to skill?
     createAgent: {
       name: 'Supervisor',

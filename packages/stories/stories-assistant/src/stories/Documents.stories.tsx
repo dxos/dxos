@@ -17,7 +17,7 @@ import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, config, createDecorators, storyParameters } from '../testing';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Documents',
   render: ModuleContainer,
@@ -88,7 +88,6 @@ export const WithMarkdown: Story = {
         plugins: [MarkdownPlugin(), ReviewPlugin(), SpacePlugin({})],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const document = space.db.add(
         Markdown.make({
@@ -153,7 +152,6 @@ export const WithSkills: Story = {
         plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const document = space.db.add(Markdown.make({ name: 'Tasks' }));
       const skill = space.db.add(
@@ -184,7 +182,6 @@ export const WithScript: Story = {
         plugins: [MarkdownPlugin(), ScriptPlugin()],
       };
     },
-    config: config.local,
     types: [Script.Script, Text.Text],
     onInit: async ({ client, space }) => {
       const [{ getAccessCredential }, { templates }] = await Promise.all([

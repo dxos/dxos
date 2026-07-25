@@ -314,7 +314,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
  * Create storybook decorators.
  * Supports lazy plugin loading via the `lazyPlugins` option.
  */
-export const createDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
+export const createDecorators = ({ config: configProp = config.remote, lazyPlugins, ...props }: DecoratorsProps) => {
   // Theme + fullscreen layout are common to every story group, so the factory owns them (outermost
   // decorators) rather than each `meta` repeating a `storyDecorators` array. The plugin manager and
   // the optional skill binder both render via `PluginManagerHost` (lazy or not) so the binder's
@@ -334,11 +334,15 @@ export const createDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => 
         lazyResult
           ? buildPluginManagerOptions({
               ...props,
+              config: configProp,
               plugins: [...(props.plugins ?? []), ...(lazyResult.plugins ?? [])],
               types: [...(props.types ?? []), ...(lazyResult.types ?? [])],
             })
           : null,
-      [lazyResult],
+      // `props`/`lazyPlugins` are stable per createDecorators call; the captured config must
+      // still invalidate the memo if a recreated decorator carries a different one.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [lazyResult, configProp],
     );
 
     if (!options) {

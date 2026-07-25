@@ -20,13 +20,14 @@ export * from './TasksModule';
  * surfaces instead of a role here.
  */
 export const StoryRole = {
+  ExecutionGraph: Role.make<Record<string, any>>('org.dxos.storybook.role.executionGraph'),
+  Invocations: Role.make<Record<string, any>>('org.dxos.storybook.role.invocations'),
+  Logging: Role.make<Record<string, any>>('org.dxos.storybook.role.logging'),
+
   Chat: Role.make<Record<string, any>>('org.dxos.storybook.role.chat'),
   Context: Role.make<Record<string, any>>('org.dxos.storybook.role.context'),
   Database: Role.make<Record<string, any>>('org.dxos.storybook.role.database'),
-  ExecutionGraph: Role.make<Record<string, any>>('org.dxos.storybook.role.executionGraph'),
   Graph: Role.make<Record<string, any>>('org.dxos.storybook.role.graph'),
-  Invocations: Role.make<Record<string, any>>('org.dxos.storybook.role.invocations'),
-  Logging: Role.make<Record<string, any>>('org.dxos.storybook.role.logging'),
   ResearchInput: Role.make<Record<string, any>>('org.dxos.storybook.role.researchInput'),
   ResearchOutput: Role.make<Record<string, any>>('org.dxos.storybook.role.researchOutput'),
   Routine: Role.make<Record<string, any>>('org.dxos.storybook.role.routine'),
