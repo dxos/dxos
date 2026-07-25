@@ -70,7 +70,7 @@ export const WithMail: Story = {
 };
 
 /**
- * Prompt: "sync my email"
+ * Prompt: "sync my email".
  */
 export const WithGmail: Story = {
   decorators: createDecorators({
