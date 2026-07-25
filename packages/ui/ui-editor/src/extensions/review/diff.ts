@@ -238,7 +238,11 @@ export const computeWordHunks = (original: string, modified: string): Hunk[] => 
  * changes (see {@link trackChanges}), where word granularity makes every keystroke read as a struck
  * word rebuilt beside it.
  */
-export const computeCharHunks = (original: string, modified: string): Hunk[] => {
+export const computeCharHunks = (original: string, modified: string): Hunk[] =>
+  wordHunks(original, modified).flatMap((hunk) => refineWithinWord(original, modified, hunk));
+
+/** Accumulates a diff's changed regions into {@link Hunk}s, given a tokenisation of the two texts. */
+const accumulate = (changes: Array<{ value: string; added?: boolean; removed?: boolean }>): Hunk[] => {
   const hunks: Hunk[] = [];
   let positionA = 0;
   let positionB = 0;
@@ -249,7 +253,7 @@ export const computeCharHunks = (original: string, modified: string): Hunk[] => 
       pending = undefined;
     }
   };
-  for (const change of diffChars(original, modified)) {
+  for (const change of changes) {
     if (change.added) {
       pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
       positionB += change.value.length;
@@ -266,6 +270,29 @@ export const computeCharHunks = (original: string, modified: string): Hunk[] => 
   }
   flush();
   return hunks;
+};
+
+const wordHunks = (original: string, modified: string): Hunk[] => accumulate(diffWordsWithSpace(original, modified));
+
+/**
+ * Re-diffs a hunk character by character when the edit stays inside a single word, so a keystroke
+ * marks only the characters it changed rather than restyling the whole word. A hunk spanning
+ * whitespace keeps word granularity: character diffing across words matches stray letters (the `t` of
+ * `it` against the `t` of `two`), which fragments one edit into several strikes with untouched letters
+ * marooned between them.
+ */
+const refineWithinWord = (original: string, modified: string, hunk: Hunk): Hunk[] => {
+  const removed = original.slice(hunk.fromA, hunk.toA);
+  const inserted = modified.slice(hunk.fromB, hunk.toB);
+  if (/\s/.test(removed) || /\s/.test(inserted)) {
+    return [hunk];
+  }
+  return accumulate(diffChars(removed, inserted)).map((inner) => ({
+    fromA: hunk.fromA + inner.fromA,
+    toA: hunk.fromA + inner.toA,
+    fromB: hunk.fromB + inner.fromB,
+    toB: hunk.fromB + inner.toB,
+  }));
 };
 
 /**

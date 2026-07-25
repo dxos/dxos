@@ -273,3 +273,17 @@ describe('groupHunks', () => {
     expect(groupHunks(hunks, before, { maxGap: 10, respectBlockBoundaries: false })).toHaveLength(1);
   });
 });
+
+describe('computeCharHunks', () => {
+  // Character diffing is what keeps a single keystroke from restyling a whole word, but it aligns on
+  // any matching character — so deleting whole words can anchor mid-token (the `t` of `it` matching the
+  // `t` of `two`), striking half of two words the reader never touched.
+  test('a whole-word deletion anchors on word boundaries, not mid-token', ({ expect }) => {
+    const original = 'the revision it was written on, so two people can suggest';
+    const modified = 'the revision two people can suggest';
+
+    const hunks = computeCharHunks(original, modified);
+    expect(hunks).toHaveLength(1);
+    expect(original.slice(hunks[0].fromA, hunks[0].toA)).toBe('it was written on, so ');
+  });
+});
