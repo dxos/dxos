@@ -14273,6 +14273,9 @@ importers:
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar

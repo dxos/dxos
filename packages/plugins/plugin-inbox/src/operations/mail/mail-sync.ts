@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
-import { Operation, Trace } from '@dxos/compute';
+import { Cancellation, Operation, Trace } from '@dxos/compute';
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { Cursor } from '@dxos/link';
@@ -295,9 +295,8 @@ export const runMailSync = (
 
     const stats: Cursor.Stats = { newMessages: 0 };
 
-    // Cooperative cancellation: the progress trace sink wires the meter's cancel control to
-    // `ProcessManager.terminate()`; the pipeline also observes this signal for in-process abort.
-    const controller = new AbortController();
+    // Fires on run cancellation (local terminate or EDGE cancel) — the pipeline observes it below.
+    const signal = yield* Cancellation.signal;
 
     // Live sync status via trace `status.update` events. The progress trace sink projects these into
     // the runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.
@@ -489,10 +488,12 @@ export const runMailSync = (
         }),
       ),
       Pipeline.abortWith(
-        controller.signal,
-        // TODO(wittjosiah): Could this note+remove pairing be upstreamed into abortWith itself?
+        signal,
+        // `abortWith` interrupts, so nothing below the pipeline runs — the terminal status must be
+        // emitted here or the meter's key stays suppressed for every later run.
         Effect.sync(() => {
           log('mail sync cancelled', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
+          reportStatus({ message: PROGRESS_STATUS_CANCELLED });
         }),
       ),
       Effect.tapError((error) =>
@@ -509,8 +510,8 @@ export const runMailSync = (
     // (per-page commits no longer flush — see `Cursor.commit`).
     yield* Database.flush({ indexes: true });
 
-    // Full funnel, each stage narrower than the last, logged unconditionally (even on cancel/failure) so a
-    // zero result can be attributed: `enumerated` 0 → empty windows / provider returned no ids; `taken` 0
+    // Full funnel, each stage narrower than the last, so a zero result on a completed run can be
+    // attributed: `enumerated` 0 → empty windows / provider returned no ids; `taken` 0
     // with `enumerated` > 0 → everything dedup-dropped (cursor already has these); `processed` 0 with
     // `taken` > 0 → every candidate dropped in decode/map (no body, filtered sender, unmappable);
     // `newMessages` 0 with `processed` > 0 → commit dropped them (e.g. draft reconciliation).
@@ -528,7 +529,6 @@ export const runMailSync = (
       senders: senders.size,
       attachments: attachmentCount,
       extent,
-      aborted: controller.signal.aborted,
     });
 
     // Final stats publish (disabled — see the TODO above) recorded the committed `newMessages` count and
@@ -537,53 +537,47 @@ export const runMailSync = (
     // finishedAt = new Date(finishedMs).toISOString();
     // publishStats();
 
-    // On cancel, only the status event differs; the completed path also has cursor post-run work.
-    if (controller.signal.aborted) {
-      reportStatus({ message: PROGRESS_STATUS_CANCELLED });
-    } else {
-      reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+    reportStatus({ message: PROGRESS_STATUS_COMPLETE });
 
-      // Fold the run's observed key extent so the window advances even if every scanned message was
-      // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
-      Cursor.extendRange(binding, extent);
+    // Fold the run's observed key extent so the window advances even if every scanned message was
+    // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
+    Cursor.extendRange(binding, extent);
 
-      const capped = taken >= maxMessages;
-      // The provider drains the delta in bounded chunks; `hasMoreDelta` means this run consumed one chunk
-      // and more remain. Both signals mean "re-run", but only `!capped` advances state.
-      const hasMoreDelta = source.hasMoreDelta?.() ?? false;
-      log('mail sync run finished', {
-        provider: provider.name,
-        mailbox: Obj.getURI(mailbox),
-        taken,
-        maxMessages,
-        capped,
-        hasMoreDelta,
-        newMessages: stats.newMessages,
-        action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
-      });
-      if (!capped) {
-        // Additions weren't truncated, so this run's chunk fully drained: mark backfill done (the backward
-        // half reached the horizon) and advance the delta token LAST, only after the merged stream
-        // committed. A crash/cap leaves the token unadvanced, so the next run re-fetches the same chunk
-        // (additions dedup-drop, tag ops re-apply idempotently).
-        Cursor.completeBackfill(binding, horizon.getTime());
-        const nextToken = source.nextToken?.();
-        if (nextToken !== undefined) {
-          Cursor.writeToken(binding, nextToken);
-        }
+    const capped = taken >= maxMessages;
+    // The provider drains the delta in bounded chunks; `hasMoreDelta` means this run consumed one chunk
+    // and more remain. Both signals mean "re-run", but only `!capped` advances state.
+    const hasMoreDelta = source.hasMoreDelta?.() ?? false;
+    log('mail sync run finished', {
+      provider: provider.name,
+      mailbox: Obj.getURI(mailbox),
+      taken,
+      maxMessages,
+      capped,
+      hasMoreDelta,
+      newMessages: stats.newMessages,
+      action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
+    });
+    if (!capped) {
+      // Additions weren't truncated, so this run's chunk fully drained: mark backfill done (the backward
+      // half reached the horizon) and advance the delta token LAST, only after the merged stream
+      // committed. A crash/cap leaves the token unadvanced, so the next run re-fetches the same chunk
+      // (additions dedup-drop, tag ops re-apply idempotently).
+      Cursor.completeBackfill(binding, horizon.getTime());
+      const nextToken = source.nextToken?.();
+      if (nextToken !== undefined) {
+        Cursor.writeToken(binding, nextToken);
       }
-      if (capped || hasMoreDelta) {
-        // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
-        // than an in-process loop) keeps this invocation bounded and lets the runtime schedule the
-        // continuation; committed progress + the advanced token/cursor mean the next run resumes forward.
-        yield* Operation.runAgain().pipe(Effect.orDie);
-      }
+    }
+    if (capped || hasMoreDelta) {
+      // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
+      // than an in-process loop) keeps this invocation bounded and lets the runtime schedule the
+      // continuation; committed progress + the advanced token/cursor mean the next run resumes forward.
+      yield* Operation.runAgain().pipe(Effect.orDie);
     }
 
     log('sync complete', {
       provider: provider.name,
       newMessages: stats.newMessages,
-      cancelled: controller.signal.aborted,
       taken,
     });
     return { newMessages: stats.newMessages };
