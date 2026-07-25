@@ -4,13 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
@@ -26,15 +26,14 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
 import { ReviewPlugin } from '../../ReviewPlugin';
 import { textOf } from '../../should-trigger-agent';
-import { SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
+import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
 import { translations } from '../../translations';
 import { AgentIdentity, CommentCapabilities } from '../../types';
 
@@ -198,7 +197,6 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const attendableId = doc && qualifyId(Node.RootId, doc.id);
-  const attentionAttrs = useAttentionAttributes(attendableId);
 
   // Story renders surfaces directly (no deck), so expand graph actions for the doc node.
   useEffect(() => {
@@ -218,37 +216,7 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
     registry.set(markdownSettings, { ...registry.get(markdownSettings), commentAgentMode: agentMode ?? 'off' });
   }, [markdownSettings, registry, agentMode]);
 
-  const articleData = useMemo(() => ({ subject: doc, attendableId: attendableId ?? 'story' }), [doc, attendableId]);
-  const companionData = useMemo(
-    () => ({
-      subject: 'comments',
-      companionTo: doc,
-      attendableId: attendableId ?? 'story',
-    }),
-    [doc, attendableId],
-  );
-  const historyData = useMemo(
-    () => ({
-      subject: 'history',
-      companionTo: doc,
-      attendableId: attendableId ?? 'story',
-    }),
-    [doc, attendableId],
-  );
-
-  if (!doc) {
-    return <Loading data={{ doc: !!doc }} />;
-  }
-
-  return (
-    <div className='dx-container grid grid-cols-[3fr_2fr]' {...attentionAttrs}>
-      <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
-      <div className='grid grid-rows-2 min-bs-0'>
-        <Surface.Surface type={AppSurface.Article} data={companionData} limit={1} />
-        <Surface.Surface type={AppSurface.Article} data={historyData} limit={1} />
-      </div>
-    </div>
-  );
+  return <ReviewStoryLayout attendableId={attendableId} />;
 };
 
 const meta = {
