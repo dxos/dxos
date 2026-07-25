@@ -1,4 +1,4 @@
-# @dxos/story-modules
+# @dxos/storybook-testing
 
 Surface-grid container for driving storybook layouts from a 2D array of module role tokens.
 

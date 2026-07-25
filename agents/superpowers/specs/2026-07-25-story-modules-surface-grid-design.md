@@ -1,7 +1,7 @@
 # Story-modules object-bound surface grid
 
 Date: 2026-07-25
-Packages: `@dxos/story-modules`, `@dxos/stories-assistant`
+Packages: `@dxos/storybook-testing`, `@dxos/stories-assistant`
 
 ## Problem
 
@@ -45,7 +45,7 @@ machinery to pass a real surface binding exists — nothing feeds it object-boun
 
 ## Design
 
-### 1. Cell vocabulary (`@dxos/story-modules`)
+### 1. Cell vocabulary (`@dxos/storybook-testing`)
 
 Small factory helpers that produce the container's existing `ModuleSpec` (`{ type, data, id }`),
 exported under a `Cell` namespace:
@@ -85,7 +85,7 @@ This deletes `useActiveObject` and the per-module `attendableId`/expand boilerpl
 
 `onInit` returns a `ModuleLayout` built from the objects it just created. The layout is a story
 concern (produced at client-init, referencing runtime objects), so it flows through a **new**
-writable layout-atom capability. The generic `@dxos/story-modules` `ModuleContainer` stays
+writable layout-atom capability. The generic `@dxos/storybook-testing` `ModuleContainer` stays
 **prop-based** (`layout` prop) to keep it reusable and free of the onInit/atom concern; the
 capability and the threading live in the `stories-assistant` harness, whose wrapper
 `ModuleContainer` reads the atom and passes it down as the `layout` prop. `onInit`'s return is
@@ -141,7 +141,7 @@ custom role) is produced during migration, not up front.
 
 ## Migration plan
 
-1. Add the `Cell` vocabulary and app-graph adapter to `@dxos/story-modules`; extend `ModuleSpec`
+1. Add the `Cell` vocabulary and app-graph adapter to `@dxos/storybook-testing`; extend `ModuleSpec`
    and container to render object-bound cells and overrides. Keep `Module.*`/`args.layout`
    working (both cell forms coexist).
 2. Thread `onInit`'s return into the new layout atom in
@@ -157,7 +157,7 @@ custom role) is produced during migration, not up front.
   (`WithMarkdown` interaction assertions) must still pass.
 - The generic app-graph adapter (attendableId + expand) is covered by the `WithMarkdown` comment
   toolbar, which only resolves when the graph path is expanded.
-- `moon run @dxos/story-modules:test` and `@dxos/stories-assistant:test` after each step.
+- `moon run @dxos/storybook-testing:test` and `@dxos/stories-assistant:test` after each step.
 
 ## Risks / open questions
 

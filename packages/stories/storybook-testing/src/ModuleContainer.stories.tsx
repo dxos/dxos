@@ -73,7 +73,7 @@ const ExampleSurfacesPlugin = Plugin.define(
 );
 
 const meta: Meta<typeof ModuleContainer> = {
-  title: 'stories/story-modules/ModuleContainer',
+  title: 'stories/storybook-testing/ModuleContainer',
   render: ModuleContainer,
   decorators: [
     withTheme(),

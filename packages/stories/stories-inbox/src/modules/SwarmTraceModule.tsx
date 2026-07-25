@@ -13,7 +13,7 @@ import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { Trace } from '@dxos/compute';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 /** Cap on retained events so a long-running story does not grow the list unbounded. */
 const MAX_EVENTS = 200;

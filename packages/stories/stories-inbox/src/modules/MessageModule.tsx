@@ -12,7 +12,7 @@ import { useResolveRef } from '@dxos/echo-react';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { useQuery } from '@dxos/react-client/echo';
 import { useSelection } from '@dxos/react-ui-attention';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 import { Message } from '@dxos/types';
 
 /** The selected thread (companion of the mailbox; tracks the mailbox article's selection). */

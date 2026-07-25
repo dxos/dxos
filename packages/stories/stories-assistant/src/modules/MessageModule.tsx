@@ -10,7 +10,7 @@ import { type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useSelection } from '@dxos/react-ui-attention';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 export const MessageModule = ({ space }: ModuleProps) => {
   const mailboxes = useQuery(space.db, Filter.type(Mailbox.Mailbox));

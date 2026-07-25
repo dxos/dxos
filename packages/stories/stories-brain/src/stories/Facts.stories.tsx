@@ -18,7 +18,7 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ModuleContainer, type ModuleLayout } from '@dxos/story-modules';
+import { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
 
 import { FactsStoryContext } from '../modules';
 import { CrawlerStoresPlugin } from '../testing';

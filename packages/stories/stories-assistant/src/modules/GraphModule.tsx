@@ -15,7 +15,7 @@ import { IconButton, Panel, Toolbar, composable, composableProps } from '@dxos/r
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 import { mx } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing/schema';

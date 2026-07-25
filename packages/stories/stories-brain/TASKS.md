@@ -558,7 +558,7 @@ term Topic may be renamed `Project` and generalized beyond email (threads, task 
       space-native (`useQuery`). Faithful conversion needs: (1) brain module infra (`Module` tokens +
       `moduleSurfaces` + `StoryModulesPlugin`, mirroring inbox/assistant), (2) a story-scoped React
       Context carrying the controller that surfaces read (Pipeline's Objects stays a real space
-      surface), (3) relax `@dxos/story-modules` `ModuleContainer`'s `if (!space)` gate so it renders
+      surface), (3) relax `@dxos/storybook-testing` `ModuleContainer`'s `if (!space)` gate so it renders
       space-lessly for Facts (which has no client/space) — keep `ModuleProps.space` REQUIRED (making it
       optional ripples to all 31 inbox+assistant modules that access `space.db`). Facts still needs the
       plugin-manager decorator (`corePlugins` + `StorybookPlugin` + `StoryModulesPlugin`), just no

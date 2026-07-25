@@ -11,7 +11,7 @@ import { Mailbox } from '@dxos/plugin-inbox';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 import { exportFeedMessages, replaceFeed, resetMailbox } from '../testing';
 

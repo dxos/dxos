@@ -10,7 +10,7 @@ import { Instructions } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 // No plugin renders a bare `Instructions` object as an Article (the routine article surface matches
 // `Routine.Routine`, which only references Instructions), so render it via the generic card surface

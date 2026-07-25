@@ -14,7 +14,7 @@ import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 export const ContextModule = ({ space }: ModuleProps) => {
   // Objects bound to the feed (the agent-independent context: `session.addContext` → `binder.bind`).

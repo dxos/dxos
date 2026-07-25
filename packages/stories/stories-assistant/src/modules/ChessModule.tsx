@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { Game } from '@dxos/plugin-game';
 import { useQuery } from '@dxos/react-client/echo';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 export const ChessModule = ({ space }: ModuleProps) => {
   // TODO(burdon): Fix.

@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { NotFound, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 import { useActiveObject } from '../testing';
 

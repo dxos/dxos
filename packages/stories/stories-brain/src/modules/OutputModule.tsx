@@ -11,7 +11,7 @@ import { Thread } from '@dxos/pipeline-email';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { BrainCapabilities } from '@dxos/plugin-brain/types';
 import { useQuery } from '@dxos/react-client/echo';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 import { Organization, Person } from '@dxos/types';
 
 import { type EchoObjectItem, OutputPanel } from '../components';

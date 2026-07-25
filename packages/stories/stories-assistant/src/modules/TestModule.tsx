@@ -6,7 +6,7 @@ import React, { useId, useMemo } from 'react';
 
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 /**
  * Diagnostic module that renders the space and attendable id the container injected.

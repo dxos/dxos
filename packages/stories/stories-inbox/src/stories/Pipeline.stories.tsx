@@ -28,7 +28,7 @@ import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/story-modules';
+import { ModuleContainer } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { Module, StoryAiPlugin, StoryModulesPlugin, StorySyncPlugin, seedDemoMessages } from '../testing';

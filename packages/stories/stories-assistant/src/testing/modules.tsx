@@ -4,7 +4,7 @@
 
 import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { withModuleProps } from '@dxos/story-modules';
+import { withModuleProps } from '@dxos/storybook-testing';
 
 import {
   ChatModule,

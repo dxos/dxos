@@ -10,7 +10,7 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { useQuery } from '@dxos/react-client/echo';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 /** LEFT: the mailbox article (includes the connect/sync auth button). */
 export const MailboxModule = ({ space, attendableId }: ModuleProps) => {

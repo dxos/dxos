@@ -5,7 +5,7 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
-import { type ModuleLayout } from '@dxos/story-modules';
+import { type ModuleLayout } from '@dxos/storybook-testing';
 
 /**
  * Writable atom holding the story layout produced by `onInit`. The harness writes it after the

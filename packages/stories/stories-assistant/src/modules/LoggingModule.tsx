@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { LogPanel } from '@dxos/react-ui-debug';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 /**
  * Renders the `@dxos/react-ui-debug` {@link LogPanel} — a live `@dxos/log` viewer with filter,

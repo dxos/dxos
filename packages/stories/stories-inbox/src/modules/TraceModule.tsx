@@ -6,7 +6,7 @@ import React from 'react';
 
 import { TracePanel } from '@dxos/plugin-assistant/components';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 /**
  * Renders the assistant `TracePanel` (process tree + execution-graph timeline) for the story space.

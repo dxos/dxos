@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { FactViewer } from '@dxos/react-ui-rdf';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 import { useFactsStory } from './context';
 

@@ -51,7 +51,7 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
-import { type ModuleLayout } from '@dxos/story-modules';
+import { type ModuleLayout } from '@dxos/storybook-testing';
 
 import { StoryLayout } from './layout';
 import { moduleSurfaces } from './modules';

@@ -10,7 +10,7 @@ import { meta } from '@dxos/plugin-assistant';
 import { TemplateEditor } from '@dxos/plugin-routine/components';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 export const SkillModule = ({ space }: ModuleProps) => {

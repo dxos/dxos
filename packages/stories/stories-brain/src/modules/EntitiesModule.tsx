@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 import { EntityList, entitiesFromFacts } from '../components';
 import { useFactsStory } from './context';

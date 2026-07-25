@@ -13,7 +13,7 @@ import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 /**
  * Lists active triggers in the space and exposes manual cron invocation via {@link TriggerDispatcher}.

@@ -7,7 +7,7 @@ import React from 'react';
 import { DevtoolsContextProvider, InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 export const InvocationsModule = ({ space }: ModuleProps) => {
   const feed = space?.properties.invocationTraceFeed?.target;

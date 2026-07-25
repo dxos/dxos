@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type Question, QuestionStore } from '@dxos/pipeline-discord';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 import { QuestionsPanel } from '../components';
 import { CrawlerStores } from '../testing';

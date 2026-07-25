@@ -802,9 +802,6 @@
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
-      "path": "packages/stories/story-modules/tsconfig.json"
-    },
-    {
       "path": "packages/common/storybook-addon-logger/tsconfig.json"
     },
     {
@@ -815,6 +812,9 @@
     },
     {
       "path": "tools/storybook-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/storybook-testing/tsconfig.json"
     },
     {
       "path": "packages/common/storybook-utils/tsconfig.json"

@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { meta } from '@dxos/plugin-connector';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 export const TokenManagerModule = ({ attendableId }: ModuleProps) => {
   const data = useMemo(() => ({ attendableId, subject: `${meta.profile.key}.space-settings` }), [attendableId]);

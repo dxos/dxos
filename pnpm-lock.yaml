@@ -20246,9 +20246,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/story-modules':
+      '@dxos/storybook-testing':
         specifier: workspace:*
-        version: link:../story-modules
+        version: link:../storybook-testing
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -20421,9 +20421,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite
-      '@dxos/story-modules':
+      '@dxos/storybook-testing':
         specifier: workspace:*
-        version: link:../story-modules
+        version: link:../storybook-testing
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -20590,9 +20590,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/story-modules':
+      '@dxos/storybook-testing':
         specifier: workspace:*
-        version: link:../story-modules
+        version: link:../storybook-testing
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -20631,7 +20631,7 @@ importers:
         specifier: '>=8.1.4'
         version: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
-  packages/stories/story-modules:
+  packages/stories/storybook-testing:
     dependencies:
       '@dxos/app-framework':
         specifier: workspace:*

@@ -11,7 +11,7 @@ import { Cursor } from '@dxos/link';
 import { isCursorForTarget } from '@dxos/plugin-connector';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { useQuery } from '@dxos/react-client/echo';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 /** The connection bound to the mailbox (once connected). */
 export const ConnectorModule = ({ space, attendableId }: ModuleProps) => {

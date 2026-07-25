@@ -22,7 +22,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 // Local Ollama model driving `AnalyzeMailbox` fact extraction. Ollama reliably fails structured
 // output, so the operation is invoked with `strict: false`.

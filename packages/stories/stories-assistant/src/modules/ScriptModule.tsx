@@ -13,7 +13,7 @@ import { ScriptCapabilities } from '@dxos/plugin-script';
 import { ScriptArticle } from '@dxos/plugin-script/containers';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 /** Value type contributed by a capability interface definition. */
 type CapabilityValue<D> = D extends Capability.InterfaceDef<infer T> ? T : never;

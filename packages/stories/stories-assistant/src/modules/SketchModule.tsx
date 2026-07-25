@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { Sketch } from '@dxos/plugin-sketch';
 import { useQuery } from '@dxos/react-client/echo';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 export const SketchModule = ({ space }: ModuleProps) => {
   const objects = useQuery(space.db, Filter.type(Sketch.Sketch));

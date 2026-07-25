@@ -14,7 +14,7 @@ import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
 import { FactPipeline } from '@dxos/pipeline-rdf';
 import { BrainCapabilities } from '@dxos/plugin-brain/types';
 import { discordSourceLayer } from '@dxos/plugin-discord';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 import { type CrawlAction, type CrawlOptions, CrawlPanel, initialOptions } from '../components';
 import { CrawlerStores } from '../testing';

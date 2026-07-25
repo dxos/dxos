@@ -8,7 +8,7 @@ import React from 'react';
 import { ActivationEvents, Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { DXN } from '@dxos/keys';
-import { withModuleProps } from '@dxos/story-modules';
+import { withModuleProps } from '@dxos/storybook-testing';
 
 import {
   ArchiveModule,

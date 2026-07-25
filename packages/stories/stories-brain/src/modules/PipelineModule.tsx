@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useProgress } from '@dxos/app-toolkit/ui';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 import { PipelinePanel } from '../components';
 import { PIPELINE_RUN, usePipelineStory } from './pipeline-context';

@@ -16,23 +16,42 @@ import { type ObjectCellSpec, type ResolvedCellProps } from './ModuleContainer';
  * or as a raw role-token surface for panels that are not object-bound.
  */
 export namespace Cell {
-  type ArticleOptions = { component?: FC<ResolvedCellProps>; variant?: string; data?: Record<string, any> };
+  type ArticleOptions = {
+    component?: FC<ResolvedCellProps>;
+    variant?: string;
+    data?: Record<string, any>;
+  };
 
   /** Object plank: dispatches the object's real Article surface (or `opts.component` if provided). */
   export const article = (object: Obj.Unknown, opts: ArticleOptions = {}): ObjectCellSpec => ({
     object,
     component: opts.component,
-    data: { ...(opts.variant ? { variant: opts.variant } : {}), ...opts.data },
+    data: {
+      ...(opts.variant
+        ? {
+            variant: opts.variant,
+          }
+        : {}),
+      ...opts.data,
+    },
   });
 
   /** Object companion (e.g. `'history'`, `'comments'`): an Article surface keyed on `companionTo`. */
   export const companion = (variant: string, object: Obj.Unknown): ObjectCellSpec => ({
     object,
-    data: { subject: variant, companionTo: object },
+    data: {
+      subject: variant,
+      companionTo: object,
+    },
   });
 
   /** Space-scoped deck companion (e.g. `'trace'`) whose surface reads `useActiveSpace()`. */
-  export const deckCompanion = (variant: string): { type: Role.Role<any>; data: Record<string, any> } => ({
+  export const deckCompanion = (
+    variant: string,
+  ): {
+    type: Role.Role<any>;
+    data: Record<string, any>;
+  } => ({
     type: AppSurface.deckCompanion(variant),
     data: {},
   });
@@ -42,5 +61,13 @@ export namespace Cell {
     token: Role.Role<any>,
     data?: Record<string, any>,
     id?: string,
-  ): { type: Role.Role<any>; data?: Record<string, any>; id?: string } => ({ type: token, data, id });
+  ): {
+    type: Role.Role<any>;
+    data?: Record<string, any>;
+    id?: string;
+  } => ({
+    type: token,
+    data,
+    id,
+  });
 }

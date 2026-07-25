@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/story-modules",
+  "name": "@dxos/storybook-testing",
   "version": "0.10.0",
   "private": true,
   "description": "Surface-grid container for driving storybook layouts from a 2D array of module role tokens.",

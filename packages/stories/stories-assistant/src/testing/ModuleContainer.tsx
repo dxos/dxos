@@ -20,7 +20,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import {
   ModuleContainer as StoryModuleContainer,
   ModuleContainerProps as StoryModuleContainerProps,
-} from '@dxos/story-modules';
+} from '@dxos/storybook-testing';
 import { isNonNullable } from '@dxos/util';
 
 import { StoryLayout } from './layout';
@@ -30,7 +30,7 @@ export type ModuleContainerProps = Partial<Pick<StoryModuleContainerProps, 'layo
 };
 
 /**
- * Assistant-flavored wrapper over the generic `@dxos/story-modules` container. Adds the
+ * Assistant-flavored wrapper over the generic `@dxos/storybook-testing` container. Adds the
  * assistant-specific behavior — binding story skills into the chat context — on top of the reusable
  * surface-grid mechanism.
  */

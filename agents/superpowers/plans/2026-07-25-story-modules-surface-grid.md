@@ -4,7 +4,7 @@
 
 **Goal:** Replace the `Module.*` role-token indirection in the assistant storybooks with object-bound surface bindings a story declares from `onInit`, rendered by the real composer plugin surfaces.
 
-**Architecture:** `@dxos/story-modules` gains a `Cell` vocabulary (factories producing surface-binding grid cells) and an app-graph adapter in its container (attendableId + graph-path expansion, done once). The `stories-assistant` harness threads `onInit`'s returned layout through a new writable layout-atom capability into the container. Modules that were object→Article wrappers collapse to `Cell.article(object)`; harness-created objects and story-only diagnostics use custom-role `Cell.surface` panels.
+**Architecture:** `@dxos/storybook-testing` gains a `Cell` vocabulary (factories producing surface-binding grid cells) and an app-graph adapter in its container (attendableId + graph-path expansion, done once). The `stories-assistant` harness threads `onInit`'s returned layout through a new writable layout-atom capability into the container. Modules that were object→Article wrappers collapse to `Cell.article(object)`; harness-created objects and story-only diagnostics use custom-role `Cell.surface` panels.
 
 **Tech Stack:** TypeScript, React, `@dxos/app-framework` surfaces, `@dxos/app-toolkit` (`AppSurface`, `Paths`, `NotFound`), `@effect-atom/atom-react`, Effect, Storybook 9 (`@storybook/react-vite`), vitest (via moon).
 
@@ -16,14 +16,14 @@
 - TypeScript, single quotes, arrow functions, named exports, namespace/barrel imports. Import order: builtin → external → @dxos → internal → parent → sibling.
 - Comments say *why* in one load-bearing clause, ending with a period. Audit added comments before each commit.
 - Prefer ES `#private`; name a forwarded ref `forwardedRef`. React imports named (`useMemo`, `type Ref`).
-- Test after every step: `moon run @dxos/story-modules:test` and `moon run @dxos/stories-assistant:test`. Storybook on port 9009 (reuse the user's running server; never kill it — start on another `--port` if needed).
+- Test after every step: `moon run @dxos/storybook-testing:test` and `moon run @dxos/stories-assistant:test`. Storybook on port 9009 (reuse the user's running server; never kill it — start on another `--port` if needed).
 - Every migration step MUST keep the existing `Module.*`/`args.layout` path working until Phase 5 (both cell forms coexist).
 
 ---
 
 ## File Structure
 
-**`@dxos/story-modules`** (`packages/stories/story-modules/src/`)
+**`@dxos/storybook-testing`** (`packages/stories/story-modules/src/`)
 - `Cell.ts` (create) — the `Cell` namespace: `article`, `companion`, `deckCompanion`, `surface`. Pure factories returning `ModuleSpec`.
 - `ModuleContainer.tsx` (modify) — extend `ModuleSpec` with the object-bound + override forms; add the app-graph adapter (attendableId + `NotFound.expandPath`) for object cells.
 - `Cell.test.ts` (create) — unit tests for the factories.
@@ -38,7 +38,7 @@
 
 ---
 
-## Phase 1 — `Cell` vocabulary + app-graph adapter (`@dxos/story-modules`)
+## Phase 1 — `Cell` vocabulary + app-graph adapter (`@dxos/storybook-testing`)
 
 ### Task 1: Extend `ModuleSpec` and add the app-graph adapter to the container
 
@@ -95,7 +95,7 @@ describe('normalizeCell', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `moon run @dxos/story-modules:test -- ModuleContainer.test.tsx`
+Run: `moon run @dxos/storybook-testing:test -- ModuleContainer.test.tsx`
 Expected: FAIL — `normalizeCell` is not exported.
 
 - [ ] **Step 3: Implement the extended spec + `normalizeCell` + app-graph rendering**
@@ -253,12 +253,12 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `moon run @dxos/story-modules:test -- ModuleContainer.test.tsx`
+Run: `moon run @dxos/storybook-testing:test -- ModuleContainer.test.tsx`
 Expected: PASS (3 tests).
 
 - [ ] **Step 5: Typecheck + build the package**
 
-Run: `moon run @dxos/story-modules:build`
+Run: `moon run @dxos/storybook-testing:build`
 Expected: builds clean (no type errors).
 
 - [ ] **Step 6: Format and commit**
@@ -333,7 +333,7 @@ describe('Cell', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `moon run @dxos/story-modules:test -- Cell.test.ts`
+Run: `moon run @dxos/storybook-testing:test -- Cell.test.ts`
 Expected: FAIL — cannot find module `./Cell`.
 
 - [ ] **Step 3: Implement `Cell`**
@@ -404,8 +404,8 @@ export * from './ModuleContainer';
 
 - [ ] **Step 5: Run tests + build**
 
-Run: `moon run @dxos/story-modules:test -- Cell.test.ts` → Expected: PASS (5 tests).
-Run: `moon run @dxos/story-modules:build` → Expected: clean.
+Run: `moon run @dxos/storybook-testing:test -- Cell.test.ts` → Expected: PASS (5 tests).
+Run: `moon run @dxos/storybook-testing:build` → Expected: clean.
 
 - [ ] **Step 6: Format and commit**
 
@@ -426,7 +426,7 @@ git commit -m "story-modules: add Cell factory vocabulary"
 - Modify: `packages/stories/stories-assistant/src/testing/index.ts`
 
 **Interfaces:**
-- Consumes: `Capability` (`@dxos/app-framework`), `Atom` (`@effect-atom/atom-react`), `ModuleLayout` (`@dxos/story-modules`).
+- Consumes: `Capability` (`@dxos/app-framework`), `Atom` (`@effect-atom/atom-react`), `ModuleLayout` (`@dxos/storybook-testing`).
 - Produces:
   - `StoryLayout.Atom: Capability.Interface<Atom.Writable<ModuleLayout | undefined>>` — the shared, writable layout atom capability.
 
@@ -442,7 +442,7 @@ Create `packages/stories/stories-assistant/src/testing/layout.ts`:
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
-import { type ModuleLayout } from '@dxos/story-modules';
+import { type ModuleLayout } from '@dxos/storybook-testing';
 
 /**
  * Writable atom holding the story layout produced by `onInit`. The harness writes it after the
@@ -493,7 +493,7 @@ In `decorators.tsx`, add imports:
 
 ```tsx
 import { Atom } from '@effect-atom/atom-react';
-import { type ModuleLayout } from '@dxos/story-modules';
+import { type ModuleLayout } from '@dxos/storybook-testing';
 import { StoryLayout } from './layout';
 ```
 
@@ -628,7 +628,7 @@ git commit -m "stories-assistant: thread onInit layout through the StoryLayout a
 - Modify: `packages/stories/stories-assistant/src/stories/Documents.stories.tsx` (`WithMarkdown` uses `onInit` → layout)
 
 **Interfaces:**
-- Consumes: `Cell` (`@dxos/story-modules`), the existing `ChatModule`/`LoggingModule` components, `Role` (`@dxos/app-framework`).
+- Consumes: `Cell` (`@dxos/storybook-testing`), the existing `ChatModule`/`LoggingModule` components, `Role` (`@dxos/app-framework`).
 - Produces:
   - `StoryRole.Chat`, `StoryRole.Logging` role tokens (custom, object-less panels).
   - `WithMarkdown.onInit` returns a `ModuleLayout`; `args.layout` removed from that story.
@@ -678,7 +678,7 @@ import { StoryRole } from '../modules/roles';
 In `packages/stories/stories-assistant/src/stories/Documents.stories.tsx`, update imports and the `WithMarkdown` story. Add `Cell` and `StoryRole`:
 
 ```tsx
-import { Cell } from '@dxos/story-modules';
+import { Cell } from '@dxos/storybook-testing';
 import { StoryRole } from '../modules/roles';
 ```
 
@@ -850,7 +850,7 @@ git rm packages/stories/stories-assistant/MIGRATION.md
 
 Run: `moon run @dxos/stories-assistant:build` → Expected: clean (no unresolved imports).
 Run: `moon run @dxos/stories-assistant:test` → Expected: PASS.
-Run: `moon run @dxos/story-modules:test` → Expected: PASS.
+Run: `moon run @dxos/storybook-testing:test` → Expected: PASS.
 
 - [ ] **Step 5: Format and commit**
 
@@ -869,7 +869,7 @@ Expected: no matches.
 
 - [ ] **Step 2: Lint both packages**
 
-Run: `moon run @dxos/story-modules:lint && moon run @dxos/stories-assistant:lint`
+Run: `moon run @dxos/storybook-testing:lint && moon run @dxos/stories-assistant:lint`
 Expected: clean.
 
 - [ ] **Step 3: Storybook smoke test of every migrated story group**

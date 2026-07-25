@@ -17,7 +17,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Card, Panel, ScrollArea, Tag, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 const atomEmpty = Atom.make(() => [] as const);
 

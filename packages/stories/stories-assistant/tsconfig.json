@@ -266,7 +266,7 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../story-modules"
+      "path": "../storybook-testing"
     }
   ]
 }

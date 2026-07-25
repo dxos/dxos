@@ -13,7 +13,7 @@ import { AssistantSkill } from '@dxos/plugin-assistant';
 import { CommentSkill } from '@dxos/plugin-comments/skills';
 import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
-import { Cell } from '@dxos/story-modules';
+import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/roles';
@@ -100,7 +100,7 @@ export const WithMarkdown: Story = {
           content: addSpellingMistakes(MARKDOWN_DOCUMENT, 3, '!!!').replaceAll(/(?<!\n)\n(?!\n)/g, '\n\n'),
         }),
       );
-      const styleGuide = space.db.add(
+      const guide = space.db.add(
         Markdown.make({
           name: 'Style Guide',
           content: STYLE_GUIDE,
@@ -108,7 +108,7 @@ export const WithMarkdown: Story = {
       );
       // Register the documents in the space root collection so plugin-space builds app-graph nodes
       // for them — this is what makes the editor's comment toolbar (a graph action) resolvable.
-      addToRootCollection(space, [document, styleGuide]);
+      addToRootCollection(space, [document, guide]);
       return [
         [Cell.surface(StoryRole.Chat)],
         [Cell.article(document)],

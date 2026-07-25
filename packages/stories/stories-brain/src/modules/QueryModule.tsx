@@ -11,7 +11,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
 import { BrainCapabilities } from '@dxos/plugin-brain/types';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type ModuleProps } from '@dxos/storybook-testing';
 
 import { DEFAULT_SPARQL, QueryPanel } from '../components';
 import { useFactsStory } from './context';
