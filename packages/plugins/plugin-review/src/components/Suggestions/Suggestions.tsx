@@ -31,8 +31,8 @@ export type SuggestionsProps = {
   onReject?: (group: SuggestionGroup) => void;
   /** Reveal a suggestion's range in the document. */
   onSelect?: (group: SuggestionGroup) => void;
-  /** The revealed suggestion's group key. */
-  selected?: string;
+  /** The current change (author + document range); its card is accented. */
+  selected?: { author: string; from: number; to: number };
 };
 
 /**

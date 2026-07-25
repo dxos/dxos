@@ -122,14 +122,14 @@ export const suggestions = ({ sources, base, group, onAccept, onReject, onSelect
         charHunks = charHunksFor.get(sourceBase) ?? computeCharHunks(sourceBase, doc);
         charHunksFor.set(sourceBase, charHunks);
       }
-      const raw = group
-        ? groupHunks(diffHunks(anchor, source.content), anchor, group)
-        : diffHunks(anchor, source.content);
       // Edits the document already carries relative to the SAME anchor have been accepted, so they are
-      // no longer suggestions — matched by content, since accepting shifts every later offset.
+      // no longer suggestions — matched by content (accepting shifts every later offset) and BEFORE
+      // grouping, since a group coalesces several hunks and would never match one of them.
       const applied = sourceBase === undefined ? undefined : new Set(diffHunks(sourceBase, doc).map(editKey));
-      const pending = applied === undefined ? raw : raw.filter((hunk) => !applied.has(editKey(hunk)));
-      const hunks = charHunks === undefined ? pending : rebaseHunksWith(charHunks, pending);
+      const authored = diffHunks(anchor, source.content);
+      const pending = applied === undefined ? authored : authored.filter((hunk) => !applied.has(editKey(hunk)));
+      const grouped = group ? groupHunks(pending, anchor, group) : pending;
+      const hunks = charHunks === undefined ? grouped : rebaseHunksWith(charHunks, grouped);
       for (const hunk of hunks) {
         all.push({ ...hunk, author: source.author, colour: source.colour });
       }

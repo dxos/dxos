@@ -31,7 +31,7 @@ import { CommentOperation } from '#types';
 import { CommentCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state';
-import { type SuggestionGroup, suggestionGroupKey, useStatus } from '../../hooks';
+import { type SuggestionGroup, useStatus } from '../../hooks';
 import { getMessageMetadata } from '../../util';
 
 /**
@@ -359,7 +359,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { set: setReviewView } = useViewStateActions(ReviewCapabilities.viewAspect, subject.id);
   const handleSelectSuggestion = useCallback(
     (group: SuggestionGroup) => {
-      setReviewView({ suggestion: suggestionGroupKey(group) });
+      setReviewView({ suggestion: { author: group.author, from: group.from, to: group.to } });
       if (!mainText) {
         return;
       }

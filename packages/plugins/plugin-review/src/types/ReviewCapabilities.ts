@@ -40,10 +40,11 @@ export namespace ReviewCapabilities {
     view?: BranchView;
     mode?: ReviewMode;
     /**
-     * The suggestion the reader is looking at, as its {@link suggestionGroupKey}. Shared so the editor
+     * The change the reader is looking at: its author and range in the document. Shared so the editor
      * and the review companion agree on which change is current, whichever surface it was picked from.
+     * A range (not the changed text) because the companion coalesces adjacent hunks into one card.
      */
-    suggestion?: string;
+    suggestion?: { author: string; from: number; to: number };
   };
 
   const VersionSelectionSchema: Schema.Schema<VersionSelection> = Schema.Union(
@@ -61,7 +62,7 @@ export namespace ReviewCapabilities {
       selection: Schema.optional(VersionSelectionSchema),
       view: Schema.optional(Schema.Literal('base', 'diff', 'branch')),
       mode: Schema.optional(Schema.Literal('editing', 'suggesting', 'viewing')),
-      suggestion: Schema.optional(Schema.String),
+      suggestion: Schema.optional(Schema.Struct({ author: Schema.String, from: Schema.Number, to: Schema.Number })),
     }).pipe(Schema.mutable),
     defaultValue: () => ({}),
   });

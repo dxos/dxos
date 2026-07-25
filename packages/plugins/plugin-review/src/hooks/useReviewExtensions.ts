@@ -157,7 +157,7 @@ export const useReviewExtensions = ({
   const { set: setReviewView } = useViewStateActions(ReviewCapabilities.viewAspect, object.id);
   const handleSelectSuggestion = useCallback(
     (hunk: DiffHunk, author: string) => {
-      setReviewView({ suggestion: `${author} ${hunk.removed} ${hunk.inserted}` });
+      setReviewView({ suggestion: { author, from: hunk.from, to: hunk.to } });
     },
     [setReviewView],
   );

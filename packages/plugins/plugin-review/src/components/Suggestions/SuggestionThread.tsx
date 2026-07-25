@@ -28,8 +28,8 @@ export type SuggestionThreadProps = {
   onReject?: (group: SuggestionGroup) => void;
   /** Reveal a suggestion's range in the document. */
   onSelect?: (group: SuggestionGroup) => void;
-  /** The revealed suggestion, accented in the list. */
-  selected?: string;
+  /** The current change (author + document range); its card is accented. */
+  selected?: { author: string; from: number; to: number };
 };
 
 /**
@@ -115,8 +115,15 @@ export const SuggestionThread = ({
     [byId, onSelect],
   );
   // The tile carrying the revealed suggestion, resolved back from its group key.
+  // Matched by author and overlap rather than by text: a card may coalesce several of the editor's
+  // hunks, so the two surfaces never agree on the exact content of a change.
   const currentMessageId = useMemo(
-    () => (selected ? [...byId].find(([, group]) => suggestionGroupKey(group) === selected)?.[0] : undefined),
+    () =>
+      selected
+        ? [...byId].find(
+            ([, group]) => group.author === selected.author && group.from <= selected.to && group.to >= selected.from,
+          )?.[0]
+        : undefined,
     [byId, selected],
   );
 
