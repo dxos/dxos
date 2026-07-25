@@ -142,8 +142,10 @@ export const WithCommands: Story = {
 
     const content = await waitFor(() => {
       const element = canvasElement.querySelector<HTMLElement>('.cm-content');
-      void expect(element).not.toBeNull();
-      return element!;
+      if (!element) {
+        throw new Error('Chat editor content not found.');
+      }
+      return element;
     });
 
     await userEvent.click(content);

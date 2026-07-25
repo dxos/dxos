@@ -126,10 +126,12 @@ export const WithProjectCommands: Story = {
     await waitFor(
       async () => {
         const content = canvasElement.querySelector<HTMLElement>('[role="group"] .cm-content');
-        void expect(content).not.toBeNull();
+        if (!content) {
+          throw new Error('Prompt editor content not found.');
+        }
         if (optionLabels().length === 0) {
-          await userEvent.click(content!);
-          await userEvent.type(content!, '{Backspace}{Backspace}{Backspace}{Backspace}$t');
+          await userEvent.click(content);
+          await userEvent.type(content, '{Backspace}{Backspace}{Backspace}{Backspace}$t');
         }
         void expect(optionLabels()).toEqual(['$track']);
       },

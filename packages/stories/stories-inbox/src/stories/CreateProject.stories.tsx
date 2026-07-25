@@ -77,7 +77,7 @@ const Story = () => {
   return (
     <div className='flex flex-col bs-full'>
       <Button onClick={handleCreate}>Create Project</Button>
-      {/* Accepted/created projects render in the space-level Projects section (plugin-brain); this story
+      {/* Accepted/created projects render in the space-level Projects section (plugin-projects); this story
           asserts creation via the space db count rather than an inbox list. */}
       <div className='grow' data-testid='project-count' data-count={projects.length} />
     </div>
