@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -353,18 +353,20 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     },
     [markdownDoc, mainText, invokePromise, subject],
   );
-  // The revealed suggestion, by group key — accents its card while the editor shows its range.
-  const [selectedSuggestion, setSelectedSuggestion] = useState<string>();
+  // The current suggestion, by group key — shared with the editor so clicking a change in the document
+  // accents its card, and clicking a card reveals the change.
+  const { suggestion: selectedSuggestion } = useViewState(ReviewCapabilities.viewAspect, subject.id);
+  const { set: setReviewView } = useViewStateActions(ReviewCapabilities.viewAspect, subject.id);
   const handleSelectSuggestion = useCallback(
     (group: SuggestionGroup) => {
-      setSelectedSuggestion(suggestionGroupKey(group));
+      setReviewView({ suggestion: suggestionGroupKey(group) });
       if (!mainText) {
         return;
       }
       const cursor = toCursorRange(Doc.createAccessor(mainText, ['content']), group.from, group.to);
       void invokePromise(MarkdownOperation.ScrollToAnchor, { subject: attendableId ?? subjectId, cursor });
     },
-    [mainText, invokePromise, attendableId, subjectId],
+    [mainText, invokePromise, attendableId, subjectId, setReviewView],
   );
 
   const handleAcceptSuggestion = useCallback(

@@ -71,6 +71,8 @@ export type SuggestionsOptions = {
    * (revert the hunk on the author's branch). The widget is dismissed either way.
    */
   onReject?: (hunk: DiffHunk, author: string) => void;
+  /** Invoked when a change is clicked in the document, so the host can reveal it elsewhere. */
+  onSelect?: (hunk: DiffHunk, author: string) => void;
 };
 
 /** A hunk tagged with the source it came from, so overlapping suggestions stay attributable. */
@@ -104,7 +106,7 @@ type SuggestionState = {
  * the change); Reject hides the suggestion without altering the document (a view-only dismissal for
  * the session).
  */
-export const suggestions = ({ sources, base, group, onAccept, onReject }: SuggestionsOptions): Extension => {
+export const suggestions = ({ sources, base, group, onAccept, onReject, onSelect }: SuggestionsOptions): Extension => {
   const tagged = (state: EditorState): TaggedHunk[] => {
     const doc = state.doc.toString();
     // With an explicit base, diff each source against it and rebase the hunks into the (possibly
@@ -123,11 +125,12 @@ export const suggestions = ({ sources, base, group, onAccept, onReject }: Sugges
       const raw = group
         ? groupHunks(diffHunks(anchor, source.content), anchor, group)
         : diffHunks(anchor, source.content);
-      const hunks = charHunks === undefined ? raw : rebaseHunksWith(charHunks, raw);
+      // Edits the document already carries relative to the SAME anchor have been accepted, so they are
+      // no longer suggestions — matched by content, since accepting shifts every later offset.
+      const applied = sourceBase === undefined ? undefined : new Set(diffHunks(sourceBase, doc).map(editKey));
+      const pending = applied === undefined ? raw : raw.filter((hunk) => !applied.has(editKey(hunk)));
+      const hunks = charHunks === undefined ? pending : rebaseHunksWith(charHunks, pending);
       for (const hunk of hunks) {
-        if (isApplied(doc, hunk)) {
-          continue;
-        }
         all.push({ ...hunk, author: source.author, colour: source.colour });
       }
     }
@@ -143,8 +146,7 @@ export const suggestions = ({ sources, base, group, onAccept, onReject }: Sugges
    * the branch still differs from its own fork anchor. A change whose proposed text is already present
    * (and whose replaced text is gone) has been applied, so it is no longer a suggestion.
    */
-  const isApplied = (doc: string, hunk: DiffHunk): boolean =>
-    hunk.inserted.length > 0 && doc.slice(hunk.from, hunk.from + hunk.inserted.length) === hunk.inserted;
+  const editKey = (hunk: DiffHunk): string => `${hunk.removed}\u241f${hunk.inserted}`;
 
   const build = (state: EditorState, dismissed: ReadonlySet<string>): SuggestionState => {
     const ranges = [];
@@ -214,11 +216,42 @@ export const suggestions = ({ sources, base, group, onAccept, onReject }: Sugges
 
   return [
     field,
+    selectHandler(field, onSelect),
     suggestTooltip(field, onAccept, onReject),
     changeBars((state) => state.field(field).changeBars),
     suggestTheme,
   ];
 };
+
+/**
+ * Reports the change under a click, so the host can reveal it on its other surfaces (the review
+ * companion accents the matching card). The click is not consumed — the caret still lands where the
+ * reader put it.
+ */
+const selectHandler = (
+  field: StateField<SuggestionState>,
+  onSelect?: (hunk: DiffHunk, author: string) => void,
+): Extension =>
+  EditorView.domEventHandlers({
+    mousedown: (event, view) => {
+      if (!onSelect) {
+        return false;
+      }
+      const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+      if (pos === null) {
+        return false;
+      }
+      const hunk = view.state
+        .field(field)
+        .hunks.find((candidate) =>
+          candidate.from === candidate.to ? pos === candidate.from : pos >= candidate.from && pos <= candidate.to,
+        );
+      if (hunk) {
+        onSelect(hunk, hunk.author);
+      }
+      return false;
+    },
+  });
 
 /**
  * Accept/reject controls in the CodeMirror tooltip layer (`.cm-tooltip`), which renders outside

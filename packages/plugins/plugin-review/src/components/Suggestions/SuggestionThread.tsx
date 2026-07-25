@@ -135,8 +135,8 @@ export const SuggestionThread = ({
       currentMessageId={currentMessageId}
     >
       <Thread.Content id='suggestions' role='list' data-testid='suggestion-list'>
-        {messages.map((message) => (
-          <MessageComponent.Tile key={Obj.getURI(message)} message={message} />
+        {messages.map((message, index) => (
+          <MessageComponent.Tile key={Obj.getURI(message)} message={message} continues={index < messages.length - 1} />
         ))}
       </Thread.Content>
     </Thread.Root>

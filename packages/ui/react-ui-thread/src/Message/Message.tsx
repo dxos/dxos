@@ -340,6 +340,8 @@ MessageTextbox.displayName = 'Message.Textbox';
 export type MessageTileProps = {
   message: MessageType.Message;
   classNames?: MessageRootProps['classNames'];
+  /** Whether the avatar-rail continuation line is drawn below the tile; false for the last tile. */
+  continues?: boolean;
 };
 
 /**
@@ -347,7 +349,7 @@ export type MessageTileProps = {
  * context for metadata resolution, injected renderers, and callbacks. This is
  * the unit rendered by `Thread.Messages`.
  */
-const MessageTile = ({ message, classNames }: MessageTileProps) => {
+const MessageTile = ({ message, classNames, continues = true }: MessageTileProps) => {
   const { t } = useTranslation(translationKey);
   const {
     getMetadata,
@@ -454,6 +456,7 @@ const MessageTile = ({ message, classNames }: MessageTileProps) => {
   return (
     <MessageRoot
       {...metadata}
+      continues={continues}
       controls={controls}
       // Selecting a tile is how the host reveals what it refers to (a suggestion's range in the
       // document), so the whole tile is the target — the accent marks which one is showing.

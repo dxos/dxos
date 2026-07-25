@@ -80,16 +80,12 @@ export const suggestionGroups = (base: string, sources: SuggestionSource[], poli
       const raw = policy
         ? groupHunks(diffHunks(anchor, source.content), anchor, policy)
         : diffHunks(anchor, source.content);
-      const hunks = source.base === undefined ? raw : rebaseHunksWith(computeCharHunks(source.base, base), raw);
-      return (
-        hunks
-          // Diffing against the author's fork anchor keeps reporting a change after it is accepted (the
-          // branch still differs from its own anchor), so drop changes already present in the document.
-          .filter(
-            (hunk) =>
-              !(hunk.inserted.length > 0 && base.slice(hunk.from, hunk.from + hunk.inserted.length) === hunk.inserted),
-          )
-          .map((hunk) => ({ ...hunk, author: source.author, colour: source.colour }))
-      );
+      // Edits the document already carries relative to the SAME anchor have been accepted, so they are
+      // no longer suggestions — matched by content, since accepting shifts every later offset.
+      const editKey = (hunk: DiffHunk) => `${hunk.removed}\u241f${hunk.inserted}`;
+      const applied = source.base === undefined ? undefined : new Set(diffHunks(source.base, base).map(editKey));
+      const pending = applied === undefined ? raw : raw.filter((hunk) => !applied.has(editKey(hunk)));
+      const hunks = source.base === undefined ? pending : rebaseHunksWith(computeCharHunks(source.base, base), pending);
+      return hunks.map((hunk) => ({ ...hunk, author: source.author, colour: source.colour }));
     })
     .sort((a, b) => a.from - b.from || a.to - b.to || (a.author < b.author ? -1 : a.author > b.author ? 1 : 0));

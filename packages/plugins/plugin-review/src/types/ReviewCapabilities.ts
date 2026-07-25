@@ -39,6 +39,11 @@ export namespace ReviewCapabilities {
     selection?: VersionSelection;
     view?: BranchView;
     mode?: ReviewMode;
+    /**
+     * The suggestion the reader is looking at, as its {@link suggestionGroupKey}. Shared so the editor
+     * and the review companion agree on which change is current, whichever surface it was picked from.
+     */
+    suggestion?: string;
   };
 
   const VersionSelectionSchema: Schema.Schema<VersionSelection> = Schema.Union(
@@ -56,6 +61,7 @@ export namespace ReviewCapabilities {
       selection: Schema.optional(VersionSelectionSchema),
       view: Schema.optional(Schema.Literal('base', 'diff', 'branch')),
       mode: Schema.optional(Schema.Literal('editing', 'suggesting', 'viewing')),
+      suggestion: Schema.optional(Schema.String),
     }).pipe(Schema.mutable),
     defaultValue: () => ({}),
   });

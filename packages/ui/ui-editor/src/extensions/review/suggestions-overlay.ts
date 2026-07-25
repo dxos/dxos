@@ -31,6 +31,7 @@ export type SuggestionsOverlay = {
 export const suggestionsOverlay = (
   onAccept?: (hunk: DiffHunk, author: string) => void,
   onReject?: (hunk: DiffHunk, author: string) => void,
+  onSelect?: (hunk: DiffHunk, author: string) => void,
 ): SuggestionsOverlay => {
   const compartment = new Compartment();
   return {
@@ -38,7 +39,7 @@ export const suggestionsOverlay = (
     reconfigure: (view: EditorView, sources: SuggestionSource[], enabled: boolean, base?: string) => {
       view.dispatch({
         effects: compartment.reconfigure(
-          enabled && sources.length > 0 ? suggestions({ sources, base, onAccept, onReject }) : [],
+          enabled && sources.length > 0 ? suggestions({ sources, base, onAccept, onReject, onSelect }) : [],
         ),
       });
     },

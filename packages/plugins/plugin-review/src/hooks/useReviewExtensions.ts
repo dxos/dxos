@@ -14,6 +14,7 @@ import { type Identity } from '@dxos/halo';
 import { useMembers } from '@dxos/halo-react';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
+import { useViewStateActions } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import {
   type DiffHunk,
@@ -26,6 +27,7 @@ import {
 import { Branch } from '@dxos/versioning';
 
 import { versionDiff } from '../extensions';
+import { ReviewCapabilities } from '../types';
 import { authorHue, hueColour } from '../util';
 import { type VersionedEditor } from './useVersionedEditor';
 import { type useVersioning } from './useVersioning';
@@ -150,9 +152,18 @@ export const useReviewExtensions = ({
   // the leaf both depend on) lives in its own compartment, reconfigured live as the resolved sources
   // or the review mode change — it must never remount the editor (which would rebind automerge and
   // lose scroll/selection).
+  // Clicking a change in the document makes it current for every review surface: the companion accents
+  // the matching card (see `suggestionGroupKey`).
+  const { set: setReviewView } = useViewStateActions(ReviewCapabilities.viewAspect, object.id);
+  const handleSelectSuggestion = useCallback(
+    (hunk: DiffHunk, author: string) => {
+      setReviewView({ suggestion: `${author} ${hunk.removed} ${hunk.inserted}` });
+    },
+    [setReviewView],
+  );
   const overlay = useMemo(
-    () => suggestionsOverlay(handleAmbientAccept, handleAmbientReject),
-    [handleAmbientAccept, handleAmbientReject],
+    () => suggestionsOverlay(handleAmbientAccept, handleAmbientReject, handleSelectSuggestion),
+    [handleAmbientAccept, handleAmbientReject, handleSelectSuggestion],
   );
 
   // In Suggesting mode the editor is bound to the user's own branch, so the foreign overlay diffs
