@@ -20,6 +20,7 @@ import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
 import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
+import { registerSurfaceRootElement } from '../components/Surface/SurfaceRootElement';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 
@@ -318,6 +319,13 @@ export const useApp = ({
   progressRef.current = startupProgress;
 
   const surfaces = useMemo(() => new SurfaceManager(manager.capabilities), [manager]);
+
+  // Boundary dispatch stays inert until the app also enables roles via
+  // `Surface.setBoundaryRoles`; registration is idempotent. Runs before any surface
+  // renders because the shell renders nothing until startup completes.
+  useEffect(() => {
+    registerSurfaceRootElement({ manager, surfaces });
+  }, [manager, surfaces]);
 
   return useCallback(
     () => (

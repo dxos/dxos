@@ -16,8 +16,9 @@ import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
-import { bootLoader, useApp } from '@dxos/app-framework/ui';
+import { Surface, bootLoader, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
@@ -530,6 +531,12 @@ const main = async () => {
 
     return <App />;
   };
+
+  // Roles listed here dispatch into `<dx-surface-root>` boundaries, each hosting its own
+  // React root (web-components project). Escape hatch: localStorage key set to 'off'.
+  if (localStorage.getItem('dxos.org/surface-boundary') !== 'off') {
+    Surface.setBoundaryRoles([AppSurface.StatusIndicator.role]);
+  }
 
   const root = document.getElementById('root')!;
   log('composer main: rendering App', { bootId: BOOT_ID, strict: conf.isStrict });
