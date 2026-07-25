@@ -19,9 +19,10 @@
       @apply bg-focus-surface border-separator;
     }
 
+    /* Border matches the ring while it shows, so the focus treatment reads as one band (no inner line). */
     &:not([disabled]):focus-visible,
     &:not([disabled]):has(:focus-visible) {
-      @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-focus-ring-subtle)];
+      @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-focus-ring-subtle)] border-[color:var(--color-focus-ring-subtle)];
     }
   }
 }
