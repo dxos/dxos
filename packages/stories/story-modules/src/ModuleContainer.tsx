@@ -6,18 +6,36 @@ import React, { type FC, type ReactNode, useEffect } from 'react';
 
 import { Capabilities, type Role } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { AppSpace, Paths } from '@dxos/app-toolkit';
+import { AppSpace, NotFound, Paths } from '@dxos/app-toolkit';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { type Obj } from '@dxos/echo';
 import { StorybookCapabilities } from '@dxos/plugin-testing';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-/**
- * A single grid cell: either a bare role token (role-only dispatch, no data) or a
- * `{ type, data }` spec for surfaces that require a subject (e.g. `AppSurface.Section`).
- */
-export type ModuleSpec = Role.Role<any> | { type: Role.Role<any>; data?: Record<string, any>; id?: string };
+/** Props a resolved object cell's override component receives. */
+export type ResolvedCellProps = { space: Space; object: Obj.Unknown; attendableId: string };
+
+/** Object-bound cell: renders the real plugin surface for `object` (or `component`, if given). */
+export type ObjectCellSpec = {
+  object: Obj.Unknown;
+  /** Role token to dispatch (defaults to `AppSurface.Article`). */
+  token?: Role.Role<any>;
+  /** Extra surface data merged with `{ subject, attendableId }` (e.g. `companionTo`, `variant`). */
+  data?: Record<string, any>;
+  /** Story override: render this instead of dispatching the plugin surface. */
+  component?: FC<ResolvedCellProps>;
+  /** Attendable id override (defaults to the object's collections path). */
+  id?: string;
+};
+
+/** A single grid cell. */
+export type ModuleSpec =
+  | Role.Role<any>
+  | { type: Role.Role<any>; data?: Record<string, any>; id?: string }
+  | ObjectCellSpec;
 
 /** 2D layout: outer array = columns, inner array = stacked rows within a column. */
 export type ModuleLayout = ModuleSpec[][];
@@ -48,14 +66,45 @@ export type ModuleContainerProps = {
   compact?: boolean;
 };
 
-const toCell = (spec: ModuleSpec): { type: Role.Role<any>; data?: Record<string, any>; id?: string } =>
-  'type' in spec ? spec : { type: spec };
+type NormalizedSurfaceCell = { kind: 'surface'; type: Role.Role<any>; data?: Record<string, any>; id: string };
+type NormalizedObjectCell = {
+  kind: 'object';
+  object: Obj.Unknown;
+  type: Role.Role<any>;
+  data: Record<string, any>;
+  component?: FC<ResolvedCellProps>;
+  attendableId: string;
+  id: string;
+};
+type NormalizedCell = NormalizedSurfaceCell | NormalizedObjectCell;
 
-/** A stable, unique attendable id for a cell: its explicit `id`, else the role NSID + grid position
- * (two cells sharing a role would otherwise collapse into one attention target). */
-const cellAttendableId = (spec: ModuleSpec, columnIndex: number, moduleIndex: number): string => {
-  const cell = toCell(spec);
-  return cell.id ?? `${cell.type.role}:${columnIndex}:${moduleIndex}`;
+// Structural discriminant: an object cell is the only `ModuleSpec` form carrying an `object` key
+// (a bare `Role` token or `{ type, data }` surface cell has none).
+const isObjectCell = (spec: ModuleSpec): spec is ObjectCellSpec =>
+  typeof spec === 'object' && spec !== null && 'object' in spec;
+
+/**
+ * Normalizes a `ModuleSpec` cell to a discriminated shape the container renders. Object cells derive
+ * their attendable id from the object's space-scoped collections path (the id the app-graph and
+ * attention system key object-scoped actions on), unless overridden.
+ */
+export const normalizeCell = (spec: ModuleSpec, spaceId: string, position = ''): NormalizedCell => {
+  if (isObjectCell(spec)) {
+    const attendableId = spec.id ?? Paths.getCollectionsPath(spaceId, spec.object.id);
+    return {
+      kind: 'object',
+      object: spec.object,
+      type: spec.token ?? AppSurface.Article,
+      data: spec.data ?? {},
+      component: spec.component,
+      attendableId,
+      id: attendableId,
+    };
+  }
+  if (typeof spec === 'object' && 'type' in spec) {
+    return { kind: 'surface', type: spec.type, data: spec.data, id: spec.id ?? `${spec.type.role}:${position}` };
+  }
+  return { kind: 'surface', type: spec, id: `${spec.role}:${position}` };
 };
 
 /**
@@ -75,6 +124,7 @@ const cellAttendableId = (spec: ModuleSpec, columnIndex: number, moduleIndex: nu
 export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const layoutState = useCapability(StorybookCapabilities.LayoutState);
+  const { graph } = useAppGraph();
   const [space] = useSpaces();
 
   useEffect(() => {
@@ -82,6 +132,20 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
       atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: Paths.getSpacePath(space.id) });
     }
   }, [space, layoutState, atomRegistry]);
+
+  // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve — the
+  // work the deck's navtree normally does on navigation.
+  const objectPaths = space
+    ? layout
+        .flat()
+        .map((spec) => normalizeCell(spec, space.id))
+        .flatMap((cell) => (cell.kind === 'object' ? [cell.attendableId] : []))
+    : [];
+  useEffect(() => {
+    for (const path of objectPaths) {
+      NotFound.expandPath(graph, path);
+    }
+  }, [graph, JSON.stringify(objectPaths)]);
 
   if (!space) {
     return <Loading data={{ space: !!space }} />;
@@ -99,15 +163,26 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
           style={{ gridTemplateRows: `repeat(${column.length}, minmax(0, 1fr))` }}
         >
           {column.map((spec, moduleIndex) => {
-            const { type, data } = toCell(spec);
-            const attendableId = cellAttendableId(spec, columnIndex, moduleIndex);
+            const cell = normalizeCell(spec, space.id, `${columnIndex}:${moduleIndex}`);
             return (
               <AttendableContainer
                 key={moduleIndex}
-                id={attendableId}
+                id={cell.id}
                 classNames={mx('border border-separator overflow-hidden', !compact && 'rounded-sm')}
               >
-                <Surface.Surface type={type} data={{ ...data, space, attendableId }} limit={1} />
+                {cell.kind === 'object' ? (
+                  cell.component ? (
+                    <cell.component space={space} object={cell.object} attendableId={cell.attendableId} />
+                  ) : (
+                    <Surface.Surface
+                      type={cell.type}
+                      data={{ subject: cell.object, attendableId: cell.attendableId, ...cell.data }}
+                      limit={1}
+                    />
+                  )
+                ) : (
+                  <Surface.Surface type={cell.type} data={{ ...cell.data, space, attendableId: cell.id }} limit={1} />
+                )}
               </AttendableContainer>
             );
           })}
