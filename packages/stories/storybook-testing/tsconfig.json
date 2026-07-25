@@ -18,7 +18,13 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../devtools/devtools"
     },
     {
       "path": "../../plugins/plugin-client"
@@ -40,6 +46,12 @@
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-components"
+    },
+    {
+      "path": "../../ui/react-ui-debug"
     },
     {
       "path": "../../ui/ui-theme"

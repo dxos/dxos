@@ -2,7 +2,7 @@
   "name": "@dxos/storybook-testing",
   "version": "0.10.0",
   "private": true,
-  "description": "Surface-grid container for driving storybook layouts from a 2D array of module role tokens.",
+  "description": "Object-bound surface-grid testbench for driving storybook layouts against real plugin surfaces, plus shared diagnostic panels.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -28,6 +28,8 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
+    "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -35,6 +37,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-ui-debug": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "effect": "catalog:",

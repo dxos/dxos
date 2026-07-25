@@ -4,3 +4,4 @@
 
 export * from './Cell';
 export * from './ModuleContainer';
+export * from './modules';

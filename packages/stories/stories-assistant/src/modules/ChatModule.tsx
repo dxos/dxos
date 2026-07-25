@@ -11,9 +11,7 @@ import { Chat } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
 import { useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/storybook-testing';
-
-import { ExecutionGraphModule } from './ExecutionGraphModule';
+import { ExecutionGraphModule, type ModuleProps } from '@dxos/storybook-testing';
 
 export const ChatModule = ({ space }: ModuleProps) => {
   const { preset, ...chatProps } = usePresets({});

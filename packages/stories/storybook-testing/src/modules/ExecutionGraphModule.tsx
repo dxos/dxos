@@ -9,7 +9,8 @@ import { Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
-import { type ModuleProps } from '@dxos/storybook-testing';
+
+import { type ModuleProps } from '../ModuleContainer';
 
 export const ExecutionGraphModule = ({ space }: ModuleProps) => {
   const invocationsFeed = space.properties?.invocationTraceFeed?.target;

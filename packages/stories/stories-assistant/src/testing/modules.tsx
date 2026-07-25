@@ -3,16 +3,13 @@
 //
 
 import { Surface } from '@dxos/app-framework/ui';
-import { withModuleProps } from '@dxos/storybook-testing';
+import { ExecutionGraphModule, InvocationsModule, LoggingModule, withModuleProps } from '@dxos/storybook-testing';
 
 import {
   ChatModule,
   ContextModule,
   DatabaseModule,
-  ExecutionGraphModule,
   GraphModule,
-  InvocationsModule,
-  LoggingModule,
   ResearchInputModule,
   ResearchOutputModule,
   RoutineModule,
