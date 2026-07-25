@@ -1,7 +1,5 @@
 ---
-'@dxos/ui-editor': minor
-'@dxos/plugin-space': minor
-'@dxos/plugin-review': minor
+'@dxos/echo': minor
 '@dxos/plugin-markdown': minor
 ---
 

@@ -7,9 +7,9 @@ import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
-import { ReviewPlugin } from '@dxos/plugin-review/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
+import { ReviewPlugin } from '@dxos/plugin-review/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 

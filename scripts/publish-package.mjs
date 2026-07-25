@@ -9,8 +9,8 @@
 // passes and release automation takes over. Builds the package, validates it is publishable, and
 // runs `pnpm publish` (which rewrites `workspace:`/`catalog:` specifiers to concrete versions —
 // npm would ship them verbatim), then opens the package's npm settings page (where trusted
-// publishing is configured for future automated releases). Auth is the caller's responsibility
-// (`npm login` or a scoped token in ~/.npmrc) — this script never handles credentials.
+// publishing is configured for future automated releases). When `npm whoami` reports no session the
+// script starts an interactive `npm login`; credentials stay with npm and never pass through here.
 //
 // Usage:
 //   node scripts/publish-package.mjs <package-name|package-dir> [--dry-run] [--tag <tag>] [--no-build] [--no-open]

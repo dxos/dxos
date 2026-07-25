@@ -4,7 +4,7 @@ Design for checkpointing, time travel, branching, and merge-back of markdown doc
 built on automerge's native versioning primitives.
 
 Status: approved 2026-07-16. Phase 1 scope (this document) targets plugin-markdown;
-see [Phase 2](#phase-2-upstreaming) for the planned generalization.
+see [Phase 2](#phase-2--per-user-suggestion-branches-branchkind--lifecycle) for the planned generalization.
 
 ## Motivation
 
