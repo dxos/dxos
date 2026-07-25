@@ -45,10 +45,10 @@ export const WithTriggers: Story = {
   }),
   args: {
     layout: [
-      [Cell.surface(StoryRole.Chat)],
+      [StoryRole.Chat],
       [
-        Cell.surface(AppSurface.Article, { subject: `${automationMeta.profile.key}.space-settings-automation` }),
-        Cell.surface(StoryRole.Invocations),
+        { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+        StoryRole.Invocations,
       ],
     ],
     skills: [],
@@ -111,8 +111,8 @@ export const WithChessTrigger: Story = {
       return [
         [Cell.article(game)],
         [
-          Cell.surface(AppSurface.Article, { subject: `${automationMeta.profile.key}.space-settings-automation` }),
-          Cell.surface(StoryRole.Invocations),
+          { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+          StoryRole.Invocations,
         ],
       ];
     },
@@ -147,6 +147,6 @@ export const WithPrompt: Story = {
     },
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Routine)], [Cell.surface(StoryRole.Invocations)]],
+    layout: [[StoryRole.Routine], [StoryRole.Invocations]],
   },
 };

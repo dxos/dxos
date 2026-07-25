@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { userEvent, within } from 'storybook/test';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DelegationSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
-import { Cell } from '@dxos/storybook-testing';
 
 import { StoryRole } from '../modules/roles';
 import { ModuleContainer, config, createDecorators } from '../testing';
@@ -35,7 +35,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Chat)]],
+    layout: [[StoryRole.Chat]],
   },
 };
 
@@ -50,7 +50,7 @@ export const WithPlanning: Story = {
     },
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Chat)], [Cell.deckCompanion('trace'), Cell.surface(StoryRole.Context)]],
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
     skills: [MarkdownSkill.key, PlanningSkill.key],
   },
 };
@@ -76,7 +76,7 @@ export const WithSubAgents: Story = {
     },
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Chat)], [Cell.deckCompanion('trace'), Cell.surface(StoryRole.Context)]],
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
     skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
   },
 };
@@ -126,7 +126,7 @@ export const WithExecutionGraph: Story = {
     },
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Chat)], [Cell.deckCompanion('trace')]],
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
     skills: [MarkdownSkill.key],
   },
 };
@@ -142,7 +142,7 @@ export const WithWebSearch: Story = {
     config: config.remote,
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Chat)]],
+    layout: [[StoryRole.Chat]],
     skills: [WebSearchSkill.key],
   },
 };

@@ -110,10 +110,10 @@ export const WithMarkdown: Story = {
       // for them — this is what makes the editor's comment toolbar (a graph action) resolvable.
       addToRootCollection(space, [document, guide]);
       return [
-        [Cell.surface(StoryRole.Chat)],
+        [StoryRole.Chat],
         [Cell.article(document)],
         [Cell.companion(document, 'history'), Cell.companion(document, 'comments')],
-        [Cell.surface(StoryRole.Logging)],
+        [StoryRole.Logging],
       ];
     },
     onChatCreated: async ({ space, binder }) => {
@@ -203,7 +203,7 @@ export const WithSkills: Story = {
         }),
       );
       addToRootCollection(space, [document]);
-      return [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Tasks), Cell.article(skill)]];
+      return [[StoryRole.Chat], [StoryRole.Tasks, Cell.article(skill)]];
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Markdown.Document)).run();
@@ -262,7 +262,7 @@ export const WithScript: Story = {
 
       await space.db.flush();
       addToRootCollection(space, [script]);
-      return [[Cell.surface(StoryRole.Chat)], [Cell.article(script)]];
+      return [[StoryRole.Chat], [Cell.article(script)]];
     },
     onChatCreated: async ({ space, binder }) => {
       const skills = await space.db.query(Query.select(Filter.type(Skill.Skill))).run();

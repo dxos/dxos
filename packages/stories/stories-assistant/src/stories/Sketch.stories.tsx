@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { userEvent, within } from 'storybook/test';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Ref } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { SketchSkill } from '@dxos/plugin-sketch';
@@ -47,7 +48,7 @@ const decorators = createDecorators({
     const { Sketch } = await import('@dxos/plugin-sketch');
     const sketch = space.db.add(Sketch.make({ name: 'Sketch' }));
     addToRootCollection(space, [sketch]);
-    return [[Cell.surface(StoryRole.Chat)], [Cell.article(sketch)], [Cell.deckCompanion('trace')]];
+    return [[StoryRole.Chat], [Cell.article(sketch)], [AppSurface.deckCompanion('trace')]];
   },
   onChatCreated: async ({ space, binder }) => {
     const { Sketch } = await import('@dxos/plugin-sketch');

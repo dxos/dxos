@@ -20,7 +20,7 @@ import {
 /**
  * React surfaces for the stories-assistant diagnostic panels that have no equivalent composer
  * plugin surface (the harness chat and space-scoped debug views). Each is registered under a
- * `StoryRole` custom role and addressed from a story layout via `Cell.surface(StoryRole.X)`.
+ * `StoryRole` custom role and referenced directly as a bare token in a story layout (`StoryRole.X`).
  * Object-bound panels (documents, sketches, games, …) are dispatched directly against the real
  * plugin surfaces via `Cell.article`/`Cell.companion`, so they need no wrapper here.
  */

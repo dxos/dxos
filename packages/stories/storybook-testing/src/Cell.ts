@@ -4,16 +4,16 @@
 
 import { type FC } from 'react';
 
-import { type Role } from '@dxos/app-framework';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Obj } from '@dxos/echo';
 
 import { type ObjectCellSpec, type ResolvedCellProps } from './ModuleContainer';
 
 /**
- * Grid-cell factories for a story layout. Each returns a `ModuleSpec` the container renders as a
- * real plugin surface bound to a concrete object (mirroring composer's `PlankComponent` dispatch),
- * or as a raw role-token surface for panels that are not object-bound.
+ * Grid-cell factories for the object-bound story layout cells — the only cells that need helper
+ * construction, because they carry an ECHO object the container binds to its real plugin surface
+ * (mirroring composer's `PlankComponent` dispatch) and derives an attendable id from. Cells that are
+ * not object-bound are written directly in the layout as `AppSurface`/role tokens or `{ type, data }`
+ * literals (the app-framework's own surface-dispatch vocabulary), so they need no factory here.
  */
 export namespace Cell {
   type ArticleOptions = {
@@ -27,11 +27,7 @@ export namespace Cell {
     object,
     component: opts.component,
     data: {
-      ...(opts.variant
-        ? {
-            variant: opts.variant,
-          }
-        : {}),
+      ...(opts.variant ? { variant: opts.variant } : {}),
       ...opts.data,
     },
   });
@@ -48,31 +44,5 @@ export namespace Cell {
       subject: variant,
       companionTo: object,
     },
-  });
-
-  /** Space-scoped deck companion (e.g. `'trace'`) whose surface reads `useActiveSpace()`. */
-  export const deckCompanion = (
-    variant: string,
-  ): {
-    type: Role.Role<any>;
-    data: Record<string, any>;
-  } => ({
-    type: AppSurface.deckCompanion(variant),
-    data: {},
-  });
-
-  /** Raw role-token surface for panels that are not object-bound (custom story roles). */
-  export const surface = (
-    token: Role.Role<any>,
-    data?: Record<string, any>,
-    id?: string,
-  ): {
-    type: Role.Role<any>;
-    data?: Record<string, any>;
-    id?: string;
-  } => ({
-    type: token,
-    data,
-    id,
   });
 }

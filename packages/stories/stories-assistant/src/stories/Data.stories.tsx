@@ -89,11 +89,7 @@ export const WithResearch: Story = {
     },
   }),
   args: {
-    layout: [
-      [Cell.surface(StoryRole.Chat)],
-      [Cell.surface(StoryRole.Graph), Cell.surface(StoryRole.ExecutionGraph)],
-      [Cell.surface(StoryRole.Context)],
-    ],
+    layout: [[StoryRole.Chat], [StoryRole.Graph, StoryRole.ExecutionGraph], [StoryRole.Context]],
     skills: [
       // AssistantSkill.key
       // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
@@ -111,7 +107,7 @@ export const WithSearch: Story = {
     },
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Graph)]],
+    layout: [[StoryRole.Chat], [StoryRole.Graph]],
   },
 };
 
@@ -127,7 +123,7 @@ export const WithDatabase: Story = {
     },
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Database)]],
+    layout: [[StoryRole.Database]],
   },
 };
 
@@ -167,12 +163,12 @@ export const WithResearchQueue: Story = {
   }),
   args: {
     layout: [
-      [Cell.surface(StoryRole.ResearchInput), Cell.surface(StoryRole.ResearchOutput)],
+      [StoryRole.ResearchInput, StoryRole.ResearchOutput],
       [
-        Cell.surface(AppSurface.Article, { subject: `${automationMeta.profile.key}.space-settings-automation` }),
-        Cell.surface(StoryRole.Invocations),
-        Cell.surface(StoryRole.Routine),
-        Cell.surface(StoryRole.Graph),
+        { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+        StoryRole.Invocations,
+        StoryRole.Routine,
+        StoryRole.Graph,
       ],
     ],
     skills: [WebSearchSkill.key],
@@ -348,8 +344,8 @@ export const WithProject: Story = {
       return [
         [Cell.article(project)],
         [
-          Cell.surface(AppSurface.Article, { subject: `${automationMeta.profile.key}.space-settings-automation` }),
-          Cell.surface(StoryRole.Invocations),
+          { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+          StoryRole.Invocations,
         ],
       ];
     },
@@ -394,10 +390,10 @@ export const WithCRM: Story = {
     onInit: async ({ space }) => {
       const [mailbox] = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       return [
-        [Cell.surface(StoryRole.Chat)],
+        [StoryRole.Chat],
         [Cell.article(mailbox)],
-        [Cell.companion(mailbox, 'automation'), Cell.deckCompanion('trace')],
-        [Cell.surface(StoryRole.Database)],
+        [Cell.companion(mailbox, 'automation'), AppSurface.deckCompanion('trace')],
+        [StoryRole.Database],
       ];
     },
     onChatCreated: async ({ space, binder }) => {

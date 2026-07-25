@@ -69,7 +69,7 @@ export const WithMail: Story = {
     },
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Context)]],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
     skills: [AssistantSkill.key, MarkdownSkill.key, InboxSkill.key],
   },
 };
@@ -92,12 +92,12 @@ export const WithGmail: Story = {
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
       addToRootCollection(space, [mailbox]);
       return [
-        [Cell.surface(StoryRole.Chat)],
+        [StoryRole.Chat],
         [
           Cell.article(mailbox),
-          Cell.surface(AppSurface.Article, { subject: `${connectorMeta.profile.key}.space-settings` }),
+          { type: AppSurface.Article, data: { subject: `${connectorMeta.profile.key}.space-settings` } },
         ],
-        [Cell.surface(StoryRole.Context)],
+        [StoryRole.Context],
       ];
     },
     onChatCreated: async ({ space, binder }) => {
@@ -146,7 +146,7 @@ export const WithConnectorPrompt: Story = {
     },
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Context)]],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
     skills: [AssistantSkill.key, ConnectorsSkill.key],
   },
 };
@@ -178,9 +178,9 @@ export const WithCalendar: Story = {
   }),
   args: {
     layout: [
-      [Cell.surface(StoryRole.Chat)],
-      [Cell.surface(AppSurface.Article, { subject: `${connectorMeta.profile.key}.space-settings` })],
-      [Cell.surface(StoryRole.Context)],
+      [StoryRole.Chat],
+      [{ type: AppSurface.Article, data: { subject: `${connectorMeta.profile.key}.space-settings` } }],
+      [StoryRole.Context],
     ],
     skills: [AssistantSkill.key, CalendarSkill.key],
   },
@@ -199,7 +199,7 @@ export const WithLinearSync: Story = {
     }),
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Graph)]],
+    layout: [[StoryRole.Chat], [StoryRole.Graph]],
     skills: [LinearSkill.key],
   },
 };
@@ -229,7 +229,7 @@ export const WithTranscription: Story = {
     },
   }),
   args: {
-    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Context)]],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
     skills: [AssistantSkill.key, TranscriptionSkill.key],
   },
 };
