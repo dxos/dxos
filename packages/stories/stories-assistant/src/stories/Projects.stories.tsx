@@ -5,18 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { userEvent, within } from 'storybook/test';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { type Space } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
+import { StoryRole } from '../modules';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Projects',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -42,6 +42,7 @@ const PROJECT_COMMANDS = [
 let storySpace: Space | undefined;
 
 const decorators = createDecorators({
+  skills: [AssistantSkill.key],
   lazyPlugins: async () => {
     const [{ Instructions, Project, Routine }, { Collection, Text }, { ProjectsPlugin }] = await Promise.all([
       import('@dxos/compute'),
@@ -85,8 +86,7 @@ const decorators = createDecorators({
 });
 
 const sharedArgs = {
-  layout: [[Module.Chat], [Module.Trace]],
-  skills: [AssistantSkill.key],
+  layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
 };
 
 /**

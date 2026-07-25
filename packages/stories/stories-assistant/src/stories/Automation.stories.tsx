@@ -4,20 +4,21 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
 import { Filter, Query, Ref } from '@dxos/echo';
 import { ChessOperation } from '@dxos/plugin-chess';
+import { meta as automationMeta } from '@dxos/plugin-routine';
 import { Text } from '@dxos/schema';
+import { Cell } from '@dxos/storybook-testing';
 
-import { Module, ModuleContainer, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
+import { StoryRole } from '../modules';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Automation',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -37,10 +38,16 @@ export const WithTriggers: Story = {
         }),
       );
     },
+    skills: [],
   }),
   args: {
-    layout: [[Module.Chat], [Module.Triggers, Module.Invocations]],
-    skills: [],
+    layout: [
+      [StoryRole.Chat],
+      [
+        { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+        StoryRole.Invocations,
+      ],
+    ],
   },
 };
 
@@ -61,7 +68,7 @@ export const WithChessTrigger: Story = {
     onInit: async ({ space }) => {
       const [{ Chess }, { Game }] = await Promise.all([import('@dxos/plugin-chess'), import('@dxos/plugin-game')]);
       // TODO(burdon): Add player DID (for user and assistant).
-      space.db.add(
+      const game = space.db.add(
         Game.make({
           name: 'Challenge',
           variant: Chess.make({
@@ -84,6 +91,7 @@ export const WithChessTrigger: Story = {
           }),
         }),
       );
+      addToRootCollection(space, [game]);
       space.db.add(
         Trigger.make({
           runnable: Ref.make(Operation.serialize(ChessOperation.Play)),
@@ -95,12 +103,16 @@ export const WithChessTrigger: Story = {
           },
         }),
       );
+      return [
+        [Cell.article(game)],
+        [
+          { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+          StoryRole.Invocations,
+        ],
+      ];
     },
-  }),
-  args: {
-    layout: [[Module.Chess], [Module.Triggers, Module.Invocations]],
     skills: [],
-  },
+  }),
 };
 
 export const WithPrompt: Story = {
@@ -127,6 +139,6 @@ export const WithPrompt: Story = {
     },
   }),
   args: {
-    layout: [[Module.Routine], [Module.Invocations]],
+    layout: [[StoryRole.Routine], [StoryRole.Invocations]],
   },
 };

@@ -4,29 +4,31 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ConnectorsSkill, LinearSkill } from '@dxos/assistant-toolkit';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
+import { meta as connectorMeta } from '@dxos/plugin-connector';
 import { Calendar, CalendarSkill, InboxSkill, Mailbox } from '@dxos/plugin-inbox';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { TranscriptionSkill } from '@dxos/plugin-transcription';
+import { Cell } from '@dxos/storybook-testing';
 import { Event, Message, Person, Pipeline, Task, Transcript } from '@dxos/types';
 
+import { StoryRole } from '../modules';
 import {
-  Module,
   ModuleContainer,
   accessTokensFromEnv,
+  addToRootCollection,
   config,
   createDecorators,
   createTestMailbox,
   createTestTranscription,
+  storyParameters,
 } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Connectors',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -62,10 +64,10 @@ export const WithMail: Story = {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
     },
+    skills: [AssistantSkill.key, MarkdownSkill.key, InboxSkill.key],
   }),
   args: {
-    layout: [[Module.Chat], [Module.Context]],
-    skills: [AssistantSkill.key, MarkdownSkill.key, InboxSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
 
@@ -86,7 +88,16 @@ export const WithGmail: Story = {
     config: config.persistent,
     types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      addToRootCollection(space, [mailbox]);
+      return [
+        [StoryRole.Chat],
+        [
+          Cell.article(mailbox),
+          { type: AppSurface.Article, data: { subject: `${connectorMeta.profile.key}.space-settings` } },
+        ],
+        [StoryRole.Context],
+      ];
     },
     onChatCreated: async ({ space, binder }) => {
       const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
@@ -95,11 +106,8 @@ export const WithGmail: Story = {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
     },
-  }),
-  args: {
-    layout: [[Module.Chat], [Module.Inbox, Module.TokenManager], [Module.Context]],
     skills: [AssistantSkill.key, InboxSkill.key],
-  },
+  }),
 };
 
 /**
@@ -132,10 +140,10 @@ export const WithConnectorPrompt: Story = {
         }),
       ]);
     },
+    skills: [AssistantSkill.key, ConnectorsSkill.key],
   }),
   args: {
-    layout: [[Module.Chat], [Module.Context]],
-    skills: [AssistantSkill.key, ConnectorsSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
 
@@ -162,10 +170,14 @@ export const WithCalendar: Story = {
         await binder.bind({ objects: [Ref.make(calendar)] });
       }
     },
+    skills: [AssistantSkill.key, CalendarSkill.key],
   }),
   args: {
-    layout: [[Module.Chat], [Module.TokenManager], [Module.Context]],
-    skills: [AssistantSkill.key, CalendarSkill.key],
+    layout: [
+      [StoryRole.Chat],
+      [{ type: AppSurface.Article, data: { subject: `${connectorMeta.profile.key}.space-settings` } }],
+      [StoryRole.Context],
+    ],
   },
 };
 
@@ -179,10 +191,10 @@ export const WithLinearSync: Story = {
     accessTokens: accessTokensFromEnv({
       'linear.app': VITE_LINEAR_API_KEY,
     }),
+    skills: [LinearSkill.key],
   }),
   args: {
-    layout: [[Module.Chat], [Module.Graph]],
-    skills: [LinearSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Graph]],
   },
 };
 
@@ -208,9 +220,9 @@ export const WithTranscription: Story = {
       const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
+    skills: [AssistantSkill.key, TranscriptionSkill.key],
   }),
   args: {
-    layout: [[Module.Chat], [Module.Context]],
-    skills: [AssistantSkill.key, TranscriptionSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
