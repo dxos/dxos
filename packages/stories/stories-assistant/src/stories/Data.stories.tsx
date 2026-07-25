@@ -23,7 +23,6 @@ import {
   ModuleContainer,
   ResearchInputQueue,
   addTestData,
-  config,
   createDecorators,
   createTestMailbox,
   loadMockInboxSnapshot,
