@@ -12,13 +12,14 @@ type SpaceArchiveObject = {
  * do not depend on live connector credentials.
  */
 export const loadMockInboxSnapshot = async (): Promise<unknown> => {
-  const snapshot = await import('./profiles/mock-inbox.dx.json');
+  const snapshot = await import('./fixtures/mock-inbox.dx.json');
   return {
     ...snapshot,
     objects: snapshot.objects.map((object: SpaceArchiveObject) => {
       if (object['@type']?.includes('accessToken')) {
         return { ...object, token: 'redacted' };
       }
+
       return object;
     }),
   };

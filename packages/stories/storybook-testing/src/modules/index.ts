@@ -15,8 +15,8 @@ export * from './LoggingModule';
  * them from a layout via the same token.
  */
 export const ModuleRole = {
-  Config: Role.make<Record<string, any>>('org.dxos.storybook.role.config'),
-  ExecutionGraph: Role.make<Record<string, any>>('org.dxos.storybook.role.executionGraph'),
-  Invocations: Role.make<Record<string, any>>('org.dxos.storybook.role.invocations'),
-  Logging: Role.make<Record<string, any>>('org.dxos.storybook.role.logging'),
+  Config: Role.make<Record<string, unknown>>('org.dxos.storybook.role.config'),
+  ExecutionGraph: Role.make<Record<string, unknown>>('org.dxos.storybook.role.executionGraph'),
+  Invocations: Role.make<Record<string, unknown>>('org.dxos.storybook.role.invocations'),
+  Logging: Role.make<Record<string, unknown>>('org.dxos.storybook.role.logging'),
 };

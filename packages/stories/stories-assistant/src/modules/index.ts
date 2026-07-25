@@ -23,12 +23,12 @@ export * from './TasksModule';
 export const StoryRole = {
   ...ModuleRole,
 
-  Chat: Role.make<Record<string, any>>('org.dxos.storybook.role.chat'),
-  Context: Role.make<Record<string, any>>('org.dxos.storybook.role.context'),
-  Database: Role.make<Record<string, any>>('org.dxos.storybook.role.database'),
-  Graph: Role.make<Record<string, any>>('org.dxos.storybook.role.graph'),
-  ResearchInput: Role.make<Record<string, any>>('org.dxos.storybook.role.researchInput'),
-  ResearchOutput: Role.make<Record<string, any>>('org.dxos.storybook.role.researchOutput'),
-  Routine: Role.make<Record<string, any>>('org.dxos.storybook.role.routine'),
-  Tasks: Role.make<Record<string, any>>('org.dxos.storybook.role.tasks'),
+  Chat: Role.make<Record<string, unknown>>('org.dxos.storybook.role.chat'),
+  Context: Role.make<Record<string, unknown>>('org.dxos.storybook.role.context'),
+  Database: Role.make<Record<string, unknown>>('org.dxos.storybook.role.database'),
+  Graph: Role.make<Record<string, unknown>>('org.dxos.storybook.role.graph'),
+  ResearchInput: Role.make<Record<string, unknown>>('org.dxos.storybook.role.researchInput'),
+  ResearchOutput: Role.make<Record<string, unknown>>('org.dxos.storybook.role.researchOutput'),
+  Routine: Role.make<Record<string, unknown>>('org.dxos.storybook.role.routine'),
+  Tasks: Role.make<Record<string, unknown>>('org.dxos.storybook.role.tasks'),
 };
