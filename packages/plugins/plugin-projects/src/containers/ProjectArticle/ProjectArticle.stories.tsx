@@ -13,8 +13,10 @@ import { Instructions, Project, Routine, Skill } from '@dxos/compute';
 import { Collection, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
@@ -94,7 +96,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...translations, ...reactUiTranslations],
+    translations: [...translations, ...reactUiTranslations, ...formTranslations, ...routineTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

@@ -19,7 +19,12 @@ import { FormRow } from '../../FormRow';
 
 // `dx-input` supplies the surface/border and its `:focus-within` shift; no focus ring — plain inputs
 // only ring on `:focus-visible` (keyboard), and a `focus-within` ring would light up on mouse focus too.
-const editorClassNames = ['dx-input min-h-[6lh] p-1 px-2'];
+// The explicit focus border/surface utilities beat `Editor.View`'s built-in `focus:border-accent-bg` /
+// `focus-within:border-focus-ring-subtle` (utilities outrank the `dx-components` layer `dx-input` rule).
+const editorClassNames = [
+  'dx-input min-h-[6lh] p-1 px-2',
+  'focus:border-separator focus-within:border-separator focus-within:bg-focus-surface',
+];
 
 /**
  * Form field that edits a markdown value in a CodeMirror editor.

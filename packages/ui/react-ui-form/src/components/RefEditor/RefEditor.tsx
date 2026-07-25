@@ -281,7 +281,7 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
         ref={composedRef}
       >
         <Editor.View
-          classNames='flex items-center dx-input px-2 h-[2rem]'
+          classNames='flex items-center dx-input px-2 h-[2rem] focus:border-separator focus-within:border-separator'
           {...props}
           initialValue={value}
           selectionEnd
