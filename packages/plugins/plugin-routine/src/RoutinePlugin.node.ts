@@ -4,7 +4,7 @@
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Operation, Trace, Trigger } from '@dxos/compute';
+import { Operation, Routine, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client';
 
 import {
@@ -16,7 +16,6 @@ import {
   TriggerRuntimeController,
 } from '#capabilities';
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 import { trigger } from './commands';
 

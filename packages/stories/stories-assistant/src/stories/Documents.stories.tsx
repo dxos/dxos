@@ -10,8 +10,8 @@ import { Script, Skill, Template } from '@dxos/compute';
 import { Filter, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AssistantSkill } from '@dxos/plugin-assistant';
-import { CommentSkill } from '@dxos/plugin-comments/skills';
 import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
+import { CommentSkill } from '@dxos/plugin-review/skills';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
@@ -78,15 +78,14 @@ export const WithMarkdown: Story = {
     lazyPlugins: async () => {
       // SpacePlugin contributes the `versioning-state` capability that the Comments article surface
       // (and the versioning UI) reads; without it the story throws "No capability found".
-      // VersioningPlugin contributes the `history` companion surface the HistoryModule renders into.
-      const [{ MarkdownPlugin }, { CommentsPlugin }, { SpacePlugin }, { VersioningPlugin }] = await Promise.all([
+      // ReviewPlugin contributes the `history` companion surface the HistoryModule renders into.
+      const [{ MarkdownPlugin }, { ReviewPlugin }, { SpacePlugin }] = await Promise.all([
         import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-comments/plugin'),
+        import('@dxos/plugin-review/plugin'),
         import('@dxos/plugin-space/plugin'),
-        import('@dxos/plugin-versioning/plugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), CommentsPlugin(), SpacePlugin({}), VersioningPlugin()],
+        plugins: [MarkdownPlugin(), ReviewPlugin(), SpacePlugin({})],
       };
     },
     config: config.remote,

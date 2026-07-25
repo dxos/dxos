@@ -82,7 +82,7 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
           });
         },
         // A deliberate click selects the thread in the editor (handled internally); reflect it in the
-        // list immediately (mirrors plugin-comments revealing the companion on click).
+        // list immediately (mirrors plugin-review revealing the companion on click).
         onActivate: (id) => setActiveComment(id),
         getComments: () => registry.get(commentsAtom),
         subscribe: (sink) => {

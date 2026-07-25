@@ -1,5 +1,5 @@
 ---
-'@dxos/plugin-versioning': minor
+'@dxos/plugin-markdown': minor
 ---
 
-Extract the generic version/review layer out of `@dxos/plugin-space` into a new `@dxos/plugin-versioning` system (core) plugin. The history companion (checkpoint/branch/merge timeline), the in-memory version-selection and review-mode state, the default review-render policy, the `HistoryProvider` opt-in, and the timeline model now live in `@dxos/plugin-versioning` under the `VersioningCapabilities` namespace (previously `SpaceCapabilities`). Consumers import these symbols from `@dxos/plugin-versioning`; `plugin-space` no longer depends on `@dxos/versioning`. `VersioningPlugin` is a core plugin, auto-included by composer-app. (Sibling `@dxos/plugin-space` / `@dxos/plugin-markdown` / `@dxos/plugin-comments` bump via the fixed release group.)
+Consolidate document review into `@dxos/plugin-review`. The comment threads (previously `@dxos/plugin-comments`) and the generic version/review layer (previously in `@dxos/plugin-space`) now live in one plugin under the `ReviewCapabilities` namespace: the history companion (checkpoint/branch/merge timeline), the in-memory version-selection and review-mode state, the default review-render policy, the `HistoryProvider` opt-in, and the timeline model. `plugin-space` no longer depends on `@dxos/versioning`, and `plugin-markdown` carries no review vocabulary — it exposes a neutral `EditorBindingHook` capability that `plugin-review` contributes to.

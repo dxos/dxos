@@ -6,12 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Instructions, Trace, Trigger } from '@dxos/compute';
+import { Instructions, Routine, Trace, Trigger } from '@dxos/compute';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { Routine } from '@dxos/plugin-routine';
 
 import { crm } from './crm';
 

@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Operation, Trigger } from '@dxos/compute';
+import { Operation, Routine, Trigger } from '@dxos/compute';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Cursor } from '@dxos/link';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Routine, connectedRoutinesQuery } from '@dxos/plugin-routine';
+import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { Calendar, Mailbox } from '#types';

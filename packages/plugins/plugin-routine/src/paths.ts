@@ -3,9 +3,9 @@
 //
 
 import { Paths } from '@dxos/app-toolkit';
+import { Routine } from '@dxos/compute';
 
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 const { getSectionPath: getRoutinesPath } = Paths.createTypeSectionPaths(Routine.Routine, {
   groupId: Paths.GroupSegments.ai,

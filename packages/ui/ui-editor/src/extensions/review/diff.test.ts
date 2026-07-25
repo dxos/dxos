@@ -87,6 +87,31 @@ describe('diff hunks', () => {
     const start = base.indexOf('charlie');
     expect(revertHunk(base, branch, { start, end: start + 4 })).toBeUndefined();
   });
+
+  // A pure insertion is empty on the base side, and the review companion anchors it at that single
+  // offset — so both sides of the overlap test are zero-width. A strict half-open test never matches,
+  // which made Accept/Reject silently no-op for every suggestion that only adds text.
+  test('accepts and reverts a pure insertion anchored at an empty range', ({ expect }) => {
+    const base = 'alpha\nbravo\n';
+    const branch = 'alpha\nbravo\ncharlie\n';
+    const at = base.length;
+
+    // Accept: splice the branch's added line into the base.
+    const accept = cherryPickHunk(base, branch, { start: at, end: at });
+    expect(accept).toBeDefined();
+    if (!accept) {
+      return;
+    }
+    expect(base.slice(0, accept.from) + accept.insert + base.slice(accept.from + accept.del)).toBe(branch);
+
+    // Reject: strip the addition back off the branch.
+    const revert = revertHunk(base, branch, { start: at, end: at });
+    expect(revert).toBeDefined();
+    if (!revert) {
+      return;
+    }
+    expect(branch.slice(0, revert.from) + revert.insert + branch.slice(revert.from + revert.del)).toBe(base);
+  });
 });
 
 describe('diffHunks', () => {
@@ -246,5 +271,54 @@ describe('groupHunks', () => {
     expect(groupHunks(hunks, before, { maxGap: 10 })).toHaveLength(2);
     // Opting out of boundary-respect bridges them.
     expect(groupHunks(hunks, before, { maxGap: 10, respectBlockBoundaries: false })).toHaveLength(1);
+  });
+});
+
+describe('computeCharHunks', () => {
+  // Character diffing is what keeps a single keystroke from restyling a whole word, but it aligns on
+  // any matching character — so deleting whole words can anchor mid-token (the `t` of `it` matching the
+  // `t` of `two`), striking half of two words the reader never touched.
+  test('a whole-word deletion anchors on word boundaries, not mid-token', ({ expect }) => {
+    const original = 'the revision it was written on, so two people can suggest';
+    const modified = 'the revision two people can suggest';
+
+    const hunks = computeCharHunks(original, modified);
+    expect(hunks).toHaveLength(1);
+    expect(original.slice(hunks[0].fromA, hunks[0].toA)).toBe('it was written on, so ');
+  });
+});
+
+describe('overlay hunks after the reader edits', () => {
+  const MAIN =
+    'The editor now tracks suggestions from every collaborator at once. Each proposal is diffed against the revision it was written on, so two people can suggest changes.';
+  // Alice proposes replacing a run of words further along the paragraph.
+  const ALICE = MAIN.replace('it was written on, so two people can', 'the revision it was written on, so anyone may');
+
+  /** What the overlay renders: the proposal diffed against its anchor, rebased into doc coordinates. */
+  const overlayHunks = (doc: string) => rebaseHunksWith(computeCharHunks(MAIN, doc), diffHunks(MAIN, ALICE));
+
+  /** A struck span must not cut a word in half — `written` may not render as `wri` + struck `tten`. */
+  const splitsWord = (text: string, offset: number) =>
+    offset > 0 && offset < text.length && /\w/.test(text[offset - 1]) && /\w/.test(text[offset]);
+
+  test('a foreign strike keeps whole words when the reader edits inside a nearby word', ({ expect }) => {
+    // The reader corrects a typo inside `written` — a character-level edit in the middle of a word.
+    const doc = MAIN.replace('written', 'writtten');
+    for (const hunk of overlayHunks(doc)) {
+      if (hunk.to > hunk.from) {
+        expect(splitsWord(doc, hunk.from)).toBe(false);
+        expect(splitsWord(doc, hunk.to)).toBe(false);
+      }
+    }
+  });
+
+  test('a foreign strike keeps whole words when the reader deletes words before it', ({ expect }) => {
+    const doc = MAIN.replace('from every collaborator ', '');
+    for (const hunk of overlayHunks(doc)) {
+      if (hunk.to > hunk.from) {
+        expect(splitsWord(doc, hunk.from)).toBe(false);
+        expect(splitsWord(doc, hunk.to)).toBe(false);
+      }
+    }
   });
 });
