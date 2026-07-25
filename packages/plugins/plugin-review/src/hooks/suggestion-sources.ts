@@ -12,6 +12,8 @@ import { idHue, stringToHue } from '@dxos/util';
 export type ResolvedSuggestionBranch = {
   author: string;
   content: string;
+  /** The parent text at the branch's fork anchor — what this author's proposal was written against. */
+  base?: string;
   /**
    * The author's palette hue (from their identity), when known. Aligns the suggestion's colour with
    * the author's avatar/tag colour; absent ⇒ a stable hue is derived from the author id.
@@ -42,7 +44,7 @@ export const suggestionColour = (author: string, hue?: string): string =>
  */
 export const buildSuggestionSources = (branches: ResolvedSuggestionBranch[]): SuggestionSource[] =>
   branches
-    .map(({ author, content, hue }) => ({ author, colour: suggestionColour(author, hue), content }))
+    .map(({ author, content, hue, base }) => ({ author, colour: suggestionColour(author, hue), content, base }))
     .sort((a, b) => (a.author < b.author ? -1 : a.author > b.author ? 1 : 0));
 
 /** One reviewable suggestion card: a grouped change from a single author, anchored in the base text. */

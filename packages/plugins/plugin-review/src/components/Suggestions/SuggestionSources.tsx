@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useCallback, useEffect, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
+import { type Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
-import { Branch } from '@dxos/versioning';
+import { Branch, Version } from '@dxos/versioning';
 
 import { type ResolvedSuggestionBranch } from '../../hooks';
 
@@ -132,11 +133,22 @@ const BranchContent = ({
 
   // Subscribe to the bound branch text so edits re-emit (the crux — a one-time read would go stale).
   const [content] = useObject(binding?.object, 'content');
+  // The parent text as it stood when this branch forked. The overlay diffs the proposal against it, so
+  // the diff stays this author's changes — text the reader typed after the fork is not their deletion.
+  // Materialising a historical snapshot is expensive, so it is keyed to the immutable fork anchor
+  // rather than recomputed per render (which pegged the CPU as the reader typed).
+  const parent = 'content' in document ? (document as { content?: { target?: Text.Text } }).content?.target : undefined;
+  const anchor = branch.anchor?.join(',');
+  const base = useMemo(
+    () => (parent && branch.anchor?.length ? Version.contentAt(parent, branch.anchor) : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [parent, anchor],
+  );
   useEffect(() => {
     if (content !== undefined) {
-      onContent(branch.id, { author: branch.creator ?? branch.id, content, hue });
+      onContent(branch.id, { author: branch.creator ?? branch.id, content, hue, base });
     }
-  }, [content, branch.id, branch.creator, hue, onContent]);
+  }, [content, branch.id, branch.creator, hue, base, onContent]);
 
   return null;
 };

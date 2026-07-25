@@ -96,6 +96,22 @@ describe('suggestions with an explicit base', () => {
     view.destroy();
   });
 
+  // The ambient (editing) path has no shared base — the editor IS main — so each source carries the
+  // anchor its branch forked from. Without it, everything the reader types reads as that author's
+  // deletion, once per visible suggestion.
+  test('a per-source base is used when no shared base is given', ({ expect }) => {
+    const view = new EditorView({
+      doc: BRANCH,
+      extensions: [suggestions({ sources: [{ author: 'did:bob', colour: 'x', content: BOB, base: MAIN }] })],
+    });
+
+    const struck = deleteRanges(view).map((range) => BRANCH.slice(range.from, range.to));
+    expect(struck).toEqual(['lazy']);
+    expect(struck.join(' ')).not.toContain('really');
+
+    view.destroy();
+  });
+
   test('without base, the foreign source diffs against the doc and strikes the user text', ({ expect }) => {
     // Diffing BOB against the BRANCH doc reads the user's "really" as text bob would delete — the bug
     // that `base` fixes.

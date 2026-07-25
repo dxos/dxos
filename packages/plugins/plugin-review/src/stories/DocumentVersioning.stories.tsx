@@ -133,7 +133,7 @@ const AmbientReviewPlugin = Plugin.define(
         // Stand in for plugin-comments' contribution so the Suggesting view-mode entry appears.
         Capability.contributes(MarkdownCapabilities.ViewModeExtension, {
           id: 'suggesting',
-          icon: 'ph--pencil-simple--regular',
+          icon: 'ph--note-pencil--regular',
           label: 'Suggesting',
           reviewMode: 'suggesting',
           order: 3,
@@ -141,6 +141,61 @@ const AmbientReviewPlugin = Plugin.define(
       ]),
   }),
   Plugin.make,
+);
+
+const PROSE = concat(
+  '# Release notes',
+  '',
+  'The editor now tracks suggestions from every collaborator at once. Each proposal is diffed against',
+  'the revision it was written on, so two people can suggest changes to the same paragraph without',
+  'either one appearing to delete the other.',
+  '',
+  'Reviewers can work through the changes in any order:',
+  '',
+  '- Accept folds a change into the document.',
+  '- Reject drops it and leaves the text untouched.',
+  '- Comments stay anchored to their range either way.',
+  '',
+  'The last paragraph exists so there is something to delete at the end of the document.',
+  '',
+);
+
+const PROSE_SUGGESTION_BOB = concat(
+  '# Release notes',
+  '',
+  'The editor now tracks suggestions from every collaborator at once. Each proposal is diffed against',
+  'the revision it was written on, so two people can suggest changes to the same paragraph without',
+  'either one appearing to delete the other.',
+  '',
+  'Reviewers can work through the changes in any order:',
+  '',
+  '- Accept folds a change into the document.',
+  '- Reject drops it and leaves the text untouched.',
+  '- Comments stay anchored to their range either way.',
+  '- Bob: add an example of a conflicting edit.',
+  '',
+  'The last paragraph exists so there is something to delete at the end of the document.',
+  '',
+  'Bob also proposes this closing line, so a suggestion sits at the very end of the document.',
+  '',
+);
+
+const PROSE_SUGGESTION_ALICE = concat(
+  '# Release notes',
+  '',
+  'The editor now tracks suggestions from every collaborator at once, which is the point of the whole',
+  'exercise. Each proposal is diffed against',
+  'the revision it was written on, so two people can suggest changes to the same paragraph without',
+  'either one appearing to delete the other.',
+  '',
+  'Reviewers can work through the changes in any order:',
+  '',
+  '- Accept folds a change into the document.',
+  '- Reject drops it and leaves the text untouched.',
+  '- Comments stay anchored to their range either way.',
+  '',
+  'The last paragraph exists so there is something to delete at the end of the document.',
+  '',
 );
 
 // Play functions drive document edits through the data layer (exercising the editor's live
@@ -337,10 +392,10 @@ export const Default: Story = {
  */
 export const AmbientReview: Story = {
   args: {
-    content: concat('# Hello World', ''),
+    content: PROSE,
     suggestions: [
-      { creator: 'did:alice', content: concat('# Hello World', '', 'Alice: nice intro.', '') },
-      { creator: 'did:bob', content: concat('# Hello World', '', 'Bob: add an example.', '') },
+      { creator: 'did:alice', content: PROSE_SUGGESTION_ALICE },
+      { creator: 'did:bob', content: PROSE_SUGGESTION_BOB },
     ],
   },
   parameters: {
@@ -361,8 +416,8 @@ export const AmbientReview: Story = {
  */
 export const Suggesting: Story = {
   args: {
-    content: concat('# Hello World', ''),
-    suggestions: [{ creator: 'did:bob', content: concat('# Hello World', '', 'Bob: add an example.', '') }],
+    content: PROSE,
+    suggestions: [{ creator: 'did:bob', content: PROSE_SUGGESTION_BOB }],
   },
   parameters: {
     ambientReview: true,
@@ -379,8 +434,8 @@ export const Suggesting: Story = {
  */
 export const EditingTyping: Story = {
   args: {
-    content: concat('# Hello World', '', 'Body paragraph.', ''),
-    suggestions: [{ creator: 'did:bob', content: concat('# Hello World', '', 'Bob: add an example.', '') }],
+    content: PROSE,
+    suggestions: [{ creator: 'did:bob', content: PROSE_SUGGESTION_BOB }],
   },
   parameters: {
     ambientReview: true,
@@ -929,12 +984,14 @@ export const ReviewChromeTest: Story = {
     const lines = () => Array.from(canvasElement.querySelectorAll('.cm-line'));
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 20_000 });
 
-    // The trailing suggestion never occupies the last line.
+    // A suggestion at the very end anchors before the document's final position, so the caret still
+    // has somewhere to land past it (with `side: 1` the widget owned the end and trapped the caret).
     await waitFor(
       async () => {
         const last = lines().at(-1);
         invariant(last, 'no editor lines');
-        await expect(last.querySelector('.cm-suggest-insert')).toBeNull();
+        const widget = last.querySelector('.cm-suggest-actions');
+        await expect(widget === null || widget !== last.lastElementChild).toBe(true);
       },
       { timeout: 15_000 },
     );

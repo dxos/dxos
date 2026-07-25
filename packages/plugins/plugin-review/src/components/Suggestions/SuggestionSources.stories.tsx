@@ -158,7 +158,10 @@ export const Default: Story = {
   args: { onResolved: fn() },
   play: async ({ args }) => {
     // Order matches branch enumeration order (push order in `seedAgentSuggestions`: Kai then Nova).
-    const expected = STORY_AGENTS.map((agent) => ({ author: agent.did, content: agent.content }));
+    // Matched per field: each resolved branch also carries its fork `base` (and may carry a `hue`).
+    const expected = STORY_AGENTS.map((agent) =>
+      expect.objectContaining({ author: agent.did, content: agent.content }),
+    );
     await waitFor(() => expect(args.onResolved).toHaveBeenCalledWith(expected), { timeout: 12_000 });
   },
 };

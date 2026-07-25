@@ -23,7 +23,7 @@ export default Capability.makeModule(
     // so it appears only when this plugin is present); selecting it puts the document in suggesting mode.
     const suggestingViewMode = Capability.contributes(MarkdownCapabilities.ViewModeExtension, {
       id: 'suggesting',
-      icon: 'ph--pencil-simple--regular',
+      icon: 'ph--note-pencil--regular',
       label: ['view-mode.suggesting.label', { ns: meta.profile.key }],
       reviewMode: 'suggesting',
       order: 3,
