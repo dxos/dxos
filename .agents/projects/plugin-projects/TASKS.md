@@ -24,7 +24,14 @@ Plan: agents/superpowers/plans/2026-07-24-plugin-projects.md (all 10 tasks compl
 
 ## Phase 2 / milestone 2
 
-- [ ] **Open PR** — submit-pr skill; surface Composer preview URL. (Awaiting user go.)
+Initial priority (user, 2026-07-24):
+
+1. Create, edit, delete projects in Composer (delete flow + end-to-end verify).
+2. Use project instructions in chat (verify the binding reaches the system prompt live).
+3. Use with outliner skill to manage tasks (project + task outline artifact + skill binding).
+4. Define and use commands (authoring UI + commands rendered into the session prompt).
+
+- [x] **Open PR** — #12335 (Check in progress; preview pending).
 - [ ] **PLUGIN.mdl for plugin-projects** — as-built record now that implementation settled.
 - [ ] **Commands-authoring UI** — InstructionsEditor edits text/skills/objects only; `commands` currently data-only despite autocomplete shipping.
 - [ ] **In-article routine creation**; project-scoped chat list UI.

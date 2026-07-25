@@ -31,7 +31,11 @@ export const ProjectArticle = ({ role, subject }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
-  const instructions = project.instructions?.target;
+  // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory, and a
+  // sync `.target` read would leave the section permanently missing. The sub-editor mutates the
+  // instructions in place, so unwrap the snapshot back to the live entity.
+  const [instructionsSnapshot] = useObject(project.instructions);
+  const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
   const [artifacts] = useObject(project.artifacts);
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
