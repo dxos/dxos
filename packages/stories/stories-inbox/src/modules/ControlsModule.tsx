@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Provider } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Ref } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
@@ -18,18 +19,25 @@ import { type RDF } from '@dxos/pipeline-rdf';
 import { BrainCapabilities } from '@dxos/plugin-brain/types';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { useClient } from '@dxos/react-client';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/storybook-testing';
 
 // Local Ollama model driving `AnalyzeMailbox` fact extraction. Ollama reliably fails structured
 // output, so the operation is invoked with `strict: false`.
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
 
 /** Reset / analyze controls plus a JSON status readout — owns the analyze pipeline. */
-export const ControlsModule = ({ space }: ModuleProps) => {
+export const ControlsModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <ControlsModuleContainer space={space} />;
+};
+
+const ControlsModuleContainer = ({ space }: { space: Space }) => {
   const client = useClient();
   const identity = useIdentity();
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));

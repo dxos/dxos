@@ -4,15 +4,23 @@
 
 import React from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Entity, Filter, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/storybook-testing';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing/schema';
 
-export const ResearchInputModule = ({ space }: ModuleProps) => {
+export const ResearchInputModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <ResearchInputModuleContainer space={space} />;
+};
+
+const ResearchInputModuleContainer = ({ space }: { space: Space }) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
   const feed = researchInput?.feed.target;
   const objects = useQuery(

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type FC, type ReactNode, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 import { Capabilities, type Role } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
@@ -16,7 +16,11 @@ import { Loading } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 /** Props a resolved object cell's override component receives. */
-export type ResolvedCellProps = { space: Space; object: Obj.Unknown; attendableId: string };
+export type ResolvedCellProps = {
+  space: Space;
+  object: Obj.Unknown;
+  attendableId: string;
+};
 
 /** Object-bound cell: renders the real plugin surface for `object` (or `component`, if given). */
 export type ObjectCellSpec = {
@@ -39,27 +43,6 @@ export type ModuleSpec =
 
 /** 2D layout: outer array = columns, inner array = stacked rows within a column. */
 export type ModuleLayout = ModuleSpec[][];
-
-/**
- * Props every module surface receives from {@link ModuleContainer}: the active space and the cell's
- * attendable id (registered with the attention system by the container's `AttendableContainer`).
- */
-export type ModuleProps = {
-  /** Active space. */
-  space: Space;
-  /** Active component. */
-  attendableId?: string;
-};
-
-/**
- * Adapts a module component to a surface: reads the {@link ModuleProps} the container injects via the
- * surface `data`, gating on the space so module bodies never call hooks conditionally. Replaces the
- * per-storybook `withActiveSpace` wrapper — space + attendable id are now owned by the container.
- */
-export const withModuleProps =
-  (Component: FC<ModuleProps>) =>
-  ({ data }: { data?: Partial<ModuleProps> }): ReactNode =>
-    data?.space ? <Component space={data.space} attendableId={data.attendableId ?? ''} /> : null;
 
 export type ModuleContainerProps = {
   layout: ModuleLayout;
@@ -108,6 +91,7 @@ export const normalizeCell = (spec: ModuleSpec, spaceId: string, position = ''):
       attendableId,
     };
   }
+
   if (typeof spec === 'object' && 'type' in spec) {
     return {
       kind: 'surface',
@@ -116,6 +100,7 @@ export const normalizeCell = (spec: ModuleSpec, spaceId: string, position = ''):
       data: spec.data,
     };
   }
+
   return {
     kind: 'surface',
     type: spec,
@@ -183,11 +168,10 @@ const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string
  * Renders a columns×rows grid of app-framework surfaces from a {@link ModuleLayout}.
  *
  * Each cell resolves via `<Surface.Surface type={token} limit={1} />` and is wrapped in an
- * `AttendableContainer` so its attendable id participates in the attention system (focus makes it the
- * current attention — surfaces provide it via `withModuleProps`). The active workspace is set to the
- * first space so surfaces resolve — done from the React tree because the plugin-module activation
- * context resolves a different AtomRegistry than the UI reads. The active space and each cell's
- * attendable id are injected into every surface via `data` ({@link ModuleProps}).
+ * `AttendableContainer` so its attendable id participates in the attention system. The active
+ * workspace is set to the first space so module surfaces resolve it via `useActiveSpace()` — done
+ * from the React tree because the plugin-module activation context resolves a different AtomRegistry
+ * than the UI reads. Each cell's attendable id is injected into its surface `data`.
  *
  * Storybook-agnostic: any storybook that contributes `Capabilities.ReactSurface` module surfaces can
  * drive its layout with this container. Provide `withAttention()` (from `@dxos/react-ui-attention/testing`)
@@ -205,8 +189,8 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
     }
   }, [space, layoutState, atomRegistry]);
 
-  // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve — the
-  // work the deck's navtree normally does on navigation.
+  // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve —
+  // the work the deck's navtree normally does on navigation.
   const objectPaths = space
     ? layout
         .flat()
@@ -250,7 +234,7 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
                     data={
                       cell.kind === 'object'
                         ? { subject: cell.object, attendableId: cell.attendableId, ...cell.data }
-                        : { ...cell.data, space, attendableId: cell.id }
+                        : { ...cell.data, attendableId: cell.id }
                     }
                   />
                 )}

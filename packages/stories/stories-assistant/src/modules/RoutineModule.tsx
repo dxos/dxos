@@ -5,17 +5,24 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Instructions } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/storybook-testing';
 
 // No plugin renders a bare `Instructions` object as an Article (the routine article surface matches
 // `Routine.Routine`, which only references Instructions), so render it via the generic card surface
 // contributed by the PreviewPlugin.
-export const RoutineModule = ({ space }: ModuleProps) => {
+export const RoutineModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <RoutineModuleContainer space={space} />;
+};
+
+const RoutineModuleContainer = ({ space }: { space: Space }) => {
   const [instructions] = useQuery(space.db, Filter.type(Instructions.Instructions));
   if (!instructions) {
     return null;

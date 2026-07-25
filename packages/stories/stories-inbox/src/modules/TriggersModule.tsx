@@ -7,20 +7,28 @@ import * as Exit from 'effect/Exit';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Trigger } from '@dxos/compute';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/storybook-testing';
 
 /**
  * Lists active triggers in the space and exposes manual cron invocation via {@link TriggerDispatcher}.
  * Triggers are created solely by the connector integration (the sync toggle → {@link createSyncRoutine}),
  * so this panel only observes and invokes them.
  */
-export const TriggersModule = ({ space }: ModuleProps) => {
+export const TriggersModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <TriggersModuleContainer space={space} />;
+};
+
+const TriggersModuleContainer = ({ space }: { space: Space }) => {
   const triggers = useQuery(
     space.db,
     Query.select(Filter.type(Trigger.Trigger)).debugLabel('stories-inbox.TriggersModule'),

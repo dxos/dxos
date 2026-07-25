@@ -4,13 +4,13 @@
 
 import React from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { Markdown } from '@dxos/plugin-markdown';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import { type ModuleProps } from '@dxos/storybook-testing';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -19,7 +19,15 @@ import {
   outliner,
 } from '@dxos/ui-editor';
 
-export const TasksModule = ({ space }: ModuleProps) => {
+export const TasksModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <TasksModuleContainer space={space} />;
+};
+
+const TasksModuleContainer = ({ space }: { space: Space }) => {
   const { themeMode } = useThemeContext();
   const [document] = useQuery(space.db, Filter.type(Markdown.Document));
   if (!document?.content.target) {

@@ -8,7 +8,6 @@ import React from 'react';
 import { ActivationEvents, Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { DXN } from '@dxos/keys';
-import { withModuleProps } from '@dxos/storybook-testing';
 
 import {
   ArchiveModule,
@@ -50,37 +49,37 @@ const moduleSurfaces: Surface.Definition[] = [
   Surface.create({
     id: 'inbox.controls',
     filter: Surface.makeFilter(Module.Controls),
-    component: withModuleProps(ControlsModule),
+    component: ControlsModule,
   }),
   Surface.create({
     id: 'inbox.mailbox',
     filter: Surface.makeFilter(Module.Mailbox),
-    component: withModuleProps(MailboxModule),
+    component: MailboxModule,
   }),
   Surface.create({
     id: 'inbox.message',
     filter: Surface.makeFilter(Module.Message),
-    component: withModuleProps(MessageModule),
+    component: MessageModule,
   }),
   Surface.create({
     id: 'inbox.facts',
     filter: Surface.makeFilter(Module.Facts),
-    component: withModuleProps(FactsModule),
+    component: FactsModule,
   }),
   Surface.create({
     id: 'inbox.topics',
     filter: Surface.makeFilter(Module.Topics),
-    component: withModuleProps(TopicsModule),
+    component: TopicsModule,
   }),
   Surface.create({
     id: 'inbox.connector',
     filter: Surface.makeFilter(Module.Connector),
-    component: withModuleProps(ConnectorModule),
+    component: ConnectorModule,
   }),
   Surface.create({
     id: 'inbox.archive',
     filter: Surface.makeFilter(Module.Archive),
-    component: withModuleProps(ArchiveModule),
+    component: ArchiveModule,
   }),
   // The stats panel reads plugin-debug's transient store directly — no active space needed.
   Surface.create({
@@ -91,22 +90,22 @@ const moduleSurfaces: Surface.Definition[] = [
   Surface.create({
     id: 'inbox.syncState',
     filter: Surface.makeFilter(Module.SyncState),
-    component: withModuleProps(SyncStateModule),
+    component: SyncStateModule,
   }),
   Surface.create({
     id: 'inbox.trace',
     filter: Surface.makeFilter(Module.Trace),
-    component: withModuleProps(TraceModule),
+    component: TraceModule,
   }),
   Surface.create({
     id: 'inbox.swarmTrace',
     filter: Surface.makeFilter(Module.SwarmTrace),
-    component: withModuleProps(SwarmTraceModule),
+    component: SwarmTraceModule,
   }),
   Surface.create({
     id: 'inbox.triggers',
     filter: Surface.makeFilter(Module.Triggers),
-    component: withModuleProps(TriggersModule),
+    component: TriggersModule,
   }),
 ];
 

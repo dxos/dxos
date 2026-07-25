@@ -5,15 +5,24 @@
 import React from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
-import { useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
+import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
-import { ExecutionGraphModule, type ModuleProps } from '@dxos/storybook-testing';
+import { ExecutionGraphModule } from '@dxos/storybook-testing';
 
-export const ChatModule = ({ space }: ModuleProps) => {
+export const ChatModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <ChatModuleContainer space={space} />;
+};
+
+const ChatModuleContainer = ({ space }: { space: Space }) => {
   const { preset, ...chatProps } = usePresets({});
 
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
@@ -44,7 +53,7 @@ export const ChatModule = ({ space }: ModuleProps) => {
               </Popover.Trigger>
               <Popover.Portal>
                 <Popover.Content>
-                  <ExecutionGraphModule space={space} />
+                  <ExecutionGraphModule />
                   <Popover.Arrow />
                 </Popover.Content>
               </Popover.Portal>

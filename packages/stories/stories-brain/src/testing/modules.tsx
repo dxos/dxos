@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvents, Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { DXN } from '@dxos/keys';
-import { withModuleProps } from '@dxos/storybook-testing';
 
 import {
   CrawlModule,
@@ -23,8 +22,7 @@ import {
 /**
  * Role tokens for the stories-brain modules (Facts + Pipeline). Each is contributed as a dedicated
  * `Capabilities.ReactSurface` under its own role NSID (role-only dispatch), so a story layout is a
- * plain grid of these tokens and `ModuleContainer` injects the active space + attendable id into each
- * surface (`withModuleProps`).
+ * plain grid of these tokens; each module resolves the active space itself via `useActiveSpace()`.
  */
 export const Module = {
   // Facts story.
@@ -44,42 +42,42 @@ const moduleSurfaces: Surface.Definition[] = [
   Surface.create({
     id: 'brain.crawl',
     filter: Surface.makeFilter(Module.Crawl),
-    component: withModuleProps(CrawlModule),
+    component: CrawlModule,
   }),
   Surface.create({
     id: 'brain.query',
     filter: Surface.makeFilter(Module.Query),
-    component: withModuleProps(QueryModule),
+    component: QueryModule,
   }),
   Surface.create({
     id: 'brain.questions',
     filter: Surface.makeFilter(Module.Questions),
-    component: withModuleProps(QuestionsModule),
+    component: QuestionsModule,
   }),
   Surface.create({
     id: 'brain.facts',
     filter: Surface.makeFilter(Module.Facts),
-    component: withModuleProps(FactsModule),
+    component: FactsModule,
   }),
   Surface.create({
     id: 'brain.entities',
     filter: Surface.makeFilter(Module.Entities),
-    component: withModuleProps(EntitiesModule),
+    component: EntitiesModule,
   }),
   Surface.create({
     id: 'brain.input',
     filter: Surface.makeFilter(Module.Input),
-    component: withModuleProps(InputModule),
+    component: InputModule,
   }),
   Surface.create({
     id: 'brain.pipeline',
     filter: Surface.makeFilter(Module.Pipeline),
-    component: withModuleProps(PipelineModule),
+    component: PipelineModule,
   }),
   Surface.create({
     id: 'brain.output',
     filter: Surface.makeFilter(Module.Output),
-    component: withModuleProps(OutputModule),
+    component: OutputModule,
   }),
 ];
 

@@ -4,15 +4,22 @@
 
 import React from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { InvocationTraceStartEvent } from '@dxos/compute-runtime';
 import { Filter, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
 
-import { type ModuleProps } from '../ModuleContainer';
+export const ExecutionGraphModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <ExecutionGraphContainer space={space} />;
+};
 
-export const ExecutionGraphModule = ({ space }: ModuleProps) => {
+const ExecutionGraphContainer = ({ space }: { space: Space }) => {
   const invocationsFeed = space.properties?.invocationTraceFeed?.target;
   const invocations = useQuery(
     space.db,

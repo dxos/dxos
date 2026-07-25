@@ -4,13 +4,13 @@
 
 import React from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { DevtoolsContextProvider, InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
-import { type ModuleProps } from '../ModuleContainer';
-
-export const InvocationsModule = ({ space }: ModuleProps) => {
+export const InvocationsModule = () => {
+  const space = useActiveSpace();
   const feed = space?.properties.invocationTraceFeed?.target;
   const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
 

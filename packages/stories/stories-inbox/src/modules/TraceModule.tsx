@@ -4,14 +4,23 @@
 
 import React from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { TracePanel } from '@dxos/plugin-assistant/components';
+import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/storybook-testing';
 
 /**
  * Renders the assistant `TracePanel` (process tree + execution-graph timeline) for the story space.
  */
-export const TraceModule = ({ space, attendableId }: ModuleProps) => {
+export const TraceModule = ({ data }: { data?: { attendableId?: string } }) => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <TraceModuleContainer space={space} attendableId={data?.attendableId} />;
+};
+
+const TraceModuleContainer = ({ space, attendableId }: { space: Space; attendableId?: string }) => {
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>

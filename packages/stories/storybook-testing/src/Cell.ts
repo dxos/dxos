@@ -36,9 +36,11 @@ export namespace Cell {
     },
   });
 
-  /** Object companion (e.g. `'history'`, `'comments'`): an Article surface keyed on `companionTo`.
+  /**
+   * Object companion (e.g. `'history'`, `'comments'`): an Article surface keyed on `companionTo`.
    * `extra` carries surface data some companions require beyond the variant (e.g. an attention-linked
-   * `variant` field), merged after the base fields so it cannot clobber `subject`/`companionTo`. */
+   * `variant` field), merged after the base fields so it cannot clobber `subject`/`companionTo`.
+   */
   export const companion = (object: Obj.Unknown, variant: string, extra?: Record<string, any>): ObjectCellSpec => ({
     object,
     data: {

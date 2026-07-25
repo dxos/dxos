@@ -10,10 +10,11 @@ import React, { memo, useEffect, useLayoutEffect, useRef, useState } from 'react
 
 import { Capabilities } from '@dxos/app-framework';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Trace } from '@dxos/compute';
+import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/storybook-testing';
 
 /** Cap on retained events so a long-running story does not grow the list unbounded. */
 const MAX_EVENTS = 200;
@@ -31,7 +32,15 @@ type ReceivedEvent = Trace.FlatEvent & {
  * over the space swarm (DX-1125), consumed via the swarm-backed {@link Capabilities.RemoteTraceMonitor}.
  * The monitor is subscribed with a space-scoped filter so it surfaces all swarm traffic for this space.
  */
-export const SwarmTraceModule = ({ space }: ModuleProps) => {
+export const SwarmTraceModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <SwarmTraceModuleContainer space={space} />;
+};
+
+const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
   const monitor = useOptionalCapability(Capabilities.RemoteTraceMonitor);
   const runtime = useOptionalCapability(Capabilities.ProcessManagerRuntime);
   const [events, setEvents] = useState<ReceivedEvent[]>([]);

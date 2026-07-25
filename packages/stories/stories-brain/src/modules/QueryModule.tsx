@@ -8,16 +8,25 @@ import React, { useCallback, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { useCapability } from '@dxos/app-framework/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
 import { buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
 import { BrainCapabilities } from '@dxos/plugin-brain/types';
-import { type ModuleProps } from '@dxos/storybook-testing';
+import { type Space } from '@dxos/react-client/echo';
 
 import { DEFAULT_SPARQL, QueryPanel } from '../components';
 import { useFactsStory } from './context';
 
 /** LEFT (middle): natural-language → SPARQL over Brain's per-space `FactStore`; results are the view. */
-export const QueryModule = ({ space }: ModuleProps) => {
+export const QueryModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <QueryModuleContainer space={space} />;
+};
+
+const QueryModuleContainer = ({ space }: { space: Space }) => {
   const registry = useCapability(BrainCapabilities.FactStoreRegistry);
   const { setFacts } = useFactsStory();
 

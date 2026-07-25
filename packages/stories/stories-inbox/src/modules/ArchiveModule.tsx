@@ -4,14 +4,14 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/storybook-testing';
 
 import { exportFeedMessages, replaceFeed, resetMailbox } from '../testing';
 
@@ -23,7 +23,15 @@ import { exportFeedMessages, replaceFeed, resetMailbox } from '../testing';
  * AccessToken) so the mailbox returns to a fully disconnected, clean-slate state — otherwise
  * disconnected Connection accounts accumulate in the Connect menu across reconnects.
  */
-export const ArchiveModule = ({ space }: ModuleProps) => {
+export const ArchiveModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <ArchiveModuleContainer space={space} />;
+};
+
+const ArchiveModuleContainer = ({ space }: { space: Space }) => {
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
   const feed = useResolveRef(mailbox?.feed);
   const [status, setStatus] = useState<{ action: string; count: number } | undefined>();

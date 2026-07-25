@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -17,7 +18,6 @@ import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/storybook-testing';
 import { mx } from '@dxos/ui-theme';
 
 type DatabaseView = 'graph' | 'object-tree' | 'cards';
@@ -28,7 +28,15 @@ const VIEW_OPTIONS: { value: DatabaseView; icon: string; label: string }[] = [
   { value: 'cards', icon: 'ph--squares-four--regular', label: 'Cards' },
 ];
 
-export const DatabaseModule = ({ space }: ModuleProps) => {
+export const DatabaseModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <DatabaseModuleContainer space={space} />;
+};
+
+const DatabaseModuleContainer = ({ space }: { space: Space }) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [view, setView] = useState<DatabaseView>('graph');
   const [open, setOpen] = useState(false);

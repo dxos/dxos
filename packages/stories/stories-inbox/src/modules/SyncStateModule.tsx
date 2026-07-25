@@ -4,16 +4,25 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type Database } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/storybook-testing';
 
 /**
  * Renders the space database's EDGE sync state (Automerge document counts and feed block backlogs)
  * as live JSON, driven by {@link Database.subscribeToSyncState}.
  */
-export const SyncStateModule = ({ space }: ModuleProps) => {
+export const SyncStateModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <SyncStateModuleContainer space={space} />;
+};
+
+const SyncStateModuleContainer = ({ space }: { space: Space }) => {
   const [syncState, setSyncState] = useState<Database.SyncState>();
 
   useEffect(() => {

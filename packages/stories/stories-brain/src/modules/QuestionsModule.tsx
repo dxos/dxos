@@ -7,13 +7,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type Question, QuestionStore } from '@dxos/pipeline-discord';
-import { type ModuleProps } from '@dxos/storybook-testing';
 
 import { QuestionsPanel } from '../components';
 import { CrawlerStores } from '../testing';
 
 /** LEFT (bottom): standing questions the crawl attempts as targets drain (from the crawler runtime). */
-export const QuestionsModule = (_: ModuleProps) => {
+export const QuestionsModule = () => {
   const crawler = useCapability(CrawlerStores);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [busy, setBusy] = useState(false);

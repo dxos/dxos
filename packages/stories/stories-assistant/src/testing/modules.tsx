@@ -3,7 +3,7 @@
 //
 
 import { Surface } from '@dxos/app-framework/ui';
-import { ExecutionGraphModule, InvocationsModule, LoggingModule, withModuleProps } from '@dxos/storybook-testing';
+import { ExecutionGraphModule, InvocationsModule, LoggingModule } from '@dxos/storybook-testing';
 
 import {
   ChatModule,
@@ -28,56 +28,56 @@ export const moduleSurfaces: Surface.Definition[] = [
   Surface.create({
     id: 'role.chat',
     filter: Surface.makeFilter(StoryRole.Chat),
-    component: withModuleProps(ChatModule),
+    component: ChatModule,
   }),
   Surface.create({
     id: 'role.context',
     filter: Surface.makeFilter(StoryRole.Context),
-    component: withModuleProps(ContextModule),
+    component: ContextModule,
   }),
   Surface.create({
     id: 'role.database',
     filter: Surface.makeFilter(StoryRole.Database),
-    component: withModuleProps(DatabaseModule),
+    component: DatabaseModule,
   }),
   Surface.create({
     id: 'role.executionGraph',
     filter: Surface.makeFilter(StoryRole.ExecutionGraph),
-    component: withModuleProps(ExecutionGraphModule),
+    component: ExecutionGraphModule,
   }),
   Surface.create({
     id: 'role.graph',
     filter: Surface.makeFilter(StoryRole.Graph),
-    component: withModuleProps(GraphModule),
+    component: GraphModule,
   }),
   Surface.create({
     id: 'role.invocations',
     filter: Surface.makeFilter(StoryRole.Invocations),
-    component: withModuleProps(InvocationsModule),
+    component: InvocationsModule,
   }),
   Surface.create({
     id: 'role.logging',
     filter: Surface.makeFilter(StoryRole.Logging),
-    component: withModuleProps(LoggingModule),
+    component: LoggingModule,
   }),
   Surface.create({
     id: 'role.researchInput',
     filter: Surface.makeFilter(StoryRole.ResearchInput),
-    component: withModuleProps(ResearchInputModule),
+    component: ResearchInputModule,
   }),
   Surface.create({
     id: 'role.researchOutput',
     filter: Surface.makeFilter(StoryRole.ResearchOutput),
-    component: withModuleProps(ResearchOutputModule),
+    component: ResearchOutputModule,
   }),
   Surface.create({
     id: 'role.routine',
     filter: Surface.makeFilter(StoryRole.Routine),
-    component: withModuleProps(RoutineModule),
+    component: RoutineModule,
   }),
   Surface.create({
     id: 'role.tasks',
     filter: Surface.makeFilter(StoryRole.Tasks),
-    component: withModuleProps(TasksModule),
+    component: TasksModule,
   }),
 ];

@@ -5,6 +5,7 @@
 import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useFlush } from '@dxos/plugin-assistant/hooks';
@@ -15,12 +16,19 @@ import { IconButton, Panel, Toolbar, composable, composableProps } from '@dxos/r
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/storybook-testing';
 import { mx } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing/schema';
 
-export const GraphModule = ({ space }: ModuleProps) => {
+export const GraphModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <GraphModuleContainer space={space} />;
+};
+
+const GraphModuleContainer = ({ space }: { space: Space }) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 

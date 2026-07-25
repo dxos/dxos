@@ -8,13 +8,14 @@ import React, { useCallback, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { useCapability } from '@dxos/app-framework/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { AgentRegistry, type ChannelInfo, Source } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
 import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
 import { FactPipeline } from '@dxos/pipeline-rdf';
 import { BrainCapabilities } from '@dxos/plugin-brain/types';
 import { discordSourceLayer } from '@dxos/plugin-discord';
-import { type ModuleProps } from '@dxos/storybook-testing';
+import { type Space } from '@dxos/react-client/echo';
 
 import { type CrawlAction, type CrawlOptions, CrawlPanel, initialOptions } from '../components';
 import { CrawlerStores } from '../testing';
@@ -24,7 +25,15 @@ import { useFactsStory } from './context';
  * LEFT (top): the crawl controls. Runs the Discord pipeline over the {@link CrawlerStores} runtime,
  * providing Brain's per-space `FactStore` so extracted facts land in the same store the viewer reads.
  */
-export const CrawlModule = ({ space }: ModuleProps) => {
+export const CrawlModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <CrawlModuleContainer space={space} />;
+};
+
+const CrawlModuleContainer = ({ space }: { space: Space }) => {
   const registry = useCapability(BrainCapabilities.FactStoreRegistry);
   const crawler = useCapability(CrawlerStores);
   const { setFacts, setSelected } = useFactsStory();
