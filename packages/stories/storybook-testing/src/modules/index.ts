@@ -4,6 +4,7 @@
 
 import { Role } from '@dxos/app-framework';
 
+export * from './ConfigModule';
 export * from './ExecutionGraphModule';
 export * from './InvocationsModule';
 export * from './LoggingModule';
@@ -14,6 +15,7 @@ export * from './LoggingModule';
  * them from a layout via the same token.
  */
 export const ModuleRole = {
+  Config: Role.make<Record<string, any>>('org.dxos.storybook.role.config'),
   ExecutionGraph: Role.make<Record<string, any>>('org.dxos.storybook.role.executionGraph'),
   Invocations: Role.make<Record<string, any>>('org.dxos.storybook.role.invocations'),
   Logging: Role.make<Record<string, any>>('org.dxos.storybook.role.logging'),

@@ -20666,6 +20666,9 @@ importers:
       '@dxos/react-ui-debug':
         specifier: workspace:*
         version: link:../../ui/react-ui-debug
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

@@ -3,7 +3,7 @@
 //
 
 import { Surface } from '@dxos/app-framework/ui';
-import { ExecutionGraphModule, InvocationsModule, LoggingModule } from '@dxos/storybook-testing/modules';
+import { ConfigModule, ExecutionGraphModule, InvocationsModule, LoggingModule } from '@dxos/storybook-testing/modules';
 
 import {
   ChatModule,
@@ -29,6 +29,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.chat',
     filter: Surface.makeFilter(StoryRole.Chat),
     component: ChatModule,
+  }),
+  Surface.create({
+    id: 'role.config',
+    filter: Surface.makeFilter(StoryRole.Config),
+    component: ConfigModule,
   }),
   Surface.create({
     id: 'role.context',

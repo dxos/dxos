@@ -48,6 +48,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-debug": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",

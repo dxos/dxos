@@ -32,7 +32,7 @@ export const Default: Story = {
     },
   }),
   args: {
-    layout: [[StoryRole.Chat], [StoryRole.Logging]],
+    layout: [[StoryRole.Chat], [StoryRole.Logging, StoryRole.Config]],
   },
 };
 

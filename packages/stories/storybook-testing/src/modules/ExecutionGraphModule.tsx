@@ -16,6 +16,7 @@ export const ExecutionGraphModule = () => {
   if (!space) {
     return null;
   }
+
   return <ExecutionGraphContainer space={space} />;
 };
 
