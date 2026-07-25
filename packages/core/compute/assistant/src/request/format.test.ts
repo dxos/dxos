@@ -55,8 +55,8 @@ describe('formatSystemPrompt', () => {
         }),
       );
       yield* Database.flush();
-      Obj.update(instructions, (current) => {
-        current.text = Ref.fromURI(URI.make('dxn:echo:@:missing-text'));
+      Obj.update(instructions, (instructions) => {
+        instructions.text = Ref.fromURI(URI.make('dxn:echo:@:missing-text'));
       });
 
       const prompt = yield* formatSystemPrompt({ objects: [instructions] });
