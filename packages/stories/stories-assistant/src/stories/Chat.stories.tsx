@@ -5,16 +5,16 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { userEvent, within } from 'storybook/test';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DelegationSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 
-import { Module, ModuleContainer, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
+import { StoryRole } from '../modules';
+import { ModuleContainer, config, createDecorators, storyParameters } from '../testing';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Chat',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -32,7 +32,7 @@ export const Default: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat]],
+    layout: [[StoryRole.Chat], [StoryRole.Logging, StoryRole.Config]],
   },
 };
 
@@ -44,10 +44,10 @@ export const WithPlanning: Story = {
         plugins: [MarkdownPlugin()],
       };
     },
+    skills: [MarkdownSkill.key, PlanningSkill.key],
   }),
   args: {
-    layout: [[Module.Chat], [Module.Trace, Module.Context]],
-    skills: [MarkdownSkill.key, PlanningSkill.key],
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
   },
 };
 
@@ -69,10 +69,46 @@ export const WithSubAgents: Story = {
         plugins: [MarkdownPlugin()],
       };
     },
+    skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
   }),
   args: {
-    layout: [[Module.Chat], [Module.Trace, Module.Context]],
-    skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
+  },
+};
+
+/**
+ * Two surfaces over a shared space: ChatModule (left) and TracePanel (right).
+ * Agent tool invocations populate the execution-graph timeline in the companion panel.
+ */
+export const WithExecutionGraph: Story = {
+  decorators: createDecorators({
+    config: config.remote,
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+    skills: [MarkdownSkill.key],
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
+  },
+};
+
+export const WithWebSearch: Story = {
+  decorators: createDecorators({
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+    config: config.remote,
+    skills: [WebSearchSkill.key],
+  }),
+  args: {
+    layout: [[StoryRole.Chat]],
   },
 };
 
@@ -103,39 +139,5 @@ export const WithSubAgentsTest: Story = {
 
     // The supervisor runs the sub-agent in the background and posts the result back to the chat.
     await canvas.findByText(/sub-agent completed/i, {}, { timeout: 180_000 });
-  },
-};
-
-/**
- * Two surfaces over a shared space: ChatModule (left) and TracePanel (right).
- * Agent tool invocations populate the execution-graph timeline in the companion panel.
- */
-export const WithExecutionGraph: Story = {
-  decorators: createDecorators({
-    lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
-      return {
-        plugins: [MarkdownPlugin()],
-      };
-    },
-  }),
-  args: {
-    layout: [[Module.Chat], [Module.Trace]],
-    skills: [MarkdownSkill.key],
-  },
-};
-
-export const WithWebSearch: Story = {
-  decorators: createDecorators({
-    lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
-      return {
-        plugins: [MarkdownPlugin()],
-      };
-    },
-  }),
-  args: {
-    layout: [[Module.Chat]],
-    skills: [WebSearchSkill.key],
   },
 };

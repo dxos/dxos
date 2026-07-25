@@ -5,11 +5,10 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { useQuery } from '@dxos/react-client/echo';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 
 /**
  * Renders the mailbox's topic-suggestions surface (the `/topics` node). Constructs the same surface
@@ -17,7 +16,15 @@ import { type ModuleProps } from '@dxos/story-modules';
  * module renders `TopicSuggestionsArticle` exactly as clicking the nav node would. Accepted topics live
  * in the space-level Topics section (`@dxos/plugin-brain`).
  */
-export const TopicsModule = ({ space, attendableId }: ModuleProps) => {
+export const TopicsModule = ({ data }: { data?: { attendableId?: string } }) => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <TopicsModuleContainer space={space} attendableId={data?.attendableId} />;
+};
+
+const TopicsModuleContainer = ({ space, attendableId }: { space: Space; attendableId?: string }) => {
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
   if (!mailbox) {
     return null;
