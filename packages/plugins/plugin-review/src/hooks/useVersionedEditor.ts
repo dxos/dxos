@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useOptionalCapabilities } from '@dxos/app-framework/ui';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import { type Markdown } from '@dxos/plugin-markdown/types';
@@ -102,7 +102,9 @@ export const useVersionedEditor = ({
   // selection (branch/checkpoint/fork) keeps the advanced behaviour untouched — the policy is
   // consulted only on the ambient path. The policy capability is contributed by plugin-space (A2);
   // absent (e.g. a bare story host) ⇒ the GDocs-parity default.
-  const [reviewRenderPolicy] = useCapabilities(ReviewCapabilities.ReviewRenderPolicy);
+  // Optional lookup: the absent-policy fallback below already covers hosts without a plugin
+  // manager (bare stories, headless hook tests), so the manager itself must not be required.
+  const [reviewRenderPolicy] = useOptionalCapabilities(ReviewCapabilities.ReviewRenderPolicy);
   const renderPolicy = reviewRenderPolicy ?? ReviewCapabilities.defaultReviewRenderPolicy;
   const ambient = selection.kind === 'current';
   const policy = renderPolicy(mode);

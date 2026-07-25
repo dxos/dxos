@@ -158,6 +158,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/platform": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
