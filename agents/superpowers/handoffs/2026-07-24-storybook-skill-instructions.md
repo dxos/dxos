@@ -58,9 +58,10 @@ localised the defect.
 
 - Two tables: **automated** (play-asserted, runs in `moon run <pkg>:test-storybook` + CI) and **manual**
   (judgment). Each row: story, what it asserts / what to verify.
-- **Assert the mutation, not the dispatch.** Our `A3` asserted that Accept/Reject "route to ops" and was
-  green while the buttons did nothing — the op fired and no document change followed. A test that stops
-  at the seam it owns will pass through a broken feature.
+- **Describe the outcome, not the dispatch — and cover it.** Our plan's manual row for Accept/Reject
+  read "route to ops", and that was literally true while the buttons did nothing: the op fired, the
+  document never changed. No automated test covered the path at all. Word each row as the user-visible
+  outcome, and be honest in the plan about which rows have no automated backing.
 - Stories tagged `['!test']` never run in CI; say so in the plan and state _why_ per story, or the plan
   overstates its coverage.
 - Record results in the plan with dates, and keep issue ids (`S1.3`) stable once reported.
