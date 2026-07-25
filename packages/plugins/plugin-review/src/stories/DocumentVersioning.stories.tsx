@@ -916,10 +916,10 @@ export const ReviewChromeTest: Story = {
 
     // The trailing suggestion never occupies the last line.
     await waitFor(
-      () => {
+      async () => {
         const last = lines().at(-1);
         invariant(last, 'no editor lines');
-        expect(last.querySelector('.cm-suggest-insert')).toBeNull();
+        await expect(last.querySelector('.cm-suggest-insert')).toBeNull();
       },
       { timeout: 15_000 },
     );
