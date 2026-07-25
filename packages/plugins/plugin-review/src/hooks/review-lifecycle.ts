@@ -114,3 +114,31 @@ export const deriveBinding = (inputs: LifecycleInputs): BindingDescriptor => {
     ambientSuggesting,
   };
 };
+
+/** A view-mode dropdown selection: a built-in editor mode, or a contributed entry carrying its review mode. */
+export type ViewModeSelection =
+  | { kind: 'builtin'; viewMode: EditorViewMode }
+  | { kind: 'contributed'; reviewMode: ReviewCapabilities.ReviewMode };
+
+/**
+ * The single owner of what a dropdown selection means: both halves of the (review mode, view mode)
+ * pair are written by this one function, so a contradictory pair — the F1.7 class of bug, where a
+ * stale readonly view mode survived into Suggesting — cannot be stored at all. Built-ins imply the
+ * review posture (readonly ⇒ viewing, else editing); a contributed mode keeps the editor on an
+ * editable view mode, stepping off readonly if that is where the user came from.
+ */
+export const applyViewModeSelection = (
+  prev: { mode: ReviewCapabilities.ReviewMode; viewMode: EditorViewMode | undefined },
+  selection: ViewModeSelection,
+): { mode: ReviewCapabilities.ReviewMode; viewMode: EditorViewMode | undefined } => {
+  if (selection.kind === 'builtin') {
+    return {
+      mode: selection.viewMode === 'readonly' ? 'viewing' : 'editing',
+      viewMode: selection.viewMode,
+    };
+  }
+  return {
+    mode: selection.reviewMode,
+    viewMode: prev.viewMode === 'readonly' ? 'source' : prev.viewMode,
+  };
+};

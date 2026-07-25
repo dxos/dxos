@@ -3,17 +3,18 @@
 //
 
 import { Compartment, type Extension } from '@codemirror/state';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { Markdown, type UseEditorBinding } from '@dxos/plugin-markdown/types';
+import { Markdown, type UseEditorBinding, type ViewModeSelection } from '@dxos/plugin-markdown/types';
 import { useEditorContext } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { type SuggestionSource, changeBarGutter, type suggestionsOverlay } from '@dxos/ui-editor';
 
 import { SuggestionSourcesProvider, VersionToolbar } from '../components';
+import { applyViewModeSelection } from './review-lifecycle';
 import { useReviewExtensions } from './useReviewExtensions';
 import { useVersionedEditor } from './useVersionedEditor';
 import { useVersioning } from './useVersioning';
@@ -29,7 +30,7 @@ const compareCompartment = new Compartment();
  * the review affordances (suggest overlay, tracked changes, multi-author ambient overlay, compare
  * overlay, version banner) ride along. Contributed via `MarkdownCapabilities.EditorBindingHook`.
  */
-export const useMarkdownEditorBinding: UseEditorBinding = ({ object, id, viewMode, diffView }) => {
+export const useMarkdownEditorBinding: UseEditorBinding = ({ object, id, viewMode, onViewModeChange, diffView }) => {
   const identity = useIdentity();
   const versioning = useVersioning(object);
   // The accepted base (`main`) the review overlays diff against; subscribed so it tracks keystrokes.
@@ -94,6 +95,20 @@ export const useMarkdownEditorBinding: UseEditorBinding = ({ object, id, viewMod
     </>
   );
 
+  // One dropdown gesture writes BOTH halves of the (review mode, view mode) pair through the pure
+  // event function, so a contradictory pair — a stale readonly view mode surviving into Suggesting —
+  // cannot be stored (see review-lifecycle.ts).
+  const selectViewMode = useCallback(
+    (selection: ViewModeSelection) => {
+      const next = applyViewModeSelection({ mode: versioning.mode, viewMode }, selection);
+      versioning.setMode(next.mode);
+      if (next.viewMode !== undefined && next.viewMode !== viewMode) {
+        onViewModeChange?.(next.viewMode);
+      }
+    },
+    [versioning.mode, versioning.setMode, viewMode, onViewModeChange],
+  );
+
   return {
     subject: editor.editorObject,
     initialValue: editor.initialValue,
@@ -101,8 +116,9 @@ export const useMarkdownEditorBinding: UseEditorBinding = ({ object, id, viewMod
     viewMode: editor.effectiveViewMode,
     loading: editor.branchLoading,
     ambient,
-    reviewMode: versioning.mode,
-    setReviewMode: versioning.setMode,
+    selectViewMode,
+    activeReviewMode:
+      ambient && versioning.mode !== 'editing' && versioning.mode !== 'viewing' ? versioning.mode : undefined,
     extensionProps,
     extensions,
     overlays,

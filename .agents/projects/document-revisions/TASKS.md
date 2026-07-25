@@ -670,3 +670,14 @@ S2, S3 and S6 run headlessly by the agent after the main-merge:
 
 **Assessment:** the mode-switch/bind lifecycle (F1.2, F1.7, F1.1) is one state machine failing in
 different ways — needs a designed model + headless unit tests, not more per-symptom patches.
+
+### Lifecycle design executed (2026-07-25)
+
+All four steps of `agents/superpowers/specs/2026-07-25-review-mode-lifecycle-design.md` landed:
+fast-forward (F1.2), pure `deriveBinding` + transition table, permanent change-bar gutter (F1.1),
+stale-readonly resolution (F1.7), and the MarkdownArticle event collapse — the dropdown now forwards
+one `ViewModeSelection` to the binding, and `applyViewModeSelection` writes both halves of the
+(review mode, view mode) pair atomically, so the F1.7 class of contradiction cannot be stored.
+Verified live: Suggesting → Read only → Suggesting through the real dropdown ends editable with
+overlays restored. Remaining: F1.5 (bullet-deletion grouping), F1.6 (rebind flicker), S1.8 (timeline
+colours), walkthrough re-run.

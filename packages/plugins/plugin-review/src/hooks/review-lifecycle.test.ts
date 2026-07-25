@@ -5,7 +5,12 @@
 import { describe, test } from 'vitest';
 
 import { ReviewCapabilities } from '../types';
-import { type BindingDescriptor, type LifecycleInputs, deriveBinding } from './review-lifecycle';
+import {
+  type BindingDescriptor,
+  type LifecycleInputs,
+  applyViewModeSelection,
+  deriveBinding,
+} from './review-lifecycle';
 
 const EDITING = ReviewCapabilities.defaultReviewRenderPolicy('editing');
 const SUGGESTING = ReviewCapabilities.defaultReviewRenderPolicy('suggesting');
@@ -116,4 +121,53 @@ describe('deriveBinding', () => {
     expect(last?.subject).toBe('own-branch');
     expect(last?.loading).toBe(false);
   });
+});
+
+describe('applyViewModeSelection', () => {
+  // One dropdown gesture writes BOTH halves of the pair — the table is the contract.
+  const rows: Array<
+    [
+      string,
+      Parameters<typeof applyViewModeSelection>[0],
+      Parameters<typeof applyViewModeSelection>[1],
+      ReturnType<typeof applyViewModeSelection>,
+    ]
+  > = [
+    [
+      'Markdown (preview) is an editing posture',
+      { mode: 'suggesting', viewMode: 'source' },
+      { kind: 'builtin', viewMode: 'preview' },
+      { mode: 'editing', viewMode: 'preview' },
+    ],
+    [
+      'Plain text (source) is an editing posture',
+      { mode: 'viewing', viewMode: 'readonly' },
+      { kind: 'builtin', viewMode: 'source' },
+      { mode: 'editing', viewMode: 'source' },
+    ],
+    [
+      'Read only is the viewing posture',
+      { mode: 'editing', viewMode: 'preview' },
+      { kind: 'builtin', viewMode: 'readonly' },
+      { mode: 'viewing', viewMode: 'readonly' },
+    ],
+    [
+      'Suggesting keeps the current editable view mode',
+      { mode: 'editing', viewMode: 'preview' },
+      { kind: 'contributed', reviewMode: 'suggesting' },
+      { mode: 'suggesting', viewMode: 'preview' },
+    ],
+    [
+      'Suggesting from Read only steps the editor off readonly (F1.7)',
+      { mode: 'viewing', viewMode: 'readonly' },
+      { kind: 'contributed', reviewMode: 'suggesting' },
+      { mode: 'suggesting', viewMode: 'source' },
+    ],
+  ];
+
+  for (const [label, prev, selection, expected] of rows) {
+    test(label, ({ expect }) => {
+      expect(applyViewModeSelection(prev, selection)).toEqual(expected);
+    });
+  }
 });
