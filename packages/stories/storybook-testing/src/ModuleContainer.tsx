@@ -66,16 +66,23 @@ export type ModuleContainerProps = {
   compact?: boolean;
 };
 
-type NormalizedSurfaceCell = { kind: 'surface'; type: Role.Role<any>; data?: Record<string, any>; id: string };
+type NormalizedSurfaceCell = {
+  kind: 'surface';
+  type: Role.Role<any>;
+  id: string;
+  data?: Record<string, any>;
+};
+
 type NormalizedObjectCell = {
   kind: 'object';
   object: Obj.Unknown;
   type: Role.Role<any>;
+  id: string;
   data: Record<string, any>;
   component?: FC<ResolvedCellProps>;
   attendableId: string;
-  id: string;
 };
+
 type NormalizedCell = NormalizedSurfaceCell | NormalizedObjectCell;
 
 // Structural discriminant: an object cell is the only `ModuleSpec` form carrying an `object` key
@@ -95,16 +102,25 @@ export const normalizeCell = (spec: ModuleSpec, spaceId: string, position = ''):
       kind: 'object',
       object: spec.object,
       type: spec.token ?? AppSurface.Article,
+      id: attendableId,
       data: spec.data ?? {},
       component: spec.component,
       attendableId,
-      id: attendableId,
     };
   }
   if (typeof spec === 'object' && 'type' in spec) {
-    return { kind: 'surface', type: spec.type, data: spec.data, id: spec.id ?? `${spec.type.role}:${position}` };
+    return {
+      kind: 'surface',
+      type: spec.type,
+      id: spec.id ?? `${spec.type.role}:${position}`,
+      data: spec.data,
+    };
   }
-  return { kind: 'surface', type: spec, id: `${spec.role}:${position}` };
+  return {
+    kind: 'surface',
+    type: spec,
+    id: `${spec.role}:${position}`,
+  };
 };
 
 /** Grace period before a still-unmatched binding is reported as a mistake, so surfaces registered
@@ -159,6 +175,7 @@ const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string
   if (settled && !isAvailable({ type, data })) {
     return <BindingDebug role={type.role} data={data} />;
   }
+
   return <Surface.Surface type={type} data={data} limit={1} />;
 };
 
