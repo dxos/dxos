@@ -18,7 +18,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { AiService, Provider } from '@dxos/ai';
 import { OllamaAiServiceLayer } from '@dxos/ai/testing';
-import { Topic } from '@dxos/compute';
+import { Project } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -251,7 +251,9 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person, Thread, Topic.Topic] }));
+    ({ db } = await builder.createDatabase({
+      types: [Organization.Organization, Person.Person, Thread, Project.Project],
+    }));
     // Seed a known Organization so domain-matching can link a sender's Person to it.
     for (const org of TEST_ORGS) {
       db.add(Obj.make(Organization.Organization, org));
@@ -419,7 +421,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         db.add(topic);
       }
       await db.flush({ indexes: true });
-      const storedTopics = await db.query(Filter.type(Topic.Topic)).run();
+      const storedTopics = await db.query(Filter.type(Project.Project)).run();
       expect(storedTopics.length).toBe(topics.length);
 
       // Commitment ledger over the advisory fact store: rows (if any) must be grounded in a fact.

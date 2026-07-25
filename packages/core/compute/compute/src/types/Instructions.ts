@@ -11,6 +11,14 @@ import { Text } from '@dxos/schema';
 
 import * as Skill from './Skill';
 
+/** A sentinel command the model recognizes in chat (e.g. `$track <text>`). */
+export const Command = Schema.Struct({
+  sentinel: Schema.String.annotations({ description: 'Token that invokes the command (e.g. "$track").' }),
+  description: Schema.optional(Schema.String),
+  prompt: Schema.String.annotations({ description: 'What the model should do when the sentinel appears.' }),
+});
+export type Command = Schema.Schema.Type<typeof Command>;
+
 /**
  * Prompt-based operation.
  * May reference skills and additional context.
@@ -37,6 +45,8 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
      * executes a routine through the agent prompt, not only triggered automations.
      */
     objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Schema.annotations({ title: 'Objects' }), Schema.optional),
+    /** Sentinel commands available to chat sessions running with these instructions. */
+    commands: Schema.Array(Command).pipe(Schema.annotations({ title: 'Commands' }), Schema.optional),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--scroll--regular', hue: 'sky' }),
@@ -52,10 +62,20 @@ export type MakeProps = {
   text?: string;
   skills?: Ref.Ref<Skill.Skill>[];
   objects?: Ref.Ref<Obj.Unknown>[];
+  commands?: Command[];
 };
 
 /** Creates an Instructions object with an owned Markdown `text` body (parented so it cascades and deep-clones). */
-export const make = ({ name, description, input, output, text, skills = [], objects }: MakeProps): Instructions => {
+export const make = ({
+  name,
+  description,
+  input,
+  output,
+  text,
+  skills = [],
+  objects,
+  commands,
+}: MakeProps): Instructions => {
   const body = Text.make({ content: text ?? '' });
   const instructions = Obj.make(Instructions, {
     name,
@@ -65,6 +85,7 @@ export const make = ({ name, description, input, output, text, skills = [], obje
     text: Ref.make(body),
     skills,
     objects,
+    commands,
   });
   // The body is owned by the instructions: it cascade-deletes with it and is cloned alongside it under
   // `Obj.clone(..., { deep: 'parent' })`.

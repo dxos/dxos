@@ -505,6 +505,9 @@
       "path": "packages/plugins/plugin-progress/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-projects/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {

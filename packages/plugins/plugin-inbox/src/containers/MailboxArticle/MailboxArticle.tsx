@@ -280,14 +280,18 @@ export const MailboxArticle = ({
           const message = messages.find((message) => message.id === action.messageId);
           if (message && db) {
             void invokePromise(
-              InboxOperation.CreateTopicFromMessage,
+              InboxOperation.CreateProjectFromMessage,
               { mailbox: EchoRef.make(mailbox), message },
               { spaceId: db.spaceId },
             )
               .then((result) => {
-                const topicId = result?.data?.topicId;
-                if (topicId) {
-                  void showItem({ contextId: id, selectionId: topicId, companion: Attention.linkedSegment('topic') });
+                const projectId = result?.data?.projectId;
+                if (projectId) {
+                  void showItem({
+                    contextId: id,
+                    selectionId: projectId,
+                    companion: Attention.linkedSegment('topic'),
+                  });
                 }
               })
               // Surface the failure instead of silently swallowing it (AI timeout / DB error).

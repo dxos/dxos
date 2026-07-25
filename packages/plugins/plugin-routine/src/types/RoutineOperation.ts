@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Instructions, Operation } from '@dxos/compute';
+import { Instructions, Operation, Routine } from '@dxos/compute';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 // Value-side `EID` import keeps TS declaration emit portable — `TriggerTemplate`
 // references `EID.Schema` and the inferred `CreateTriggerFromTemplate` type
@@ -17,7 +17,6 @@ import { EID as _EchoURIReference } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-import * as Routine from './Routine';
 import { TriggerTemplate } from './schema';
 export { _EchoURIReference };
 

@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Routine } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 export const translations: Resource[] = [
   ...componentsTranslations,

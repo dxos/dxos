@@ -4,13 +4,13 @@
 
 import React from 'react';
 
+import { Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Accordion, Empty, Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 import { type RoutineRun, type RunStatus } from './runs';
 import { useRoutineRuns } from './useRoutineRuns';

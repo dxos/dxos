@@ -11,8 +11,8 @@ import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
+import * as ExternalProject from './ExternalProject';
 import * as Person from './Person';
-import * as Project from './Project';
 
 export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.1.0'))(
   Schema.Struct({
@@ -75,7 +75,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         }),
       ),
     ),
-    project: Schema.optional(Ref.Ref(Project.Project).annotations({ title: 'Project' })),
+    project: Schema.optional(Ref.Ref(ExternalProject.ExternalProject).annotations({ title: 'Project' })),
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),

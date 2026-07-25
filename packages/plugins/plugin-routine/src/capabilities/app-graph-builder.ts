@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import { Operation, Routine } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
@@ -14,7 +14,6 @@ import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 import { getRoutinesPath } from '../paths';
 

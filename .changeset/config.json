@@ -274,6 +274,7 @@
       "@dxos/plugin-presenter",
       "@dxos/plugin-preview",
       "@dxos/plugin-progress",
+      "@dxos/plugin-projects",
       "@dxos/plugin-pwa",
       "@dxos/plugin-registry",
       "@dxos/plugin-review",
