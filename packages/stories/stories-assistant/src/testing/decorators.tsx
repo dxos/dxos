@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
@@ -50,7 +51,9 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
+import { type ModuleLayout } from '@dxos/story-modules';
 
+import { StoryLayout } from './layout';
 import { moduleSurfaces } from './modules';
 import { initClientFromSpaceSnapshot } from './snapshot';
 
@@ -89,7 +92,7 @@ type DecoratorsProps = {
   accessTokens?: AccessToken.AccessToken[];
   /** Import a `.dx.json` space archive instead of creating an empty space. */
   importSnapshot?: () => Promise<unknown>;
-  onInit?: (props: { client: Client; space: Space }) => Promise<void>;
+  onInit?: (props: { client: Client; space: Space }) => Promise<ModuleLayout | void>;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent'>);
 
@@ -113,6 +116,11 @@ const buildPluginManagerOptions = ({
   const clientServices = config?.values.runtime?.client?.storage?.persistent
     ? persistentClientServices(config)
     : { config };
+
+  // Shared per-story: `onInit` fills the holder during client-init; the setup module (which holds
+  // the AtomRegistry) copies it into `layoutAtom`, which the wrapper container reads.
+  const layoutHolder: { current?: ModuleLayout } = {};
+  const layoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
 
   return {
     // SetupSchema registers ECHO schemas so plugin-scoped types are available in stories.
@@ -152,7 +160,7 @@ const buildPluginManagerOptions = ({
               }
 
               if (onInit) {
-                yield* Effect.promise(() => onInit({ client, space }));
+                layoutHolder.current = (yield* Effect.promise(() => onInit({ client, space }))) || undefined;
               }
 
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
@@ -177,7 +185,7 @@ const buildPluginManagerOptions = ({
 
             yield* Effect.promise(() => space.db.flush({ indexes: true }));
             if (onInit) {
-              yield* Effect.promise(() => onInit({ client, space }));
+              layoutHolder.current = (yield* Effect.promise(() => onInit({ client, space }))) || undefined;
             }
             yield* Effect.promise(() => space.db.flush({ indexes: true }));
           }),
@@ -193,7 +201,7 @@ const buildPluginManagerOptions = ({
 
       // Test-specific.
       StorybookPlugin({}),
-      StoryPlugin({ onChatCreated, createAgent }),
+      StoryPlugin({ onChatCreated, createAgent, layoutAtom, layoutHolder }),
       ...plugins,
     ],
   };
@@ -319,6 +327,10 @@ type StoryPluginOptions = {
    * Accepts `true` for defaults, or an options object for name/instructions.
    */
   createAgent?: boolean | CreateAgentOptions;
+
+  /** Shared with `buildPluginManagerOptions` — see the comment where it is created. */
+  layoutAtom?: Atom.Writable<ModuleLayout | undefined>;
+  layoutHolder?: { current?: ModuleLayout };
 };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>(
@@ -332,6 +344,11 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activatesOn: ActivationEvents.SetupReactSurface,
     activate: () => Effect.succeed(Capability.contributes(Capabilities.ReactSurface, moduleSurfaces)),
   }),
+  Plugin.addModule(({ layoutAtom }) => ({
+    id: 'com.example.plugin.testing.module.layout',
+    activatesOn: ActivationEvents.SetupReactSurface,
+    activate: () => Effect.succeed(layoutAtom ? [Capability.contributes(StoryLayout.Atom, layoutAtom)] : []),
+  })),
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.testing',
     activatesOn: AppActivationEvents.SetupArtifactDefinition,
@@ -348,7 +365,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         Capability.contributes(Capabilities.OperationHandler, ExampleHandlers),
       ]),
   }),
-  Plugin.addModule(({ createAgent, onChatCreated }) => ({
+  Plugin.addModule(({ createAgent, onChatCreated, layoutAtom, layoutHolder }) => ({
     id: 'com.example.plugin.testing.module.setup',
     activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),
     activate: Effect.fnUntraced(function* () {
@@ -411,6 +428,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
             Effect.ensuring(Effect.promise(() => binder.close())),
           );
         }
+      }
+
+      // Publish the story layout (built by `onInit`) now that the space + objects exist.
+      if (layoutAtom && layoutHolder?.current) {
+        const registry = yield* Capability.get(Capabilities.AtomRegistry);
+        registry.set(layoutAtom, layoutHolder.current);
       }
     }),
   })),

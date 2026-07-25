@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
@@ -22,7 +23,9 @@ import {
 } from '@dxos/story-modules';
 import { isNonNullable } from '@dxos/util';
 
-export type ModuleContainerProps = Pick<StoryModuleContainerProps, 'layout'> & {
+import { StoryLayout } from './layout';
+
+export type ModuleContainerProps = Partial<Pick<StoryModuleContainerProps, 'layout'>> & {
   skills?: string[];
 };
 
@@ -34,6 +37,8 @@ export type ModuleContainerProps = Pick<StoryModuleContainerProps, 'layout'> & {
 export const ModuleContainer = ({ layout, skills = [] }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const skillsDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
+  const layoutAtom = useCapability(StoryLayout.Atom);
+  const resolvedLayout = useAtomValue(layoutAtom) ?? layout ?? [];
   const [space] = useSpaces();
 
   useAsyncEffect(async () => {
@@ -69,5 +74,5 @@ export const ModuleContainer = ({ layout, skills = [] }: ModuleContainerProps) =
     await binder.use((binder) => binder.bind({ skills: skillObjects.map((skill) => Ref.make(skill)) }));
   }, [space, skills, skillsDefinitions]);
 
-  return <StoryModuleContainer layout={layout} />;
+  return <StoryModuleContainer layout={resolvedLayout} />;
 };
