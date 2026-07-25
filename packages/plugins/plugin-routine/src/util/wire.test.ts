@@ -8,7 +8,7 @@ import { Instructions, Operation, Routine, Runnable, Trigger } from '@dxos/compu
 import { Obj, Ref } from '@dxos/echo';
 
 import { blank } from '../templates';
-import { isRunInstructions } from './run-instructions';
+import { isRunInstructions, runInstructionsRef } from './run-instructions';
 import { makeRoutine } from './wire';
 
 describe('wire', () => {
@@ -59,7 +59,7 @@ describe('wire', () => {
 
   test('makeRoutine leaves pre-set trigger bindings alone when there is no action', ({ expect }) => {
     const trigger = Trigger.make({});
-    const preset = Ref.fromURI('dxn:echo:@:preset-runnable');
+    const preset = runInstructionsRef();
     Obj.update(trigger, (trigger) => {
       trigger.runnable = preset;
     });
