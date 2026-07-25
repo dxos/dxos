@@ -612,7 +612,7 @@ Driven through the storybook DOM (synthetic pointer/keyboard + decoration counts
       looped in the headless suite and was reverted). Needs a non-mutating mechanism that still leaves a
       landing spot. ALSO: the gutter change-bar spans the untouched paragraph sitting BETWEEN the two
       suggestions, so the bar range is computed too wide.
-- [ ] **S4.4 NEW — the reader's own typing appears as a suggestion card in the companion.** The inline
+- [x] **S4.4 FIXED — the reader's own typing appeared as a suggestion card in the companion.** The inline
       overlay no longer strikes it (fixed via per-source fork anchors) but the companion still builds its
       groups against the live document, so the same text surfaces as somebody's suggestion. The companion
       needs the same per-source base the overlay now uses.
@@ -622,4 +622,11 @@ Driven through the storybook DOM (synthetic pointer/keyboard + decoration counts
       is aligning across unchanged text. Grouping/granularity in `diffHunks`/`groupHunks`.
 - [ ] **S4.1 CONFIRMED — no selection indication.** Clicking a suggestion card highlights nothing in the
       card or the document, so there is no way to see which change a card refers to.
-- [ ] **S1.8 NEW — timeline lanes are not in the author's colour.**
+- [ ] **S1.8 — timeline lanes are not in the author's colour: NOT A REGRESSION, never implemented.**
+      `Timeline` (`@dxos/react-ui-components`) colours lanes from a fixed palette indexed by lane and has
+      no author input; `ObjectHistory`/`timeline.ts` never reference a hue. The walkthrough step asserting
+      author colours described behaviour that does not exist (my error, inherited from the test plan).
+      Doing it needs a per-branch colour prop on `Timeline` — a design change, not a fix.
+- [ ] **Corruption repaired (agent error).** A bad scripted edit replaced the separator spaces in
+      `suggestionKey` with NUL bytes, which made grep treat `suggest.ts` as binary; keys stayed unique so
+      every test still passed. Repaired, and the other touched packages were swept clean.
