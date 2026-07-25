@@ -31,7 +31,9 @@ import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { Module, StoryAiPlugin, StoryModulesPlugin, StorySyncPlugin, seedDemoMessages } from '../testing';
+import { StoryRole } from '../modules';
+import { StoryAiPlugin, StorySyncPlugin, seedDemoMessages } from '../testing';
+import { StoryModulesPlugin } from '../testing/modules';
 
 /**
  * Schema for every object the connect+sync flow reads or writes: the mailbox + feed, the
@@ -79,7 +81,7 @@ type StoryArgs = {
 const DefaultStory = ({ seed = false }: StoryArgs) => (
   <>
     {seed && <SeedRunner />}
-    <ModuleContainer layout={[[Module.Mailbox], [Module.Message], [Module.Controls, Module.Facts]]} />
+    <ModuleContainer layout={[[StoryRole.Mailbox], [StoryRole.Message], [StoryRole.Controls, StoryRole.Facts]]} />
   </>
 );
 

@@ -21,8 +21,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
 
 import { FactsStoryContext } from '../modules';
+import { StoryRole } from '../modules';
 import { CrawlerStoresPlugin } from '../testing';
-import { Module, StoryModulesPlugin } from '../testing/modules';
+import { StoryModulesPlugin } from '../testing/modules';
 
 /**
  * The columns of the Facts story, driven through `ModuleContainer`. The crawl/query/questions modules
@@ -30,10 +31,14 @@ import { Module, StoryModulesPlugin } from '../testing/modules';
  * consume the shared display state. Facts live in the `FactStoreRegistry`; crawler-only stores come
  * from the story-local {@link CrawlerStoresPlugin}.
  */
-const CRAWL_LAYOUT: ModuleLayout = [[Module.Crawl, Module.Query, Module.Questions], [Module.Facts], [Module.Entities]];
+const CRAWL_LAYOUT: ModuleLayout = [
+  [StoryRole.Crawl, StoryRole.Query, StoryRole.Questions],
+  [StoryRole.Facts],
+  [StoryRole.Entities],
+];
 
 /** In-memory variant: just the viewer + entity nav over a seeded store. */
-const VIEWER_LAYOUT: ModuleLayout = [[Module.Facts], [Module.Entities]];
+const VIEWER_LAYOUT: ModuleLayout = [[StoryRole.Facts], [StoryRole.Entities]];
 
 /**
  * Owns the cross-module display state (current facts view + selected entity) and drives the layout.
