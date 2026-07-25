@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DiffHunk, type GroupPolicy, type SuggestionSource, diffHunks, groupHunks } from '@dxos/ui-editor';
+import {
+  type DiffHunk,
+  type GroupPolicy,
+  type SuggestionSource,
+  computeCharHunks,
+  diffHunks,
+  groupHunks,
+  rebaseHunksWith,
+} from '@dxos/ui-editor';
 import { idHue, stringToHue } from '@dxos/util';
 
 /**
@@ -65,9 +73,14 @@ export const suggestionGroupKey = (group: SuggestionGroup): string =>
 export const suggestionGroups = (base: string, sources: SuggestionSource[], policy?: GroupPolicy): SuggestionGroup[] =>
   sources
     .flatMap((source) => {
-      const hunks = policy
-        ? groupHunks(diffHunks(base, source.content), base, policy)
-        : diffHunks(base, source.content);
+      // Diff against the revision this author wrote on (their branch's fork anchor) and rebase into
+      // `base` coordinates — the same treatment the editor overlay gives, so the reader's own edits
+      // never surface as somebody else's proposed change.
+      const anchor = source.base ?? base;
+      const raw = policy
+        ? groupHunks(diffHunks(anchor, source.content), anchor, policy)
+        : diffHunks(anchor, source.content);
+      const hunks = source.base === undefined ? raw : rebaseHunksWith(computeCharHunks(source.base, base), raw);
       return hunks.map((hunk) => ({ ...hunk, author: source.author, colour: source.colour }));
     })
     .sort((a, b) => a.from - b.from || a.to - b.to || (a.author < b.author ? -1 : a.author > b.author ? 1 : 0));
