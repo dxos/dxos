@@ -14,8 +14,8 @@ projects:
     summary: New core plugin for interactive long-running processes (Routines, Agents, artifacts); Project type succeeds Topic; obviates plugin-sidekick.
     tasks: .agents/projects/plugin-projects/TASKS.md
     design: agents/superpowers/specs/2026-07-24-plugin-projects-design.md
-    prs: []
-    resume: 'Milestone 1 COMPLETE on branch (19 commits; final review passed; verification green). Next: open PR (submit-pr) on user go; then PLUGIN.mdl + milestone 2 (commands UI, in-article routine creation, templates).'
+    prs: [12335]
+    resume: 'PR #12335 opened (milestone 1). Next: watch Check to green + address review comments; then PLUGIN.mdl + milestone 2 (commands UI, in-article routine creation, templates).'
 
   - name: sketch-scene-dsl
     status: active
