@@ -8,6 +8,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
+import { computeCharHunks } from './diff';
 import { trackChanges } from './track-changes';
 
 const MAIN = 'alpha\nbravo\ncharlie';
@@ -57,5 +58,44 @@ describe('trackChanges', () => {
     const view = mount('intro\n\nalpha\nbravo\ncharlie');
     expect(view.dom.querySelectorAll('.cm-change-bar')).toHaveLength(1);
     view.destroy();
+  });
+
+  // A reader deleting a run of words must strike exactly those words: character diffing used to match
+  // stray letters across the run (`t` of `it` against `t` of `two`), splitting words at both edges.
+  test('deleting a run of words strikes whole words', ({ expect }) => {
+    const main = 'the revision it was written on, so two people can suggest changes';
+    const doc = main.replace('it was written on, so ', '');
+    const hunks = computeCharHunks(main, doc);
+    expect(hunks).toHaveLength(1);
+    expect(main.slice(hunks[0].fromA, hunks[0].toA)).toBe('it was written on, so ');
+  });
+
+  // Selections do not respect word edges. Cutting into the words at each end fuses the survivors, and a
+  // word-level hunk then reads as "delete both words, insert this fused one" — rendering a phantom of
+  // both whole words plus a bogus insertion (`writte` + inserted `ngest`) instead of a plain deletion.
+  test('a deletion that cuts into words at both ends strikes only what was removed', ({ expect }) => {
+    const main = 'the revision it was written on, so two people can suggest changes';
+    const cut = 'n on, so two people can sugge';
+    const doc = main.replace(cut, '');
+
+    const hunks = computeCharHunks(main, doc);
+    expect(hunks).toHaveLength(1);
+    expect(main.slice(hunks[0].fromA, hunks[0].toA)).toBe(cut);
+    // Nothing is reported as inserted: the reader only deleted.
+    expect(doc.slice(hunks[0].fromB, hunks[0].toB)).toBe('');
+  });
+
+  // Deleting `suggest change` from `suggest changes` leaves an `s`, and that survivor is equally the
+  // tail of `changes` or the head of `suggest`. The minimal edit is ambiguous, so the strike must be
+  // slid to the word boundary — otherwise it keeps the `s` of `suggest` and strikes `uggest changes`.
+  test('an ambiguous deletion strikes from the word boundary', ({ expect }) => {
+    const main = 'so two people can suggest changes to the same';
+    const cut = 'suggest change';
+    const doc = main.replace(cut, '');
+
+    const hunks = computeCharHunks(main, doc);
+    expect(hunks).toHaveLength(1);
+    expect(main.slice(hunks[0].fromA, hunks[0].toA)).toBe(cut);
+    expect(main[hunks[0].fromA - 1]).toBe(' ');
   });
 });

@@ -2,11 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Instructions, Trigger } from '@dxos/compute';
+import { Instructions, Routine, Trigger } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-
-import { Routine } from '#types';
 
 /**
  * Reactive query for all routines connected to an object O, via three structural paths:

@@ -5,10 +5,9 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { Instructions, Trigger } from '@dxos/compute';
+import { Instructions, Routine, Trigger } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Routine } from '@dxos/plugin-routine';
 
 import { dailyDigest } from './daily-digest';
 import { researchBrief } from './research-brief';

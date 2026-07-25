@@ -43,10 +43,14 @@ export type MessageCallbacks = {
   onAcceptChange?: (messageId: string) => void;
   /** Reject a suggested-change block on a message (omit to hide the affordance). */
   onRejectChange?: (messageId: string) => void;
+  /** Select a message — the host reveals what it refers to (omit to leave tiles inert). */
+  onMessageSelect?: (messageId: string) => void;
 };
 
 /** Shared context provided by `Thread.Root` to its message tiles. */
 export type ThreadContextValue = {
+  /** The selected message, accented in the list. */
+  currentMessageId?: string;
   /** Resolve presentational metadata for a message. */
   getMetadata: (message: Message.Message) => MessageMetadata;
   /** Injected renderers (e.g. object/reference tiles). */

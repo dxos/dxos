@@ -10,7 +10,7 @@ export * from './util';
 export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-mailbox'),
   () => import('./analyze/analyze-mailbox'),
-  () => import('./analyze/create-topic-from-message'),
+  () => import('./analyze/create-project-from-message'),
   () => import('./classify-email'),
   () => import('./draft-email-and-open'),
   () => import('./draft-email'),
