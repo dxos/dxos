@@ -26,6 +26,10 @@ export type SuggestionThreadProps = {
   dismissed?: ReadonlySet<string>;
   onAccept?: (group: SuggestionGroup) => void;
   onReject?: (group: SuggestionGroup) => void;
+  /** Reveal a suggestion's range in the document. */
+  onSelect?: (group: SuggestionGroup) => void;
+  /** The revealed suggestion, accented in the list. */
+  selected?: string;
 };
 
 /**
@@ -43,6 +47,8 @@ export const SuggestionThread = ({
   dismissed,
   onAccept,
   onReject,
+  onSelect,
+  selected,
 }: SuggestionThreadProps) => {
   // Each visible group becomes an in-memory message with a `change` block; `byId` maps the tile's
   // message id back to its group so the Accept/Reject callbacks resolve to the durable operation.
@@ -99,6 +105,20 @@ export const SuggestionThread = ({
     },
     [byId, onReject],
   );
+  const handleSelect = useCallback(
+    (messageId: string) => {
+      const suggestion = byId.get(messageId);
+      if (suggestion) {
+        onSelect?.(suggestion);
+      }
+    },
+    [byId, onSelect],
+  );
+  // The tile carrying the revealed suggestion, resolved back from its group key.
+  const currentMessageId = useMemo(
+    () => (selected ? [...byId].find(([, group]) => suggestionGroupKey(group) === selected)?.[0] : undefined),
+    [byId, selected],
+  );
 
   // No visible suggestions ⇒ render nothing; the companion's shared empty-state prompt (shown by
   // the container when there are neither comments nor suggestions) covers the empty case.
@@ -107,7 +127,13 @@ export const SuggestionThread = ({
   }
 
   return (
-    <Thread.Root getMetadata={getMetadata} onAcceptChange={handleAcceptChange} onRejectChange={handleRejectChange}>
+    <Thread.Root
+      getMetadata={getMetadata}
+      onAcceptChange={handleAcceptChange}
+      onRejectChange={handleRejectChange}
+      onMessageSelect={onSelect ? handleSelect : undefined}
+      currentMessageId={currentMessageId}
+    >
       <Thread.Content id='suggestions' role='list' data-testid='suggestion-list'>
         {messages.map((message) => (
           <MessageComponent.Tile key={Obj.getURI(message)} message={message} />

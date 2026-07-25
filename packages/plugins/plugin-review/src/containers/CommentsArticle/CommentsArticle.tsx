@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -14,7 +14,7 @@ import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
-import { Markdown } from '@dxos/plugin-markdown';
+import { Markdown, MarkdownOperation } from '@dxos/plugin-markdown';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useAttention, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
@@ -31,7 +31,7 @@ import { CommentOperation } from '#types';
 import { CommentCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state';
-import { type SuggestionGroup, useStatus } from '../../hooks';
+import { type SuggestionGroup, suggestionGroupKey, useStatus } from '../../hooks';
 import { getMessageMetadata } from '../../util';
 
 /**
@@ -353,6 +353,20 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     },
     [markdownDoc, mainText, invokePromise, subject],
   );
+  // The revealed suggestion, by group key — accents its card while the editor shows its range.
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string>();
+  const handleSelectSuggestion = useCallback(
+    (group: SuggestionGroup) => {
+      setSelectedSuggestion(suggestionGroupKey(group));
+      if (!mainText) {
+        return;
+      }
+      const cursor = toCursorRange(Doc.createAccessor(mainText, ['content']), group.from, group.to);
+      void invokePromise(MarkdownOperation.ScrollToAnchor, { subject: attendableId ?? subjectId, cursor });
+    },
+    [mainText, invokePromise, attendableId, subjectId],
+  );
+
   const handleAcceptSuggestion = useCallback(
     (group: SuggestionGroup) => routeSuggestion(CollaborationOperation.AcceptChange, group),
     [routeSuggestion],
@@ -459,6 +473,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 authorHues={authorHues}
                 onAccept={handleAcceptSuggestion}
                 onReject={handleRejectSuggestion}
+                onSelect={handleSelectSuggestion}
+                selected={selectedSuggestion}
               />
               <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
               <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>

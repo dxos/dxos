@@ -29,6 +29,10 @@ export type SuggestionsProps = {
   authorHues?: Record<string, string>;
   onAccept?: (group: SuggestionGroup) => void;
   onReject?: (group: SuggestionGroup) => void;
+  /** Reveal a suggestion's range in the document. */
+  onSelect?: (group: SuggestionGroup) => void;
+  /** The revealed suggestion's group key. */
+  selected?: string;
 };
 
 /**
@@ -45,6 +49,8 @@ export const Suggestions = ({
   authorHues,
   onAccept,
   onReject,
+  onSelect,
+  selected,
 }: SuggestionsProps) => {
   if (!document) {
     return null;
@@ -61,6 +67,8 @@ export const Suggestions = ({
           authorHues={authorHues}
           onAccept={onAccept}
           onReject={onReject}
+          onSelect={onSelect}
+          selected={selected}
         />
       )}
     </SuggestionSources>

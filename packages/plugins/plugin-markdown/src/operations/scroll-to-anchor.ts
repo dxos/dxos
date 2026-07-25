@@ -31,9 +31,17 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
 
       // Fallback: no thread ref — scroll the cursor range into view if needed.
       const range = Cursor.getRangeFromCursor(entry.view.state, cursor);
-      if (range && !isRangeVisible(entry.view, range)) {
-        entry.view.dispatch({ effects: EditorView.scrollIntoView(range.from, SCROLL_OPTIONS) });
+      if (!range) {
+        return;
       }
+      // Selecting the range is what makes the reveal visible for an anchor that carries no decoration
+      // of its own (a suggestion card's change), so the reader sees which one they picked.
+      entry.view.dispatch({
+        ...(range.to > range.from ? { selection: { anchor: range.from, head: range.to } } : {}),
+        ...(isRangeVisible(entry.view, range)
+          ? {}
+          : { effects: EditorView.scrollIntoView(range.from, SCROLL_OPTIONS) }),
+      });
     }),
   ),
 );

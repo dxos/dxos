@@ -349,8 +349,17 @@ export type MessageTileProps = {
  */
 const MessageTile = ({ message, classNames }: MessageTileProps) => {
   const { t } = useTranslation(translationKey);
-  const { getMetadata, identityDid, editable, onMessageDelete, onAcceptProposal, onAcceptChange, onRejectChange } =
-    useThreadContext('Message.Tile');
+  const {
+    getMetadata,
+    identityDid,
+    editable,
+    onMessageDelete,
+    onAcceptProposal,
+    onAcceptChange,
+    onRejectChange,
+    onMessageSelect,
+    currentMessageId,
+  } = useThreadContext('Message.Tile');
   const [editing, setEditing] = useState(false);
 
   const metadata = getMetadata(message);
@@ -363,6 +372,7 @@ const MessageTile = ({ message, classNames }: MessageTileProps) => {
   const handleAcceptProposal = useCallback(() => onAcceptProposal?.(message.id), [onAcceptProposal, message.id]);
   const handleAcceptChange = useCallback(() => onAcceptChange?.(message.id), [onAcceptChange, message.id]);
   const handleRejectChange = useCallback(() => onRejectChange?.(message.id), [onRejectChange, message.id]);
+  const handleSelect = useCallback(() => onMessageSelect?.(message.id), [onMessageSelect, message.id]);
   const handleSave = useCallback(
     (text: string) => {
       Obj.update(message, (message) => {
@@ -445,7 +455,17 @@ const MessageTile = ({ message, classNames }: MessageTileProps) => {
     <MessageRoot
       {...metadata}
       controls={controls}
-      classNames={[hoverableControls, hoverableFocusedWithinControls, classNames]}
+      // Selecting a tile is how the host reveals what it refers to (a suggestion's range in the
+      // document), so the whole tile is the target — the accent marks which one is showing.
+      onClick={onMessageSelect ? handleSelect : undefined}
+      aria-current={currentMessageId === message.id ? 'location' : undefined}
+      classNames={[
+        hoverableControls,
+        hoverableFocusedWithinControls,
+        onMessageSelect && 'cursor-pointer',
+        currentMessageId === message.id && 'bg-activeSurface',
+        classNames,
+      ]}
     >
       <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
       <MessageBody message={message} isAuthor={isAuthor} editing={editing} onSave={handleSave} />
