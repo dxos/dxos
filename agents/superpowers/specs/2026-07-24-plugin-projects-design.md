@@ -25,7 +25,7 @@ Evolved in place from `Topic.ts` (Topic is deleted; no shims). Typename
 `org.dxos.type.project@0.2.0` — 0.2.0 disambiguates from stored instances of the
 name-squatting `@dxos/types` Project at 0.1.0.
 
-```
+```text
 name?: string
 description?: string
 instructions: Ref(Instructions)      // owned (Obj.setParent), cascade-delete/clone
@@ -57,7 +57,7 @@ hold `Ref(Routine)`.
 
 `Instructions` (`@dxos/compute`) gains an optional structured field:
 
-```
+```text
 commands?: Array<{ sentinel: string; description?: string; prompt: string }>
 ```
 

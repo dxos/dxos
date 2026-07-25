@@ -43,7 +43,7 @@ export const make = (
   props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'routines'> & {
     routines?: ReadonlyArray<Ref.Ref<Routine.Routine>>;
   } = {},
-): Project => Obj.make(Project, { routines: [], ...props });
+): Project => Obj.make(Project, { ...props, routines: props.routines ?? [] });
 
 /** Bindings a chat session should receive when running in a project's context. */
 export type ContextBindings = {

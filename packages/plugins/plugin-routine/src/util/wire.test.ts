@@ -48,6 +48,25 @@ describe('wire', () => {
     expect(routine.triggers[0]?.target?.remote).toBe(true);
   });
 
+  test('makeRoutine wires triggers supplied via the `triggers` array', ({ expect }) => {
+    const instructions = Instructions.make({ name: 'Body', text: 'do something' });
+    const trigger = Trigger.make({ spec: Trigger.specTimer('0 9 * * *') });
+    const routine = makeRoutine({ name: 'R', instructions, triggers: [Ref.make(trigger)] });
+    expect(isRunInstructions(trigger.runnable)).toBe(true);
+    const bound = trigger.input?.instructions;
+    expect(Ref.isRef(bound) ? bound.target?.id : undefined).toBe(instructions.id);
+  });
+
+  test('makeRoutine leaves pre-set trigger bindings alone when there is no action', ({ expect }) => {
+    const trigger = Trigger.make({});
+    const preset = Ref.fromURI('dxn:echo:@:preset-runnable');
+    Obj.update(trigger, (trigger) => {
+      trigger.runnable = preset;
+    });
+    makeRoutine({ name: 'R', trigger });
+    expect(trigger.runnable?.uri).toBe(preset.uri);
+  });
+
   describe('blank template', () => {
     test('is the default no-op template', ({ expect }) => {
       expect(blank.id).toBe('org.dxos.routine.blank');

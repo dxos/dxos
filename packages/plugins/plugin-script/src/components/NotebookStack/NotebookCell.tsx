@@ -184,6 +184,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
 };
 
 const NotebookTextEditor = ({
+  classNames,
   extensions: extensionsProp,
   readOnly,
   ...props
@@ -204,8 +205,8 @@ const NotebookTextEditor = ({
     <Editor.Root>
       {/* Focused-cell affordance: Editor.View no longer applies a focus border by default. */}
       <Editor.View
-        classNames='border focus-within:border-focus-ring-subtle'
         {...props}
+        classNames={mx('border focus-within:border-focus-ring-subtle', classNames)}
         extensions={extensions}
         selectionEnd
       />

@@ -82,4 +82,4 @@ export const runnableRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Operation.P
 /** Factory wrapper around `Obj.make` for {@link Routine}. Trigger wiring lives in plugin-routine (`makeRoutine`). */
 export const make = (
   props: Omit<Obj.MakeProps<typeof Routine>, 'triggers'> & { triggers?: ReadonlyArray<Ref.Ref<Trigger.Trigger>> },
-): Routine => Obj.make(Routine, { triggers: [], ...props });
+): Routine => Obj.make(Routine, { ...props, triggers: props.triggers ?? [] });

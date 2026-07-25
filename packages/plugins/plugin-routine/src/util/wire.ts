@@ -66,7 +66,10 @@ export const makeRoutine = ({
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(trigger));
     });
-    // Wire the trigger's `runnable`/`input` from the action (`spec`); preserves any template-provided input.
+  }
+  // Wire every attached trigger (singular or `triggers`) from the action; preserves template-provided
+  // input. Gated on `spec`: with no action yet, wiring would null out pre-set trigger runnables.
+  if (routine.spec) {
     wireTriggers(routine);
   }
   return routine;

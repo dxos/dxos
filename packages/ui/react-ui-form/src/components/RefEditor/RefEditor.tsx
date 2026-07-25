@@ -17,7 +17,7 @@ import {
   type UseEditorMenuProps,
 } from '@dxos/react-ui-editor';
 import { createBasicExtensions, createThemeExtensions, insertAtCursor, keymap } from '@dxos/ui-editor';
-import { getHashHue } from '@dxos/ui-theme';
+import { getHashHue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -86,6 +86,7 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
       placeholder: placeholderProp,
       activateOnTyping,
       numItems = 8,
+      classNames,
       ...props
     },
     forwardedRef,
@@ -280,7 +281,12 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
         getMenu={getMenu}
         ref={composedRef}
       >
-        <Editor.View classNames='flex items-center dx-input h-[2rem]' {...props} initialValue={value} selectionEnd />
+        <Editor.View
+          {...props}
+          classNames={mx('flex items-center dx-input h-[2rem]', classNames)}
+          initialValue={value}
+          selectionEnd
+        />
       </Editor.Root>
     );
   },
