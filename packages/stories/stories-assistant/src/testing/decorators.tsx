@@ -249,7 +249,7 @@ const PluginManagerHost = ({
  * Create storybook decorators.
  * Supports lazy plugin loading via the `lazyPlugins` option.
  */
-export const createDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
+export const createDecorators = ({ config = config.remote, lazyPlugins, ...props }: DecoratorsProps) => {
   if (lazyPlugins) {
     return [
       ((Story: FC, context: { id: string }) => {

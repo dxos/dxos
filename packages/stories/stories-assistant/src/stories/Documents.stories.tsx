@@ -209,7 +209,7 @@ export const WithScript: Story = {
         plugins: [MarkdownPlugin(), ScriptPlugin()],
       };
     },
-    config: config.local,
+    config: config.remote,
     types: [Script.Script, Text.Text],
     onInit: async ({ client, space }) => {
       const [{ getAccessCredential }, { templates }] = await Promise.all([

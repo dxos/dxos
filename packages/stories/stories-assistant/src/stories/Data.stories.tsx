@@ -112,7 +112,7 @@ export const WithSearch: Story = {
  */
 export const WithDatabase: Story = {
   decorators: createDecorators({
-    config: config.local,
+    config: config.remote,
     types: testTypes,
     onInit: async ({ space }) => {
       await addTestData(space);
