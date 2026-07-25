@@ -85,11 +85,20 @@ This deletes `useActiveObject` and the per-module `attendableId`/expand boilerpl
 
 `onInit` returns a `ModuleLayout` built from the objects it just created. The layout is a story
 concern (produced at client-init, referencing runtime objects), so it flows through a **new**
-layout-atom capability defined in `@dxos/story-modules` — the shared contract between the generic
-`ModuleContainer` (reader) and the harness (writer). The `stories-assistant` `ClientPlugin`
-`onClientInitialized` hook captures `onInit`'s return value and contributes it into that atom;
-`ModuleContainer` reads the atom instead of taking a static `layout` prop. (Distinct from the
-existing `StorybookCapabilities.LayoutState`, which holds workspace/deck state, not the cell grid.)
+writable layout-atom capability. The generic `@dxos/story-modules` `ModuleContainer` stays
+**prop-based** (`layout` prop) to keep it reusable and free of the onInit/atom concern; the
+capability and the threading live in the `stories-assistant` harness, whose wrapper
+`ModuleContainer` reads the atom and passes it down as the `layout` prop. `onInit`'s return is
+captured in `onClientInitialized` and written into the atom by the harness's setup module (which
+holds the `AtomRegistry`). (Distinct from the existing `StorybookCapabilities.LayoutState`, which
+holds workspace/deck state, not the cell grid.)
+
+**Harness-created objects.** The Chat (and, under `createAgent`, the Agent) is created by the
+assistant plugin's `CreateChat` operation in the harness setup module — *after* `onInit`. A story
+therefore cannot reference the chat object in its `onInit` layout. Such objects are addressed by a
+**custom-role** cell (`Cell.surface`) whose registered surface resolves the harness-created object
+(e.g. latest `Assistant.Chat`) and delegates to the real plugin surface (`ChatArticle`). Only
+**story-created** objects use `Cell.article(object)` directly.
 
 Reference (`WithMarkdown`):
 
@@ -108,11 +117,13 @@ onInit: async ({ space }) => {
 
 ### 4. Module fate
 
-- **Object → Article** modules (Document, Chat, Sketch, Chess, Table, Map, Script, Inbox, …)
-  collapse to `Cell.article(object)` against the real plugin surface; the wrapper and `Module.*`
-  token are deleted. Chat uses the real `ChatArticle` (`plugin-assistant` contributes an
-  `Article` surface bound to `Chat.Chat`); a story that wants the richer custom chat panel
-  (toolbar + Logs popover) uses the `Cell.article(chat, { component })` override.
+- **Object → Article** modules for **story-created** objects (Document, Sketch, Chess, Table, Map,
+  Script, Inbox, …) collapse to `Cell.article(object)` against the real plugin surface; the wrapper
+  and `Module.*` token are deleted. A story that wants a bespoke variant uses the
+  `Cell.article(object, { component })` override.
+- **Chat** (harness-created) becomes a custom-role `Cell.surface(Chat)` panel that resolves the
+  latest `Assistant.Chat` and delegates to the real `ChatArticle`. A story wanting the richer
+  custom chat panel (toolbar + Logs popover) supplies its own component for that role.
 - **Object companions** (History, Comments) → `Cell.companion(variant, object)`.
   **Space companion** (Trace) → `Cell.deckCompanion('trace')`.
 - **Story-only diagnostics** with no composer surface (Logging, Database, Graph, ExecutionGraph,
