@@ -12,8 +12,6 @@ import { InvocationsModule } from './InvocationsModule';
 import { LoggingModule } from './LoggingModule';
 import { RoutineModule } from './RoutineModule';
 
-// Components are re-exported because they are composed directly by consumers (e.g. the assistant
-// ChatModule embeds `ExecutionGraphModule`), not only dispatched via `moduleSurfaces`.
 export * from './ConfigModule';
 export * from './DatabaseModule';
 export * from './ExecutionGraphModule';
