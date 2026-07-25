@@ -86,14 +86,19 @@ export const formatSystemPrompt = ({
 
     const objectDefs = yield* Function.pipe(
       contextObjects,
-      Effect.forEach((object) =>
-        Effect.succeed(trim`
-          <object>
-            <dxn>${Obj.getURI(object)}</dxn>
-            <typename>${Obj.getTypename(object)}</typename>
-          </object>
-        `),
-      ),
+      Effect.forEach((object) => {
+        // Carry the label so the model only tool-loads an object when it needs the contents,
+        // not just to learn what the reference is.
+        const label = Obj.getLabel(object);
+        return Effect.succeed(
+          trim`
+            <object>
+              <dxn>${Obj.getURI(object)}</dxn>
+              <typename>${Obj.getTypename(object)}</typename>${label ? `\n  <label>${label}</label>` : ''}
+            </object>
+          `,
+        );
+      }),
       Effect.map((objects) => (objects.length > 0 ? ['## Context Objects', ...objects].join('\n\n') : undefined)),
     );
 

@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Instructions } from '@dxos/compute';
+import { Instructions, Project } from '@dxos/compute';
 import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import { Database, Obj } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -17,7 +17,7 @@ import { formatSystemPrompt } from './format';
 
 const testLayer = () =>
   Layer.mergeAll(
-    TestDatabaseLayer({ types: [Instructions.Instructions, Text.Text] }),
+    TestDatabaseLayer({ types: [Instructions.Instructions, Project.Project, Text.Text] }),
     registryLayerNoop,
     operationServiceLayerNoop,
   );
@@ -45,12 +45,14 @@ describe('formatSystemPrompt', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('keeps non-instructions objects as context stubs', () =>
+  it.effect('keeps non-instructions objects as context stubs, carrying their label', () =>
     Effect.gen(function* () {
       const doc = yield* Database.add(Text.make({ content: 'plain object' }));
-      const prompt = yield* formatSystemPrompt({ objects: [doc] });
+      const project = yield* Database.add(Project.make({ name: 'Voyage' }));
+      const prompt = yield* formatSystemPrompt({ objects: [doc, project] });
       expect(prompt).toContain('## Context Objects');
       expect(prompt).toContain(Obj.getURI(doc));
+      expect(prompt).toContain('<label>Voyage</label>');
       expect(prompt).not.toContain('## Instructions');
     }).pipe(Effect.provide(testLayer())),
   );
