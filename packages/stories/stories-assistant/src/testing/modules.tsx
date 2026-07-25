@@ -3,7 +3,7 @@
 //
 
 import { Surface } from '@dxos/app-framework/ui';
-import { ConfigModule, ExecutionGraphModule, InvocationsModule, LoggingModule } from '@dxos/storybook-testing/modules';
+import { moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
 
 import {
   ChatModule,
@@ -22,18 +22,16 @@ import {
  * plugin surface (the harness chat and space-scoped debug views). Each is registered under a
  * `StoryRole` custom role and referenced directly as a bare token in a story layout (`StoryRole.X`).
  * Object-bound panels (documents, sketches, games, …) are dispatched directly against the real
- * plugin surfaces via `Cell.article`/`Cell.companion`, so they need no wrapper here.
+ * plugin surfaces via `Cell.article`/`Cell.companion`, so they need no wrapper here. Generic
+ * diagnostics (config, logging, invocations, execution graph) come from `moduleSurfaces`.
  */
 export const moduleSurfaces: Surface.Definition[] = [
+  ...commonSurfaces,
+
   Surface.create({
     id: 'role.chat',
     filter: Surface.makeFilter(StoryRole.Chat),
     component: ChatModule,
-  }),
-  Surface.create({
-    id: 'role.config',
-    filter: Surface.makeFilter(StoryRole.Config),
-    component: ConfigModule,
   }),
   Surface.create({
     id: 'role.context',
@@ -46,24 +44,9 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: DatabaseModule,
   }),
   Surface.create({
-    id: 'role.executionGraph',
-    filter: Surface.makeFilter(StoryRole.ExecutionGraph),
-    component: ExecutionGraphModule,
-  }),
-  Surface.create({
     id: 'role.graph',
     filter: Surface.makeFilter(StoryRole.Graph),
     component: GraphModule,
-  }),
-  Surface.create({
-    id: 'role.invocations',
-    filter: Surface.makeFilter(StoryRole.Invocations),
-    component: InvocationsModule,
-  }),
-  Surface.create({
-    id: 'role.logging',
-    filter: Surface.makeFilter(StoryRole.Logging),
-    component: LoggingModule,
   }),
   Surface.create({
     id: 'role.researchInput',

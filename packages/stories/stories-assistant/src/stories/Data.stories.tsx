@@ -29,7 +29,7 @@ import {
   addToRootCollection,
   createDecorators,
   createTestMailbox,
-  loadMockInboxSnapshot,
+  loadMockInbox,
   organizations,
   storyParameters,
   testTypes,
@@ -351,7 +351,7 @@ export const WithProject: Story = {
  */
 export const WithCRM: Story = {
   decorators: createDecorators({
-    importSnapshot: loadMockInboxSnapshot,
+    importSnapshot: loadMockInbox,
     lazyPlugins: async () => {
       const [{ CrmPlugin }, { InboxPlugin }, { MarkdownPlugin }, { TablePlugin }] = await Promise.all([
         import('@dxos/plugin-crm/plugin'),
