@@ -630,3 +630,17 @@ Driven through the storybook DOM (synthetic pointer/keyboard + decoration counts
 - [ ] **Corruption repaired (agent error).** A bad scripted edit replaced the separator spaces in
       `suggestionKey` with NUL bytes, which made grep treat `suggest.ts` as binary; keys stayed unique so
       every test still passed. Repaired, and the other touched packages were swept clean.
+
+### Walkthrough completion (2026-07-25, agent-driven)
+
+S2, S3 and S6 run headlessly by the agent after the main-merge:
+
+- **S6 (Default, no-review baseline): PASS.** 9 keystrokes land, focus held, zero review decorations.
+- **S3 (EditingTyping): PASS.** 24 keystrokes land with focus held, no strikethrough of the reader's own
+  text, the foreign overlay and its cards intact.
+- **S2 (AmbientReview): PASS except the known fixture gap.** Two authors overlay in distinct hues
+  (lime/violet), the hover controls open on the change, stay anchored while the pointer crosses it and
+  survive the pointer moving into them (S2.1 flicker fixed), and Accept from the popover folds the change
+  (decorations 4 → 3, cards 3 → 2). The popover stays open after clicking — the auto-hide was reverted at
+  the user's request. Comment click-through remains untestable (S2.0: the story's `comments()` extension
+  never renders a mark).
