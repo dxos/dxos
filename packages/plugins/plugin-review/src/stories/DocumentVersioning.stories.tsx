@@ -20,8 +20,6 @@
 //                                    legacy/external conflict block.
 //
 
-import { type Extension } from '@codemirror/state';
-import { ViewPlugin } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
@@ -42,14 +40,18 @@ import { translations as spaceTranslations } from '@dxos/plugin-space/translatio
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Cursor, EditorView, comments, documentId, setComments } from '@dxos/ui-editor';
+import { AnchoredTo, Message, Thread } from '@dxos/types';
+import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
 import { ReviewPlugin } from '../plugin';
-import { ReviewStoryLayout, type ReviewStoryPanel } from '../testing';
+import { ReviewStoryLayout, type ReviewStoryPanel, seedComments } from '../testing';
 import { translations } from '../translations';
 
 const concat = (...lines: string[]) => lines.join('\n');
+
+/** The phrase the story's seeded comment thread is anchored to; must appear in the story document. */
+const COMMENT_ANCHOR = 'Reviewers can work through the changes';
 
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
 const MarkdownExtensionsPlugin = Plugin.define(
@@ -71,48 +73,7 @@ const MarkdownExtensionsPlugin = Plugin.define(
 // comment coexistence; suggestion sources resolve through the real in-package provider.
 //
 
-/**
- * Comment-highlight extension for the story: seeds one comment over the word "Hello" on mount,
- * dispatching `setComments` directly (bypassing a comments store) so a `.cm-comment` mark is present
- * regardless of the review mode. Mirrors what plugin-comments' `threads` extension renders.
- * A `ViewPlugin` (not an `updateListener`) so it fires without waiting for a document change.
- */
-const storyCommentsExtension = (): Extension => [
-  comments({ id: 'story-comment', readonly: true }),
-  ViewPlugin.fromClass(
-    class {
-      #seeded = false;
-
-      constructor(view: EditorView) {
-        this.seed(view);
-      }
-
-      // The editor mounts before its content loads (the document arrives through the automerge
-      // binding), so seeding only in the constructor found an empty document and never fired.
-      update(update: { view: EditorView; docChanged: boolean }): void {
-        if (!this.#seeded && update.docChanged) {
-          this.seed(update.view);
-        }
-      }
-
-      seed(view: EditorView): void {
-        const from = view.state.doc.toString().indexOf('Hello');
-        if (from < 0) {
-          return;
-        }
-
-        this.#seeded = true;
-        const id = view.state.facet(documentId);
-        const cursor = Cursor.getCursorFromRange(view.state, { from, to: from + 'Hello'.length });
-        queueMicrotask(() =>
-          view.dispatch({ effects: setComments.of({ id, comments: [{ id: 'story-comment-1', cursor }] }) }),
-        );
-      }
-    },
-  ),
-];
-
-/** Contributes the ambient-review fixtures; gated to the AmbientReview story via `ambientReview` param. */
+/** Contributes the Suggesting view-mode entry; gated to the review stories via the `ambientReview` param. */
 const AmbientReviewPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.markdown.story.ambientReview'),
@@ -124,7 +85,6 @@ const AmbientReviewPlugin = Plugin.define(
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: () =>
       Effect.succeed([
-        Capability.contributes(MarkdownCapabilities.ExtensionProvider, [() => storyCommentsExtension()]),
         // Stand in for plugin-comments' contribution so the Suggesting view-mode entry appears.
         Capability.contributes(MarkdownCapabilities.ViewModeExtension, {
           id: 'suggesting',
@@ -308,7 +268,7 @@ const meta = {
         // Ambient-review fixtures only for the AmbientReview story (keeps other stories untouched).
         ...(context.parameters?.ambientReview ? [AmbientReviewPlugin()] : []),
         ClientPlugin({
-          types: [Markdown.Document, Text.Text],
+          types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
@@ -321,6 +281,10 @@ const meta = {
               // play-driven stories build up step by step, without a play mutating it first.
               for (const { creator, content } of context.args.suggestions ?? []) {
                 yield* Effect.promise(() => seedSuggestion(creator, content));
+              }
+              if (context.parameters?.ambientReview) {
+                const text = yield* Effect.promise(() => currentDoc!.content.load());
+                seedComments(personalSpace, currentDoc!, text, [COMMENT_ANCHOR]);
               }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),

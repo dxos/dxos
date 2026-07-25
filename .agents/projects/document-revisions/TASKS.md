@@ -605,9 +605,11 @@ Driven through the storybook DOM (synthetic pointer/keyboard + decoration counts
       inserted preview. Suspect `SuggestionWidget.ignoreEvent()` returns `true`, so pointer events inside
       the widget are ignored by the editor and only the surrounding mark can trigger the hover — which
       would also explain a popover that flickers as the pointer crosses between mark and widget.
-- [ ] **S2.0 STILL OPEN.** Retried the fixture (seed on first `docChanged`, not just at construction) —
-      the comment marks still never render, and even `.cm-commentsHighlightLayer` is absent, so the
-      story's `comments()` extension appears not to reach the editor at all.
+- [x] **S2.0 FIXED.** Two causes: the fixture still searched for "Hello" after the document became prose,
+      and — the real one — a story-local `comments()` instance is pointless because the plugin's own
+      instance primes the shared comment state from the database and clears anything dispatched into it.
+      The story now seeds a real anchored `Thread` (shared `seedComments` in `testing/`), which also
+      exercises the production path. Verified: the comment mark renders on the anchored phrase.
 - [ ] S1.1, S4.1, S4.3 untouched this pass.
 
 ### Third pass (2026-07-24, user walkthrough on the fixed build)
