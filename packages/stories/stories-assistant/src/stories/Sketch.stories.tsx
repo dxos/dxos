@@ -126,6 +126,15 @@ const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeo
 };
 
 /**
+ * Conversational drawing over a live AI stack: the chat (left) drives the sketch canvas (right)
+ * through the scene DSL (read/edit operations by object id). Try: "Draw a smiley face", then
+ * "Add a hat", then "Make the smile bigger".
+ */
+export const Default: Story = {
+  decorators,
+};
+
+/**
  * First story on purpose. The prompt below is the implementing agent's own (Claude, 2026-07-23):
  * how it feels about this project, drawn live with the DSL it built — open the story and watch.
  */
@@ -148,15 +157,6 @@ export const Reflection: Story = {
     // The model chooses its own object ids for a creative prompt; any managed object counts.
     await waitForObjectRecords(undefined, 3, 300_000);
   },
-};
-
-/**
- * Conversational drawing over a live AI stack: the chat (left) drives the sketch canvas (right)
- * through the scene DSL (read/edit operations by object id). Try: "Draw a smiley face", then
- * "Add a hat", then "Make the smile bigger".
- */
-export const Default: Story = {
-  decorators,
 };
 
 /**

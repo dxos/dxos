@@ -120,39 +120,6 @@ export const WithMarkdown: Story = {
   }),
 };
 
-/**
- * Enters a prompt into the chat that asks the assistant to rewrite the document to match the style
- * guide (both are bound into the chat context). The assistant uses the markdown update tool to edit
- * the live document in place.
- *
- * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
- * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
- */
-export const WithMarkdownStyleGuide: Story = {
-  ...WithMarkdown,
-  tags: ['!test'],
-  play: async ({ canvasElement }) => {
-    await submitPrompt(canvasElement, 'Update the Document to obey the Style Guide');
-  },
-};
-
-/**
- * As above, but asks the assistant to make the edits on a NEW branch rather than the live document.
- * The assistant creates a branch (create-branch tool) and applies the style-guide edits to it
- * (update tool with the branchId), leaving the branch unmerged for review — the input to Phase 2's
- * branch-diff view.
- *
- * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
- * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
- */
-export const WithMarkdownStyleGuideBranch: Story = {
-  ...WithMarkdown,
-  tags: ['!test'],
-  play: async ({ canvasElement }) => {
-    await submitPrompt(canvasElement, 'Update the Document in a new branch to obey the Style Guide');
-  },
-};
-
 /** Types a prompt into the chat's CodeMirror editor and submits it, asserting it lands as a message. */
 const submitPrompt = async (canvasElement: HTMLElement, prompt: string) => {
   const canvas = within(canvasElement);
@@ -263,4 +230,37 @@ export const WithScript: Story = {
       await binder.bind({ skills: skills.map((skill) => Ref.make(skill)) });
     },
   }),
+};
+
+/**
+ * Enters a prompt into the chat that asks the assistant to rewrite the document to match the style
+ * guide (both are bound into the chat context). The assistant uses the markdown update tool to edit
+ * the live document in place.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
+ * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithMarkdownStyleGuide: Story = {
+  ...WithMarkdown,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, 'Update the Document to obey the Style Guide');
+  },
+};
+
+/**
+ * As above, but asks the assistant to make the edits on a NEW branch rather than the live document.
+ * The assistant creates a branch (create-branch tool) and applies the style-guide edits to it
+ * (update tool with the branchId), leaving the branch unmerged for review — the input to Phase 2's
+ * branch-diff view.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
+ * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithMarkdownStyleGuideBranch: Story = {
+  ...WithMarkdown,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, 'Update the Document in a new branch to obey the Style Guide');
+  },
 };

@@ -79,36 +79,6 @@ export const WithSubAgents: Story = {
 };
 
 /**
- * Interaction test for end-to-end delegation: enters a prompt that delegates a unit of work,
- * then waits for the supervisor to run the sub-agent and fold its result back into the conversation.
- *
- * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`);
- * run it manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
- */
-export const WithSubAgentsTest: Story = {
-  ...WithSubAgents,
-  tags: ['!test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // The chat prompt is a CodeMirror editor; locate it via its placeholder.
-    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-    if (!editor) {
-      throw new Error('Chat editor not found.');
-    }
-
-    // Enter a prompt that delegates work to a sub-agent and submit it.
-    await userEvent.click(editor);
-    await userEvent.type(editor, 'Delegate a task to a sub-agent to compute 10 factorial.');
-    await userEvent.keyboard('{Enter}');
-
-    // The supervisor runs the sub-agent in the background and posts the result back to the chat.
-    await canvas.findByText(/sub-agent completed/i, {}, { timeout: 180_000 });
-  },
-};
-
-/**
  * Two surfaces over a shared space: ChatModule (left) and TracePanel (right).
  * Agent tool invocations populate the execution-graph timeline in the companion panel.
  */
@@ -141,5 +111,35 @@ export const WithWebSearch: Story = {
   }),
   args: {
     layout: [[StoryRole.Chat]],
+  },
+};
+
+/**
+ * Interaction test for end-to-end delegation: enters a prompt that delegates a unit of work,
+ * then waits for the supervisor to run the sub-agent and fold its result back into the conversation.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`);
+ * run it manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithSubAgentsTest: Story = {
+  ...WithSubAgents,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // The chat prompt is a CodeMirror editor; locate it via its placeholder.
+    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+    if (!editor) {
+      throw new Error('Chat editor not found.');
+    }
+
+    // Enter a prompt that delegates work to a sub-agent and submit it.
+    await userEvent.click(editor);
+    await userEvent.type(editor, 'Delegate a task to a sub-agent to compute 10 factorial.');
+    await userEvent.keyboard('{Enter}');
+
+    // The supervisor runs the sub-agent in the background and posts the result back to the chat.
+    await canvas.findByText(/sub-agent completed/i, {}, { timeout: 180_000 });
   },
 };
