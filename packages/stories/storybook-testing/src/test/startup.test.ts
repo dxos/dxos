@@ -7,7 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
-import { describe, onTestFinished, test } from 'vitest';
+import { afterAll, beforeAll, describe, onTestFinished, test } from 'vitest';
 
 import { ActivationEvents, Capabilities, type Plugin } from '@dxos/app-framework';
 import { RpcClosedError } from '@dxos/client';
@@ -20,22 +20,26 @@ import { type Client, Config } from '@dxos/react-client';
 const localConfig = new Config({});
 
 // The client-services effect-rpc endpoint rejects any in-flight request with `RpcClosedError` when
-// the client is destroyed (`onTestFinished` → `client.destroy()`), which surfaces as an unhandled
-// rejection that exits the node test process non-zero even though the test itself passes. Swallow
-// only that specific error; re-throw everything else. Registered once via a global flag so
-// re-running setup across files doesn't stack handlers.
-const FLAG = '__dxos_rpc_closed_teardown_filter__';
-if (!(globalThis as Record<string, unknown>)[FLAG]) {
-  (globalThis as Record<string, unknown>)[FLAG] = true;
-  const handler = (err: unknown) => {
-    if (err instanceof RpcClosedError) {
-      return;
-    }
-    throw err;
-  };
-  process.on('uncaughtException', handler);
-  process.on('unhandledRejection', handler);
-}
+// the client is destroyed (`onTestFinished` → `client.destroy()`), surfacing as an unhandled
+// rejection that would exit the node process non-zero even though the test passed. Filter ONLY that
+// specific error and re-throw everything else, scoped to this file's lifetime (registered in
+// `beforeAll`, removed in `afterAll`) so no global handler leaks into other test files.
+const ignoreRpcClosedTeardown = (err: unknown) => {
+  if (err instanceof RpcClosedError) {
+    return;
+  }
+  throw err;
+};
+
+beforeAll(() => {
+  process.on('uncaughtException', ignoreRpcClosedTeardown);
+  process.on('unhandledRejection', ignoreRpcClosedTeardown);
+});
+
+afterAll(() => {
+  process.off('uncaughtException', ignoreRpcClosedTeardown);
+  process.off('unhandledRejection', ignoreRpcClosedTeardown);
+});
 
 /**
  * Measures the time taken for each phase of ClientPlugin startup.

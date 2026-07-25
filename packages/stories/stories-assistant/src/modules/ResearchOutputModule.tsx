@@ -17,6 +17,7 @@ export const ResearchOutputModule = () => {
   if (!space) {
     return null;
   }
+
   return <ResearchOutputModuleContainer space={space} />;
 };
 

@@ -85,6 +85,7 @@ same reason when no EDGE is reachable. Not caused by this PR.
 
 - Restart `:9009` and re-measure §1/§2.
 - If activation is still slow after §1, profile plugin activation with debug logging.
-- (Author) `storybook-testing/src/test/startup.test.ts` swallows `RpcClosedError` via
-  `process.on('uncaughtException'/'unhandledRejection')` — replace with a narrowly-scoped vitest
-  `onUnhandledError` per the repo's no-blanket-suppression rule (flagged in the PR review reply).
+- `storybook-testing/src/test/startup.test.ts` filters the teardown `RpcClosedError` with a
+  handler scoped to the file's lifetime (registered in `beforeAll`, removed in `afterAll`) rather
+  than a permanent global `process.on` — only that signature is ignored, everything else re-throws,
+  satisfying the repo's no-blanket-suppression rule.
