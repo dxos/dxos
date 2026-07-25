@@ -24,6 +24,7 @@ export const TasksModule = () => {
   if (!space) {
     return null;
   }
+
   return <TasksModuleContainer space={space} />;
 };
 

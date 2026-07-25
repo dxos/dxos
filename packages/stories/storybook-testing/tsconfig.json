@@ -24,16 +24,25 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../core/compute/compute"
+    },
+    {
       "path": "../../core/compute/compute-runtime"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../devtools/devtools"
     },
     {
       "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-explorer"
     },
     {
       "path": "../../plugins/plugin-graph"
@@ -60,10 +69,16 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-chat"
+    },
+    {
       "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-debug"
+    },
+    {
+      "path": "../../ui/react-ui-masonry"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

@@ -9,6 +9,7 @@ export * from './useMembers';
 export * from './useSpaces';
 export * from './useSpaceInvitations';
 export * from './useSpaceProperties';
+export * from './useFlush';
 export * from './useSubscription';
 export * from './useSyncState';
 export * from './useFeedSyncState';

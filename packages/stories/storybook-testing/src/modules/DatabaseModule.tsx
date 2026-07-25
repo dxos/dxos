@@ -9,10 +9,9 @@ import { ObjectsTree } from '@dxos/devtools';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { type EntityId } from '@dxos/keys';
-import { useFlush } from '@dxos/plugin-assistant/hooks';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, IconButton, Panel, ScrollArea, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
@@ -23,9 +22,21 @@ import { mx } from '@dxos/ui-theme';
 type DatabaseView = 'graph' | 'object-tree' | 'cards';
 
 const VIEW_OPTIONS: { value: DatabaseView; icon: string; label: string }[] = [
-  { value: 'graph', icon: 'ph--graph--regular', label: 'Graph' },
-  { value: 'object-tree', icon: 'ph--tree-structure--regular', label: 'Object tree' },
-  { value: 'cards', icon: 'ph--squares-four--regular', label: 'Cards' },
+  {
+    value: 'graph',
+    icon: 'ph--graph--regular',
+    label: 'Graph',
+  },
+  {
+    value: 'object-tree',
+    icon: 'ph--tree-structure--regular',
+    label: 'Object tree',
+  },
+  {
+    value: 'cards',
+    icon: 'ph--squares-four--regular',
+    label: 'Cards',
+  },
 ];
 
 export const DatabaseModule = () => {
@@ -33,6 +44,7 @@ export const DatabaseModule = () => {
   if (!space) {
     return null;
   }
+
   return <DatabaseModuleContainer space={space} />;
 };
 

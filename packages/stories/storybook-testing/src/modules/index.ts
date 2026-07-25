@@ -6,14 +6,20 @@ import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 
 import { ConfigModule } from './ConfigModule';
+import { DatabaseModule } from './DatabaseModule';
 import { ExecutionGraphModule } from './ExecutionGraphModule';
 import { InvocationsModule } from './InvocationsModule';
 import { LoggingModule } from './LoggingModule';
+import { RoutineModule } from './RoutineModule';
 
+// Components are re-exported because they are composed directly by consumers (e.g. the assistant
+// ChatModule embeds `ExecutionGraphModule`), not only dispatched via `moduleSurfaces`.
 export * from './ConfigModule';
+export * from './DatabaseModule';
 export * from './ExecutionGraphModule';
 export * from './InvocationsModule';
 export * from './LoggingModule';
+export * from './RoutineModule';
 
 /**
  * Roles for the generic diagnostic modules in this package, colocated with their components so a
@@ -22,9 +28,11 @@ export * from './LoggingModule';
  */
 export const ModuleRole = {
   Config: Role.make<Record<string, unknown>>('org.dxos.storybook.role.config'),
+  Database: Role.make<Record<string, unknown>>('org.dxos.storybook.role.database'),
   ExecutionGraph: Role.make<Record<string, unknown>>('org.dxos.storybook.role.executionGraph'),
   Invocations: Role.make<Record<string, unknown>>('org.dxos.storybook.role.invocations'),
   Logging: Role.make<Record<string, unknown>>('org.dxos.storybook.role.logging'),
+  Routine: Role.make<Record<string, unknown>>('org.dxos.storybook.role.routine'),
 };
 
 /**
@@ -37,6 +45,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.config',
     filter: Surface.makeFilter(ModuleRole.Config),
     component: ConfigModule,
+  }),
+  Surface.create({
+    id: 'role.database',
+    filter: Surface.makeFilter(ModuleRole.Database),
+    component: DatabaseModule,
   }),
   Surface.create({
     id: 'role.executionGraph',
@@ -52,5 +65,10 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.logging',
     filter: Surface.makeFilter(ModuleRole.Logging),
     component: LoggingModule,
+  }),
+  Surface.create({
+    id: 'role.routine',
+    filter: Surface.makeFilter(ModuleRole.Routine),
+    component: RoutineModule,
   }),
 ];

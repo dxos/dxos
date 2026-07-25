@@ -8,23 +8,23 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { useFlush } from '@dxos/plugin-assistant/hooks';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { ResearchInputQueue } from '../testing/schema';
+import { ResearchInputQueue } from '../testing';
 
 export const GraphModule = () => {
   const space = useActiveSpace();
   if (!space) {
     return null;
   }
+
   return <GraphModuleContainer space={space} />;
 };
 

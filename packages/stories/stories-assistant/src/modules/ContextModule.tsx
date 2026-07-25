@@ -20,6 +20,7 @@ export const ContextModule = () => {
   if (!space) {
     return null;
   }
+
   return <ContextModuleContainer space={space} />;
 };
 

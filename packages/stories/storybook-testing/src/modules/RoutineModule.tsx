@@ -19,6 +19,7 @@ export const RoutineModule = () => {
   if (!space) {
     return null;
   }
+
   return <RoutineModuleContainer space={space} />;
 };
 

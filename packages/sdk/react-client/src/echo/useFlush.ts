@@ -6,6 +6,10 @@ import { useCallback, useRef, useState } from 'react';
 
 import { type Space } from '@dxos/client/echo';
 
+/**
+ * Flushes a space's database to storage, exposing a transient `idle → flushing → flushed → idle`
+ * state suitable for driving a toolbar affordance.
+ */
 export const useFlush = (space?: Space) => {
   const [state, setState] = useState<'idle' | 'flushing' | 'flushed'>('idle');
   const resetTimer = useRef<NodeJS.Timeout | null>(null);

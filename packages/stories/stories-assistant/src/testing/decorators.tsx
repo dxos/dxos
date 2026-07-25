@@ -60,7 +60,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ModuleLayout, StoryLayout } from '@dxos/storybook-testing';
 import { isNonNullable } from '@dxos/util';
 
-import { moduleSurfaces } from './modules';
+import { moduleSurfaces } from '../modules';
 import { initClientFromSpaceSnapshot } from './snapshot';
 
 /** Shared CSF parameters for the assistant story groups (fullscreen canvas + plugin translations). */
