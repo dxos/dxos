@@ -125,6 +125,9 @@ export const suggestions = ({ sources, base, group, onAccept, onReject }: Sugges
         : diffHunks(anchor, source.content);
       const hunks = charHunks === undefined ? raw : rebaseHunksWith(charHunks, raw);
       for (const hunk of hunks) {
+        if (isApplied(doc, hunk)) {
+          continue;
+        }
         all.push({ ...hunk, author: source.author, colour: source.colour });
       }
     }
@@ -133,6 +136,15 @@ export const suggestions = ({ sources, base, group, onAccept, onReject }: Sugges
       (a, b) => a.from - b.from || a.to - b.to || (a.author < b.author ? -1 : a.author > b.author ? 1 : 0),
     );
   };
+
+  /**
+   * Has this change already landed in the document? Diffing a proposal against the revision its author
+   * wrote on keeps the diff to their edits, but it also keeps reporting them after they are accepted —
+   * the branch still differs from its own fork anchor. A change whose proposed text is already present
+   * (and whose replaced text is gone) has been applied, so it is no longer a suggestion.
+   */
+  const isApplied = (doc: string, hunk: DiffHunk): boolean =>
+    hunk.inserted.length > 0 && doc.slice(hunk.from, hunk.from + hunk.inserted.length) === hunk.inserted;
 
   const build = (state: EditorState, dismissed: ReadonlySet<string>): SuggestionState => {
     const ranges = [];
@@ -218,8 +230,12 @@ const suggestTooltip = (
   field: StateField<SuggestionState>,
   onAccept?: (hunk: DiffHunk, author: string) => void,
   onReject?: (hunk: DiffHunk, author: string) => void,
-): Extension =>
-  hoverTooltip(
+): Extension => {
+  // The controls are anchored to the hunk, not the pointer, and the same instance is returned for
+  // every position within it — a fresh tooltip per pointer position makes them flicker and jump as the
+  // pointer crosses the change.
+  const tooltips = new Map<string, Tooltip>();
+  return hoverTooltip(
     (view, pos): Tooltip | null => {
       // Match the hunk under the pointer: a range covers `[from, to]`; a pure insertion (from === to,
       // rendered as a widget) is matched at its single offset.
@@ -231,15 +247,27 @@ const suggestTooltip = (
       if (!hunk) {
         return null;
       }
-      return {
+
+      const key = `${suggestionKey(hunk, hunk.author)} ${hunk.from}:${hunk.to}`;
+      const cached = tooltips.get(key);
+      if (cached) {
+        return cached;
+      }
+
+      // Only the hunk being hovered is worth keeping; the document moves on.
+      tooltips.clear();
+      const tooltip: Tooltip = {
         pos: hunk.from,
         end: hunk.to,
         above: true,
         create: () => ({ dom: createControls(view, hunk, onAccept, onReject) }),
       };
+      tooltips.set(key, tooltip);
+      return tooltip;
     },
     { hoverTime: 75 },
   );
+};
 
 /** Builds the accept/reject control row for a hunk; shared by the tooltip layer. */
 const createControls = (
