@@ -155,6 +155,11 @@ export const suggestions = ({ sources, base, group, onAccept, onReject }: Sugges
         const side = hunk.to === state.doc.length ? -1 : 1;
         ranges.push(Decoration.widget({ widget: new SuggestionWidget(hunk), side }).range(hunk.to));
       }
+      // A whitespace-only change (a proposed paragraph break) has no visible text on the line it
+      // anchors to; barring that line marks prose the author never touched.
+      if (hunk.removed.trim().length === 0 && hunk.inserted.trim().length === 0) {
+        continue;
+      }
       // Trim a trailing newline so a paragraph-break change does not tag the following (empty) line.
       let end = hunk.to;
       while (end > hunk.from && state.doc.sliceString(end - 1, end) === '\n') {

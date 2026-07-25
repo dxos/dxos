@@ -29,19 +29,25 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
         return;
       }
 
-      // Fallback: no thread ref — scroll the cursor range into view if needed.
-      const range = Cursor.getRangeFromCursor(entry.view.state, cursor);
+      // A change proposed at a single offset (a pure insertion) anchors as a zero-width range, which
+      // resolves only if both ends map; fall back to the start alone so those still reveal.
+      const [from] = cursor.split(':');
+      const range =
+        Cursor.getRangeFromCursor(entry.view.state, cursor) ??
+        Cursor.getRangeFromCursor(entry.view.state, `${from}:${from}`);
       if (!range) {
         return;
       }
-      // Selecting the range is what makes the reveal visible for an anchor that carries no decoration
-      // of its own (a suggestion card's change), so the reader sees which one they picked.
+
+      // Put the caret at the start of the change and take focus: the reader lands where the change is
+      // and can type there, which a selection alone does not give them.
       entry.view.dispatch({
-        ...(range.to > range.from ? { selection: { anchor: range.from, head: range.to } } : {}),
+        selection: { anchor: range.from },
         ...(isRangeVisible(entry.view, range)
           ? {}
           : { effects: EditorView.scrollIntoView(range.from, SCROLL_OPTIONS) }),
       });
+      entry.view.focus();
     }),
   ),
 );
