@@ -1153,6 +1153,53 @@ describe('reentrancy', () => {
       expect(restored.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );
+
+  // Rehydration rebuilds the process context, so the restored incarnation gets its own cancellation
+  // controller. What must hold is the pairing: the restored handle's terminate has to fire the signal
+  // the restored handler observes — otherwise the resumed run is uncancellable while a dead controller
+  // is aborted instead. `suspend` (shutdown) must not fire either one; it is not a cancel.
+  it.effect(
+    'a rehydrated process is cancelled by its own Cancellation signal',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const seen: AbortSignal[] = [];
+      const executable = Process.make(
+        { key: 'test.cancellation-rehydrate', input: Schema.Number, output: Schema.Void, services: [] },
+        () =>
+          Effect.succeed({
+            onSpawn: () => Effect.void,
+            onInput: () =>
+              Effect.gen(function* () {
+                seen.push(yield* Cancellation.signal);
+              }),
+            onAlarm: () => Effect.void,
+            onChildEvent: () => Effect.void,
+          }),
+      );
+
+      const handle = yield* manager.spawn(executable);
+      yield* handle.submitInput(1);
+      yield* handle.runToCompletion();
+
+      yield* manager.shutdown();
+      yield* manager.startup();
+      const dormant = yield* manager.list({ key: executable.key });
+      const restored = yield* dormant[0].hydrate(executable);
+      yield* restored.submitInput(2);
+      yield* restored.runToCompletion();
+
+      expect(seen).toHaveLength(2);
+      const [firstIncarnation, afterRehydrate] = seen;
+      expect(afterRehydrate).not.toBe(firstIncarnation);
+      // Shutdown suspended the process; neither controller fired.
+      expect(firstIncarnation.aborted).toBe(false);
+      expect(afterRehydrate.aborted).toBe(false);
+
+      yield* restored.terminate();
+      expect(afterRehydrate.aborted).toBe(true);
+      expect(firstIncarnation.aborted).toBe(false);
+    }, Effect.provide(TestLayer)),
+  );
 });
 
 describe('durability', () => {

@@ -40,7 +40,7 @@ const makeManager = (
     processTreeAtom,
     ...(getEdgeClient
       ? {
-          cancel: ({ space, trigger }: RemoteProcessManager.RemoteCancelTarget) =>
+          cancel: ({ space, trigger }: RemoteProcessManager.CancelTarget) =>
             Effect.gen(function* () {
               // `space` arrives as an untyped string from trace meta; skip rather than throw when it is
               // not a valid space id (best-effort — the meter has already cleared locally).

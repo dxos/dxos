@@ -12,11 +12,11 @@ import * as Layer from 'effect/Layer';
 import { Process } from '@dxos/compute';
 
 /**
- * Cancel target for a remote (EDGE) run. Addressed by `trigger` (the stable cross-boundary key) in
- * `space`; `pid` is carried for correlation/telemetry only. Ids are strings to keep this interface
- * free of `@dxos/keys` value imports.
+ * Cancel target for a remote (EDGE) run — the {@link Manager.cancel} argument. Addressed by `trigger`
+ * (the stable cross-boundary key) in `space`; `pid` is carried for correlation/telemetry only. Ids are
+ * strings to keep this interface free of `@dxos/keys` value imports.
  */
-export type RemoteCancelTarget = {
+export type CancelTarget = {
   readonly space: string;
   readonly trigger: string;
   readonly pid?: string;
@@ -37,7 +37,7 @@ export interface Manager {
    * continuation chain; the trigger itself stays enabled so its schedule keeps firing. Optional:
    * absent in {@link layerNoop} (local-only deployments have no remote runtime to cancel on).
    */
-  readonly cancel?: (target: RemoteCancelTarget) => Effect.Effect<void>;
+  readonly cancel?: (target: CancelTarget) => Effect.Effect<void>;
 }
 
 export class Service extends Context.Tag('@dxos/compute-runtime/RemoteProcessManager')<Service, Manager>() {}
