@@ -39,16 +39,10 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
         return;
       }
 
-      // Put the caret where the reader can type against the change, and take focus. A change proposed
-      // as its own line (a zero-width anchor at a line start) reads better from the line before it —
-      // parking inside the proposal's own line puts the caret after the text it proposes.
-      const line = entry.view.state.doc.lineAt(range.from);
-      const anchor =
-        range.to === range.from && range.from === line.from && line.number > 1
-          ? entry.view.state.doc.line(line.number - 1).to
-          : range.from;
+      // Put the caret at the start of the change and take focus: the reader lands where the change is
+      // and can type there, which a selection alone does not give them.
       entry.view.dispatch({
-        selection: { anchor },
+        selection: { anchor: range.from },
         ...(isRangeVisible(entry.view, range)
           ? {}
           : { effects: EditorView.scrollIntoView(range.from, SCROLL_OPTIONS) }),

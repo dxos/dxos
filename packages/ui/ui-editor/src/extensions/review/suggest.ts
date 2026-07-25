@@ -265,12 +265,7 @@ const suggestTooltip = (
       tooltips.set(key, tooltip);
       return tooltip;
     },
-    {
-      hoverTime: 75,
-      // Accepting changes the document and rejecting dismisses the hunk; either way the controls are
-      // about a change that no longer exists, so they must go rather than wait for the pointer to move.
-      hideOn: (transaction) => transaction.docChanged || transaction.effects.some((effect) => effect.is(dismissEffect)),
-    },
+    { hoverTime: 75 },
   );
 };
 
