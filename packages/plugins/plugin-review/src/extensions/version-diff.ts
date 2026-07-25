@@ -116,6 +116,7 @@ const changedLines = (base: string, state: EditorState): Map<number, LineChange>
       mark(span.from, 'delete');
     }
   }
+
   return lines;
 };
 
