@@ -13,8 +13,10 @@ import { AssistantSkill } from '@dxos/plugin-assistant';
 import { CommentSkill } from '@dxos/plugin-comments/skills';
 import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
+import { Cell } from '@dxos/story-modules';
 import { trim } from '@dxos/util';
 
+import { StoryRole } from '../modules/roles';
 import { Module, ModuleContainer, addToRootCollection, config, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
@@ -107,6 +109,12 @@ export const WithMarkdown: Story = {
       // Register the documents in the space root collection so plugin-space builds app-graph nodes
       // for them — this is what makes the editor's comment toolbar (a graph action) resolvable.
       addToRootCollection(space, [document, styleGuide]);
+      return [
+        [Cell.surface(StoryRole.Chat)],
+        [Cell.article(document)],
+        [Cell.companion('history', document), Cell.companion('comments', document)],
+        [Cell.surface(StoryRole.Logging)],
+      ];
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Markdown.Document)).run();
@@ -114,7 +122,6 @@ export const WithMarkdown: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Document], [Module.History, Module.Comments], [Module.Logging]],
     skills: [AssistantSkill.key, MarkdownSkill.key, CommentSkill.key],
   },
 };

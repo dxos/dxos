@@ -35,6 +35,7 @@ import {
   TraceModule,
   TriggersModule,
 } from '../modules';
+import { StoryRole } from '../modules/roles';
 
 /**
  * Role tokens for the stories-assistant modules. Each module is contributed as a dedicated
@@ -211,5 +212,15 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'module.triggers',
     filter: Surface.makeFilter(Module.Triggers),
     component: withModuleProps(TriggersModule),
+  }),
+  Surface.create({
+    id: 'role.chat',
+    filter: Surface.makeFilter(StoryRole.Chat),
+    component: withModuleProps(ChatModule),
+  }),
+  Surface.create({
+    id: 'role.logging',
+    filter: Surface.makeFilter(StoryRole.Logging),
+    component: withModuleProps(LoggingModule),
   }),
 ];
