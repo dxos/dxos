@@ -3,7 +3,7 @@
 //
 
 import { Surface } from '@dxos/app-framework/ui';
-import { ExecutionGraphModule, InvocationsModule, LoggingModule } from '@dxos/storybook-testing';
+import { ExecutionGraphModule, InvocationsModule, LoggingModule } from '@dxos/storybook-testing/modules';
 
 import {
   ChatModule,

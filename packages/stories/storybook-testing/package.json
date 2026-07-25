@@ -18,6 +18,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./modules": {
+      "source": "./src/modules/index.ts",
+      "types": "./dist/types/src/modules/index.d.ts",
+      "import": "./dist/lib/modules/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
