@@ -10,7 +10,7 @@ import { AssistantSkill } from '@dxos/plugin-assistant';
 import { type Space } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
+import { Module, ModuleContainer, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -42,7 +42,6 @@ const PROJECT_COMMANDS = [
 let storySpace: Space | undefined;
 
 const decorators = createDecorators({
-  config: config.remote,
   lazyPlugins: async () => {
     const [{ Instructions, Project, Routine }, { Collection, Text }, { ProjectsPlugin }] = await Promise.all([
       import('@dxos/compute'),

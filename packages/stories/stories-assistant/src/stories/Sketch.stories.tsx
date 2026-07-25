@@ -11,7 +11,7 @@ import { SketchSkill } from '@dxos/plugin-sketch';
 import { type Space } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
+import { Module, ModuleContainer, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -29,7 +29,6 @@ type Story = StoryObj<typeof meta>;
 let storySpace: Space | undefined;
 
 const decorators = createDecorators({
-  config: config.remote,
   lazyPlugins: async () => {
     const [{ Sketch }, { SketchPlugin }] = await Promise.all([
       import('@dxos/plugin-sketch'),

@@ -47,7 +47,6 @@ export const WithMail: Story = {
         plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
       await space.db.flush();
@@ -70,7 +69,9 @@ export const WithMail: Story = {
   },
 };
 
-// Test with prompt: Sync my email.
+/**
+ * Prompt: "sync my email".
+ */
 export const WithGmail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
@@ -118,7 +119,6 @@ export const WithConnectorPrompt: Story = {
         plugins: [InboxPlugin(), ConnectorPlugin()],
       };
     },
-    config: config.remote,
     types: [Feed.Feed, Mailbox.Mailbox],
     onChatCreated: async ({ space, chat }) => {
       const feed = await chat.feed.load();
@@ -151,7 +151,6 @@ export const WithCalendar: Story = {
         plugins: [InboxPlugin(), ConnectorPlugin()],
       };
     },
-    config: config.remote,
     types: [Feed.Feed, Calendar.Calendar, Event.Event],
     onInit: async ({ space }) => {
       space.db.add(Calendar.make({ name: 'Calendar' }));
@@ -176,7 +175,6 @@ const VITE_LINEAR_API_KEY = process.env.VITE_LINEAR_API_KEY;
 export const WithLinearSync: Story = {
   decorators: createDecorators({
     plugins: [],
-    config: config.remote,
     types: [Task.Task, Person.Person, Pipeline.Pipeline],
     accessTokens: accessTokensFromEnv({
       'linear.app': VITE_LINEAR_API_KEY,
@@ -199,7 +197,6 @@ export const WithTranscription: Story = {
         plugins: [TranscriptionPlugin(), PreviewPlugin()],
       };
     },
-    config: config.remote,
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());

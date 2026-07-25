@@ -15,7 +15,7 @@ import { CommentSkill } from '@dxos/plugin-review/skills';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, addToRootCollection, config, createDecorators } from '../testing';
+import { Module, ModuleContainer, addToRootCollection, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -89,7 +89,6 @@ export const WithMarkdown: Story = {
         plugins: [MarkdownPlugin(), ReviewPlugin(), SpacePlugin({})],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const document = space.db.add(
         Markdown.make({
@@ -184,7 +183,6 @@ export const WithSkills: Story = {
         plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       space.db.add(Markdown.make({ name: 'Tasks' }));
     },
@@ -209,7 +207,6 @@ export const WithScript: Story = {
         plugins: [MarkdownPlugin(), ScriptPlugin()],
       };
     },
-    config: config.local,
     types: [Script.Script, Text.Text],
     onInit: async ({ client, space }) => {
       const [{ getAccessCredential }, { templates }] = await Promise.all([

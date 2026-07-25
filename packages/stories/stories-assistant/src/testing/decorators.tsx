@@ -249,7 +249,7 @@ const PluginManagerHost = ({
  * Create storybook decorators.
  * Supports lazy plugin loading via the `lazyPlugins` option.
  */
-export const createDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
+export const createDecorators = ({ config: configProp = config.remote, lazyPlugins, ...props }: DecoratorsProps) => {
   if (lazyPlugins) {
     return [
       ((Story: FC, context: { id: string }) => {
@@ -263,11 +263,15 @@ export const createDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => 
             lazyResult
               ? buildPluginManagerOptions({
                   ...props,
+                  config: configProp,
                   plugins: lazyResult.plugins,
                   types: [...(props.types ?? []), ...(lazyResult.types ?? [])],
                 })
               : null,
-          [lazyResult],
+          // `props`/`lazyPlugins` are stable per createDecorators call; the captured config must
+          // still invalidate the memo if a recreated decorator carries a different one.
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+          [lazyResult, configProp],
         );
 
         if (!options) {
@@ -283,7 +287,8 @@ export const createDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => 
     ];
   }
 
-  return [withPluginManager(buildPluginManagerOptions(props))];
+  // Destructuring consumed `config`, so forward the selected one explicitly (both paths).
+  return [withPluginManager(buildPluginManagerOptions({ ...props, config: configProp }))];
 };
 
 /**

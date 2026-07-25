@@ -651,3 +651,22 @@ S2, S3 and S6 run headlessly by the agent after the main-merge:
   (decorations 4 → 3, cards 3 → 2). The popover stays open after clicking — the auto-hide was reverted at
   the user's request. Comment click-through remains untestable (S2.0: the story's `comments()` extension
   never renders a mark).
+
+### F1 walkthrough (2026-07-25, post-merge build)
+
+- [ ] **F1.1 Decoration/gutter flicker** — likely the change-bar gutter being added/removed with the
+      overlay; reconfigure the extension in place (enable/disable) instead of adding/removing it.
+- [ ] **F1.2 Stale own-edit strike** — Markdown: type "hello" → Suggesting → Markdown: type "world" →
+      Suggesting: "world" renders struck through, and no new card appears. The own-branch content is
+      captured at first bind and not refreshed on re-entry, so later main edits diff as deletions.
+- [x] F1.3 / F1.4 word + mid-word deletion spans: good.
+- [ ] **F1.5 Block deletion renders three fragments** (ok but not ideal): deleting a bullet leaves the
+      previous bullet intact, then the struck span, then the next bullet's text run-on. Better: strike the
+      entire bullet as one unit.
+- [ ] **F1.6 Trailing-suggestion caret access is cumbersome** (tracked for later; lower priority).
+- [ ] **F1.7 Mode-switch round-trips end read-only** — after multiple Suggesting↔Markdown↔Plain-text
+      switches, ending in Suggesting the document is not editable. The bind/rebind + review-mode state
+      machine has order-dependent state.
+
+**Assessment:** the mode-switch/bind lifecycle (F1.2, F1.7, F1.1) is one state machine failing in
+different ways — needs a designed model + headless unit tests, not more per-symptom patches.

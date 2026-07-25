@@ -8,7 +8,7 @@ import { userEvent, within } from 'storybook/test';
 import { DelegationSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
+import { Module, ModuleContainer, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -30,7 +30,6 @@ export const Default: Story = {
         plugins: [MarkdownPlugin()],
       };
     },
-    config: config.remote,
   }),
   args: {
     layout: [[Module.Chat]],
@@ -39,7 +38,6 @@ export const Default: Story = {
 
 export const WithPlanning: Story = {
   decorators: createDecorators({
-    config: config.remote,
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
       return {
@@ -60,7 +58,6 @@ export const WithPlanning: Story = {
  */
 export const WithSubAgents: Story = {
   decorators: createDecorators({
-    config: config.remote,
     // TODO(burdon): Move instructions to skill?
     createAgent: {
       name: 'Supervisor',
@@ -115,7 +112,6 @@ export const WithSubAgentsTest: Story = {
  */
 export const WithExecutionGraph: Story = {
   decorators: createDecorators({
-    config: config.remote,
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
       return {
@@ -137,7 +133,6 @@ export const WithWebSearch: Story = {
         plugins: [MarkdownPlugin()],
       };
     },
-    config: config.remote,
   }),
   args: {
     layout: [[Module.Chat]],

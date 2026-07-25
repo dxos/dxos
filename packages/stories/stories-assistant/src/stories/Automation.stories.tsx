@@ -11,7 +11,7 @@ import { Filter, Query, Ref } from '@dxos/echo';
 import { ChessOperation } from '@dxos/plugin-chess';
 import { Text } from '@dxos/schema';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
+import { Module, ModuleContainer, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -28,7 +28,6 @@ type Story = StoryObj<typeof meta>;
 export const WithTriggers: Story = {
   decorators: createDecorators({
     plugins: [],
-    config: config.remote,
     onInit: async ({ space }) => {
       space.db.add(
         Trigger.make({
@@ -59,7 +58,6 @@ export const WithChessTrigger: Story = {
         types: [Game.Game, Chess.State],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const [{ Chess }, { Game }] = await Promise.all([import('@dxos/plugin-chess'), import('@dxos/plugin-game')]);
       // TODO(burdon): Add player DID (for user and assistant).
@@ -113,7 +111,6 @@ export const WithPrompt: Story = {
         plugins: [MarkdownPlugin()],
       };
     },
-    config: config.remote,
     types: [Text.Text],
     onInit: async ({ space }) => {
       space.db.add(Operation.serialize(RunInstructions));
