@@ -3,6 +3,7 @@
 //
 
 import { Role } from '../../../common';
+import { isSurfaceBoundaryRole, setSurfaceBoundaryRoles } from './boundary';
 import { SurfaceContext } from './context';
 import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent';
 import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
@@ -14,6 +15,13 @@ import {
   useSurfaceProfilerEntries,
   useSurfaceProfilerStats,
 } from './SurfaceProfilerContext';
+import {
+  DX_SURFACE_ROOT_TAG,
+  SURFACE_ROOT_MOUNTED_EVENT,
+  SURFACE_ROOT_UNMOUNTED_EVENT,
+  registerSurfaceRootElement,
+} from './SurfaceRootElement';
+import { SurfaceRootProviders } from './SurfaceRootProviders';
 import {
   type Binding as SurfaceBindingType,
   type Definition as SurfaceDefinition,
@@ -45,6 +53,15 @@ export namespace Surface {
 
   export const isDebugEnabled = isSurfaceDebugEnabled;
   export const setDebug = setSurfaceDebug;
+
+  // Web-component boundary dispatch (see boundary.ts / SurfaceRootElement.tsx).
+  export const registerRootElement = registerSurfaceRootElement;
+  export const setBoundaryRoles = setSurfaceBoundaryRoles;
+  export const isBoundaryRole = isSurfaceBoundaryRole;
+  export const RootProviders = SurfaceRootProviders;
+  export const ROOT_TAG = DX_SURFACE_ROOT_TAG;
+  export const ROOT_MOUNTED_EVENT = SURFACE_ROOT_MOUNTED_EVENT;
+  export const ROOT_UNMOUNTED_EVENT = SURFACE_ROOT_UNMOUNTED_EVENT;
 
   export const ProfilerProvider = SurfaceProfilerProvider;
   export const useProfilerCallback = useSurfaceProfilerCallback;

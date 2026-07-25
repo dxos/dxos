@@ -11,11 +11,11 @@ import { ContextProtocolProvider } from '@dxos/web-context-react';
 import { Capabilities } from '../common';
 import * as Role from '../common/Role';
 import { PluginManagerContext } from '../context';
-import { topologicalSort } from '../helpers';
 import { PluginManagerProvider } from '../ui/components/PluginManager/PluginManagerProvider';
 import { SurfaceComponent } from '../ui/components/Surface/SurfaceComponent';
 import { SurfaceManager } from '../ui/components/Surface/SurfaceManager';
 import { SurfaceManagerProvider } from '../ui/components/Surface/SurfaceManagerContext';
+import { composeContexts } from '../ui/components/Surface/SurfaceRootProviders';
 import { type TestHarness } from './harness';
 
 export type HarnessRenderOptions = Omit<RenderOptions, 'wrapper'> & {
@@ -85,19 +85,6 @@ const HarnessProviders = ({ harness, extra, children }: HarnessProvidersProps) =
       </ContextProtocolProvider>
     </PluginManagerProvider>
   );
-};
-
-const composeContexts = (contexts: Capabilities.ReactContext[]): FC<PropsWithChildren> => {
-  if (contexts.length === 0) {
-    return Passthrough;
-  }
-  return topologicalSort(contexts)
-    .map(({ context }) => context)
-    .reduce((Acc, Next) => ({ children }: PropsWithChildren) => (
-      <Acc>
-        <Next>{children}</Next>
-      </Acc>
-    ));
 };
 
 // Composes in innermost-first order: the first context in the array wraps
