@@ -489,7 +489,12 @@ Workstream folded in from `claude/markdown-selection-assistant-visibility-833995
       (resolves workspace/catalog specifiers; dry-run verified 0 unresolved). User to run first publish.
 - [ ] **PR #12333 land** (CI deliberately unwatched until confirmed working; re-arm via land skill).
 - [ ] History companion walkthrough in serve-min (story battery covers it; in-app pass pending).
-- [ ] PLUGIN.mdl rewrite for merged plugin-review; plugin-key settings migration decision (users re-enable once).
+- [ ] PLUGIN.mdl rewrite for merged plugin-review.
+- [x] **Plugin-key settings migration: DECIDED 2026-07-25 — no migration.** Merging plugin-comments and
+      plugin-versioning into `org.dxos.plugin.review` retires both old keys, so an existing user's
+      enabled-plugin list names two plugins that no longer exist and not the one replacing them: comments
+      and history stop appearing until they enable Review from the registry. Accepted as a one-off
+      re-enable rather than rewriting the retired keys on load.
 - [ ] Later arcs (consolidation doc): per-media diff seam in `@dxos/versioning`; sheet/sketch adapters;
       `react-ui-review` extraction; ExtensionProvider props → review-context facet; `useCapabilityMaybe`
       (`packages/sdk/app-framework/TASKS.md`).
