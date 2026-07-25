@@ -149,7 +149,10 @@ export const useVersionedEditor = ({
   const branchLoading =
     // The base view renders a detached parent snapshot, so it does not wait on the branch binding.
     (!!activeBranch && !branchText && !baseActive) ||
-    (!!activeVersion?.branch && !checkpointText) ||
+    // Any checkpoint, not just a branch one: a root checkpoint reads its text through a ref that may
+    // still be loading, and the `checkpoint-*` key does not change when it resolves — the editor would
+    // stay blank.
+    (!!activeVersion && !checkpointText) ||
     (!!activeFork && forkContent === undefined) ||
     // Ambient Suggesting waits on the user's own branch binding so edits never land on main.
     (ambientSuggesting && !ownBranchText);
