@@ -111,9 +111,12 @@ A package's TEST-PLAN carries two tables — **automated** (play-asserted; runs 
 `moon run <pkg>:test-storybook` and CI) and **manual** (judgment). Each row: the story, and what it
 asserts or what to verify.
 
-- **Assert the resulting mutation, not the op dispatch.** A plugin-review test asserted that
-  Accept/Reject "route to ops" and stayed green while the buttons did nothing — the op fired and no
-  document change followed. A test that stops at the seam it owns passes through a broken feature.
+- **Word each row as the user-visible outcome, not the internal seam — then cover it.** A
+  plugin-review manual row read "Accept/Reject route to ops", which stayed literally true while the
+  buttons did nothing: the op fired and the document never changed. No automated test covered the
+  path at all. Write "Accept folds the change into the document" instead, and **state plainly in the
+  plan which rows have no automated backing** — a row phrased as a dispatch describes a seam that
+  cannot fail, so it hides both the broken feature and the missing coverage.
 - Stories tagged `['!test']` never run in CI. Say so in the plan and state _why_ per story, or the
   plan overstates its coverage.
 - Record results with dates, and keep issue ids stable once reported.
@@ -171,6 +174,7 @@ look.
 - Every story smoke-loaded before it reaches the user.
 - Walkthrough: one story at a time, a baseline story included, failures logged not fixed.
 - Play stories carry a `Test` suffix and no manual `Test:` JSDoc, and are declared last.
-- Test plan asserts mutations, and states why each `['!test']` story is excluded.
+- Test-plan rows describe user-visible outcomes, name which have no automated backing, and state why
+  each `['!test']` story is excluded.
 - Component's first story (decorators, translations) → [[composer-ui]]; full-app Playwright specs →
   [[browser-e2e-tests]].
