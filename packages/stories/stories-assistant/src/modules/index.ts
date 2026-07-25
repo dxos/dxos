@@ -3,6 +3,7 @@
 //
 
 import { Role } from '@dxos/app-framework';
+import { ModuleRole } from '@dxos/storybook-testing/modules';
 
 export * from './ChatModule';
 export * from './ContextModule';
@@ -20,9 +21,7 @@ export * from './TasksModule';
  * surfaces instead of a role here.
  */
 export const StoryRole = {
-  ExecutionGraph: Role.make<Record<string, any>>('org.dxos.storybook.role.executionGraph'),
-  Invocations: Role.make<Record<string, any>>('org.dxos.storybook.role.invocations'),
-  Logging: Role.make<Record<string, any>>('org.dxos.storybook.role.logging'),
+  ...ModuleRole,
 
   Chat: Role.make<Record<string, any>>('org.dxos.storybook.role.chat'),
   Context: Role.make<Record<string, any>>('org.dxos.storybook.role.context'),
