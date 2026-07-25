@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { Attention, ViewState } from '@dxos/react-ui-attention';
+import { type Attention, type ViewState } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 

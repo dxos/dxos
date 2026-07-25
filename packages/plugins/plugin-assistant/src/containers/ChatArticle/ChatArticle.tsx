@@ -16,7 +16,7 @@ import { useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useChatProcessor, useChatServices, usePresets } from '#hooks';
+import { useChatProcessor, useChatServices, usePresets, useSelectionContext } from '#hooks';
 import { type Assistant, AssistantCapabilities, type ChatType } from '#types';
 
 export type ChatArticleProps = AppSurface.ObjectSectionProps<ChatType.Chat> & {
@@ -37,6 +37,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     // The provider is configured in settings; the chat surfaces it as a read-only online indicator.
     const online = preset?.provider === Provider.edge.id;
     const processor = useChatProcessor({ space, chat, preset, runtime, registry, settings });
+    const getContext = useSelectionContext(companionTo);
 
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
     // a direct `chat.viewType` read in render does not establish a reactive dependency.
@@ -78,7 +79,14 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     }
 
     return (
-      <ChatComponent.Root chat={chat} db={space?.db} processor={processor} onEvent={onEvent} onSubmit={onSubmit}>
+      <ChatComponent.Root
+        chat={chat}
+        db={space?.db}
+        processor={processor}
+        getContext={getContext}
+        onEvent={onEvent}
+        onSubmit={onSubmit}
+      >
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Toolbar>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />

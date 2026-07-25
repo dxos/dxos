@@ -35,6 +35,9 @@ export default Capability.makeModule(
     const getCommentConfig = (typename: string) =>
       capabilities.getAll(AppCapabilities.CommentConfig).find(({ id }) => id === typename);
 
+    const getAnchorResolver = (typename: string) =>
+      capabilities.getAll(AppCapabilities.AnchorResolver).find(({ key }) => key === typename);
+
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'commentsCompanion',
@@ -95,12 +98,13 @@ export default Capability.makeModule(
 
                 // Fallback (non-editor objects): anchor to the current selection, or create an
                 // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
-                // placeholder is not a cursor range and would throw in `getAnchorLabel`.
+                // placeholder is not a cursor range the resolver could span.
                 const selection = viewState.get(Selection.aspect, objectUri);
                 const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
                 yield* Operation.invoke(CommentOperation.Create, {
                   anchor: cursorAnchor ?? Date.now().toString(),
-                  name: cursorAnchor ? config.getAnchorLabel?.(object, cursorAnchor) : undefined,
+                  name:
+                    cursorAnchor && typename ? getAnchorResolver(typename)?.getText(object, cursorAnchor) : undefined,
                   subject: object,
                 });
               }),

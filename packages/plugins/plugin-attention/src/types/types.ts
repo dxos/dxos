@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 

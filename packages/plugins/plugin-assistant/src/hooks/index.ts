@@ -15,6 +15,7 @@ export * from './useFilteredTypes';
 export * from './useFlush';
 export * from './usePresets';
 export * from './useReferencesProvider';
+export * from './useSelectionContext';
 export * from './useTraceMessages';
 export * from './useHomeSuggestions';
 export * from './useProcessEphemeralStatus';

@@ -19,6 +19,7 @@ import {
   HistoryModule,
   InboxModule,
   InvocationsModule,
+  LoggingModule,
   MessageModule,
   ProjectModule,
   ResearchInputModule,
@@ -54,6 +55,7 @@ export const Module = {
   History: Role.make<Record<string, any>>('org.dxos.storybook.module.history'),
   Inbox: Role.make<Record<string, any>>('org.dxos.storybook.module.inbox'),
   Invocations: Role.make<Record<string, any>>('org.dxos.storybook.module.invocations'),
+  Logging: Role.make<Record<string, any>>('org.dxos.storybook.module.logging'),
   Message: Role.make<Record<string, any>>('org.dxos.storybook.module.message'),
   Project: Role.make<Record<string, any>>('org.dxos.storybook.module.project'),
   ResearchInput: Role.make<Record<string, any>>('org.dxos.storybook.module.researchInput'),
@@ -134,6 +136,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'module.invocations',
     filter: Surface.makeFilter(Module.Invocations),
     component: withModuleProps(InvocationsModule),
+  }),
+  Surface.create({
+    id: 'module.logging',
+    filter: Surface.makeFilter(Module.Logging),
+    component: withModuleProps(LoggingModule),
   }),
   Surface.create({
     id: 'module.message',

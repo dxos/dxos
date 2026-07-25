@@ -10,7 +10,7 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type ModuleProps } from '@dxos/story-modules';
 
-import { useCurrentObject } from '../testing';
+import { useActiveObject } from '../testing';
 
 /**
  * Renders the current context object as its Article surface — for a Markdown document this is the
@@ -18,7 +18,7 @@ import { useCurrentObject } from '../testing';
  */
 export const DocumentModule = ({ space }: ModuleProps) => {
   const { graph } = useAppGraph();
-  const object = useCurrentObject(space);
+  const object = useActiveObject(space);
   // The object is a child of the space root collection, so its app-graph node id is the collections
   // path. The editor's toolbar actions (e.g. the comment button) are graph actions on that node;
   // expand the path to materialize the node and its actions — the work the deck's navtree normally

@@ -15,6 +15,7 @@ export * from './ExecutionGraphModule';
 export * from './GraphModule';
 export * from './HistoryModule';
 export * from './InvocationsModule';
+export * from './LoggingModule';
 export * from './MessageModule';
 export * from './ProjectModule';
 export * from './ResearchInputModule';
