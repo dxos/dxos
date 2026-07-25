@@ -8,6 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, type CancelTarget, createProgressTraceSink, resolveTriggerId } from '@dxos/app-toolkit';
 import { Process, ServiceResolver, Trace } from '@dxos/compute';
 import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
+import { log } from '@dxos/log';
 
 /**
  * Contributes a {@link Capabilities.TraceSink} that projects `status.update` trace events into the
@@ -55,17 +56,30 @@ export default Capability.makeModule(
         resolver.resolve(RemoteProcessManager.Service, {}).pipe(
           Effect.flatMap((manager) => manager.cancel?.({ space, trigger, pid }) ?? Effect.void),
           Effect.scoped,
-          // No remote manager configured / unreachable — the meter has already cleared locally; drop.
-          Effect.catchAll(() => Effect.void),
+          // Soft-fail (the meter has already cleared locally) but never silently: an unresolvable
+          // manager or a rejected request means the run may still be going on the edge.
+          Effect.catchAllCause((cause) =>
+            Effect.sync(() => log.warn('edge progress cancel failed', { space, trigger, pid, cause })),
+          ),
         ),
       );
 
     return Capability.contributes(Capabilities.TraceSink, ({ resolver }) =>
       createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
         cancelProcess: (target: CancelTarget) => {
-          const triggerId = resolveTriggerId(target);
-          if (target.runtimeName && Trace.isEdgeRuntime(target.runtimeName) && target.space && triggerId) {
-            cancelRemote(resolver, target.space, triggerId, target.pid);
+          // An edge target never falls through to local terminate: its pid names a process on the
+          // edge runtime, so terminating that id here could only hit an unrelated local process.
+          if (target.runtimeName && Trace.isEdgeRuntime(target.runtimeName)) {
+            const triggerId = resolveTriggerId(target);
+            if (target.space && triggerId) {
+              cancelRemote(resolver, target.space, triggerId, target.pid);
+            } else {
+              log.warn('edge progress cancel dropped: unresolvable target', {
+                space: target.space,
+                trigger: target.trigger?.uri.toString(),
+                pid: target.pid,
+              });
+            }
           } else if (target.pid) {
             terminateLocal(target.pid);
           }

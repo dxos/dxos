@@ -123,10 +123,10 @@ describe('Trace.encodeTraceMessage / decodeTraceMessage', () => {
     const original = message({ pid: 'p1', space: 'SPACE1', trigger }, [{ type: 'status.update' }]);
     const tags = Trace.messageToTags(original);
 
-    // Payload alone loses the trigger (by design)…
+    // The payload alone loses the trigger by design.
     expect(Trace.decodeTraceMessage(Trace.encodeTraceMessage(original)).meta.trigger).toBeUndefined();
 
-    // …the envelope tags restore it.
+    // The envelope tags restore it.
     const decoded = Trace.decodeTraceMessage(Trace.encodeTraceMessage(original), tags);
     expect(decoded.meta.trigger?.uri.toString()).toBe(trigger.uri.toString());
     expect(Trace.matchesFilter(decoded, { trigger: trigger.uri.toString() })).toBe(true);
@@ -136,5 +136,20 @@ describe('Trace.encodeTraceMessage / decodeTraceMessage', () => {
     const original = message({ pid: 'p1', space: 'SPACE1' }, [{ type: 'status.update' }]);
     const decoded = Trace.decodeTraceMessage(Trace.encodeTraceMessage(original), Trace.messageToTags(original));
     expect(decoded.meta.trigger).toBeUndefined();
+  });
+
+  // `conversation` is the other ref the payload drops, and it is what `matchesFilter` compares — so a
+  // conversation-filtered subscription (the coarse tag `subscriptionTagForFilter` prefers) receives
+  // the broadcast and then discards it unless decode restores the ref.
+  test('restores meta.conversation from the envelope tags', ({ expect }) => {
+    const conversation = Ref.fromURI(EID.make({ entityId: 'CONVERSATION1' }));
+    const original = message({ pid: 'p1', space: 'SPACE1', conversation }, [{ type: 'status.update' }]);
+    const tags = Trace.messageToTags(original);
+
+    expect(Trace.decodeTraceMessage(Trace.encodeTraceMessage(original)).meta.conversation).toBeUndefined();
+
+    const decoded = Trace.decodeTraceMessage(Trace.encodeTraceMessage(original), tags);
+    expect(decoded.meta.conversation?.uri.toString()).toBe(conversation.uri.toString());
+    expect(Trace.matchesFilter(decoded, { conversation: conversation.uri.toString() })).toBe(true);
   });
 });

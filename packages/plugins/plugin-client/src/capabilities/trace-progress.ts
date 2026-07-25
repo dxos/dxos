@@ -31,13 +31,16 @@ export default Capability.makeModule(
     const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
     const resolver = yield* Capability.get(Capabilities.ServiceResolver);
 
-    // Edge-only cancel: the meter has already cleared locally; a missing remote manager is a no-op.
+    // Edge-only cancel. Soft-fails (the meter has already cleared locally), but never silently: an
+    // unresolvable manager or a rejected request means the run may still be going on the edge.
     const cancelRemote = (space: string, trigger: string, pid?: string) =>
       Effect.runFork(
         resolver.resolve(RemoteProcessManager.Service, {}).pipe(
           Effect.flatMap((manager) => manager.cancel?.({ space, trigger, pid }) ?? Effect.void),
           Effect.scoped,
-          Effect.catchAll(() => Effect.void),
+          Effect.catchAllCause((cause) =>
+            Effect.sync(() => log.warn('edge progress cancel failed', { space, trigger, pid, cause })),
+          ),
         ),
       );
 

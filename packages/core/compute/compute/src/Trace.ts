@@ -331,24 +331,30 @@ export const encodeTraceMessage = (message: Pick<MessageData, 'meta' | 'isEpheme
 
 /**
  * Decode a broadcast trace message back into a {@link Message} object (DX-1125). The wire payload
- * drops ref meta fields, so `tags` — the broadcast envelope's tag list — is required to restore
- * `meta.trigger` for consumers that address work by trigger (e.g. cancelling an edge run). The
- * restored ref is address-only (`.uri`); it is never resolved.
+ * drops both ref meta fields (see {@link encodeMetaForWire}), so `tags` — the broadcast envelope's
+ * tag list — is required to restore them: `trigger` addresses work for cancellation, and
+ * `conversation` is what {@link matchesFilter} compares, so a subscription filtered by it matches
+ * nothing without this. Restored refs are address-only (`.uri`); they are never resolved.
  */
 export const decodeTraceMessage = (bytes: Uint8Array, tags?: readonly string[]): Message => {
   const parsed = JSON.parse(new TextDecoder().decode(bytes)) as Partial<MessageData>;
   const meta = parsed.meta ?? {};
-  const trigger = meta.trigger ?? triggerFromTags(tags);
+  const conversation = meta.conversation ?? refFromTags<Obj.Unknown>(tags, 'conversation:');
+  const trigger = meta.trigger ?? refFromTags<Trigger.Trigger>(tags, 'trigger:');
   return Obj.make(Message, {
-    meta: { ...meta, ...(trigger ? { trigger } : {}) },
+    meta: {
+      ...meta,
+      ...(conversation ? { conversation } : {}),
+      ...(trigger ? { trigger } : {}),
+    },
     isEphemeral: parsed.isEphemeral ?? true,
     events: parsed.events ?? [],
   });
 };
 
-/** The trigger ref carried on a broadcast envelope's `trigger:<uri>` tag, when present and parseable. */
-const triggerFromTags = (tags: readonly string[] | undefined): Ref.Ref<Trigger.Trigger> | undefined => {
-  const uri = tags?.find((tag) => tag.startsWith('trigger:'))?.slice('trigger:'.length);
+/** The ref carried on a broadcast envelope's `<prefix><uri>` tag, when present and parseable. */
+const refFromTags = <T>(tags: readonly string[] | undefined, prefix: string): Ref.Ref<T> | undefined => {
+  const uri = tags?.find((tag) => tag.startsWith(prefix))?.slice(prefix.length);
   const eid = uri !== undefined ? EID.tryParse(uri) : undefined;
   return eid !== undefined ? Ref.fromURI(eid) : undefined;
 };
