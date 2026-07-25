@@ -159,7 +159,7 @@ export const useReviewExtensions = ({
     (hunk: DiffHunk, author: string) => {
       setReviewView({ suggestion: { author, from: hunk.from, to: hunk.to } });
     },
-    [setReviewView],
+    [setReviewView, object.id],
   );
   const overlay = useMemo(
     () => suggestionsOverlay(handleAmbientAccept, handleAmbientReject, handleSelectSuggestion),

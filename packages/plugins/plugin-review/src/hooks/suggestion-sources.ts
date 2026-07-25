@@ -77,15 +77,18 @@ export const suggestionGroups = (base: string, sources: SuggestionSource[], poli
       // `base` coordinates — the same treatment the editor overlay gives, so the reader's own edits
       // never surface as somebody else's proposed change.
       const anchor = source.base ?? base;
-      const raw = policy
-        ? groupHunks(diffHunks(anchor, source.content), anchor, policy)
-        : diffHunks(anchor, source.content);
       // Edits the document already carries relative to the SAME anchor have been accepted, so they are
-      // no longer suggestions — matched by content, since accepting shifts every later offset.
+      // no longer suggestions — matched by content (accepting shifts every later offset) and BEFORE
+      // grouping, since a card coalesces several hunks and would never match one of them.
       const editKey = (hunk: DiffHunk) => `${hunk.removed}\u241f${hunk.inserted}`;
       const applied = source.base === undefined ? undefined : new Set(diffHunks(source.base, base).map(editKey));
-      const pending = applied === undefined ? raw : raw.filter((hunk) => !applied.has(editKey(hunk)));
-      const hunks = source.base === undefined ? pending : rebaseHunksWith(computeCharHunks(source.base, base), pending);
+      const authored = diffHunks(anchor, source.content);
+      const pending = (applied === undefined ? authored : authored.filter((hunk) => !applied.has(editKey(hunk))))
+        // A whitespace-only change (a proposed paragraph break) has nothing to show on a card, and
+        // reviewing it apart from the text it spaces is meaningless.
+        .filter((hunk) => hunk.removed.trim().length > 0 || hunk.inserted.trim().length > 0);
+      const grouped = policy ? groupHunks(pending, anchor, policy) : pending;
+      const hunks = source.base === undefined ? grouped : rebaseHunksWith(computeCharHunks(source.base, base), grouped);
       return hunks.map((hunk) => ({ ...hunk, author: source.author, colour: source.colour }));
     })
     .sort((a, b) => a.from - b.from || a.to - b.to || (a.author < b.author ? -1 : a.author > b.author ? 1 : 0));
