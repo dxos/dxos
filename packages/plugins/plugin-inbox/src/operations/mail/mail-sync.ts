@@ -5,7 +5,6 @@
 import { format } from 'date-fns';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
@@ -296,15 +295,8 @@ export const runMailSync = (
 
     const stats: Cursor.Stats = { newMessages: 0 };
 
-    // Cooperative cancellation: an optional Cancellation service (provided by the runtime able to
-    // cancel an in-flight run — e.g. EDGE, driven by a client cancel) exposes the AbortSignal the
-    // pipeline observes. Absent locally, where cancellation arrives as fiber interruption (also
-    // caught by `Pipeline.abortWith`), so fall back to a signal that never fires.
-    const cancellation = yield* Effect.serviceOption(Cancellation.Cancellation);
-    const signal = Option.match(cancellation, {
-      onNone: () => new AbortController().signal,
-      onSome: (service) => service.signal,
-    });
+    // Fires on run cancellation (local terminate or EDGE cancel) — the pipeline observes it below.
+    const signal = yield* Cancellation.signal;
 
     // Live sync status via trace `status.update` events. The progress trace sink projects these into
     // the runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.

@@ -24,6 +24,7 @@ import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/TestClock';
 
 import {
+  Cancellation,
   Operation,
   OperationHandlerSet,
   Process,
@@ -404,6 +405,33 @@ describe('ManagerImpl', () => {
         yield* handle.terminate();
         expect(handle.status.state).toEqual(Process.State.TERMINATED);
       }
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'terminate fires the run Cancellation signal',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const captured = yield* Deferred.make<AbortSignal>();
+      const executable = Process.make(
+        { key: 'test.cancellation', input: Schema.Void, output: Schema.Void, services: [] },
+        () =>
+          Effect.succeed({
+            onSpawn: () =>
+              Effect.gen(function* () {
+                yield* Deferred.succeed(captured, yield* Cancellation.signal);
+              }),
+            onInput: () => Effect.void,
+            onAlarm: () => Effect.void,
+            onChildEvent: () => Effect.void,
+          }),
+      );
+      const handle = yield* manager.spawn(executable);
+      const signal = yield* Deferred.await(captured);
+      expect(signal.aborted).toEqual(false);
+      yield* handle.terminate();
+      expect(signal.aborted).toEqual(true);
+      expect(handle.status.state).toEqual(Process.State.TERMINATED);
     }, Effect.provide(TestLayer)),
   );
 

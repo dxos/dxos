@@ -163,6 +163,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   readonly #onStatusChanged: (() => void) | undefined;
   readonly #hasRunningChildren: () => boolean;
   readonly #onTerminate?: () => Effect.Effect<void>;
+  readonly #cancellation?: AbortController;
   constructor(
     readonly pid: Process.ID,
     parentId: Process.ID | null,
@@ -186,6 +187,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     restoring?: boolean,
     encodeInput?: (input: I) => Effect.Effect<unknown>,
     initialState?: Process.State,
+    cancellation?: AbortController,
   ) {
     this.parentId = parentId;
     this.key = key;
@@ -207,6 +209,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     this.#persistence = persistence ?? NOOP_PERSISTENCE;
     this.#restoring = restoring ?? false;
     this.#encodeInput = encodeInput ?? ((input) => Effect.succeed(input));
+    this.#cancellation = cancellation;
 
     this.#currentStatus = {
       state: initialState ?? Process.State.RUNNING,
@@ -299,6 +302,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       log('lifecycle: terminating');
       this.#finished = true;
       this.#setStatus(Process.State.TERMINATING);
+      // Before the scope-close interrupt, so non-Effect work holding the run's Cancellation signal
+      // (e.g. an in-flight fetch) unhooks with the fiber. Suspend deliberately does not fire it.
+      this.#cancellation?.abort();
       if (this.#onTerminate !== undefined) {
         yield* this.#onTerminate();
       }
