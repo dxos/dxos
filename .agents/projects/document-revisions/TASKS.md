@@ -531,9 +531,18 @@ Reported by the user during the storybook walkthrough (§3b). **Log only — no 
 - [ ] **S4.1 Clicking a suggestion card does not reveal it in the document.** Should highlight (and scroll
       to when off-screen) the matching range, reusing the comment click-reveal mechanism. Also: style each
       suggestion as its own card, as comment threads are.
-- [ ] **S4.2 Accept / Reject in the companion have no effect.** Buttons are inert — the document is
-      unchanged and the card stays. Note `A3` asserts these "route to ops", so the assertion stops short of
-      the resulting mutation (see also S2.2: the companion is the primary accept/reject surface).
+- [x] **S4.2 FIXED — Accept / Reject in the companion had no effect.** Root cause in
+      `@dxos/ui-editor` `diff.ts`: `cherryPickHunk`/`revertHunk` located the hunk with a strict
+      half-open overlap test. A pure insertion is zero-width on the base side AND the companion anchors
+      it at a single offset, so `from < end && to > start` could never match — every add-only suggestion
+      silently no-opped. Both now fall back to containment when either side is empty; unit test added
+      (`diff.test.ts`, insertion accept + revert). Verified in the story: accepting folds the change into
+      main (content 764 → 787 chars, inline suggestion decorations 9 → 8).
+      Correction to the earlier note here: the "route to ops" wording is the **manual** plan row (M3), not
+      a green automated assertion — no automated test covered this path at all, which is the real gap.
+- [ ] **S4.3 Companion card list does not shrink after an accept.** The change folds into main and its
+      inline decoration clears, but the accept/reject card count stays the same — the group list appears
+      not to recompute against the new base.
 
 ### S3 / S5 — status
 

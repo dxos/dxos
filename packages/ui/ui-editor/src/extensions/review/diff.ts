@@ -269,6 +269,17 @@ export const computeCharHunks = (original: string, modified: string): Hunk[] => 
 };
 
 /**
+ * Does a hunk cover the anchored range? Half-open, so a range touching a neighbouring hunk's
+ * boundary is not on that hunk — except where either side is empty, which is the normal shape of a
+ * pure insertion: the inserted text occupies no span on the other side, and the caller anchors it at
+ * a single offset. Those collapse to a containment test, or accepting an insertion is impossible.
+ */
+const overlaps = (from: number, to: number, range: { start: number; end: number }): boolean =>
+  from === to || range.start === range.end
+    ? from <= range.end && to >= range.start
+    : from < range.end && to > range.start;
+
+/**
  * Resolve a single change to apply when cherry-picking from `compare` (A) into `current` (B): find
  * the hunk overlapping `range` (a character range in `current`) and return the splice that replaces
  * that hunk's current text with the compare version. Returns undefined if no hunk overlaps the range
@@ -280,8 +291,7 @@ export const cherryPickHunk = (
   compare: string,
   range: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
-  // Half-open overlap: a range touching a neighbouring hunk's boundary is not on that hunk.
-  const hunk = computeWordHunks(compare, current).find((h) => h.fromB < range.end && h.toB > range.start);
+  const hunk = computeWordHunks(compare, current).find((h) => overlaps(h.fromB, h.toB, range));
   if (!hunk) {
     return undefined;
   }
@@ -304,7 +314,7 @@ export const revertHunk = (
   baseRange: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
   // A = base, B = compare (branch); locate the hunk by its base-side range.
-  const hunk = computeWordHunks(base, compare).find((h) => h.fromA < baseRange.end && h.toA > baseRange.start);
+  const hunk = computeWordHunks(base, compare).find((h) => overlaps(h.fromA, h.toA, baseRange));
   if (!hunk) {
     return undefined;
   }
