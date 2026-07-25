@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { DXN, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Text as EchoText, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
@@ -83,5 +83,42 @@ describe('suggestion branches', () => {
 
     expect(await Branch.archiveIfEmpty(doc, edited)).toBe(false);
     expect(doc.history?.branches.find(({ id }) => id === edited.id)?.status).toBe('active');
+  });
+
+  test('find-or-create fast-forwards an unedited branch whose anchor fell behind', async ({ expect }) => {
+    const { db, doc, root } = await setup('one two three');
+
+    const stale = await Branch.suggestion(doc, root, 'did:alice');
+    // Main advances after the fork; the branch has no edits of its own.
+    Obj.update(root, (root) => {
+      EchoText.update(root, 'content', 'one two three four');
+    });
+    await db.flush();
+
+    // Re-entry retires the stale branch and re-forks at the current heads, so text typed on main in
+    // between never diffs as the author's deletion.
+    const fresh = await Branch.suggestion(doc, root, 'did:alice');
+    expect(fresh.id).not.toBe(stale.id);
+    expect(activeSuggestions(doc, 'did:alice')).toHaveLength(1);
+    const binding = await Branch.bind(doc, fresh);
+    try {
+      expect(binding.object.content).toBe('one two three four');
+    } finally {
+      binding.dispose();
+    }
+
+    // An EDITED branch is never fast-forwarded — its pending suggestions are preserved.
+    const editedBinding = await Branch.bind(doc, fresh);
+    Obj.update(editedBinding.object, (text) => {
+      EchoText.update(text, 'content', 'one two three four five');
+    });
+    await db.flush();
+    editedBinding.dispose();
+    Obj.update(root, (root) => {
+      EchoText.update(root, 'content', 'one two three four six');
+    });
+    await db.flush();
+    const kept = await Branch.suggestion(doc, root, 'did:alice');
+    expect(kept.id).toBe(fresh.id);
   });
 });

@@ -126,11 +126,11 @@ describe('editor binding lifecycle', () => {
     }
   });
 
-  // Reproduces F1.2: text typed on MAIN between Suggesting sessions is missing from the (stale) own
-  // branch, so re-entering Suggesting diffs it as the user's own DELETION — rendering a strikethrough
-  // over text they just typed. The own branch must fast-forward to main on re-entry when it carries
-  // no edits of its own. Flips to passing when that lands.
-  test.fails('re-entering Suggesting fast-forwards an unchanged own branch (F1.2)', async () => {
+  // Guards F1.2: text typed on MAIN between Suggesting sessions was missing from the (stale) own
+  // branch, so re-entering Suggesting diffed it as the user's own DELETION — a strikethrough over
+  // text they just typed. `Branch.suggestion` now retires an unedited branch whose anchor fell behind
+  // and re-forks it at the current heads.
+  test('re-entering Suggesting fast-forwards an unchanged own branch (F1.2)', async () => {
     const { result } = setup();
     await settled(result);
 

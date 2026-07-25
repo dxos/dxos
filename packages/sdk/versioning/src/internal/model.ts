@@ -254,6 +254,14 @@ export const suggestionBranch = async (
     (branch) => branch.status === 'active' && branch.kind === 'suggestion' && branch.creator === creator,
   );
   if (existing) {
+    // Fast-forward an UNEDITED branch whose anchor fell behind: text since typed on main is absent
+    // from the branch, so every diff against it reads as the author deleting that text. A branch with
+    // no edits carries nothing to preserve, so it is retired and re-forked at the current heads. An
+    // edited branch is returned as-is — its pending suggestions were authored against its anchor.
+    const heads = getHeads(parent);
+    if (!sameHeads(existing.anchor, heads) && (await archiveIfEmpty(doc, existing))) {
+      return createBranch(doc, { name: `suggestion: ${creator}`, parent, creator, kind: 'suggestion' });
+    }
     return existing;
   }
 
