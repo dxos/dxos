@@ -384,7 +384,10 @@ export const WithCRM: Story = {
       Trigger.Trigger,
     ],
     onInit: async ({ space }) => {
-      const [mailbox] = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      // The snapshot normally provides a mailbox; fall back to an empty one so the object-bound
+      // cells always have a subject to render.
+      const [existing] = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = existing ?? space.db.add(Mailbox.make({ name: 'Mailbox' }));
       return [
         [StoryRole.Chat],
         [Cell.article(mailbox)],

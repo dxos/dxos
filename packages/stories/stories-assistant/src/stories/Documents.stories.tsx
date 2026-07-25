@@ -196,7 +196,7 @@ export const WithSkills: Story = {
           instructions: Template.make({ source: 'Help manage the task list.' }),
         }),
       );
-      addToRootCollection(space, [document]);
+      addToRootCollection(space, [document, skill]);
       return [[StoryRole.Chat], [StoryRole.Tasks, Cell.article(skill)]];
     },
     onChatCreated: async ({ space, binder }) => {

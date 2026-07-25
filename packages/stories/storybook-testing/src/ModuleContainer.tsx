@@ -244,7 +244,7 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
                     type={cell.type}
                     data={
                       cell.kind === 'object'
-                        ? { subject: cell.object, attendableId: cell.attendableId, ...cell.data }
+                        ? { subject: cell.object, ...cell.data, attendableId: cell.attendableId }
                         : { ...cell.data, attendableId: cell.id }
                     }
                   />
