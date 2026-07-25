@@ -17,7 +17,7 @@ import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/roles';
-import { Module, ModuleContainer, addToRootCollection, config, createDecorators } from '../testing';
+import { ModuleContainer, addToRootCollection, config, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -194,16 +194,22 @@ export const WithSkills: Story = {
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      space.db.add(Markdown.make({ name: 'Tasks' }));
+      const document = space.db.add(Markdown.make({ name: 'Tasks' }));
+      const skill = space.db.add(
+        Skill.make({
+          key: 'org.dxos.skill.tasks',
+          name: 'Tasks',
+          instructions: Template.make({ source: 'Help manage the task list.' }),
+        }),
+      );
+      addToRootCollection(space, [document]);
+      return [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Tasks), Cell.article(skill)]];
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
-  args: {
-    layout: [[Module.Chat], [Module.Tasks, Module.Skill]],
-  },
 };
 
 export const WithScript: Story = {
@@ -232,7 +238,7 @@ export const WithScript: Story = {
       invariant(template.name, 'Template name not found');
 
       // Ensure at least one Script exists so the React surface can render.
-      space.db.add(
+      const script = space.db.add(
         Script.make({
           name: template.name,
           description: 'Function to get the exchange rates between two currencies.',
@@ -255,13 +261,12 @@ export const WithScript: Story = {
       );
 
       await space.db.flush();
+      addToRootCollection(space, [script]);
+      return [[Cell.surface(StoryRole.Chat)], [Cell.article(script)]];
     },
     onChatCreated: async ({ space, binder }) => {
       const skills = await space.db.query(Query.select(Filter.type(Skill.Skill))).run();
       await binder.bind({ skills: skills.map((skill) => Ref.make(skill)) });
     },
   }),
-  args: {
-    layout: [[Module.Chat], [Module.Script]],
-  },
 };

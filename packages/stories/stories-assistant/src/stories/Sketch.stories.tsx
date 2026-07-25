@@ -9,9 +9,11 @@ import { Filter, Ref } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { SketchSkill } from '@dxos/plugin-sketch';
 import { type Space } from '@dxos/react-client/echo';
+import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
+import { StoryRole } from '../modules/roles';
+import { ModuleContainer, addToRootCollection, config, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -43,7 +45,9 @@ const decorators = createDecorators({
   onInit: async ({ space }) => {
     storySpace = space;
     const { Sketch } = await import('@dxos/plugin-sketch');
-    space.db.add(Sketch.make({ name: 'Sketch' }));
+    const sketch = space.db.add(Sketch.make({ name: 'Sketch' }));
+    addToRootCollection(space, [sketch]);
+    return [[Cell.surface(StoryRole.Chat)], [Cell.article(sketch)], [Cell.deckCompanion('trace')]];
   },
   onChatCreated: async ({ space, binder }) => {
     const { Sketch } = await import('@dxos/plugin-sketch');
@@ -53,7 +57,6 @@ const decorators = createDecorators({
 });
 
 const sharedArgs = {
-  layout: [[Module.Chat], [Module.Sketch], [Module.Trace]],
   skills: [AssistantSkill.key, SketchSkill.key],
 };
 

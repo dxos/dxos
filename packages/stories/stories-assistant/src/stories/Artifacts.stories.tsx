@@ -10,9 +10,11 @@ import { ChessSkill } from '@dxos/plugin-chess';
 import { MapSkill } from '@dxos/plugin-map';
 import { Markdown } from '@dxos/plugin-markdown';
 import { ViewModel } from '@dxos/schema';
+import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
+import { StoryRole } from '../modules/roles';
+import { ModuleContainer, config, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -75,7 +77,7 @@ export const WithChess: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Context]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Context)]],
     skills: [AssistantSkill.key, ChessSkill.key],
   },
 };
@@ -124,7 +126,7 @@ export const WithMap: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Context]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Context)]],
     skills: [AssistantSkill.key, MapSkill.key],
   },
 };
@@ -186,7 +188,7 @@ export const WithTrip: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Context]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Context)]],
   },
 };
 
@@ -214,6 +216,6 @@ export const WithBoard: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Context]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Context)]],
   },
 };

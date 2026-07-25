@@ -4,18 +4,22 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ConnectorsSkill, LinearSkill } from '@dxos/assistant-toolkit';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
+import { meta as connectorMeta } from '@dxos/plugin-connector';
 import { Calendar, CalendarSkill, InboxSkill, Mailbox } from '@dxos/plugin-inbox';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { TranscriptionSkill } from '@dxos/plugin-transcription';
+import { Cell } from '@dxos/storybook-testing';
 import { Event, Message, Person, Pipeline, Task, Transcript } from '@dxos/types';
 
+import { StoryRole } from '../modules/roles';
 import {
-  Module,
   ModuleContainer,
   accessTokensFromEnv,
+  addToRootCollection,
   config,
   createDecorators,
   createTestMailbox,
@@ -65,7 +69,7 @@ export const WithMail: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Context]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Context)]],
     skills: [AssistantSkill.key, MarkdownSkill.key, InboxSkill.key],
   },
 };
@@ -85,7 +89,16 @@ export const WithGmail: Story = {
     config: config.persistent,
     types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      addToRootCollection(space, [mailbox]);
+      return [
+        [Cell.surface(StoryRole.Chat)],
+        [
+          Cell.article(mailbox),
+          Cell.surface(AppSurface.Article, { subject: `${connectorMeta.profile.key}.space-settings` }),
+        ],
+        [Cell.surface(StoryRole.Context)],
+      ];
     },
     onChatCreated: async ({ space, binder }) => {
       const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
@@ -96,7 +109,6 @@ export const WithGmail: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Inbox, Module.TokenManager], [Module.Context]],
     skills: [AssistantSkill.key, InboxSkill.key],
   },
 };
@@ -134,7 +146,7 @@ export const WithConnectorPrompt: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Context]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Context)]],
     skills: [AssistantSkill.key, ConnectorsSkill.key],
   },
 };
@@ -165,7 +177,11 @@ export const WithCalendar: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.TokenManager], [Module.Context]],
+    layout: [
+      [Cell.surface(StoryRole.Chat)],
+      [Cell.surface(AppSurface.Article, { subject: `${connectorMeta.profile.key}.space-settings` })],
+      [Cell.surface(StoryRole.Context)],
+    ],
     skills: [AssistantSkill.key, CalendarSkill.key],
   },
 };
@@ -183,7 +199,7 @@ export const WithLinearSync: Story = {
     }),
   }),
   args: {
-    layout: [[Module.Chat], [Module.Graph]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Graph)]],
     skills: [LinearSkill.key],
   },
 };
@@ -213,7 +229,7 @@ export const WithTranscription: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Context]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Context)]],
     skills: [AssistantSkill.key, TranscriptionSkill.key],
   },
 };

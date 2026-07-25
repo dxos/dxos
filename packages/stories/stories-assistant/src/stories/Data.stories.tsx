@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DatabaseSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, Trigger } from '@dxos/compute';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
@@ -14,16 +15,18 @@ import { CrmSkill } from '@dxos/plugin-crm';
 import { ProfileOf } from '@dxos/plugin-crm/types';
 import { InboxSkill, Mailbox } from '@dxos/plugin-inbox';
 import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
-import { Routine } from '@dxos/plugin-routine';
+import { Routine, meta as automationMeta } from '@dxos/plugin-routine';
 import { ViewModel } from '@dxos/schema';
+import { Cell } from '@dxos/storybook-testing';
 import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { StoryRole } from '../modules/roles';
 import {
-  Module,
   ModuleContainer,
   ResearchInputQueue,
   addTestData,
+  addToRootCollection,
   config,
   createDecorators,
   createTestMailbox,
@@ -86,7 +89,11 @@ export const WithResearch: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Graph, Module.ExecutionGraph], [Module.Context]],
+    layout: [
+      [Cell.surface(StoryRole.Chat)],
+      [Cell.surface(StoryRole.Graph), Cell.surface(StoryRole.ExecutionGraph)],
+      [Cell.surface(StoryRole.Context)],
+    ],
     skills: [
       // AssistantSkill.key
       // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
@@ -104,7 +111,7 @@ export const WithSearch: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Graph]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.surface(StoryRole.Graph)]],
   },
 };
 
@@ -120,7 +127,7 @@ export const WithDatabase: Story = {
     },
   }),
   args: {
-    layout: [[Module.Database]],
+    layout: [[Cell.surface(StoryRole.Database)]],
   },
 };
 
@@ -160,8 +167,13 @@ export const WithResearchQueue: Story = {
   }),
   args: {
     layout: [
-      [Module.ResearchInput, Module.ResearchOutput],
-      [Module.Triggers, Module.Invocations, Module.Routine, Module.Graph],
+      [Cell.surface(StoryRole.ResearchInput), Cell.surface(StoryRole.ResearchOutput)],
+      [
+        Cell.surface(AppSurface.Article, { subject: `${automationMeta.profile.key}.space-settings-automation` }),
+        Cell.surface(StoryRole.Invocations),
+        Cell.surface(StoryRole.Routine),
+        Cell.surface(StoryRole.Graph),
+      ],
     ],
     skills: [WebSearchSkill.key],
   },
@@ -304,7 +316,7 @@ export const WithProject: Story = {
         jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
       });
 
-      space.db.add(
+      const project = space.db.add(
         Pipeline.make({
           name: 'Investor Research',
           columns: [
@@ -331,10 +343,18 @@ export const WithProject: Story = {
           ],
         }),
       );
+      addToRootCollection(space, [project]);
+
+      return [
+        [Cell.article(project)],
+        [
+          Cell.surface(AppSurface.Article, { subject: `${automationMeta.profile.key}.space-settings-automation` }),
+          Cell.surface(StoryRole.Invocations),
+        ],
+      ];
     },
   }),
   args: {
-    layout: [[Module.Project], [Module.Triggers, Module.Invocations]],
     skills: [],
   },
 };
@@ -371,6 +391,15 @@ export const WithCRM: Story = {
       Tag.Tag,
       Trigger.Trigger,
     ],
+    onInit: async ({ space }) => {
+      const [mailbox] = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      return [
+        [Cell.surface(StoryRole.Chat)],
+        [Cell.article(mailbox)],
+        [Cell.companion('automation', mailbox), Cell.deckCompanion('trace')],
+        [Cell.surface(StoryRole.Database)],
+      ];
+    },
     onChatCreated: async ({ space, binder }) => {
       const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       const mailbox = mailboxes[0];
@@ -380,7 +409,6 @@ export const WithCRM: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Inbox], [Module.RoutineCompanion, Module.Trace], [Module.Database]],
     skills: [
       AssistantSkill.key,
       CrmSkill.key,

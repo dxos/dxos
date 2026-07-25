@@ -7,8 +7,10 @@ import { userEvent, within } from 'storybook/test';
 
 import { DelegationSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
+import { Cell } from '@dxos/storybook-testing';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
+import { StoryRole } from '../modules/roles';
+import { ModuleContainer, config, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -33,7 +35,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    layout: [[Module.Chat]],
+    layout: [[Cell.surface(StoryRole.Chat)]],
   },
 };
 
@@ -48,7 +50,7 @@ export const WithPlanning: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Trace, Module.Context]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.deckCompanion('trace'), Cell.surface(StoryRole.Context)]],
     skills: [MarkdownSkill.key, PlanningSkill.key],
   },
 };
@@ -74,7 +76,7 @@ export const WithSubAgents: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Trace, Module.Context]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.deckCompanion('trace'), Cell.surface(StoryRole.Context)]],
     skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
   },
 };
@@ -124,7 +126,7 @@ export const WithExecutionGraph: Story = {
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Trace]],
+    layout: [[Cell.surface(StoryRole.Chat)], [Cell.deckCompanion('trace')]],
     skills: [MarkdownSkill.key],
   },
 };
@@ -140,7 +142,7 @@ export const WithWebSearch: Story = {
     config: config.remote,
   }),
   args: {
-    layout: [[Module.Chat]],
+    layout: [[Cell.surface(StoryRole.Chat)]],
     skills: [WebSearchSkill.key],
   },
 };
