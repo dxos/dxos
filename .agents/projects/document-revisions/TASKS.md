@@ -703,4 +703,5 @@ colours), walkthrough re-run.
 
 **Assessment:** the mode-switch/bind lifecycle (F1.2, F1.7, F1.1) is one state machine failing in
 different ways — needs a designed model + headless unit tests, not more per-symptom patches.
->>>>>>> theirs
+
+> > > > > > > theirs
