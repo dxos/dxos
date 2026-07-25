@@ -165,6 +165,25 @@ linked via `routines`).
 - `ProjectArticle` story + play test; chat-binding story in stories-assistant.
 - Verify: `moon` build/test/lint + storybook from the worktree on an alt port.
 
+## Milestone 2 decisions (as-built addenda)
+
+- **Instructions reach the model via the prompt formatter, not stubs**: bound
+  `Instructions` objects are rendered inline by `formatSystemPrompt`
+  (`@dxos/assistant` request/format.ts) as a `## Instructions` section — resolved
+  markdown text plus sentinel-command directives — and are excluded from the
+  `## Context Objects` stub list. This is the load-bearing half of "use project
+  instructions in chat"; binding alone only produced a tool-loadable stub.
+- **Context stubs carry labels** (`<label>`), so the model tool-loads bound
+  objects only for contents, not identification.
+- **Owned refs resolve reactively in articles**: `.target` sync reads never
+  resolve on cold/deep-link loads; use `useObject(ref)` +
+  `Obj.getReactiveOrUndefined` (ProjectArticle instructions).
+- **Instructions typename labels**: plugin-assistant's legacy "Routine" labels
+  for `org.dxos.type.instructions` corrected to "Instructions"; project
+  creation names the owned Instructions object.
+- **Dev loop**: Projects/Routine/Outliner plugins are part of the composer-app
+  minimal set (`serve-min`).
+
 ## Deferred / follow-ups (tracked in TASKS.md)
 
 - Possibly move Project type from `@dxos/compute` into the plugin at end.

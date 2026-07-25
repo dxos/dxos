@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: milestone 1 COMPLETE on branch claude/plugin-projects-core-03b07f (19 commits, final whole-branch review passed after fixes; build/test/lint/format green). Next: open PR via submit-pr skill on user's go; then PLUGIN.mdl + milestone 2._
+_Resume: PR #12335 GREEN + preview live (pr-12335-composer-main.dxos.workers.dev), awaiting review; 3 MS2 commits LOCAL/unpushed (8bf145dd40, bb45d4e472, f45f055760 — cold-load fix, instructions→system-prompt, stub labels) pending PR-strategy decision (grow #12335 vs follow-up PR). Next: commands-authoring UI in InstructionsEditor, then outliner skill design._
 
 ## Phase 1: Core plugin + Project type (milestone 1) — DONE
 
@@ -31,7 +31,15 @@ Initial priority (user, 2026-07-24):
 3. Use with outliner skill to manage tasks (project + task outline artifact + skill binding).
 4. Define and use commands (authoring UI + commands rendered into the session prompt).
 
-- [x] **Open PR** — #12335 (Check in progress; preview pending).
+- [x] **Open PR** — #12335 GREEN; preview https://pr-12335-composer-main.dxos.workers.dev; awaiting review.
+- [x] **P2: instructions reach the model** — formatSystemPrompt renders bound Instructions inline (## Instructions: text + sentinel-command directives), out of the tool-load stub list; unit tests (format.test.ts 2/2). User-verified "basically working" in-app.
+- [x] **P1 partial: create/edit verified live** in Composer via serve-min (this worktree); cold-load fix: ProjectArticle resolves owned instructions reactively (useObject + Obj.getReactiveOrUndefined — sync .target never resolves on deep link).
+- [x] **Context-stub labels** — object stubs in the system prompt carry `<label>` so the model doesn't tool-load just to identify a binding.
+- [x] **Chip labeling** — plugin-assistant Instructions typename translations were legacy "Routine"; now "Instructions"; create-object names the owned Instructions.
+- [x] **Minimal plugin set** — Projects/Routine/Outliner in plugin-defs.minimal.tsx + defaults + vite optimizeDeps glob.
+- [x] **Live-AI story** — stories/stories-assistant/Projects ("Voyage": AHOY marker + $track command; Default manual + InstructionsTest play, !test-tagged).
+- [ ] **P1 remaining: delete flow** — verify navtree ⋮ delete for projects; ALSO: intermittent "first click into empty deck attends but opens no plank" (repro needed).
+- [ ] **PR strategy decision (user)** — push the 3 local MS2 commits onto #12335 vs land #12335 first and follow up. Default: keep local until #12335 lands.
 - [ ] **PLUGIN.mdl for plugin-projects** — as-built record now that implementation settled.
 - [ ] **Commands-authoring UI** — InstructionsEditor edits text/skills/objects only; `commands` currently data-only despite autocomplete shipping.
 - [ ] **In-article routine creation**; project-scoped chat list UI.
