@@ -14,6 +14,7 @@ import { Client, ClientProvider, fromHost } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { useVersionedEditor } from './useVersionedEditor';
 import { useVersioning } from './useVersioning';
@@ -26,7 +27,7 @@ import { useVersioning } from './useVersioning';
  * (typed text struck through after a round-trip, the editor ending read-only) becomes a replayable
  * sequence.
  */
-const useBindingHarness = (doc: Markdown.Document, identity: { did: string }) => {
+const useBindingHarness = (doc: Markdown.Document, identity: { did: string }, viewMode: EditorViewMode) => {
   const versioning = useVersioning(doc);
   const editor = useVersionedEditor({
     object: doc,
@@ -34,7 +35,7 @@ const useBindingHarness = (doc: Markdown.Document, identity: { did: string }) =>
     identity: identity as Parameters<typeof useVersionedEditor>[0]['identity'],
     mainContent: doc.content.target?.content,
     diffView: undefined,
-    viewMode: 'preview',
+    viewMode,
     id: 'test-surface',
   });
   return { versioning, editor };
@@ -70,7 +71,11 @@ describe('editor binding lifecycle', () => {
     </ClientProvider>
   );
 
-  const setup = () => renderHook(() => useBindingHarness(doc, identity), { wrapper });
+  const setup = () =>
+    renderHook(({ viewMode }: { viewMode: EditorViewMode }) => useBindingHarness(doc, identity, viewMode), {
+      wrapper,
+      initialProps: { viewMode: 'preview' as EditorViewMode },
+    });
 
   /** Waits out the async own-branch (or branch) binding so assertions never race it. */
   const settled = async (result: { current: ReturnType<typeof useBindingHarness> }) => {
@@ -99,14 +104,18 @@ describe('editor binding lifecycle', () => {
   });
 
   test('mode round-trips always end editable (F1.7)', async () => {
-    const { result } = setup();
+    const { result, rerender } = setup();
     await settled(result);
-    // Suggesting → Markdown → Plain text → Suggesting, twice — the reported repro ended read-only.
+    // Suggesting → Markdown (preview) → Plain text (source) → Suggesting, twice — the dropdown sets
+    // BOTH the editor view mode and the review mode on each hop (see MarkdownArticle), so each step
+    // drives the pair the way the UI does. The reported repro ended read-only.
     for (let cycle = 0; cycle < 2; cycle++) {
       act(() => result.current.versioning.setMode('suggesting'));
       await settled(result);
+      rerender({ viewMode: 'preview' });
       act(() => result.current.versioning.setMode('editing'));
       await settled(result);
+      rerender({ viewMode: 'source' });
       act(() => result.current.versioning.setMode('editing'));
       await settled(result);
       act(() => result.current.versioning.setMode('suggesting'));

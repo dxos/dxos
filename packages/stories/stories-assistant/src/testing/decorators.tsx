@@ -284,7 +284,8 @@ export const createDecorators = ({ config: configProp = config.remote, lazyPlugi
     ];
   }
 
-  return [withPluginManager(buildPluginManagerOptions(props))];
+  // Destructuring consumed `config`, so forward the selected one explicitly (both paths).
+  return [withPluginManager(buildPluginManagerOptions({ ...props, config: configProp }))];
 };
 
 /**

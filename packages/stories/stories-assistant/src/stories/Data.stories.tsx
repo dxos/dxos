@@ -71,7 +71,6 @@ export const WithResearch: Story = {
         plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
       };
     },
-    config: config.remote,
     types: [...researchStoryEchoTypes, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
@@ -96,7 +95,6 @@ export const WithResearch: Story = {
 
 export const WithSearch: Story = {
   decorators: createDecorators({
-    config: config.remote,
     types: testTypes,
     onInit: async ({ space }) => {
       await addTestData(space);
@@ -112,7 +110,6 @@ export const WithSearch: Story = {
  */
 export const WithDatabase: Story = {
   decorators: createDecorators({
-    config: config.remote,
     types: testTypes,
     onInit: async ({ space }) => {
       await addTestData(space);
@@ -126,7 +123,6 @@ export const WithDatabase: Story = {
 export const WithResearchQueue: Story = {
   decorators: createDecorators({
     plugins: [],
-    config: config.remote,
     types: [...researchStoryEchoTypes, ResearchInputQueue, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
@@ -178,7 +174,6 @@ export const WithProject: Story = {
         plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()],
       };
     },
-    config: config.remote,
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     types: [
       Tag.Tag,
@@ -356,7 +351,6 @@ export const WithCRM: Story = {
         plugins: [CrmPlugin(), InboxPlugin(), MarkdownPlugin(), TablePlugin()],
       };
     },
-    config: config.remote,
     types: [
       AccessToken.AccessToken,
       Feed.Feed,

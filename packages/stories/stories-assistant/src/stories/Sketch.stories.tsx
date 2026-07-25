@@ -29,7 +29,6 @@ type Story = StoryObj<typeof meta>;
 let storySpace: Space | undefined;
 
 const decorators = createDecorators({
-  config: config.remote,
   lazyPlugins: async () => {
     const [{ Sketch }, { SketchPlugin }] = await Promise.all([
       import('@dxos/plugin-sketch'),
