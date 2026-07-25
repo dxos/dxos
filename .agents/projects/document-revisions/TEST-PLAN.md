@@ -257,3 +257,62 @@ suffix and the plain name belongs to the hands-on story. Order:
 | S4  | CommentsArticle / **WithAgentSuggestions**       | change-block cards: Accept folds / Reject reverts, author hues                            |
 | S5  | CommentsArticle / **WithCommentsAndSuggestions** | comments + suggestions coexistence, click-through                                         |
 | S6  | DocumentVersioning / **Default**                 | no-review baseline (default binding)                                                      |
+
+## 4. Full pass after the review fixes (prepared 2026-07-25)
+
+Everything below is on `localhost:9014` (this worktree's storybook). Every story seeds before mount, so
+each starts from the state its script describes — reload between runs to reset.
+
+**Fixed since the last pass, so worth confirming rather than re-reporting:** focus loss on every
+keystroke, accept/reject doing nothing, suggestions vanishing in Markdown mode, your typing struck
+through or surfacing as a card, deletion spans grabbing unrelated characters, the caret trapped after a
+trailing suggestion, cards not clearing on accept, the hover popover flickering, and the missing comment
+highlight in the review stories.
+
+**Known-open, do not spend time on:** decoration flicker when clicking a suggestion (S1.1), flicker when
+switching view modes (S1.6), timeline lanes not author-coloured (S1.8 — never implemented; needs a
+`Timeline` colour prop).
+
+### F1 — Suggesting (`stories/DocumentVersioning/Suggesting`)
+
+1. Switch the view-mode dropdown (note-pencil icon) to Suggesting: the editor rebinds to your branch and
+   Bob's suggestions still overlay.
+2. Type mid-paragraph: your text renders in your colour, underlined, with a gutter change-bar — and no
+   focus loss between keystrokes.
+3. Delete a few words: strikethrough phantom covering exactly what you removed, no stray characters at
+   either end; hover → restore returns them.
+4. Delete a range that cuts into the words at both ends: the strike still covers only what you deleted.
+5. Delete a whole bullet: the phantom preserves the line break.
+6. Click past Bob's closing-line suggestion at the very end: the caret gets there and typing lands after it.
+7. Round-trip Suggesting → Markdown → Plain text → Suggesting: suggestions survive every hop and the
+   editor stays editable.
+
+### F2 — AmbientReview (`stories/DocumentVersioning/AmbientReview`)
+
+1. Alice (lime) and Bob (violet) both overlay, each with a gutter bar; the seeded comment highlight sits
+   on “Reviewers can work through the changes”.
+2. Hover a change: the Accept/Reject popover opens, stays put as the pointer crosses the change, and
+   survives the pointer moving into it.
+3. Accept from the popover: the change folds into the document, the popover closes, its card leaves the
+   companion, and the other author's suggestion is untouched.
+4. Reject from the popover: the suggestion clears and the document is unchanged.
+5. Click the comment highlight under an overlay: the comment activates (the overlay must not eat the click).
+6. Click a change in the document: its card accents in the companion. Click a card: the caret moves to
+   the change and the editor takes focus.
+
+### F3 — EditingTyping (`stories/DocumentVersioning/EditingTyping`)
+
+1. Type steadily on the ambient path: no caret jump, no dropped keys, no strikethrough of your own text.
+2. Toggle view modes between bursts: content stable, no suggestion branch created for your keystrokes.
+
+### F4 / F5 — CommentsArticle (`containers/CommentsArticle/WithAgentSuggestions`, `WithCommentsAndSuggestions`)
+
+1. Suggestion cards list per author with consistent colours across card, decoration and timeline lane.
+2. Accept folds the change and drops the card; Reject clears it leaving the text untouched.
+3. With comments and suggestions together: both render, clicking either reveals its range, and neither
+   swallows the other's click.
+
+### F6 — Default (`stories/DocumentVersioning/Default`)
+
+1. Plain document, no review chrome, no decorations.
+2. Typing is clean — this is the control for anything that looks like a review-layer regression.
