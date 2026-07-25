@@ -50,6 +50,29 @@ export const useMarkdownEditorBinding: UseEditorBinding = ({ object, id, viewMod
   const { document } = versioning;
   const { ambient, policy } = editor;
 
+  // Stable identity is load-bearing: `MarkdownArticle` derives the editor's extension list from these
+  // props, so a fresh object each render would rebuild the extensions and recreate the editor view,
+  // dropping focus and the caret on every keystroke.
+  const extensionProps = useMemo(
+    () => ({
+      reviewBranch: editor.reviewBranch,
+      // Only when the editor is bound to the branch doc directly (Branch view) — in the
+      // diff/suggest overlay the editor stays on main, so anchors resolve against main.
+      branchText: editor.suggestActive ? undefined : editor.branchText,
+      suggestionBranch: editor.suggestionBranch,
+      // Ambient view follows the review policy; the advanced paths always show comments.
+      showComments: ambient ? policy.showComments : true,
+    }),
+    [
+      editor.reviewBranch,
+      editor.suggestActive,
+      editor.branchText,
+      editor.suggestionBranch,
+      ambient,
+      policy.showComments,
+    ],
+  );
+
   const overlays = (
     <>
       <CompareOverlay overlay={review.compareOverlay} />
@@ -80,15 +103,7 @@ export const useMarkdownEditorBinding: UseEditorBinding = ({ object, id, viewMod
     ambient,
     reviewMode: versioning.mode,
     setReviewMode: versioning.setMode,
-    extensionProps: {
-      reviewBranch: editor.reviewBranch,
-      // Only when the editor is bound to the branch doc directly (Branch view) — in the
-      // diff/suggest overlay the editor stays on main, so anchors resolve against main.
-      branchText: editor.suggestActive ? undefined : editor.branchText,
-      suggestionBranch: editor.suggestionBranch,
-      // Ambient view follows the review policy; the advanced paths always show comments.
-      showComments: ambient ? policy.showComments : true,
-    },
+    extensionProps,
     extensions,
     overlays,
     banner: <VersionToolbar versioning={versioning} />,

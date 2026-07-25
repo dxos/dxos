@@ -544,7 +544,12 @@ Reported by the user during the storybook walkthrough (§3b). **Log only — no 
 
 ### S6 — DocumentVersioning / Default (no-review baseline)
 
-- [ ] **S6.1 Focus lost on the first click and on every keystroke — with NO review binding active.** The
+- [x] **S6.1 FIXED — focus lost on the first click and on every keystroke with NO review affordance in use.**
+      Root cause: `useMarkdownEditorBinding` returned `extensionProps` as a fresh object literal each
+      render; `MarkdownArticle` has it in the dep array that builds the editor's extension list, so every
+      render rebuilt the extensions and recreated the editor view. Fixed by memoizing `extensionProps`.
+      Verified headlessly: click + type now keeps focus in `.cm-content` and the keystrokes land.
+      Original report: The
       control case fails, so the defect is upstream of the review/ambient path (S1.3/S1.4 are very likely
       the same bug, not three). Prime suspect: the editor subtree remounting per render — this story's
       `DefaultStory` drives the Surface from `useSpaces`/`useQuery`, so a fresh doc identity per render
@@ -552,9 +557,10 @@ Reported by the user during the storybook walkthrough (§3b). **Log only — no 
 
 ### Triage order (walkthrough complete)
 
-1. **S6.1 first** — it is the control-case failure and probably subsumes S1.3/S1.4. First question to
-   settle: does it reproduce in `serve-min` (product) or only in storybook (harness)? That split decides
-   whether the rest of this list is product work.
+1. **S6.1 first** — it is the control-case failure and probably subsumes S1.3/S1.4. **CONFIRMED PRODUCT
+   (user bisect, 2026-07-24): in `serve-min` the editor is fine with plugin-review disabled; enabling it
+   loses focus on every keystroke.** So the defect is in the contributed `EditorBindingHook` path, and it
+   fires even with no review affordance in use.
 2. **S4.2** accept/reject inert (core function; A3's assertion stops at op dispatch).
 3. **S1.2** suggestion lost on view-mode round-trip; **S1.5** caret trapped after a trailing suggestion.
 4. **S2.1** popover hover gap; **S1.1** decoration flicker on click.
