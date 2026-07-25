@@ -202,7 +202,13 @@ const NotebookTextEditor = ({
 
   return (
     <Editor.Root>
-      <Editor.View classNames='border' {...props} extensions={extensions} selectionEnd />
+      {/* Focused-cell affordance: Editor.View no longer applies a focus border by default. */}
+      <Editor.View
+        classNames='border focus-within:border-focus-ring-subtle'
+        {...props}
+        extensions={extensions}
+        selectionEnd
+      />
     </Editor.Root>
   );
 };
