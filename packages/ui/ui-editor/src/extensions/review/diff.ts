@@ -5,7 +5,7 @@
 import { Chunk, unifiedMergeView } from '@codemirror/merge';
 import { type Extension, Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { diffChars, diffWordsWithSpace } from 'diff';
+import { diffWordsWithSpace } from 'diff';
 
 export type DiffOptions = {
   /**
@@ -239,7 +239,29 @@ export const computeWordHunks = (original: string, modified: string): Hunk[] => 
  * word rebuilt beside it.
  */
 export const computeCharHunks = (original: string, modified: string): Hunk[] =>
-  wordHunks(original, modified).flatMap((hunk) => refineWithinWord(original, modified, hunk));
+  joinNearbyHunks(wordHunks(original, modified)).map((hunk) => trimCommonAffixes(original, modified, hunk));
+
+/**
+ * Unchanged text shorter than this between two changed regions does not separate them: a selection
+ * that cuts into the words at each end leaves a word fragment on both sides of a single space, and
+ * reporting those as two changes strikes text the reader never touched.
+ */
+const MIN_COMMON_RUN = 4;
+
+/** Merges hunks separated by less unchanged text than {@link MIN_COMMON_RUN}, absorbing the gap. */
+const joinNearbyHunks = (hunks: Hunk[]): Hunk[] => {
+  const merged: Hunk[] = [];
+  for (const hunk of hunks) {
+    const previous = merged.at(-1);
+    if (previous && hunk.fromA - previous.toA < MIN_COMMON_RUN && hunk.fromB - previous.toB < MIN_COMMON_RUN) {
+      previous.toA = hunk.toA;
+      previous.toB = hunk.toB;
+    } else {
+      merged.push({ ...hunk });
+    }
+  }
+  return merged;
+};
 
 /** Accumulates a diff's changed regions into {@link Hunk}s, given a tokenisation of the two texts. */
 const accumulate = (changes: Array<{ value: string; added?: boolean; removed?: boolean }>): Hunk[] => {
@@ -275,24 +297,32 @@ const accumulate = (changes: Array<{ value: string; added?: boolean; removed?: b
 const wordHunks = (original: string, modified: string): Hunk[] => accumulate(diffWordsWithSpace(original, modified));
 
 /**
- * Re-diffs a hunk character by character when the edit stays inside a single word, so a keystroke
- * marks only the characters it changed rather than restyling the whole word. A hunk spanning
- * whitespace keeps word granularity: character diffing across words matches stray letters (the `t` of
- * `it` against the `t` of `two`), which fragments one edit into several strikes with untouched letters
- * marooned between them.
+ * Shrinks a word-level hunk to the characters that actually changed, by dropping the prefix and suffix
+ * its two sides share. Word granularity is what keeps one edit from fragmenting into strikes with
+ * untouched letters marooned between them, but on its own it reports whole words: a deletion cutting
+ * into the words at each end fuses the survivors, and the hunk then reads as "delete both words, insert
+ * this fused one". Trimming leaves exactly the range the reader removed (or typed).
  */
-const refineWithinWord = (original: string, modified: string, hunk: Hunk): Hunk[] => {
+const trimCommonAffixes = (original: string, modified: string, hunk: Hunk): Hunk => {
   const removed = original.slice(hunk.fromA, hunk.toA);
   const inserted = modified.slice(hunk.fromB, hunk.toB);
-  if (/\s/.test(removed) || /\s/.test(inserted)) {
-    return [hunk];
+  const limit = Math.min(removed.length, inserted.length);
+
+  let prefix = 0;
+  while (prefix < limit && removed[prefix] === inserted[prefix]) {
+    prefix++;
   }
-  return accumulate(diffChars(removed, inserted)).map((inner) => ({
-    fromA: hunk.fromA + inner.fromA,
-    toA: hunk.fromA + inner.toA,
-    fromB: hunk.fromB + inner.fromB,
-    toB: hunk.fromB + inner.toB,
-  }));
+  let suffix = 0;
+  while (suffix < limit - prefix && removed[removed.length - 1 - suffix] === inserted[inserted.length - 1 - suffix]) {
+    suffix++;
+  }
+
+  return {
+    fromA: hunk.fromA + prefix,
+    toA: hunk.toA - suffix,
+    fromB: hunk.fromB + prefix,
+    toB: hunk.toB - suffix,
+  };
 };
 
 /**

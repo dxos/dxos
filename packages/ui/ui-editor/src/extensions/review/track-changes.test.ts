@@ -69,4 +69,19 @@ describe('trackChanges', () => {
     expect(hunks).toHaveLength(1);
     expect(main.slice(hunks[0].fromA, hunks[0].toA)).toBe('it was written on, so ');
   });
+
+  // Selections do not respect word edges. Cutting into the words at each end fuses the survivors, and a
+  // word-level hunk then reads as "delete both words, insert this fused one" — rendering a phantom of
+  // both whole words plus a bogus insertion (`writte` + inserted `ngest`) instead of a plain deletion.
+  test('a deletion that cuts into words at both ends strikes only what was removed', ({ expect }) => {
+    const main = 'the revision it was written on, so two people can suggest changes';
+    const cut = 'n on, so two people can sugge';
+    const doc = main.replace(cut, '');
+
+    const hunks = computeCharHunks(main, doc);
+    expect(hunks).toHaveLength(1);
+    expect(main.slice(hunks[0].fromA, hunks[0].toA)).toBe(cut);
+    // Nothing is reported as inserted: the reader only deleted.
+    expect(doc.slice(hunks[0].fromB, hunks[0].toB)).toBe('');
+  });
 });
