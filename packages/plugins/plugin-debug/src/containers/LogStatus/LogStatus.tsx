@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
-import { LogPanel } from '@dxos/react-ui-debug';
+import { IconButton, Panel, Popover, useTranslation } from '@dxos/react-ui';
+import { Logger } from '@dxos/react-ui-debug';
 
 import { meta } from '#meta';
 
@@ -25,7 +25,21 @@ export const LogStatus = () => {
       <Popover.Portal>
         <Popover.Content side='top'>
           <Popover.Viewport classNames='is-[40rem] bs-[24rem]'>
-            <LogPanel />
+            <Logger.Root>
+              <Panel.Root classNames='bs-full'>
+                <Panel.Toolbar asChild>
+                  <Logger.Toolbar />
+                </Panel.Toolbar>
+                <Panel.Content asChild>
+                  <Logger.Content>
+                    <Logger.List />
+                  </Logger.Content>
+                </Panel.Content>
+                <Panel.Statusbar asChild>
+                  <Logger.Filter />
+                </Panel.Statusbar>
+              </Panel.Root>
+            </Logger.Root>
           </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>

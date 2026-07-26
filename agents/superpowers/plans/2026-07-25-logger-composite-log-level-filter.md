@@ -1330,6 +1330,7 @@ git commit -m "react-ui-debug: add Logger.Levels per-file log-level popover"
 **What:** A text input (placed **below the list**, in `Panel.Statusbar`) that filters the buffered rows by a case-insensitive substring match on each entry's file + message. This is a **view filter over the buffer** — distinct from the toolbar's base-level `filter`, which controls `@dxos/log` capture/level. It changes nothing about what is captured; it only hides non-matching buffered rows.
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (Root state, `Logger.List` filtering, new `Logger.Filter` part)
 - Modify: `packages/ui/react-ui-debug/src/translations.ts` (`search.*` keys)
 
@@ -1338,14 +1339,17 @@ git commit -m "react-ui-debug: add Logger.Levels per-file log-level popover"
 - [ ] **Step 1: Add `textFilter` state to `Logger.Root`**
 
 In `LoggerRoot`, add alongside the other `useState` hooks:
+
 ```tsx
 const [textFilter, setTextFilter] = useState('');
 ```
+
 Add `textFilter` and `setTextFilter` to the `LoggerContextValue` type and pass both on the `<LoggerProvider …>` element.
 
 - [ ] **Step 2: Filter rows in `Logger.List`**
 
 Replace the `Logger.List` body's row derivation so it computes each row's `record` once and applies the text filter (keep the `Listbox` structure from Task 7b):
+
 ```tsx
 const LoggerList = ({ classNames }: LoggerListProps) => {
   const { t } = useTranslation(translationKey);
@@ -1454,6 +1458,7 @@ LoggerFilter.displayName = 'Logger.Filter';
 ```
 
 - [ ] **Step 4: Translations** — add to `translations.ts` after the `levels.*` keys:
+
 ```ts
         'search.placeholder': 'Find in buffer…',
         'search.clear': 'Clear filter',
@@ -1463,6 +1468,7 @@ LoggerFilter.displayName = 'Logger.Filter';
 - [ ] **Step 5: Build** — `~/.proto/shims/moon run react-ui-debug:build` → PASS.
 
 - [ ] **Step 6: Commit**
+
 ```bash
 git add packages/ui/react-ui-debug/src/components/Logger/Logger.tsx packages/ui/react-ui-debug/src/translations.ts
 git commit -m "react-ui-debug: add Logger.Filter (text-match filter over the log buffer)"
@@ -1625,6 +1631,7 @@ export const LoggingModule = () => (
 - [ ] **Step 2b: Update `plugin-debug/src/capabilities/react-surface.tsx`**
 
 Replace `import { LogPanel } from '@dxos/react-ui-debug';` with `import { Logger } from '@dxos/react-ui-debug';`, ensure `Panel` is imported from `@dxos/react-ui` (add if absent), and replace the `logs` surface `component: () => <LogPanel />,` with:
+
 ```tsx
 component: () => (
   <Logger.Root>
@@ -1648,6 +1655,7 @@ component: () => (
 - [ ] **Step 2c: Update `devtools/.../performance/panels/LoggingPanel.tsx`**
 
 This file imports its own `Panel` from `'../Panel'`, so import the design-system panel **aliased** to avoid the clash. `Logger.Root` takes the former `LogPanel` props; the `classNames='bs-[280px]'` sizing moves onto the inner `UiPanel.Root`:
+
 ```tsx
 //
 // Copyright 2025 DXOS.org

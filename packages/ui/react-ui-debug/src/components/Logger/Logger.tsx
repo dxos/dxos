@@ -7,6 +7,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { type LogConfig, type LogEntry, LogLevel, type LogOptions, log, logFileRegistry, shouldLog } from '@dxos/log';
 import {
+  Icon,
   IconButton,
   Input,
   Popover,
@@ -514,6 +515,7 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
           autoComplete='off'
           spellCheck={false}
           onChange={(ev) => setTextFilter(ev.target.value)}
+          end={<Icon icon='ph--magnifying-glass--regular' />}
         />
       </Input.Root>
       {textFilter.length > 0 && (

@@ -4,13 +4,27 @@
 
 import React from 'react';
 
-import { LogPanel } from '@dxos/react-ui-debug';
+import { Panel } from '@dxos/react-ui';
+import { Logger } from '@dxos/react-ui-debug';
 
 /**
- * Renders the `@dxos/react-ui-debug` {@link LogPanel} — a live `@dxos/log` viewer with filter,
- * level, and record controls — as a story module. LogPanel is self-contained (it reads the global
- * log stream and supplies its own toolbar), so the module renders it directly.
+ * Renders the `@dxos/react-ui-debug` {@link Logger} composite — a live `@dxos/log` viewer with
+ * level filter, per-file levels, a text-match buffer filter, and record controls — assembled as a story module.
  */
-export const LoggingModule = () => {
-  return <LogPanel />;
-};
+export const LoggingModule = () => (
+  <Logger.Root>
+    <Panel.Root classNames='bs-full'>
+      <Panel.Toolbar asChild>
+        <Logger.Toolbar />
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <Logger.Content>
+          <Logger.List />
+        </Logger.Content>
+      </Panel.Content>
+      <Panel.Statusbar asChild>
+        <Logger.Filter />
+      </Panel.Statusbar>
+    </Panel.Root>
+  </Logger.Root>
+);
