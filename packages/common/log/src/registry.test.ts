@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { createLogFileRegistry } from './registry';
 
 describe('LogFileRegistry', () => {
-  test('registers unique files, returned sorted', () => {
+  test('registers unique files, returned sorted', ({ expect }) => {
     const registry = createLogFileRegistry();
     registry.register('b.ts');
     registry.register('a.ts');
@@ -15,14 +15,14 @@ describe('LogFileRegistry', () => {
     expect(registry.getFiles()).toEqual(['a.ts', 'b.ts']);
   });
 
-  test('getFiles returns a copy (callers cannot mutate internal state)', () => {
+  test('getFiles returns a copy (callers cannot mutate internal state)', ({ expect }) => {
     const registry = createLogFileRegistry();
     registry.register('a.ts');
     registry.getFiles().push('x.ts');
     expect(registry.getFiles()).toEqual(['a.ts']);
   });
 
-  test('notifies subscribers only on a new file; unsubscribe stops notifications', () => {
+  test('notifies subscribers only on a new file; unsubscribe stops notifications', ({ expect }) => {
     const registry = createLogFileRegistry();
     let count = 0;
     const unsubscribe = registry.subscribe(() => {
@@ -36,7 +36,7 @@ describe('LogFileRegistry', () => {
     expect(count).toBe(1);
   });
 
-  test('clear empties the registry and notifies', () => {
+  test('clear empties the registry and notifies', ({ expect }) => {
     const registry = createLogFileRegistry();
     let count = 0;
     registry.subscribe(() => {
@@ -48,7 +48,7 @@ describe('LogFileRegistry', () => {
     expect(count).toBe(2);
   });
 
-  test('register ignores empty/non-string input', () => {
+  test('register ignores empty/non-string input', ({ expect }) => {
     const registry = createLogFileRegistry();
     registry.register('');
     expect(registry.getFiles()).toEqual([]);
