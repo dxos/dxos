@@ -7,16 +7,11 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
+import { ThemedClassName } from '../../util';
+
 type LocalFrame = { href: string; fileName: string };
 
 export type ParsedStackFrame = ReturnType<typeof ErrorStackParser.parse>[number];
-
-export type ErrorStackProps = {
-  /** When set, these frames are shown instead of parsing `error`. */
-  frames?: ParsedStackFrame[];
-  /** Used when `frames` is omitted. */
-  error?: Error;
-};
 
 /**
  * Parses `captureOwnerStack()` output (React dev) into frames for {@link ErrorStack}.
@@ -26,6 +21,7 @@ export const parseCaptureOwnerStack = (stack: string | null): ParsedStackFrame[]
   if (stack == null || stack.length === 0) {
     return null;
   }
+
   const err = new Error();
   err.stack = stack;
   try {
@@ -40,17 +36,24 @@ export const parseCaptureOwnerStack = (stack: string | null): ParsedStackFrame[]
   }
 };
 
+export type ErrorStackProps = ThemedClassName<{
+  /** When set, these frames are shown instead of parsing `error`. */
+  frames?: ParsedStackFrame[];
+  /** Used when `frames` is omitted. */
+  error?: Error;
+}>;
+
 /**
  * Renders a parsed error stack trace with tree connector symbols and clickable vscode:// links for local frames.
  */
-export const ErrorStack = ({ error, frames: framesProp }: ErrorStackProps) => {
+export const ErrorStack = ({ classNames, error, frames: framesProp }: ErrorStackProps) => {
   const frames = framesProp ?? (error ? ErrorStackParser.parse(error) : []);
   if (frames.length === 0) {
     return null;
   }
 
   return (
-    <div className='font-mono text-sm'>
+    <div className={mx('font-mono text-sm', classNames)}>
       {frames.map((frame, i) => {
         const isLast = i === frames.length - 1;
         const local = frame.fileName

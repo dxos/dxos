@@ -10,11 +10,13 @@ Refactor the monolithic `LogPanel` (in `@dxos/react-ui-debug`) into a Radix-styl
 composite named `Logger`, then add a feature that lets a user set a `@dxos/log`
 level for **any** individual file or for **all** files, live, from the panel.
 
-Two call sites consume the component today and will assemble the parts
+Four call sites consume the component today and will assemble the parts
 themselves:
 
 - `packages/plugins/plugin-debug/src/containers/LogStatus/LogStatus.tsx`
+- `packages/plugins/plugin-debug/src/capabilities/react-surface.tsx` (the `logs` companion surface)
 - `packages/stories/storybook-testing/src/modules/LoggingModule.tsx`
+- `packages/devtools/devtools/src/components/performance/panels/LoggingPanel.tsx`
 
 ## Decisions (locked)
 
@@ -92,7 +94,7 @@ while only displaying entries that pass the combined filter.
 
 ### Files
 
-```
+```text
 packages/ui/react-ui-debug/src/components/Logger/
   Logger.tsx          # composite (was LogPanel.tsx)
   format.ts           # moved unchanged from LogPanel/
@@ -149,7 +151,7 @@ children }`.
 
 ### Effective-filter computation
 
-```
+```text
 effectiveFilter = [baseFilter, ...[...fileLevels].map(([file, level]) => `${file}:${levelName(level)}`)]
   .filter(Boolean)
   .join(', ')
