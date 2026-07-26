@@ -22,13 +22,44 @@ themselves:
    `react-ui-logging` package).
 2. **Rename to `Logger`** — composite namespace `Logger.Root` / `Logger.Toolbar`
    / `Logger.Content` / `Logger.List` (+ `Logger.Levels`).
-3. **File source = live stream** — the set of "registered files" is discovered
-   from `entry.meta.F` as entries flow through the processor. No registry added
-   to `@dxos/log`.
+3. **File source = `@dxos/log` dev registry, populated at module load**
+   (revised — supersedes the earlier "live stream" decision). `@dxos/log`
+   maintains a registry of log files. In **development mode** every module that
+   uses a logged callee registers its file at load time via the
+   `@dxos/vite-plugin-log` transform (which already injects a `__dxlog_file`
+   preamble per module). The registry owns the **file list only**; per-file
+   *levels* remain a `Logger`-panel concern composed into the `@dxos/log` filter
+   string. `Logger.Root` unions the registry with any files it observes in the
+   live stream, so it still works where the transform is absent (tests, plain
+   Storybook).
 4. **Level UI = dedicated Levels section + popover** — `Logger.Levels` opened
    from a Toolbar button.
 5. **Consumers assemble parts** — pure composite; each call site composes the
    standard layout itself (no pre-composed default view).
+
+## Registry architecture (`@dxos/log` + `@dxos/vite-plugin-log`)
+
+- **Registry singleton** (`packages/common/log/src/registry.ts`): a
+  `LogFileRegistry` — `register(file)`, `getFiles(): string[]` (sorted copy),
+  `subscribe(listener): () => void`, `clear()`. Instantiated as a **global
+  singleton** `logFileRegistry = ((globalThis as any).DX_LOG_FILES ??=
+  createLogFileRegistry())`, mirroring how `log` is `globalThis.DX_LOG` — one
+  instance across duplicate module copies. Exported from the package index.
+- **Population = transform-injected, dev-only.** `computeLogMetaEdits`
+  (`tools/vite-plugin-log/src/transform.ts`) already inserts
+  `var __dxlog_file="<path>";` into the preamble of every module with a logged
+  binding. A new `registerFiles` option (threaded through `transform()` and the
+  transform specs) appends **one guarded statement** to that same preamble edit:
+  `globalThis.DX_LOG_FILES&&globalThis.DX_LOG_FILES.register(__dxlog_file);`.
+  No injected imports (no binding collisions); the `&&` guard makes it a no-op
+  wherever the registry global is absent.
+- **Dev gate.** The Vite plugin passes `registerFiles: isServe` (serve =
+  development), so **production builds inject nothing** and the registry stays
+  empty. `transformLogMeta` (esbuild/`dx-compile`) and the standalone rolldown
+  plugin default `registerFiles: false`.
+- **Consumer.** `Logger.Root` reads `logFileRegistry.getFiles()`, subscribes for
+  updates, and unions with files seen in its own processor — the registry is the
+  superset in dev; the stream is the fallback elsewhere.
 
 ## Background: `@dxos/log` filter semantics
 
@@ -90,9 +121,12 @@ deviation from the skill's `tx()` guidance).
   - state: `rows: LogRow[]`, `filter` (base), `recording`, `expanded: Set<number>`,
     `fileLevels: Map<string, LogLevel>`, derived `files: string[]` (sorted unique).
   - `capacity` normalization (from `maxLines`), monotonic `nextRowId`.
+  - `files` sourced from `logFileRegistry.getFiles()` + a `subscribe`, **unioned**
+    with files seen in the stream.
   - effects: ref-counted `acquire/releaseLogConfig`; a single `addProcessor`
     subscription that (a) records `entry.meta?.F` into the files set for every
-    entry, (b) pushes rows that pass `shouldLog(entry, config.filters)`.
+    entry (stream fallback), (b) pushes rows that pass
+    `shouldLog(entry, config.filters)`; plus a `logFileRegistry.subscribe`.
   - `log.config({ filter: effectiveFilter })` recomputed from base `filter` +
     `fileLevels` whenever either changes and `recording` is on.
   - callbacks: `setFilter`, `setRecording`, `setFileLevel(file, level | undefined)`
@@ -163,7 +197,8 @@ Root's effect. `shouldLog` in the processor then reflects the combined filters.
 
 ## Out of scope (YAGNI)
 
-- No file-registration API in `@dxos/log` (files come from the stream).
+- Registry owns the **file list only** — no per-file level state or `shouldLog`
+  integration in `@dxos/log` (levels stay a panel concern via the filter string).
 - No persistence of per-file levels across reloads.
 - No regex/glob patterns beyond `@dxos/log`'s existing substring matching.
 - No `logger.*` theme-token file.
