@@ -17,6 +17,7 @@ export const translations = [
         'copy.label': 'Copy log',
         'copy-entry.label': 'Copy entry',
         'levels.label': 'Log levels',
+        'levels.reset.label': 'Reset all levels',
         'levels.inherit.label': 'Inherit',
         'levels.empty.message': 'No log files registered yet.',
         'levels.filter.placeholder': 'Filter files…',

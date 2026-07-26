@@ -332,7 +332,7 @@ type LoggerLevelsProps = ThemedClassName<{}>;
 
 const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
   const { t } = useTranslation(translationKey);
-  const { files, fileLevels, setFileLevel } = useLoggerContext('Logger.Levels');
+  const { files, fileLevels, setFileLevel, clearFileLevels } = useLoggerContext('Logger.Levels');
   const [fileFilter, setFileFilter] = useState('');
 
   // `files` arrives already sorted from the provider; narrow by a case-insensitive match on the full
@@ -365,6 +365,13 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                       onChange={(ev) => setFileFilter(ev.target.value)}
                     />
                   </Input.Root>
+                  <Toolbar.IconButton
+                    icon='ph--trash--regular'
+                    iconOnly
+                    label={t('levels.reset.label')}
+                    disabled={fileLevels.size === 0}
+                    onClick={clearFileLevels}
+                  />
                 </Toolbar.Root>
               </Panel.Toolbar>
               <Panel.Content asChild>
