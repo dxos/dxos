@@ -103,7 +103,7 @@ const [LoggerProvider, useLoggerContext] = createContext<LoggerContextValue>('Lo
 // Root
 //
 
-export type LoggerRootProps = PropsWithChildren<{
+type LoggerRootProps = PropsWithChildren<{
   maxLines?: number;
   initialFilter?: string;
   defaultRecording?: boolean;
@@ -252,7 +252,7 @@ LoggerRoot.displayName = 'Logger.Root';
 // Toolbar
 //
 
-export type LoggerToolbarProps = ComposableProps;
+type LoggerToolbarProps = ComposableProps;
 
 const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
   const { t } = useTranslation(translationKey);
@@ -310,7 +310,7 @@ LoggerToolbar.displayName = 'Logger.Toolbar';
 // Levels
 //
 
-export type LoggerLevelsProps = ThemedClassName<{}>;
+type LoggerLevelsProps = ThemedClassName<{}>;
 
 const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
   const { t } = useTranslation(translationKey);
@@ -398,7 +398,7 @@ LoggerLevels.displayName = 'Logger.Levels';
 // Content
 //
 
-export type LoggerContentProps = ComposableProps;
+type LoggerContentProps = ComposableProps;
 
 const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { rows } = useLoggerContext('Logger.Content');
@@ -427,7 +427,7 @@ LoggerContent.displayName = 'Logger.Content';
 // List
 //
 
-export type LoggerListProps = ThemedClassName<{}>;
+type LoggerListProps = ThemedClassName<{}>;
 
 const LoggerList = ({ classNames }: LoggerListProps) => {
   const { t } = useTranslation(translationKey);
@@ -499,7 +499,7 @@ LoggerList.displayName = 'Logger.List';
 // Filter
 //
 
-export type LoggerFilterProps = ComposableProps;
+type LoggerFilterProps = ComposableProps;
 
 const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
   const { t } = useTranslation(translationKey);
@@ -530,4 +530,26 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
 
 LoggerFilter.displayName = 'Logger.Filter';
 
+//
+// Logger
+//
+
+export const Logger = {
+  Root: LoggerRoot,
+  Toolbar: LoggerToolbar,
+  Content: LoggerContent,
+  List: LoggerList,
+  Levels: LoggerLevels,
+  Filter: LoggerFilter,
+};
+
 export { useLoggerContext };
+
+export type {
+  LoggerContentProps,
+  LoggerFilterProps,
+  LoggerLevelsProps,
+  LoggerListProps,
+  LoggerRootProps,
+  LoggerToolbarProps,
+};

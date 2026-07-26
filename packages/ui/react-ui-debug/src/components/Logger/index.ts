@@ -3,3 +3,4 @@
 //
 
 export * from './Logger';
+export * from './format';
