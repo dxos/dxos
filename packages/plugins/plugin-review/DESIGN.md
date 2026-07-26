@@ -1,19 +1,19 @@
 # Document Review — Specification
 
-Status: DRAFT for sign-off. This document is the contract: every invariant either names its
-enforcing test or is marked OPEN.
+Status: APPROVED (capture-layer architecture adopted; see §4). This document is the contract: every
+invariant either names its enforcing test or is marked OPEN.
 
 Three layers, specified separately because they fail separately:
 
-1. **Feature set** — what the user gets.
+1. **Specification** — feature set.
 2. **Infrastructure** — the headless data model and its invariants.
 3. **Editor** — how CodeMirror renders and captures it.
 
 ---
 
-## 1. Feature set
+## 1. Specification
 
-Google-Docs-parity review, plus private draft branches (which Google does not have).
+Google-Docs-parity review (comments + suggestions) plus private draft branches.
 
 ### 1.1 Postures (per user, per document)
 
@@ -36,11 +36,14 @@ review"). Each user has one posture at a time:
 - A suggestion renders to _other_ users (and to the author outside Suggesting) as: proposed text in
   the author's colour, replaced text struck through, a change-bar in the shared gutter, and a card in
   the review companion.
-- **Accept** folds one change into main (partial cherry-pick, not a whole-branch merge). **Reject**
-  reverts that change on the author's branch. Both are durable operations with undo. When the last
-  change is resolved, the branch archives itself.
+- **Accept** folds one change into main (partial cherry-pick, not a whole-branch merge).
+  **Reject** reverts that change on the author's branch. Both are durable operations with undo.
+  When the last change is resolved, the branch archives itself.
 - Accept/Reject are available from: the inline hover popover, and the companion card. Both surfaces
   and the document share one "current change" selection (click either side to reveal the other).
+- **Per-author visibility**: the user can toggle each author's suggestions on/off (e.g. from the
+  companion's author list). Hiding an author removes their overlay decorations, change bars and cards
+  for this user only; it never touches the branches themselves. Session-local, per document.
 
 ### 1.3 Comments
 
@@ -57,15 +60,14 @@ review"). Each user has one posture at a time:
   (base / diff / branch), and conflict resolution on merge.
 - While a draft is selected the ambient overlay is off — the advanced path shows exactly the branch
   (or its diff), and comments scope to the branch under review.
-- OPEN: suggesting _against a draft branch_ (a suggestion whose parent is a draft, not main) is out of
-  scope for this iteration; the model permits it later (a suggestion branch is just a branch whose
-  parent is any Text).
+- Suggesting _against a draft branch_ (a suggestion whose parent is a draft, not main) is in scope
+  (§4.2): a suggestion branch is a branch whose parent is any Text; the capture layer routes to it.
 
 ### 1.5 History
 
 - Checkpoints (named, on main or a branch), time travel (read-only snapshots), fork points always
   addressable in the timeline. The timeline is the git-graph companion.
-- OPEN: author-coloured lanes — requires a colour input on `Timeline`; not designed here.
+- Author-coloured lanes: planned (§4.3) — `Timeline` gains a per-branch colour input.
 
 ---
 
@@ -123,6 +125,7 @@ Each invariant names its enforcing test. An invariant without a test is not an i
 | ------------------------------------------ | ----------------------------------- | ----------------------------------------- |
 | Suggestion branches, history, checkpoints  | ECHO (replicated)                   | Shared substance.                         |
 | Posture, version selection, current change | ViewState aspect (memory, per user) | Session UI state.                         |
+| Hidden suggestion authors                  | ViewState aspect (memory, per user) | A view filter, never data.                |
 | Editor view mode                           | Deck/surface state                  | Pre-existing owner; written only via I-9. |
 
 ---
@@ -141,6 +144,9 @@ the ambient path; §3.2 is what holds until then.
 
 - One permanently mounted change-bar gutter (contributors reconfigure markers inside it).
 - Overlays (foreign suggestions, compare) live in compartments, reconfigured live, never remounted.
+- The suggestion overlay and the companion filter their sources by the hidden-authors set before
+  rendering; hiding is a source filter, not a decoration hack, so counts, cards and gutter bars stay
+  consistent.
 - Binding decisions flow through I-8/I-9. Remount happens exactly when the bound document changes:
   entering/leaving Suggesting, selecting a branch/checkpoint.
 
@@ -192,11 +198,11 @@ Therefore:
 
 ---
 
-## 4. Open decisions (blocking sign-off)
+## 4. Decisions
 
-1. **Adopt §3.3 (capture layer)?** It is the only path that removes the remount class of defects
-   rather than sanding them. A multi-day change with the §3.3 obligations as its test plan; the
-   alternative is accepting remount UX on ambient mode switches permanently.
-2. **Suggest-against-draft (§1.4)** — defer or include in the §3.3 work (the capture layer makes it
-   nearly free: route to a branch whose parent is the draft).
-3. **Timeline author colours** — separate `Timeline` API work; prioritize or drop.
+1. **Capture layer (§3.3): ADOPTED.** The remount class of defects is removed structurally, not
+   sanded. The §3.3 obligations are the test plan; ambient mode switches must not tear down the view.
+2. **Suggest-against-draft (§1.4): IN SCOPE**, delivered with the capture-layer work (routing to a
+   branch whose parent is the draft).
+3. **Timeline author colours (§1.5): PLANNED** — `Timeline` gains a per-branch colour input; the
+   review timeline passes author hues.
