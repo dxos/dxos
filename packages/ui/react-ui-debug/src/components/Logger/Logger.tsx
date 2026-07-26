@@ -635,7 +635,6 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                   className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-description')}
                   title={record.package ? `${record.package}/${record.file}` : record.file}
                 >
-                  {record.package && <span className='truncate text-subdued'>{record.package}</span>}
                   <span className='truncate'>{record.file}</span>
                 </div>
                 <span className='truncate' title={record.message}>
