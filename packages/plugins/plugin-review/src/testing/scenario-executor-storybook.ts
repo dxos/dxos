@@ -213,6 +213,12 @@ export const runScenarioStorybook = async (
                 beforeAt === -1 || (widgetAt !== -1 && widgetAt < beforeAt),
                 `${label}: proposal rendered after the typed text (${JSON.stringify(lineText)})`,
               ).toBe(true);
+              // The change bar must not tint the host line's own text: a block-insert widget carries
+              // its own bar, so the shared gutter stays empty for this pure-insert suggestion.
+              await expect(
+                canvasElement.querySelectorAll('.cm-change-bar'),
+                `${label}: gutter bar bleeds onto the host line`,
+              ).toHaveLength(0);
             }
           },
           { timeout: 15_000 },

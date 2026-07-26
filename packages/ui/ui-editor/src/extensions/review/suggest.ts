@@ -174,6 +174,12 @@ export const suggestions = ({ sources, base, group, onAccept, onReject, onSelect
       if (hunk.removed.trim().length === 0 && hunk.inserted.trim().length === 0) {
         continue;
       }
+      // A pure BLOCK insertion renders wholly inside its widget, which spans its own visual rows on
+      // the host line — a full-height gutter bar would tint the host line's own text too. The widget
+      // carries its own bar instead (see SuggestionWidget).
+      if (hunk.removed === '' && hunk.inserted.endsWith('\n')) {
+        continue;
+      }
       // Trim a trailing newline so a paragraph-break change does not tag the following (empty) line.
       let end = hunk.to;
       while (end > hunk.from && state.doc.sliceString(end - 1, end) === '\n') {
@@ -397,13 +403,20 @@ class SuggestionWidget extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
+    // A pure block insertion occupies its own visual rows, so it carries its own change bar — the
+    // shared gutter's full-line bar would tint the host line's text (see the gutter skip in `build`).
+    const block = this.#hunk.removed === '' && this.#hunk.inserted.endsWith('\n');
     return Domino.of('span')
       .classNames('cm-suggest-actions')
       .append(
         Domino.of('span')
-          .classNames('cm-suggest-insert')
+          .classNames(block ? 'cm-suggest-insert cm-suggest-insert-block' : 'cm-suggest-insert')
           // The author's colour carries attribution: coloured text underlined in the same colour.
-          .style({ color: this.#hunk.colour, borderBottomColor: this.#hunk.colour })
+          .style({
+            color: this.#hunk.colour,
+            borderBottomColor: this.#hunk.colour,
+            ...(block && { borderInlineStartColor: this.#hunk.colour }),
+          })
           .text(this.#hunk.inserted),
       ).root;
   }
@@ -428,6 +441,15 @@ const suggestTheme = EditorView.baseTheme({
   // so attribution reads from colour rather than a uniform green fill.
   '& .cm-suggest-insert': {
     borderBottom: '2px solid transparent',
+  },
+  // A block insertion's own change bar (colour set inline per hunk). Stays an inline box so the
+  // widget's trailing newline breaks the host line as real text would; the start-edge border draws
+  // the bar on the first fragment only.
+  '& .cm-suggest-insert-block': {
+    borderInlineStartWidth: '3px',
+    borderInlineStartStyle: 'solid',
+    borderRadius: '1px',
+    paddingInlineStart: '6px',
   },
   '& .cm-suggest-actions': {
     marginInlineStart: '2px',
