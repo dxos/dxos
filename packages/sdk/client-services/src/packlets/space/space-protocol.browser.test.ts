@@ -10,12 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { TestAgentBuilder, TestFeedBuilder, WebsocketNetworkManagerProvider } from './testing';
-
-// TODO(burdon): Config.
-// Signal server will be started by the setup script.
-const port = process.env.SIGNAL_PORT ?? 4000;
-const SIGNAL_URL = `ws://localhost:${port}/.well-known/dx/signal`;
+import { TestAgentBuilder, TestFeedBuilder } from './testing';
 
 describe('space/space-protocol', () => {
   // TODO(dmaretskyi): Fails with the vscode test-runner for some reason.
@@ -95,7 +90,6 @@ describe('space/space-protocol', () => {
   test.skip('replicates a feed through a webrtc connection', async () => {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
-      networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL),
     });
     onTestFinished(async () => {
       await builder.close();

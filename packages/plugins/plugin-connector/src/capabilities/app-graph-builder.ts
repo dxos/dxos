@@ -14,7 +14,7 @@ import { Cursor } from '@dxos/link';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { Connector } from '#types';
@@ -145,7 +145,7 @@ export default Capability.makeModule(
         connector: (cursor) =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('connector'),
+              id: Attention.linkedSegment('connector'),
               label: ['connection-companion.label', { ns: meta.profile.key }],
               icon: 'ph--plugs-connected--regular',
               data: cursor,

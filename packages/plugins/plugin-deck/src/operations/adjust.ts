@@ -11,12 +11,12 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { incrementPlank } from '../layout';
 import { DeckCapabilities, DeckOperation, PLANK_COMPANION_TYPE } from '../types';
-import { COMPANION_VIEW_STATE_CONTEXT, companionVariantAspect, computeActiveUpdates } from '../util';
+import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
@@ -60,15 +60,17 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
 
           if (companions.length > 0) {
             const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-            const selected = viewState.get(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT);
+            const selected = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
             const preferred = selected.variant
-              ? companions.find((companion) => getLinkedVariant(companion.id) === selected.variant)
+              ? companions.find((companion) => Attention.getLinkedVariant(companion.id) === selected.variant)
               : undefined;
             const companion = preferred ?? companions[0];
             if (!preferred) {
-              viewState.set(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT, {
-                variant: getLinkedVariant(companion.id),
-              });
+              // Merge (don't replace) so seeding the variant preserves the persisted split points.
+              viewState.update(companionAspect, COMPANION_VIEW_STATE_CONTEXT, (prev) => ({
+                ...prev,
+                variant: Attention.getLinkedVariant(companion.id),
+              }));
             }
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
               updateActiveDeck(state, { companionOpen: true }),

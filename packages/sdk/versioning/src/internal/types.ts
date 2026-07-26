@@ -56,6 +56,8 @@ export const Branch = Schema.mutable(
     status: BranchStatus,
     createdAt: Schema.String,
     creator: Schema.optional(Schema.String),
+    /** Branch intent: one `suggestion` per author (review model) vs an explicit `draft` fork. Absent ⇒ draft. */
+    kind: Schema.optional(Schema.Literal('suggestion', 'draft')),
     mergedAt: Schema.optional(Schema.String),
   }),
 );
@@ -80,7 +82,7 @@ export const makeVersion = (props: MakeVersionProps): Version => ({
 });
 
 export type MakeBranchProps = Pick<Branch, 'parent' | 'anchor' | 'name'> &
-  Partial<Pick<Branch, 'key' | 'content' | 'creator'>>;
+  Partial<Pick<Branch, 'key' | 'content' | 'creator' | 'kind'>>;
 
 /** Constructs an active Branch record with a generated id and creation timestamp. */
 export const makeBranch = (props: MakeBranchProps): Branch => ({

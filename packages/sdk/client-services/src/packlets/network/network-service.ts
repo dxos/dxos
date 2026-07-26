@@ -7,7 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
-import { type SignalManager } from '@dxos/messaging';
+import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
   type NetworkStatus,
@@ -114,37 +114,40 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     const { peer, tags = [] } = request;
     return EffectStream.async<Message, Error>((emit) => {
       const ctx = Context.default();
-      // Register the tag subscription so the edge fans broadcasts out to this peer (DX-1125). Targeted
-      // delivery needs no registration.
-      if (tags.length > 0) {
-        void this.signalManager.subscribeMessages(peer, tags);
-      }
 
-      // Point-to-point messages addressed to this peer.
-      this.signalManager.onMessage.on(ctx, (message) => {
-        if (message.recipient.peerKey === peer.peerKey) {
-          void emit.single(message);
-        }
+      // This stream crosses the client-services RPC (protobufjs codec, e.g. dedicated worker → main
+      // thread). Its `Message.payload` is a `google.protobuf.Any` without `preserve_any`, and the
+      // codec refuses to encode an Any lacking '@type' — stamping the opaque form
+      // ('@type': 'google.protobuf.Any' + type_url/value) makes it pass through verbatim.
+      const encodableAny = (payload: Message['payload']): Message['payload'] => ({
+        ...payload,
+        '@type': 'google.protobuf.Any',
       });
 
-      // Broadcasts whose tags intersect the subscription (logical OR); surfaced as a message addressed
-      // to this peer, carrying the broadcast tags.
-      this.signalManager.onBroadcast?.on(ctx, (broadcast) => {
-        if (tags.length > 0 && broadcast.tags.some((tag) => tags.includes(tag))) {
-          void emit.single({
-            author: broadcast.author,
-            recipient: peer,
-            payload: broadcast.payload,
-            tags: broadcast.tags,
-          });
-        }
-      });
+      // The subscription encapsulates routing (DX-1125): point-to-point messages addressed to `peer`,
+      // plus — when `tags` are set — swarm broadcasts whose tags intersect. The returned callback owns
+      // teardown, refcounted so it releases only this stream's tag registration.
+      let unsubscribe: UnsubscribeCallback | undefined;
+      void this.signalManager
+        .subscribeMessages({
+          peer,
+          tags,
+          onMessage: (message) => {
+            void emit.single({ ...message, payload: encodableAny(message.payload) });
+          },
+        })
+        .then((unsub) => {
+          if (ctx.disposed) {
+            void unsub();
+          } else {
+            unsubscribe = unsub;
+          }
+        })
+        .catch((err) => emit.fail(err instanceof Error ? err : new Error(String(err))));
 
-      return Effect.promise(() => {
-        if (tags.length > 0) {
-          void this.signalManager.unsubscribeMessages(peer);
-        }
-        return ctx.dispose();
+      return Effect.promise(async () => {
+        await unsubscribe?.();
+        await ctx.dispose();
       });
     });
   }

@@ -9,11 +9,11 @@ import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
 import { checkoutVersion, getEditHistory } from '@dxos/echo-client';
 import { EID, type URI } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
-import { ObjectViewer, PanelContainer, Placeholder, Searchbar } from '../../../components';
+import { ObjectViewer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
@@ -177,54 +177,55 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
-      }
-    >
-      <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
-        <div className='flex flex-col w-full overflow-hidden'>
-          <DynamicTable
-            properties={dataProperties}
-            rows={dataRows}
-            features={features}
-            onRowClick={handleObjectRowClicked}
-          />
-          <div
-            className={mx(
-              'h-(--dx-statusbar-size)',
-              'flex shrink-0 justify-end items-center gap-2',
-              'bg-base-surface text-description',
-            )}
-          >
-            <div className='text-sm pe-2'>Objects: {items.length}</div>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
+          <div className='flex flex-col w-full overflow-hidden'>
+            <DynamicTable
+              properties={dataProperties}
+              rows={dataRows}
+              features={features}
+              onRowClick={handleObjectRowClicked}
+            />
+            <div
+              className={mx(
+                'h-(--dx-statusbar-size)',
+                'flex shrink-0 justify-end items-center gap-2',
+                'bg-base-surface text-description',
+              )}
+            >
+              <div className='text-sm pe-2'>Objects: {items.length}</div>
+            </div>
           </div>
-        </div>
 
-        <div className='dx-container grid grid-rows-[1fr_16rem] border-s border-t border-separator'>
-          <div className='p-1 min-h-0 overflow-auto'>
-            {selected ? (
-              <ObjectViewer
-                object={selectedVersionObject ?? selected}
-                id={Obj.getURI(selected)}
-                onNavigate={onNavigate}
-              />
-            ) : (
-              <Placeholder label='Data' />
-            )}
-          </div>
-          <div className={mx(!selected && 'p-1 border-t border-separator')}>
-            {selected ? (
-              <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
-            ) : (
-              <Placeholder label='History' />
-            )}
+          <div className='dx-container grid grid-rows-[1fr_16rem] border-s border-t border-separator'>
+            <div className='p-1 min-h-0 overflow-auto'>
+              {selected ? (
+                <ObjectViewer
+                  object={selectedVersionObject ?? selected}
+                  id={Obj.getURI(selected)}
+                  onNavigate={onNavigate}
+                />
+              ) : (
+                <Placeholder label='Data' />
+              )}
+            </div>
+            <div className={mx(!selected && 'p-1 border-t border-separator')}>
+              {selected ? (
+                <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
+              ) : (
+                <Placeholder label='History' />
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </PanelContainer>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

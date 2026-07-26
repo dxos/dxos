@@ -9,15 +9,16 @@ import { translations as editorTranslations } from '@dxos/react-ui-editor/transl
 import { Text } from '@dxos/schema';
 
 import {
+  AnchorResolver,
   AnchorSort,
   CommentConfig,
   CreateObject,
-  HistoryProvider,
   MarkdownSettings,
   MarkdownState,
   OperationHandler,
   ReactSurface,
   SkillDefinition,
+  UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -26,13 +27,9 @@ import { Markdown, MarkdownEvents } from '#types';
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
-  // Opts documents into the generic history companion contributed by plugin-space.
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSchema,
-    activate: HistoryProvider,
-  }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
   AppPlugin.addSurfaceModule({
     activate: ReactSurface,
@@ -45,7 +42,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'state',
-    // Wait for AttentionEvents.AttentionReady so ViewStateManager is available when the module
+    // Wait for AttentionEvents.AttentionReady so Manager is available when the module
     // resolves AttentionCapabilities.ViewState to build the editor state store.
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AttentionEvents.AttentionReady),
     activate: MarkdownState,
@@ -54,6 +51,10 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): More relevant event?
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
+  }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.AppGraphReady,
+    activate: AnchorResolver,
   }),
   Plugin.make,
 );

@@ -13,12 +13,12 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities, type StoredDeckState, defaultDeck } from '#types';
 
-import { COMPANION_VIEW_STATE_CONTEXT, companionVariantAspect, serializeDeckToUrl } from '../util';
+import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, serializeDeckToUrl } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /** Bounded retry for URL resolution while a cold restore's container chain finishes loading. */
@@ -283,9 +283,9 @@ export default Capability.makeModule(
       let companion: { attendedId: string; node: PathResolution.RepresentedNode } | undefined;
       if (deck.companionOpen && deck.active.length > 0) {
         const plankId = deck.active[deck.active.length - 1];
-        const selection = viewState.get(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT);
+        const selection = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
         if (plankId && selection.variant) {
-          const companionNodeId = `${plankId}/${linkedSegment(selection.variant)}`;
+          const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;
           const represented = PathResolution.representNode(builder, companionNodeId);
           if (Option.isSome(represented)) {
             companion = { attendedId: plankId, node: represented.value };
@@ -311,7 +311,7 @@ export default Capability.makeModule(
 
     const unsubscribeState = registry.subscribe(stateAtom, () => syncUrl());
     const unsubscribeAttention = attention.subscribeCurrent(() => syncUrl());
-    const unsubscribeCompanionVariant = viewState.subscribe(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
+    const unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
       syncUrl(),
     );
     // Correct a bare/stale URL against the already-persisted deck on load (see the note above).

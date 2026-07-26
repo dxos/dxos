@@ -2,25 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
+import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
-import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
+import { MemorySignalManager, MemorySignalManagerContext, Messenger, type PeerInfo } from '@dxos/messaging';
 
 import { type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
 
 describe('Signal Integration Test', () => {
-  let broker: SignalServerRunner;
+  // In-memory signaling context connecting the peers in each test (replaces the KUBE server).
+  let context: MemorySignalManagerContext;
 
-  beforeAll(async () => {
-    broker = await runTestSignalServer();
-  });
-
-  afterAll(() => {
-    void broker.stop();
+  beforeEach(() => {
+    context = new MemorySignalManagerContext();
   });
 
   const setupPeer = async ({
@@ -30,7 +26,7 @@ describe('Signal Integration Test', () => {
     peer?: PeerInfo;
     topic?: PublicKey;
   }) => {
-    const signalManager = new WebsocketSignalManager([{ server: broker.url() }]);
+    const signalManager = new MemorySignalManager(context);
     await signalManager.open();
     onTestFinished(async () => {
       await signalManager.close();

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Instructions, Skill, Trigger } from '@dxos/compute';
+import { Instructions, Routine, Skill, Trigger } from '@dxos/compute';
 import { Feed, Filter, Json, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -20,7 +20,6 @@ import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Routine } from '#types';
 
 import { RoutineArticle } from './RoutineArticle';
 

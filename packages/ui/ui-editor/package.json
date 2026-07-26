@@ -78,6 +78,7 @@
     "@uiw/codemirror-theme-vscode": "catalog:",
     "ajv": "catalog:",
     "codemirror": "catalog:",
+    "diff": "catalog:",
     "lib0": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "lodash.merge": "catalog:",

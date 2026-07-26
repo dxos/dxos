@@ -86,7 +86,11 @@ export const fileMatcherInput = (file: string, resolveWorkspacePackage: Workspac
 };
 
 /** Match a graph node key (a file path or `[external] <specifier>`) against the matcher. */
-export const matchesKey = (key: string, matcher: Matcher, resolveWorkspacePackage: WorkspacePackageResolver): boolean =>
+export const matchesKey = (
+  key: string,
+  matcher: Matcher,
+  resolveWorkspacePackage: WorkspacePackageResolver,
+): boolean =>
   isExternalKey(key)
     ? matcher.matches({ resolvedAbsolute: null, packageName: null, externalSpecifier: externalSpecifierOf(key) })
     : matcher.matches(fileMatcherInput(key, resolveWorkspacePackage));

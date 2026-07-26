@@ -256,9 +256,6 @@
       "path": "../../plugins/plugin-code"
     },
     {
-      "path": "../../plugins/plugin-comments"
-    },
-    {
       "path": "../../plugins/plugin-commerce"
     },
     {
@@ -385,10 +382,16 @@
       "path": "../../plugins/plugin-progress"
     },
     {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
       "path": "../../plugins/plugin-pwa"
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-review"
     },
     {
       "path": "../../plugins/plugin-routine"
@@ -539,6 +542,9 @@
     },
     {
       "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-error-boundary"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"

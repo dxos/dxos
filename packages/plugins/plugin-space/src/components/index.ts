@@ -5,7 +5,6 @@
 export * from './AwaitingObject';
 export * from './CreateObjectPanel';
 export * from './ForeignKeys';
-export * from './NamePopover';
 export * from './SyncStatus';
 
 // TODO(wittjosiah): Remove.

@@ -4,7 +4,7 @@
 
 import React, { type JSX, type PropsWithChildren } from 'react';
 
-import { Icon, ThemedClassName } from '@dxos/react-ui';
+import { Icon, Panel as PanelPrimitive, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type PanelProps = ThemedClassName<{
@@ -33,21 +33,37 @@ export const Panel = ({
   onToggle,
 }: PropsWithChildren<PanelProps>) => {
   return (
-    <div className='flex flex-col shrink-0 overflow-hidden'>
-      <div
-        className='flex items-center justify-between px-2 text-sm text-fine cursor-pointer'
-        onClick={() => onToggle?.(id, !open)}
-      >
-        <div className='flex items-center gap-2 py-1'>
-          <Icon icon={icon} />
-          <span className='truncate'>{title}</span>
-        </div>
-        {info}
-      </div>
-      {children && (
+    // Collapsible section: auto-height rows so the content can animate closed (the primitive defaults to 1fr content).
+    <PanelPrimitive.Root style={{ gridTemplateRows: 'auto auto' }} classNames='shrink-0'>
+      {/* Panel.Toolbar's public type omits onClick even though it forwards DOM props at runtime, so the handler lives on an asChild div. */}
+      <PanelPrimitive.Toolbar asChild classNames='px-2 text-sm text-fine cursor-pointer'>
         <div
+          role='button'
+          aria-expanded={open}
+          tabIndex={0}
+          className='flex items-center justify-between'
+          onClick={() => onToggle?.(id, !open)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              if (event.key === ' ') {
+                event.preventDefault();
+              }
+              onToggle?.(id, !open);
+            }
+          }}
+        >
+          <div className='flex items-center gap-2 py-1'>
+            <Icon icon={icon} />
+            <span className='truncate'>{title}</span>
+          </div>
+          {/* Stop info-control clicks (e.g. the Stats play/pause toggle) from also toggling the panel. */}
+          {info && <div onClick={(event) => event.stopPropagation()}>{info}</div>}
+        </div>
+      </PanelPrimitive.Toolbar>
+      {children && (
+        <PanelPrimitive.Content
           style={{ maxHeight: open ? (maxHeight ? `${maxHeight}px` : undefined) : 0 }}
-          className={mx(
+          classNames={mx(
             'flex flex-col w-full transition-all duration-200 ease-in-out',
             maxHeight ? 'overflow-y-auto' : 'h-full overflow-hidden',
             padding && 'px-2',
@@ -55,8 +71,8 @@ export const Panel = ({
           )}
         >
           {children}
-        </div>
+        </PanelPrimitive.Content>
       )}
-    </div>
+    </PanelPrimitive.Root>
   );
 };

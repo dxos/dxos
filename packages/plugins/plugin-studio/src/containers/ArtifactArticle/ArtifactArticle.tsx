@@ -438,7 +438,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
           ) : (
             selectedVariant &&
             (selectedVariant.jobId ? (
-              <div role='status' className='flex items-center justify-center bs-full text-subdued'>
+              <div role='status' className='flex items-center justify-center h-full text-subdued'>
                 {t('generating.label')}
               </div>
             ) : (

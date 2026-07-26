@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph } from '@dxos/plugin-graph';
-import { expandAttendableId } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 /**
  * Expand graph nodes along the full path from root to the given node ID.
@@ -18,7 +18,7 @@ export const useExpandPath = (nodeId?: string) => {
 
   useEffect(() => {
     if (nodeId) {
-      for (const prefix of expandAttendableId(nodeId)) {
+      for (const prefix of Attention.expandAttendableId(nodeId)) {
         Graph.expand(graph, prefix, 'child');
       }
     }

@@ -11,7 +11,7 @@ import { Graph, GraphBuilder, Node, PathResolution } from '@dxos/app-graph';
 import { Filter, Key, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { expandAttendableId } from '@dxos/react-ui-attention/types';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import * as Paths from './Paths';
 import * as UrlPath from './UrlPath';
@@ -37,7 +37,7 @@ export type ExistenceChecker = (echoUri: EID.EID) => Effect.Effect<boolean>;
  * This triggers graph connectors to populate child nodes at each level.
  */
 export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): void => {
-  const prefixes = expandAttendableId(qualifiedId);
+  const prefixes = Attention.expandAttendableId(qualifiedId);
   for (const prefix of prefixes) {
     Graph.expand(graph, prefix, 'child');
   }

@@ -169,5 +169,15 @@ const decorations = () => [
     '.cm-list-item-current': {
       borderColor: 'var(--color-focus-ring-subtle)',
     },
+
+    // The drag preview clones the selected rows, whose content is shifted horizontally to preview the
+    // drop indent — so the highlight must come from the (full-width) container, not the cloned lines,
+    // to span the editor width regardless of the indent level.
+    '.cm-blockDragPreview': {
+      backgroundImage: 'linear-gradient(var(--color-cm-highlight-surface), var(--color-cm-highlight-surface))',
+    },
+    '.cm-blockDragPreview .cm-list-item-selected': {
+      backgroundColor: 'transparent',
+    },
   }),
 ];

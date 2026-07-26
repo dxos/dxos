@@ -8,7 +8,7 @@ exports[`jsonata > evaluates expression with trigger event > input as expression
     "value": "nested",
   },
   "ref": {
-    "/": "echo:/01KD35WMWTEEE1WQQPYEGD1X2B",
+    "/": "echo:///01KD35WMWTEEE1WQQPYEGD1X2B",
   },
   "value": "Hello, John!",
 }
@@ -22,7 +22,7 @@ exports[`jsonata > evaluates expression with trigger event > input templating 1`
     "value": "nested",
   },
   "ref": {
-    "/": "echo:/01KD35WMWTEEE1WQQPYEGD1X2B",
+    "/": "echo:///01KD35WMWTEEE1WQQPYEGD1X2B",
     "target": {
       "@meta": {
         "keys": [],

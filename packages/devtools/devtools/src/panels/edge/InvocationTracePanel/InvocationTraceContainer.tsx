@@ -15,14 +15,13 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/Format';
 import { type URI } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
-import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { ExceptionPanel } from './ExceptionPanel';
 import { ExecutionGraphPanel } from './ExecutionGraphPanel';
@@ -170,25 +169,25 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       [],
     );
 
-    // TODO(burdon): Use Panel.Root
     return (
       <div {...composableProps(props, { classNames: ['h-full'] })} ref={forwardedRef}>
-        <PanelContainer
-          toolbar={
-            showSpaceSelector ? (
+        <Panel.Root>
+          {showSpaceSelector && (
+            <Panel.Toolbar asChild>
               <Toolbar.Root classNames='border-b border-subdued-separator'>
                 <DataSpaceSelector />
               </Toolbar.Root>
-            ) : undefined
-          }
-        >
-          <div className='relative flex-1 min-h-0'>
-            <div className={mx('absolute inset-0 overflow-hidden', gridLayout)}>
-              <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
-              {selectedInvocation && <Selected span={selectedInvocation} />}
+            </Panel.Toolbar>
+          )}
+          <Panel.Content>
+            <div className='relative flex-1 min-h-0'>
+              <div className={mx('absolute inset-0 overflow-hidden', gridLayout)}>
+                <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
+                {selectedInvocation && <Selected span={selectedInvocation} />}
+              </div>
             </div>
-          </div>
-        </PanelContainer>
+          </Panel.Content>
+        </Panel.Root>
       </div>
     );
   },
@@ -216,12 +215,12 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
     <Tabs.Root asChild orientation='horizontal' value={activeTab} onValueChange={setActiveTab}>
       <div className='grid grid-cols-1 grid-rows-[min-content_1fr] min-h-0 overflow-hidden border-separator [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'>
         <Tabs.Tablist classNames='border-b border-separator'>
-          <Tabs.Tab value='input'>Input</Tabs.Tab>
-          {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
-          {isLogQueue && <Tabs.Tab value='errors'>Error logs</Tabs.Tab>}
-          {isLogQueue && <Tabs.Tab value='raw'>Raw</Tabs.Tab>}
-          {span.error && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
-          {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
+          <Tabs.Button value='input'>Input</Tabs.Button>
+          {isLogQueue && <Tabs.Button value='logs'>Logs</Tabs.Button>}
+          {isLogQueue && <Tabs.Button value='errors'>Error logs</Tabs.Button>}
+          {isLogQueue && <Tabs.Button value='raw'>Raw</Tabs.Button>}
+          {span.error && <Tabs.Button value='failure'>Failure</Tabs.Button>}
+          {contents === 'execution-graph' && <Tabs.Button value='execution-graph'>Execution Graph</Tabs.Button>}
         </Tabs.Tablist>
         <Tabs.Panel value='input' classNames='min-h-0 min-w-0 w-full overflow-auto'>
           <JsonHighlighter data={span.input} />

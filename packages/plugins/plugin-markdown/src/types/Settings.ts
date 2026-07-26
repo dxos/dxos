@@ -28,6 +28,7 @@ export const DiffViewMode = Schema.Union(
   Schema.Literal('inline'),
   Schema.Literal('sideBySide'),
   Schema.Literal('gutter'),
+  Schema.Literal('suggest'),
 );
 export type DiffViewMode = Schema.Schema.Type<typeof DiffViewMode>;
 
@@ -69,7 +70,7 @@ export const Settings = Schema.mutable(
       DiffViewMode.annotations({
         title: 'Diff view',
         description:
-          "How document version comparisons are rendered: 'inline' (unified), 'sideBySide' (two panes), or 'gutter' (change bars).",
+          "How document version comparisons are rendered: 'inline' (unified), 'sideBySide' (two panes), 'gutter' (change bars), or 'suggest' (accept/reject each change over the parent).",
       }),
     ),
     folding: Schema.optional(

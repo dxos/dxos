@@ -104,9 +104,6 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../sdk/versioning"
-    },
-    {
       "path": "../../ui/lit-ui"
     },
     {

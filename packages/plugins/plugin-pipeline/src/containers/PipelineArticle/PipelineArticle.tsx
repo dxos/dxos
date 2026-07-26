@@ -14,7 +14,7 @@ import {
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenu } from '@dxos/react-ui-menu';
 import { type Pipeline } from '@dxos/types';
@@ -35,7 +35,7 @@ export const PipelineArticle = ({ role, subject: pipeline, attendableId }: Pipel
   const handleColumnAdd = useCallback(
     () =>
       invokePromise(LayoutOperation.UpdateCompanion, {
-        subject: linkedSegment('settings'),
+        subject: Attention.linkedSegment('settings'),
       }),
     [invokePromise],
   );

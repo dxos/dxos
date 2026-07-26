@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Topic } from '@dxos/compute';
+import { Project } from '@dxos/compute';
 import { AccessToken, Cursor } from '@dxos/link';
 import { ClientEvents } from '@dxos/plugin-client';
 import { TagIndex } from '@dxos/schema';
@@ -43,7 +43,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       Message.Message,
       ExtractedFrom.ExtractedFrom,
       TagIndex.TagIndex,
-      Topic.Topic,
+      Project.Project,
       AccessToken.AccessToken,
       Cursor.Cursor,
     ],

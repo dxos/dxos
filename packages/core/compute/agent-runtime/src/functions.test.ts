@@ -16,7 +16,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
-import { AssistantTestLayer } from './testing';
+import { AssistantTestLayer, runMemoizedTests } from './testing';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -60,7 +60,7 @@ const TestLayer = Layer.empty.pipe(
   ),
 );
 
-describe('Research', () => {
+describe.skipIf(!runMemoizedTests())('Research', () => {
   it.effect(
     'call a function with a ref input',
     Effect.fnUntraced(

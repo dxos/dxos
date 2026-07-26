@@ -56,7 +56,7 @@
     "@dxos/react-ui-rdf": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
-    "@dxos/story-modules": "workspace:*",
+    "@dxos/storybook-testing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

@@ -9,7 +9,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { isLinkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
@@ -45,7 +45,7 @@ export type DeckPlankProps = ThemedClassName<{
  */
 export const DeckPlank = memo(
   ({ id, part, fullscreen = false, active, soloLook, path, classNames }: DeckPlankProps) => {
-    if (isLinkedSegment(id)) {
+    if (Attention.isLinkedSegment(id)) {
       return <CompanionPlank id={id} classNames={classNames} />;
     }
 

@@ -8,7 +8,7 @@ import { type MouseEvent, type RefObject, useCallback, useMemo, useRef } from 'r
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { getAttendables } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -24,7 +24,7 @@ const OPEN_ICON = 'ph--arrow-square-out--regular';
  * attended. Resolve it from a click target (in-DOM), not from within a portaled menu.
  */
 export const getRootAttendableId = (element: Element): string | undefined =>
-  getAttendables('[data-attendable-id]', element).at(-1);
+  Attention.getAttendables('[data-attendable-id]', element).at(-1);
 
 /**
  * Helper for card content that opens objects (e.g. a related-object link): attach `ref` to the card's

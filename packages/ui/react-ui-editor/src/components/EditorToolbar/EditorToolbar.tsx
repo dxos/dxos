@@ -18,7 +18,7 @@ import { addImageUpload } from './image';
 import { addLists } from './lists';
 import { addSearch } from './search';
 import { type EditorToolbarState } from './types';
-import { addViewMode } from './view-mode';
+import { type ViewModeItem, addViewMode } from './view-mode';
 
 // TODO(burdon): Enable toolbar variants (e.g., markdown, code).
 
@@ -35,6 +35,8 @@ export type EditorToolbarFeatureFlags = Partial<{
   // TODO(wittjosiah): Factor out (depends on plugin-level capabilities.)
   onImageUpload: () => void;
   onViewModeChange: (mode: EditorViewMode) => void;
+  /** Override the view-mode dropdown entries (default: the three built-in modes). See {@link ViewModeItem}. */
+  viewModes: ViewModeItem[];
 }>;
 
 export type EditorToolbarActionGraphProps = {
@@ -86,6 +88,7 @@ const useMarkdownMenuActions = ({ state, getView, customActions, ...features }: 
       features?.showSearch,
       features?.onImageUpload,
       features?.onViewModeChange,
+      features?.viewModes,
     ],
   );
 
@@ -110,7 +113,7 @@ const createMarkdownActions = ({
       .separator('gap')
       .subgraph(customActions && get(customActions))
       .subgraph(features?.showSearch !== false && addSearch(getView))
-      .subgraph(features?.onViewModeChange && addViewMode(stateSnapshot, features.onViewModeChange))
+      .subgraph(features?.onViewModeChange && addViewMode(stateSnapshot, features.onViewModeChange, features.viewModes))
       .build();
   });
 };

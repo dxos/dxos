@@ -32,7 +32,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
-import { isLinkedSegment, useAttentionContext } from '@dxos/react-ui-attention';
+import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
@@ -219,7 +219,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const scrollToPlank = useContext(ScrollToPlankContext);
   // The companion plank keeps one shared width across its variants (a companion id is
   // `<plank>/~<variant>`), so switching tabs never resizes it; ordinary planks size per id.
-  const sizingKey = isLinkedSegment(id) ? COMPANION_SIZE_KEY : id;
+  const sizingKey = Attention.isLinkedSegment(id) ? COMPANION_SIZE_KEY : id;
   // Clamp the plank to a viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
   const maxPlankWidthPx = useContext(MaxPlankWidthContext);

@@ -150,9 +150,9 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
         </Panel.Toolbar>
         <Panel.Content>
           {objects.length === 0 ? (
-            <Empty classNames='bs-full' label={t('type-collection-empty.message')} />
+            <Empty classNames='h-full' label={t('type-collection-empty.message')} />
           ) : results.length === 0 ? (
-            <Empty classNames='bs-full' label={t('search-no-results.message')} />
+            <Empty classNames='h-full' label={t('search-no-results.message')} />
           ) : layout === 'table' ? (
             <DynamicTable
               type={type}

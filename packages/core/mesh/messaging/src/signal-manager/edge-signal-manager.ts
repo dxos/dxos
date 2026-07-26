@@ -24,8 +24,25 @@ import {
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { type BroadcastMessage, type Message, type PeerInfo, PeerInfoHash, type SwarmEvent } from '../signal-methods';
+import {
+  type Message,
+  type PeerInfo,
+  PeerInfoHash,
+  type SubscribeMessagesParams,
+  type SwarmEvent,
+  type UnsubscribeCallback,
+} from '../signal-methods';
 import { type SignalManager } from './signal-manager';
+
+/**
+ * A single message subscription registered on an {@link EdgeSignalManager} (DX-1125). Point-to-point
+ * delivery matches `peerKey`; broadcast delivery matches any intersection with `tags`.
+ */
+type MessageSubscription = {
+  peerKey: string;
+  tags: Set<string>;
+  onMessage: (message: Message) => void;
+};
 
 export class EdgeSignalManager extends Resource implements SignalManager {
   /**
@@ -33,8 +50,12 @@ export class EdgeSignalManager extends Resource implements SignalManager {
    */
   public swarmEvent = new Event<SwarmEvent>();
   public swarmState = new Event<SwarmResponse>();
-  public onMessage = new Event<Message>();
-  public onBroadcast = new Event<BroadcastMessage>();
+
+  /**
+   * Active message subscriptions. Routing is encapsulated here (DX-1125): each incoming message is
+   * dispatched to every subscription it matches, and each subscription owns its own teardown.
+   */
+  private readonly _subscriptions = new Set<MessageSubscription>();
 
   /**
    * Swarm key -> { peer: <own state payload>, joinedPeers: <state of swarm> }.
@@ -46,11 +67,13 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   >(PublicKey.hash);
 
   /**
-   * OR-subscription tag set for broadcast messages (DX-1125). A single set is maintained across all
-   * joined swarms; the edge fans out any broadcast whose tags intersect this set. Re-sent on
+   * OR-subscription tag refcounts for broadcast messages (DX-1125). One count per distinct tag across
+   * all subscribers, so one consumer's unsubscribe releases only its own registration rather than
+   * clobbering another consumer's identical subscription. The effective tag set (the keys) is shared
+   * across all joined swarms; the edge fans out any broadcast whose tags intersect it. Re-sent on
    * reconnect and whenever a swarm is (re-)joined.
    */
-  private readonly _subscribedTags = new Set<string>();
+  private readonly _subscribedTags = new Map<string, number>();
 
   private readonly _edgeConnection: EdgeConnection;
 
@@ -147,80 +170,71 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   async sendMessage(ctx: Context, message: Message): Promise<void> {
-    if (!this._matchSelfPeerInfo(message.author)) {
+    const { author, recipient, tags, payload } = message;
+    // Exactly one of point-to-point (`recipient`) or broadcast (`tags`) delivery (DX-1125). A broadcast
+    // carries its target swarm in `author.swarmKey` and is published with no `target`; the edge fans it
+    // out to every peer whose subscription tags intersect.
+    invariant((recipient == null) !== !tags?.length, 'Exactly one of `recipient` or `tags` must be set');
+
+    if (!this._matchSelfPeerInfo(author)) {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
       log.warn('ignoring author on send request', {
-        author: message.author,
-        expected: { peerKey: this._edgeConnection.peerKey, identityDid: this._edgeConnection.identityDid },
-      });
-    }
-
-    await this._edgeConnection.send(
-      ctx,
-      protocol.createMessage(bufWkt.AnySchema, {
-        serviceId: EdgeService.SIGNAL,
-        source: message.author,
-        target: [message.recipient],
-        payload: { typeUrl: message.payload.type_url, value: message.payload.value },
-      }),
-    );
-  }
-
-  /**
-   * Broadcast a tagged message to a swarm (DX-1125). Published with `source.swarmKey` set and no
-   * `target`; the edge fans it out to peers whose subscription tags intersect.
-   */
-  async sendBroadcast(
-    ctx: Context,
-    {
-      author,
-      swarmKey,
-      tags,
-      payload,
-    }: { author: PeerInfo; swarmKey: string; tags: string[]; payload: Message['payload'] },
-  ): Promise<void> {
-    if (!this._matchSelfPeerInfo(author)) {
-      log.warn('ignoring author on broadcast request', {
         author,
         expected: { peerKey: this._edgeConnection.peerKey, identityDid: this._edgeConnection.identityDid },
       });
     }
+
     await this._edgeConnection.send(
       ctx,
       protocol.createMessage(bufWkt.AnySchema, {
         serviceId: EdgeService.SIGNAL,
-        source: { ...author, swarmKey },
+        source: author,
+        target: recipient != null ? [recipient] : undefined,
         tags,
         payload: { typeUrl: payload.type_url, value: payload.value },
       }),
     );
   }
 
-  async subscribeMessages(peerInfo: PeerInfo, tags?: string[]): Promise<void> {
-    // Point-to-point delivery needs no registration (the edge relays targeted messages to this peer's
-    // socket). Only tag broadcasts require a subscription registered on the swarm (DX-1125).
-    if (!tags?.length) {
-      return;
-    }
+  async subscribeMessages({ peer, tags = [], onMessage }: SubscribeMessagesParams): Promise<UnsubscribeCallback> {
+    const subscription: MessageSubscription = { peerKey: peer.peerKey, tags: new Set(tags), onMessage };
+    this._subscriptions.add(subscription);
+
+    // Point-to-point delivery needs no edge registration (the edge relays targeted messages to this
+    // peer's socket). Only tag broadcasts require an OR-subscription registered on the swarm (DX-1125),
+    // refcounted so one subscriber's teardown does not clobber another's identical tags.
     let changed = false;
-    for (const tag of tags) {
-      if (!this._subscribedTags.has(tag)) {
-        this._subscribedTags.add(tag);
+    for (const tag of subscription.tags) {
+      const count = this._subscribedTags.get(tag) ?? 0;
+      this._subscribedTags.set(tag, count + 1);
+      if (count === 0) {
         changed = true;
       }
     }
     if (changed) {
       await this._sendSubscription(this._ctx);
     }
-  }
 
-  async unsubscribeMessages(peerInfo: PeerInfo): Promise<void> {
-    if (this._subscribedTags.size === 0) {
-      return;
-    }
-    // TODO(dmaretskyi): Per-subscriber tag accounting; today a single set is cleared wholesale.
-    this._subscribedTags.clear();
-    await this._sendSubscription(this._ctx);
+    return async () => {
+      this._subscriptions.delete(subscription);
+      // Release only this subscription's tag registrations; a tag stays live while another holds it.
+      let released = false;
+      for (const tag of subscription.tags) {
+        const count = this._subscribedTags.get(tag);
+        if (count === undefined) {
+          continue;
+        }
+        if (count > 1) {
+          this._subscribedTags.set(tag, count - 1);
+        } else {
+          this._subscribedTags.delete(tag);
+          released = true;
+        }
+      }
+      if (released) {
+        await this._sendSubscription(this._ctx);
+      }
+    };
   }
 
   /**
@@ -243,7 +257,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         payload: {
           action: SwarmRequestAction.SUBSCRIBE,
           swarmKeys,
-          subscribeTags: Array.from(this._subscribedTags),
+          subscribeTags: Array.from(this._subscribedTags.keys()),
         },
       }),
     );
@@ -306,7 +320,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
     // Broadcasts (DX-1125) carry tags and no target; point-to-point messages carry exactly one target.
     if ((message.tags?.length ?? 0) > 0 && (message.target?.length ?? 0) === 0) {
-      this.onBroadcast.emit({
+      this._deliver({
         author: message.source,
         tags: message.tags ?? [],
         payload: { type_url: payload.typeUrl, value: payload.value },
@@ -317,7 +331,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     invariant(message.target, 'target is missing');
     invariant(message.target.length === 1, 'target should have exactly one item');
 
-    this.onMessage.emit({
+    this._deliver({
       author: message.source,
       recipient: message.target[0],
       payload: {
@@ -325,6 +339,22 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         value: payload.value,
       },
     });
+  }
+
+  /**
+   * Route an incoming message to matching subscriptions (DX-1125): point-to-point by recipient
+   * `peerKey`, broadcasts by tag intersection.
+   */
+  private _deliver(message: Message): void {
+    for (const subscription of this._subscriptions) {
+      if (message.recipient != null) {
+        if (subscription.peerKey === message.recipient.peerKey) {
+          subscription.onMessage(message);
+        }
+      } else if (message.tags?.some((tag) => subscription.tags.has(tag))) {
+        subscription.onMessage(message);
+      }
+    }
   }
 
   private _matchSelfPeerInfo(peer: PeerInfo): boolean {

@@ -73,6 +73,8 @@ export interface LogMetaTransformOptions {
    * @default /node_modules|\\0/
    */
   excludeId?: RegExp;
+  /** Inject a `globalThis.DX_LOG_FILES.register(...)` line per module (dev only). @default false */
+  registerFiles?: boolean;
 }
 
 /** Dev NDJSON log file sink (HMR). `enabled` must be `true` to turn on. */

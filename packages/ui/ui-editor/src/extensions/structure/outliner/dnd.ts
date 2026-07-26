@@ -86,12 +86,18 @@ export const getDropIndent = (
   const items = flattenItems(state);
   const count = items.length;
   const unit = getIndentUnit(state);
-  const sourceIndent = indentAt(state, items[sourceIndices[0]].lineRange.from);
+  const sourceItem = items[sourceIndices[0]];
+  const sourceIndent = indentAt(state, sourceItem.lineRange.from);
 
-  // The item directly above the drop slot, skipping the dragged item.
-  const sources = new Set(sourceIndices);
+  // The item directly above the drop slot, skipping the dragged subtree (the source's children are
+  // collapsed with it, so they cannot serve as the indent reference).
+  const [sourceFrom, sourceTo] = getRange(state.facet(treeFacet), sourceItem);
   let aboveIndex = dropIndex - 1;
-  while (aboveIndex >= 0 && sources.has(aboveIndex)) {
+  while (
+    aboveIndex >= 0 &&
+    items[aboveIndex].lineRange.from >= sourceFrom &&
+    items[aboveIndex].lineRange.from <= sourceTo
+  ) {
     aboveIndex--;
   }
   const above = aboveIndex >= 0 ? items[aboveIndex] : null;

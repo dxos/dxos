@@ -10,7 +10,7 @@ export interface SwarmTraceSinkOptions {
   /**
    * Publish an encoded ephemeral trace message to the swarm for `space`, tagged for subscriber
    * matching (DX-1125). Fire-and-forget. The caller owns the space → swarm-key mapping and transport:
-   *   - client / local runtime: `SignalManager.sendBroadcast` over the WebSocket;
+   *   - client / local runtime: `SignalManager.sendMessage` with broadcast `tags` over the WebSocket;
    *   - edge runtime: a direct `env.SWARM.idFromName(swarmKey).publish(...)` DO call.
    */
   publish: (params: { space: string; tags: string[]; payload: Uint8Array }) => void;

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { AttentionEvents } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
 
 import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
@@ -23,7 +24,8 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'state',
-    activatesOn: AppActivationEvents.LayoutReady,
+    // Wait for AttentionReady too so the ViewState Manager (the expansion persistence backend) is available.
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.LayoutReady, AttentionEvents.AttentionReady),
     firesAfterActivation: [NavTreeEvents.StateReady],
     activate: State,
   }),

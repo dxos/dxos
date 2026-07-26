@@ -309,6 +309,8 @@ export class QueryPlanner {
         throw queryTooComplexError(context.originalQuery);
       case 'in':
         throw queryTooComplexError(context.originalQuery);
+      case 'in-query':
+        throw queryTooComplexError(context.originalQuery);
       case 'range':
         throw queryTooComplexError(context.originalQuery);
 
@@ -943,6 +945,14 @@ export class QueryPlanner {
         selectStepIndex = -1;
         orderStepIndex = -1;
       }
+      // Same reasoning for a nested subquery-membership predicate (`Filter.in(query.project(...))`):
+      // it prunes results in-memory after the SelectStep based on a set resolved at execution time,
+      // so pushing the limit earlier would slice candidates before the semi-join runs and starve
+      // the result set.
+      if (step._tag === 'FilterStep' && filterContainsInQuery(step.filter)) {
+        selectStepIndex = -1;
+        orderStepIndex = -1;
+      }
     }
 
     if (selectStepIndex === -1 && orderStepIndex === -1) {
@@ -1072,6 +1082,32 @@ const _filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
     case 'and':
     case 'or':
       return filter.filters.some(_filterContainsChildOf);
+    default:
+      return false;
+  }
+};
+
+/**
+ * Returns true if the filter is a subquery-membership predicate (`Filter.in(query.project(...))`,
+ * AST type `in-query`) or composes one via `and` / `or` / `not` / a nested `object` prop. Unlike
+ * `child-of`, which is only ever a root filter, `in-query` is always nested inside an `object`
+ * filter's `props` — the residual FilterStep produced by `_generateSelectionFromFilter`'s `object`
+ * case (above) is always `type: 'object'`, so this must recurse into `props` to find it.
+ *
+ * Exported (unlike the sibling `_filterContains*` helpers) so `query-executor.ts`'s `extractScopes`
+ * can reuse it — a bare `filter.type === 'in-query'` check there would miss the common case.
+ */
+export const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'in-query':
+      return true;
+    case 'object':
+      return Object.values(filter.props).some(filterContainsInQuery);
+    case 'not':
+      return filterContainsInQuery(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(filterContainsInQuery);
     default:
       return false;
   }

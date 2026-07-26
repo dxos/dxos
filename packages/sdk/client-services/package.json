@@ -100,7 +100,6 @@
     "platform": "catalog:"
   },
   "devDependencies": {
-    "@dxos/signal": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@effect/platform-browser": "catalog:",
     "@effect/vitest": "catalog:",

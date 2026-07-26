@@ -84,17 +84,19 @@ The authoritative references live under [`packages/reflect/deus/`](../../../pack
 - [`src/extension/mdl.grammar`](../../../packages/reflect/deus/src/extension/mdl.grammar) — Lezer grammar (use only when chasing syntax questions).
 
 Use the template as the starting structure and `packages/plugins/plugin-chess/PLUGIN.mdl`
-as a reference. Once it exists (i.e. in every session AFTER the initial build),
-`PLUGIN.mdl` is the source of truth for what the plugin does. It must be:
+as a reference. `PLUGIN.mdl` is a **record of what has been built — not a
+working document**. Design exploration for new features (in any session) happens
+in a design doc under `agents/superpowers/specs/`; `PLUGIN.mdl` is updated only
+after the design AND implementation have settled. It must be:
 
 - **Present before a new plugin's first PR merges** — created at the close of
   Phase 1 as described above; never omitted.
-- **Kept up-to-date** — when features are discussed, added, or changed in a later
-  session, update `PLUGIN.mdl` first, before implementing.
+- **Updated after the work settles** — when features are added or changed,
+  brainstorm and implement against a design doc, then bring `PLUGIN.mdl` in
+  line with the as-built plugin before the PR (never edit it speculatively
+  up front).
 - **Used for testing** — derive user feature tests and acceptance criteria from
   the spec's `feat`, `req`, and `test` blocks.
-- **Reviewed before implementation** — for changes to an existing plugin, the
-  user approves the updated `PLUGIN.mdl` before code is written.
 
 ## Workflow
 

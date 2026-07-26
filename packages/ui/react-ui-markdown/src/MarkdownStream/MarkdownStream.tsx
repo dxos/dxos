@@ -3,7 +3,7 @@
 //
 
 import { EditorSelection, type Extension, Transaction } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
@@ -59,16 +59,34 @@ import { isTruthy } from '@dxos/util';
 import { footer, setFooterVisibleEffect } from './footer';
 import { type StreamerOptions, createStreamer } from './stream';
 
+/** Document offset range (CodeMirror positions). */
+export type DocumentRange = { from: number; to: number };
+
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
   focus: () => void;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
+  /** Scroll the given document position into view. */
+  scrollTo: (pos: number, options?: { y?: 'start' | 'center' | 'end' | 'nearest' }) => void;
+  /** The document range currently visible in the viewport, or `undefined` if not mounted. */
+  getVisibleRange: () => DocumentRange | undefined;
+  /** Subscribe to visible-range changes (fires immediately with the current range). Returns an unsubscribe fn. */
+  onVisibleRangeChange: (cb: (range: DocumentRange) => void) => () => void;
   navigateNext: () => void;
   navigatePrevious: () => void;
   setContext: (context: any) => void;
   setContent: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
 }
+
+/** Map the scroll container's top/bottom edges to document positions. */
+const computeVisibleRange = (view: EditorView): DocumentRange => {
+  const rect = view.scrollDOM.getBoundingClientRect();
+  // `posAtCoords(_, false)` clamps to the nearest position rather than returning null.
+  const from = view.posAtCoords({ x: rect.left + 1, y: rect.top + 1 }, false);
+  const to = view.posAtCoords({ x: rect.left + 1, y: rect.bottom - 1 }, false);
+  return { from, to };
+};
 
 export type MarkdownStreamEvent = {
   type: 'submit';
@@ -405,6 +423,33 @@ const createMarkdownStreamController = ({
       viewRef.current?.dispatch({
         effects: crawlerLineEffect.of({ line: -1, behavior }),
       });
+    },
+
+    /** Scroll the given document position into view. */
+    scrollTo: (pos: number, options?: { y?: 'start' | 'center' | 'end' | 'nearest' }) => {
+      const view = viewRef.current;
+      if (!view) {
+        return;
+      }
+      const clamped = Math.max(0, Math.min(pos, view.state.doc.length));
+      view.dispatch({ effects: EditorView.scrollIntoView(clamped, { y: options?.y ?? 'start' }) });
+    },
+
+    /** The document range currently visible in the viewport. */
+    getVisibleRange: () => {
+      const view = viewRef.current;
+      return view ? computeVisibleRange(view) : undefined;
+    },
+
+    /** Subscribe to visible-range changes (scroll). Fires immediately with the current range. */
+    onVisibleRangeChange: (cb: (range: DocumentRange) => void) => {
+      const view = viewRef.current;
+      if (!view) {
+        return () => {};
+      }
+      const handler = () => cb(computeVisibleRange(view));
+      handler();
+      return addEventListener(view.scrollDOM, 'scroll', handler, { passive: true });
     },
 
     /** Navigate previous prompt. */

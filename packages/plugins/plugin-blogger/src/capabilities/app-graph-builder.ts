@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -176,7 +176,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('comments'),
+              id: Attention.linkedSegment('comments'),
               label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
               data: contentDoc,
@@ -184,7 +184,7 @@ export default Capability.makeModule(
             }),
             // Hidden, addressable node for the body doc so the in-editor comment toolbar action resolves.
             // The doc has no navtree node, so `graph.actions(<post node id>/<doc.id>)` — the id
-            // PostArticle uses as the editor's `attendableId` — would otherwise be empty. plugin-comments'
+            // PostArticle uses as the editor's `attendableId` — would otherwise be empty. plugin-review's
             // `commentToolbar` matches on `node.data` (not the node type/id), so a custom `type` keeps
             // object/delete actions off this node. `disposition: 'hidden'` keeps it out of the navtree.
             Node.make({

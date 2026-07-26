@@ -18,7 +18,7 @@ import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
-import { type ViewStateManager, selectionAspect } from '@dxos/react-ui-attention';
+import { Selection, ViewState } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
@@ -63,7 +63,7 @@ export type ExtensionsOptions = {
   compact?: boolean;
   viewMode?: EditorViewMode;
   editable?: boolean;
-  viewState?: ViewStateManager;
+  viewState?: ViewState.Manager;
   editorStateStore?: EditorStateStore;
   setWidgets?: (widgets: XmlWidgetState[]) => void;
   platform?: 'mobile' | 'desktop';
@@ -245,7 +245,7 @@ const createBaseExtensions = ({
   return extensions;
 };
 
-const selectionChange = (viewState: ViewStateManager) => {
+const selectionChange = (viewState: ViewState.Manager) => {
   const debouncedHandler = debounceAndThrottle((update: ViewUpdate) => {
     const id = update.state.facet(documentId);
     const cursorConverter = update.state.facet(Cursor.converter);
@@ -263,7 +263,7 @@ const selectionChange = (viewState: ViewStateManager) => {
         to: cursorConverter.toCursor(range.to),
       }));
 
-    viewState.set(selectionAspect, id, { mode: 'multi-range', ranges });
+    viewState.set(Selection.aspect, id, { mode: 'multi-range', ranges });
   }, 100);
 
   return EditorView.updateListener.of((update: ViewUpdate) => {

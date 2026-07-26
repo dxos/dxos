@@ -112,7 +112,7 @@ export default Capability.makeModule(
                         data: Devtools.Client.Logs,
                         type: Devtools.id,
                         properties: {
-                          label: ['logs.label', { ns: meta.profile.key }],
+                          label: ['logging.label', { ns: meta.profile.key }],
                           icon: 'ph--file-text--regular',
                         },
                       }),

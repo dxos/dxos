@@ -30,10 +30,12 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/story-modules';
+import { ModuleContainer } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { Module, StoryModulesPlugin, StorySyncPlugin } from '../testing';
+import { StoryRole } from '../modules';
+import { StorySyncPlugin } from '../testing';
+import { StoryModulesPlugin } from '../testing/modules';
 
 const TYPES = [
   AccessToken.AccessToken,
@@ -93,10 +95,11 @@ const DECORATORS = [
 const DefaultStory = () => (
   <ModuleContainer
     layout={[
-      [Module.Mailbox, Module.Message],
-      [Module.Archive, Module.Stats, Module.SyncState],
-      [Module.Connector, Module.Triggers],
-      [Module.Trace],
+      [StoryRole.Mailbox, StoryRole.Message],
+      [StoryRole.Archive, StoryRole.Stats, StoryRole.SyncState],
+      [StoryRole.Connector, StoryRole.Triggers],
+      [StoryRole.Trace],
+      [StoryRole.SwarmTrace],
     ]}
     compact
   />

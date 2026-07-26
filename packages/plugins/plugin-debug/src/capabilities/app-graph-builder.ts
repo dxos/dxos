@@ -77,6 +77,22 @@ export default Capability.makeModule(
             }),
           ]),
       }),
+
+      // Log panel deck companion.
+      GraphBuilder.createExtension({
+        id: 'logs',
+        match: NodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeDeckCompanion({
+              id: 'logs',
+              label: ['logs.label', { ns: meta.profile.key }],
+              icon: 'ph--list-magnifying-glass--regular',
+              data: 'logs' as const,
+              position: Position.last,
+            }),
+          ]),
+      }),
     ]);
 
     return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);

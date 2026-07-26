@@ -167,6 +167,7 @@ const MessageBody = ({ message, isAuthor, editing, onSave }: MessageBodyProps) =
   const textBlockIndex = message.blocks.findIndex((block) => block._tag === 'text');
   const textBlock = textBlockIndex !== -1 ? (message.blocks[textBlockIndex] as ContentBlock.Text) : undefined;
   const proposalBlock = message.blocks.find((block) => block._tag === 'proposal') as ContentBlock.Proposal | undefined;
+  const changeBlock = message.blocks.find((block) => block._tag === 'change') as ContentBlock.Change | undefined;
   const references = message.blocks
     .filter((block) => block._tag === 'reference')
     .map((block) => (block as ContentBlock.Reference).reference);
@@ -176,6 +177,13 @@ const MessageBody = ({ message, isAuthor, editing, onSave }: MessageBodyProps) =
     <>
       {textBlock && <TextBlock block={textBlock} isAuthor={isAuthor} editing={editing} onSave={onSave} />}
       {proposalBlock && <div className='me-4 italic'>{proposalBlock.text}</div>}
+      {changeBlock && (
+        <p className='me-4 text-sm break-words'>
+          {changeBlock.before && <span className='line-through opacity-60'>{changeBlock.before}</span>}
+          {changeBlock.before && changeBlock.after && ' '}
+          {changeBlock.after && <span>{changeBlock.after}</span>}
+        </p>
+      )}
       {Object &&
         Ref.Array.targets(references).map((reference, index) => (
           <Object key={index} subject={reference as Obj.Unknown} />
@@ -332,6 +340,8 @@ MessageTextbox.displayName = 'Message.Textbox';
 export type MessageTileProps = {
   message: MessageType.Message;
   classNames?: MessageRootProps['classNames'];
+  /** Whether the avatar-rail continuation line is drawn below the tile; false for the last tile. */
+  continues?: boolean;
 };
 
 /**
@@ -339,18 +349,32 @@ export type MessageTileProps = {
  * context for metadata resolution, injected renderers, and callbacks. This is
  * the unit rendered by `Thread.Messages`.
  */
-const MessageTile = ({ message, classNames }: MessageTileProps) => {
+const MessageTile = ({ message, classNames, continues = true }: MessageTileProps) => {
   const { t } = useTranslation(translationKey);
-  const { getMetadata, identityDid, editable, onMessageDelete, onAcceptProposal } = useThreadContext('Message.Tile');
+  const {
+    getMetadata,
+    identityDid,
+    editable,
+    onMessageDelete,
+    onAcceptProposal,
+    onAcceptChange,
+    onRejectChange,
+    onMessageSelect,
+    currentMessageId,
+  } = useThreadContext('Message.Tile');
   const [editing, setEditing] = useState(false);
 
   const metadata = getMetadata(message);
   const isAuthor = !!identityDid && identityDid === metadata.authorId;
   const hasProposal = message.blocks.some((block) => block._tag === 'proposal');
+  const hasChange = message.blocks.some((block) => block._tag === 'change');
 
   const handleEdit = useCallback(() => setEditing((value) => !value), []);
   const handleDelete = useCallback(() => onMessageDelete?.(message.id), [onMessageDelete, message.id]);
   const handleAcceptProposal = useCallback(() => onAcceptProposal?.(message.id), [onAcceptProposal, message.id]);
+  const handleAcceptChange = useCallback(() => onAcceptChange?.(message.id), [onAcceptChange, message.id]);
+  const handleRejectChange = useCallback(() => onRejectChange?.(message.id), [onRejectChange, message.id]);
+  const handleSelect = useCallback(() => onMessageSelect?.(message.id), [onMessageSelect, message.id]);
   const handleSave = useCallback(
     (text: string) => {
       Obj.update(message, (message) => {
@@ -365,9 +389,11 @@ const MessageTile = ({ message, classNames }: MessageTileProps) => {
 
   const showEdit = isAuthor && editable;
   const showAccept = hasProposal && !!onAcceptProposal;
+  const showAcceptChange = hasChange && !!onAcceptChange;
+  const showRejectChange = hasChange && !!onRejectChange;
   const showDelete = !!onMessageDelete;
   const controls =
-    showEdit || showAccept || showDelete ? (
+    showEdit || showAccept || showAcceptChange || showRejectChange || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
           <IconButton
@@ -391,6 +417,28 @@ const MessageTile = ({ message, classNames }: MessageTileProps) => {
             onClick={handleAcceptProposal}
           />
         )}
+        {showAcceptChange && (
+          <IconButton
+            data-testid='thread.message.accept-change'
+            variant='ghost'
+            icon='ph--check--regular'
+            iconOnly
+            label={t('accept-change.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={handleAcceptChange}
+          />
+        )}
+        {showRejectChange && (
+          <IconButton
+            data-testid='thread.message.reject-change'
+            variant='ghost'
+            icon='ph--x--regular'
+            iconOnly
+            label={t('reject-change.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={handleRejectChange}
+          />
+        )}
         {showDelete && (
           <IconButton
             data-testid='thread.message.delete'
@@ -408,8 +456,19 @@ const MessageTile = ({ message, classNames }: MessageTileProps) => {
   return (
     <MessageRoot
       {...metadata}
+      continues={continues}
       controls={controls}
-      classNames={[hoverableControls, hoverableFocusedWithinControls, classNames]}
+      // Selecting a tile is how the host reveals what it refers to (a suggestion's range in the
+      // document), so the whole tile is the target — the accent marks which one is showing.
+      onClick={onMessageSelect ? handleSelect : undefined}
+      aria-current={currentMessageId === message.id ? 'location' : undefined}
+      classNames={[
+        hoverableControls,
+        hoverableFocusedWithinControls,
+        onMessageSelect && 'cursor-pointer',
+        currentMessageId === message.id && 'bg-activeSurface',
+        classNames,
+      ]}
     >
       <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
       <MessageBody message={message} isAuthor={isAuthor} editing={editing} onSave={handleSave} />

@@ -1,15 +1,17 @@
 {
-  // Cloudflare Workers (Static Assets) config for the Storybook site — assets-only (no Worker script).
+  // Cloudflare Workers (Static Assets) config for the react Storybook site — assets-only (no Worker
+  // script). Named "storybook-react" (not bare "storybook") so a future storybook-solid/storybook-lit etc.
+  // doesn't force a rename here.
   // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
   // Local dev: `moon run storybook-react:bundle && wrangler dev`.
-  "name": "storybook",
+  "name": "storybook-react",
   "compatibility_date": "2024-11-01",
   "assets": {
     "directory": "./out/storybook-react",
     "not_found_handling": "single-page-application",
   },
   "env": {
-    "production": { "name": "storybook" },
-    "main": { "name": "storybook-main" },
+    "production": { "name": "storybook-react" },
+    "main": { "name": "storybook-react-main" },
   },
 }

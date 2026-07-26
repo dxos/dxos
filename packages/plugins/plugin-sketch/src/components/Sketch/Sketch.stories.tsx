@@ -9,7 +9,8 @@ import { createObject } from '@dxos/echo-client';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SketchBuilder, data } from '#testing';
+import { SketchBuilder } from '#model';
+import { data } from '#testing';
 import { Sketch } from '#types';
 
 import { migrateCanvas } from '../../migrations';

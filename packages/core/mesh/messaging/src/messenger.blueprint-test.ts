@@ -6,9 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { range } from '@dxos/util';
 
-import { WebsocketSignalManager } from './signal-manager';
 import { type Message } from './signal-methods';
 import { PAYLOAD_1, PAYLOAD_2, PAYLOAD_3, TestBuilder, messageEqual } from './testing';
 
@@ -311,29 +309,6 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       // expect to receive 1 message.
       await asyncTimeout(promise(), 1000);
       expect(count).toEqual(1);
-    });
-  });
-
-  describe.skip('load', () => {
-    test('many connections to KUBE', { timeout: 5_000 }, async () => {
-      const builder = new TestBuilder({
-        signalManagerFactory: async () =>
-          new WebsocketSignalManager([{ server: 'wss://dev.kube.dxos.org/.well-known/dx/signal' }]),
-      });
-      void range(100).map(async () => {
-        const peer = await builder.createPeer();
-
-        void peer.messenger.sendMessage(Context.default(), {
-          author: peer.peerInfo,
-          recipient: peer.peerInfo,
-          payload: {
-            type_url: 'dxos.test',
-            value: Buffer.from('TEST'),
-          },
-        });
-      });
-
-      await sleep(1000000);
     });
   });
 };

@@ -24,5 +24,6 @@ export const useMembers = (spaceId?: SpaceId): readonly Space.Member[] => {
     () => Atom.make((spaceId ? Space.members(spaceId) : Stream.empty).pipe(Stream.provideContext(services))),
     [services, spaceId],
   );
+
   return Result.getOrElse(useAtomValue(atom), () => EMPTY);
 };

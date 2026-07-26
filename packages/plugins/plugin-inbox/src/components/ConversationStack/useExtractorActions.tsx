@@ -3,9 +3,9 @@
 //
 
 import { type Capabilities } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { log } from '@dxos/log';
-import { getSpace } from '@dxos/react-client/echo';
 
 import { isAiServiceUnavailable } from '../../operations/extractor/ai-gate';
 import { InboxOperation, Mailbox } from '../../types';
@@ -43,15 +43,15 @@ export const buildExtractActions = (
   const matching = extractors;
 
   const runOne = (extractorId: string) => {
-    const space = getSpace(message);
-    if (!space) {
+    const db = Obj.getDatabase(message);
+    if (!db) {
       return Promise.resolve();
     }
 
     // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
     // (e.g. `AiService`) can materialize.
     return invoker
-      .invokePromise(InboxOperation.ExtractMessage, { source: message, extractorId }, { spaceId: space.id })
+      .invokePromise(InboxOperation.ExtractMessage, { source: message, extractorId }, { spaceId: db.spaceId })
       .catch((err) => {
         // Distinguish the startup race where the assistant plugin's `AiService` LayerSpec is not
         // yet in the process-manager runtime: surface an actionable message instead of an opaque

@@ -28,7 +28,7 @@ import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
-import { Calendar, DraftEvent, InboxOperation, SystemTags } from '#types';
+import { Calendar, DraftEvent, SystemTags } from '#types';
 
 import { getCalendarRangeSelectionId } from '../../paths';
 import { InitializeCalendar } from './InitializeCalendar';
@@ -180,13 +180,6 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     handleNavigate(event.id);
   }, [db, subject, selectedDate, handleNavigate]);
 
-  // Push all draft events for this calendar to Google Calendar.
-  // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
-  // (Database/Feed/Credentials) can materialize.
-  const handleSyncDraft = useCallback(() => {
-    void invokePromise(InboxOperation.SyncDraftEvents, { calendar }, { spaceId: db?.spaceId });
-  }, [invokePromise, calendar, db]);
-
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const menuActions = useMenuBuilder(
@@ -199,24 +192,12 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           { label: ['calendar-toolbar-create-event.menu', { ns: meta.profile.key }], icon: 'ph--pen--regular' },
           handleCreate,
         );
-      if (draftEvents.length > 0) {
-        builder.action(
-          'sync-draft',
-          {
-            label: ['calendar-toolbar-sync.menu', { ns: meta.profile.key }],
-            icon: 'ph--cloud-arrow-up--regular',
-            // Pushing drafts to Google Calendar requires a connection bound to this calendar.
-            disabled: !connection,
-          },
-          handleSyncDraft,
-        );
-      }
       return builder
         .separator('gap')
         .subgraph(graphActions(graph, get, id, { filter: isToolbarAction, surface: TOOLBAR_DISPOSITION }))
         .build();
     },
-    [graph, id, handleCreate, handleSyncDraft, draftEvents.length, connection],
+    [graph, id, handleCreate],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });

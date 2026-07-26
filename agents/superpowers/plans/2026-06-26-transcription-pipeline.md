@@ -326,9 +326,7 @@ describe('TranscriptEvent', () => {
 import { type ContentBlock } from '@dxos/types';
 
 export type TranscriptEvent =
-  | { kind: 'block'; block: ContentBlock.Transcript }
-  | { kind: 'silence'; sinceMs: number }
-  | { kind: 'tick' };
+  { kind: 'block'; block: ContentBlock.Transcript } | { kind: 'silence'; sinceMs: number } | { kind: 'tick' };
 
 export const TranscriptEvent = {
   block: (block: ContentBlock.Transcript): TranscriptEvent => ({ kind: 'block', block }),

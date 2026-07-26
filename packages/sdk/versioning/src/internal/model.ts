@@ -105,6 +105,7 @@ export type CreateBranchProps = {
   parent: Text.Text;
   heads?: readonly string[];
   creator?: string;
+  kind?: Versioning.Branch['kind'];
 };
 
 /**
@@ -124,6 +125,7 @@ export const createBranch = async (doc: VersionedObject, props: CreateBranchProp
     parent: Ref.make(parent),
     anchor,
     ...(props.creator !== undefined && { creator: props.creator }),
+    ...(props.kind !== undefined && { kind: props.kind }),
   });
   // The record id doubles as the registry branch name: unique per object, stable, and free of
   // user-label collisions (the display name lives on the record only).
@@ -236,6 +238,95 @@ export const discardBranch = (doc: VersionedObject, branch: Versioning.Branch): 
   Obj.update(doc, () => {
     stored.status = 'archived';
   });
+};
+
+// In-flight find-or-create per (doc, creator): two surfaces entering Suggesting concurrently must
+// resolve to ONE branch — without this, both can pass the not-found check and create duplicates.
+const inflightSuggestionBranches = new Map<string, Promise<Versioning.Branch>>();
+
+/**
+ * Find-or-create the caller's suggestion branch (one per author). Suggestion branches are keyed by
+ * `creator` and reused across edits, so a user accrues a single reviewable set of changes rather than
+ * a branch per edit. Idempotent: returns the existing active suggestion branch when present; calls
+ * for the same (doc, creator) are serialized through an in-flight cache.
+ */
+export const suggestionBranch = (
+  doc: VersionedObject,
+  parent: Text.Text,
+  creator: string,
+): Promise<Versioning.Branch> => {
+  const cacheKey = `${doc.id}:${creator}`;
+  const pending = inflightSuggestionBranches.get(cacheKey);
+  if (pending) {
+    return pending;
+  }
+  const run = findOrCreateSuggestionBranch(doc, parent, creator).finally(() => {
+    inflightSuggestionBranches.delete(cacheKey);
+  });
+  inflightSuggestionBranches.set(cacheKey, run);
+  return run;
+};
+
+const findOrCreateSuggestionBranch = async (
+  doc: VersionedObject,
+  parent: Text.Text,
+  creator: string,
+): Promise<Versioning.Branch> => {
+  const existing = doc.history?.branches.find(
+    (branch) => branch.status === 'active' && branch.kind === 'suggestion' && branch.creator === creator,
+  );
+  if (existing) {
+    // INVARIANT: an own suggestion branch is always "main + that author's suggestions" — main's
+    // progress must never read as the author's deletions. A branch whose anchor fell behind is
+    // reconciled on re-entry by folding main's changes INTO it (CRDT merge; shared fork ancestry)
+    // and advancing the anchor. Always a sync, never a re-fork: callers hold the branch identity
+    // (cards, anchors, in-flight operations), so find-or-create must return the SAME branch.
+    const heads = getHeads(parent);
+    if (!sameHeads(existing.anchor, heads) && existing.key) {
+      const db = Obj.getDatabase(doc);
+      invariant(db, 'document not in a database');
+      await db.syncBranch(parent.id, existing.key);
+      Obj.update(doc, () => {
+        existing.anchor = heads;
+      });
+    }
+    return existing;
+  }
+
+  return createBranch(doc, { name: `suggestion: ${creator}`, parent, creator, kind: 'suggestion' });
+};
+
+/**
+ * Archives the branch when it carries no changes vs its fork point (parent@anchor) — e.g. once the
+ * last suggested hunk has been accepted or rejected. Keeps the timeline free of empty suggestion
+ * branches. Returns whether it archived.
+ */
+export const archiveIfEmpty = async (doc: VersionedObject, branch: Versioning.Branch): Promise<boolean> => {
+  const stored = resolveBranch(doc, branch);
+  if (stored.status !== 'active') {
+    return false;
+  }
+  const parent = stored.parent.target;
+  invariant(parent, 'branch parent not loaded');
+  const base = contentAt(parent, stored.anchor);
+
+  let content: string;
+  if (stored.key) {
+    const binding = await bindBranch(doc, stored);
+    try {
+      content = binding.object.content;
+    } finally {
+      binding.dispose();
+    }
+  } else {
+    content = stored.content?.target?.content ?? '';
+  }
+
+  if (content === base) {
+    discardBranch(doc, stored);
+    return true;
+  }
+  return false;
 };
 
 const resolveBranch = (doc: VersionedObject, branch: Versioning.Branch): Versioning.Branch => {
