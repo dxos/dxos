@@ -16,7 +16,12 @@ import { Logger } from './Logger';
 
 random.seed(123);
 
-const FILES = ['alpha.ts', 'beta.ts', 'gamma.ts'];
+// Full workspace paths so rows and the Levels popover show the derived package name.
+const FILES = [
+  'packages/ui/react-ui-debug/src/alpha.ts',
+  'packages/plugins/plugin-inbox/src/beta.ts',
+  'packages/core/echo/echo/src/gamma.ts',
+];
 
 // Hand-written meta so entries appear to originate from distinct files, populating the Levels list.
 // A `seq`/`file` context is attached so expanding a row shows real structured content.
@@ -36,7 +41,7 @@ const DefaultStory = () => (
         <Toolbar.Root>
           {FILES.map((file) => (
             <Toolbar.Button key={file} onClick={() => emit(file, 'info')}>
-              {file}
+              {file.split('/').pop()}
             </Toolbar.Button>
           ))}
           <Toolbar.Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Toolbar.Button>

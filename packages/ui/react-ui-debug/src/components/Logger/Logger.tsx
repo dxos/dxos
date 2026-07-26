@@ -38,7 +38,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '../../translations';
-import { formatLogEntry } from './format';
+import { formatLogEntry, packageName } from './format';
 
 //
 // Shared
@@ -130,9 +130,6 @@ export const copyToClipboard = (text: string): void => {
 };
 
 type LogRow = { id: number; entry: LogEntry };
-
-// Derive the workspace package directory from a source path (…/packages/<group>/<pkg>/…) for display/grouping.
-const packageName = (file: string): string | undefined => file.match(/packages\/[^/]+\/([^/]+)\//)?.[1];
 
 // Compose the base filter with per-file overrides into a single @dxos/log filter string.
 // Order-independent: an override below the base level raises that file's verbosity; above, it quiets it.
@@ -593,12 +590,6 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
     );
   }
 
-  // Rows carry inner controls (checkbox, copy), so this is a plain `role=list` — nesting buttons in a
-  // `role=option` is invalid WAI-ARIA. The row is the sole arrow-nav stop (`onClick` makes the item
-  // interactive → tabIndex 0); inner controls opt out with `tabIndex={-1}`. The current line follows focus
-  // (click + arrows), styled via `aria-current`/`dx-current`. Space toggles expansion and Enter toggles the
-  // checkbox: handled on the wrapper (Listbox collapses both keys into one synthetic row click, losing which
-  // was pressed); arrow keys fall through to Tabster.
   return (
     <Listbox.Root>
       <div
@@ -640,7 +631,13 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                   </Input.Root>
                 </div>
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
-                <span className={mx('truncate', !expanded.has(id) && 'text-description')}>{record.file}</span>
+                <div
+                  className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-description')}
+                  title={record.package ? `${record.package}/${record.file}` : record.file}
+                >
+                  {record.package && <span className='truncate text-subdued'>{record.package}</span>}
+                  <span className='truncate'>{record.file}</span>
+                </div>
                 <span className='truncate' title={record.message}>
                   {record.message}
                 </span>
