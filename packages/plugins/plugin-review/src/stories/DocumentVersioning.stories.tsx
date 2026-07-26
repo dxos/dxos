@@ -740,11 +740,12 @@ const editorReadOnly = (canvasElement: HTMLElement): boolean | undefined => {
  */
 const selectViewMode = async (canvasElement: HTMLElement, label: string) => {
   const body = within(canvasElement.ownerDocument.body);
-  // The dropdown trigger's accessible name is the ACTIVE item's label (applyActive), so locate it
-  // by its stable eye icon rather than a name that changes with the selection.
+  // Both the trigger's accessible name AND its icon track the active item (applyActive), so locate
+  // it structurally: the view-mode dropdown is the last menu-popup button in the editor toolbar.
   const trigger = await waitFor(
     () => {
-      const found = canvasElement.querySelector('button:has(use[href*="ph--eye"])');
+      const buttons = canvasElement.querySelectorAll('button[aria-haspopup="menu"]');
+      const found = buttons[buttons.length - 1];
       invariant(found instanceof HTMLElement);
       return found;
     },
@@ -946,5 +947,55 @@ export const ReviewChromeTest: Story = {
     await selectViewMode(canvasElement, 'Markdown');
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });
     await expect(canvasElement.querySelector('.cm-content')?.getAttribute('contenteditable')).toBe('true');
+  },
+};
+
+/**
+ * The same-view invariant (DESIGN.md §3.3): ambient mode switches never tear down the editor. The
+ * CodeMirror view — and its DOM — must persist across entering and leaving Suggesting, with caret and
+ * focus surviving and edits landing on the right document.
+ */
+export const SuggestingSwapTest: Story = {
+  args: {
+    content: PROSE,
+    suggestions: [{ creator: 'did:bob', content: PROSE_SUGGESTION_BOB }],
+  },
+  parameters: {
+    ambientReview: true,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 20_000 });
+    const contentEl = () => canvasElement.querySelector<HTMLElement>('.cm-content');
+    const before = contentEl();
+    invariant(before, 'editor not mounted');
+    const view = EditorView.findFromDOM(before);
+    invariant(view, 'view not found');
+
+    // Park the caret mid-paragraph and enter Suggesting.
+    view.focus();
+    const anchor = view.state.doc.toString().indexOf('any order');
+    view.dispatch({ selection: { anchor } });
+    await selectViewMode(canvasElement, 'Suggesting');
+    await waitFor(() => expect(contentEl()?.getAttribute('contenteditable')).toBe('true'), { timeout: 15_000 });
+
+    // Same view, same DOM — no teardown; caret survived the swap.
+    await expect(contentEl()).toBe(before);
+    await expect(EditorView.findFromDOM(before)).toBe(view);
+    await expect(view.state.selection.main.anchor).toBe(anchor);
+
+    // Type: the edit lands on the BRANCH (as the user's tracked change), never on main.
+    view.dispatch({
+      changes: { from: anchor, insert: 'SWAP' },
+      selection: { anchor: anchor + 'SWAP'.length },
+      userEvent: 'input.type',
+    });
+    await waitFor(() => expect(trackInserts(canvasElement)).toContain('SWAP'), { timeout: 15_000 });
+    await expect(rootContent()).not.toContain('SWAP');
+
+    // Leave Suggesting: still the same view and DOM.
+    await selectViewMode(canvasElement, 'Markdown');
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('SWAP'), { timeout: 15_000 });
+    await expect(contentEl()).toBe(before);
+    await expect(EditorView.findFromDOM(before)).toBe(view);
   },
 };

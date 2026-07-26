@@ -68,11 +68,13 @@ export const deriveBinding = (inputs: LifecycleInputs): BindingDescriptor => {
           ? `base-${inputs.branchId}`
           : undefined;
 
+  // Ambient Suggesting is NOT loading while its branch binds: the editor stays mounted on main,
+  // read-only (see effectiveViewMode), and swaps in place when the binding resolves — unmounting here
+  // would tear the view down, which is exactly what the ambient path must never do.
   const loading =
     (inputs.selection === 'branch' && !inputs.branchBound && !inputs.baseActive) ||
     (inputs.selection === 'checkpoint' && !inputs.checkpointResolved) ||
-    (inputs.selection === 'fork' && !inputs.forkResolved) ||
-    (ambientSuggesting && !inputs.ownBranchBound);
+    (inputs.selection === 'fork' && !inputs.forkResolved);
 
   const subject = snapshotKey
     ? ('snapshot' as const)
@@ -84,15 +86,17 @@ export const deriveBinding = (inputs: LifecycleInputs): BindingDescriptor => {
           ? ('branch' as const)
           : ('document' as const);
 
+  // Ambient postures share ONE key: entering/leaving Suggesting swaps the bound document through the
+  // live view's extension compartment (the automerge source reconciles the content in place), so the
+  // editor is never torn down and caret/focus/scroll survive. Only the advanced paths — genuinely a
+  // different surface — remount.
   const editorKey = snapshotKey
     ? snapshotKey
     : inputs.suggestActive
       ? `suggest-${inputs.branchId}`
-      : ambientSuggesting
-        ? 'suggesting'
-        : inputs.selection === 'branch'
-          ? `branch-${inputs.branchId}`
-          : 'current';
+      : inputs.selection === 'branch'
+        ? `branch-${inputs.branchId}`
+        : 'current';
 
   // Suggesting is an editable posture by definition, but the view-mode dropdown leaves `viewMode`
   // untouched when a contributed mode is picked — so a stale `readonly` (from a Read-only hop) would
@@ -100,9 +104,12 @@ export const deriveBinding = (inputs: LifecycleInputs): BindingDescriptor => {
   const effectiveViewMode =
     snapshotKey || inputs.suggestActive || !ambientEditable
       ? 'readonly'
-      : ambientSuggesting && inputs.viewMode === 'readonly'
-        ? 'source'
-        : inputs.viewMode;
+      : ambientSuggesting && !inputs.ownBranchBound
+        ? // Still bound to main while the own branch resolves: never editable against the wrong document.
+          'readonly'
+        : ambientSuggesting && inputs.viewMode === 'readonly'
+          ? 'source'
+          : inputs.viewMode;
 
   return {
     subject,

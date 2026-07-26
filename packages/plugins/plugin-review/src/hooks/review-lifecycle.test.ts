@@ -45,14 +45,24 @@ describe('deriveBinding', () => {
       { subject: 'document', editorKey: 'current', effectiveViewMode: 'readonly', loading: false },
     ],
     [
-      'ambient suggesting waits for the own branch',
+      // Mounted on main, read-only, until the branch binds — never unmounted (loading) on the
+      // ambient path.
+      'ambient suggesting waits for the own branch on main, read-only',
       { mode: 'suggesting', policy: SUGGESTING },
-      { subject: 'document', editorKey: 'suggesting', loading: true, ambientSuggesting: true },
+      {
+        subject: 'document',
+        editorKey: 'current',
+        loading: false,
+        effectiveViewMode: 'readonly',
+        ambientSuggesting: true,
+      },
     ],
     [
+      // The same key as Editing: the swap to the own branch rides the live view's extension
+      // reconfiguration, never a remount.
       'ambient suggesting binds the own branch once resolved',
       { mode: 'suggesting', policy: SUGGESTING, ownBranchBound: true },
-      { subject: 'own-branch', editorKey: 'suggesting', effectiveViewMode: 'preview', loading: false },
+      { subject: 'own-branch', editorKey: 'current', effectiveViewMode: 'preview', loading: false },
     ],
     [
       'a selected branch waits for its binding',

@@ -77,9 +77,21 @@ describe('editor binding lifecycle', () => {
       initialProps: { viewMode: 'preview' as EditorViewMode },
     });
 
-  /** Waits out the async own-branch (or branch) binding so assertions never race it. */
+  /**
+   * Waits out the async bindings so assertions never race them. Ambient Suggesting no longer reports
+   * `loading` (the editor stays mounted on main, read-only, until the swap), so settling there means
+   * waiting for the own branch itself.
+   */
   const settled = async (result: { current: ReturnType<typeof useBindingHarness> }) => {
-    await waitFor(() => expect(result.current.editor.branchLoading).toBe(false), { timeout: 10_000 });
+    await waitFor(
+      () => {
+        expect(result.current.editor.branchLoading).toBe(false);
+        if (result.current.versioning.mode === 'suggesting') {
+          expect(result.current.editor.ownBranchText).toBeDefined();
+        }
+      },
+      { timeout: 10_000 },
+    );
   };
 
   test('default posture: ambient, editable, bound to the document', async () => {
