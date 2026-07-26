@@ -62,20 +62,22 @@ already exist:
 
 ## Aspect A — CLI bridge & session continuation
 
-- **`dx agent -p "<prompt>"`** — non-interactive; streams the agent's work and
-  final reply to stdout as **plain human-readable text**. The hypervisor is Claude
-  Code and reads unstructured stdout directly, so there is **no wire protocol** —
-  prose is the interface. Implemented on the existing `runNonInteractive` path
-  (may be a thin alias/rename of `dx chat --prompt`, or a dedicated `agent`
-  command that shares the code path).
-- **`--continue <session-uri>`** — reattach to an existing session instead of
-  creating a fresh feed. Session identity = the ECHO `Feed` DXN; reuses
-  `AgentService.getSession(feed)`. The session persists across restarts.
-- On exit, the command **prints the continuation hint** so the hypervisor is
+- **`dx agent "<prompt>"`** — non-interactive; streams the agent's work and final
+  reply to stdout as **plain human-readable text**. The hypervisor is Claude Code
+  and reads unstructured stdout directly, so there is **no wire protocol** — prose
+  is the interface. Built as a dedicated `agent` command sharing the
+  `runNonInteractive` path. The prompt is a **positional argument**: the global
+  `dx -p/--profile` option owns `-p`, so the design's original `-p` spelling is
+  unavailable.
+- **`--continue <session-uri>`** _(designed; not yet implemented)_ — reattach to an
+  existing session instead of creating a fresh feed. Session identity = the ECHO
+  `Feed` DXN; would reuse `AgentService.getSession(feed)`. Until wired, each
+  invocation is a fresh session and continuity comes from the Composer's journal.
+- On exit, the command **prints a continuation hint** so the hypervisor is
   reminded how to resume:
 
-  ```
-  » continue: dx agent --continue <uri> -p "<next prompt>"
+  ```text
+  » continue: dx agent "<next instruction>"
   ```
 
 - **Sentinel exit codes** let the hypervisor branch without parsing stdout:
@@ -127,7 +129,7 @@ Because every accepted edit is a known-good, health-checked commit, the
 The hypervisor cannot tell a good checkpoint from a bad one without a health
 check. Known-good = the last commit that passes:
 
-- **Scripted smoke test** — `dx` starts, plugins load, `dx agent -p "ping"`
+- **Scripted smoke test** — `dx` starts, plugins load, `dx agent "ping"`
   round-trips within a timeout.
 - **Hypervisor judgment** — Claude Code additionally _watches stdout and agent
   behaviour_ and may declare a state unhealthy even if the scripted test passes
@@ -162,9 +164,12 @@ one of the few conditions under which the otherwise-autonomous hypervisor halts
   open, SQLite replays the WAL, validates checksums, and **discards any frames
   after the last valid commit** — a mid-write kill rolls back cleanly to last
   committed state, never to corruption.
-- **The hazard is `cp` ordering, not corruption.** A naive live `cp` of the `.db`
-  alone loses committed-but-not-checkpointed data still in `-wal`. Copying
-  `db + -wal` (db first) is safe; `-shm` is volatile and need not be copied.
+- **A live `cp` is never safe — use a real snapshot API instead.** Copying the
+  `.db` alone loses committed-but-not-checkpointed data still in `-wal`; copying
+  `db + -wal` is _also_ unsafe live, because a checkpoint can land between the two
+  copies, pairing an old `.db` with a truncated newer `-wal` and losing committed
+  data. A single-file `cp` is only safe when the process is **down** (below); for a
+  live snapshot use `VACUUM INTO` or the Online Backup API.
 - **Recommended recipes:**
   - _Backup while the process is down_ (the common case — the hypervisor acts
     only when the Composer has exited): clean shutdown runs

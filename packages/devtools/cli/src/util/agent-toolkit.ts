@@ -7,16 +7,19 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import { execFile } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { promisify } from 'node:util';
 
 import { OpaqueToolkit } from '@dxos/ai';
 
 import { requestReload } from './reload-signal';
 
-const execFileAsync = promisify(execFile);
+/** Narrow an unknown thrown value to a message without casts. */
+const formatError = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+
+/** Cap directory listings so a huge directory cannot flood the context. */
+const MAX_LIST_ENTRIES = 1_000;
 
 /**
  * Root the agent's file/shell operations resolve against. Defaults to the process cwd (the checkout
@@ -121,7 +124,7 @@ export const AgentToolkitLayer = AgentToolkit.toLayer({
         }
         return await fs.readFile(resolved, 'utf8');
       },
-      catch: (err) => String((err as Error).message ?? err),
+      catch: formatError,
     });
   }),
   write_file: Effect.fn(function* ({ path: input, content }) {
@@ -132,13 +135,17 @@ export const AgentToolkitLayer = AgentToolkit.toLayer({
         await fs.writeFile(resolved, content, 'utf8');
         return `Wrote ${Buffer.byteLength(content, 'utf8')} bytes to ${resolved}`;
       },
-      catch: (err) => String((err as Error).message ?? err),
+      catch: formatError,
     });
   }),
   edit_file: Effect.fn(function* ({ path: input, oldText, newText }) {
     return yield* Effect.tryPromise({
       try: async () => {
         const resolved = resolvePath(input);
+        const stat = await fs.stat(resolved);
+        if (stat.size > MAX_READ_BYTES) {
+          throw new Error(`File too large (${stat.size} bytes > ${MAX_READ_BYTES}).`);
+        }
         const current = await fs.readFile(resolved, 'utf8');
         const first = current.indexOf(oldText);
         if (first === -1) {
@@ -150,7 +157,7 @@ export const AgentToolkitLayer = AgentToolkit.toLayer({
         await fs.writeFile(resolved, current.slice(0, first) + newText + current.slice(first + oldText.length), 'utf8');
         return `Edited ${resolved}`;
       },
-      catch: (err) => String((err as Error).message ?? err),
+      catch: formatError,
     });
   }),
   list_dir: Effect.fn(function* ({ path: input }) {
@@ -158,32 +165,65 @@ export const AgentToolkitLayer = AgentToolkit.toLayer({
       try: async () => {
         const resolved = resolvePath(input);
         const entries = await fs.readdir(resolved, { withFileTypes: true });
-        return entries
-          .map((entry) => (entry.isDirectory() ? `${entry.name}/` : entry.name))
-          .sort()
-          .join('\n');
+        const names = entries.map((entry) => (entry.isDirectory() ? `${entry.name}/` : entry.name)).sort();
+        const shown = names.slice(0, MAX_LIST_ENTRIES).join('\n');
+        return names.length > MAX_LIST_ENTRIES
+          ? `${shown}\n… [${names.length - MAX_LIST_ENTRIES} more entries]`
+          : shown;
       },
-      catch: (err) => String((err as Error).message ?? err),
+      catch: formatError,
     });
   }),
   bash: Effect.fn(function* ({ command, cwd }) {
-    return yield* Effect.tryPromise({
-      try: async () => {
-        const { stdout, stderr } = await execFileAsync('bash', ['-lc', command], {
-          cwd: cwd ? resolvePath(cwd) : workspaceRoot(),
-          timeout: BASH_TIMEOUT_MS,
-          maxBuffer: 32 * 1024 * 1024,
-          encoding: 'utf8',
-        });
-        return truncate(`exit 0\n--- stdout ---\n${stdout}\n--- stderr ---\n${stderr}`);
-      },
-      // execFile rejects on non-zero exit; surface the captured streams as a value, not a throw,
-      // so the agent can read a failing build/test instead of losing the output.
-      catch: (err: any) =>
-        truncate(
-          `exit ${err?.code ?? 1}\n--- stdout ---\n${err?.stdout ?? ''}\n--- stderr ---\n${err?.stderr ?? err?.message ?? ''}`,
-        ),
-    }).pipe(Effect.catchAll((captured) => Effect.succeed(captured)));
+    // `detached: true` runs bash as its own process-group leader so a timeout kills the whole tree
+    // (`process.kill(-pid)`), not just the shell — otherwise a hung build orphans its children.
+    // Streams are captured and bounded, and a non-zero exit is returned as a value (not thrown) so
+    // the agent can read a failing build/test instead of losing the output.
+    return yield* Effect.promise(
+      () =>
+        new Promise<string>((resolve) => {
+          let stdout = '';
+          let stderr = '';
+          let killedForOutput = false;
+          const child = spawn('bash', ['-lc', command], {
+            cwd: cwd ? resolvePath(cwd) : workspaceRoot(),
+            detached: true,
+          });
+          const killGroup = (signal: NodeJS.Signals) => {
+            if (child.pid !== undefined) {
+              try {
+                process.kill(-child.pid, signal);
+              } catch {
+                child.kill(signal);
+              }
+            }
+          };
+          const timer = setTimeout(() => killGroup('SIGKILL'), BASH_TIMEOUT_MS);
+          const append = (chunk: Buffer, onStdout: boolean) => {
+            const text = chunk.toString('utf8');
+            if (onStdout) {
+              stdout += text;
+            } else {
+              stderr += text;
+            }
+            if (!killedForOutput && stdout.length + stderr.length > MAX_OUTPUT_CHARS * 2) {
+              killedForOutput = true;
+              killGroup('SIGKILL');
+            }
+          };
+          child.stdout.on('data', (chunk: Buffer) => append(chunk, true));
+          child.stderr.on('data', (chunk: Buffer) => append(chunk, false));
+          child.on('error', (error) => {
+            clearTimeout(timer);
+            resolve(truncate(`spawn error: ${formatError(error)}`));
+          });
+          child.on('close', (code, signal) => {
+            clearTimeout(timer);
+            const status = killedForOutput ? 'killed (output limit)' : signal ? `killed (${signal})` : `exit ${code}`;
+            resolve(truncate(`${status}\n--- stdout ---\n${stdout}\n--- stderr ---\n${stderr}`));
+          });
+        }),
+    );
   }),
   request_reload: Effect.fn(function* ({ reason }) {
     requestReload(reason);

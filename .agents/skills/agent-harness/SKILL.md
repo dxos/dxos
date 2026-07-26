@@ -35,12 +35,14 @@ run **fully autonomously** — see [Autonomy](#autonomy).
 ## The loop
 
 1. **Start / resume the Composer** (async, then sleep):
+   ```text
+   dx agent "<goal or next instruction>"   # prompt is a positional arg (global -p is --profile)
    ```
-   dx agent -p "<goal or next instruction>"                # fresh session
-   dx agent --continue <session-uri> -p "<next instruction>"  # resume
-   ```
-   Run it in the background, then `bash sleep <interval>` — the sleep is both a
-   pacing device and your **heartbeat / progress check**.
+   Each invocation is a fresh session today — session reattach (`--continue`) is
+   not yet wired, so carry context across restarts via the Composer's journal:
+   re-prompt with "read your journal and continue". Run it in the background, then
+   `bash sleep <interval>` — the sleep is both a pacing device and your
+   **heartbeat / progress check**.
 2. **On each wake**, before doing anything else, check:
    - Is the process still alive? Did it exit — with what **exit code**?
      - `0` → turn complete / idle. Decide the next instruction or whether the
@@ -59,12 +61,17 @@ run **fully autonomously** — see [Autonomy](#autonomy).
 
 The Composer edits non-core plugins itself and exits `75`. You are the gate:
 
+Start from a **clean baseline** (commit or stash any pre-existing local work first)
+so checkpoints and rollbacks touch only the Composer's edits, never unrelated changes.
+
 1. Run the **boot health-check** (below) on the edited tree.
-2. **Green** → `git add -A && git commit -m "harness: checkpoint <n>"`, take a
-   paired profile snapshot, then restart with `--continue`.
-3. **Red** → discard the edit (`git reset --hard <last-known-good>` or stash),
-   restart on the last known-good checkpoint, and **inject the failure** (error +
-   stdout tail) into the next `-p` prompt so the Composer knows what broke.
+2. **Green** → commit the Composer's edits (stage them explicitly, not a blind
+   `git add -A` if the tree also holds unrelated work), take a paired profile
+   snapshot, then restart and re-prompt to continue.
+3. **Red** → discard the edit (`git reset --hard <last-known-good>` or `git stash`
+   — only safe because the baseline was clean), restart on the last known-good
+   checkpoint, and **inject the failure** (error + stdout tail) into the next
+   prompt so the Composer knows what broke.
 
 The core/leaf boundary is **soft** (prompt-enforced): the Composer is told to edit
 only non-core plugins and defer heavy lifting to you. It _can_ technically touch
@@ -74,7 +81,7 @@ anything, so the health-check + checkpoint gate is the real protection.
 
 A commit is **known-good** only if both pass:
 
-- **Scripted smoke test** — `dx` starts, plugins load, and `dx agent -p "ping"`
+- **Scripted smoke test** — `dx` starts, plugins load, and `dx agent "ping"`
   round-trips within a timeout.
 - **Your judgment** — you additionally watch stdout + behaviour and may declare a
   state unhealthy even if the smoke test passes (looping, garbage output, ignoring
