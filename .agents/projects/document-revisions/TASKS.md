@@ -705,3 +705,17 @@ colours), walkthrough re-run.
 different ways — needs a designed model + headless unit tests, not more per-symptom patches.
 
 > > > > > > > theirs
+
+### F1 re-run (2026-07-25, post-collapse build) — FAILED on step 1
+
+- [ ] **G1 Mode switch flickers** (remount: `editorKey` current↔suggesting rebinds CodeMirror).
+- [ ] **G2 Clicking the last line toggles the view back to Markdown** (spurious mode change from a click).
+- [ ] **G3 Comment highlight height changes across a mode round-trip** when a suggestion ends on the line
+      before it (layer geometry recomputed against the remounted editor).
+- [ ] **G4 MAJOR — text typed on main while the own branch has edits renders struck-through on re-entry.**
+      Suggest "Suggest 1" → Markdown: type "Text 2" → Suggesting: "Text 2" struck, no card. The
+      fast-forward deliberately skips an EDITED branch, so any main edit while a suggestion exists reads
+      as the user's deletion. The unedited-branch fix does not cover the common case: the branch must
+      merge main IN (CRDT), not be skipped.
+- [ ] **G5 Caret jumps UP to the end of the last suggestion** when pressing down on the last line.
+- [ ] **G6 Caret/selection not restored across view-mode changes** (lost in the remount).
