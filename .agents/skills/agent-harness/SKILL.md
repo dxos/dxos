@@ -157,8 +157,8 @@ Durable artifacts the Composer re-reads on every `--continue`:
 
 ## Build status
 
-Implement in phases (each independently useful): **A** CLI bridge (`dx agent -p`,
-`--continue`, exit codes) → **C** recovery (health-check, checkpoints, backups,
+Implement in phases (each independently useful): **A** CLI bridge (positional
+`dx agent "<goal>"`, `--continue` (not yet wired), exit codes) → **C** recovery (health-check, checkpoints, backups,
 time log, postmortems, circuit breaker) → **B** self-editing (`fs`/`bash` tools,
 reload gate, journal/plan memory, budgeted subagents) → **D** critique framework
 (future). See the design doc for rationale and confidence levels.

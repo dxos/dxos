@@ -199,8 +199,7 @@ export const AgentToolkitLayer = AgentToolkit.toLayer({
             }
           };
           const timer = setTimeout(() => killGroup('SIGKILL'), BASH_TIMEOUT_MS);
-          const append = (chunk: Buffer, onStdout: boolean) => {
-            const text = chunk.toString('utf8');
+          const append = (text: string, onStdout: boolean) => {
             if (onStdout) {
               stdout += text;
             } else {
@@ -211,8 +210,11 @@ export const AgentToolkitLayer = AgentToolkit.toLayer({
               killGroup('SIGKILL');
             }
           };
-          child.stdout.on('data', (chunk: Buffer) => append(chunk, true));
-          child.stderr.on('data', (chunk: Buffer) => append(chunk, false));
+          // Decode on the stream (not per chunk) so multi-byte UTF-8 split across chunks stays intact.
+          child.stdout.setEncoding('utf8');
+          child.stderr.setEncoding('utf8');
+          child.stdout.on('data', (text: string) => append(text, true));
+          child.stderr.on('data', (text: string) => append(text, false));
           child.on('error', (error) => {
             clearTimeout(timer);
             resolve(truncate(`spawn error: ${formatError(error)}`));
