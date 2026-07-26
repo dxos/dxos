@@ -132,13 +132,15 @@ export const registerSurfaceRootElement = (nextHost: SurfaceRootHost): void => {
           return;
         }
         this.#root ??= createRoot(this);
+        // The scope provider wraps the contributed contexts too (not just the dispatcher):
+        // contributions gate chrome DOM on `useSurfaceBoundaryScope`, so they must see it.
         this.#root.render(
-          <SurfaceRootProviders manager={host.manager} surfaces={host.surfaces}>
-            <BoundaryScopeContext.Provider value={role}>
+          <BoundaryScopeContext.Provider value={role}>
+            <SurfaceRootProviders manager={host.manager} surfaces={host.surfaces}>
               <SurfaceComponent type={{ role }} {...this.#surfaceProps} />
               <MountedSignal dispatch={(type) => this.#dispatchLifecycle(type)} />
-            </BoundaryScopeContext.Provider>
-          </SurfaceRootProviders>,
+            </SurfaceRootProviders>
+          </BoundaryScopeContext.Provider>,
         );
       }
     },
