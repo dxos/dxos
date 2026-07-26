@@ -85,30 +85,30 @@ describe('suggestion branches', () => {
     expect(doc.history?.branches.find(({ id }) => id === edited.id)?.status).toBe('active');
   });
 
-  test('find-or-create fast-forwards an unedited branch whose anchor fell behind', async ({ expect }) => {
+  test('find-or-create reconciles a stale branch by folding main in, keeping its identity', async ({ expect }) => {
     const { db, doc, root } = await setup('one two three');
 
-    const stale = await Branch.suggestion(doc, root, 'did:alice');
+    const branch = await Branch.suggestion(doc, root, 'did:alice');
     // Main advances after the fork; the branch has no edits of its own.
     Obj.update(root, (root) => {
       EchoText.update(root, 'content', 'one two three four');
     });
     await db.flush();
 
-    // Re-entry retires the stale branch and re-forks at the current heads, so text typed on main in
-    // between never diffs as the author's deletion.
-    const fresh = await Branch.suggestion(doc, root, 'did:alice');
-    expect(fresh.id).not.toBe(stale.id);
+    // Re-entry folds main into the SAME branch (callers hold the branch identity), so text typed on
+    // main in between never diffs as the author's deletion.
+    const synced = await Branch.suggestion(doc, root, 'did:alice');
+    expect(synced.id).toBe(branch.id);
     expect(activeSuggestions(doc, 'did:alice')).toHaveLength(1);
-    const binding = await Branch.bind(doc, fresh);
+    const binding = await Branch.bind(doc, synced);
     try {
       expect(binding.object.content).toBe('one two three four');
     } finally {
       binding.dispose();
     }
 
-    // An EDITED branch is never fast-forwarded — its pending suggestions are preserved.
-    const editedBinding = await Branch.bind(doc, fresh);
+    // An EDITED branch reconciles the same way: pending suggestions AND main's progress both survive.
+    const editedBinding = await Branch.bind(doc, synced);
     Obj.update(editedBinding.object, (text) => {
       EchoText.update(text, 'content', 'one two three four five');
     });
@@ -119,6 +119,13 @@ describe('suggestion branches', () => {
     });
     await db.flush();
     const kept = await Branch.suggestion(doc, root, 'did:alice');
-    expect(kept.id).toBe(fresh.id);
+    expect(kept.id).toBe(synced.id);
+    const keptBinding = await Branch.bind(doc, kept);
+    try {
+      expect(keptBinding.object.content).toContain('five');
+      expect(keptBinding.object.content).toContain('six');
+    } finally {
+      keptBinding.dispose();
+    }
   });
 });

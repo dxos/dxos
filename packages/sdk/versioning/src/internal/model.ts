@@ -256,22 +256,17 @@ export const suggestionBranch = async (
   if (existing) {
     // INVARIANT: an own suggestion branch is always "main + that author's suggestions" — main's
     // progress must never read as the author's deletions. A branch whose anchor fell behind is
-    // reconciled on re-entry: unedited ⇒ retire and re-fork at the current heads; edited ⇒ fold
-    // main's changes INTO the branch (CRDT merge; shared fork ancestry) and advance the anchor so
-    // later diffs compare against the reconciled base.
+    // reconciled on re-entry by folding main's changes INTO it (CRDT merge; shared fork ancestry)
+    // and advancing the anchor. Always a sync, never a re-fork: callers hold the branch identity
+    // (cards, anchors, in-flight operations), so find-or-create must return the SAME branch.
     const heads = getHeads(parent);
-    if (!sameHeads(existing.anchor, heads)) {
-      if (await archiveIfEmpty(doc, existing)) {
-        return createBranch(doc, { name: `suggestion: ${creator}`, parent, creator, kind: 'suggestion' });
-      }
-      if (existing.key) {
-        const db = Obj.getDatabase(doc);
-        invariant(db, 'document not in a database');
-        await db.syncBranch(parent.id, existing.key);
-        Obj.update(doc, () => {
-          existing.anchor = heads;
-        });
-      }
+    if (!sameHeads(existing.anchor, heads) && existing.key) {
+      const db = Obj.getDatabase(doc);
+      invariant(db, 'document not in a database');
+      await db.syncBranch(parent.id, existing.key);
+      Obj.update(doc, () => {
+        existing.anchor = heads;
+      });
     }
     return existing;
   }
