@@ -60,10 +60,10 @@ Story: `DocumentVersioning / AmbientReview` (seeded: two authors' suggestions in
 anchored comment).
 
 1. Both authors overlay in their own colours with change bars; the comment highlight coexists.
-2. Hover a change: the Accept/Reject popover opens, stays anchored while the pointer crosses the
-   change, and survives the pointer moving into it.
-3. Accept: the change folds into the document; its decorations, card and popover clear; the other
-   author is untouched. Undo restores.
+2. Hover a change: no popover opens (the inline popover is disabled — DESIGN §4, Decision 4);
+   the companion card is the review surface.
+3. Accept from the companion card: the change folds into the document; its decorations and card
+   clear; the other author is untouched. Undo restores.
 4. Reject: the suggestion clears; the document is unchanged.
 5. Click the comment highlight under an overlay: the thread activates (the overlay must not eat it).
 6. Click a change in the document: its card accents. Click a card: the caret moves to the change and

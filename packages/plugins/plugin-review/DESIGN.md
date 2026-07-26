@@ -39,8 +39,11 @@ review"). Each user has one posture at a time:
 - **Accept** folds one change into main (partial cherry-pick, not a whole-branch merge).
   **Reject** reverts that change on the author's branch. Both are durable operations with undo.
   When the last change is resolved, the branch archives itself.
-- Accept/Reject are available from: the inline hover popover, and the companion card. Both surfaces
-  and the document share one "current change" selection (click either side to reveal the other).
+- Accept/Reject are available from the companion card (Decision 4: the inline hover popover is
+  disabled — hover chrome over text proved noisy). The companion and the document share one
+  "current change" selection (click either side to reveal the other).
+- Attribution chrome: proposed text underlined in the author's colour; a change bar in the shared
+  gutter, capped to the proposal's own rows for block insertions so it never tints adjacent text.
 - **Per-author visibility**: the user can toggle each author's suggestions on/off (e.g. from the
   companion's author list). Hiding an author removes their overlay decorations, change bars and cards
   for this user only; it never touches the branches themselves. Session-local, per document.
@@ -206,6 +209,9 @@ Therefore:
    branch whose parent is the draft).
 3. **Timeline author colours (§1.5): PLANNED** — `Timeline` gains a per-branch colour input; the
    review timeline passes author hues.
+4. **Inline hover Accept/Reject popover: DISABLED** on the ambient overlay — the companion cards are
+   the review surface (hover chrome over text proved noisy). The explicit compare path keeps its
+   inline controls.
 
 ---
 

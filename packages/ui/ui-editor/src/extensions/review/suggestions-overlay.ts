@@ -39,7 +39,10 @@ export const suggestionsOverlay = (
     reconfigure: (view: EditorView, sources: SuggestionSource[], enabled: boolean, base?: string) => {
       view.dispatch({
         effects: compartment.reconfigure(
-          enabled && sources.length > 0 ? suggestions({ sources, base, onAccept, onReject, onSelect }) : [],
+          // Hover accept/reject is disabled on the ambient path (Decision 4): cards are the surface.
+          enabled && sources.length > 0
+            ? suggestions({ sources, base, hoverControls: false, onAccept, onReject, onSelect })
+            : [],
         ),
       });
     },

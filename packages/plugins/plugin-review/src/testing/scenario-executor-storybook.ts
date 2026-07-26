@@ -213,12 +213,14 @@ export const runScenarioStorybook = async (
                 beforeAt === -1 || (widgetAt !== -1 && widgetAt < beforeAt),
                 `${label}: proposal rendered after the typed text (${JSON.stringify(lineText)})`,
               ).toBe(true);
-              // The change bar must not tint the host line's own text: a block-insert widget carries
-              // its own bar, so the shared gutter stays empty for this pure-insert suggestion.
+              // The change bar must not tint the host line's own text: a block-insert proposal gets
+              // ONE gutter bar whose height is capped to the proposal's rows (never full line height).
+              const bars = Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-change-bar'));
+              await expect(bars, `${label}: gutter bars`).toHaveLength(1);
               await expect(
-                canvasElement.querySelectorAll('.cm-change-bar'),
-                `${label}: gutter bar bleeds onto the host line`,
-              ).toHaveLength(0);
+                bars[0].style.height.includes('lh'),
+                `${label}: gutter bar not row-capped (would tint the host line's own text)`,
+              ).toBe(true);
             }
           },
           { timeout: 15_000 },
