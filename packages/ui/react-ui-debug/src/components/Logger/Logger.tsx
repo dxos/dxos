@@ -9,6 +9,7 @@ import { type LogConfig, type LogEntry, LogLevel, type LogOptions, log, logFileR
 import {
   IconButton,
   Input,
+  Popover,
   ScrollArea,
   Select,
   type ThemedClassName,
@@ -300,8 +301,91 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
 
 LoggerToolbar.displayName = 'Logger.Toolbar';
 
-// Temporary stub — replaced by the full Levels popover in the next task.
-const LoggerLevels = () => null;
+//
+// Levels
+//
+
+export type LoggerLevelsProps = ThemedClassName<{}>;
+
+const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
+  const { t } = useTranslation(translationKey);
+  const { files, fileLevels, setFileLevel, clearFileLevels } = useLoggerContext('Logger.Levels');
+
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <Toolbar.IconButton
+          icon='ph--sliders--regular'
+          iconOnly
+          label={t('levels.label')}
+          classNames={mx(fileLevels.size > 0 && 'text-primary-text', classNames)}
+        />
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content>
+          <Popover.Viewport classNames='is-[22rem] max-bs-[20rem] overflow-y-auto p-2'>
+            <div className='flex items-center justify-between pb-1'>
+              <span className='text-sm text-subdued'>{t('levels.title')}</span>
+              <IconButton
+                icon='ph--x--regular'
+                iconOnly
+                density='xs'
+                variant='ghost'
+                label={t('levels.clear')}
+                disabled={fileLevels.size === 0}
+                onClick={clearFileLevels}
+              />
+            </div>
+            {files.length === 0 && <div className='p-1 text-xs text-subdued'>{t('levels.empty')}</div>}
+            {files.length > 0 && (
+              <Listbox.Root>
+                <Listbox.Content>
+                  {files.map((file) => {
+                    const basename = file.split('/').pop() ?? file;
+                    const value = fileLevels.get(file) ?? 'inherit';
+                    return (
+                      <Listbox.Item key={file} id={file} classNames='grid grid-cols-[1fr_7rem] items-center gap-1'>
+                        <Listbox.ItemLabel classNames='text-xs' title={file}>
+                          {basename}
+                        </Listbox.ItemLabel>
+                        <Select.Root
+                          value={value}
+                          onValueChange={(next) =>
+                            setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
+                          }
+                        >
+                          <Select.TriggerButton classNames='is-full text-sm' placeholder={t('levels.inherit')} />
+                          <Select.Portal>
+                            <Select.Content>
+                              <Select.ScrollUpButton />
+                              <Select.Viewport>
+                                <Select.Option value='inherit' classNames='text-sm'>
+                                  {t('levels.inherit')}
+                                </Select.Option>
+                                {LEVELS.map((level) => (
+                                  <Select.Option key={level} value={level} classNames='text-sm'>
+                                    {t(`level.${level}`)}
+                                  </Select.Option>
+                                ))}
+                              </Select.Viewport>
+                              <Select.ScrollDownButton />
+                              <Select.Arrow />
+                            </Select.Content>
+                          </Select.Portal>
+                        </Select.Root>
+                      </Listbox.Item>
+                    );
+                  })}
+                </Listbox.Content>
+              </Listbox.Root>
+            )}
+          </Popover.Viewport>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+};
 
 LoggerLevels.displayName = 'Logger.Levels';
 
