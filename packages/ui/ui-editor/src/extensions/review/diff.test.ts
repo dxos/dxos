@@ -231,6 +231,19 @@ describe('rebaseHunks', () => {
     expect(doc.slice(rebased.from, rebased.to)).toBe(hunks[0].removed);
   });
 
+  test('a doc insertion at a trailing pure-insert anchor stays BEHIND the proposal', ({ expect }) => {
+    // The author proposed "World\n" at the end of base; the user then typed "After" at that same
+    // spot on main. The proposal must stay anchored BEFORE the user's new text — mapping it past the
+    // insertion renders the user's input "in front" of the suggestion they typed after.
+    const base = '# Hello World\nHello\n';
+    const doc = '# Hello World\nHello\nAfter';
+    const hunks = diffHunks(base, '# Hello World\nHello\nWorld\n');
+    expect(hunks).toEqual([{ from: 20, to: 20, removed: '', inserted: 'World\n' }]);
+    const [rebased] = rebaseHunks(base, doc, hunks);
+    expect(rebased.from).toBe(20);
+    expect(rebased.to).toBe(20);
+  });
+
   test('a zero-width (pure-insertion) hunk at a doc-edit boundary never inverts (from <= to)', ({ expect }) => {
     // Bob inserts "!" right after "one" (a zero-width hunk at base offset 3); the user also inserts "X"
     // at that same offset. Both endpoints of the zero-width hunk must map to the same doc offset, so the

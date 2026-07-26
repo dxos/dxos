@@ -185,11 +185,23 @@ export const runScenarioStorybook = async (
       case 'expect-clean-insert': {
         await waitFor(
           async () => {
-            const inserts = Array.from(canvasElement.querySelectorAll('.cm-suggest-insert'))
-              .map((node) => node.textContent ?? '')
-              .join(' ');
+            const widgets = Array.from(canvasElement.querySelectorAll('.cm-suggest-insert'));
+            const inserts = widgets.map((node) => node.textContent ?? '').join(' ');
             await expect(inserts, label).toContain(step.text);
             await expect(canvasElement.querySelectorAll('.cm-suggest-delete'), label).toHaveLength(0);
+            if (step.before !== undefined) {
+              const { before } = step;
+              // Rendered order: the proposal widget precedes the text the user typed at its anchor.
+              const widget = widgets.find((node) => node.textContent?.includes(step.text));
+              invariant(widget, `${label}: suggestion widget missing`);
+              const lineText = widget.closest('.cm-line')?.textContent ?? '';
+              const widgetAt = lineText.indexOf(step.text);
+              const beforeAt = lineText.indexOf(before);
+              await expect(
+                beforeAt === -1 || (widgetAt !== -1 && widgetAt < beforeAt),
+                `${label}: proposal rendered after the typed text (${JSON.stringify(lineText)})`,
+              ).toBe(true);
+            }
           },
           { timeout: 15_000 },
         );

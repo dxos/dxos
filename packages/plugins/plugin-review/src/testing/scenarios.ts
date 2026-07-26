@@ -37,8 +37,10 @@ export type ScenarioStep =
   /**
    * The user's pending suggestion is a PURE insertion containing `text`: no hunk strikes existing
    * document text. Guards the doubled-text defect — a non-minimal hunk re-inserting unchanged text.
+   * With `before`, the suggestion is also anchored BEFORE that (main) text — text typed at a trailing
+   * suggestion's anchor lands after the proposal, never in front of it.
    */
-  | { kind: 'expect-clean-insert'; text: string }
+  | { kind: 'expect-clean-insert'; text: string; before?: string }
   /** The user's own tracked change: contains a substring, or (`none`) no own change/branch exists. */
   | { kind: 'expect-own-change'; contains?: string; none?: boolean };
 
@@ -125,6 +127,7 @@ export const modeRoundTripScenario: ReviewScenario = {
     { kind: 'type', text: 'After\n' },
     { kind: 'expect-main', contains: 'Hello\nAfter' },
     { kind: 'expect-count', where: 'main', text: 'World', count: 0 },
+    { kind: 'expect-clean-insert', text: 'World', before: 'After' },
     { kind: 'select-mode', mode: 'suggesting' },
     { kind: 'expect-count', where: 'doc', text: 'World', count: 1 },
     { kind: 'expect-count', where: 'doc', text: 'Hello', count: 1 },

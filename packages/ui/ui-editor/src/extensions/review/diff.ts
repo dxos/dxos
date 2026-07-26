@@ -179,10 +179,11 @@ export const rebaseHunksWith = (charHunks: Hunk[], hunks: DiffHunk[]): DiffHunk[
       if (pos < hunk.fromA) {
         break;
       }
-      // An exclusive upper edge (`side > 0`) sitting exactly at a doc edit's start belongs to the
-      // region BEFORE the edit, so map it to `fromB` — never across the edit (which would absorb the
-      // user's own adjacent text into a foreign hunk).
-      if (pos === hunk.fromA && side > 0) {
+      // Any edge sitting exactly at a doc edit's start belongs to the region BEFORE the edit, so map
+      // it to `fromB` — never across the edit. For an upper edge this keeps a foreign hunk from
+      // absorbing the user's adjacent text; for a pure-insert anchor it keeps the proposal anchored
+      // BEFORE text the user typed at that spot (typing at a trailing suggestion lands after it).
+      if (pos === hunk.fromA) {
         return hunk.fromB;
       }
       if (pos < hunk.toA) {

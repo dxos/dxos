@@ -217,6 +217,13 @@ export const runScenarioHeadless = async (
                 for (const group of groups) {
                   expect(group.removed, `${label}: hunk strikes existing text`).toBe('');
                 }
+                if (step.before !== undefined) {
+                  const anchor = root.content.indexOf(step.before);
+                  invariant(anchor >= 0, `${label}: 'before' text missing from main`);
+                  const group = groups.find((candidate) => candidate.inserted.includes(step.text));
+                  invariant(group, `${label}: suggestion group missing`);
+                  expect(group.from, `${label}: proposal anchored past the typed text`).toBeLessThanOrEqual(anchor);
+                }
               } finally {
                 binding.dispose();
               }
