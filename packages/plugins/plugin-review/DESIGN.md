@@ -150,30 +150,30 @@ the ambient path; §3.2 is what holds until then.
 - Binding decisions flow through I-8/I-9. Remount happens exactly when the bound document changes:
   entering/leaving Suggesting, selecting a branch/checkpoint.
 
-### 3.3 Target: the capture layer (design, not yet built)
+### 3.3 Target: same-view branch swap (design, not yet built)
 
-**The editor never leaves main.** One document, one mount, for every ambient posture.
+**One `EditorView`, forever, on the ambient path.** The invariant is that ambient mode switches never
+tear down the view — continuity of caret, selection, focus, scroll and overlay geometry follows from
+that single fact.
 
-- **Suggesting becomes an input-routing mode**: a CodeMirror transaction filter intercepts the user's
-  document-changing transactions, applies them to the **branch binding** (automerge, off-editor), and
-  cancels them locally; the suggestions overlay (which already renders every author's branch diff,
-  including self as tracked changes) immediately shows the change. The editor document itself is only
-  ever changed by main's sync extension and by Accept.
-- Mode switches then change _only_ decorations and the filter's enablement — no teardown, so caret,
-  selection, focus and overlay geometry survive by construction.
-- **Design obligations before building** (each becomes a test):
-  - _Latency & echo_: a routed keystroke must render its overlay update in the same frame batch, or
-    typing feels dead. Measure with the existing play harness; budget one frame.
-  - _Selection mapping_: the caret sits in main-coordinates; insertions by the overlay at the caret
-    must map it forward (CodeMirror `ChangeDesc.mapPos` over the synthesized overlay changes).
-  - _IME/composition_: composition sessions must not be intercepted mid-flight (filter defers until
-    `compositionend`; CodeMirror exposes `view.composing`).
-  - _Undo_: undo in Suggesting undoes the _branch_ change (route `undo` through the binding), not a
-    main transaction.
-  - _Deletion UX_: deleting over foreign struck text must skip phantoms (map through the overlay's
-    range set).
-- Advanced paths (draft branch selected, checkpoints) keep the rebind — they genuinely show a
-  different document, and a remount there is correct and expected.
+- The editor's sync source (the automerge binding backing the document) lives in a **compartment**.
+  Entering Suggesting reconfigures it to the user's own-branch binding and applies the content delta
+  between the two documents as one ordinary transaction (a splice, with the caret and selection
+  mapped through it). Leaving Suggesting reverses it. No React remount, no CodeMirror teardown.
+- The editor document in Suggesting **is the branch**, so typing, deletion, IME composition, undo and
+  selection behave natively — no input interception layer exists.
+- Others' suggestions rebase into the current document exactly as in every posture (I-2/I-3 keep the
+  branch equal to `main + own suggestions`, so the delta applied on entry is precisely the user's own
+  pending suggestions). The user's own pending edits render as tracked changes against main.
+- While the own-branch binding is still resolving on first entry, the editor stays on main read-only
+  (never editable against the wrong document); the swap applies when the binding is ready.
+- **Design obligations** (each becomes a test):
+  - _Same view instance_ across every ambient mode switch (the DOM node and CodeMirror view persist).
+  - _Splice mapping_: caret/selection/scroll map correctly through the entry/exit delta.
+  - _No cross-writes_: edits made in Suggesting land only on the branch; edits in Editing only on
+    main — including around the moment of the swap.
+- Advanced paths (draft branch selected, checkpoints) keep the remount — they genuinely show a
+  different document and continuity is not expected.
 
 ### 3.4 The mode dropdown
 
