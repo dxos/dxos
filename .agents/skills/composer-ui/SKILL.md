@@ -129,12 +129,27 @@ See: `plugin-chess/src/containers/ChessArticle/`, `plugin-sample/src/containers/
 
 ## Lists, pickers, and stacks
 
-Pick the collection primitive by decision order — don't hand-roll a list of mapped `<div>`s:
+**Rule: never hand-roll a list.** Any vertical collection of rows — even a
+read-only display list — is built from a `@dxos/react-ui-list` primitive, never
+a `map()` over `<div>`/`<li>`. A mapped stack of `<div>`s in a review is a
+defect; reach for the primitive below instead. `@dxos/react-ui`'s core
+`List`/`ListItem` are **deprecated** — do not use them; `Listbox` is their
+successor.
+
+Pick the collection primitive by decision order:
 
 1. **Need a picker / combobox** (choose from a set, typeahead)? **Check for an existing one first** —
    `Picker` / `Combobox` / `Listbox` in [`@dxos/react-ui-list`](../../../packages/ui/react-ui-list/src/components),
    or a domain widget like `SearchList` (`@dxos/react-ui-search`). Reuse before building.
-2. **A simple flat or tree list**? Use `@dxos/react-ui-list` — `List`, `RowList`, `Tree`, `Accordion`.
+2. **A simple flat list** (display rows, selectable rows, or rows with per-row
+   controls)? Use **`Listbox`** from `@dxos/react-ui-list`:
+   `Listbox.Root` (headless; omit `value`/`onValueChange` for a non-selectable
+   `role=list`, pass them for single-select) → `Listbox.Content` (the `<ul>`) →
+   `Listbox.Item id=… classNames=…` (a row; put arbitrary children — labels via
+   `Listbox.ItemLabel`, buttons, a `Select` — inside). See
+   `plugin-space/src/components/ForeignKeys/ForeignKeys.tsx` for the read-only
+   idiom. For a **reorderable / master-detail** list use `OrderedList`; for
+   hierarchy use `Tree` / `Accordion`.
 3. **A reorderable / resizable / tiled collection of surfaces**? Use the **`Stack` from
    `@dxos/react-ui-mosaic`** (`MosaicStack` / `MosaicVirtualStack`, with `MosaicStackTileComponent`
    tiles).
@@ -142,7 +157,7 @@ Pick the collection primitive by decision order — don't hand-roll a list of ma
 **Do NOT use `@dxos/react-ui-stack` — it is deprecated.** (Some plugins still import it; don't copy them.)
 The live Stack is the Mosaic one.
 
-**`dx-current` / `dx-selected` are automatic.** `List` and `Stack` drive current-item and selection state
+**`dx-current` / `dx-selected` are automatic.** `Listbox` and `Stack` drive current-item and selection state
 themselves (via react-tabster keyboard navigation) — you don't set those classes or wire focus by hand.
 Like `Form`, both **own their own padding and spacing**, so drop them straight into a `ScrollArea.Viewport`
 without a padded wrapper.
@@ -428,7 +443,7 @@ never the repo root. If a story renders empty with "Invalid hook call" / "Cannot
 
 - Layout from `Panel.*` + `ScrollArea.*`; no wrapper `<div>`s for styling; `asChild` when the child is composable.
 - Let `Form`/`List`/`Stack` own their padding/spacing — don't double-pad them.
-- Collections: existing picker/combobox → `react-ui-list` list → Mosaic `Stack`. Never `@dxos/react-ui-stack` (deprecated).
+- Collections: never hand-roll a list of mapped `<div>`s — existing picker/combobox → `react-ui-list` (`Listbox` for flat lists; `OrderedList`/`Tree`/`Accordion` otherwise) → Mosaic `Stack`. `@dxos/react-ui` `List`/`ListItem` and `@dxos/react-ui-stack` are deprecated.
 - Colors from verified tokens (grep `semantic.css` / copy a component); no invented tokens, no `className`.
 - Toolbars via `MenuBuilder` + `useMenuActions` + `Menu.Root` with `attendableId`.
 - Object editing via composed `Form` (`Viewport`/`Content`/`FieldSet`) + schema; no native inputs; form never mutates `values`.

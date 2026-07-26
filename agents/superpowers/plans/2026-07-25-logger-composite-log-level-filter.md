@@ -1008,6 +1008,159 @@ git commit -m "react-ui-debug: add Logger Toolbar/Content/List parts and levels 
 
 ---
 
+### Task 7b: Rework Task 7 parts to conventions — `Listbox` list + `composable` Toolbar/Content
+
+Two convention fixes to the parts added in Task 7, both in `Logger.tsx`:
+
+**(A) `Logger.List` onto `@dxos/react-ui-list` `Listbox`.** Repo rule (composer-ui skill, "Lists, pickers, and stacks"): never hand-roll a list of mapped `<div>`s — flat lists use `Listbox`. (`Logger.Levels`, Task 8, is authored on `Listbox` directly.)
+
+**(B) `Logger.Toolbar` and `Logger.Content` wrapped with `composable()`.** They are consumed as `<Panel.Toolbar asChild><Logger.Toolbar/></Panel.Toolbar>` and `<Panel.Content asChild><Logger.Content>…`. `Panel.Toolbar`/`Panel.Content` are `slottable` and warn+wrap (`dx-slot-warning` div) when the `asChild` child is not COMPOSABLE — and the slot's injected `className`/`ref` are dropped. Wrapping each part with `composable()` (from `@dxos/react-ui`, the same factory `Toolbar.Root`/`ScrollArea.Root` use) marks them COMPOSABLE and forwards the slot props to their root. Follow the `Empty.tsx` idiom (`packages/ui/react-ui-list/src/components/Empty/Empty.tsx`).
+
+**Files:**
+- Modify: `packages/ui/react-ui-debug/package.json` (add `@dxos/react-ui-list` workspace dep)
+- Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (`Logger.List`, `Logger.Toolbar`, `Logger.Content`, imports, Props types)
+
+**Interfaces:** public part names unchanged. `LoggerToolbarProps` / `LoggerContentProps` become `ComposableProps` (children included for Content). `Listbox` with **no** `value`/`onValueChange` renders a non-selectable `role=list` — correct for a read-only log stream.
+
+- [ ] **Step 1: Add the dependency**
+
+Run:
+```bash
+pnpm add --filter '@dxos/react-ui-debug' '@dxos/react-ui-list@workspace:*'
+```
+Expected: `@dxos/react-ui-list": "workspace:*"` under `dependencies`.
+
+- [ ] **Step 2: Imports**
+
+In `Logger.tsx`: add `composable, composableProps` to the `@dxos/react-ui` named import; add `import { type ComposableProps } from '@dxos/ui-types';` (after the `@dxos/react-ui` import); add `import { Listbox } from '@dxos/react-ui-list';` (after `@dxos/react-ui`, before `@dxos/ui-theme`). `ThemedClassName` may no longer be needed for the reworked Toolbar/Content — keep it only if `Logger.List`/`Levels` still use it (they do: `LoggerListProps = ThemedClassName<{}>`, `LoggerLevelsProps = ThemedClassName<{}>`).
+
+- [ ] **Step 3: Wrap `Logger.Toolbar` with `composable`**
+
+Replace the `LoggerToolbar` definition (keep its children and displayName) with:
+```tsx
+export type LoggerToolbarProps = ComposableProps;
+
+const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
+  const { filter, setFilter, recording, setRecording, clear, copyAll } = useLoggerContext('Logger.Toolbar');
+
+  // A bare level matching the filter selects it; a scoped filter shows no selection.
+  const selectedLevel = (LEVELS as readonly string[]).includes(filter) ? filter : '';
+
+  return (
+    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+      {/* …unchanged children: Input, base-level Select, <LoggerLevels />, record toggle, clear, copy… */}
+    </Toolbar.Root>
+  );
+});
+
+LoggerToolbar.displayName = 'Logger.Toolbar';
+```
+Keep the exact children from Task 7. `Toolbar.Root` runs its own `composableProps` internally, so passing the merged `className`/`role`/`style` through is correct (its `role !== 'none'` guard preserves the default `toolbar` role).
+
+- [ ] **Step 4: Wrap `Logger.Content` with `composable`**
+
+Replace the `LoggerContent` definition with:
+```tsx
+export type LoggerContentProps = ComposableProps;
+
+const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  const { rows } = useLoggerContext('Logger.Content');
+
+  // Keep the viewport pinned to the newest entry.
+  const viewportRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  }, [rows]);
+
+  return (
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin ref={forwardedRef}>
+      <ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
+        {children}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+});
+
+LoggerContent.displayName = 'Logger.Content';
+```
+Note: `forwardedRef` goes to `ScrollArea.Root` (the slotted root); `viewportRef` stays internal for auto-scroll. If `PropsWithChildren` is now unused, drop it from the React import.
+
+- [ ] **Step 5: Replace the `Logger.List` body (onto `Listbox`)**
+
+Replace the entire `LoggerList` component (keep the `LoggerListProps` type and `displayName`) with:
+```tsx
+const LoggerList = ({ classNames }: LoggerListProps) => {
+  const { t } = useTranslation(translationKey);
+  const { rows, expanded, toggleExpand } = useLoggerContext('Logger.List');
+
+  if (rows.length === 0) {
+    return <div className={mx('p-2 text-subdued', classNames)}>{t('empty.message')}</div>;
+  }
+
+  return (
+    <Listbox.Root>
+      <Listbox.Content classNames={mx(classNames)}>
+        {rows.map(({ id, entry }) => {
+          const record = formatLogEntry(entry);
+          const expandable = Boolean(record.context || record.error);
+          return (
+            <Listbox.Item key={id} id={String(id)} classNames='group px-1'>
+              <div className='flex flex-col is-full'>
+                <div className='grid grid-cols-[1rem_8rem_1fr_min-content] items-center gap-1'>
+                  <div className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</div>
+                  <div className='truncate text-subdued'>{record.file}</div>
+                  <button
+                    type='button'
+                    aria-expanded={expandable ? expanded.has(id) : undefined}
+                    className='truncate text-start cursor-pointer'
+                    title={record.message}
+                    onClick={() => toggleExpand(id)}
+                  >
+                    {record.message}
+                  </button>
+                  <IconButton
+                    icon='ph--clipboard--regular'
+                    iconOnly
+                    density='xs'
+                    label={t('copy-entry.label')}
+                    variant='ghost'
+                    classNames='p-0 opacity-50 group-hover:opacity-100'
+                    onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
+                  />
+                </div>
+                {expanded.has(id) && expandable && (
+                  <pre className='px-4 py-1 whitespace-pre-wrap text-subdued'>
+                    {JSON.stringify({ context: record.context, error: record.error }, null, 2)}
+                  </pre>
+                )}
+              </div>
+            </Listbox.Item>
+          );
+        })}
+      </Listbox.Content>
+    </Listbox.Root>
+  );
+};
+```
+Before finalizing, confirm `Listbox.Root`/`Content`/`Item` prop names against `packages/ui/react-ui-list/src/components/Listbox/Listbox.tsx` (exports `Root`, `Content`, `Item`, `ItemLabel`, `ItemContent`, `Indicator`; `Item` takes `id` + `classNames`). If `Listbox.Content` does not accept `classNames`, move the class to `Listbox.Root`. Match the `ForeignKeys.tsx` usage.
+
+- [ ] **Step 6: Build**
+
+Run: `~/.proto/shims/moon run react-ui-debug:build`
+Expected: PASS. Type-check confirms `composable()` signatures and the `Listbox`/`ComposableProps` usage. (If `composable`'s render props type doesn't expose `children` for Content, import and use `PropsWithChildren` in the generic: `composable<HTMLDivElement, PropsWithChildren>(...)` and type `LoggerContentProps = ComposableProps<PropsWithChildren>` — verify against `Empty.tsx`/`slots.ts`.)
+
+- [ ] **Step 7: Commit**
+```bash
+git add packages/ui/react-ui-debug/package.json packages/ui/react-ui-debug/src/components/Logger/Logger.tsx pnpm-lock.yaml
+git commit -m "react-ui-debug: Logger.List on Listbox; composable Toolbar/Content"
+```
+
+---
+
 ### Task 8: `Logger.Levels` — per-file level popover
 
 **Files:**
@@ -1056,40 +1209,48 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
               />
             </div>
             {files.length === 0 && <div className='p-1 text-xs text-subdued'>{t('levels.empty')}</div>}
-            {files.map((file) => {
-              const basename = file.split('/').pop() ?? file;
-              const value = fileLevels.get(file) ?? 'inherit';
-              return (
-                <div key={file} className='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'>
-                  <span className='truncate text-xs' title={file}>
-                    {basename}
-                  </span>
-                  <Select.Root
-                    value={value}
-                    onValueChange={(next) => setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))}
-                  >
-                    <Select.TriggerButton classNames='is-full text-sm' placeholder={t('levels.inherit')} />
-                    <Select.Portal>
-                      <Select.Content>
-                        <Select.ScrollUpButton />
-                        <Select.Viewport>
-                          <Select.Option value='inherit' classNames='text-sm'>
-                            {t('levels.inherit')}
-                          </Select.Option>
-                          {LEVELS.map((level) => (
-                            <Select.Option key={level} value={level} classNames='text-sm'>
-                              {t(`level.${level}`)}
-                            </Select.Option>
-                          ))}
-                        </Select.Viewport>
-                        <Select.ScrollDownButton />
-                        <Select.Arrow />
-                      </Select.Content>
-                    </Select.Portal>
-                  </Select.Root>
-                </div>
-              );
-            })}
+            {files.length > 0 && (
+              <Listbox.Root>
+                <Listbox.Content>
+                  {files.map((file) => {
+                    const basename = file.split('/').pop() ?? file;
+                    const value = fileLevels.get(file) ?? 'inherit';
+                    return (
+                      <Listbox.Item key={file} id={file} classNames='grid grid-cols-[1fr_7rem] items-center gap-1'>
+                        <Listbox.ItemLabel classNames='text-xs' title={file}>
+                          {basename}
+                        </Listbox.ItemLabel>
+                        <Select.Root
+                          value={value}
+                          onValueChange={(next) =>
+                            setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
+                          }
+                        >
+                          <Select.TriggerButton classNames='is-full text-sm' placeholder={t('levels.inherit')} />
+                          <Select.Portal>
+                            <Select.Content>
+                              <Select.ScrollUpButton />
+                              <Select.Viewport>
+                                <Select.Option value='inherit' classNames='text-sm'>
+                                  {t('levels.inherit')}
+                                </Select.Option>
+                                {LEVELS.map((level) => (
+                                  <Select.Option key={level} value={level} classNames='text-sm'>
+                                    {t(`level.${level}`)}
+                                  </Select.Option>
+                                ))}
+                              </Select.Viewport>
+                              <Select.ScrollDownButton />
+                              <Select.Arrow />
+                            </Select.Content>
+                          </Select.Portal>
+                        </Select.Root>
+                      </Listbox.Item>
+                    );
+                  })}
+                </Listbox.Content>
+              </Listbox.Root>
+            )}
           </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
