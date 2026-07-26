@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FC, createContext } from 'react';
+import { type FC, createContext, useContext } from 'react';
 
 /**
  * Props handed to the boundary renderer when a role dispatches across a
@@ -20,6 +20,13 @@ export type SurfaceBoundaryProps = {
  * the dispatcher inside its own boundary must render in-tree or it would recurse forever.
  */
 export const BoundaryScopeContext = createContext<string | null>(null);
+
+/**
+ * The boundary role this render tree lives inside, or `null` in the primary app root.
+ * `ReactContext` contributions that render chrome DOM (e.g. a toast viewport) must gate it
+ * on this — re-composed per boundary root, unconditional chrome would duplicate per root.
+ */
+export const useSurfaceBoundaryScope = (): string | null => useContext(BoundaryScopeContext);
 
 // Injected by `registerSurfaceRootElement` to avoid a module cycle between the dispatcher
 // and the element that renders the dispatcher.

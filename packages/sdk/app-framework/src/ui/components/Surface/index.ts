@@ -3,7 +3,7 @@
 //
 
 import { Role } from '../../../common';
-import { isSurfaceBoundaryRole, setSurfaceBoundaryRoles } from './boundary';
+import { isSurfaceBoundaryRole, setSurfaceBoundaryRoles, useSurfaceBoundaryScope } from './boundary';
 import { SurfaceContext } from './context';
 import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent';
 import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
@@ -58,6 +58,7 @@ export namespace Surface {
   export const registerRootElement = registerSurfaceRootElement;
   export const setBoundaryRoles = setSurfaceBoundaryRoles;
   export const isBoundaryRole = isSurfaceBoundaryRole;
+  export const useBoundaryScope = useSurfaceBoundaryScope;
   export const RootProviders = SurfaceRootProviders;
   export const ROOT_TAG = DX_SURFACE_ROOT_TAG;
   export const ROOT_MOUNTED_EVENT = SURFACE_ROOT_MOUNTED_EVENT;
