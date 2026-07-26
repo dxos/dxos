@@ -489,7 +489,7 @@ Workstream folded in from `claude/markdown-selection-assistant-visibility-833995
       (resolves workspace/catalog specifiers; dry-run verified 0 unresolved). User to run first publish.
 - [ ] **PR #12333 land** (CI deliberately unwatched until confirmed working; re-arm via land skill).
 - [ ] History companion walkthrough in serve-min (story battery covers it; in-app pass pending).
-- [ ] PLUGIN.mdl rewrite for merged plugin-review.
+- [x] PLUGIN.mdl rewrite for merged plugin-review — done (a166743): org.dxos.plugin.review, records the merged surface (binding hook, lifecycle, suggestions, history, comments/agent) + acceptance mapped to the real suites.
 - [x] **Plugin-key settings migration: DECIDED 2026-07-25 — no migration.** Merging plugin-comments and
       plugin-versioning into `org.dxos.plugin.review` retires both old keys, so an existing user's
       enabled-plugin list names two plugins that no longer exist and not the one replacing them: comments
@@ -736,5 +736,5 @@ invariants I-1..I-9, §5 known risks); scripts: [`plugin-review/TEST-PLAN.md`](.
       diff-pipeline invariant/property tests; whitespace-residue archiving; Playwright real-typing
       smoke test; menu-level `onCloseAutoFocus`.
 - [ ] Backlog carried: F1.5 bullet-deletion grouping; F1.6 trailing-caret ergonomics; G2/G5 retest;
-      S1.8 / Decision 3 timeline author colours; suggest-against-draft (Decision 2); PLUGIN.mdl rewrite;
+      S1.8 / Decision 3 timeline author colours; suggest-against-draft (Decision 2);
       `@dxos/plugin-review` first publish (user).
