@@ -17,7 +17,8 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
-import { LogPanel } from '@dxos/react-ui-debug';
+import { Panel } from '@dxos/react-ui';
+import { Logger } from '@dxos/react-ui-debug';
 import { Position } from '@dxos/util';
 
 import {
@@ -194,7 +195,23 @@ export default Capability.makeModule(
       Surface.create({
         id: 'logs',
         filter: Surface.makeFilter(AppSurface.deckCompanion('logs')),
-        component: () => <LogPanel />,
+        component: () => (
+          <Logger.Root>
+            <Panel.Root>
+              <Panel.Toolbar asChild>
+                <Logger.Toolbar />
+              </Panel.Toolbar>
+              <Panel.Content asChild>
+                <Logger.Content>
+                  <Logger.List />
+                </Logger.Content>
+              </Panel.Content>
+              <Panel.Statusbar asChild>
+                <Logger.Filter />
+              </Panel.Statusbar>
+            </Panel.Root>
+          </Logger.Root>
+        ),
       }),
       Surface.create({
         id: 'logStatus',

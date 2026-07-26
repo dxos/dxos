@@ -18,15 +18,21 @@ export type LogRecord = {
 };
 
 /** Flattens a log entry into a JSON-safe record via the entry's computed getters. */
-export const formatLogEntry = (entry: LogEntry): LogRecord => {
-  const context = entry.computedContext;
+export const formatLogEntry = ({
+  timestamp,
+  level,
+  message,
+  computedMeta,
+  computedContext,
+  computedError,
+}: LogEntry): LogRecord => {
   return {
-    timestamp: new Date(entry.timestamp).toISOString(),
-    level: shortLevelName[entry.level],
-    file: entry.computedMeta.filename?.split('/').pop(),
-    line: entry.computedMeta.line,
-    message: entry.message,
-    context: Object.keys(context).length > 0 ? context : undefined,
-    error: entry.computedError,
+    timestamp: new Date(timestamp).toISOString(),
+    level: shortLevelName[level],
+    file: computedMeta.filename?.split('/').pop(),
+    line: computedMeta.line,
+    message,
+    context: Object.keys(computedContext).length > 0 ? computedContext : undefined,
+    error: computedError,
   };
 };

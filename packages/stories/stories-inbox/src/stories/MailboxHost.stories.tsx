@@ -106,7 +106,7 @@ const HostStory = () => {
   }, [client]);
 
   return (
-    <div className='flex flex-col gap-4 p-4 max-is-[48rem]' data-testid='mailbox-host'>
+    <div className='flex flex-col gap-4 p-4 max-w-[48rem]' data-testid='mailbox-host'>
       <div className='flex flex-col gap-1'>
         <h1 className='text-lg font-medium'>Live mailbox host</h1>
         <p className='text-sm text-description'>

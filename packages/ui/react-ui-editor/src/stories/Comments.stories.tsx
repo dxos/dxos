@@ -185,7 +185,7 @@ const CommentsList = ({
   };
 
   return (
-    <div className='border-bs border-subdued-separator overflow-y-auto max-bs-48'>
+    <div className='border-bs border-subdued-separator overflow-y-auto max-h-48'>
       <Listbox.Root value={activeId} onValueChange={handleSelect}>
         <Listbox.Content aria-label='Comments' classNames='p-1'>
           {resolved.map(({ comment, range }) => (

@@ -265,7 +265,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         )}
       >
         {/* Row 1: calendar + segment stack. */}
-        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-bs-0 overflow-hidden'>
+        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-h-0 overflow-hidden'>
           <NaturalCalendar.Root>
             <Panel.Root className='hidden @3xl:block border-r border-subdued-separator'>
               <Panel.Toolbar asChild>

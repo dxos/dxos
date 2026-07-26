@@ -157,7 +157,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
         )) ||
           (visibleResults.length === 0 ? (
             <Empty
-              classNames='bs-full'
+              classNames='h-full'
               label={view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
             />
           ) : (

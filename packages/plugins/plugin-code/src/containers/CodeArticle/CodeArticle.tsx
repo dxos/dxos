@@ -242,7 +242,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
             <div
               role='region'
               aria-label={t('output-pane.label')}
-              className='dx-container grid min-bs-0 overflow-hidden'
+              className='dx-container grid min-h-0 overflow-hidden'
             >
               {selected ? <FileEditor file={selected} role={role} /> : null}
             </div>

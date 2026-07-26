@@ -79,10 +79,10 @@ const listStyles = tv({
     //
     // Grid whose columns/placement come from the `hasIcon` variant: a leading rail-item icon track
     // only when an icon is present, so an icon-less row doesn't reserve (and indent past) empty space.
-    itemContentRoot: 'grid items-center gap-x-2 is-full min-is-0',
+    itemContentRoot: 'grid items-center gap-x-2 w-full min-w-0',
     itemContentIcon: 'col-start-1 row-start-1 place-self-center',
-    itemContentTitle: 'row-start-1 min-is-0 truncate',
-    itemContentDescription: 'row-start-2 min-is-0 truncate text-sm text-description',
+    itemContentTitle: 'row-start-1 min-w-0 truncate',
+    itemContentDescription: 'row-start-2 min-w-0 truncate text-sm text-description',
 
     //
     // Empty
