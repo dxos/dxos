@@ -106,6 +106,18 @@ export const runScenarioStorybook = async (
         await waitFor(() => expect(findView(canvasElement).state.readOnly, label).toBe(!editable), {
           timeout: 15_000,
         });
+        // The dropdown returns focus to its trigger on close; the article must hand it back to the
+        // editor so the caret survives every mode switch (DOM-tier invariant; headless cannot see it).
+        await waitFor(
+          async () => {
+            const active = canvasElement.ownerDocument.activeElement;
+            await expect(
+              !!active && !!active.closest('.cm-editor'),
+              `${label}: editor lost focus to ${active?.tagName}`,
+            ).toBe(true);
+          },
+          { timeout: 5_000 },
+        );
         break;
       }
       case 'type': {
