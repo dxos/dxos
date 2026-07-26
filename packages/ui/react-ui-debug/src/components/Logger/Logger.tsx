@@ -16,6 +16,7 @@ import {
   shouldLog,
 } from '@dxos/log';
 import {
+  ErrorStack,
   Icon,
   IconButton,
   Input,
@@ -28,9 +29,11 @@ import {
   Toolbar,
   composable,
   composableProps,
+  parseCaptureOwnerStack,
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -154,6 +157,10 @@ type LoggerContextValue = {
   clearFileLevels: () => void;
   expanded: Set<number>;
   toggleExpand: (id: number) => void;
+  current: number | undefined;
+  setCurrent: (id: number) => void;
+  checked: Set<number>;
+  toggleChecked: (id: number) => void;
   clear: () => void;
   copyAll: () => void;
 };
@@ -181,6 +188,8 @@ const LoggerRoot = ({
   const [recording, setRecording] = useState(defaultRecording);
   const [rows, setRows] = useState<LogRow[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [current, setCurrent] = useState<number>();
+  const [checked, setChecked] = useState<Set<number>>(new Set());
   const [fileLevels, setFileLevels] = useState<Map<string, LevelName>>(new Map());
   // Set membership is O(1); the sorted view is memoized so a high-volume stream never re-sorts per entry.
   const filesRef = useRef<Set<string>>(new Set(logFileRegistry.getFiles()));
@@ -260,16 +269,18 @@ const LoggerRoot = ({
     recorderRef.current?.setFilter(effectiveFilter);
   }, [effectiveFilter]);
 
-  // Drop expansion state for evicted rows so the set stays bounded (no-op while nothing is expanded).
+  // Drop per-row state (expansion, selection) for evicted rows so the sets stay bounded.
   useEffect(() => {
-    setExpanded((prev) => {
+    const ids = new Set(rows.map((row) => row.id));
+    const prune = (prev: Set<number>) => {
       if (prev.size === 0) {
         return prev;
       }
-      const ids = new Set(rows.map((row) => row.id));
       const next = new Set([...prev].filter((id) => ids.has(id)));
       return next.size === prev.size ? prev : next;
-    });
+    };
+    setExpanded(prune);
+    setChecked(prune);
   }, [rows]);
 
   const setFileLevel = useCallback((file: string, level: LevelName | undefined) => {
@@ -287,18 +298,29 @@ const LoggerRoot = ({
   const clear = useCallback(() => {
     setRows([]);
     setExpanded(new Set());
+    setChecked(new Set());
+    setCurrent(undefined);
   }, []);
+  // Copy the checked rows when any are checked, else the whole buffer.
   const copyAll = useCallback(() => {
+    const selected = checked.size > 0 ? rows.filter((row) => checked.has(row.id)) : rows;
     copyToClipboard(
       JSON.stringify(
-        rows.map(({ entry }) => formatLogEntry(entry)),
+        selected.map(({ entry }) => formatLogEntry(entry)),
         null,
         2,
       ),
     );
-  }, [rows]);
+  }, [rows, checked]);
   const toggleExpand = useCallback((id: number) => {
     setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+  const toggleChecked = useCallback((id: number) => {
+    setChecked((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -320,6 +342,10 @@ const LoggerRoot = ({
       clearFileLevels={clearFileLevels}
       expanded={expanded}
       toggleExpand={toggleExpand}
+      current={current}
+      setCurrent={setCurrent}
+      checked={checked}
+      toggleChecked={toggleChecked}
       clear={clear}
       copyAll={copyAll}
     >
@@ -548,7 +574,8 @@ type LoggerListProps = ThemedClassName<{}>;
 
 const LoggerList = ({ classNames }: LoggerListProps) => {
   const { t } = useTranslation(translationKey);
-  const { rows, expanded, toggleExpand, textFilter } = useLoggerContext('Logger.List');
+  const { rows, expanded, toggleExpand, current, setCurrent, checked, toggleChecked, textFilter } =
+    useLoggerContext('Logger.List');
 
   // Compute the display record once; filter the buffer by a case-insensitive match on file + message.
   const needle = textFilter.trim().toLowerCase();
@@ -566,43 +593,78 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
     );
   }
 
+  // Rows carry inner controls (checkbox, copy), so this is a plain `role=list` — nesting buttons in a
+  // `role=option` is invalid WAI-ARIA. The row is the sole arrow-nav stop (`onClick` makes the item
+  // interactive → tabIndex 0); inner controls opt out with `tabIndex={-1}`. The current line follows focus
+  // (click + arrows), styled via `aria-current`/`dx-current`. Space toggles expansion and Enter toggles the
+  // checkbox: handled on the wrapper (Listbox collapses both keys into one synthetic row click, losing which
+  // was pressed); arrow keys fall through to Tabster.
   return (
     <Listbox.Root>
-      <Listbox.Content classNames={mx(classNames)}>
-        {visible.map(({ id, entry, record }) => (
-          <Listbox.Item
-            key={id}
-            id={String(id)}
-            classNames='group grid grid-cols-[1rem_8rem_1fr_max-content] items-center gap-2 px-2 py-0'
-          >
-            <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
-            <span className='truncate text-subdued'>{record.file}</span>
-            <button
-              type='button'
-              aria-expanded={expanded.has(id)}
-              className='truncate text-start cursor-pointer'
-              title={record.message}
-              onClick={() => toggleExpand(id)}
-            >
-              {record.message}
-            </button>
-            <IconButton
-              icon='ph--clipboard--regular'
-              iconOnly
-              density='xs'
-              label={t('copy-entry.label')}
-              variant='ghost'
-              classNames='p-0 opacity-50 group-hover:opacity-100'
-              onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
-            />
-            {expanded.has(id) && (
-              <pre className='col-span-full px-4 py-1 whitespace-pre-wrap text-subdued'>
-                {JSON.stringify({ message: record.message, context: record.context, error: record.error }, null, 2)}
-              </pre>
-            )}
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
+      <div
+        onKeyDown={(event) => {
+          if (current === undefined) {
+            return;
+          }
+          if (event.key === ' ') {
+            event.preventDefault();
+            toggleExpand(current);
+          } else if (event.key === 'Enter') {
+            event.preventDefault();
+            toggleChecked(current);
+          }
+        }}
+      >
+        <Listbox.Content classNames={mx(classNames)}>
+          {visible.map(({ id, entry, record }) => {
+            const isExpanded = expanded.has(id);
+            // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
+            const frames = isExpanded && record.error ? parseCaptureOwnerStack(record.error) : null;
+            return (
+              <Listbox.Item
+                key={id}
+                id={String(id)}
+                aria-current={current === id || undefined}
+                onFocus={() => setCurrent(id)}
+                onClick={() => setCurrent(id)}
+                classNames='group grid grid-cols-[auto_1rem_8rem_1fr_max-content] gap-2 items-center p-0 dx-current'
+              >
+                <div className='pl-2'>
+                  <Input.Root>
+                    <Input.Checkbox
+                      tabIndex={-1}
+                      size={3}
+                      checked={checked.has(id)}
+                      onCheckedChange={() => toggleChecked(id)}
+                    />
+                  </Input.Root>
+                </div>
+                <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
+                <span className={mx('truncate', !expanded.has(id) && 'text-description')}>{record.file}</span>
+                <span className='truncate' title={record.message}>
+                  {record.message}
+                </span>
+                <IconButton
+                  icon='ph--clipboard--regular'
+                  iconOnly
+                  density='xs'
+                  tabIndex={-1}
+                  label={t('copy-entry.label')}
+                  variant='ghost'
+                  classNames='p-0 opacity-50 group-hover:opacity-100'
+                  onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
+                />
+                {isExpanded && (
+                  <div className='col-span-full'>
+                    <JsonHighlighter classNames='p-2' data={{ message: record.message, context: record.context }} />
+                    {frames && <ErrorStack classNames='p-1 bg-input-surface' frames={frames} />}
+                  </div>
+                )}
+              </Listbox.Item>
+            );
+          })}
+        </Listbox.Content>
+      </div>
     </Listbox.Root>
   );
 };

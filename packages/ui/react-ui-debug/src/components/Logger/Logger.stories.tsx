@@ -23,7 +23,10 @@ const FILES = ['alpha.ts', 'beta.ts', 'gamma.ts'];
 let seq = 0;
 const emit = (file: string, level: 'info' | 'warn' | 'error') => {
   const meta: CallMetadata = { F: file, L: 1, S: undefined };
-  log[level](random.lorem.sentences(), { seq: ++seq, file }, meta);
+  // Attach a real Error at error level so the expanded row shows a stack trace.
+  const context =
+    level === 'error' ? { seq: ++seq, file, error: new Error('Simulated failure') } : { seq: ++seq, file };
+  log[level](random.lorem.sentences(), context, meta);
 };
 
 const DefaultStory = () => (
