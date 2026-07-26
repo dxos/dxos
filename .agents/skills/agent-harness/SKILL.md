@@ -21,7 +21,7 @@ run **fully autonomously** — see [Autonomy](#autonomy).
 ## Mental model
 
 - **One checkout, one writer at a time.** The Composer running ⟺ you sleeping
-  (`bash sleep`); the Composer exited ⟺ you act. Never edit the tree while a
+  (a `sleep`); the Composer exited ⟺ you act. Never edit the tree while a
   `dx agent` process is live — that invariant is what keeps the shared checkout
   safe.
 - **Session = ECHO `Feed` DXN.** Continuation reattaches to it; it survives
@@ -41,7 +41,7 @@ run **fully autonomously** — see [Autonomy](#autonomy).
    Each invocation is a fresh session today — session reattach (`--continue`) is
    not yet wired, so carry context across restarts via the Composer's journal:
    re-prompt with "read your journal and continue". Run it in the background, then
-   `bash sleep <interval>` — the sleep is both a pacing device and your
+   `sleep <interval>` — the sleep is both a pacing device and your
    **heartbeat / progress check**.
 2. **On each wake**, before doing anything else, check:
    - Is the process still alive? Did it exit — with what **exit code**?
@@ -68,10 +68,11 @@ so checkpoints and rollbacks touch only the Composer's edits, never unrelated ch
 2. **Green** → commit the Composer's edits (stage them explicitly, not a blind
    `git add -A` if the tree also holds unrelated work), take a paired profile
    snapshot, then restart and re-prompt to continue.
-3. **Red** → discard the edit (`git reset --hard <last-known-good>` or `git stash`
-   — only safe because the baseline was clean), restart on the last known-good
-   checkpoint, and **inject the failure** (error + stdout tail) into the next
-   prompt so the Composer knows what broke.
+3. **Red** → discard the edit — `git reset --hard <last-known-good>` **and
+   `git clean -fd`** (reset restores only tracked files; clean drops the
+   Composer's untracked additions, which is safe only because the baseline was
+   clean) — restart on the last known-good checkpoint, and **inject the failure**
+   (error + stdout tail) into the next prompt so the Composer knows what broke.
 
 The core/leaf boundary is **soft** (prompt-enforced): the Composer is told to edit
 only non-core plugins and defer heavy lifting to you. It _can_ technically touch
