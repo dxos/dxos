@@ -2,117 +2,465 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Refactor `@dxos/react-ui-debug`'s `LogPanel` into a Radix-style composite `Logger` and add a UI to set a `@dxos/log` level for any individual file or all files.
+**Goal:** Refactor `@dxos/react-ui-debug`'s `LogPanel` into a Radix-style composite `Logger`, add a `@dxos/log` dev-mode registry of log files (populated at module load by the transform), and add a UI to set a log level for any individual file or all files.
 
-**Architecture:** A headless `Logger.Root` provider owns all state (rows, base filter, recording, expanded set, per-file level map, discovered files) and side effects (the `log.addProcessor` subscription, ref-counted global-config ownership, and `log.config` calls). Presentational parts `Logger.Toolbar` / `Logger.Content` / `Logger.List` / `Logger.Levels` consume context. Per-file overrides are composed with the base filter into a single `@dxos/log` filter string; `@dxos/log`'s substring+level matching makes below-base overrides *raise* verbosity and above-base overrides *quiet* a file.
+**Architecture:** `@dxos/log` gains a global-singleton `LogFileRegistry` (`globalThis.DX_LOG_FILES`). In development, `@dxos/vite-plugin-log`'s transform appends one guarded registration line to the `__dxlog_file` preamble it already injects per module, so every log-using file registers at load. A headless `Logger.Root` provider unions the registry's files with any it sees in the live stream, owns all panel state/effects, and composes the base filter with per-file overrides into a single `@dxos/log` filter string; `@dxos/log`'s substring+level matching makes a below-base override *raise* a file's verbosity and an above-base override *quiet* it. Presentational parts `Logger.Toolbar` / `Content` / `List` / `Levels` consume context.
 
-**Tech Stack:** React (arrow components, named imports), TypeScript, `@dxos/log`, `@dxos/react-ui` primitives (Panel, Toolbar, Select, Input, Popover, ScrollArea, IconButton, ToggleIconButton), `@radix-ui/react-context` / `react-slot` / `react-primitive`, TailwindCSS via `mx()`, Storybook, moon, oxfmt.
+**Tech Stack:** React (arrow components, named imports), TypeScript, `@dxos/log`, `@dxos/vite-plugin-log` (Rolldown/Oxc AST transform, `RolldownMagicString`), `@dxos/react-ui` primitives (Panel, Toolbar, Select, Input, Popover, ScrollArea, IconButton, ToggleIconButton), `@radix-ui/react-context`, TailwindCSS via `mx()`, Storybook, moon, oxfmt, vitest.
 
 ## Global Constraints
 
 - **Branch safety:** only edit on the assigned `claude/…` branch; never on `main`.
-- **No casts** (`as any`, `as unknown as T`, non-null `!`) to satisfy the type-checker; `as const` is fine.
-- **Copyright header** `// Copyright 2026 DXOS.org //` on every new `.ts`/`.tsx` file (match existing files in the package).
+- **No casts** (`as any`, `as unknown as T`, non-null `!`) to satisfy the type-checker; `as const` is fine. (The transform code already contains some `as any` at library boundaries — do not add new ones; match the file's existing minimal usage only where unavoidable and pre-existing.)
+- **Copyright header** `// Copyright 2026 DXOS.org //` on every new `.ts`/`.tsx` file.
 - **Imports grouped** builtin → external → @dxos → internal → parent → sibling, blank line between groups. Named exports; no default exports.
-- **React:** arrow-function components, named React imports (`useMemo`, `type Ref` — not `React.useMemo`); forwarded ref param named `forwardedRef`.
-- **Composite idiom** (`composite-components` skill): internal names prefixed (`LoggerRoot`), dotted `displayName` (`'Logger.Root'`), every Props type exported, namespace assembled as an object literal, section comments between parts. **Deviation (approved):** classnames use `mx()` + Tailwind, not `tx()` theme tokens — the panel has no token file and a `logger.*` namespace owned from this package would be inappropriate coupling.
-- **Workspace deps** use `workspace:*`; external deps added from the **catalog** (`pnpm add --filter '@dxos/react-ui-debug' --save-catalog …`). Do not hand-edit versions.
-- **Format before commit:** run `pnpm format` and stage the result.
-- **Per-file level map keys on `entry.meta?.F`** (the raw string `@dxos/log`'s `matchFilter` matches against); the basename (`key.split('/').pop()`) is display-only.
-- **Level values are name strings** (`'trace'|'debug'|'verbose'|'info'|'warn'|'error'`) end-to-end — no `LogLevel`↔name conversion; the effective filter is a plain comma-joined string.
+- **React:** arrow-function components, named React imports; forwarded ref param named `forwardedRef`.
+- **Composite idiom** (`composite-components` skill): internal names prefixed (`LoggerRoot`), dotted `displayName` (`'Logger.Root'`), every Props type exported, namespace assembled as an object literal, section comments between parts. **Deviation (approved):** classnames use `mx()` + Tailwind, not `tx()` theme tokens.
+- **Registry global name is `DX_LOG_FILES`** (mirrors the existing `globalThis.DX_LOG`). The transform-injected call is exactly `globalThis.DX_LOG_FILES&&globalThis.DX_LOG_FILES.register(__dxlog_file);` (no spaces, guarded).
+- **Registry is dev-only.** The Vite plugin passes `registerFiles: isServe`; `transformLogMeta` and the standalone rolldown transform default `registerFiles: false`. Production builds inject nothing.
+- **Registry owns the file list only** — no per-file level state or `shouldLog` changes in `@dxos/log`.
+- **Level values are name strings** (`'trace'|'debug'|'verbose'|'info'|'warn'|'error'`) end-to-end; the effective filter is a plain comma-joined string. Per-file map keys on `entry.meta?.F` / the registry's raw path; the basename (`path.split('/').pop()`) is display-only.
+- **Workspace deps** `workspace:*`; external deps from the **catalog**.
+- **Format before commit:** `pnpm format`, stage the result.
+- **Do not break the shared transform.** Task 4 touches code that runs on every package's build. It is TDD'd, its full test suite is run before commit, and dependent tasks come after it.
 
 ---
 
 ## File Structure
 
 ```
+packages/common/log/
+  src/registry.ts                           # NEW: LogFileRegistry singleton
+  src/registry.test.ts                      # NEW
+  src/index.ts                              # MODIFY: export ./registry
+tools/vite-plugin-log/
+  src/definitions.ts                        # MODIFY: registerFiles option on transform types
+  src/transform.ts                          # MODIFY: inject registration line when registerFiles
+  src/plugin.ts                             # MODIFY: pass registerFiles: isServe
+  src/transform.test.ts                     # MODIFY: assert injected line (+ off by default)
 packages/ui/react-ui-debug/
-  package.json                              # MODIFY: add 3 radix catalog deps
-  src/
-    translations.ts                         # MODIFY: add levels.* keys
-    components/
-      index.ts                              # MODIFY: export ./Logger (was ./LogPanel)
-      Logger/                               # NEW dir (replaces LogPanel/)
-        Logger.tsx                          # NEW: composite (Root/Toolbar/Content/List/Levels)
-        format.ts                           # MOVED verbatim from LogPanel/format.ts
-        index.ts                            # NEW: barrel
-        Logger.stories.tsx                  # NEW: reworked story
+  package.json                              # DONE (Task 1): 3 radix catalog deps
+  src/translations.ts                       # MODIFY: levels.* keys
+  src/components/index.ts                   # MODIFY: export ./Logger
+  src/components/Logger/
+    format.ts                               # DONE (Task 1): moved from LogPanel/
+    format.test.ts                          # Task 2: moved from LogPanel/
+    Logger.tsx                              # NEW: composite
+    Logger.test.ts                          # NEW: composeFilter tests
+    index.ts                                # NEW: barrel
+    Logger.stories.tsx                      # NEW: reworked story
 packages/plugins/plugin-debug/
   src/containers/LogStatus/LogStatus.tsx    # MODIFY: assemble Logger parts
 packages/stories/storybook-testing/
   src/modules/LoggingModule.tsx             # MODIFY: assemble Logger parts
 ```
 
-Deleted: `packages/ui/react-ui-debug/src/components/LogPanel/` (all three files).
+Deleted in Task 9: `packages/ui/react-ui-debug/src/components/LogPanel/` (`LogPanel.tsx`, `LogPanel.stories.tsx`, `index.ts`).
 
 ---
 
-### Task 1: Package deps + move `format.ts` + scaffold `Logger` dir
+### Task 1: Package deps + move `format.ts` — ✅ DONE (commit b8c1a0c3fd)
+
+Radix catalog deps added; `format.ts` moved to `Logger/`. (Note: `format.test.ts` was NOT moved — Task 2 fixes that.)
+
+---
+
+### Task 2: Move `format.test.ts` into `Logger/`
 
 **Files:**
-- Modify: `packages/ui/react-ui-debug/package.json`
-- Create: `packages/ui/react-ui-debug/src/components/Logger/format.ts` (moved)
-- Delete: `packages/ui/react-ui-debug/src/components/LogPanel/format.ts`
+- Move: `packages/ui/react-ui-debug/src/components/LogPanel/format.test.ts` → `packages/ui/react-ui-debug/src/components/Logger/format.test.ts`
 
-**Interfaces:**
-- Produces: `formatLogEntry(entry: LogEntry): LogRecord` and `type LogRecord` from `./format` (unchanged content, new path).
+**Interfaces:** none new. The test imports `./format` (relative) and `@dxos/log`; both resolve unchanged after the move.
 
-- [ ] **Step 1: Add the three radix deps from the catalog**
+- [ ] **Step 1: Move the file**
 
 Run:
 ```bash
-pnpm add --filter '@dxos/react-ui-debug' --save-catalog @radix-ui/react-context @radix-ui/react-slot @radix-ui/react-primitive
+git mv packages/ui/react-ui-debug/src/components/LogPanel/format.test.ts packages/ui/react-ui-debug/src/components/Logger/format.test.ts
 ```
-Expected: `package.json` `dependencies` gains the three `@radix-ui/react-*` entries at `catalog:`; lockfile updates. If a package is not in the catalog, the command adds it there.
 
-- [ ] **Step 2: Move `format.ts` into the new `Logger/` dir**
+- [ ] **Step 2: Run it**
 
-Run:
-```bash
-mkdir -p packages/ui/react-ui-debug/src/components/Logger
-git mv packages/ui/react-ui-debug/src/components/LogPanel/format.ts packages/ui/react-ui-debug/src/components/Logger/format.ts
-```
-Expected: `format.ts` now under `Logger/`; content unchanged.
+Run: `moon run react-ui-debug:test -- src/components/Logger/format.test.ts`
+Expected: PASS (2 tests). Confirms the relative `./format` import still resolves in the new location.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add packages/ui/react-ui-debug/package.json pnpm-lock.yaml pnpm-workspace.yaml packages/ui/react-ui-debug/src/components/Logger/format.ts
-git commit -m "react-ui-debug: add radix composite deps; relocate log format helper"
+git add -A packages/ui/react-ui-debug/src/components
+git commit -m "react-ui-debug: relocate format.test.ts alongside moved format helper"
 ```
 
 ---
 
-### Task 2: `Logger.Root` — headless provider with state, discovery, and filter composition
+### Task 3: `@dxos/log` file registry module
 
 **Files:**
-- Create: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (Root only for this task; later tasks append parts to the same file)
+- Create: `packages/common/log/src/registry.ts`
+- Create: `packages/common/log/src/registry.test.ts`
+- Modify: `packages/common/log/src/index.ts`
 
 **Interfaces:**
-- Consumes: `formatLogEntry` from `./format`.
-- Produces (used by all later parts via `useLoggerContext('<part>')`):
+- Produces (exported from `@dxos/log`):
+  ```ts
+  export interface LogFileRegistry {
+    register(file: string): void;
+    getFiles(): string[];              // sorted copy
+    subscribe(listener: () => void): () => void;  // returns unsubscribe
+    clear(): void;
+  }
+  export const createLogFileRegistry: () => LogFileRegistry;
+  export const logFileRegistry: LogFileRegistry;   // global singleton on globalThis.DX_LOG_FILES
+  ```
+- The transform (Task 4) will call `globalThis.DX_LOG_FILES.register(...)`; this task is what makes that global exist (created when `@dxos/log` is first imported).
+
+- [ ] **Step 1: Write the failing test**
+
+Create `packages/common/log/src/registry.test.ts`:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, expect, test } from 'vitest';
+
+import { createLogFileRegistry } from './registry';
+
+describe('LogFileRegistry', () => {
+  test('registers unique files, returned sorted', () => {
+    const registry = createLogFileRegistry();
+    registry.register('b.ts');
+    registry.register('a.ts');
+    registry.register('b.ts');
+    expect(registry.getFiles()).toEqual(['a.ts', 'b.ts']);
+  });
+
+  test('getFiles returns a copy (callers cannot mutate internal state)', () => {
+    const registry = createLogFileRegistry();
+    registry.register('a.ts');
+    registry.getFiles().push('x.ts');
+    expect(registry.getFiles()).toEqual(['a.ts']);
+  });
+
+  test('notifies subscribers only on a new file; unsubscribe stops notifications', () => {
+    const registry = createLogFileRegistry();
+    let count = 0;
+    const unsubscribe = registry.subscribe(() => {
+      count++;
+    });
+    registry.register('a.ts');
+    registry.register('a.ts'); // duplicate — no notification
+    expect(count).toBe(1);
+    unsubscribe();
+    registry.register('b.ts');
+    expect(count).toBe(1);
+  });
+
+  test('clear empties the registry and notifies', () => {
+    const registry = createLogFileRegistry();
+    let count = 0;
+    registry.subscribe(() => {
+      count++;
+    });
+    registry.register('a.ts');
+    registry.clear();
+    expect(registry.getFiles()).toEqual([]);
+    expect(count).toBe(2);
+  });
+
+  test('register ignores empty/non-string input', () => {
+    const registry = createLogFileRegistry();
+    registry.register('');
+    expect(registry.getFiles()).toEqual([]);
+  });
+});
+```
+
+- [ ] **Step 2: Run to verify it fails**
+
+Run: `moon run log:test -- src/registry.test.ts`
+Expected: FAIL — cannot find module `./registry`.
+
+- [ ] **Step 3: Write `registry.ts`**
+
+Create `packages/common/log/src/registry.ts`:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+/**
+ * Registry of source files that use `@dxos/log`, populated at module load by the
+ * `@dxos/vite-plugin-log` transform in development. Enables tooling (e.g. the Logger
+ * panel) to enumerate log files and offer per-file level control. The registry owns
+ * the file list only — levels are applied via the standard `@dxos/log` filter string.
+ */
+export interface LogFileRegistry {
+  /** Register a file path (idempotent; notifies subscribers only when newly added). */
+  register(file: string): void;
+  /** Sorted copy of registered file paths. */
+  getFiles(): string[];
+  /** Subscribe to registry changes; returns an unsubscribe function. */
+  subscribe(listener: () => void): () => void;
+  /** Remove all registered files (notifies subscribers). */
+  clear(): void;
+}
+
+export const createLogFileRegistry = (): LogFileRegistry => {
+  const files = new Set<string>();
+  const listeners = new Set<() => void>();
+
+  const notify = (): void => {
+    for (const listener of listeners) {
+      listener();
+    }
+  };
+
+  return {
+    register: (file) => {
+      if (typeof file !== 'string' || file.length === 0 || files.has(file)) {
+        return;
+      }
+      files.add(file);
+      notify();
+    },
+    getFiles: () => [...files].sort(),
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    clear: () => {
+      files.clear();
+      notify();
+    },
+  };
+};
+
+/**
+ * Global singleton so all (possibly duplicated) copies of `@dxos/log` and the
+ * transform-injected `globalThis.DX_LOG_FILES.register(...)` calls share one registry —
+ * mirrors how `log` is `globalThis.DX_LOG`.
+ */
+export const logFileRegistry: LogFileRegistry = ((globalThis as any).DX_LOG_FILES ??= createLogFileRegistry());
+```
+
+- [ ] **Step 4: Export from the package index**
+
+In `packages/common/log/src/index.ts`, add after the other `export *` lines (keep grouping):
+
+```ts
+export * from './registry';
+```
+
+- [ ] **Step 5: Run the test**
+
+Run: `moon run log:test -- src/registry.test.ts`
+Expected: PASS (5 tests).
+
+- [ ] **Step 6: Build the package**
+
+Run: `moon run log:build`
+Expected: PASS.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add packages/common/log/src/registry.ts packages/common/log/src/registry.test.ts packages/common/log/src/index.ts
+git commit -m "log: add dev-mode LogFileRegistry singleton (globalThis.DX_LOG_FILES)"
+```
+
+---
+
+### Task 4: `@dxos/vite-plugin-log` — inject module-load registration (dev only)
+
+**Files:**
+- Modify: `tools/vite-plugin-log/src/definitions.ts`
+- Modify: `tools/vite-plugin-log/src/transform.ts`
+- Modify: `tools/vite-plugin-log/src/plugin.ts`
+- Modify: `tools/vite-plugin-log/src/transform.test.ts`
+
+**Interfaces:**
+- Consumes: nothing new (references the `globalThis.DX_LOG_FILES` global created by Task 3 at runtime; no import).
+- Produces: `transform(code, ast, filename, { specs, registerFiles? })` and `computeLogMetaEdits(program, code, specs, displayPath, options?)` gain an optional `registerFiles` flag; `LogMetaTransformOptions` gains `registerFiles?: boolean`; `transformLogMeta` gains `registerFiles` in its options bag (default `false`).
+
+**Context:** `computeLogMetaEdits` already pushes one preamble edit at `preambleInsertIndex` containing `var __dxlog_file="<path>";\n`. When `registerFiles` is true, that same edit's `text` gains a second line so no new offsets/edits are introduced. All three transform entry points (`transform`, `transformLogMeta`, `rolldownLogMetaTransform`) funnel through `computeLogMetaEdits`.
+
+- [ ] **Step 1: Write the failing tests**
+
+In `tools/vite-plugin-log/src/transform.test.ts`, first inspect an existing test to match the harness (it calls `transformLogMeta(code, filename, options)` or `computeLogMetaEdits`/`transform` directly — mirror whichever the file uses). Add two tests:
+
+```ts
+test('registerFiles injects a guarded registration line after the preamble', () => {
+  const src = ['import { log } from "@dxos/log";', 'log("hello");', ''].join('\n');
+  const out = transformLogMeta(src, 'src/module.ts', { registerFiles: true }) ?? src;
+  expect(out).toContain('var __dxlog_file="src/module.ts";');
+  expect(out).toContain('globalThis.DX_LOG_FILES&&globalThis.DX_LOG_FILES.register(__dxlog_file);');
+});
+
+test('registerFiles defaults off — no registration line', () => {
+  const src = ['import { log } from "@dxos/log";', 'log("hello");', ''].join('\n');
+  const out = transformLogMeta(src, 'src/module.ts') ?? src;
+  expect(out).toContain('var __dxlog_file="src/module.ts";');
+  expect(out).not.toContain('DX_LOG_FILES');
+});
+```
+
+If the file's existing tests use `computeLogMetaEdits`/`transform` with `RolldownMagicString` instead of `transformLogMeta`, write the two tests in that same style (pass `{ specs: DEFAULT_LOG_META_TRANSFORM_SPEC, registerFiles: true }` to `transform`, and assert on `code.toString()`). Match the file — do not introduce a second harness style.
+
+- [ ] **Step 2: Run to verify they fail**
+
+Run: `moon run vite-plugin-log:test -- src/transform.test.ts`
+Expected: the new `registerFiles injects…` test FAILS (line absent); the `defaults off` test may already pass.
+
+- [ ] **Step 3: Thread `registerFiles` through the transform**
+
+In `tools/vite-plugin-log/src/transform.ts`:
+
+(a) `transform` signature — add `registerFiles` to the options bag and pass it on:
+```ts
+export function transform(
+  code: RolldownMagicString,
+  ast: Program,
+  filename: string,
+  options: { specs: LogMetaTransformSpec[]; registerFiles?: boolean },
+): void {
+  const edits = computeLogMetaEdits(ast, code.toString(), options.specs, filename, {
+    registerFiles: options.registerFiles ?? false,
+  });
+  const sorted = [...edits].sort((a, b) => b.pos - a.pos);
+  for (const { pos, text } of sorted) {
+    code.appendLeft(pos, text);
+  }
+}
+```
+
+(b) `transformLogMeta` — add `registerFiles` to its options and forward:
+```ts
+export const transformLogMeta = (
+  code: string,
+  filename: string,
+  options: { specs?: LogMetaTransformSpec[]; lang?: 'ts' | 'tsx' | 'js' | 'jsx'; registerFiles?: boolean } = {},
+): string | null => {
+  const lang = options.lang ?? langFromFilename(filename);
+  if (lang === undefined) {
+    return null;
+  }
+  const ast = parseAst(code, { astType: lang.includes('ts') ? 'ts' : 'js', lang });
+  const ms = new RolldownMagicString(code);
+  transform(ms, ast, filename, {
+    specs: options.specs ?? DEFAULT_LOG_META_TRANSFORM_SPEC,
+    registerFiles: options.registerFiles ?? false,
+  });
+  const next = ms.toString();
+  return next === code ? null : next;
+};
+```
+
+(c) `computeLogMetaEdits` — accept options and extend the preamble text:
+```ts
+export function computeLogMetaEdits(
+  program: Program,
+  code: string,
+  specs: LogMetaTransformSpec[],
+  displayPath: string,
+  options: { registerFiles?: boolean } = {},
+): LogMetaEdit[] {
+  if (specs.length === 0) {
+    return [];
+  }
+
+  const bindings = collectImportBindings(program, specs);
+  if (bindings.size === 0) {
+    return [];
+  }
+
+  const edits: LogMetaEdit[] = [];
+  const preambleAt = preambleInsertIndex(program);
+  const leadingNewline = preambleAt > 0 && code[preambleAt - 1] !== '\n' ? '\n' : '';
+  const registration = options.registerFiles
+    ? 'globalThis.DX_LOG_FILES&&globalThis.DX_LOG_FILES.register(__dxlog_file);\n'
+    : '';
+  edits.push({
+    pos: preambleAt,
+    text: `${leadingNewline}var __dxlog_file=${JSON.stringify(displayPath)};\n${registration}`,
+  });
+
+  // ... unchanged Visitor block ...
+```
+(Leave the `new Visitor({...})` body and the rest of the function exactly as-is.)
+
+- [ ] **Step 4: Add the option to definitions and the rolldown context type**
+
+In `tools/vite-plugin-log/src/definitions.ts`, add to `LogMetaTransformOptions`:
+```ts
+  /** Inject a `globalThis.DX_LOG_FILES.register(...)` line per module (dev only). @default false */
+  registerFiles?: boolean;
+```
+
+- [ ] **Step 5: Have the Vite plugin enable it in serve mode**
+
+In `tools/vite-plugin-log/src/plugin.ts`, the meta-transform hook already tracks `isServe` (set in `configResolved`). In the `handler`, the `doMetaTransform` branch calls `transform(ms, program, metaOptions!.filename ?? id, { specs: metaOptions!.to_transform })`. Change that call to:
+```ts
+transform(ms, program, metaOptions!.filename ?? id, {
+  specs: metaOptions!.to_transform,
+  registerFiles: isServe,
+});
+```
+Also update `rolldownLogMetaTransform` (standalone) to forward `options.registerFiles` (default false):
+```ts
+transform(ms, ctx.ast, options.filename ?? ctx.id, {
+  specs: options.to_transform,
+  registerFiles: options.registerFiles ?? false,
+});
+```
+
+- [ ] **Step 6: Run the transform tests (full file — this is the shared transform)**
+
+Run: `moon run vite-plugin-log:test -- src/transform.test.ts`
+Expected: PASS, including the two new tests and all pre-existing preamble assertions (which still see `var __dxlog_file="src/module.ts";` — the registration line is only added when `registerFiles` is passed, and existing tests don't pass it).
+
+- [ ] **Step 7: Build the plugin**
+
+Run: `moon run vite-plugin-log:build`
+Expected: PASS.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add tools/vite-plugin-log/src/definitions.ts tools/vite-plugin-log/src/transform.ts tools/vite-plugin-log/src/plugin.ts tools/vite-plugin-log/src/transform.test.ts
+git commit -m "vite-plugin-log: dev-mode module-load registration into DX_LOG_FILES"
+```
+
+---
+
+### Task 5: `Logger.Root` — headless provider (registry + stream, filter composition)
+
+**Files:**
+- Create: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (Root only; later tasks append parts)
+
+**Interfaces:**
+- Consumes: `formatLogEntry` from `./format`; `logFileRegistry` from `@dxos/log`.
+- Produces (via `useLoggerContext('<part>')`):
   ```ts
   type LevelName = 'trace' | 'debug' | 'verbose' | 'info' | 'warn' | 'error';
   type LogRow = { id: number; entry: LogEntry };
   type LoggerContextValue = {
     rows: LogRow[];
-    filter: string;                                   // base filter text
-    setFilter: (filter: string) => void;
-    recording: boolean;
-    setRecording: (fn: (value: boolean) => boolean) => void;
-    files: string[];                                  // sorted unique entry.meta.F seen
+    filter: string; setFilter: (filter: string) => void;
+    recording: boolean; setRecording: (fn: (value: boolean) => boolean) => void;
+    files: string[];                                  // registry ∪ stream, sorted
     fileLevels: Map<string, LevelName>;
-    setFileLevel: (file: string, level: LevelName | undefined) => void;  // undefined clears
+    setFileLevel: (file: string, level: LevelName | undefined) => void;
     clearFileLevels: () => void;
-    expanded: Set<number>;
-    toggleExpand: (id: number) => void;
-    clear: () => void;
-    copyAll: () => void;
+    expanded: Set<number>; toggleExpand: (id: number) => void;
+    clear: () => void; copyAll: () => void;
   };
   ```
-  Also produces the shared constants `LEVELS`, `levelColor`, and the exported `LoggerRootProps`.
+  Also exports `LEVELS`, `levelColor`, `copyToClipboard`, `composeFilter`, `useLoggerContext`, `LoggerRootProps`, `LevelName`.
 
-- [ ] **Step 1: Write `Logger.tsx` with the Root provider**
+- [ ] **Step 1: Write `Logger.tsx` with shared helpers + Root**
 
 Create `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx`:
 
@@ -124,7 +472,7 @@ Create `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx`:
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type LogConfig, type LogEntry, LogLevel, type LogOptions, log, shouldLog } from '@dxos/log';
+import { type LogConfig, type LogEntry, LogLevel, type LogOptions, log, logFileRegistry, shouldLog } from '@dxos/log';
 
 import { formatLogEntry } from './format';
 
@@ -174,7 +522,7 @@ type LogRow = { id: number; entry: LogEntry };
 
 // Compose the base filter with per-file overrides into a single @dxos/log filter string.
 // Order-independent: an override below the base level raises that file's verbosity; above, it quiets it.
-const composeFilter = (base: string, fileLevels: Map<string, LevelName>): string =>
+export const composeFilter = (base: string, fileLevels: Map<string, LevelName>): string =>
   [base, ...[...fileLevels].map(([file, level]) => `${file}:${level}`)].filter(Boolean).join(', ');
 
 //
@@ -220,7 +568,23 @@ const LoggerRoot = ({
   const [rows, setRows] = useState<LogRow[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [fileLevels, setFileLevels] = useState<Map<string, LevelName>>(new Map());
-  const [files, setFiles] = useState<string[]>([]);
+  const [files, setFiles] = useState<string[]>(() => logFileRegistry.getFiles());
+
+  // Union any newly seen file into the sorted set (registry load-time entries and stream entries alike).
+  const addFile = useCallback((file: string) => {
+    setFiles((prev) => (prev.includes(file) ? prev : [...prev, file].sort()));
+  }, []);
+
+  // Track files registered at module load (dev registry), unioned with the initial snapshot.
+  useEffect(() => {
+    const sync = () => {
+      for (const file of logFileRegistry.getFiles()) {
+        addFile(file);
+      }
+    };
+    sync();
+    return logFileRegistry.subscribe(sync);
+  }, [addFile]);
 
   // Normalize the public prop: a non-positive or non-finite bound would defeat `slice(-capacity)`.
   const capacity = useMemo(
@@ -251,7 +615,7 @@ const LoggerRoot = ({
     const dispose = log.addProcessor((config: LogConfig, entry: LogEntry) => {
       const file = entry.meta?.F;
       if (file) {
-        setFiles((prev) => (prev.includes(file) ? prev : [...prev, file].sort()));
+        addFile(file);
       }
       if (shouldLog(entry, config.filters)) {
         setRows((prev) => [...prev, { id: nextRowId.current++, entry }].slice(-capacity));
@@ -259,7 +623,7 @@ const LoggerRoot = ({
     });
 
     return () => dispose();
-  }, [recording, effectiveFilter, capacity]);
+  }, [recording, effectiveFilter, capacity, addFile]);
 
   // Drop expansion state for evicted rows so the set stays bounded (no-op while nothing is expanded).
   useEffect(() => {
@@ -323,41 +687,31 @@ const LoggerRoot = ({
 
 LoggerRoot.displayName = 'Logger.Root';
 
-//
-// Logger (namespace assembled in a later task)
-//
-
 export { useLoggerContext };
 ```
 
-- [ ] **Step 2: Verify it type-checks**
+- [ ] **Step 2: Verify build**
 
 Run: `moon run react-ui-debug:build`
-Expected: PASS (Root compiles; no parts referenced yet). If `createContext` typing complains about the tuple, confirm the import is from `@radix-ui/react-context` (not React).
+Expected: PASS.
 
 - [ ] **Step 3: Commit**
 
 ```bash
 git add packages/ui/react-ui-debug/src/components/Logger/Logger.tsx
-git commit -m "react-ui-debug: add headless Logger.Root with file discovery and filter composition"
+git commit -m "react-ui-debug: add headless Logger.Root (registry + stream, filter composition)"
 ```
 
 ---
 
-### Task 2b: Unit-test the filter composition
+### Task 6: `composeFilter` behavioral test
 
 **Files:**
-- Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (export `composeFilter`)
 - Create: `packages/ui/react-ui-debug/src/components/Logger/Logger.test.ts`
 
-**Interfaces:**
-- Consumes: `composeFilter(base: string, fileLevels: Map<string, LevelName>): string`.
+**Interfaces:** Consumes `composeFilter`, `LevelName` from `./Logger`.
 
-- [ ] **Step 1: Export `composeFilter`**
-
-In `Logger.tsx`, change `const composeFilter` to `export const composeFilter`.
-
-- [ ] **Step 2: Write the failing test**
+- [ ] **Step 1: Write the test**
 
 Create `packages/ui/react-ui-debug/src/components/Logger/Logger.test.ts`:
 
@@ -368,7 +722,7 @@ Create `packages/ui/react-ui-debug/src/components/Logger/Logger.test.ts`:
 
 import { describe, expect, test } from 'vitest';
 
-import { shouldLog, LogLevel, parseFilter } from '@dxos/log';
+import { LogLevel, parseFilter, shouldLog } from '@dxos/log';
 
 import { composeFilter, type LevelName } from './Logger';
 
@@ -379,71 +733,67 @@ describe('composeFilter', () => {
     expect(composeFilter('info', new Map())).toBe('info');
   });
 
-  test('appends per-file overrides', () => {
-    const map = new Map<string, LevelName>([['a.ts', 'debug'], ['b.ts', 'error']]);
+  test('appends per-file overrides in insertion order', () => {
+    const map = new Map<string, LevelName>([
+      ['a.ts', 'debug'],
+      ['b.ts', 'error'],
+    ]);
     expect(composeFilter('info', map)).toBe('info, a.ts:debug, b.ts:error');
   });
 
   test('override below base raises verbosity for that file only', () => {
     const filters = parseFilter(composeFilter('info', new Map([['a.ts', 'debug']])));
-    expect(shouldLog(entry(LogLevel.DEBUG, 'a.ts'), filters)).toBe(true); // raised
-    expect(shouldLog(entry(LogLevel.DEBUG, 'b.ts'), filters)).toBe(false); // still gated by base
+    expect(shouldLog(entry(LogLevel.DEBUG, 'a.ts'), filters)).toBe(true);
+    expect(shouldLog(entry(LogLevel.DEBUG, 'b.ts'), filters)).toBe(false);
   });
 
-  test('override above base quiets that file', () => {
+  test('override above base quiets that file only', () => {
     const filters = parseFilter(composeFilter('info', new Map([['a.ts', 'error']])));
-    expect(shouldLog(entry(LogLevel.INFO, 'a.ts'), filters)).toBe(false); // quieted
+    expect(shouldLog(entry(LogLevel.INFO, 'a.ts'), filters)).toBe(false);
     expect(shouldLog(entry(LogLevel.ERROR, 'a.ts'), filters)).toBe(true);
-    expect(shouldLog(entry(LogLevel.INFO, 'b.ts'), filters)).toBe(true); // base unaffected
+    expect(shouldLog(entry(LogLevel.INFO, 'b.ts'), filters)).toBe(true);
   });
 });
 ```
 
-- [ ] **Step 3: Run and verify it passes**
+- [ ] **Step 2: Run**
 
 Run: `moon run react-ui-debug:test -- src/components/Logger/Logger.test.ts`
-Expected: PASS (4 tests). This is the behavioral proof of the composition semantics.
+Expected: PASS (4 tests). Behavioral proof of the raise/quiet semantics.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add packages/ui/react-ui-debug/src/components/Logger/Logger.tsx packages/ui/react-ui-debug/src/components/Logger/Logger.test.ts
+git add packages/ui/react-ui-debug/src/components/Logger/Logger.test.ts
 git commit -m "react-ui-debug: test Logger filter composition raise/quiet semantics"
 ```
 
 ---
 
-### Task 3: `Logger.Toolbar`, `Logger.Content`, `Logger.List` presentational parts
+### Task 7: `Logger.Toolbar`, `Logger.Content`, `Logger.List` + translations
 
 **Files:**
-- Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (append parts; add imports)
-- Modify: `packages/ui/react-ui-debug/src/translations.ts` (levels keys — done here so the Toolbar's Levels button label resolves)
+- Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (append parts, extend imports)
+- Modify: `packages/ui/react-ui-debug/src/translations.ts`
 
 **Interfaces:**
 - Consumes: `useLoggerContext`, `LEVELS`, `levelColor`, `copyToClipboard`, `formatLogEntry`.
-- Produces: `LoggerToolbar`, `LoggerContent`, `LoggerList` (+ Props types). The Toolbar renders the Levels popover **trigger**; the popover **content** (`Logger.Levels`) is added in Task 4 — for this task the trigger is a plain `IconButton` placeholder wrapped so Task 4 only swaps its surrounding `Popover`.
+- Produces: `LoggerToolbar`, `LoggerContent`, `LoggerList` (+ Props). Toolbar references `<LoggerLevels />`; Task 8 replaces its stub.
 
 - [ ] **Step 1: Add translation keys**
 
-In `packages/ui/react-ui-debug/src/translations.ts`, add inside the `[translationKey]` object (after `'copy-entry.label'`):
-
+In `packages/ui/react-ui-debug/src/translations.ts`, add inside the `[translationKey]` object after `'copy-entry.label'`:
 ```ts
         'levels.label': 'Log levels',
         'levels.title': 'Per-file log levels',
         'levels.clear': 'Reset all',
         'levels.inherit': 'Inherit',
-        'levels.empty': 'No files have logged yet.',
+        'levels.empty': 'No log files registered yet.',
 ```
 
-- [ ] **Step 2: Extend imports at the top of `Logger.tsx`**
+- [ ] **Step 2: Extend `Logger.tsx` imports**
 
-Add (react-ui named imports, merged into a single grouped import block):
-
-```tsx
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-```
-and replace the `@dxos/log`-only external group by also importing from `@dxos/react-ui` and `@dxos/ui-theme`:
+Add the external/dxos imports (keep groups ordered — external, then `@dxos/log`, then `@dxos/react-ui`, then `@dxos/ui-theme`, then `../../translations`, then `./format`):
 ```tsx
 import {
   IconButton,
@@ -459,11 +809,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 ```
-(Keep import groups ordered: external radix → `@dxos/log` → `@dxos/react-ui` → `@dxos/ui-theme` → parent `../../translations` → sibling `./format`.)
 
-- [ ] **Step 3: Append the Toolbar part**
-
-Append to `Logger.tsx` (before the namespace section):
+- [ ] **Step 3: Append Toolbar (with a temporary Levels stub)**
 
 ```tsx
 //
@@ -474,7 +821,7 @@ export type LoggerToolbarProps = ThemedClassName<{}>;
 
 const LoggerToolbar = ({ classNames }: LoggerToolbarProps) => {
   const { t } = useTranslation(translationKey);
-  const { filter, setFilter, recording, setRecording, fileLevels, clear, copyAll } = useLoggerContext('Logger.Toolbar');
+  const { filter, setFilter, recording, setRecording, clear, copyAll } = useLoggerContext('Logger.Toolbar');
 
   // A bare level matching the filter selects it; a scoped filter shows no selection.
   const selectedLevel = (LEVELS as readonly string[]).includes(filter) ? filter : '';
@@ -523,17 +870,13 @@ const LoggerToolbar = ({ classNames }: LoggerToolbarProps) => {
 };
 
 LoggerToolbar.displayName = 'Logger.Toolbar';
-```
 
-Note: `<LoggerLevels />` (the popover trigger+content) is defined in Task 4. To keep this task independently buildable, add a temporary stub immediately below the Toolbar:
-
-```tsx
 // Temporary stub — replaced by the full Levels popover in the next task.
 const LoggerLevels = () => null;
 LoggerLevels.displayName = 'Logger.Levels';
 ```
 
-- [ ] **Step 4: Append the Content part**
+- [ ] **Step 4: Append Content**
 
 ```tsx
 //
@@ -566,7 +909,7 @@ const LoggerContent = ({ classNames, children }: LoggerContentProps) => {
 LoggerContent.displayName = 'Logger.Content';
 ```
 
-- [ ] **Step 5: Append the List part (rows extracted from today's `LogPanel`)**
+- [ ] **Step 5: Append List**
 
 ```tsx
 //
@@ -627,10 +970,10 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
 LoggerList.displayName = 'Logger.List';
 ```
 
-- [ ] **Step 6: Verify build**
+- [ ] **Step 6: Build**
 
 Run: `moon run react-ui-debug:build`
-Expected: PASS. (Slot/Primitive imported but currently unused is fine only if referenced; if the build errors on unused imports, defer the `Slot`/`Primitive` import to Task 5 where `asChild` uses them — see Task 5 Step 1.)
+Expected: PASS.
 
 - [ ] **Step 7: Commit**
 
@@ -641,20 +984,16 @@ git commit -m "react-ui-debug: add Logger Toolbar/Content/List parts and levels 
 
 ---
 
-### Task 4: `Logger.Levels` — per-file level popover
+### Task 8: `Logger.Levels` — per-file level popover
 
 **Files:**
-- Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (replace the `LoggerLevels` stub with the real part; add `Popover` to the `@dxos/react-ui` import)
+- Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (replace the stub; add `Popover` import)
 
-**Interfaces:**
-- Consumes: `useLoggerContext`, `LEVELS`, `files`, `fileLevels`, `setFileLevel`, `clearFileLevels`.
-- Produces: `LoggerLevels` (+ `LoggerLevelsProps`). Replaces the Task 3 stub; still referenced as `<LoggerLevels />` inside the Toolbar.
+**Interfaces:** Consumes `useLoggerContext`, `LEVELS`, `files`, `fileLevels`, `setFileLevel`, `clearFileLevels`. Produces `LoggerLevels` (+ `LoggerLevelsProps`).
 
-- [ ] **Step 1: Add `Popover` to the react-ui import** in `Logger.tsx` (insert `Popover,` into the named import block, keeping alpha order after `Input`).
+- [ ] **Step 1: Add `Popover` to the react-ui import** (insert `Popover,` after `Input,`).
 
-- [ ] **Step 2: Replace the stub with the real Levels part**
-
-Delete the temporary `LoggerLevels = () => null` stub and add:
+- [ ] **Step 2: Replace the `LoggerLevels = () => null` stub**
 
 ```tsx
 //
@@ -695,7 +1034,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
             {files.length === 0 && <div className='p-1 text-xs text-subdued'>{t('levels.empty')}</div>}
             {files.map((file) => {
               const basename = file.split('/').pop() ?? file;
-              const value = fileLevels.get(file) ?? '';
+              const value = fileLevels.get(file) ?? 'inherit';
               return (
                 <div key={file} className='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'>
                   <span className='truncate text-xs' title={file}>
@@ -703,14 +1042,14 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                   </span>
                   <Select.Root
                     value={value}
-                    onValueChange={(next) => setFileLevel(file, next === '' ? undefined : (next as LevelName))}
+                    onValueChange={(next) => setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))}
                   >
                     <Select.TriggerButton classNames='is-full text-sm' placeholder={t('levels.inherit')} />
                     <Select.Portal>
                       <Select.Content>
                         <Select.ScrollUpButton />
                         <Select.Viewport>
-                          <Select.Option value='' classNames='text-sm'>
+                          <Select.Option value='inherit' classNames='text-sm'>
                             {t('levels.inherit')}
                           </Select.Option>
                           {LEVELS.map((level) => (
@@ -737,10 +1076,9 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
 
 LoggerLevels.displayName = 'Logger.Levels';
 ```
+(Uses the `'inherit'` sentinel rather than an empty-string Select value — Radix Select disallows `value=''`.)
 
-Note: verify `Select.Option value=''` is accepted (empty string is falsy but valid). If the underlying Radix Select rejects an empty-string value, use the sentinel `'inherit'` instead and map it: `value={fileLevels.get(file) ?? 'inherit'}` and `onValueChange={(next) => setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))}`. Confirm by grepping an existing `Select.Option value=''` in the repo before choosing; default to the `'inherit'` sentinel if none exists.
-
-- [ ] **Step 3: Verify build**
+- [ ] **Step 3: Build**
 
 Run: `moon run react-ui-debug:build`
 Expected: PASS.
@@ -754,21 +1092,19 @@ git commit -m "react-ui-debug: add Logger.Levels per-file log-level popover"
 
 ---
 
-### Task 5: Namespace assembly, barrel, and delete `LogPanel`
+### Task 9: Namespace assembly, barrel, delete `LogPanel`
 
 **Files:**
-- Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (namespace object + exports)
+- Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (namespace + exports)
 - Create: `packages/ui/react-ui-debug/src/components/Logger/index.ts`
 - Modify: `packages/ui/react-ui-debug/src/components/index.ts`
-- Delete: `packages/ui/react-ui-debug/src/components/LogPanel/LogPanel.tsx`, `LogPanel.stories.tsx`, `index.ts`
+- Delete: `LogPanel/LogPanel.tsx`, `LogPanel/LogPanel.stories.tsx`, `LogPanel/index.ts`
 
-**Interfaces:**
-- Produces: `Logger = { Root, Toolbar, Content, List, Levels }` and all `Logger*Props`; barrel re-exports `./Logger` and `./format`.
+**Interfaces:** Produces `Logger = { Root, Toolbar, Content, List, Levels }` + all `Logger*Props`.
 
 - [ ] **Step 1: Assemble the namespace at the end of `Logger.tsx`**
 
-Replace the trailing `export { useLoggerContext };` section with:
-
+Replace the trailing `export { useLoggerContext };` with:
 ```tsx
 //
 // Logger
@@ -786,16 +1122,7 @@ export { useLoggerContext };
 export type { LoggerContentProps, LoggerLevelsProps, LoggerListProps, LoggerRootProps, LoggerToolbarProps };
 ```
 
-(If any earlier `export type`/`export` on the individual Props caused duplicate-export errors, keep the declarations un-exported at definition and export them only in this block.)
-
-- [ ] **Step 2: Confirm `asChild`/Slot usage**
-
-The parts above render fixed primitives (`Toolbar.Root`, `ScrollArea.Root`, `div`) and do not need `asChild`. Remove the `Slot`/`Primitive` imports added in Task 3 Step 2 **if unused** to keep the build clean. (This composite is namespaced but not slot-forwarding; that matches the "consumers assemble" decision and the Panel wrapper supplies layout.)
-
-- [ ] **Step 3: Create the barrel**
-
-Create `packages/ui/react-ui-debug/src/components/Logger/index.ts`:
-
+- [ ] **Step 2: Create the barrel** `packages/ui/react-ui-debug/src/components/Logger/index.ts`:
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -805,10 +1132,7 @@ export * from './Logger';
 export * from './format';
 ```
 
-- [ ] **Step 4: Point `components/index.ts` at Logger**
-
-Replace `packages/ui/react-ui-debug/src/components/index.ts` body:
-
+- [ ] **Step 3: Point `components/index.ts` at Logger**
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -817,28 +1141,24 @@ Replace `packages/ui/react-ui-debug/src/components/index.ts` body:
 export * from './Logger';
 ```
 
-- [ ] **Step 5: Delete the old `LogPanel` files**
-
-Run:
+- [ ] **Step 4: Delete old files**
 ```bash
 git rm packages/ui/react-ui-debug/src/components/LogPanel/LogPanel.tsx \
        packages/ui/react-ui-debug/src/components/LogPanel/LogPanel.stories.tsx \
        packages/ui/react-ui-debug/src/components/LogPanel/index.ts
 ```
-Expected: `LogPanel/` dir removed (its `format.ts` was already moved in Task 1).
 
-- [ ] **Step 6: Verify no stale references**
+- [ ] **Step 5: Confirm no stale references**
 
 Run: `grep -rn "LogPanel" packages/ui/react-ui-debug/src`
 Expected: no output.
 
-- [ ] **Step 7: Build**
+- [ ] **Step 6: Build**
 
 Run: `moon run react-ui-debug:build`
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
-
+- [ ] **Step 7: Commit**
 ```bash
 git add packages/ui/react-ui-debug/src
 git commit -m "react-ui-debug: assemble Logger namespace; remove LogPanel"
@@ -846,20 +1166,18 @@ git commit -m "react-ui-debug: assemble Logger namespace; remove LogPanel"
 
 ---
 
-### Task 6: Update consumers + rework the story
+### Task 10: Update consumers + rework story
 
 **Files:**
 - Modify: `packages/plugins/plugin-debug/src/containers/LogStatus/LogStatus.tsx`
 - Modify: `packages/stories/storybook-testing/src/modules/LoggingModule.tsx`
 - Create: `packages/ui/react-ui-debug/src/components/Logger/Logger.stories.tsx`
 
-**Interfaces:**
-- Consumes: `Logger` from `@dxos/react-ui-debug`; `Panel`, `Toolbar` from `@dxos/react-ui`.
+**Interfaces:** Consumes `Logger` from `@dxos/react-ui-debug`; `Panel` (and `Toolbar` in the story) from `@dxos/react-ui`.
 
 - [ ] **Step 1: Update `LogStatus.tsx`**
 
-Replace the `import { LogPanel } from '@dxos/react-ui-debug';` with `import { Logger } from '@dxos/react-ui-debug';` and add `Panel` to the `@dxos/react-ui` import. Replace `<LogPanel />` inside the viewport with:
-
+Replace `import { LogPanel } from '@dxos/react-ui-debug';` with `import { Logger } from '@dxos/react-ui-debug';`, add `Panel` to the `@dxos/react-ui` import, and replace `<LogPanel />` inside the `Popover.Viewport` with:
 ```tsx
 <Logger.Root>
   <Panel.Root classNames='bs-full'>
@@ -876,7 +1194,6 @@ Replace the `import { LogPanel } from '@dxos/react-ui-debug';` with `import { Lo
 ```
 
 - [ ] **Step 2: Update `LoggingModule.tsx`**
-
 ```tsx
 //
 // Copyright 2026 DXOS.org
@@ -907,9 +1224,9 @@ export const LoggingModule = () => (
 );
 ```
 
-- [ ] **Step 3: Create the reworked story**
+- [ ] **Step 3: Create `Logger.stories.tsx`**
 
-Create `packages/ui/react-ui-debug/src/components/Logger/Logger.stories.tsx`:
+First confirm the random helper name: `grep -n "arrayElement\|export" packages/common/random/src/index.ts` (or wherever `@dxos/random` exports). If `random.helpers.arrayElement` is absent, use `FILES[i % FILES.length]` keyed off a counter. Then create:
 
 ```tsx
 //
@@ -930,11 +1247,11 @@ import { Logger } from './Logger';
 
 random.seed(123);
 
+const FILES = ['alpha.ts', 'beta.ts', 'gamma.ts'];
+
 // Hand-written meta so entries appear to originate from distinct files, populating the Levels list.
 const emit = (file: string, level: 'info' | 'warn' | 'error') =>
   log[level](random.lorem.sentences(), {}, { F: file, L: 1 } as any);
-
-const FILES = ['alpha.ts', 'beta.ts', 'gamma.ts'];
 
 const DefaultStory = () => (
   <Logger.Root initialFilter='info'>
@@ -946,8 +1263,8 @@ const DefaultStory = () => (
               {file}
             </Toolbar.Button>
           ))}
-          <Toolbar.Button onClick={() => emit(random.helpers.arrayElement(FILES), 'warn')}>Warn</Toolbar.Button>
-          <Toolbar.Button onClick={() => emit(random.helpers.arrayElement(FILES), 'error')}>Error</Toolbar.Button>
+          <Toolbar.Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Toolbar.Button>
+          <Toolbar.Button onClick={() => emit(FILES[1], 'error')}>Error (beta)</Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
@@ -983,11 +1300,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 ```
 
-Note: confirm `random.helpers.arrayElement` exists in `@dxos/random`; if not, use `FILES[Math.floor(...)]` alternative already seeded, or `random.number({ min: 0, max: FILES.length - 1 })`. Grep `@dxos/random` exports before finalizing.
-
-- [ ] **Step 4: Verify build + no stale refs**
-
-Run:
+- [ ] **Step 4: Build + no stale refs**
 ```bash
 grep -rn "LogPanel" packages/plugins/plugin-debug/src packages/stories/storybook-testing/src
 moon run react-ui-debug:build && moon run plugin-debug:build
@@ -995,7 +1308,6 @@ moon run react-ui-debug:build && moon run plugin-debug:build
 Expected: first command no output; builds PASS.
 
 - [ ] **Step 5: Commit**
-
 ```bash
 git add packages/plugins/plugin-debug/src/containers/LogStatus/LogStatus.tsx packages/stories/storybook-testing/src/modules/LoggingModule.tsx packages/ui/react-ui-debug/src/components/Logger/Logger.stories.tsx
 git commit -m "react-ui-debug: migrate LogStatus + storybook consumers to Logger composite"
@@ -1003,47 +1315,23 @@ git commit -m "react-ui-debug: migrate LogStatus + storybook consumers to Logger
 
 ---
 
-### Task 7: Format, lint, and manual Storybook verification
+### Task 11: Format, lint, and manual verification
 
-**Files:** none (verification only, plus any format/lint fixups).
+**Files:** none (verification + any fixups).
 
-- [ ] **Step 1: Format**
-
-Run: `pnpm format`
-Expected: files reformatted; stage them.
-
-- [ ] **Step 2: Lint the package**
-
-Run: `moon run react-ui-debug:lint -- --fix`
-Expected: PASS (no errors). Fix any import-order or naming issues surfaced.
-
-- [ ] **Step 3: Test**
-
-Run: `moon run react-ui-debug:test`
-Expected: PASS (includes `Logger.test.ts`).
-
-- [ ] **Step 4: Manual verification in Storybook**
-
-Reuse the user's server on :9009 (do not kill it): `curl -s localhost:9009 >/dev/null && echo up`. If down, start on a different port: `moon run storybook-react:serve` (or `-- --port 9010`). Open `ui/react-ui-debug/Logger` → Default.
-
-Verify:
-1. Click `alpha.ts` / `beta.ts` / `gamma.ts` → info lines appear (base `info`).
-2. Open the Levels popover (sliders icon) → all three files listed.
-3. Set `alpha.ts` → `debug`; the base filter shows `info`. Emit from alpha (there is no debug button, so temporarily lower the base to `trace`… — instead verify quiet path, which is observable with the existing buttons):
-   - Set `beta.ts` → `error`. Click `beta.ts` (info) → **suppressed**; click Error until beta is chosen → its error line shows. Other files' info still shows.
-   - Set `beta.ts` → `Inherit` → its info lines appear again.
-4. Confirm the Levels trigger shows the active-state color while any override is set, and `Reset all` clears overrides.
-
-Capture a screenshot of the panel with an override applied (`computer` screenshot) to attach as proof.
-
-- [ ] **Step 5: Final format check + commit any fixups**
-
-Run: `pnpm format && git status --short`
-Expected: clean or staged fixups.
-
+- [ ] **Step 1: Format** — `pnpm format`; stage results.
+- [ ] **Step 2: Lint** — `moon run react-ui-debug:lint -- --fix` and `moon run log:lint -- --fix` and `moon run vite-plugin-log:lint -- --fix`. Expected: PASS; fix import-order/naming issues.
+- [ ] **Step 3: Tests** — `moon run log:test`, `moon run vite-plugin-log:test`, `moon run react-ui-debug:test`. Expected: PASS.
+- [ ] **Step 4: Manual Storybook verification.** Reuse the user's server on :9009 (`curl -s localhost:9009 >/dev/null && echo up`); if down, start on a different port. Open `ui/react-ui-debug/Logger` → Default.
+  1. Click `alpha.ts` / `beta.ts` / `gamma.ts` → info lines appear (base `info`).
+  2. Open the Levels popover (sliders icon) → the three files listed (from the stream; registry too if the plugin is active in this storybook).
+  3. Set `beta.ts` → `error`; click `beta.ts` (info) → suppressed; click `Error (beta)` → error line shows; other files' info still shows.
+  4. Set `beta.ts` → `Inherit` → beta info reappears; `Reset all` clears overrides and the trigger loses its active color.
+  Capture a screenshot with an override applied.
+- [ ] **Step 5: Final format + commit fixups**
 ```bash
-git add -A
-git commit -m "react-ui-debug: format and lint fixups for Logger composite"
+pnpm format && git status --short
+git add -A && git commit -m "react-ui-debug: format and lint fixups for Logger composite"
 ```
 
 ---
@@ -1051,15 +1339,17 @@ git commit -m "react-ui-debug: format and lint fixups for Logger composite"
 ## Self-Review
 
 **Spec coverage:**
-- Rename LogPanel → Logger composite (Root/Toolbar/Content/List) → Tasks 2–5. ✓
-- Headless Root → Task 2. ✓
-- Per-file level feature (any/all) → Levels part (Task 4) + composition (Task 2/2b). ✓
-- Files from live stream → Task 2 discovery in processor. ✓
-- Dedicated Levels section + popover → Task 4. ✓
-- Consumers assemble parts → Task 6. ✓
-- Keep in react-ui-debug → all tasks in-package. ✓
-- Testing/verification → Task 2b (unit) + Task 7 (build/lint/story). ✓
+- Rename LogPanel → Logger composite (Root/Toolbar/Content/List/Levels) → Tasks 5–10. ✓
+- Headless Root → Task 5. ✓
+- `@dxos/log` dev registry, file-list-only, global `DX_LOG_FILES` → Task 3. ✓
+- Module-load population via transform, dev-gated (`registerFiles: isServe`) → Task 4. ✓
+- Root unions registry + stream → Task 5. ✓
+- Per-file level UI (any/all) + composition → Tasks 6, 8. ✓
+- Dedicated Levels popover → Task 8. ✓
+- Consumers assemble parts → Task 10. ✓
+- format.test.ts relocation (Task 1 gap) → Task 2. ✓
 
-**Placeholder scan:** No TBD/TODO; every code step shows full code. The two "confirm before choosing" notes (empty-string Select value; `random` helper name) are explicit fallbacks with concrete alternatives, not placeholders.
+**Placeholder scan:** No TBD/TODO; every code step shows full code. The "confirm the random helper name" note in Task 10 carries a concrete fallback.
 
-**Type consistency:** `LevelName`, `LogRow`, `LoggerContextValue`, `composeFilter`, `setFileLevel(file, level|undefined)`, `Logger.{Root,Toolbar,Content,List,Levels}` used consistently across Tasks 2–6. Context accessor `useLoggerContext('<part>')` string matches each part's `displayName`.
+**Type consistency:** `LevelName`, `LogRow`, `LoggerContextValue`, `composeFilter`, `setFileLevel(file, level|undefined)`, `logFileRegistry.{register,getFiles,subscribe,clear}`, `registerFiles` option, and `Logger.{Root,Toolbar,Content,List,Levels}` are used consistently across tasks. `useLoggerContext('<part>')` strings match each part's `displayName`.
+```
