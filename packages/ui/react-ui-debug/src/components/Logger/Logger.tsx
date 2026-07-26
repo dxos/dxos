@@ -5,7 +5,16 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type LogConfig, type LogEntry, LogLevel, type LogOptions, log, logFileRegistry, shouldLog } from '@dxos/log';
+import {
+  type LogConfig,
+  type LogEntry,
+  LogLevel,
+  type LogOptions,
+  log,
+  logFileRegistry,
+  parseFilter,
+  shouldLog,
+} from '@dxos/log';
 import {
   Icon,
   IconButton,
@@ -46,23 +55,70 @@ export const levelColor = (level: LogLevel) =>
         ? 'text-info-text'
         : 'text-success-text';
 
-// Ref-counted global-config ownership so concurrent panels restore the original config only after the last stops.
-let activeRecorders = 0;
+// Registry of active recording sessions; each contributes its own filter so concurrent panels
+// compose the shared @dxos/log config instead of the last writer clobbering it.
+type ActiveRecorder = { filter: string };
+const activeRecorders = new Set<ActiveRecorder>();
 let sharedSavedOptions: LogOptions | undefined;
 
-const acquireLogConfig = (): void => {
-  if (activeRecorders === 0) {
-    sharedSavedOptions = log.runtimeConfig.options;
-  }
-  activeRecorders += 1;
+// Union of every active recorder's filter so the shared config (and other processors, e.g. the
+// console) capture at least what every panel wants; each recorder still self-filters its own view.
+const composeGlobalFilter = (): string =>
+  [...activeRecorders]
+    .map((recorder) => recorder.filter)
+    .filter(Boolean)
+    .join(', ');
+
+const applyGlobalFilter = (): void => {
+  log.config({ filter: composeGlobalFilter() });
 };
 
-const releaseLogConfig = (): void => {
-  activeRecorders = Math.max(0, activeRecorders - 1);
-  if (activeRecorders === 0 && sharedSavedOptions) {
-    log.config(sharedSavedOptions);
-    sharedSavedOptions = undefined;
+export interface LogRecorder {
+  /** Update this recorder's filter and recompose the shared global config. */
+  setFilter(filter: string): void;
+  /** Unregister; restores the saved global config once the last recorder stops. */
+  dispose(): void;
+}
+
+/**
+ * Register a recording session that self-filters its own entries (via its own parsed filter)
+ * while contributing that filter to the shared @dxos/log config. Because every entry is
+ * delivered to every processor, self-filtering — not the shared config — is what keeps
+ * concurrent recorders with divergent filters from clobbering each other's view.
+ */
+export const startLogRecording = (
+  filter: string,
+  onEntry: (entry: LogEntry, matched: boolean) => void,
+): LogRecorder => {
+  const recorder: ActiveRecorder = { filter };
+  if (activeRecorders.size === 0) {
+    sharedSavedOptions = log.runtimeConfig.options;
   }
+  activeRecorders.add(recorder);
+  applyGlobalFilter();
+
+  let filters = parseFilter(filter);
+  const dispose = log.addProcessor((_config: LogConfig, entry: LogEntry) => onEntry(entry, shouldLog(entry, filters)));
+
+  return {
+    setFilter: (next) => {
+      recorder.filter = next;
+      filters = parseFilter(next);
+      applyGlobalFilter();
+    },
+    dispose: () => {
+      dispose();
+      activeRecorders.delete(recorder);
+      if (activeRecorders.size === 0) {
+        if (sharedSavedOptions) {
+          log.config(sharedSavedOptions);
+          sharedSavedOptions = undefined;
+        }
+      } else {
+        applyGlobalFilter();
+      }
+    },
+  };
 };
 
 // Guard clipboard writes so rejected or unavailable writes surface rather than dangling as unhandled rejections.
@@ -166,35 +222,43 @@ const LoggerRoot = ({
   // Monotonic id so list keys stay stable once `slice(-capacity)` drops older rows.
   const nextRowId = useRef(0);
 
-  // Acquire/release the shared global-config ownership across the recording lifetime (ref-counted across panels).
-  useEffect(() => {
-    if (!recording) {
-      return;
-    }
-    acquireLogConfig();
-    return () => releaseLogConfig();
-  }, [recording]);
-
-  // Apply the composed filter and capture entries while recording; discover every file regardless of the display filter.
   const effectiveFilter = useMemo(() => composeFilter(filter, fileLevels), [filter, fileLevels]);
+
+  // Latest capacity/filter read from refs so the recording session (keyed on `recording`) never
+  // resubscribes its processor on every keystroke; filter changes are pushed via setFilter below.
+  const capacityRef = useRef(capacity);
+  capacityRef.current = capacity;
+  const effectiveFilterRef = useRef(effectiveFilter);
+  effectiveFilterRef.current = effectiveFilter;
+
+  // Register a self-filtering recording session for the recording lifetime; discover every file
+  // regardless of the display filter (every entry is delivered, only matches become rows).
+  const recorderRef = useRef<LogRecorder | undefined>(undefined);
   useEffect(() => {
     if (!recording) {
       return;
     }
 
-    log.config({ filter: effectiveFilter });
-    const dispose = log.addProcessor((config: LogConfig, entry: LogEntry) => {
+    const recorder = startLogRecording(effectiveFilterRef.current, (entry, matched) => {
       const file = entry.meta?.F;
       if (file) {
         addFile(file);
       }
-      if (shouldLog(entry, config.filters)) {
-        setRows((prev) => [...prev, { id: nextRowId.current++, entry }].slice(-capacity));
+      if (matched) {
+        setRows((prev) => [...prev, { id: nextRowId.current++, entry }].slice(-capacityRef.current));
       }
     });
+    recorderRef.current = recorder;
+    return () => {
+      recorder.dispose();
+      recorderRef.current = undefined;
+    };
+  }, [recording, addFile]);
 
-    return () => dispose();
-  }, [recording, effectiveFilter, capacity, addFile]);
+  // Push filter changes into the active recorder without tearing down the processor.
+  useEffect(() => {
+    recorderRef.current?.setFilter(effectiveFilter);
+  }, [effectiveFilter]);
 
   // Drop expansion state for evicted rows so the set stays bounded (no-op while nothing is expanded).
   useEffect(() => {

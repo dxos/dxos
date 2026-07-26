@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { LogEntry, LogLevel, parseFilter, shouldLog } from '@dxos/log';
+import { LogEntry, LogLevel, log, parseFilter, shouldLog } from '@dxos/log';
 
-import { type LevelName, composeFilter } from './Logger';
+import { type LevelName, composeFilter, startLogRecording } from './Logger';
 
 describe('composeFilter', () => {
   test('base only when no overrides', ({ expect }) => {
@@ -37,3 +37,34 @@ describe('composeFilter', () => {
 
 const entry = (level: LogLevel, file: string) =>
   new LogEntry({ level, message: '', meta: { F: file, L: 0, S: undefined }, timestamp: 0 });
+
+describe('startLogRecording', () => {
+  test('concurrent recorders each see only their own filtered entries', ({ expect }) => {
+    const debugLevels: LogLevel[] = [];
+    const errorLevels: LogLevel[] = [];
+    const debugRecorder = startLogRecording('debug', (rec, matched) => matched && debugLevels.push(rec.level));
+    const errorRecorder = startLogRecording('error', (rec, matched) => matched && errorLevels.push(rec.level));
+
+    log.debug('debug entry');
+    log.error('error entry');
+
+    debugRecorder.dispose();
+    errorRecorder.dispose();
+
+    // The stricter recorder is not clobbered by the more verbose one registered alongside it.
+    expect(debugLevels).toEqual([LogLevel.DEBUG, LogLevel.ERROR]);
+    expect(errorLevels).toEqual([LogLevel.ERROR]);
+  });
+
+  test('composes the shared global filter and restores it on release', ({ expect }) => {
+    const original = log.runtimeConfig.options.filter;
+    const first = startLogRecording('info', () => {});
+    const second = startLogRecording('error', () => {});
+
+    expect(log.runtimeConfig.options.filter).toBe('info, error');
+    second.dispose();
+    expect(log.runtimeConfig.options.filter).toBe('info');
+    first.dispose();
+    expect(log.runtimeConfig.options.filter).toBe(original);
+  });
+});
