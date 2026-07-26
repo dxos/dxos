@@ -206,3 +206,36 @@ Therefore:
    branch whose parent is the draft).
 3. **Timeline author colours (§1.5): PLANNED** — `Timeline` gains a per-branch colour input; the
    review timeline passes author hues.
+
+---
+
+## 5. Known risks
+
+Standing engineering concerns — each names its containment and, where one exists, the structural fix.
+
+1. **Heuristic accumulation in the diff pipeline.** The rendering path (word diff → applied-change
+   filter → delimiter pairing → grouping → rebase → decorations) carries several targeted rules:
+   hunk minimization, markdown delimiter pairing, edge-anchored rebase mapping, widget newline
+   splitting, block-vs-gutter change bars. Each is unit-tested; the risk is their interaction over
+   the full input space (many authors' overlapping edits × live main edits). Containment: the shared
+   scenarios (TEST-PLAN.md, "Shared scenarios") grow adversarially with every reported defect.
+   Direction: invariant/property tests over the pipeline (e.g. applying every hunk reconstructs the
+   proposal; no hunk strikes text common to both sides) to cover the space between examples.
+2. **The attach-reconcile is a patch on a racy handoff.** Swapping the automerge source through the
+   compartment leaves a window where the view's content is not the bound document's; the microtask
+   reconcile shrinks the window to near-zero but does not remove it. Structural fix (§3.3 endgame):
+   perform the swap as ONE CodeMirror transaction — reconfigure and content replace computed
+   together — so no gap can exist.
+3. **Whitespace residue keeps branches alive.** Bare paragraph-break hunks are hidden from cards and
+   unmarked in the overlay, so accepting every visible change can leave a whitespace-only diff on
+   the suggestion branch — which then never satisfies I-6's auto-archive. Direction: fold
+   whitespace-only hunks into the acceptance of their adjacent content hunk, or treat a
+   whitespace-only branch diff as empty for archiving.
+4. **Automated plays type by dispatch, not by key.** The CI storybook runner cannot produce real
+   keystrokes/IME, so defects in the DOM input path (composition, focus, frame scheduling) are
+   invisible to every automated tier and surface only under a real browser. Direction: a small
+   Playwright smoke test driving genuine typing against the storybook.
+5. **Focus restore polls.** After a view-mode selection the editor reclaims focus by bounded retry
+   (the menu returns focus to its trigger asynchronously after close). Cleaner fix: a menu-level
+   `onCloseAutoFocus` opt-out in the shared menu component, at the cost of touching menu machinery
+   shared by every dropdown.
