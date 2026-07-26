@@ -136,14 +136,14 @@ Manual + optional playwright/debug-port automation:
 
 ### Current inventory (`@dxos/sql-sqlite`)
 
-| File                                | Status             | Covers                                    |
-| ----------------------------------- | ------------------ | ----------------------------------------- |
-| `sqlite-memory.browser.test.ts`     | ✅ active          | wa-sqlite in-memory CRUD                  |
+| File                                | Status            | Covers                                    |
+| ----------------------------------- | ----------------- | ----------------------------------------- |
+| `sqlite-memory.browser.test.ts`     | ✅ active         | wa-sqlite in-memory CRUD                  |
 | `opfs-worker.browser.test.ts`       | ⏭ `describe.skip` | Effect `SqliteClient.layer` + OPFS worker |
 | `sqlite-idb.browser.test.ts`        | ⏭ skip            | IDBBatchAtomicVFS (broken)                |
 | `sqlite-effect-idb.browser.test.ts` | ⏭ skip            | Effect client + IDB VFS                   |
-| `opfs-pool-sync.ts`                 | ❌ none            | Pool header write (critical for recovery) |
-| `OpfsWorker.ts` import/export       | ❌ none            | deserialize + VACUUM path                 |
+| `opfs-pool-sync.ts`                 | ❌ none           | Pool header write (critical for recovery) |
+| `OpfsWorker.ts` import/export       | ❌ none           | deserialize + VACUUM path                 |
 
 Package config: [vitest.config.ts](../../packages/common/sql-sqlite/vitest.config.ts) — browser project `chromium`; moon tag `ts-test-browser`.
 

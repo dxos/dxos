@@ -69,6 +69,15 @@ export const mergeBranch = (obj: Obj.Unknown, name: string, opts?: { deleteAfter
 };
 
 /**
+ * Fold main's changes INTO a branch (the reverse of {@link mergeBranch}); the branch becomes
+ * "main + its own changes", so diffing it against main yields only the branch's edits.
+ */
+export const syncBranch = (obj: Obj.Unknown, name: string): Promise<void> => {
+  const { db, id } = resolve(obj);
+  return db.syncBranch(id, name);
+};
+
+/**
  * Delete a branch (its documents lose their sync reference). Cannot delete `'main'`.
  */
 export const deleteBranch = (obj: Obj.Unknown, name: string): void => {

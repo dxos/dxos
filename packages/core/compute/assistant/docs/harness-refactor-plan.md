@@ -271,11 +271,7 @@ handle =
 - [ ] **Step 6: Write a test** that spawns the agent process and drives the RPC:
 
 ```ts
-const handle =
-  yield *
-  manager.spawn(agentProcess /* AgentService executable */, {
-    /* target */
-  });
+const handle = yield * manager.spawn(agentProcess /* AgentService executable */, {/* target */});
 yield * handle.rpc.setAlarm({ at: DateTime.unsafeNow(), message: 'wake' });
 // assert the process hibernates with a pending alarm / fires via TestClock
 ```
@@ -402,14 +398,7 @@ bound as a blueprint. Read the `operations` and `blueprints` skills first.
 test('agent schedules a self-wake via the alarm blueprint', ({ expect }) =>
   Effect.gen(function* () {
     // bind alarm blueprint, drive a turn that calls set-alarm, advance TestClock, assert wake
-  }).pipe(
-    Effect.provide(
-      AssistantTestLayer({
-        /* ... */
-      }),
-    ),
-    runTest,
-  ));
+  }).pipe(Effect.provide(AssistantTestLayer({/* ... */})), runTest));
 ```
 
 - [ ] **Step 2: Implement `set-alarm` operation** — parse `{ in, at }` (move `resolveWakeAt`

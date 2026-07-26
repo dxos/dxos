@@ -1,8 +1,8 @@
 # Document Revisions & Branches — Tasks
 
-_Resume: PR #12315 OPEN for eval. Comment-click bugs FIXED + comments() seam refactored (dedupe extension, posAtCoords hit-test, threads→commentSync port, 2px highlight padding — all pushed). Uncommitted: none. NEXT: address PR #12315 review comments; then user evals + merges. Autonomous-debug note: mcp browser pane has a 0-viewport (no positioned clicks) — use the vitest storybook chromium harness; storybook running on :9009. Then DECIDE §0 (view-mode↔review-mode coupling) and the comment-decoration-as-layer question (recommended NO full rewrite)._
+_Resume: user runs the F1–F6 walkthrough (TEST-PLAN.md) against the worktree storybook on :9010; PR #12339 OPEN, auto-merge OFF (user: no landing until they test). All suites green locally. Uncommitted: none. Last: session fix arc — suggestion doubling (diffHunks minimize), dead automerge binding on mode swap (microtask attach-reconcile), anchor-stable rebase, focus restore after the view-mode menu, widget-carried change bars, atomic markdown delimiter pairs (+ table scenarios), tag-only author chips, DESIGN.md §5 known risks._
 
-Design: [`packages/plugins/plugin-comments/DESIGN.md`](../../../packages/plugins/plugin-comments/DESIGN.md).
+Design: [`packages/plugins/plugin-review/DESIGN.md`](../../../packages/plugins/plugin-review/DESIGN.md) (spec, invariants, §5 known risks).
 Test plan + follow-along script: [`TEST-PLAN.md`](TEST-PLAN.md).
 
 ## OPEN DECISION (2026-07-23) — view-mode ↔ review-mode coupling (reported "buggy")
@@ -489,7 +489,7 @@ Workstream folded in from `claude/markdown-selection-assistant-visibility-833995
       (resolves workspace/catalog specifiers; dry-run verified 0 unresolved). User to run first publish.
 - [ ] **PR #12333 land** (CI deliberately unwatched until confirmed working; re-arm via land skill).
 - [ ] History companion walkthrough in serve-min (story battery covers it; in-app pass pending).
-- [ ] PLUGIN.mdl rewrite for merged plugin-review.
+- [x] PLUGIN.mdl rewrite for merged plugin-review — done (a166743): org.dxos.plugin.review, records the merged surface (binding hook, lifecycle, suggestions, history, comments/agent) + acceptance mapped to the real suites.
 - [x] **Plugin-key settings migration: DECIDED 2026-07-25 — no migration.** Merging plugin-comments and
       plugin-versioning into `org.dxos.plugin.review` retires both old keys, so an existing user's
       enabled-plugin list names two plugins that no longer exist and not the one replacing them: comments
@@ -670,3 +670,71 @@ S2, S3 and S6 run headlessly by the agent after the main-merge:
 
 **Assessment:** the mode-switch/bind lifecycle (F1.2, F1.7, F1.1) is one state machine failing in
 different ways — needs a designed model + headless unit tests, not more per-symptom patches.
+
+### Lifecycle design executed (2026-07-25)
+
+All four steps of `agents/superpowers/specs/2026-07-25-review-mode-lifecycle-design.md` landed:
+fast-forward (F1.2), pure `deriveBinding` + transition table, permanent change-bar gutter (F1.1),
+stale-readonly resolution (F1.7), and the MarkdownArticle event collapse — the dropdown now forwards
+one `ViewModeSelection` to the binding, and `applyViewModeSelection` writes both halves of the
+(review mode, view mode) pair atomically, so the F1.7 class of contradiction cannot be stored.
+Verified live: Suggesting → Read only → Suggesting through the real dropdown ends editable with
+overlays restored. Remaining: F1.5 (bullet-deletion grouping), F1.6 (rebind flicker), S1.8 (timeline
+colours), walkthrough re-run.
+
+### F1 re-run (2026-07-25, post-collapse build) — FAILED on step 1
+
+- [x] **G1 FIXED — same-view branch swap (DESIGN §3.3).** Ambient postures share one editorKey; the automerge source swaps through a live compartment; `SuggestingSwapTest` asserts one DOM node + caret survival.
+- [ ] **G2 Clicking the last line toggles the view back to Markdown** (spurious mode change from a click). UNVERIFIED since the swap rework — retest in F1.
+- [ ] **G3 Comment highlight height changes across a mode round-trip** when a suggestion ends on the line
+      before it (layer geometry recomputed against the remounted editor).
+- [x] **G4 FIXED — I-2 reconciliation folds main IN.** `db.syncBranch` (CRDT merge main→branch) on every
+      Suggesting re-entry with a stale anchor; identity-stable (never re-fork); `branch.test.ts` covers
+      unedited + edited branches.
+- [ ] **G5 Caret jumps UP to the end of the last suggestion** when pressing down on the last line. Partially addressed by anchor-stable rebase (typing at a trailing suggestion lands after it) — retest in F1.
+- [x] **G6 FIXED** — no remount (same-view swap) + `RefocusEditor` hands focus back after a dropdown selection; scenario plays assert editor focus after every mode switch.
+
+## 2026-07-26 — spec reset, same-view swap, scenario harness, defect arc (session hydrate)
+
+Branch `claude/markdown-selection-assistant-visibility-833995`, PR
+[#12339](https://github.com/dxos/dxos/pull/12339) (OPEN; **auto-merge OFF — user lands after testing**).
+Spec: [`plugin-review/DESIGN.md`](../../../packages/plugins/plugin-review/DESIGN.md) (three layers,
+invariants I-1..I-9, §5 known risks); scripts: [`plugin-review/TEST-PLAN.md`](../../../packages/plugins/plugin-review/TEST-PLAN.md).
+
+- [x] **DESIGN.md rewritten** as the living three-layer spec (feature set / infrastructure invariants,
+      each naming its enforcing test / CodeMirror architecture) + standalone TEST-PLAN.md (F1–F6).
+- [x] **I-2 reconciliation** — `syncBranch` (main→branch CRDT fold) replaces archive/re-fork; identity
+      stable; find-or-create serialized per (doc, creator).
+- [x] **Pure lifecycle model** — `deriveBinding` + `applyViewModeSelection` (review-lifecycle.ts), 18
+      table tests; one dropdown gesture writes the (posture, view-mode) pair atomically (I-9).
+- [x] **Same-view branch swap (DESIGN §3.3) proven** — `SuggestingSwapTest` green in CI: one EditorView
+      across Suggesting entry/exit, caret preserved, edits land on the branch, main untouched.
+- [x] **Shared scenarios** — definitions as data (`testing/scenarios.ts`, 8 scenarios) with two
+      executors: headless (`renderHook` + real EditorView) and storybook plays; step kinds incl.
+      expect-count / expect-clean-insert / expect-one-suggestion; focus + gutter invariants asserted on
+      every mode switch. TEST-PLAN documents the mechanism.
+- [x] **Per-author visibility (F2.7)** — `hiddenAuthors` ViewState aspect; source-level filtering
+      (overlay, bars, cards); tag-only toggle chips (`SuggestionAuthors` + story); `AuthorVisibilityTest`.
+- [x] **Defect arc (user repro: Hello/World/ZZZ on Default)** — four root causes, each red-tested at its
+      real tier first:
+      (1) `diffHunks` non-minimal replace → doubled text (minimize; word replaces keep granularity);
+      (2) rAF attach-reconcile never fires in throttled frames → dead binding, input lost/misplaced
+      (microtask; found via live browser forensics — plays type by dispatch and cannot see it);
+      (3) rebase mapped a trailing pure-insert anchor past text typed at it → input "in front"
+      (edge-at-edit-start maps to fromB);
+      (4) menu close returned focus to its trigger → caret stranded (`RefocusEditor`, bounded retry).
+- [x] **Rendering polish** — block-insert suggestions carry their own change bar (gutter no longer
+      tints the host line); widget newline runs unstyled (no stray bar/underline fragments).
+- [x] **Markdown markup** — delimiter pairs (`**`…`**` etc.) coalesce into one atomic suggestion
+      (`pairMarkupHunks`) and `cherryPickHunk`/`revertHunk` merge range-spanning hunks so accept/reject
+      apply the whole pair; scenarios: multi-word bold wrap, suggested table block, table-cell edit.
+- [x] **CodeRabbit round** — all inline threads fixed-or-answered and resolved (compare-view stays
+      editable by design; default binding steps off stale readonly; DESIGN §refs; no-cast identity).
+- [ ] **NEXT: user F1–F6 walkthrough** on the worktree storybook (:9010); fix reports by step number;
+      then land #12339 (user gate).
+- [ ] DESIGN §5 risks queue (post-walkthrough triage): atomic swap transaction (§3.3 endgame);
+      diff-pipeline invariant/property tests; whitespace-residue archiving; Playwright real-typing
+      smoke test; menu-level `onCloseAutoFocus`.
+- [ ] Backlog carried: F1.5 bullet-deletion grouping; F1.6 trailing-caret ergonomics; G2/G5 retest;
+      S1.8 / Decision 3 timeline author colours; suggest-against-draft (Decision 2);
+      `@dxos/plugin-review` first publish (user).

@@ -11,6 +11,7 @@ import {
   computeHunks,
   diffHunks,
   groupHunks,
+  pairMarkupHunks,
   rebaseHunks,
   rebaseHunksWith,
   revertHunk,
@@ -114,6 +115,43 @@ describe('diff hunks', () => {
   });
 });
 
+describe('pairMarkupHunks', () => {
+  test('a multi-word bold wrap coalesces into one atomic replace', ({ expect }) => {
+    const before = 'alpha bravo charlie delta.';
+    const hunks = diffHunks(before, 'alpha **bravo charlie** delta.');
+    expect(hunks).toHaveLength(2);
+    const paired = pairMarkupHunks(hunks, before);
+    expect(paired).toHaveLength(1);
+    expect(paired[0].removed).toBe('bravo charlie');
+    expect(paired[0].inserted).toBe('**bravo charlie**');
+  });
+
+  test('a single-word wrap is already one hunk and passes through', ({ expect }) => {
+    const before = 'alpha bravo charlie';
+    const hunks = pairMarkupHunks(diffHunks(before, 'alpha **bravo** charlie'), before);
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].inserted).toBe('**bravo**');
+  });
+
+  test('does not bridge across a line break or pair unrelated inserts', ({ expect }) => {
+    const before = 'alpha\nbravo';
+    const hunks = diffHunks(before, '**alpha\nbravo**');
+    expect(pairMarkupHunks(hunks, before)).toHaveLength(2);
+    const unrelated = diffHunks('one two three', 'one X two Y three');
+    expect(pairMarkupHunks(unrelated, 'one two three')).toHaveLength(2);
+  });
+
+  test('cherry-picking a pair-spanning range applies the whole pair', ({ expect }) => {
+    const current = 'alpha bravo charlie delta.';
+    const compare = 'alpha **bravo charlie** delta.';
+    // The paired hunk's range in `current` covers the wrapped words.
+    const splice = cherryPickHunk(current, compare, { start: 6, end: 19 });
+    expect(splice).toBeDefined();
+    const applied = current.slice(0, splice!.from) + splice!.insert + current.slice(splice!.from + splice!.del);
+    expect(applied).toBe(compare);
+  });
+});
+
 describe('diffHunks', () => {
   /** Apply every hunk's replacement to `before` (right-to-left so earlier offsets stay valid). */
   const applyAll = (before: string, hunks: DiffHunk[]): string =>
@@ -136,6 +174,36 @@ describe('diffHunks', () => {
     expect(hunks[0].from).toBe(hunks[0].to);
     expect(hunks[0].removed).toBe('');
     expect(hunks[0].inserted).toBe('two ');
+  });
+
+  test('an insert adjacent to identical text stays a pure insertion (minimal hunk)', ({ expect }) => {
+    // Word-level diffing sees `WorldHello` -> `WorldHelloWorld` as one changed word; the hunk must
+    // still not claim the unchanged `WorldHello` — a replace here strikes real document text and
+    // re-inserts it, which renders as doubled content.
+    const before = '# Hello WorldHello\n\n';
+    const hunks = diffHunks(before, '# Hello WorldHelloWorld\n\n');
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].removed).toBe('');
+    expect(hunks[0].inserted).toBe('World');
+    expect(hunks[0].from).toBe(hunks[0].to);
+    expect(applyAll(before, hunks)).toBe('# Hello WorldHelloWorld\n\n');
+  });
+
+  test('a delete adjacent to identical text stays a pure deletion (minimal hunk)', ({ expect }) => {
+    const before = '# Hello WorldHelloWorld\n\n';
+    const hunks = diffHunks(before, '# Hello WorldHello\n\n');
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].inserted).toBe('');
+    expect(hunks[0].removed).toBe('World');
+    expect(applyAll(before, hunks)).toBe('# Hello WorldHello\n\n');
+  });
+
+  test('a genuine word replace keeps word granularity (no mid-word trim)', ({ expect }) => {
+    const before = 'the lazy dog';
+    const hunks = diffHunks(before, 'the lively dog');
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].removed).toBe('lazy');
+    expect(hunks[0].inserted).toBe('lively');
   });
 
   test('a pure deletion has no inserted text', ({ expect }) => {
@@ -199,6 +267,19 @@ describe('rebaseHunks', () => {
     const [rebased] = rebaseHunks(base, doc, hunks);
     expect(rebased.from).toBe(hunks[0].from);
     expect(doc.slice(rebased.from, rebased.to)).toBe(hunks[0].removed);
+  });
+
+  test('a doc insertion at a trailing pure-insert anchor stays BEHIND the proposal', ({ expect }) => {
+    // The author proposed "World\n" at the end of base; the user then typed "After" at that same
+    // spot on main. The proposal must stay anchored BEFORE the user's new text — mapping it past the
+    // insertion renders the user's input "in front" of the suggestion they typed after.
+    const base = '# Hello World\nHello\n';
+    const doc = '# Hello World\nHello\nAfter';
+    const hunks = diffHunks(base, '# Hello World\nHello\nWorld\n');
+    expect(hunks).toEqual([{ from: 20, to: 20, removed: '', inserted: 'World\n' }]);
+    const [rebased] = rebaseHunks(base, doc, hunks);
+    expect(rebased.from).toBe(20);
+    expect(rebased.to).toBe(20);
   });
 
   test('a zero-width (pure-insertion) hunk at a doc-edit boundary never inverts (from <= to)', ({ expect }) => {

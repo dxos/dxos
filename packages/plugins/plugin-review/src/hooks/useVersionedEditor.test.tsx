@@ -4,10 +4,12 @@
 // @vitest-environment happy-dom
 
 import { act, renderHook, waitFor } from '@testing-library/react';
+import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Text as EchoText, Obj } from '@dxos/echo';
+import { Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Client, ClientProvider, fromHost } from '@dxos/react-client';
@@ -27,12 +29,12 @@ import { useVersioning } from './useVersioning';
  * (typed text struck through after a round-trip, the editor ending read-only) becomes a replayable
  * sequence.
  */
-const useBindingHarness = (doc: Markdown.Document, identity: { did: string }, viewMode: EditorViewMode) => {
+const useBindingHarness = (doc: Markdown.Document, identity: Identity.Info, viewMode: EditorViewMode) => {
   const versioning = useVersioning(doc);
   const editor = useVersionedEditor({
     object: doc,
     versioning,
-    identity: identity as Parameters<typeof useVersionedEditor>[0]['identity'],
+    identity,
     mainContent: doc.content.target?.content,
     diffView: undefined,
     viewMode,
@@ -45,7 +47,7 @@ describe('editor binding lifecycle', () => {
   let client: Client;
   let space: Space;
   let doc: Markdown.Document;
-  let identity: { did: string };
+  let identity: Identity.Info;
 
   beforeEach(async () => {
     client = new Client({ services: fromHost() });
@@ -58,7 +60,7 @@ describe('editor binding lifecycle', () => {
     await doc.content.load();
     const did = client.halo.identity.get()?.did;
     invariant(did, 'identity not initialized');
-    identity = { did };
+    identity = Schema.decodeUnknownSync(Identity.Info)({ did });
   });
 
   afterEach(async () => {
@@ -77,9 +79,21 @@ describe('editor binding lifecycle', () => {
       initialProps: { viewMode: 'preview' as EditorViewMode },
     });
 
-  /** Waits out the async own-branch (or branch) binding so assertions never race it. */
+  /**
+   * Waits out the async bindings so assertions never race them. Ambient Suggesting no longer reports
+   * `loading` (the editor stays mounted on main, read-only, until the swap), so settling there means
+   * waiting for the own branch itself.
+   */
   const settled = async (result: { current: ReturnType<typeof useBindingHarness> }) => {
-    await waitFor(() => expect(result.current.editor.branchLoading).toBe(false), { timeout: 10_000 });
+    await waitFor(
+      () => {
+        expect(result.current.editor.branchLoading).toBe(false);
+        if (result.current.versioning.mode === 'suggesting') {
+          expect(result.current.editor.ownBranchText).toBeDefined();
+        }
+      },
+      { timeout: 10_000 },
+    );
   };
 
   test('default posture: ambient, editable, bound to the document', async () => {
@@ -126,11 +140,11 @@ describe('editor binding lifecycle', () => {
     }
   });
 
-  // Reproduces F1.2: text typed on MAIN between Suggesting sessions is missing from the (stale) own
-  // branch, so re-entering Suggesting diffs it as the user's own DELETION — rendering a strikethrough
-  // over text they just typed. The own branch must fast-forward to main on re-entry when it carries
-  // no edits of its own. Flips to passing when that lands.
-  test.fails('re-entering Suggesting fast-forwards an unchanged own branch (F1.2)', async () => {
+  // Guards F1.2: text typed on MAIN between Suggesting sessions was missing from the (stale) own
+  // branch, so re-entering Suggesting diffed it as the user's own DELETION — a strikethrough over
+  // text they just typed. `Branch.suggestion` now retires an unedited branch whose anchor fell behind
+  // and re-forks it at the current heads.
+  test('re-entering Suggesting fast-forwards an unchanged own branch (F1.2)', async () => {
     const { result } = setup();
     await settled(result);
 
@@ -158,5 +172,48 @@ describe('editor binding lifecycle', () => {
     await waitFor(() => expect(result.current.editor.ownBranchText?.content).toContain('world'), {
       timeout: 10_000,
     });
+  });
+
+  // G4 (the F1 re-run's major failure): the fast-forward only covered an UNEDITED branch. With real
+  // suggestions on the branch, text typed on main in between still diffed as the user's own deletion.
+  // Re-entering Suggesting must merge main INTO the branch (CRDT; shared fork ancestry), so the branch
+  // is always "main + the user's suggestions" and the diff contains only their changes.
+  test('re-entering Suggesting merges main into an edited own branch (G4)', async () => {
+    const { result } = setup();
+    await settled(result);
+
+    // First Suggesting session: the user adds a suggestion on their branch.
+    act(() => result.current.versioning.setMode('suggesting'));
+    await settled(result);
+    const branchText = result.current.editor.ownBranchText;
+    invariant(branchText, 'own branch not bound');
+    act(() => {
+      Obj.update(branchText, () => {
+        EchoText.update(branchText, 'content', 'alpha\nbravo\nSuggest 1\n');
+      });
+    });
+
+    // Back to editing; the user types on main.
+    act(() => result.current.versioning.setMode('editing'));
+    await settled(result);
+    const root = doc.content.target;
+    invariant(root, 'root not loaded');
+    act(() => {
+      Obj.update(root, () => {
+        EchoText.update(root, 'content', 'alpha\nbravo\nText 2\n');
+      });
+    });
+
+    // Re-enter Suggesting: the branch must now carry BOTH lines — main's new text is not a deletion.
+    act(() => result.current.versioning.setMode('suggesting'));
+    await settled(result);
+    await waitFor(
+      () => {
+        const content = result.current.editor.ownBranchText?.content ?? '';
+        expect(content).toContain('Text 2');
+        expect(content).toContain('Suggest 1');
+      },
+      { timeout: 10_000 },
+    );
   });
 });

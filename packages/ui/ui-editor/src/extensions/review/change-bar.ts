@@ -5,17 +5,26 @@
 import { type EditorState, type Extension, Facet, RangeSet } from '@codemirror/state';
 import { EditorView, GutterMarker, gutter } from '@codemirror/view';
 
-/** A change-bar gutter marker: a full-height vertical bar tinted with the author's colour. */
+/**
+ * A change-bar gutter marker: a vertical bar tinted with the author's colour. Full line height by
+ * default; `rows` caps it to that many text rows (in `lh` units) — a BLOCK-insert proposal renders
+ * as a widget occupying the top rows of its host line, and the bar must cover the proposal's rows
+ * without tinting the host line's own text below it.
+ */
 export class ChangeBarMarker extends GutterMarker {
   #colour: string;
+  #rows?: number;
+  #offsetRows?: number;
 
-  constructor(colour: string) {
+  constructor(colour: string, rows?: number, offsetRows?: number) {
     super();
     this.#colour = colour;
+    this.#rows = rows;
+    this.#offsetRows = offsetRows;
   }
 
   override eq(other: ChangeBarMarker): boolean {
-    return other.#colour === this.#colour;
+    return other.#colour === this.#colour && other.#rows === this.#rows && other.#offsetRows === this.#offsetRows;
   }
 
   override toDOM(): HTMLElement {
@@ -23,6 +32,13 @@ export class ChangeBarMarker extends GutterMarker {
     bar.className = 'cm-change-bar';
     // Attribution colour is per-author (dynamic); the bar geometry lives in the theme class.
     bar.style.background = this.#colour;
+    if (this.#rows !== undefined) {
+      bar.style.height = `calc(${this.#rows}lh)`;
+    }
+    // A proposal that STARTS with a newline renders its text below the break; shift the bar with it.
+    if (this.#offsetRows) {
+      bar.style.marginTop = `calc(${this.#offsetRows}lh)`;
+    }
     return bar;
   }
 }
@@ -68,3 +84,11 @@ const changeBarProviders = Facet.define<ChangeBarProvider>({
 
 /** Contribute per-line change bars to the shared author-coloured gutter (see {@link ChangeBarMarker}). */
 export const changeBars = (provider: ChangeBarProvider): Extension => changeBarProviders.of(provider);
+
+/**
+ * Keeps the change-bar column mounted with no markers. Hosts that toggle review overlays install this
+ * once alongside their compartments, so entering/leaving Suggesting reconfigures marker providers
+ * inside an existing gutter instead of adding and removing the column — which shifted the text and
+ * flickered on every mode switch.
+ */
+export const changeBarGutter: Extension = changeBarProviders.of(() => RangeSet.empty);

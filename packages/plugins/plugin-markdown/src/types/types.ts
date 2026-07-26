@@ -48,6 +48,8 @@ export type EditorBindingProps = {
   /** Stable surface id; snapshot binding keys derive from it. */
   id: string;
   viewMode?: EditorViewMode;
+  /** Applies a built-in view-mode change; the binding drives it from {@link EditorBinding.selectViewMode}. */
+  onViewModeChange?: (mode: EditorViewMode) => void;
   /** The `Settings.diffView` value; semantics are owned by the contributor. */
   diffView?: 'inline' | 'sideBySide' | 'gutter' | 'suggest';
 };
@@ -68,8 +70,15 @@ export type EditorBinding = {
   loading: boolean;
   /** True when no explicit version/branch is selected — gates the review-mode entries in the view-mode dropdown. */
   ambient: boolean;
-  reviewMode: ReviewMode;
-  setReviewMode: (mode: ReviewMode) => void;
+  /**
+   * One entry point for the view-mode dropdown: a built-in editor mode or a contributed review mode.
+   * The binding owns what a selection means — both the review posture and the editor view mode are
+   * decided together, so the two can never be stored in contradiction (a stale readonly view mode
+   * surviving into Suggesting was exactly that bug).
+   */
+  selectViewMode: (selection: ViewModeSelection) => void;
+  /** The contributed entry currently active (checked in the dropdown); undefined ⇒ a built-in is active. */
+  activeReviewMode?: ReviewMode;
   /** Extra props forwarded to every {@link MarkdownExtensionProvider} call. */
   extensionProps?: Pick<
     Parameters<MarkdownExtensionProvider>[0],
@@ -87,4 +96,9 @@ export type EditorBinding = {
  * Hook-shaped contribution computing the editor binding. At most one is honored; the article calls
  * it through a host component keyed by contribution identity, so hook order stays legal.
  */
+/** A view-mode dropdown selection, forwarded verbatim to {@link EditorBinding.selectViewMode}. */
+export type ViewModeSelection =
+  | { kind: 'builtin'; viewMode: EditorViewMode }
+  | { kind: 'contributed'; reviewMode: ReviewMode };
+
 export type UseEditorBinding = (props: EditorBindingProps) => EditorBinding;

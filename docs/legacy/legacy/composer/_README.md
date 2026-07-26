@@ -52,7 +52,7 @@ Composer is built atop DXOS, a software development platform that powers Compose
 
 **Data gets replicated across user's devices automatically.** The user can join multiple devices into a single profile, called a HALO, and the user's data will be transparently replicated across all of those devices.
 
-**Data is encrypted in transit with a user's encryption keys.** When data is being transmitted among their devices, it's encrypted with their keys. Data is transmitted peer-to-peer using WebRTC, though we are [evaluating alternate transport mechanisms and network topologies]().
+**Data is encrypted in transit with a user's encryption keys.** When data is being transmitted among their devices, it's encrypted with their keys. Data is transmitted peer-to-peer using WebRTC, though we are [evaluating alternate transport mechanisms and network topologies](<>).
 
 **Data can be shared with other users.** Data can also be shared among users via a primitive called Spaces. A Space is similar to a shared folder: everything in the folder will be shared with read and write privileges with every other user who has access to the Space.
 
@@ -60,7 +60,7 @@ Composer is built atop DXOS, a software development platform that powers Compose
 
 **Data is synchronized using CRDTs to resolve conflicts.** The ECHO database uses CRDTs to automatically reconcile writes to the database, ensuring that offline writers and multiple users don't clobber each other's data. In most cases, ECHO's built-in CRDT primitives are sufficient for an application's use cases, but custom merging behavior is also possible.
 
-**Users can choose to run a DXOS Agent on a server for additional services.** An optional server-powered [DXOS Agent]() provides persistent replication, offsite backup, off-device compute, and other services and resources.
+**Users can choose to run a DXOS Agent on a server for additional services.** An optional server-powered [DXOS Agent](<>) provides persistent replication, offsite backup, off-device compute, and other services and resources.
 
 For a more thorough overview of the DXOS platform, along with documentation about the SDKs, please consult the DXOS docs.
 
@@ -81,7 +81,7 @@ All functionality in Composer is provided in the form of plugins, including the 
 ::: note Rename Presentation plugins to View plugins?
 :::
 
-For more details about the specifics of plugin capabilities, see [Anatomy of a Plugin]().
+For more details about the specifics of plugin capabilities, see [Anatomy of a Plugin](<>).
 
 ### Surfaces
 
