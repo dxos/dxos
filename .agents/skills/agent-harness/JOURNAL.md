@@ -80,3 +80,26 @@
 - Still waiting; continuing to poll. On READY (SendRequest returns a ReferenceCode) → hand the
   fetch to `dx agent --skill org.dxos.skill.ibkr` (SyncPortfolioReport once, then GetPortfolio) to
   complete the ECHO-import verification.
+
+## dx-agent IBKR fetch attempt
+
+**Date:** 2025-07-10
+
+**Action:** Called `SyncPortfolioReport` exactly once (no retries, no loop).
+
+**Result:** ❌ Sync failed — IBKR is temporarily busy/unreachable.
+
+**Exact error text:**
+
+```
+IbkrSyncError: The socket connection was closed unexpectedly.
+For more information, pass `verbose: true` in the second argument to fetch()
+caused by:
+Error: The socket connection was closed unexpectedly.
+For more information, pass `verbose: true` in the second argument to fetch()
+```
+
+**Notes:** The connection was dropped at the network/socket level before IBKR could return a
+statement. This is consistent with IBKR being temporarily busy (similar in nature to the earlier
+`ErrorCode 1001` throttle events logged above). No portfolio data was fetched; `GetPortfolio` was
+not called. Stopping as instructed.
