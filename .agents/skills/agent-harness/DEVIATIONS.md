@@ -25,8 +25,21 @@ Re-read this before/while operating as the hypervisor. Append new entries; never
   asked the user whether to retry — leaving the task incomplete.
 - **Why it's wrong:** Autonomy rule — **never stop to ask**. A transient, self-clearing external
   condition is not a critical error and not task completion; it's something to wait out.
-- **Correct behavior:** Back off and **retry until the dependency is ready** (poll readiness on a
-  sane interval that respects the provider's rate limits — for IBKR, one `SendRequest` every few
-  minutes, never a tight loop, since repeated failures extend the lockout). Only halt when a
-  **critical-error-list** condition occurs or the task is **complete in its entire scope**. Keep a
-  journal note each cycle so the wait is auditable.
+- **Correct behavior:** Back off and **retry until the dependency is ready** — but the retry is done
+  by re-launching `dx agent` (see Deviation 3), not by the hypervisor probing the API. `sleep` on a
+  sane interval that respects the provider's rate limits (never a tight loop), then re-launch the
+  agent. Only halt when a **critical-error-list** condition occurs or the task is **complete in its
+  entire scope**. Keep a journal note each cycle so the wait is auditable.
+
+## Deviation 3 — Hypervisor probed the external API itself instead of driving `dx agent`
+
+- **Date:** 2026-07-26
+- **What happened:** While correctly _waiting_ for the IBKR throttle to clear (deviation-2 fix), the
+  hypervisor did the waiting by `curl`-ing IBKR's SendRequest directly on a poll loop — i.e. it did
+  the task's network work itself. Same root cause as Deviation 1.
+- **Why it's wrong:** The `dx agent` performs the fetch (via SyncPortfolioReport). The hypervisor
+  must not touch the external API; probing IBKR is task work, not orchestration.
+- **Correct behavior:** Drive the loop through the agent: launch `dx agent` to attempt the fetch; if
+  it reports the transient failure, **`sleep`** (the hypervisor's only job while waiting) and
+  **re-launch the agent** to retry. The agent — not the hypervisor — is the only thing that ever
+  contacts IBKR. Keep re-launching on a rate-limit-respecting interval until it succeeds.

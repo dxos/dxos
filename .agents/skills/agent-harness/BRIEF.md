@@ -8,6 +8,7 @@ Maintain your progress in `/home/user/dxos/.harness/JOURNAL.md` (append one entr
 decided / blocked). Read it first each turn — each `dx agent` run is a fresh session.
 
 ## Facts you can rely on
+
 - The plugin already exists at `packages/plugins/plugin-ibkr` and builds. Do NOT rewrite it.
 - The CLI wiring file is `packages/devtools/cli/src/util/skills.ts`. It manually collects skills,
   operation handlers, and ECHO types (Composer does this via plugins; the CLI does not).
@@ -21,6 +22,7 @@ decided / blocked). Read it first each turn — each `dx agent` run is a fresh s
   `source = "interactivebrokers.com"`, `token = <token>`, `account = <queryId>`.
 
 ## Step 1 — wire the plugin into the CLI (this turn)
+
 1. Add the dependency to `packages/devtools/cli/package.json`: `"@dxos/plugin-ibkr": "workspace:*"`
    in `dependencies` (keep the list alphabetically sorted).
 2. Edit `packages/devtools/cli/src/util/skills.ts`:
@@ -38,6 +40,7 @@ decided / blocked). Read it first each turn — each `dx agent` run is a fresh s
    will hand you the error to fix.
 
 ## Later steps (after reload — do NOT attempt before the plugin is loaded)
+
 - Step 2: store the IBKR credential by running (via the bash tool, from the repo root):
   `packages/devtools/cli/bin/dx connector add --source interactivebrokers.com --account 1557472 --token <IBKR_FLEX_TOKEN-redacted>`
   This creates the `AccessToken` (source→service, account→queryId, token→secret) the sync reads.
