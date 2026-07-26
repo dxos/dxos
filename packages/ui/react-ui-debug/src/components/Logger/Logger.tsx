@@ -6,6 +6,19 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type LogConfig, type LogEntry, LogLevel, type LogOptions, log, logFileRegistry, shouldLog } from '@dxos/log';
+import {
+  IconButton,
+  Input,
+  ScrollArea,
+  Select,
+  type ThemedClassName,
+  ToggleIconButton,
+  Toolbar,
+  useTranslation,
+} from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+import { translationKey } from '../../translations';
 
 import { formatLogEntry } from './format';
 
@@ -219,5 +232,153 @@ const LoggerRoot = ({
 };
 
 LoggerRoot.displayName = 'Logger.Root';
+
+//
+// Toolbar
+//
+
+export type LoggerToolbarProps = ThemedClassName<{}>;
+
+const LoggerToolbar = ({ classNames }: LoggerToolbarProps) => {
+  const { t } = useTranslation(translationKey);
+  const { filter, setFilter, recording, setRecording, clear, copyAll } = useLoggerContext('Logger.Toolbar');
+
+  // A bare level matching the filter selects it; a scoped filter shows no selection.
+  const selectedLevel = (LEVELS as readonly string[]).includes(filter) ? filter : '';
+
+  return (
+    <Toolbar.Root classNames={mx(classNames)}>
+      <Input.Root>
+        <Input.TextInput
+          placeholder={t('filter.placeholder')}
+          value={filter}
+          autoComplete='off'
+          spellCheck={false}
+          onChange={(ev) => setFilter(ev.target.value)}
+        />
+      </Input.Root>
+      <Select.Root value={selectedLevel} onValueChange={setFilter}>
+        <Select.TriggerButton classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
+        <Select.Portal>
+          <Select.Content>
+            <Select.ScrollUpButton />
+            <Select.Viewport>
+              {LEVELS.map((level) => (
+                <Select.Option key={level} value={level} classNames='text-sm'>
+                  {t(`level.${level}`)}
+                </Select.Option>
+              ))}
+            </Select.Viewport>
+            <Select.ScrollDownButton />
+            <Select.Arrow />
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
+      <LoggerLevels />
+      <ToggleIconButton
+        active={recording}
+        icon='ph--record--regular'
+        activeIcon='ph--pause--regular'
+        iconOnly
+        label={t('record.label')}
+        onClick={() => setRecording((value) => !value)}
+      />
+      <Toolbar.IconButton icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
+      <Toolbar.IconButton icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
+    </Toolbar.Root>
+  );
+};
+
+LoggerToolbar.displayName = 'Logger.Toolbar';
+
+// Temporary stub — replaced by the full Levels popover in the next task.
+const LoggerLevels = () => null;
+LoggerLevels.displayName = 'Logger.Levels';
+
+//
+// Content
+//
+
+export type LoggerContentProps = ThemedClassName<PropsWithChildren>;
+
+const LoggerContent = ({ classNames, children }: LoggerContentProps) => {
+  const { rows } = useLoggerContext('Logger.Content');
+
+  // Keep the viewport pinned to the newest entry.
+  const viewportRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  }, [rows]);
+
+  return (
+    <ScrollArea.Root orientation='vertical' thin classNames={mx(classNames)}>
+      <ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
+        {children}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+};
+
+LoggerContent.displayName = 'Logger.Content';
+
+//
+// List
+//
+
+export type LoggerListProps = ThemedClassName<{}>;
+
+const LoggerList = ({ classNames }: LoggerListProps) => {
+  const { t } = useTranslation(translationKey);
+  const { rows, expanded, toggleExpand } = useLoggerContext('Logger.List');
+
+  if (rows.length === 0) {
+    return <div className={mx('p-2 text-subdued', classNames)}>{t('empty.message')}</div>;
+  }
+
+  return (
+    <div className={mx(classNames)}>
+      {rows.map(({ id, entry }) => {
+        const record = formatLogEntry(entry);
+        const expandable = Boolean(record.context || record.error);
+        return (
+          <div key={id} className='group px-1'>
+            <div className='grid grid-cols-[1rem_8rem_1fr_min-content] items-center gap-1'>
+              <div className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</div>
+              <div className='truncate text-subdued'>{record.file}</div>
+              <button
+                type='button'
+                aria-expanded={expandable ? expanded.has(id) : undefined}
+                className='truncate text-start cursor-pointer'
+                title={record.message}
+                onClick={() => toggleExpand(id)}
+              >
+                {record.message}
+              </button>
+              <IconButton
+                icon='ph--clipboard--regular'
+                iconOnly
+                density='xs'
+                label={t('copy-entry.label')}
+                variant='ghost'
+                classNames='p-0 opacity-50 group-hover:opacity-100'
+                onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
+              />
+            </div>
+            {expanded.has(id) && expandable && (
+              <pre className='px-4 py-1 whitespace-pre-wrap text-subdued'>
+                {JSON.stringify({ context: record.context, error: record.error }, null, 2)}
+              </pre>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+LoggerList.displayName = 'Logger.List';
 
 export { useLoggerContext };

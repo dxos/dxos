@@ -16,6 +16,11 @@ export const translations = [
         'clear.label': 'Clear',
         'copy.label': 'Copy log',
         'copy-entry.label': 'Copy entry',
+        'levels.label': 'Log levels',
+        'levels.title': 'Per-file log levels',
+        'levels.clear': 'Reset all',
+        'levels.inherit': 'Inherit',
+        'levels.empty': 'No log files registered yet.',
         'empty.message': 'No log entries.',
         // oxlint-disable-next-line @dxos/rules/translation-key-format
         'level.trace': 'Trace',
