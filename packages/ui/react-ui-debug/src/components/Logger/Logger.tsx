@@ -352,7 +352,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content>
-          <Popover.Viewport classNames='w-[24rem] max-h-[20rem]'>
+          <Popover.Viewport classNames='w-[24rem] max-h-[22rem]'>
             <Panel.Root>
               <Panel.Toolbar asChild>
                 <Toolbar.Root>
