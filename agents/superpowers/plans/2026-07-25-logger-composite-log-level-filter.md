@@ -1325,6 +1325,151 @@ git commit -m "react-ui-debug: add Logger.Levels per-file log-level popover"
 
 ---
 
+### Task 8b: `Logger.Filter` — client-side text-match filter over the buffer
+
+**What:** A text input (placed **below the list**, in `Panel.Statusbar`) that filters the buffered rows by a case-insensitive substring match on each entry's file + message. This is a **view filter over the buffer** — distinct from the toolbar's base-level `filter`, which controls `@dxos/log` capture/level. It changes nothing about what is captured; it only hides non-matching buffered rows.
+
+**Files:**
+- Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (Root state, `Logger.List` filtering, new `Logger.Filter` part)
+- Modify: `packages/ui/react-ui-debug/src/translations.ts` (`search.*` keys)
+
+**Interfaces:** Adds `textFilter: string` + `setTextFilter: (value: string) => void` to `LoggerContextValue`. Adds `LoggerFilter` / `LoggerFilterProps` (`ComposableProps`).
+
+- [ ] **Step 1: Add `textFilter` state to `Logger.Root`**
+
+In `LoggerRoot`, add alongside the other `useState` hooks:
+```tsx
+const [textFilter, setTextFilter] = useState('');
+```
+Add `textFilter` and `setTextFilter` to the `LoggerContextValue` type and pass both on the `<LoggerProvider …>` element.
+
+- [ ] **Step 2: Filter rows in `Logger.List`**
+
+Replace the `Logger.List` body's row derivation so it computes each row's `record` once and applies the text filter (keep the `Listbox` structure from Task 7b):
+```tsx
+const LoggerList = ({ classNames }: LoggerListProps) => {
+  const { t } = useTranslation(translationKey);
+  const { rows, expanded, toggleExpand, textFilter } = useLoggerContext('Logger.List');
+
+  // Compute the display record once; filter the buffer by a case-insensitive match on file + message.
+  const needle = textFilter.trim().toLowerCase();
+  const visible = rows
+    .map((row) => ({ ...row, record: formatLogEntry(row.entry) }))
+    .filter(({ record }) =>
+      needle ? `${record.file ?? ''} ${record.message ?? ''}`.toLowerCase().includes(needle) : true,
+    );
+
+  if (visible.length === 0) {
+    return (
+      <div className={mx('p-2 text-subdued', classNames)}>
+        {t(rows.length === 0 ? 'empty.message' : 'search.no-matches')}
+      </div>
+    );
+  }
+
+  return (
+    <Listbox.Root>
+      <Listbox.Content classNames={mx(classNames)}>
+        {visible.map(({ id, entry, record }) => {
+          const expandable = Boolean(record.context || record.error);
+          return (
+            <Listbox.Item key={id} id={String(id)} classNames='group px-1'>
+              <div className='flex flex-col is-full'>
+                <div className='grid grid-cols-[1rem_8rem_1fr_min-content] items-center gap-1'>
+                  <div className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</div>
+                  <div className='truncate text-subdued'>{record.file}</div>
+                  <button
+                    type='button'
+                    aria-expanded={expandable ? expanded.has(id) : undefined}
+                    className='truncate text-start cursor-pointer'
+                    title={record.message}
+                    onClick={() => toggleExpand(id)}
+                  >
+                    {record.message}
+                  </button>
+                  <IconButton
+                    icon='ph--clipboard--regular'
+                    iconOnly
+                    density='xs'
+                    label={t('copy-entry.label')}
+                    variant='ghost'
+                    classNames='p-0 opacity-50 group-hover:opacity-100'
+                    onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
+                  />
+                </div>
+                {expanded.has(id) && expandable && (
+                  <pre className='px-4 py-1 whitespace-pre-wrap text-subdued'>
+                    {JSON.stringify({ context: record.context, error: record.error }, null, 2)}
+                  </pre>
+                )}
+              </div>
+            </Listbox.Item>
+          );
+        })}
+      </Listbox.Content>
+    </Listbox.Root>
+  );
+};
+
+LoggerList.displayName = 'Logger.List';
+```
+
+- [ ] **Step 3: Add the `Logger.Filter` part** (after `Logger.List`)
+
+```tsx
+//
+// Filter
+//
+
+export type LoggerFilterProps = ComposableProps;
+
+const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
+  const { textFilter, setTextFilter } = useLoggerContext('Logger.Filter');
+
+  return (
+    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+      <Input.Root>
+        <Input.TextInput
+          placeholder={t('search.placeholder')}
+          value={textFilter}
+          autoComplete='off'
+          spellCheck={false}
+          onChange={(ev) => setTextFilter(ev.target.value)}
+        />
+      </Input.Root>
+      {textFilter.length > 0 && (
+        <Toolbar.IconButton
+          icon='ph--x--regular'
+          iconOnly
+          label={t('search.clear')}
+          onClick={() => setTextFilter('')}
+        />
+      )}
+    </Toolbar.Root>
+  );
+});
+
+LoggerFilter.displayName = 'Logger.Filter';
+```
+
+- [ ] **Step 4: Translations** — add to `translations.ts` after the `levels.*` keys:
+```ts
+        'search.placeholder': 'Find in buffer…',
+        'search.clear': 'Clear filter',
+        'search.no-matches': 'No matching entries.',
+```
+
+- [ ] **Step 5: Build** — `~/.proto/shims/moon run react-ui-debug:build` → PASS.
+
+- [ ] **Step 6: Commit**
+```bash
+git add packages/ui/react-ui-debug/src/components/Logger/Logger.tsx packages/ui/react-ui-debug/src/translations.ts
+git commit -m "react-ui-debug: add Logger.Filter (text-match filter over the log buffer)"
+```
+
+---
+
 ### Task 9: Namespace assembly + barrel
 
 **Files:**
@@ -1335,7 +1480,7 @@ git commit -m "react-ui-debug: add Logger.Levels per-file log-level popover"
 
 (`LogPanel` was already removed in Task 2.)
 
-**Interfaces:** Produces `Logger = { Root, Toolbar, Content, List, Levels }` + all `Logger*Props`.
+**Interfaces:** Produces `Logger = { Root, Toolbar, Content, List, Levels, Filter }` + all `Logger*Props`.
 
 - [ ] **Step 1: Assemble the namespace at the end of `Logger.tsx`**
 
@@ -1352,10 +1497,18 @@ export const Logger = {
   Content: LoggerContent,
   List: LoggerList,
   Levels: LoggerLevels,
+  Filter: LoggerFilter,
 };
 
 export { useLoggerContext };
-export type { LoggerContentProps, LoggerLevelsProps, LoggerListProps, LoggerRootProps, LoggerToolbarProps };
+export type {
+  LoggerContentProps,
+  LoggerFilterProps,
+  LoggerLevelsProps,
+  LoggerListProps,
+  LoggerRootProps,
+  LoggerToolbarProps,
+};
 ```
 
 - [ ] **Step 2: Create the barrel** `packages/ui/react-ui-debug/src/components/Logger/index.ts`:
@@ -1423,6 +1576,9 @@ Replace `import { LogPanel } from '@dxos/react-ui-debug';` with `import { Logger
         <Logger.List />
       </Logger.Content>
     </Panel.Content>
+    <Panel.Statusbar asChild>
+      <Logger.Filter />
+    </Panel.Statusbar>
   </Panel.Root>
 </Logger.Root>
 ```
@@ -1441,7 +1597,7 @@ import { Logger } from '@dxos/react-ui-debug';
 
 /**
  * Renders the `@dxos/react-ui-debug` {@link Logger} composite — a live `@dxos/log` viewer with
- * filter, per-file level, and record controls — assembled as a story module.
+ * level filter, per-file levels, a text-match buffer filter, and record controls — assembled as a story module.
  */
 export const LoggingModule = () => (
   <Logger.Root>
@@ -1454,6 +1610,9 @@ export const LoggingModule = () => (
           <Logger.List />
         </Logger.Content>
       </Panel.Content>
+      <Panel.Statusbar asChild>
+        <Logger.Filter />
+      </Panel.Statusbar>
     </Panel.Root>
   </Logger.Root>
 );
@@ -1512,6 +1671,9 @@ const DefaultStory = () => (
               <Logger.List />
             </Logger.Content>
           </Panel.Content>
+          <Panel.Statusbar asChild>
+            <Logger.Filter />
+          </Panel.Statusbar>
         </Panel.Root>
       </Panel.Content>
     </Panel.Root>
