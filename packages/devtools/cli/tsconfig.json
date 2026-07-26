@@ -68,6 +68,9 @@
       "path": "../../core/compute/edge-compute"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/compute/operation"
     },
     {
@@ -96,6 +99,9 @@
     },
     {
       "path": "../../plugins/plugin-game"
+    },
+    {
+      "path": "../../plugins/plugin-ibkr"
     },
     {
       "path": "../../plugins/plugin-inbox"

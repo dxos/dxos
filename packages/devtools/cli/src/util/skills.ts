@@ -10,6 +10,7 @@ import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
 import { OperationHandlerSet, Skill } from '@dxos/compute';
 import { Feed, Tag, type Type } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
+import { AccessToken } from '@dxos/link';
 // Narrow subpath imports (`/skills` and `/types`) so the CLI's
 // `bun run --conditions=source` only walks plugin source files that are free of
 // React-component imports. The plugin root barrels re-export the whole tree
@@ -21,6 +22,8 @@ import { ChessOperationHandlerSet } from '@dxos/plugin-chess/plugin';
 import { ChessSkill } from '@dxos/plugin-chess/skills';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Game } from '@dxos/plugin-game/types';
+import { Ibkr, IbkrSkill } from '@dxos/plugin-ibkr';
+import { IbkrOperationHandlerSet } from '@dxos/plugin-ibkr/plugin';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
 import { CalendarSkill, InboxSendSkill, InboxSkill } from '@dxos/plugin-inbox/skills';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
@@ -62,6 +65,7 @@ export const skillRegistry = makeRegistry({
     // Skills available to the chat.
     AssistantSkill.make(),
     HarnessSkill,
+    IbkrSkill.make(),
     DatabaseSkill.make(),
     CalendarSkill.make(),
     ChessSkill.make(),
@@ -85,6 +89,7 @@ export const skillRegistry = makeRegistry({
 export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by skills above need to be added here.
   DatabaseHandlers,
+  IbkrOperationHandlerSet,
   ChessOperationHandlerSet,
   InboxOperationHandlerSet,
   KanbanOperationHandlerSet,
@@ -110,6 +115,7 @@ export const toolkits: OpaqueToolkit.OpaqueToolkit[] = [
 export const types: Type.AnyEntity[] = [
   // NOTE: Types referenced by skills above need to be added here.
   DataTypes,
+  [Ibkr.Report, Ibkr.Instrument, AccessToken.AccessToken],
   [Chat.Chat],
   [Game.Game, Chess.State],
   [Markdown.Document],
