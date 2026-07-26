@@ -65,30 +65,54 @@ Radix catalog deps added; `format.ts` moved to `Logger/`. (Note: `format.test.ts
 
 ---
 
-### Task 2: Move `format.test.ts` into `Logger/`
+### Task 2: Move `format.test.ts`; remove the now-broken `LogPanel`
+
+**Why now:** Task 1 moved `format.ts` into `Logger/`, but `LogPanel.tsx` and `LogPanel/index.ts` still `import './format'` (now missing) — so `react-ui-debug` does not build until `LogPanel` is removed. Remove it here so every later `react-ui-debug:build` is green. The package temporarily exports only the `format` helper until `Logger` lands (Task 9). External consumers (`LogStatus`, `LoggingModule`) still import `LogPanel` but are not built until Task 10.
 
 **Files:**
-- Move: `packages/ui/react-ui-debug/src/components/LogPanel/format.test.ts` → `packages/ui/react-ui-debug/src/components/Logger/format.test.ts`
+- Move: `LogPanel/format.test.ts` → `Logger/format.test.ts`
+- Delete: `LogPanel/LogPanel.tsx`, `LogPanel/LogPanel.stories.tsx`, `LogPanel/index.ts`
+- Modify: `packages/ui/react-ui-debug/src/components/index.ts`
 
-**Interfaces:** none new. The test imports `./format` (relative) and `@dxos/log`; both resolve unchanged after the move.
+**Interfaces:** `formatLogEntry` / `LogRecord` remain exported from the package (via `./Logger/format`). `LogPanel` export is removed (restored as `Logger` in Task 9).
 
-- [ ] **Step 1: Move the file**
+- [ ] **Step 1: Move the test and delete LogPanel**
 
 Run:
 ```bash
 git mv packages/ui/react-ui-debug/src/components/LogPanel/format.test.ts packages/ui/react-ui-debug/src/components/Logger/format.test.ts
+git rm packages/ui/react-ui-debug/src/components/LogPanel/LogPanel.tsx \
+       packages/ui/react-ui-debug/src/components/LogPanel/LogPanel.stories.tsx \
+       packages/ui/react-ui-debug/src/components/LogPanel/index.ts
 ```
 
-- [ ] **Step 2: Run it**
+- [ ] **Step 2: Repoint the components barrel to the surviving format helper**
 
-Run: `moon run react-ui-debug:test -- src/components/Logger/format.test.ts`
-Expected: PASS (2 tests). Confirms the relative `./format` import still resolves in the new location.
+Replace `packages/ui/react-ui-debug/src/components/index.ts` body with:
+```ts
+//
+// Copyright 2026 DXOS.org
+//
 
-- [ ] **Step 3: Commit**
+// Temporary: only the format helper survives until the Logger composite lands (see plan Task 9).
+export * from './Logger/format';
+```
+
+- [ ] **Step 3: Confirm no dangling `LogPanel` refs inside the package + build**
+
+Run:
+```bash
+grep -rn "LogPanel\|./format'" packages/ui/react-ui-debug/src/components
+moon run react-ui-debug:build
+moon run react-ui-debug:test -- src/components/Logger/format.test.ts
+```
+Expected: no `LogPanel` references remain in the package; build PASS; format test PASS (2 tests). (The relative `./format` import still resolves in the new location.)
+
+- [ ] **Step 4: Commit**
 
 ```bash
 git add -A packages/ui/react-ui-debug/src/components
-git commit -m "react-ui-debug: relocate format.test.ts alongside moved format helper"
+git commit -m "react-ui-debug: remove LogPanel; relocate format.test.ts (Logger lands next)"
 ```
 
 ---
@@ -1092,13 +1116,14 @@ git commit -m "react-ui-debug: add Logger.Levels per-file log-level popover"
 
 ---
 
-### Task 9: Namespace assembly, barrel, delete `LogPanel`
+### Task 9: Namespace assembly + barrel
 
 **Files:**
 - Modify: `packages/ui/react-ui-debug/src/components/Logger/Logger.tsx` (namespace + exports)
 - Create: `packages/ui/react-ui-debug/src/components/Logger/index.ts`
 - Modify: `packages/ui/react-ui-debug/src/components/index.ts`
-- Delete: `LogPanel/LogPanel.tsx`, `LogPanel/LogPanel.stories.tsx`, `LogPanel/index.ts`
+
+(`LogPanel` was already removed in Task 2.)
 
 **Interfaces:** Produces `Logger = { Root, Toolbar, Content, List, Levels }` + all `Logger*Props`.
 
@@ -1141,27 +1166,20 @@ export * from './format';
 export * from './Logger';
 ```
 
-- [ ] **Step 4: Delete old files**
-```bash
-git rm packages/ui/react-ui-debug/src/components/LogPanel/LogPanel.tsx \
-       packages/ui/react-ui-debug/src/components/LogPanel/LogPanel.stories.tsx \
-       packages/ui/react-ui-debug/src/components/LogPanel/index.ts
-```
-
-- [ ] **Step 5: Confirm no stale references**
+- [ ] **Step 4: Confirm no stale references**
 
 Run: `grep -rn "LogPanel" packages/ui/react-ui-debug/src`
 Expected: no output.
 
-- [ ] **Step 6: Build**
+- [ ] **Step 5: Build**
 
 Run: `moon run react-ui-debug:build`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 ```bash
 git add packages/ui/react-ui-debug/src
-git commit -m "react-ui-debug: assemble Logger namespace; remove LogPanel"
+git commit -m "react-ui-debug: assemble Logger namespace + barrel"
 ```
 
 ---
