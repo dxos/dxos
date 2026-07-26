@@ -5,7 +5,8 @@
 import { type Extension } from '@codemirror/state';
 import { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Capabilities } from '@dxos/app-framework';
+import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { CollaborationOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
@@ -14,7 +15,7 @@ import { type Identity } from '@dxos/halo';
 import { useMembers } from '@dxos/halo-react';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
-import { useViewStateActions } from '@dxos/react-ui-attention';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import {
   type DiffHunk,
@@ -77,7 +78,9 @@ export const useReviewExtensions = ({
   // Route the inline suggestion Accept/Reject controls through the durable, undoable collaboration
   // ops. The anchor is a cursor range over the parent (main) content — the editor is bound to main
   // in suggest mode — and `branch` is the compare (author) branch key (`reviewBranch`).
-  const { invokePromise } = useOperationInvoker();
+  // Optional: every call site already guards `invokePromise?.` — accept/reject are simply inert in
+  // hosts without an operation invoker (bare stories, headless scenario tests).
+  const invokePromise = useOptionalCapability(Capabilities.OperationInvoker)?.invokePromise;
   const handleAcceptChange = useCallback(
     (hunk: DiffHunk) => {
       const content = Obj.instanceOf(Markdown.Document, object) ? object.content?.target : undefined;
@@ -169,14 +172,15 @@ export const useReviewExtensions = ({
   // In Suggesting mode the editor is bound to the user's own branch, so the foreign overlay diffs
   // each source against main (rebased into the document's coordinates) and EXCLUDES the user's own
   // branch — self is shown by `trackChanges`, not doubled here. Off the suggesting path the overlay
-  // diffs sources directly against the editor document (which is main).
-  const overlaySources = useMemo(
-    () =>
-      ambientSuggesting && identity?.did
-        ? suggestionSources.filter((source) => source.author !== identity.did)
-        : suggestionSources,
-    [ambientSuggesting, identity?.did, suggestionSources],
-  );
+  // diffs sources directly against the editor document (which is main). Authors the user has hidden
+  // are filtered at the source (never per-decoration), so bars and counts stay consistent.
+  const { hiddenAuthors } = useViewState(ReviewCapabilities.viewAspect, object.id);
+  const overlaySources = useMemo(() => {
+    const hidden = new Set(hiddenAuthors ?? []);
+    return suggestionSources.filter(
+      (source) => !hidden.has(source.author) && !(ambientSuggesting && identity?.did && source.author === identity.did),
+    );
+  }, [ambientSuggesting, identity?.did, suggestionSources, hiddenAuthors]);
   const overlayBase = ambientSuggesting ? mainContent : undefined;
 
   // The suggestion author's palette colour — the same colour as their banner tag and avatar — so

@@ -23,6 +23,7 @@ import {
   computeCharHunks,
   diffHunks,
   groupHunks,
+  pairMarkupHunks,
   rebaseHunksWith,
 } from './diff';
 
@@ -54,6 +55,12 @@ export type SuggestionsOptions = {
    * the editor document (the standalone single-branch behaviour).
    */
   base?: string;
+  /**
+   * Show the hover Accept/Reject controls (default true). The ambient review overlay disables them
+   * (DESIGN §4, Decision 4: the companion cards are the review surface); the explicit compare path
+   * keeps them as its inline accept mechanism.
+   */
+  hoverControls?: boolean;
   /**
    * Optional grouping policy: coalesce an author's adjacent hunks into one reviewable unit (see
    * {@link groupHunks}). Omit to render one control per raw hunk.
@@ -106,7 +113,15 @@ type SuggestionState = {
  * the change); Reject hides the suggestion without altering the document (a view-only dismissal for
  * the session).
  */
-export const suggestions = ({ sources, base, group, onAccept, onReject, onSelect }: SuggestionsOptions): Extension => {
+export const suggestions = ({
+  sources,
+  base,
+  group,
+  hoverControls = true,
+  onAccept,
+  onReject,
+  onSelect,
+}: SuggestionsOptions): Extension => {
   const tagged = (state: EditorState): TaggedHunk[] => {
     const doc = state.doc.toString();
     // With an explicit base, diff each source against it and rebase the hunks into the (possibly
@@ -128,7 +143,10 @@ export const suggestions = ({ sources, base, group, onAccept, onReject, onSelect
       const applied = sourceBase === undefined ? undefined : new Set(diffHunks(sourceBase, doc).map(editKey));
       const authored = diffHunks(anchor, source.content);
       const pending = applied === undefined ? authored : authored.filter((hunk) => !applied.has(editKey(hunk)));
-      const grouped = group ? groupHunks(pending, anchor, group) : pending;
+      // Matched delimiter pairs (e.g. `**` … `**`) become one hunk so the pair reviews and applies
+      // atomically — accepting half a pair leaves broken syntax.
+      const paired = pairMarkupHunks(pending, anchor);
+      const grouped = group ? groupHunks(paired, anchor, group) : paired;
       const hunks = charHunks === undefined ? grouped : rebaseHunksWith(charHunks, grouped);
       for (const hunk of hunks) {
         all.push({ ...hunk, author: source.author, colour: source.colour });
@@ -152,7 +170,7 @@ export const suggestions = ({ sources, base, group, onAccept, onReject, onSelect
     const ranges = [];
     const visible: TaggedHunk[] = [];
     // First author to touch a line owns its gutter bar colour (hunks arrive sorted by offset, author).
-    const lineColour = new Map<number, string>();
+    const lineColour = new Map<number, { colour: string; rows?: number; offsetRows?: number }>();
     for (const hunk of tagged(state)) {
       if (dismissed.has(suggestionKey(hunk, hunk.author))) {
         continue;
@@ -174,6 +192,24 @@ export const suggestions = ({ sources, base, group, onAccept, onReject, onSelect
       if (hunk.removed.trim().length === 0 && hunk.inserted.trim().length === 0) {
         continue;
       }
+      // A pure BLOCK insertion renders wholly inside its widget, occupying the TOP rows of its host
+      // line — a full-height gutter bar would tint the host line's own text too, so its bar is
+      // capped to the proposal's rows.
+      if (hunk.removed === '' && hunk.inserted.endsWith('\n')) {
+        const from = state.doc.lineAt(hunk.from).from;
+        if (!lineColour.has(from)) {
+          const leading = hunk.inserted.length - hunk.inserted.replace(/^\n+/, '').length;
+          const core = hunk.inserted.replace(/^\n+/, '').replace(/\n+$/, '');
+          if (core.length > 0) {
+            lineColour.set(from, {
+              colour: hunk.colour,
+              rows: core.split('\n').length,
+              offsetRows: leading > 0 ? leading : undefined,
+            });
+          }
+        }
+        continue;
+      }
       // Trim a trailing newline so a paragraph-break change does not tag the following (empty) line.
       let end = hunk.to;
       while (end > hunk.from && state.doc.sliceString(end - 1, end) === '\n') {
@@ -182,14 +218,14 @@ export const suggestions = ({ sources, base, group, onAccept, onReject, onSelect
       for (let line = state.doc.lineAt(hunk.from).number; line <= state.doc.lineAt(end).number; line++) {
         const from = state.doc.line(line).from;
         if (!lineColour.has(from)) {
-          lineColour.set(from, hunk.colour);
+          lineColour.set(from, { colour: hunk.colour });
         }
       }
     }
     const changeBarSet = RangeSet.of(
       [...lineColour.entries()]
         .sort(([a], [b]) => a - b)
-        .map(([from, colour]) => new ChangeBarMarker(colour).range(from)),
+        .map(([from, { colour, rows, offsetRows }]) => new ChangeBarMarker(colour, rows, offsetRows).range(from)),
     );
     // `sort: true` orders the mixed mark/widget ranges (multiple sources interleave arbitrarily).
     return { dismissed, decorations: Decoration.set(ranges, true), hunks: visible, changeBars: changeBarSet };
@@ -217,7 +253,7 @@ export const suggestions = ({ sources, base, group, onAccept, onReject, onSelect
   return [
     field,
     selectHandler(field, onSelect),
-    suggestTooltip(field, onAccept, onReject),
+    hoverControls ? suggestTooltip(field, onAccept, onReject) : [],
     changeBars((state) => state.field(field).changeBars),
     suggestTheme,
   ];
@@ -397,15 +433,32 @@ class SuggestionWidget extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
-    return Domino.of('span')
-      .classNames('cm-suggest-actions')
-      .append(
-        Domino.of('span')
-          .classNames('cm-suggest-insert')
-          // The author's colour carries attribution: coloured text underlined in the same colour.
-          .style({ color: this.#hunk.colour, borderBottomColor: this.#hunk.colour })
-          .text(this.#hunk.inserted),
-      ).root;
+    // Only the CORE text carries the coloured chrome (underline/bar): leading and trailing newline
+    // runs render as plain unstyled text, so a proposal that starts or ends with a paragraph break
+    // still breaks the layout without drawing stray bar/underline fragments on empty rows — and a
+    // whitespace-only proposal (a bare paragraph break) previews as an unmarked break.
+    const inserted = this.#hunk.inserted;
+    const core = inserted.replace(/^\n+/, '').replace(/\n+$/, '');
+    const leading = inserted.slice(0, inserted.indexOf(core));
+    const trailing = core.length === 0 ? '' : inserted.slice(leading.length + core.length);
+    const root = Domino.of('span').classNames('cm-suggest-actions');
+    if (core.length === 0) {
+      return root.append(Domino.of('span').text(inserted)).root;
+    }
+    if (leading) {
+      root.append(Domino.of('span').text(leading));
+    }
+    root.append(
+      Domino.of('span')
+        .classNames('cm-suggest-insert')
+        // The author's colour carries attribution: coloured text underlined in the same colour.
+        .style({ color: this.#hunk.colour, borderBottomColor: this.#hunk.colour })
+        .text(core),
+    );
+    if (trailing) {
+      root.append(Domino.of('span').text(trailing));
+    }
+    return root.root;
   }
 
   // Pointer events must reach the editor: ignoring them left the preview inert, so hovering it never

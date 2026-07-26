@@ -13,6 +13,7 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Branch } from '@dxos/versioning';
 
 import { ReviewCapabilities } from '../types';
+import { deriveBinding } from './review-lifecycle';
 import { type useVersioning } from './useVersioning';
 
 export type VersionedEditorProps = {
@@ -77,8 +78,9 @@ export const useVersionedEditor = ({
     mode,
   } = versioning;
 
-  // Default branch compare to the accept/reject review overlay ('suggest'); the read-only diff
-  // modes (inline/sideBySide/gutter) are opt-in via settings.
+  // Default branch compare to the accept/reject review overlay ('suggest'); the inline/sideBySide/
+  // gutter diff variants are opt-in via settings and keep the branch editable — a reviewer can
+  // adjust the draft while seeing it diffed against the anchor (see useReviewExtensions).
   const diffViewMode = diffView ?? 'suggest';
   const compareActive = versioning.view === 'diff' && !!activeBranch && branchBaseContent !== undefined;
   // The `base` view shows the parent content at the branch anchor read-only (the state the branch
@@ -143,69 +145,53 @@ export const useVersionedEditor = ({
     };
   }, [ambientSuggesting, document, ownBranchParent, identity?.did]);
 
-  // While a core-branch binding is resolving, the editor must not mount against the root object
-  // — edits would silently land on main. Render an empty panel until the binding is ready. The
-  // same applies to a branch CHECKPOINT: its content is read from the branch-bound Text, which
-  // resolves asynchronously; mounting before it is ready would seed the editor with empty text and
-  // never recover (the editor key does not change when the binding later resolves).
-  const branchLoading =
-    // The base view renders a detached parent snapshot, so it does not wait on the branch binding.
-    (!!activeBranch && !branchText && !baseActive) ||
-    // Any checkpoint, not just a branch one: a root checkpoint reads its text through a ref that may
-    // still be loading, and the `checkpoint-*` key does not change when it resolves — the editor would
-    // stay blank.
-    (!!activeVersion && !checkpointText) ||
-    (!!activeFork && forkContent === undefined) ||
-    // Ambient Suggesting waits on the user's own branch binding so edits never land on main.
-    (ambientSuggesting && !ownBranchText);
+  // The binding decision itself is pure (see review-lifecycle.ts): everything async or model-shaped
+  // is flattened to plain inputs here, so each transition is covered by table tests rather than
+  // re-derived per surface.
+  const binding = deriveBinding({
+    mode,
+    viewMode,
+    policy,
+    selection: selection.kind,
+    branchId: activeBranch?.id,
+    versionId: activeVersion?.id,
+    forkId: activeFork?.id,
+    compareActive,
+    baseActive,
+    suggestActive,
+    branchBound: !!branchText,
+    checkpointResolved: !!checkpointText,
+    forkResolved: forkContent !== undefined,
+    ownBranchBound: !!ownBranchText,
+  });
 
-  // Checkpoint and fork both render read-only from a DETACHED content snapshot, never the live
-  // (pinned) object: binding CodeMirror's automerge sync to a time-travelled doc mismatches (CM
-  // holds the tip text while the historical read is shorter → out-of-range splice). A checkpoint
-  // shows a version's pinned heads; a fork shows the parent content at the branch anchor.
-  const readonlySnapshot = activeVersion
-    ? { key: `checkpoint-${activeVersion.id}`, content: checkpointContent }
-    : activeFork
-      ? { key: `fork-${activeFork.id}`, content: forkContent }
-      : baseActive
-        ? { key: `base-${activeBranch?.id}`, content: branchBaseContent }
-        : undefined;
-  const editorObject = readonlySnapshot
-    ? { id: `${id}--${readonlySnapshot.key}`, text: readonlySnapshot.content ?? '' }
-    : suggestActive
-      ? object
-      : ambientSuggesting && ownBranchText
-        ? ownBranchText
-        : (branchText ?? object);
-  const initialValue = readonlySnapshot
-    ? readonlySnapshot.content
-    : suggestActive
-      ? mainContent
-      : ambientSuggesting && ownBranchText
-        ? ownBranchText.content
-        : (branchText?.content ?? mainContent);
-  // Ambient Viewing (policy not editable) forces read-only without touching the advanced path.
-  const effectiveViewMode = readonlySnapshot || suggestActive || !ambientEditable ? 'readonly' : viewMode;
-  // Remount only when the editor's bound document changes (checkpoint/fork snapshot, branch, or the
-  // suggest overlay which rebinds to the parent). Toggling Compare keeps the same binding — its
-  // overlay is reconfigured live via the compare compartment, so it is deliberately NOT in the key. A
-  // review-mode switch changes `effectiveViewMode`, which `useTextEditor` already reconfigures for.
-  const editorKey = readonlySnapshot
-    ? readonlySnapshot.key
-    : suggestActive
-      ? `suggest-${activeBranch?.id}`
-      : ambientSuggesting
-        ? 'suggesting'
-        : activeBranch
-          ? `branch-${activeBranch.id}`
-          : 'current';
+  const snapshotContent =
+    selection.kind === 'checkpoint' ? checkpointContent : selection.kind === 'fork' ? forkContent : branchBaseContent;
+  const editorObject =
+    binding.subject === 'snapshot'
+      ? { id: `${id}--${binding.snapshotKey}`, text: snapshotContent ?? '' }
+      : // The descriptor only selects these subjects when the binding resolved, so the fallback to
+        // `object` is unreachable — kept over a non-null assertion per the no-cast rule.
+        binding.subject === 'own-branch'
+        ? (ownBranchText ?? object)
+        : binding.subject === 'branch'
+          ? (branchText ?? object)
+          : object;
+  const initialValue =
+    binding.subject === 'snapshot'
+      ? snapshotContent
+      : binding.subject === 'own-branch'
+        ? ownBranchText?.content
+        : binding.subject === 'branch'
+          ? branchText?.content
+          : mainContent;
 
   return {
     editorObject,
     initialValue,
-    editorKey,
-    effectiveViewMode,
-    branchLoading,
+    editorKey: binding.editorKey,
+    effectiveViewMode: binding.effectiveViewMode,
+    branchLoading: binding.loading,
     ambient,
     policy,
     ambientSuggesting,

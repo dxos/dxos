@@ -45,6 +45,11 @@ export namespace ReviewCapabilities {
      * A range (not the changed text) because the companion coalesces adjacent hunks into one card.
      */
     suggestion?: { author: string; from: number; to: number };
+    /**
+     * Authors (DIDs) whose suggestions this user has hidden. A view filter only — the overlay,
+     * change bars and cards skip these sources; the branches themselves are untouched.
+     */
+    hiddenAuthors?: string[];
   };
 
   const VersionSelectionSchema: Schema.Schema<VersionSelection> = Schema.Union(
@@ -63,6 +68,7 @@ export namespace ReviewCapabilities {
       view: Schema.optional(Schema.Literal('base', 'diff', 'branch')),
       mode: Schema.optional(Schema.Literal('editing', 'suggesting', 'viewing')),
       suggestion: Schema.optional(Schema.Struct({ author: Schema.String, from: Schema.Number, to: Schema.Number })),
+      hiddenAuthors: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
     }).pipe(Schema.mutable),
     defaultValue: () => ({}),
   });

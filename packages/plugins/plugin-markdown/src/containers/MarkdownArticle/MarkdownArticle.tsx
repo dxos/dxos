@@ -35,6 +35,7 @@ import {
   type MarkdownPluginState,
   type ReviewMode,
   type UseEditorBinding,
+  type ViewModeSelection,
 } from '#types';
 
 import { mergeConflicts } from '../../extensions';
@@ -44,10 +45,27 @@ import { mergeConflicts } from '../../extensions';
  * object directly, no review affordances. The review mode is kept locally so contributed view-mode
  * entries (e.g. Suggesting) still toggle without a versioning host.
  */
-const useDefaultEditorBinding: UseEditorBinding = ({ object, viewMode }) => {
+const useDefaultEditorBinding: UseEditorBinding = ({ object, viewMode, onViewModeChange }) => {
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
-  const [reviewMode, setReviewMode] = useState<ReviewMode>('editing');
+  // Contributed review modes have no host here; remember the active one so its entry still checks.
+  const [activeReviewMode, setActiveReviewMode] = useState<ReviewMode | undefined>(undefined);
+  const selectViewMode = useCallback(
+    (selection: ViewModeSelection) => {
+      if (selection.kind === 'builtin') {
+        setActiveReviewMode(undefined);
+        onViewModeChange?.(selection.viewMode);
+      } else {
+        setActiveReviewMode(selection.reviewMode);
+        // Contributed modes are editable postures: step off a stale readonly view mode (mirrors
+        // `applyViewModeSelection` in the review binding) or the mode reads active but cannot type.
+        if (viewMode === 'readonly') {
+          onViewModeChange?.('source');
+        }
+      }
+    },
+    [onViewModeChange, viewMode],
+  );
   return {
     subject: object,
     initialValue: docContent ?? textContent,
@@ -55,8 +73,8 @@ const useDefaultEditorBinding: UseEditorBinding = ({ object, viewMode }) => {
     viewMode,
     loading: false,
     ambient: true,
-    reviewMode,
-    setReviewMode,
+    selectViewMode,
+    activeReviewMode,
   };
 };
 
@@ -113,9 +131,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     });
   }
   const useBinding = bindingHooks.length > 0 ? bindingHooks[0] : useDefaultEditorBinding;
+  const { onViewModeChange } = props;
   const bindingProps = useMemo(
-    () => ({ object, id, viewMode, diffView: settings.diffView }),
-    [object, id, viewMode, settings.diffView],
+    () => ({ object, id, viewMode, onViewModeChange, diffView: settings.diffView }),
+    [object, id, viewMode, onViewModeChange, settings.diffView],
   );
 
   return (
@@ -191,13 +210,15 @@ const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { 
     );
 
     // View-mode dropdown entries: the built-in editor modes plus any contributed review modes (e.g.
-    // Suggesting from plugin-review). On the ambient path the dropdown is the single GDocs-style mode
-    // control — selecting a built-in also sets the review posture (source→editing, preview/readonly→
-    // viewing) so leaving a contributed mode works; a contributed entry sets its review mode directly.
-    // Off the ambient path (an explicit branch/checkpoint is selected) the review mode has no effect, so
-    // only the built-in editor modes are shown.
-    const { ambient, reviewMode, setReviewMode } = binding;
+    // Suggesting from plugin-review). Each entry forwards ONE selection to the binding, which owns
+    // what it means — the article does no mode arithmetic, so the review posture and the editor view
+    // mode can never be updated out of step here. Off the ambient path (an explicit branch/checkpoint
+    // is selected) the review mode has no effect, so only the built-in editor modes are shown.
+    const { ambient, activeReviewMode, selectViewMode } = binding;
     const viewModeExtensions = useCapabilities(MarkdownCapabilities.ViewModeExtension);
+    // Bumped on every dropdown selection: the menu returns focus to its trigger on close, so the
+    // editor must be handed the focus back (the caret survives in editor state) — see RefocusEditor.
+    const [focusRequest, setFocusRequest] = useState(0);
     const viewModes = useMemo<ViewModeItem[]>(() => {
       const current = viewMode ?? 'source';
       const contributed: ViewModeItem[] = ambient
@@ -207,8 +228,11 @@ const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { 
               id: extension.id,
               icon: extension.icon,
               label: extension.label,
-              checked: reviewMode === extension.reviewMode,
-              onSelect: () => setReviewMode(extension.reviewMode),
+              checked: activeReviewMode === extension.reviewMode,
+              onSelect: () => {
+                selectViewMode({ kind: 'contributed', reviewMode: extension.reviewMode });
+                setFocusRequest((count) => count + 1);
+              },
             }))
         : [];
       const contributedActive = contributed.some((item) => item.checked);
@@ -218,17 +242,12 @@ const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { 
         // otherwise the built-in matching the current editor view mode is checked.
         checked: !contributedActive && item.id === current,
         onSelect: () => {
-          onViewModeChange?.(item.id);
-          if (ambient) {
-            // Only `readonly` is a viewing posture: `preview` (labelled "Markdown") and `source`
-            // ("Plain text") are both editable, and treating preview as viewing hid every suggestion
-            // and locked the editor the moment the user picked the default mode.
-            setReviewMode(item.id === 'readonly' ? 'viewing' : 'editing');
-          }
+          selectViewMode({ kind: 'builtin', viewMode: item.id });
+          setFocusRequest((count) => count + 1);
         },
       }));
       return [...builtin, ...contributed];
-    }, [viewMode, ambient, reviewMode, setReviewMode, onViewModeChange, viewModeExtensions]);
+    }, [viewMode, ambient, activeReviewMode, selectViewMode, viewModeExtensions]);
 
     // File upload.
     const [upload] = useCapabilities(AppCapabilities.FileUploader);
@@ -286,6 +305,7 @@ const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { 
         {(editorRootProps) => (
           <Editor.Root {...editorRootProps}>
             <RegisterEditorView id={id} attendableId={attendableId} />
+            <RefocusEditor request={focusRequest} />
             {binding.overlays}
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
@@ -318,6 +338,34 @@ MarkdownArticleImpl.displayName = 'MarkdownArticleImpl';
  * Registers the mounted editor view in the shared `EditorViews` registry so operations (e.g.
  * `ScrollToAnchor` from comments/navigation) can target it by id. Must render inside `Editor.Root`.
  */
+/**
+ * Hands focus back to the editor after a view-mode dropdown selection: the menu returns focus to its
+ * trigger on close, which strands the caret (still intact in editor state) until the user clicks.
+ * The menu's own focus return can land after close animations, so a single deferred focus loses the
+ * race — retry over a short bounded window instead, stopping as soon as the editor holds focus.
+ * Gated on the explicit selection counter so the editor never steals focus on ambient changes.
+ */
+const RefocusEditor = ({ request }: { request: number }) => {
+  const { controller } = useEditorContext('MarkdownArticle.RefocusEditor');
+  const view = controller?.view;
+  useEffect(() => {
+    if (request === 0 || !view) {
+      return;
+    }
+    const deadline = Date.now() + 500;
+    const interval = setInterval(() => {
+      if (view.hasFocus || Date.now() > deadline) {
+        clearInterval(interval);
+        return;
+      }
+      view.focus();
+    }, 50);
+    return () => clearInterval(interval);
+  }, [request, view]);
+
+  return null;
+};
+
 const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: string }) => {
   const { controller } = useEditorContext('MarkdownArticle.RegisterEditorView');
   const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);

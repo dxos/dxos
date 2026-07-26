@@ -355,8 +355,22 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
   // The current suggestion, by group key — shared with the editor so clicking a change in the document
   // accents its card, and clicking a card reveals the change.
-  const { suggestion: selectedSuggestion } = useViewState(ReviewCapabilities.viewAspect, subject.id);
-  const { set: setReviewView } = useViewStateActions(ReviewCapabilities.viewAspect, subject.id);
+  const { suggestion: selectedSuggestion, hiddenAuthors } = useViewState(ReviewCapabilities.viewAspect, subject.id);
+  const { set: setReviewView, update: updateReviewView } = useViewStateActions(
+    ReviewCapabilities.viewAspect,
+    subject.id,
+  );
+  // Per-author visibility (session-local): shared through the ViewState aspect so the editor overlay
+  // and change bars filter the same authors the companion hides.
+  const handleToggleAuthor = useCallback(
+    (author: string) =>
+      updateReviewView((prev) => {
+        const hidden = new Set(prev.hiddenAuthors ?? []);
+        hidden.has(author) ? hidden.delete(author) : hidden.add(author);
+        return { ...prev, hiddenAuthors: [...hidden] };
+      }),
+    [updateReviewView],
+  );
   const handleSelectSuggestion = useCallback(
     (group: SuggestionGroup) => {
       setReviewView({ suggestion: { author: group.author, from: group.from, to: group.to } });
@@ -477,6 +491,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 onReject={handleRejectSuggestion}
                 onSelect={handleSelectSuggestion}
                 selected={selectedSuggestion}
+                hiddenAuthors={hiddenAuthors}
+                onToggleAuthor={handleToggleAuthor}
               />
               <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
               <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>

@@ -80,8 +80,8 @@ projects:
     summary: Document revisions & branches (checkpoints, draft branches, merge) for markdown + @dxos/versioning; convergence with PR 11829 core branching.
     tasks: .agents/projects/document-revisions/TASKS.md
     design: packages/plugins/plugin-review/DESIGN.md
-    prs: [12237, 12246, 12290, 12301, 12302, 12315, 12328, 12333]
-    resume: 'PR #12328 MERGED (selection→assistant context, AnchorResolver, get-selection tool, view-state keepAlive fix). PR #12333 OPEN carrying: markdown↔versioning inversion (EditorBindingHook socket) + plugin-comments/plugin-versioning MERGED into plugin-review (org.dxos.plugin.review; ReviewCapabilities; 6 dependents re-pointed; battery + serve-min verified). Publish prep done: changesets repaired, publish-package.mjs uses pnpm publish (dry-run verified) — user runs first publish of @dxos/plugin-review. NEXT: land #12333 (CI unwatched per user until confirmed); in-app History walkthrough; PLUGIN.mdl rewrite; settings-key migration decision. Specs: 2026-07-24-plugin-review-consolidation-design.md + decoupling + selection-context docs in agents/superpowers/specs/.'
+    prs: [12237, 12246, 12290, 12301, 12302, 12315, 12328, 12333, 12339]
+    resume: 'PR #12339 OPEN (auto-merge OFF — user lands after testing): same-view branch swap, I-2 syncBranch reconciliation, pure lifecycle model, shared scenario harness (8 scenarios, headless + plays), per-author visibility, defect arc (diff minimize / microtask reconcile / anchor-stable rebase / focus restore / widget bars / atomic markup pairs). NEXT: user F1-F6 walkthrough per plugin-review/TEST-PLAN.md on the worktree storybook (:9010), then land. Risks queued in DESIGN.md section 5.'
 
   - name: ai-testing-strategy
     status: active

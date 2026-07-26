@@ -45,7 +45,21 @@ import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
 import { ReviewPlugin } from '../plugin';
-import { ReviewStoryLayout, type ReviewStoryPanel, seedComments } from '../testing';
+import {
+  type ReviewScenario,
+  ReviewStoryLayout,
+  type ReviewStoryPanel,
+  boldWrapScenario,
+  editingScenario,
+  modeRoundTripScenario,
+  overlapRoundTripScenario,
+  seedComments,
+  suggestingDeleteScenario,
+  suggestingScenario,
+  tableCellEditScenario,
+  tableSuggestScenario,
+} from '../testing';
+import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook';
 import { translations } from '../translations';
 
 const concat = (...lines: string[]) => lines.join('\n');
@@ -735,29 +749,6 @@ const editorReadOnly = (canvasElement: HTMLElement): boolean | undefined => {
 };
 
 /**
- * Open the editor view-mode dropdown and pick an entry by label. The review mode is now folded into
- * this single dropdown: Source ⇒ editing, Read-only/Preview ⇒ viewing, Suggesting ⇒ suggesting.
- */
-const selectViewMode = async (canvasElement: HTMLElement, label: string) => {
-  const body = within(canvasElement.ownerDocument.body);
-  // The dropdown trigger's accessible name is the ACTIVE item's label (applyActive), so locate it
-  // by its stable eye icon rather than a name that changes with the selection.
-  const trigger = await waitFor(
-    () => {
-      const found = canvasElement.querySelector('button:has(use[href*="ph--eye"])');
-      invariant(found instanceof HTMLElement);
-      return found;
-    },
-    { timeout: 15_000 },
-  );
-  await userEvent.click(trigger);
-  // Scope to the open menu: the trigger renders the ACTIVE item's label too, so a body-wide text
-  // lookup matches both once that mode is selected.
-  const menu = await body.findByRole('menu');
-  await userEvent.click(await within(menu).findByText(label));
-};
-
-/**
  * Ambient review (Milestone A) — the default view, governed by the per-user review mode:
  * - Stays on main and overlays EVERY author's suggestions plus comments (no branch selection).
  * - Editing: both authors' suggestions overlay inline and the comment highlight shows; editor editable.
@@ -946,5 +937,168 @@ export const ReviewChromeTest: Story = {
     await selectViewMode(canvasElement, 'Markdown');
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });
     await expect(canvasElement.querySelector('.cm-content')?.getAttribute('contenteditable')).toBe('true');
+  },
+};
+
+/**
+ * The same-view invariant (DESIGN.md §3.3): ambient mode switches never tear down the editor. The
+ * CodeMirror view — and its DOM — must persist across entering and leaving Suggesting, with caret and
+ * focus surviving and edits landing on the right document.
+ */
+export const SuggestingSwapTest: Story = {
+  args: {
+    content: PROSE,
+    suggestions: [{ creator: 'did:bob', content: PROSE_SUGGESTION_BOB }],
+  },
+  parameters: {
+    ambientReview: true,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 20_000 });
+    const contentEl = () => canvasElement.querySelector<HTMLElement>('.cm-content');
+    const before = contentEl();
+    invariant(before, 'editor not mounted');
+    const view = EditorView.findFromDOM(before);
+    invariant(view, 'view not found');
+
+    // Park the caret mid-paragraph and enter Suggesting.
+    view.focus();
+    const anchor = view.state.doc.toString().indexOf('any order');
+    view.dispatch({ selection: { anchor } });
+    await selectViewMode(canvasElement, 'Suggesting');
+    await waitFor(() => expect(contentEl()?.getAttribute('contenteditable')).toBe('true'), { timeout: 15_000 });
+
+    // Same view, same DOM — no teardown; caret survived the swap.
+    await expect(contentEl()).toBe(before);
+    await expect(EditorView.findFromDOM(before)).toBe(view);
+    await expect(view.state.selection.main.anchor).toBe(anchor);
+
+    // Type: the edit lands on the BRANCH (as the user's tracked change), never on main.
+    view.dispatch({
+      changes: { from: anchor, insert: 'SWAP' },
+      selection: { anchor: anchor + 'SWAP'.length },
+      userEvent: 'input.type',
+    });
+    await waitFor(() => expect(trackInserts(canvasElement)).toContain('SWAP'), { timeout: 15_000 });
+    await expect(rootContent()).not.toContain('SWAP');
+
+    // Leave Suggesting: still the same view and DOM.
+    await selectViewMode(canvasElement, 'Markdown');
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('SWAP'), { timeout: 15_000 });
+    await expect(contentEl()).toBe(before);
+    await expect(EditorView.findFromDOM(before)).toBe(view);
+  },
+};
+
+//
+// Shared-scenario plays: each runs a `testing/scenarios.ts` definition through the full plugin
+// stack. The SAME definitions run headless in `testing/scenarios.test.tsx`, so the tiers cannot
+// drift — a new step kind fails both executors at compile time until each interprets it.
+//
+
+const scenarioArgs = (scenario: ReviewScenario): StoryArgs => ({
+  content: scenario.setup.content,
+  suggestions: scenario.setup.suggestions,
+});
+
+export const ScenarioEditingTest: Story = {
+  args: scenarioArgs(editingScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(editingScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioSuggestingTest: Story = {
+  args: scenarioArgs(suggestingScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(suggestingScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioSuggestingDeleteTest: Story = {
+  args: scenarioArgs(suggestingDeleteScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(suggestingDeleteScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioModeRoundTripTest: Story = {
+  args: scenarioArgs(modeRoundTripScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(modeRoundTripScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioOverlapRoundTripTest: Story = {
+  args: scenarioArgs(overlapRoundTripScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(overlapRoundTripScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioBoldWrapTest: Story = {
+  args: scenarioArgs(boldWrapScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(boldWrapScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioTableSuggestTest: Story = {
+  args: scenarioArgs(tableSuggestScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(tableSuggestScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioTableCellEditTest: Story = {
+  args: scenarioArgs(tableCellEditScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(tableCellEditScenario, { canvasElement, doc: getDoc }),
+};
+
+/**
+ * Per-author suggestion visibility (F2.7): toggling an author off in the companion removes their
+ * overlay decorations and cards for this user only; toggling back restores them. Other authors are
+ * unaffected throughout, and the branches themselves are untouched.
+ */
+export const AuthorVisibilityTest: Story = {
+  args: {
+    content: PROSE,
+    suggestions: [
+      { creator: 'did:alice', content: PROSE_SUGGESTION_ALICE },
+      { creator: 'did:bob', content: PROSE_SUGGESTION_BOB },
+    ],
+  },
+  parameters: {
+    ambientReview: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Both authors overlay in the editor and the companion lists both cards.
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 20_000 });
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('the point of the whole'));
+    // A suggestion card is a thread message tile carrying the Accept control (comment tiles don't).
+    const suggestionCards = () =>
+      Array.from(canvasElement.querySelectorAll('[data-testid="thread.message"]'))
+        .filter((tile) => tile.querySelector('[data-testid="thread.message.accept-change"]'))
+        .map((tile) => tile.textContent ?? '')
+        .join(' ');
+    await waitFor(() => expect(suggestionCards()).toContain('Bob'), { timeout: 15_000 });
+
+    // Toggle Bob off: his overlay and cards disappear; Alice is untouched; his branch survives.
+    const bobToggle = async () => {
+      const toggles = await canvas.findAllByTestId('suggestion-author-toggle');
+      const found = toggles.find((toggle) => toggle.textContent?.includes('did:bob'));
+      invariant(found, 'Bob toggle not found');
+      return found;
+    };
+    await userEvent.click(await bobToggle());
+    await waitFor(() => expect(suggestInserts(canvasElement)).not.toContain('Bob'), { timeout: 15_000 });
+    await expect(suggestInserts(canvasElement)).toContain('the point of the whole');
+    await waitFor(() => expect(suggestionCards()).not.toContain('Bob'));
+    await expect(suggestionCards()).toContain('point of the whole');
+    await expect(
+      getDoc().history?.branches.some(
+        (branch) => branch.status === 'active' && branch.kind === 'suggestion' && branch.creator === 'did:bob',
+      ),
+    ).toBe(true);
+
+    // Toggle Bob back on: overlay and cards return.
+    await userEvent.click(await bobToggle());
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });
+    await waitFor(() => expect(suggestionCards()).toContain('Bob'));
   },
 };
