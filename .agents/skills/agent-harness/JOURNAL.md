@@ -103,3 +103,113 @@ For more information, pass `verbose: true` in the second argument to fetch()
 statement. This is consistent with IBKR being temporarily busy (similar in nature to the earlier
 `ErrorCode 1001` throttle events logged above). No portfolio data was fetched; `GetPortfolio` was
 not called. Stopping as instructed.
+
+## dx-agent IBKR fetch attempt 2
+
+**Date:** 2025-07-10
+
+**Action:** Called `SyncPortfolioReport` exactly once (no retries, no loop).
+
+**Result:** ❌ Sync failed — IBKR is temporarily busy/unreachable.
+
+**Exact error text:**
+
+```
+IbkrSyncError: The socket connection was closed unexpectedly.
+For more information, pass `verbose: true` in the second argument to fetch()
+caused by:
+Error: The socket connection was closed unexpectedly.
+For more information, pass `verbose: true` in the second argument to fetch()
+```
+
+**Notes:** Same socket-close failure as attempt 1. `GetPortfolio` was not called (no data to
+retrieve). IBKR is temporarily busy. Stopping as instructed — no retry, no loop.
+
+## dx-agent IBKR fetch attempt 3 (direct fetch)
+
+**Date:** 2025-07-26
+
+**Action:** Called `SyncPortfolioReport` exactly once (no retries, no loop).
+Fetch path: direct (`globalThis.fetch`) — CORS proxy removed in the fix logged below.
+
+**Result:** ❌ Sync failed — same socket-close error as attempts 1 & 2.
+
+**Exact error text:**
+
+```
+IbkrSyncError: The socket connection was closed unexpectedly.
+For more information, pass `verbose: true` in the second argument to fetch()
+caused by:
+Error: The socket connection was closed unexpectedly.
+For more information, pass `verbose: true` in the second argument to fetch()
+```
+
+**Notes:** Despite switching from the CORS proxy to a direct `globalThis.fetch`, the error is
+identical. The socket is being closed before IBKR returns a response. `GetPortfolio` was not
+called (no data to retrieve). Stopping as instructed — no retry, no loop.
+
+## Fix: Remove CORS proxy from flex-client / sec-edgar-client (2025-07-26)
+
+**Problem:** `SyncPortfolioReport` was failing in the CLI with
+`"The socket connection was closed unexpectedly"`. Root cause: both
+`flex-client.ts` and `sec-edgar-client.ts` used `proxyFetchLegacy` from
+`@dxos/edge-client/cors-proxy` as their default `fetchImpl`. This routes all
+HTTP traffic through the Cloudflare Worker at `cors-proxy.dxos.workers.dev`.
+CORS proxies exist solely for browser security constraints; in a Node/bun CLI
+environment they add an unnecessary hop and are unreliable (socket closes, etc.).
+A direct network call to `ndcdyn.interactivebrokers.com` from this host works
+fine, confirming the proxy was the problem.
+
+**Fix:**
+
+- `packages/plugins/plugin-ibkr/src/services/flex-client.ts`: Removed
+  `import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy'`. Changed
+  `defaultFetch` from `proxyFetchLegacy(new URL(url))` to
+  `globalThis.fetch(url)`. The injectable `fetchImpl` parameter is preserved
+  so tests and browser callers can still supply their own implementation
+  (including `proxyFetchLegacy` for browser contexts if needed).
+- `packages/plugins/plugin-ibkr/src/services/sec-edgar-client.ts`: Same
+  change — removed `proxyFetchLegacy` import, replaced `defaultFetch` with
+  `globalThis.fetch(url, { ...init, headers: { ... } })`.
+
+**Build:** `moon run plugin-ibkr:build` → ✅ clean (23s, hash `71ca7ffe`).
+No other files changed; the `@dxos/edge-client` dep in `package.json` was
+only transitively needed and is not directly imported by the plugin's source
+after this fix.
+
+**Next:** Call `SyncPortfolioReport` once to verify end-to-end fetch now
+succeeds (hypervisor/agent next turn).
+
+## POSTMORTEM — live fetch blocked by runtime egress (not IBKR, not the plugin)
+
+**Date:** 2026-07-26
+
+**Symptom:** Every CLI `SyncPortfolioReport` attempt fails with
+`"The socket connection was closed unexpectedly"` — via the EDGE CORS proxy _and_ via a direct
+`globalThis.fetch` (the agent tried both). `GetPortfolio` never gets data.
+
+**Root cause (diagnosed by the hypervisor — environment, not the task):** the `dx` CLI runs on
+**bun 1.3.11**, and bun's `fetch` does **not** egress through this sandbox's agent proxy
+(`HTTPS_PROXY`). Verified: `curl` through the proxy reaches IBKR/SEC fine (returns real data), but
+`bun -e "fetch('https://example.com')"` fails with the identical socket-close under **every**
+config tried — default, explicit `{proxy}`, lowercase `https_proxy`, `SSL_CERT_FILE`,
+`NODE_EXTRA_CA_CERTS`. IBKR/SEC are not in the proxy `no_proxy` allowlist, so they _must_ traverse
+the proxy, which bun-fetch can't do. This is **deterministic**, not the earlier transient IBKR
+`1001` throttle — waiting/retrying cannot fix it.
+
+**Impact:** all live outbound fetch from the CLI is blocked — IBKR `SyncPortfolioReport` **and** SEC
+`GetInstrumentFundamentals`. It is a runtime/sandbox limitation, not a defect in the harness, the
+plugin wiring, the credential, or the operations.
+
+**What IS verified:** harness P1–P4; IBKR plugin installed + loaded; credential stored (`dx connector
+list`); operation wiring; SEC-EDGAR + flex parsing **logic** (unit tests pass with injected fetch);
+and the self-develop + reload loop end-to-end (agent diagnosed → edited plugin → rebuilt →
+`request_reload` → hypervisor reloaded → agent retried — the _mechanism_ works, even though the fix
+didn't address the true env cause).
+
+**Actions:** reverted the agent's `proxyFetchLegacy`→direct change (browsers need the CORS proxy; it
+didn't fix egress). No plugin change kept.
+
+**Path to finish (outside this sandbox):** run `dx` where bun's fetch can reach the internet (or the
+proxy is bun-compatible), then a single agent turn completes it:
+`dx agent --skill org.dxos.skill.ibkr "run SyncPortfolioReport once, then GetPortfolio"`.
