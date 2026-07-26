@@ -22,6 +22,9 @@ export const translations = [
         'levels.inherit': 'Inherit',
         'levels.empty': 'No log files registered yet.',
         'empty.message': 'No log entries.',
+        'search.placeholder': 'Find in buffer…',
+        'search.clear': 'Clear filter',
+        'search.no-matches': 'No matching entries.',
         // oxlint-disable-next-line @dxos/rules/translation-key-format
         'level.trace': 'Trace',
         // oxlint-disable-next-line @dxos/rules/translation-key-format

@@ -83,6 +83,8 @@ type LoggerContextValue = {
   rows: LogRow[];
   filter: string;
   setFilter: (filter: string) => void;
+  textFilter: string;
+  setTextFilter: (value: string) => void;
   recording: boolean;
   setRecording: (fn: (value: boolean) => boolean) => void;
   files: string[];
@@ -114,6 +116,7 @@ const LoggerRoot = ({
   defaultRecording = true,
 }: LoggerRootProps) => {
   const [filter, setFilter] = useState(initialFilter);
+  const [textFilter, setTextFilter] = useState('');
   const [recording, setRecording] = useState(defaultRecording);
   const [rows, setRows] = useState<LogRow[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
@@ -225,6 +228,8 @@ const LoggerRoot = ({
       rows={rows}
       filter={filter}
       setFilter={setFilter}
+      textFilter={textFilter}
+      setTextFilter={setTextFilter}
       recording={recording}
       setRecording={setRecording}
       files={files}
@@ -426,17 +431,28 @@ export type LoggerListProps = ThemedClassName<{}>;
 
 const LoggerList = ({ classNames }: LoggerListProps) => {
   const { t } = useTranslation(translationKey);
-  const { rows, expanded, toggleExpand } = useLoggerContext('Logger.List');
+  const { rows, expanded, toggleExpand, textFilter } = useLoggerContext('Logger.List');
 
-  if (rows.length === 0) {
-    return <div className={mx('p-2 text-subdued', classNames)}>{t('empty.message')}</div>;
+  // Compute the display record once; filter the buffer by a case-insensitive match on file + message.
+  const needle = textFilter.trim().toLowerCase();
+  const visible = rows
+    .map((row) => ({ ...row, record: formatLogEntry(row.entry) }))
+    .filter(({ record }) =>
+      needle ? `${record.file ?? ''} ${record.message ?? ''}`.toLowerCase().includes(needle) : true,
+    );
+
+  if (visible.length === 0) {
+    return (
+      <div className={mx('p-2 text-subdued', classNames)}>
+        {t(rows.length === 0 ? 'empty.message' : 'search.no-matches')}
+      </div>
+    );
   }
 
   return (
     <Listbox.Root>
       <Listbox.Content classNames={mx(classNames)}>
-        {rows.map(({ id, entry }) => {
-          const record = formatLogEntry(entry);
+        {visible.map(({ id, entry, record }) => {
           const expandable = Boolean(record.context || record.error);
           return (
             <Listbox.Item key={id} id={String(id)} classNames='group px-1'>
@@ -478,5 +494,40 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
 };
 
 LoggerList.displayName = 'Logger.List';
+
+//
+// Filter
+//
+
+export type LoggerFilterProps = ComposableProps;
+
+const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
+  const { textFilter, setTextFilter } = useLoggerContext('Logger.Filter');
+
+  return (
+    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+      <Input.Root>
+        <Input.TextInput
+          placeholder={t('search.placeholder')}
+          value={textFilter}
+          autoComplete='off'
+          spellCheck={false}
+          onChange={(ev) => setTextFilter(ev.target.value)}
+        />
+      </Input.Root>
+      {textFilter.length > 0 && (
+        <Toolbar.IconButton
+          icon='ph--x--regular'
+          iconOnly
+          label={t('search.clear')}
+          onClick={() => setTextFilter('')}
+        />
+      )}
+    </Toolbar.Root>
+  );
+});
+
+LoggerFilter.displayName = 'Logger.Filter';
 
 export { useLoggerContext };
