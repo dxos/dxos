@@ -372,7 +372,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                   <ScrollArea.Viewport>
                     {visibleFiles.length === 0 && (
                       <div className='p-2 text-xs text-subdued'>
-                        {t(files.length === 0 ? 'levels.empty' : 'search.no-matches')}
+                        {t(files.length === 0 ? 'levels.empty.message' : 'search.no-matches.message')}
                       </div>
                     )}
                     {visibleFiles.length > 0 && (
@@ -386,11 +386,11 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                               <Listbox.Item
                                 key={file}
                                 id={file}
-                                classNames='grid grid-cols-[1fr_7rem] items-center gap-1'
+                                classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'
                               >
-                                <Listbox.ItemLabel classNames='text-xs' title={file}>
+                                <Listbox.ItemLabel classNames='flex flex-col text-xs' title={file}>
+                                  {pkg && <div className='text-subdued'>{pkg}</div>}
                                   {basename}
-                                  {pkg && <span className='text-subdued'> · {pkg}</span>}
                                 </Listbox.ItemLabel>
                                 <Select.Root
                                   value={value}
@@ -398,13 +398,16 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                     setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
                                   }
                                 >
-                                  <Select.TriggerButton classNames='w-full text-sm' placeholder={t('levels.inherit')} />
+                                  <Select.TriggerButton
+                                    classNames='w-full text-sm'
+                                    placeholder={t('levels.inherit.label')}
+                                  />
                                   <Select.Portal>
                                     <Select.Content>
                                       <Select.ScrollUpButton />
                                       <Select.Viewport>
                                         <Select.Option value='inherit' classNames='text-sm'>
-                                          {t('levels.inherit')}
+                                          {t('levels.inherit.label')}
                                         </Select.Option>
                                         {LEVELS.map((level) => (
                                           <Select.Option key={level} value={level} classNames='text-sm'>
@@ -487,7 +490,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
   if (visible.length === 0) {
     return (
       <div className={mx('p-2 text-subdued', classNames)}>
-        {t(rows.length === 0 ? 'empty.message' : 'search.no-matches')}
+        {t(rows.length === 0 ? 'empty.message' : 'search.no-matches.message')}
       </div>
     );
   }
@@ -561,7 +564,7 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
         <Toolbar.IconButton
           icon='ph--x--regular'
           iconOnly
-          label={t('search.clear')}
+          label={t('search.clear.label')}
           onClick={() => setTextFilter('')}
         />
       )}
