@@ -133,9 +133,7 @@ export type ObjectCellSpec = {
 
 /** A single grid cell. */
 export type ModuleSpec =
-  | Role.Role<any>
-  | { type: Role.Role<any>; data?: Record<string, any>; id?: string }
-  | ObjectCellSpec;
+  Role.Role<any> | { type: Role.Role<any>; data?: Record<string, any>; id?: string } | ObjectCellSpec;
 
 /** 2D layout: outer array = columns, inner array = stacked rows within a column. */
 export type ModuleLayout = ModuleSpec[][];

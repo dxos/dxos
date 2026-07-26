@@ -53,9 +53,7 @@ Multiple `exports` subpaths so other in-repo plugins, the assistant, and the CLI
   "name": "@dxos/plugin-foo",
   "private": true,
   "type": "module",
-  "imports": {
-    /* same #aliases as community */
-  },
+  "imports": {/* same #aliases as community */},
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -113,9 +111,7 @@ export const FooPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Foo.Thing.typename,
-      metadata: {
-        /* createObject only */
-      },
+      metadata: {/* createObject only */},
     },
   }),
   AppPlugin.addSchemaModule({ schema: [Foo.Thing] }),

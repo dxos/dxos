@@ -258,8 +258,7 @@ export const ListRequest = Schema.Struct({
 export type ListRequest = Schema.Schema.Type<typeof ListRequest>;
 
 export type ListAck =
-  | { version: 1; id: string; ok: true; actions: Descriptor[] }
-  | { version: 1; id: string; ok: false; error: string };
+  { version: 1; id: string; ok: true; actions: Descriptor[] } | { version: 1; id: string; ok: false; error: string };
 
 export const PageInfo = Schema.Struct({
   url: Schema.String,
@@ -290,8 +289,7 @@ export type InvokeRequest = Schema.Schema.Type<typeof InvokeRequest>;
  *   - `operationFailed`    : the target operation returned an error
  */
 export type InvokeAck =
-  | { version: 1; id: string; ok: true; objectId?: string }
-  | { version: 1; id: string; ok: false; error: string };
+  { version: 1; id: string; ok: true; objectId?: string } | { version: 1; id: string; ok: false; error: string };
 ```
 
 - [ ] **Step 3:** Append to `types/CrxCapabilities.ts`:
