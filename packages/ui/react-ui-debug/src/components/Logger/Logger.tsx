@@ -19,7 +19,6 @@ import {
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import { formatLogEntry } from './format';
 
 //
@@ -29,7 +28,7 @@ import { formatLogEntry } from './format';
 export const LEVELS = ['trace', 'debug', 'verbose', 'info', 'warn', 'error'] as const;
 export type LevelName = (typeof LEVELS)[number];
 
-const DEFAULT_MAX_LINES = 1000;
+const DEFAULT_MAX_LINES = 1_000;
 
 export const levelColor = (level: LogLevel) =>
   level > LogLevel.WARN
@@ -200,7 +199,13 @@ const LoggerRoot = ({
     setExpanded(new Set());
   }, []);
   const copyAll = useCallback(() => {
-    copyToClipboard(JSON.stringify(rows.map(({ entry }) => formatLogEntry(entry)), null, 2));
+    copyToClipboard(
+      JSON.stringify(
+        rows.map(({ entry }) => formatLogEntry(entry)),
+        null,
+        2,
+      ),
+    );
   }, [rows]);
   const toggleExpand = useCallback((id: number) => {
     setExpanded((prev) => {
@@ -293,6 +298,7 @@ LoggerToolbar.displayName = 'Logger.Toolbar';
 
 // Temporary stub — replaced by the full Levels popover in the next task.
 const LoggerLevels = () => null;
+
 LoggerLevels.displayName = 'Logger.Levels';
 
 //
