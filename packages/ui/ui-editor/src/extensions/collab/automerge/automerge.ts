@@ -70,7 +70,11 @@ export const automerge = (accessor: Doc.Accessor): Extension => {
         constructor(private readonly _view: EditorView) {
           accessor.handle.addListener('change', this._handleChange);
 
-          requestAnimationFrame(() => {
+          // Reconcile on attach: a compartment swap hands this extension a view whose content is the
+          // PREVIOUS document's. Deferred by a microtask only to escape the in-progress update cycle;
+          // rAF is not reliable for correctness (hidden/throttled frames never fire it), and until
+          // this replace runs every write maps view coordinates onto the wrong document.
+          queueMicrotask(() => {
             const value = Doc.getValue<string>(accessor);
             const current = this._view.state.doc.toString();
             if (value !== current) {

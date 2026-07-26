@@ -69,9 +69,37 @@ export const diffHunks = (before: string, after: string): DiffHunk[] => {
   const hunks: DiffHunk[] = [];
   let position = 0;
   let pending: DiffHunk | undefined;
+  // Word-level diffing treats `WorldHello` -> `WorldHelloWorld` as one changed word, yielding a
+  // replace that claims the unchanged `WorldHello` — struck through and re-inserted, that renders as
+  // doubled text. When one side is contained in the other at an edge, trim it to the pure
+  // insert/delete core; genuine replaces keep word granularity (whole-word strikes read better).
+  const minimize = (hunk: DiffHunk): DiffHunk => {
+    const { removed, inserted } = hunk;
+    let prefix = 0;
+    while (prefix < removed.length && prefix < inserted.length && removed[prefix] === inserted[prefix]) {
+      prefix++;
+    }
+    let suffix = 0;
+    while (
+      suffix < removed.length - prefix &&
+      suffix < inserted.length - prefix &&
+      removed[removed.length - 1 - suffix] === inserted[inserted.length - 1 - suffix]
+    ) {
+      suffix++;
+    }
+    if (prefix + suffix !== removed.length && prefix + suffix !== inserted.length) {
+      return hunk;
+    }
+    return {
+      from: hunk.from + prefix,
+      to: hunk.to - suffix,
+      removed: removed.slice(prefix, removed.length - suffix),
+      inserted: inserted.slice(prefix, inserted.length - suffix),
+    };
+  };
   const flush = () => {
     if (pending) {
-      hunks.push(pending);
+      hunks.push(minimize(pending));
       pending = undefined;
     }
   };

@@ -15,9 +15,10 @@ import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
 import { automerge } from '@dxos/ui-editor';
-import { Branch } from '@dxos/versioning';
+import { Branch, Version } from '@dxos/versioning';
 
 import { useMarkdownEditorBinding } from '../hooks';
+import { suggestionGroups } from '../hooks/suggestion-sources';
 import { type ReviewScenario, type ScenarioStep } from './scenarios';
 
 type Harness = ReturnType<typeof useMarkdownEditorBinding>;
@@ -128,7 +129,7 @@ export const runScenarioHeadless = async (
           break;
         }
         case 'type': {
-          const at = view.state.doc.toString().indexOf(step.at);
+          const at = step.at !== undefined ? view.state.doc.toString().indexOf(step.at) : view.state.doc.length;
           invariant(at >= 0, `${label}: anchor not found`);
           view.dispatch({
             changes: { from: at, insert: step.text },
@@ -188,6 +189,47 @@ export const runScenarioHeadless = async (
               );
               invariant(branch, `${label}: own branch missing`);
               expect(view.state.doc.toString(), label).toContain(step.contains);
+            },
+            { timeout: 5_000 },
+          );
+          break;
+        }
+        case 'expect-clean-insert': {
+          await waitFor(
+            async () => {
+              const branch = doc.history?.branches.find(
+                (candidate) =>
+                  candidate.status === 'active' &&
+                  candidate.kind === 'suggestion' &&
+                  candidate.creator === context.identity.did,
+              );
+              invariant(branch, `${label}: own branch missing`);
+              const binding = await Branch.bind(doc, branch);
+              try {
+                const base = branch.anchor ? Version.contentAt(root, branch.anchor) : root.content;
+                const groups = suggestionGroups(root.content, [
+                  { author: branch.creator ?? '', colour: '', content: binding.object.content, base },
+                ]);
+                expect(
+                  groups.some((group) => group.inserted.includes(step.text)),
+                  label,
+                ).toBe(true);
+                for (const group of groups) {
+                  expect(group.removed, `${label}: hunk strikes existing text`).toBe('');
+                }
+              } finally {
+                binding.dispose();
+              }
+            },
+            { timeout: 5_000 },
+          );
+          break;
+        }
+        case 'expect-count': {
+          await waitFor(
+            () => {
+              const text = step.where === 'doc' ? view.state.doc.toString() : root.content;
+              expect(text.split(step.text).length - 1, label).toBe(step.count);
             },
             { timeout: 5_000 },
           );

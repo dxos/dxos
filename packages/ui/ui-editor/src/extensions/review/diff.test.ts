@@ -138,6 +138,36 @@ describe('diffHunks', () => {
     expect(hunks[0].inserted).toBe('two ');
   });
 
+  test('an insert adjacent to identical text stays a pure insertion (minimal hunk)', ({ expect }) => {
+    // Word-level diffing sees `WorldHello` -> `WorldHelloWorld` as one changed word; the hunk must
+    // still not claim the unchanged `WorldHello` — a replace here strikes real document text and
+    // re-inserts it, which renders as doubled content.
+    const before = '# Hello WorldHello\n\n';
+    const hunks = diffHunks(before, '# Hello WorldHelloWorld\n\n');
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].removed).toBe('');
+    expect(hunks[0].inserted).toBe('World');
+    expect(hunks[0].from).toBe(hunks[0].to);
+    expect(applyAll(before, hunks)).toBe('# Hello WorldHelloWorld\n\n');
+  });
+
+  test('a delete adjacent to identical text stays a pure deletion (minimal hunk)', ({ expect }) => {
+    const before = '# Hello WorldHelloWorld\n\n';
+    const hunks = diffHunks(before, '# Hello WorldHello\n\n');
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].inserted).toBe('');
+    expect(hunks[0].removed).toBe('World');
+    expect(applyAll(before, hunks)).toBe('# Hello WorldHello\n\n');
+  });
+
+  test('a genuine word replace keeps word granularity (no mid-word trim)', ({ expect }) => {
+    const before = 'the lazy dog';
+    const hunks = diffHunks(before, 'the lively dog');
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].removed).toBe('lazy');
+    expect(hunks[0].inserted).toBe('lively');
+  });
+
   test('a pure deletion has no inserted text', ({ expect }) => {
     const hunks = diffHunks('one two three', 'one three');
     expect(hunks).toHaveLength(1);

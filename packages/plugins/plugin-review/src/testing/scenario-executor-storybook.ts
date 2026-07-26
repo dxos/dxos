@@ -90,10 +90,11 @@ export const runScenarioStorybook = async (
     return root.content;
   };
 
-  // Mount settle: the editor shows the seeded content.
+  // Mount settle: the editor shows the seeded content (or merely mounts, when seeded empty).
   const marker = scenario.setup.content.split('\n').find((line) => line.trim().length > 0);
-  invariant(marker, 'scenario content is empty');
-  await waitFor(() => expect(findView(canvasElement).state.doc.toString()).toContain(marker), { timeout: 20_000 });
+  await waitFor(() => expect(findView(canvasElement).state.doc.toString()).toContain(marker ?? ''), {
+    timeout: 20_000,
+  });
 
   for (const [index, step] of scenario.steps.entries()) {
     const label = `${scenario.name} step ${index + 1} (${step.kind})`;
@@ -109,7 +110,7 @@ export const runScenarioStorybook = async (
       }
       case 'type': {
         const view = findView(canvasElement);
-        const at = view.state.doc.toString().indexOf(step.at);
+        const at = step.at !== undefined ? view.state.doc.toString().indexOf(step.at) : view.state.doc.length;
         invariant(at >= 0, `${label}: anchor not found`);
         view.focus();
         view.dispatch({
@@ -176,6 +177,29 @@ export const runScenarioStorybook = async (
             } finally {
               binding.dispose();
             }
+          },
+          { timeout: 15_000 },
+        );
+        break;
+      }
+      case 'expect-clean-insert': {
+        await waitFor(
+          async () => {
+            const inserts = Array.from(canvasElement.querySelectorAll('.cm-suggest-insert'))
+              .map((node) => node.textContent ?? '')
+              .join(' ');
+            await expect(inserts, label).toContain(step.text);
+            await expect(canvasElement.querySelectorAll('.cm-suggest-delete'), label).toHaveLength(0);
+          },
+          { timeout: 15_000 },
+        );
+        break;
+      }
+      case 'expect-count': {
+        await waitFor(
+          async () => {
+            const text = step.where === 'doc' ? findView(canvasElement).state.doc.toString() : rootContent();
+            await expect(text.split(step.text).length - 1, label).toBe(step.count);
           },
           { timeout: 15_000 },
         );

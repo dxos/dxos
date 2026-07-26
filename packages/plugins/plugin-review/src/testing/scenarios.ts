@@ -20,8 +20,8 @@ export type ScenarioSetup = {
 export type ScenarioStep =
   /** Select a posture/view mode through the single dropdown gesture. */
   | { kind: 'select-mode'; mode: 'editing' | 'suggesting' | 'viewing'; viewMode?: 'preview' | 'source' | 'readonly' }
-  /** Type text at the position of `at` (an anchor substring in the current editor document). */
-  | { kind: 'type'; at: string; text: string }
+  /** Type text at the position of `at` (an anchor substring), or at the document end when omitted. */
+  | { kind: 'type'; at?: string; text: string }
   /** Delete the given substring from the current editor document. */
   | { kind: 'delete'; text: string }
   // Expectations — checked by both executors.
@@ -32,6 +32,13 @@ export type ScenarioStep =
   | { kind: 'expect-main'; contains?: string; lacks?: string }
   /** The current user's suggestion branch contains a substring. */
   | { kind: 'expect-own-branch'; contains: string }
+  /** Exact occurrence count of a substring — catches doubling, which `contains` cannot. */
+  | { kind: 'expect-count'; where: 'doc' | 'main'; text: string; count: number }
+  /**
+   * The user's pending suggestion is a PURE insertion containing `text`: no hunk strikes existing
+   * document text. Guards the doubled-text defect — a non-minimal hunk re-inserting unchanged text.
+   */
+  | { kind: 'expect-clean-insert'; text: string }
   /** The user's own tracked change: contains a substring, or (`none`) no own change/branch exists. */
   | { kind: 'expect-own-change'; contains?: string; none?: boolean };
 
@@ -94,4 +101,75 @@ export const suggestingDeleteScenario: ReviewScenario = {
   ],
 };
 
-export const reviewScenarios: ReviewScenario[] = [editingScenario, suggestingScenario, suggestingDeleteScenario];
+/**
+ * The full ambient round-trip from an empty document: type on main, suggest, return to main, type
+ * after the suggestion, re-enter Suggesting. Guards the two swap invariants — no content doubling on
+ * any mode switch, and typing on main after a trailing suggestion lands at main's end.
+ */
+export const modeRoundTripScenario: ReviewScenario = {
+  name: 'mode round-trip keeps main and the suggestion separate',
+  setup: { content: '' },
+  steps: [
+    { kind: 'type', text: 'Hello\n' },
+    { kind: 'expect-main', contains: 'Hello' },
+    { kind: 'select-mode', mode: 'suggesting' },
+    { kind: 'type', text: 'World\n' },
+    { kind: 'expect-own-change', contains: 'World' },
+    { kind: 'expect-own-branch', contains: 'World' },
+    { kind: 'expect-main', lacks: 'World' },
+    { kind: 'select-mode', mode: 'editing', viewMode: 'preview' },
+    { kind: 'expect-clean-insert', text: 'World' },
+    { kind: 'expect-count', where: 'doc', text: 'Hello', count: 1 },
+    { kind: 'expect-count', where: 'main', text: 'Hello', count: 1 },
+    { kind: 'expect-main', lacks: 'World' },
+    { kind: 'type', text: 'After\n' },
+    { kind: 'expect-main', contains: 'Hello\nAfter' },
+    { kind: 'expect-count', where: 'main', text: 'World', count: 0 },
+    { kind: 'select-mode', mode: 'suggesting' },
+    { kind: 'expect-count', where: 'doc', text: 'World', count: 1 },
+    { kind: 'expect-count', where: 'doc', text: 'Hello', count: 1 },
+    { kind: 'expect-count', where: 'doc', text: 'After', count: 1 },
+    { kind: 'expect-main', lacks: 'World' },
+  ],
+};
+
+/**
+ * The same round-trip when the suggested text ALREADY OCCURS in the document (`World` is in the
+ * seeded heading): the review layer's applied-change matching is content-based, so overlapping text
+ * is where a suggestion can be mistaken for an accepted edit, double, or swallow input.
+ */
+export const overlapRoundTripScenario: ReviewScenario = {
+  name: 'round-trip with content overlapping the suggestion',
+  setup: { content: '# Hello World\n' },
+  steps: [
+    { kind: 'type', text: 'Hello\n' },
+    { kind: 'expect-count', where: 'main', text: 'Hello', count: 2 },
+    { kind: 'select-mode', mode: 'suggesting' },
+    { kind: 'type', text: 'World\n' },
+    { kind: 'expect-own-change', contains: 'World' },
+    { kind: 'expect-count', where: 'main', text: 'World', count: 1 },
+    { kind: 'expect-count', where: 'doc', text: 'World', count: 2 },
+    { kind: 'select-mode', mode: 'editing', viewMode: 'preview' },
+    { kind: 'expect-clean-insert', text: 'World' },
+    { kind: 'expect-count', where: 'doc', text: 'Hello', count: 2 },
+    { kind: 'expect-count', where: 'main', text: 'World', count: 1 },
+    { kind: 'type', text: 'After\n' },
+    { kind: 'expect-main', contains: 'Hello\nAfter' },
+    { kind: 'expect-count', where: 'main', text: 'World', count: 1 },
+    { kind: 'select-mode', mode: 'suggesting' },
+    { kind: 'expect-count', where: 'doc', text: 'World', count: 2 },
+    { kind: 'expect-count', where: 'doc', text: 'Hello', count: 2 },
+    { kind: 'expect-count', where: 'doc', text: 'After', count: 1 },
+    { kind: 'select-mode', mode: 'editing', viewMode: 'preview' },
+    { kind: 'expect-count', where: 'main', text: 'World', count: 1 },
+    { kind: 'expect-count', where: 'main', text: 'Hello', count: 2 },
+  ],
+};
+
+export const reviewScenarios: ReviewScenario[] = [
+  editingScenario,
+  suggestingScenario,
+  suggestingDeleteScenario,
+  modeRoundTripScenario,
+  overlapRoundTripScenario,
+];

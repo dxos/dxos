@@ -50,6 +50,8 @@ import {
   ReviewStoryLayout,
   type ReviewStoryPanel,
   editingScenario,
+  modeRoundTripScenario,
+  overlapRoundTripScenario,
   seedComments,
   suggestingDeleteScenario,
   suggestingScenario,
@@ -1012,6 +1014,18 @@ export const ScenarioSuggestingDeleteTest: Story = {
   args: scenarioArgs(suggestingDeleteScenario),
   parameters: { ambientReview: true },
   play: ({ canvasElement }) => runScenarioStorybook(suggestingDeleteScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioModeRoundTripTest: Story = {
+  args: scenarioArgs(modeRoundTripScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(modeRoundTripScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioOverlapRoundTripTest: Story = {
+  args: scenarioArgs(overlapRoundTripScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(overlapRoundTripScenario, { canvasElement, doc: getDoc }),
 };
 
 /**
