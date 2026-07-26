@@ -67,7 +67,7 @@ The Composer edits non-core plugins itself and exits `75`. You are the gate:
    stdout tail) into the next `-p` prompt so the Composer knows what broke.
 
 The core/leaf boundary is **soft** (prompt-enforced): the Composer is told to edit
-only non-core plugins and defer heavy lifting to you. It *can* technically touch
+only non-core plugins and defer heavy lifting to you. It _can_ technically touch
 anything, so the health-check + checkpoint gate is the real protection.
 
 ## Boot health-check (defines "known-good")
@@ -84,12 +84,12 @@ The last known-good commit is your `git reset` target.
 
 ## Recovery
 
-| Scenario | Response |
-| --- | --- |
-| **Crash** (non-`75` exit) | Restart; inject exit code + stdout/stderr tail + journal into the next prompt. |
+| Scenario                                 | Response                                                                              |
+| ---------------------------------------- | ------------------------------------------------------------------------------------- |
+| **Crash** (non-`75` exit)                | Restart; inject exit code + stdout/stderr tail + journal into the next prompt.        |
 | **Code corruption** (fails health-check) | `git reset` to last known-good; restore paired profile if needed; inject the failure. |
-| **Profile corruption** (won't open) | Restore the paired SQLite snapshot. |
-| **Stall** (alive-but-stuck) | Interrupt, snapshot, then re-prompt or escalate. |
+| **Profile corruption** (won't open)      | Restore the paired SQLite snapshot.                                                   |
+| **Stall** (alive-but-stuck)              | Interrupt, snapshot, then re-prompt or escalate.                                      |
 
 **Profile backup** — prefer backing up **while the process is down** (clean
 shutdown → `PRAGMA wal_checkpoint(TRUNCATE)` → single-file `cp`). For a **live**
@@ -131,8 +131,8 @@ data health checks. (The full plan → execute → critique framework is future 
 
 Durable artifacts the Composer re-reads on every `--continue`:
 
-- **Journal** — append-only markdown, one entry per turn (*did / decided /
-  blocked*). Survives truncated stdout; it is your recovery record, rehydration
+- **Journal** — append-only markdown, one entry per turn (_did / decided /
+  blocked_). Survives truncated stdout; it is your recovery record, rehydration
   source, and critique input.
 - **Plan / Task object** — the existing plan/Task/delegation model
   (`makeDelegationStrategy` → Routine + Task), maintained across restarts.

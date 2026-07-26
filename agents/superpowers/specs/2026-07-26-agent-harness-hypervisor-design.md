@@ -9,7 +9,7 @@
 Two AI models cooperate to drive long-horizon, largely-unsupervised work on the
 DXOS `dx` CLI (which runs Composer plugins, ECHO data, and operations):
 
-- **Hypervisor** — Claude Code, running fully autonomously (ideally *as* a Claude
+- **Hypervisor** — Claude Code, running fully autonomously (ideally _as_ a Claude
   cloud agent, which is itself the container/isolation boundary). Owns
   orchestration, error recovery, heavy-lifting / core-code edits, per-wake
   critique, git checkpointing, profile backup/restore, the time log, and
@@ -87,14 +87,14 @@ already exist:
 ## Aspect B — self-editing (soft-restricted, git-gated)
 
 The Composer's own runtime is loaded from the same code it may edit, so B is
-coupled to C: a self-edit that fails to compile *is* the "code corruption"
+coupled to C: a self-edit that fails to compile _is_ the "code corruption"
 recovery scenario. The edit protocol and the recovery net are therefore the same
 mechanism.
 
 - **New tool capabilities for the Composer agent:** `fs` (read/write files) and
   `bash` (exec). Isolation comes from the container (see §Isolation), not from a
   hard path allowlist.
-- **Soft (prompt-based) core/leaf boundary — not enforced.** The Composer *can*
+- **Soft (prompt-based) core/leaf boundary — not enforced.** The Composer _can_
   technically edit anything, but its system prompt instructs it to:
   - edit only **non-core plugins / leaves** (plugins, operations, skills,
     schema/data-type definitions);
@@ -103,6 +103,7 @@ mechanism.
 
   We start soft so the system is flexible; a hard allowlist can be added later if
   the Composer proves prone to bricking its own bootstrap.
+
 - **Git-gated reload loop (the "gate" is the hypervisor):**
   1. Composer makes edits, checkpoints its turn to the journal, exits `75`
      (wants-reload).
@@ -128,20 +129,20 @@ check. Known-good = the last commit that passes:
 
 - **Scripted smoke test** — `dx` starts, plugins load, `dx agent -p "ping"`
   round-trips within a timeout.
-- **Hypervisor judgment** — Claude Code additionally *watches stdout and agent
-  behaviour* and may declare a state unhealthy even if the scripted test passes
+- **Hypervisor judgment** — Claude Code additionally _watches stdout and agent
+  behaviour_ and may declare a state unhealthy even if the scripted test passes
   (e.g. the agent is looping, producing garbage, or ignoring the goal).
 
 The last known-good commit is the `git reset` target for code recovery.
 
 ### Scenarios → response
 
-| Scenario | Response |
-| --- | --- |
-| **Runtime crash** (non-`75` exit) | Restart; inject exit code + stdout/stderr tail + journal into the Composer's next prompt so it knows it crashed and why. |
-| **Code corruption** (edit fails to load) | `git reset` to last known-good checkpoint; restore paired profile if needed; inject the failure. |
-| **Profile corruption** (CLI won't open the profile) | Restore the paired SQLite snapshot (§Profile backup). |
-| **Stall / hang** (alive-but-stuck) | The `bash sleep` wake **is** the heartbeat: on wake the hypervisor inspects journal mtime + stdout progress + git diff. No progress within budget → interrupt, snapshot, re-prompt or escalate. |
+| Scenario                                            | Response                                                                                                                                                                                        |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Runtime crash** (non-`75` exit)                   | Restart; inject exit code + stdout/stderr tail + journal into the Composer's next prompt so it knows it crashed and why.                                                                        |
+| **Code corruption** (edit fails to load)            | `git reset` to last known-good checkpoint; restore paired profile if needed; inject the failure.                                                                                                |
+| **Profile corruption** (CLI won't open the profile) | Restore the paired SQLite snapshot (§Profile backup).                                                                                                                                           |
+| **Stall / hang** (alive-but-stuck)                  | The `bash sleep` wake **is** the heartbeat: on wake the hypervisor inspects journal mtime + stdout progress + git diff. No progress within budget → interrupt, snapshot, re-prompt or escalate. |
 
 ### Circuit breaker
 
@@ -165,11 +166,11 @@ one of the few conditions under which the otherwise-autonomous hypervisor halts
   alone loses committed-but-not-checkpointed data still in `-wal`. Copying
   `db + -wal` (db first) is safe; `-shm` is volatile and need not be copied.
 - **Recommended recipes:**
-  - *Backup while the process is down* (the common case — the hypervisor acts
+  - _Backup while the process is down_ (the common case — the hypervisor acts
     only when the Composer has exited): clean shutdown runs
     `PRAGMA wal_checkpoint(TRUNCATE)`, then single-file `cp`.
-  - *Live snapshot* (backup while the harness is working): **`VACUUM INTO
-    'snap.db'`** or the SQLite Online Backup API → one consistent file. This is a
+  - _Live snapshot_ (backup while the harness is working): **`VACUUM INTO
+'snap.db'`** or the SQLite Online Backup API → one consistent file. This is a
     natural fit for a small `dx` **db-export plugin** (nice-to-have, not on the
     critical path).
 - **Pairing & rollback skew:** take a profile snapshot **paired with each
@@ -191,8 +192,8 @@ one of the few conditions under which the otherwise-autonomous hypervisor halts
 Long-horizon behaviour comes from durable artifacts the Composer re-reads on every
 `--continue`, not from context alone:
 
-- **Journal** — append-only markdown, one entry per turn (*did / decided /
-  blocked*). It survives truncated stdout, so it is simultaneously the
+- **Journal** — append-only markdown, one entry per turn (_did / decided /
+  blocked_). It survives truncated stdout, so it is simultaneously the
   crash-recovery record, the rehydration source, and the hypervisor's critique
   input.
 - **Plan / goal object** — reuse the existing plan/Task/delegation model
@@ -257,13 +258,13 @@ order and each phase is independently useful.
 
 1. **Phase A — CLI bridge.** `dx agent -p` + `--continue` + continuation hint +
    exit-code protocol. Independently useful (two-model cooperation with no
-   recovery yet). *Confidence ~90%.*
+   recovery yet). _Confidence ~90%._
 2. **Phase C — recovery.** Boot health-check, git checkpointing, profile
    backup/restore, time log, postmortems, stall detection, circuit breaker.
-   *Confidence ~75%.*
+   _Confidence ~75%._
 3. **Phase B — self-editing.** `fs`/`bash` tools, soft core/leaf prompting,
    cooperative-restart reload loop, journal + plan memory, budgeted subagents.
-   *Confidence ~70% mechanically.*
+   _Confidence ~70% mechanically._
 4. **Phase D — critique framework (future).** Configurable plan → execute →
    critique judges.
 
