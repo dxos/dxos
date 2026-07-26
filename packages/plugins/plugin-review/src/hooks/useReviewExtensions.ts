@@ -5,7 +5,8 @@
 import { type Extension } from '@codemirror/state';
 import { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Capabilities } from '@dxos/app-framework';
+import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { CollaborationOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
@@ -77,7 +78,9 @@ export const useReviewExtensions = ({
   // Route the inline suggestion Accept/Reject controls through the durable, undoable collaboration
   // ops. The anchor is a cursor range over the parent (main) content — the editor is bound to main
   // in suggest mode — and `branch` is the compare (author) branch key (`reviewBranch`).
-  const { invokePromise } = useOperationInvoker();
+  // Optional: every call site already guards `invokePromise?.` — accept/reject are simply inert in
+  // hosts without an operation invoker (bare stories, headless scenario tests).
+  const invokePromise = useOptionalCapability(Capabilities.OperationInvoker)?.invokePromise;
   const handleAcceptChange = useCallback(
     (hunk: DiffHunk) => {
       const content = Obj.instanceOf(Markdown.Document, object) ? object.content?.target : undefined;
