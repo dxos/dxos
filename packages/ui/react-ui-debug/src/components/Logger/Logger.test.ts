@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { LogLevel, parseFilter, shouldLog } from '@dxos/log';
 
-import { composeFilter, type LevelName } from './Logger';
+import { type LevelName, composeFilter } from './Logger';
 
 const entry = (level: LogLevel, file: string) => ({ level, meta: { F: file } }) as any;
 

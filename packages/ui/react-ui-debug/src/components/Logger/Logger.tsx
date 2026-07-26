@@ -502,7 +502,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
           <Listbox.Item
             key={id}
             id={String(id)}
-            classNames='group grid grid-cols-[1rem_8rem_1fr_max-content] items-center gap-2 px-2 py-0.5'
+            classNames='group grid grid-cols-[1rem_8rem_1fr_max-content] items-center gap-2 px-2 py-0'
           >
             <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
             <span className='truncate text-subdued'>{record.file}</span>
