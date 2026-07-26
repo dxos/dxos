@@ -29,11 +29,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
-      /* surfaces */
-    ]),
-  ),
+  Effect.succeed(Capability.contributes(Capabilities.ReactSurface, [/* surfaces */])),
 );
 ```
 

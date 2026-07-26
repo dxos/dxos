@@ -107,7 +107,7 @@ const changedLines = (base: string, state: EditorState): Map<number, LineChange>
 
   for (const span of computeSpans(base, state)) {
     if (span.kind === 'insert') {
-      for (let position = span.from; position <= span.to; ) {
+      for (let position = span.from; position <= span.to;) {
         const line = state.doc.lineAt(Math.min(position, state.doc.length));
         mark(position, 'insert');
         position = line.to + 1;

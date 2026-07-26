@@ -20,8 +20,8 @@ After this pass: **4 active files**, **5 passing tests**, **2 skipped** (IDB VFS
 | `00-opfs-pool-sync.browser.test.ts`       | ✅ **new** | `writePoolSqlitePayload` → async OPFS read                                                           | Runs after workers shut down (sync handles)       |
 | `01-opfs-worker-protocol.browser.test.ts` | ✅ **new** | Worker `import` / `export` messages + SQL                                                            | Raw protocol; explicit worker shutdown            |
 | `02-opfs-worker-client.browser.test.ts`   | ✅ active  | Effect `SqliteClient` + OPFS: CRUD, export, import, roundtrip, **persistence across worker restart** |
-| `sqlite-idb.browser.test.ts`              | ⏭ skip    | IDBBatchAtomicVFS direct                                                                             | `open_v2` / `vfs.close` fails (`flags` undefined) |
-| `sqlite-effect-idb.browser.test.ts`       | ⏭ skip    | Effect client + IDB VFS                                                                              | Same IDB VFS failure                              |
+| `sqlite-idb.browser.test.ts`              | ⏭ skip     | IDBBatchAtomicVFS direct                                                                             | `open_v2` / `vfs.close` fails (`flags` undefined) |
+| `sqlite-effect-idb.browser.test.ts`       | ⏭ skip     | Effect client + IDB VFS                                                                              | Same IDB VFS failure                              |
 
 ---
 
