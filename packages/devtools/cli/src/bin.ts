@@ -27,7 +27,7 @@ import { loadEnabledPlugins } from '@dxos/plugin-registry';
 import { admin, agent, chat, debug, dx, fn, hub, mailbox, reflect, repl, reset } from './commands';
 import { getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
-import { getReloadRequest, installStderrFilter, RELOAD_EXIT_CODE } from './util';
+import { RELOAD_EXIT_CODE, getReloadRequest, installStderrFilter } from './util';
 
 // Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
 // of the process. The warnings come from eager space initialisation in
