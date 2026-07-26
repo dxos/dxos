@@ -14,6 +14,7 @@ import {
   rebaseHunks,
   rebaseHunksWith,
   revertHunk,
+  pairMarkupHunks,
 } from './diff';
 
 describe('diff hunks', () => {
@@ -111,6 +112,43 @@ describe('diff hunks', () => {
       return;
     }
     expect(branch.slice(0, revert.from) + revert.insert + branch.slice(revert.from + revert.del)).toBe(base);
+  });
+});
+
+describe('pairMarkupHunks', () => {
+  test('a multi-word bold wrap coalesces into one atomic replace', ({ expect }) => {
+    const before = 'alpha bravo charlie delta.';
+    const hunks = diffHunks(before, 'alpha **bravo charlie** delta.');
+    expect(hunks).toHaveLength(2);
+    const paired = pairMarkupHunks(hunks, before);
+    expect(paired).toHaveLength(1);
+    expect(paired[0].removed).toBe('bravo charlie');
+    expect(paired[0].inserted).toBe('**bravo charlie**');
+  });
+
+  test('a single-word wrap is already one hunk and passes through', ({ expect }) => {
+    const before = 'alpha bravo charlie';
+    const hunks = pairMarkupHunks(diffHunks(before, 'alpha **bravo** charlie'), before);
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].inserted).toBe('**bravo**');
+  });
+
+  test('does not bridge across a line break or pair unrelated inserts', ({ expect }) => {
+    const before = 'alpha\nbravo';
+    const hunks = diffHunks(before, '**alpha\nbravo**');
+    expect(pairMarkupHunks(hunks, before)).toHaveLength(2);
+    const unrelated = diffHunks('one two three', 'one X two Y three');
+    expect(pairMarkupHunks(unrelated, 'one two three')).toHaveLength(2);
+  });
+
+  test('cherry-picking a pair-spanning range applies the whole pair', ({ expect }) => {
+    const current = 'alpha bravo charlie delta.';
+    const compare = 'alpha **bravo charlie** delta.';
+    // The paired hunk's range in `current` covers the wrapped words.
+    const splice = cherryPickHunk(current, compare, { start: 6, end: 19 });
+    expect(splice).toBeDefined();
+    const applied = current.slice(0, splice!.from) + splice!.insert + current.slice(splice!.from + splice!.del);
+    expect(applied).toBe(compare);
   });
 });
 

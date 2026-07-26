@@ -155,6 +155,45 @@ export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolic
   return groups;
 };
 
+/** Markdown delimiter pairs that must be suggested — and applied — atomically. */
+const MARKUP_DELIMITERS = new Set(['**', '__', '*', '_', '~~', '`']);
+
+/**
+ * Coalesces two pure insertions forming a matched markdown delimiter pair around intervening text
+ * (e.g. `**` before and after a phrase) into ONE replace hunk spanning the wrapped text. Without
+ * this, wrapping MULTIPLE words diffs as two zero-width inserts, and accepting either half alone
+ * leaves broken syntax. Only a tight wrap (same line, non-empty gap) reads as one formatting action.
+ */
+export const pairMarkupHunks = (hunks: DiffHunk[], before: string): DiffHunk[] => {
+  const result: DiffHunk[] = [];
+  for (let index = 0; index < hunks.length; index++) {
+    const open = hunks[index];
+    const close = hunks[index + 1];
+    if (
+      close !== undefined &&
+      open.from === open.to &&
+      close.from === close.to &&
+      close.from > open.from &&
+      MARKUP_DELIMITERS.has(open.inserted) &&
+      close.inserted === open.inserted
+    ) {
+      const gap = before.slice(open.from, close.from);
+      if (gap.length > 0 && !gap.includes('\n')) {
+        result.push({
+          from: open.from,
+          to: close.from,
+          removed: gap,
+          inserted: open.inserted + gap + close.inserted,
+        });
+        index++;
+        continue;
+      }
+    }
+    result.push(open);
+  }
+  return result;
+};
+
 /**
  * Re-anchors {@link DiffHunk}s computed against `base` into `doc` coordinates, so a foreign author's
  * proposal (diffed `base` vs proposal) can be decorated over a `doc` that has itself diverged from
@@ -420,14 +459,19 @@ export const cherryPickHunk = (
   compare: string,
   range: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
-  const hunk = computeWordHunks(compare, current).find((h) => overlaps(h.fromB, h.toB, range));
-  if (!hunk) {
+  // Merge EVERY hunk the range overlaps into one splice: a range spanning a delimiter pair (two
+  // word-hunks wrapping unchanged text) must apply atomically — half an accepted pair is broken
+  // syntax. A cursor-anchored range still resolves a single hunk, unchanged.
+  const matched = computeWordHunks(compare, current).filter((h) => overlaps(h.fromB, h.toB, range));
+  if (matched.length === 0) {
     return undefined;
   }
+  const first = matched[0];
+  const last = matched[matched.length - 1];
   return {
-    from: hunk.fromB,
-    del: Math.min(hunk.toB, current.length) - hunk.fromB,
-    insert: compare.slice(hunk.fromA, Math.min(hunk.toA, compare.length)),
+    from: first.fromB,
+    del: Math.min(last.toB, current.length) - first.fromB,
+    insert: compare.slice(first.fromA, Math.min(last.toA, compare.length)),
   };
 };
 
@@ -442,14 +486,17 @@ export const revertHunk = (
   compare: string,
   baseRange: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
-  // A = base, B = compare (branch); locate the hunk by its base-side range.
-  const hunk = computeWordHunks(base, compare).find((h) => overlaps(h.fromA, h.toA, baseRange));
-  if (!hunk) {
+  // A = base, B = compare (branch); locate the hunks by the base-side range and merge them so a
+  // pair-spanning reject reverts the whole formatting action (mirror of cherryPickHunk).
+  const matched = computeWordHunks(base, compare).filter((h) => overlaps(h.fromA, h.toA, baseRange));
+  if (matched.length === 0) {
     return undefined;
   }
+  const first = matched[0];
+  const last = matched[matched.length - 1];
   return {
-    from: hunk.fromB,
-    del: Math.min(hunk.toB, compare.length) - hunk.fromB,
-    insert: base.slice(hunk.fromA, Math.min(hunk.toA, base.length)),
+    from: first.fromB,
+    del: Math.min(last.toB, compare.length) - first.fromB,
+    insert: base.slice(first.fromA, Math.min(last.toA, base.length)),
   };
 };

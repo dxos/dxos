@@ -24,6 +24,7 @@ import {
   diffHunks,
   groupHunks,
   rebaseHunksWith,
+  pairMarkupHunks,
 } from './diff';
 
 /** One author's proposed revision of the editor's document (the base). */
@@ -128,7 +129,10 @@ export const suggestions = ({ sources, base, group, onAccept, onReject, onSelect
       const applied = sourceBase === undefined ? undefined : new Set(diffHunks(sourceBase, doc).map(editKey));
       const authored = diffHunks(anchor, source.content);
       const pending = applied === undefined ? authored : authored.filter((hunk) => !applied.has(editKey(hunk)));
-      const grouped = group ? groupHunks(pending, anchor, group) : pending;
+      // Matched delimiter pairs (e.g. `**` … `**`) become one hunk so the pair reviews and applies
+      // atomically — accepting half a pair leaves broken syntax.
+      const paired = pairMarkupHunks(pending, anchor);
+      const grouped = group ? groupHunks(paired, anchor, group) : paired;
       const hunks = charHunks === undefined ? grouped : rebaseHunksWith(charHunks, grouped);
       for (const hunk of hunks) {
         all.push({ ...hunk, author: source.author, colour: source.colour });

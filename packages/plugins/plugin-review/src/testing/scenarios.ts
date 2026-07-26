@@ -42,7 +42,13 @@ export type ScenarioStep =
    */
   | { kind: 'expect-clean-insert'; text: string; before?: string }
   /** The user's own tracked change: contains a substring, or (`none`) no own change/branch exists. */
-  | { kind: 'expect-own-change'; contains?: string; none?: boolean };
+  | { kind: 'expect-own-change'; contains?: string; none?: boolean }
+  /**
+   * The user's pending suggestions form exactly ONE reviewable change containing `containing`.
+   * Guards atomicity: a markdown delimiter pair (e.g. `**` … `**`) must review — and later apply —
+   * as one unit, never as two half-pairs that would each leave broken syntax.
+   */
+  | { kind: 'expect-one-suggestion'; containing: string };
 
 export type ReviewScenario = {
   name: string;
@@ -169,10 +175,69 @@ export const overlapRoundTripScenario: ReviewScenario = {
   ],
 };
 
+/**
+ * Markup: wrapping MULTIPLE words in a delimiter pair diffs as two zero-width `**` inserts — the pair
+ * must surface as one atomic suggestion (half an accepted pair is broken syntax). A single-word wrap
+ * already diffs as one replace; the multi-word wrap is the split-pair case.
+ */
+export const boldWrapScenario: ReviewScenario = {
+  name: 'a bold wrap suggests as one atomic change',
+  setup: { content: 'alpha bravo charlie delta.\n' },
+  steps: [
+    { kind: 'select-mode', mode: 'suggesting' },
+    { kind: 'type', at: 'bravo', text: '**' },
+    { kind: 'type', at: ' delta', text: '**' },
+    { kind: 'expect-own-branch', contains: '**bravo charlie**' },
+    { kind: 'expect-main', lacks: '**' },
+    { kind: 'select-mode', mode: 'editing', viewMode: 'preview' },
+    { kind: 'expect-main', lacks: '**' },
+    { kind: 'expect-one-suggestion', containing: '**bravo charlie**' },
+  ],
+};
+
+/**
+ * Complex markup: a whole suggested table is one clean block insertion, and editing a cell of an
+ * existing table stays inside the cell — main's table is untouched until Accept.
+ */
+export const tableSuggestScenario: ReviewScenario = {
+  name: 'a suggested table is a clean block insertion',
+  setup: { content: '# Doc\n\nSome text.\n' },
+  steps: [
+    { kind: 'select-mode', mode: 'suggesting' },
+    { kind: 'type', text: '\n| a | b |\n| --- | --- |\n| 1 | 2 |\n' },
+    { kind: 'expect-own-branch', contains: '| a | b |' },
+    { kind: 'expect-main', lacks: '|' },
+    { kind: 'select-mode', mode: 'editing', viewMode: 'preview' },
+    { kind: 'expect-main', lacks: '|' },
+    { kind: 'expect-clean-insert', text: '| a | b |' },
+    { kind: 'select-mode', mode: 'suggesting' },
+    { kind: 'expect-count', where: 'doc', text: '| a | b |', count: 1 },
+    { kind: 'expect-main', lacks: '|' },
+  ],
+};
+
+export const tableCellEditScenario: ReviewScenario = {
+  name: 'editing a table cell suggests only the cell',
+  setup: { content: '| a | b |\n| --- | --- |\n| one | two |\n' },
+  steps: [
+    { kind: 'select-mode', mode: 'suggesting' },
+    { kind: 'type', at: 'two', text: 'X' },
+    { kind: 'expect-own-branch', contains: 'Xtwo' },
+    { kind: 'expect-main', lacks: 'X' },
+    { kind: 'select-mode', mode: 'editing', viewMode: 'preview' },
+    { kind: 'expect-main', lacks: 'X' },
+    { kind: 'expect-clean-insert', text: 'X' },
+    { kind: 'expect-count', where: 'main', text: '| one | two |', count: 1 },
+  ],
+};
+
 export const reviewScenarios: ReviewScenario[] = [
   editingScenario,
   suggestingScenario,
   suggestingDeleteScenario,
   modeRoundTripScenario,
   overlapRoundTripScenario,
+  boldWrapScenario,
+  tableSuggestScenario,
+  tableCellEditScenario,
 ];

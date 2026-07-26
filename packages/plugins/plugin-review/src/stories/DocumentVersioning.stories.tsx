@@ -49,12 +49,15 @@ import {
   type ReviewScenario,
   ReviewStoryLayout,
   type ReviewStoryPanel,
+  boldWrapScenario,
   editingScenario,
   modeRoundTripScenario,
   overlapRoundTripScenario,
   seedComments,
   suggestingDeleteScenario,
   suggestingScenario,
+  tableCellEditScenario,
+  tableSuggestScenario,
 } from '../testing';
 import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook';
 import { translations } from '../translations';
@@ -1026,6 +1029,24 @@ export const ScenarioOverlapRoundTripTest: Story = {
   args: scenarioArgs(overlapRoundTripScenario),
   parameters: { ambientReview: true },
   play: ({ canvasElement }) => runScenarioStorybook(overlapRoundTripScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioBoldWrapTest: Story = {
+  args: scenarioArgs(boldWrapScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(boldWrapScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioTableSuggestTest: Story = {
+  args: scenarioArgs(tableSuggestScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(tableSuggestScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioTableCellEditTest: Story = {
+  args: scenarioArgs(tableCellEditScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(tableCellEditScenario, { canvasElement, doc: getDoc }),
 };
 
 /**

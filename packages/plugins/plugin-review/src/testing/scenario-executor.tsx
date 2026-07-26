@@ -232,6 +232,32 @@ export const runScenarioHeadless = async (
           );
           break;
         }
+        case 'expect-one-suggestion': {
+          await waitFor(
+            async () => {
+              const branch = doc.history?.branches.find(
+                (candidate) =>
+                  candidate.status === 'active' &&
+                  candidate.kind === 'suggestion' &&
+                  candidate.creator === context.identity.did,
+              );
+              invariant(branch, `${label}: own branch missing`);
+              const binding = await Branch.bind(doc, branch);
+              try {
+                const base = branch.anchor ? Version.contentAt(root, branch.anchor) : root.content;
+                const groups = suggestionGroups(root.content, [
+                  { author: branch.creator ?? '', colour: '', content: binding.object.content, base },
+                ]);
+                expect(groups, label).toHaveLength(1);
+                expect(groups[0].inserted, label).toContain(step.containing);
+              } finally {
+                binding.dispose();
+              }
+            },
+            { timeout: 5_000 },
+          );
+          break;
+        }
         case 'expect-count': {
           await waitFor(
             () => {

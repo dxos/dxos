@@ -225,6 +225,24 @@ export const runScenarioStorybook = async (
         );
         break;
       }
+      case 'expect-one-suggestion': {
+        await waitFor(
+          async () => {
+            // The inline overlay renders the pair as ONE hunk (a single insert widget carrying the
+            // whole change), and the companion shows exactly one card.
+            const widgets = Array.from(canvasElement.querySelectorAll('.cm-suggest-insert'));
+            await expect(widgets, `${label}: overlay hunks`).toHaveLength(1);
+            await expect(widgets[0].textContent ?? '', label).toContain(step.containing);
+            const cards = Array.from(canvasElement.querySelectorAll('[data-testid="thread.message"]')).filter((tile) =>
+              tile.querySelector('[data-testid="thread.message.accept-change"]'),
+            );
+            await expect(cards, `${label}: companion cards`).toHaveLength(1);
+            await expect(cards[0].textContent ?? '', label).toContain(step.containing);
+          },
+          { timeout: 15_000 },
+        );
+        break;
+      }
       case 'expect-count': {
         await waitFor(
           async () => {

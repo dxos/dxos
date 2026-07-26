@@ -9,6 +9,7 @@ import {
   computeCharHunks,
   diffHunks,
   groupHunks,
+  pairMarkupHunks,
   rebaseHunksWith,
 } from '@dxos/ui-editor';
 import { idHue, stringToHue } from '@dxos/util';
@@ -87,7 +88,10 @@ export const suggestionGroups = (base: string, sources: SuggestionSource[], poli
         // A whitespace-only change (a proposed paragraph break) has nothing to show on a card, and
         // reviewing it apart from the text it spaces is meaningless.
         .filter((hunk) => hunk.removed.trim().length > 0 || hunk.inserted.trim().length > 0);
-      const grouped = policy ? groupHunks(pending, anchor, policy) : pending;
+      // Delimiter pairs coalesce into one reviewable change (mirrors the inline overlay) so a card
+      // never offers half a formatting action.
+      const paired = pairMarkupHunks(pending, anchor);
+      const grouped = policy ? groupHunks(paired, anchor, policy) : paired;
       const hunks = source.base === undefined ? grouped : rebaseHunksWith(computeCharHunks(source.base, base), grouped);
       return hunks.map((hunk) => ({ ...hunk, author: source.author, colour: source.colour }));
     })
