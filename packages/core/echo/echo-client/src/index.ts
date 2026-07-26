@@ -53,8 +53,8 @@ export {
   isEchoObject,
   matchKeys,
   mergeBranch,
-  syncBranch,
   switchBranch,
+  syncBranch,
 } from './echo-handler';
 export * from './hypergraph';
 export * from './proxy-db';
