@@ -23,8 +23,8 @@ import {
   computeCharHunks,
   diffHunks,
   groupHunks,
-  rebaseHunksWith,
   pairMarkupHunks,
+  rebaseHunksWith,
 } from './diff';
 
 /** One author's proposed revision of the editor's document (the base). */

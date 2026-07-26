@@ -11,10 +11,10 @@ import {
   computeHunks,
   diffHunks,
   groupHunks,
+  pairMarkupHunks,
   rebaseHunks,
   rebaseHunksWith,
   revertHunk,
-  pairMarkupHunks,
 } from './diff';
 
 describe('diff hunks', () => {
