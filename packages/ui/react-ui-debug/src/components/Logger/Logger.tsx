@@ -122,23 +122,36 @@ const LoggerRoot = ({
   const [rows, setRows] = useState<LogRow[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [fileLevels, setFileLevels] = useState<Map<string, LevelName>>(new Map());
-  const [files, setFiles] = useState<string[]>(() => logFileRegistry.getFiles());
-
-  // Union any newly seen file into the sorted set (registry load-time entries and stream entries alike).
+  // Set membership is O(1); the sorted view is memoized so a high-volume stream never re-sorts per entry.
+  const filesRef = useRef<Set<string>>(new Set(logFileRegistry.getFiles()));
+  const [filesEpoch, setFilesEpoch] = useState(0);
   const addFile = useCallback((file: string) => {
-    setFiles((prev) => (prev.includes(file) ? prev : [...prev, file].sort()));
+    if (file && !filesRef.current.has(file)) {
+      filesRef.current.add(file);
+      setFilesEpoch((epoch) => epoch + 1);
+    }
   }, []);
 
-  // Track files registered at module load (dev registry), unioned with the initial snapshot.
+  // Absorb files registered at module load (dev registry) plus any registered after mount.
   useEffect(() => {
     const sync = () => {
+      let changed = false;
       for (const file of logFileRegistry.getFiles()) {
-        addFile(file);
+        if (!filesRef.current.has(file)) {
+          filesRef.current.add(file);
+          changed = true;
+        }
+      }
+      if (changed) {
+        setFilesEpoch((epoch) => epoch + 1);
       }
     };
     sync();
     return logFileRegistry.subscribe(sync);
-  }, [addFile]);
+  }, []);
+
+  // Cache the sorted list; recomputed only when the file set actually grows.
+  const files = useMemo(() => [...filesRef.current].sort(), [filesEpoch]);
 
   // Normalize the public prop: a non-positive or non-finite bound would defeat `slice(-capacity)`.
   const capacity = useMemo(
@@ -316,6 +329,11 @@ type LoggerLevelsProps = ThemedClassName<{}>;
 const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
   const { t } = useTranslation(translationKey);
   const { files, fileLevels, setFileLevel, clearFileLevels } = useLoggerContext('Logger.Levels');
+  const [fileFilter, setFileFilter] = useState('');
+
+  // `files` arrives already sorted from the provider; narrow it by a case-insensitive path match.
+  const needle = fileFilter.trim().toLowerCase();
+  const visibleFiles = needle ? files.filter((file) => file.toLowerCase().includes(needle)) : files;
 
   return (
     <Popover.Root>
@@ -329,7 +347,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content>
-          <Popover.Viewport classNames='is-[22rem] max-bs-[20rem] overflow-y-auto p-2'>
+          <Popover.Viewport classNames='w-[22rem] max-h-[20rem]'>
             <div className='flex items-center justify-between pb-1'>
               <span className='text-sm text-subdued'>{t('levels.title')}</span>
               <IconButton
@@ -342,15 +360,30 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                 onClick={clearFileLevels}
               />
             </div>
-            {files.length === 0 && <div className='p-1 text-xs text-subdued'>{t('levels.empty')}</div>}
             {files.length > 0 && (
+              <Input.Root>
+                <Input.TextInput
+                  placeholder={t('levels.filter.placeholder')}
+                  value={fileFilter}
+                  autoComplete='off'
+                  spellCheck={false}
+                  onChange={(ev) => setFileFilter(ev.target.value)}
+                />
+              </Input.Root>
+            )}
+            {visibleFiles.length === 0 && (
+              <div className='p-1 text-xs text-subdued'>
+                {t(files.length === 0 ? 'levels.empty' : 'search.no-matches')}
+              </div>
+            )}
+            {visibleFiles.length > 0 && (
               <Listbox.Root>
                 <Listbox.Content>
-                  {files.map((file) => {
+                  {visibleFiles.map((file) => {
                     const basename = file.split('/').pop() ?? file;
                     const value = fileLevels.get(file) ?? 'inherit';
                     return (
-                      <Listbox.Item key={file} id={file} classNames='grid grid-cols-[1fr_7rem] items-center gap-1'>
+                      <Listbox.Item key={file} id={file} classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0'>
                         <Listbox.ItemLabel classNames='text-xs' title={file}>
                           {basename}
                         </Listbox.ItemLabel>
@@ -360,7 +393,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                             setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
                           }
                         >
-                          <Select.TriggerButton classNames='is-full text-sm' placeholder={t('levels.inherit')} />
+                          <Select.TriggerButton classNames='w-full text-sm' placeholder={t('levels.inherit')} />
                           <Select.Portal>
                             <Select.Content>
                               <Select.ScrollUpButton />
@@ -453,42 +486,39 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
   return (
     <Listbox.Root>
       <Listbox.Content classNames={mx(classNames)}>
-        {visible.map(({ id, entry, record }) => {
-          const expandable = Boolean(record.context || record.error);
-          return (
-            <Listbox.Item key={id} id={String(id)} classNames='group px-1'>
-              <div className='flex flex-col is-full'>
-                <div className='grid grid-cols-[1rem_8rem_1fr_min-content] items-center gap-1'>
-                  <div className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</div>
-                  <div className='truncate text-subdued'>{record.file}</div>
-                  <button
-                    type='button'
-                    aria-expanded={expandable ? expanded.has(id) : undefined}
-                    className='truncate text-start cursor-pointer'
-                    title={record.message}
-                    onClick={() => toggleExpand(id)}
-                  >
-                    {record.message}
-                  </button>
-                  <IconButton
-                    icon='ph--clipboard--regular'
-                    iconOnly
-                    density='xs'
-                    label={t('copy-entry.label')}
-                    variant='ghost'
-                    classNames='p-0 opacity-50 group-hover:opacity-100'
-                    onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
-                  />
-                </div>
-                {expanded.has(id) && expandable && (
-                  <pre className='px-4 py-1 whitespace-pre-wrap text-subdued'>
-                    {JSON.stringify({ context: record.context, error: record.error }, null, 2)}
-                  </pre>
-                )}
-              </div>
-            </Listbox.Item>
-          );
-        })}
+        {visible.map(({ id, entry, record }) => (
+          <Listbox.Item
+            key={id}
+            id={String(id)}
+            classNames='group grid grid-cols-[1rem_8rem_1fr_max-content] items-center gap-2 px-2 py-0.5'
+          >
+            <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
+            <span className='truncate text-subdued'>{record.file}</span>
+            <button
+              type='button'
+              aria-expanded={expanded.has(id)}
+              className='truncate text-start cursor-pointer'
+              title={record.message}
+              onClick={() => toggleExpand(id)}
+            >
+              {record.message}
+            </button>
+            <IconButton
+              icon='ph--clipboard--regular'
+              iconOnly
+              density='xs'
+              label={t('copy-entry.label')}
+              variant='ghost'
+              classNames='p-0 opacity-50 group-hover:opacity-100'
+              onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
+            />
+            {expanded.has(id) && (
+              <pre className='col-span-full px-4 py-1 whitespace-pre-wrap text-subdued'>
+                {JSON.stringify({ message: record.message, context: record.context, error: record.error }, null, 2)}
+              </pre>
+            )}
+          </Listbox.Item>
+        ))}
       </Listbox.Content>
     </Listbox.Root>
   );
@@ -515,7 +545,7 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
           autoComplete='off'
           spellCheck={false}
           onChange={(ev) => setTextFilter(ev.target.value)}
-          end={<Icon icon='ph--magnifying-glass--regular' />}
+          start={<Icon icon='ph--magnifying-glass--regular' />}
         />
       </Input.Root>
       {textFilter.length > 0 && (

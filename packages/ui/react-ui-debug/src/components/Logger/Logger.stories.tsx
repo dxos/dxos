@@ -19,14 +19,16 @@ random.seed(123);
 const FILES = ['alpha.ts', 'beta.ts', 'gamma.ts'];
 
 // Hand-written meta so entries appear to originate from distinct files, populating the Levels list.
+// A `seq`/`file` context is attached so expanding a row shows real structured content.
+let seq = 0;
 const emit = (file: string, level: 'info' | 'warn' | 'error') => {
   const meta: CallMetadata = { F: file, L: 1, S: undefined };
-  log[level](random.lorem.sentences(), {}, meta);
+  log[level](random.lorem.sentences(), { seq: ++seq, file }, meta);
 };
 
 const DefaultStory = () => (
   <Logger.Root initialFilter='info'>
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {FILES.map((file) => (
@@ -39,7 +41,7 @@ const DefaultStory = () => (
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <Panel.Root classNames='bs-full'>
+        <Panel.Root>
           <Panel.Toolbar asChild>
             <Logger.Toolbar />
           </Panel.Toolbar>

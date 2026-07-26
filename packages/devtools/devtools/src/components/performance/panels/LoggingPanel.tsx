@@ -12,7 +12,7 @@ import { type CustomPanelProps, Panel } from '../Panel';
 export const LoggingPanel = ({ maxLines = 100, ...props }: CustomPanelProps<{ maxLines?: number }>) => (
   <Panel {...props} icon='ph--list--regular' title='Logging' maxHeight={0}>
     <Logger.Root maxLines={maxLines} initialFilter='intent-dispatcher:debug' defaultRecording={false}>
-      <UiPanel.Root classNames='bs-[280px]'>
+      <UiPanel.Root classNames='h-[280px]'>
         <UiPanel.Toolbar asChild>
           <Logger.Toolbar />
         </UiPanel.Toolbar>

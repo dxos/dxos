@@ -24,9 +24,9 @@ export const LogStatus = () => {
       </StatusBar.Item>
       <Popover.Portal>
         <Popover.Content side='top'>
-          <Popover.Viewport classNames='is-[40rem] bs-[24rem]'>
+          <Popover.Viewport classNames='w-[40rem] h-[24rem]'>
             <Logger.Root>
-              <Panel.Root classNames='bs-full'>
+              <Panel.Root>
                 <Panel.Toolbar asChild>
                   <Logger.Toolbar />
                 </Panel.Toolbar>

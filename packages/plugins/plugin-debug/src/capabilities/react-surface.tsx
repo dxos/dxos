@@ -197,7 +197,7 @@ export default Capability.makeModule(
         filter: Surface.makeFilter(AppSurface.deckCompanion('logs')),
         component: () => (
           <Logger.Root>
-            <Panel.Root classNames='bs-full'>
+            <Panel.Root>
               <Panel.Toolbar asChild>
                 <Logger.Toolbar />
               </Panel.Toolbar>

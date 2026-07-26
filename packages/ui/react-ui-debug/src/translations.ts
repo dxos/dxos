@@ -21,6 +21,7 @@ export const translations = [
         'levels.clear': 'Reset all',
         'levels.inherit': 'Inherit',
         'levels.empty': 'No log files registered yet.',
+        'levels.filter-placeholder': 'Filter files…',
         'empty.message': 'No log entries.',
         'search.placeholder': 'Find in buffer…',
         'search.clear': 'Clear filter',

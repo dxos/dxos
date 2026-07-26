@@ -13,7 +13,7 @@ import { Logger } from '@dxos/react-ui-debug';
  */
 export const LoggingModule = () => (
   <Logger.Root>
-    <Panel.Root classNames='bs-full'>
+    <Panel.Root>
       <Panel.Toolbar asChild>
         <Logger.Toolbar />
       </Panel.Toolbar>
