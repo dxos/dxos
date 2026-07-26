@@ -159,4 +159,47 @@ describe('editor binding lifecycle', () => {
       timeout: 10_000,
     });
   });
+
+  // G4 (the F1 re-run's major failure): the fast-forward only covered an UNEDITED branch. With real
+  // suggestions on the branch, text typed on main in between still diffed as the user's own deletion.
+  // Re-entering Suggesting must merge main INTO the branch (CRDT; shared fork ancestry), so the branch
+  // is always "main + the user's suggestions" and the diff contains only their changes.
+  test('re-entering Suggesting merges main into an edited own branch (G4)', async () => {
+    const { result } = setup();
+    await settled(result);
+
+    // First Suggesting session: the user adds a suggestion on their branch.
+    act(() => result.current.versioning.setMode('suggesting'));
+    await settled(result);
+    const branchText = result.current.editor.ownBranchText;
+    invariant(branchText, 'own branch not bound');
+    act(() => {
+      Obj.update(branchText, () => {
+        EchoText.update(branchText, 'content', 'alpha\nbravo\nSuggest 1\n');
+      });
+    });
+
+    // Back to editing; the user types on main.
+    act(() => result.current.versioning.setMode('editing'));
+    await settled(result);
+    const root = doc.content.target;
+    invariant(root, 'root not loaded');
+    act(() => {
+      Obj.update(root, () => {
+        EchoText.update(root, 'content', 'alpha\nbravo\nText 2\n');
+      });
+    });
+
+    // Re-enter Suggesting: the branch must now carry BOTH lines — main's new text is not a deletion.
+    act(() => result.current.versioning.setMode('suggesting'));
+    await settled(result);
+    await waitFor(
+      () => {
+        const content = result.current.editor.ownBranchText?.content ?? '';
+        expect(content).toContain('Text 2');
+        expect(content).toContain('Suggest 1');
+      },
+      { timeout: 10_000 },
+    );
+  });
 });

@@ -866,6 +866,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.mergeBranch(rootObjectId, name, opts);
   }
 
+  syncBranch(rootObjectId: string, name: string): Promise<void> {
+    return this._entityManager.syncBranch(rootObjectId, name);
+  }
+
   deleteBranch(rootObjectId: string, name: string): void {
     this._entityManager.deleteBranch(rootObjectId, name);
   }

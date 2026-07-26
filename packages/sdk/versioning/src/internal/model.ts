@@ -254,13 +254,24 @@ export const suggestionBranch = async (
     (branch) => branch.status === 'active' && branch.kind === 'suggestion' && branch.creator === creator,
   );
   if (existing) {
-    // Fast-forward an UNEDITED branch whose anchor fell behind: text since typed on main is absent
-    // from the branch, so every diff against it reads as the author deleting that text. A branch with
-    // no edits carries nothing to preserve, so it is retired and re-forked at the current heads. An
-    // edited branch is returned as-is — its pending suggestions were authored against its anchor.
+    // INVARIANT: an own suggestion branch is always "main + that author's suggestions" — main's
+    // progress must never read as the author's deletions. A branch whose anchor fell behind is
+    // reconciled on re-entry: unedited ⇒ retire and re-fork at the current heads; edited ⇒ fold
+    // main's changes INTO the branch (CRDT merge; shared fork ancestry) and advance the anchor so
+    // later diffs compare against the reconciled base.
     const heads = getHeads(parent);
-    if (!sameHeads(existing.anchor, heads) && (await archiveIfEmpty(doc, existing))) {
-      return createBranch(doc, { name: `suggestion: ${creator}`, parent, creator, kind: 'suggestion' });
+    if (!sameHeads(existing.anchor, heads)) {
+      if (await archiveIfEmpty(doc, existing)) {
+        return createBranch(doc, { name: `suggestion: ${creator}`, parent, creator, kind: 'suggestion' });
+      }
+      if (existing.key) {
+        const db = Obj.getDatabase(doc);
+        invariant(db, 'document not in a database');
+        await db.syncBranch(parent.id, existing.key);
+        Obj.update(doc, () => {
+          existing.anchor = heads;
+        });
+      }
     }
     return existing;
   }
