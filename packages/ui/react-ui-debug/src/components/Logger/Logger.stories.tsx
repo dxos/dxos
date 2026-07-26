@@ -16,7 +16,8 @@ import { Logger } from './Logger';
 
 random.seed(123);
 
-// Full workspace paths so rows and the Levels popover show the derived package name.
+// Full workspace paths so the derived package populates each record and the Levels popover
+// (buttons still label with the basename).
 const FILES = [
   'packages/ui/react-ui-debug/src/alpha.ts',
   'packages/plugins/plugin-inbox/src/beta.ts',

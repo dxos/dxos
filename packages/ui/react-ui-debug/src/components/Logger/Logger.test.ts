@@ -35,36 +35,44 @@ describe('composeFilter', () => {
   });
 });
 
-const entry = (level: LogLevel, file: string) =>
-  new LogEntry({ level, message: '', meta: { F: file, L: 0, S: undefined }, timestamp: 0 });
-
 describe('startLogRecording', () => {
+  // Recorders mutate the process-wide `log` config, so dispose in `finally` — a failed assertion
+  // must not leak a polluted filter into later tests.
   test('concurrent recorders each see only their own filtered entries', ({ expect }) => {
     const debugLevels: LogLevel[] = [];
     const errorLevels: LogLevel[] = [];
     const debugRecorder = startLogRecording('debug', (rec, matched) => matched && debugLevels.push(rec.level));
     const errorRecorder = startLogRecording('error', (rec, matched) => matched && errorLevels.push(rec.level));
+    try {
+      log.debug('debug entry');
+      log.error('error entry');
 
-    log.debug('debug entry');
-    log.error('error entry');
-
-    debugRecorder.dispose();
-    errorRecorder.dispose();
-
-    // The stricter recorder is not clobbered by the more verbose one registered alongside it.
-    expect(debugLevels).toEqual([LogLevel.DEBUG, LogLevel.ERROR]);
-    expect(errorLevels).toEqual([LogLevel.ERROR]);
+      // The stricter recorder is not clobbered by the more verbose one registered alongside it.
+      expect(debugLevels).toEqual([LogLevel.DEBUG, LogLevel.ERROR]);
+      expect(errorLevels).toEqual([LogLevel.ERROR]);
+    } finally {
+      debugRecorder.dispose();
+      errorRecorder.dispose();
+    }
   });
 
   test('composes the shared global filter and restores it on release', ({ expect }) => {
     const original = log.runtimeConfig.options.filter;
     const first = startLogRecording('info', () => {});
     const second = startLogRecording('error', () => {});
-
-    expect(log.runtimeConfig.options.filter).toBe('info, error');
-    second.dispose();
-    expect(log.runtimeConfig.options.filter).toBe('info');
-    first.dispose();
-    expect(log.runtimeConfig.options.filter).toBe(original);
+    try {
+      expect(log.runtimeConfig.options.filter).toBe('info, error');
+      second.dispose();
+      expect(log.runtimeConfig.options.filter).toBe('info');
+      first.dispose();
+      expect(log.runtimeConfig.options.filter).toBe(original);
+    } finally {
+      // Idempotent — guarantees restoration even if an assertion above threw mid-sequence.
+      first.dispose();
+      second.dispose();
+    }
   });
 });
+
+const entry = (level: LogLevel, file: string) =>
+  new LogEntry({ level, message: '', meta: { F: file, L: 0, S: undefined }, timestamp: 0 });

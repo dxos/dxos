@@ -7,7 +7,7 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 type LocalFrame = { href: string; fileName: string };
 

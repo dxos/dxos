@@ -268,6 +268,10 @@ const LoggerRoot = ({
 
   // Drop per-row state (expansion, selection) for evicted rows so the sets stay bounded.
   useEffect(() => {
+    // Skip the id-set rebuild on the streaming hot path when there is nothing to prune.
+    if (expanded.size === 0 && checked.size === 0) {
+      return;
+    }
     const ids = new Set(rows.map((row) => row.id));
     const prune = (prev: Set<number>) => {
       if (prev.size === 0) {
@@ -278,7 +282,7 @@ const LoggerRoot = ({
     };
     setExpanded(prune);
     setChecked(prune);
-  }, [rows]);
+  }, [rows, expanded, checked]);
 
   const setFileLevel = useCallback((file: string, level: LevelName | undefined) => {
     setFileLevels((prev) => {
@@ -594,7 +598,10 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
     <Listbox.Root>
       <div
         onKeyDown={(event) => {
-          if (current === undefined) {
+          // Only act when the row itself is focused; a focused inner control (checkbox, copy)
+          // handles Space/Enter natively.
+          const target = event.target as HTMLElement;
+          if (current === undefined || target !== target.closest('[role="listitem"]')) {
             return;
           }
           if (event.key === ' ') {
