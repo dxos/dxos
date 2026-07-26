@@ -28,7 +28,7 @@ themselves:
    uses a logged callee registers its file at load time via the
    `@dxos/vite-plugin-log` transform (which already injects a `__dxlog_file`
    preamble per module). The registry owns the **file list only**; per-file
-   *levels* remain a `Logger`-panel concern composed into the `@dxos/log` filter
+   _levels_ remain a `Logger`-panel concern composed into the `@dxos/log` filter
    string. `Logger.Root` unions the registry with any files it observes in the
    live stream, so it still works where the transform is absent (tests, plain
    Storybook).
@@ -43,7 +43,7 @@ themselves:
   `LogFileRegistry` — `register(file)`, `getFiles(): string[]` (sorted copy),
   `subscribe(listener): () => void`, `clear()`. Instantiated as a **global
   singleton** `logFileRegistry = ((globalThis as any).DX_LOG_FILES ??=
-  createLogFileRegistry())`, mirroring how `log` is `globalThis.DX_LOG` — one
+createLogFileRegistry())`, mirroring how `log` is `globalThis.DX_LOG` — one
   instance across duplicate module copies. Exported from the package index.
 - **Population = transform-injected, dev-only.** `computeLogMetaEdits`
   (`tools/vite-plugin-log/src/transform.ts`) already inserts
@@ -77,9 +77,9 @@ string into `LogFilter[]`, each `{ level, pattern? }` where `pattern` is
 
 Consequences that make composition work with a single combined string:
 
-- Override **below** base level → *raises* verbosity for that file (adds a
+- Override **below** base level → _raises_ verbosity for that file (adds a
   passing match for entries the base filter drops).
-- Override **above** base level → *quiets* that file (its include filter returns
+- Override **above** base level → _quiets_ that file (its include filter returns
   `false` below the override, overriding the base's `true`).
 - Order-independent.
 
@@ -133,7 +133,7 @@ deviation from the skill's `tx()` guidance).
     (undefined clears the override), `clearFileLevels`, `clear`, `copyAll`,
     `toggleExpand`.
   - props: `LoggerRootProps = { maxLines?, initialFilter?, defaultRecording?,
-    children }`.
+children }`.
 - **`Logger.Toolbar`** — filter `Input`, base-level `Select` ("all files"),
   record `ToggleIconButton`, clear + copy `Toolbar.IconButton`s, and a Levels
   `Popover` trigger (`IconButton`) whose label/badge reflects
@@ -143,9 +143,9 @@ deviation from the skill's `tx()` guidance).
 - **`Logger.List`** — the log-entry rows extracted verbatim from today's render
   (level color, file, message expand/collapse, per-entry copy). Consumes context.
 - **`Logger.Levels`** — per-file control. One row per discovered file: file name
-  + a level `Select` whose options are the six levels plus an "Inherit" option
-  (clears the override, falling back to base). A clear-all action. Empty state
-  when no files seen yet. Rendered inside the Toolbar's `Popover.Content`.
+  - a level `Select` whose options are the six levels plus an "Inherit" option
+    (clears the override, falling back to base). A clear-all action. Empty state
+    when no files seen yet. Rendered inside the Toolbar's `Popover.Content`.
 
 ### Effective-filter computation
 
