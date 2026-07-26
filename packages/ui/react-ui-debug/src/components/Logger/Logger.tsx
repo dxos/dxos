@@ -10,6 +10,7 @@ import {
   Icon,
   IconButton,
   Input,
+  Panel,
   Popover,
   ScrollArea,
   Select,
@@ -70,6 +71,9 @@ export const copyToClipboard = (text: string): void => {
 };
 
 type LogRow = { id: number; entry: LogEntry };
+
+// Derive the workspace package directory from a source path (…/packages/<group>/<pkg>/…) for display/grouping.
+const packageName = (file: string): string | undefined => file.match(/packages\/[^/]+\/([^/]+)\//)?.[1];
 
 // Compose the base filter with per-file overrides into a single @dxos/log filter string.
 // Order-independent: an override below the base level raises that file's verbosity; above, it quiets it.
@@ -328,10 +332,11 @@ type LoggerLevelsProps = ThemedClassName<{}>;
 
 const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
   const { t } = useTranslation(translationKey);
-  const { files, fileLevels, setFileLevel, clearFileLevels } = useLoggerContext('Logger.Levels');
+  const { files, fileLevels, setFileLevel } = useLoggerContext('Logger.Levels');
   const [fileFilter, setFileFilter] = useState('');
 
-  // `files` arrives already sorted from the provider; narrow it by a case-insensitive path match.
+  // `files` arrives already sorted from the provider; narrow by a case-insensitive match on the full
+  // path (so typing a package name filters, since the path carries `packages/<group>/<pkg>/…`).
   const needle = fileFilter.trim().toLowerCase();
   const visibleFiles = needle ? files.filter((file) => file.toLowerCase().includes(needle)) : files;
 
@@ -347,77 +352,81 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content>
-          <Popover.Viewport classNames='w-[22rem] max-h-[20rem]'>
-            <div className='flex items-center justify-between pb-1'>
-              <span className='text-sm text-subdued'>{t('levels.title')}</span>
-              <IconButton
-                icon='ph--x--regular'
-                iconOnly
-                density='xs'
-                variant='ghost'
-                label={t('levels.clear')}
-                disabled={fileLevels.size === 0}
-                onClick={clearFileLevels}
-              />
-            </div>
-            {files.length > 0 && (
-              <Input.Root>
-                <Input.TextInput
-                  placeholder={t('levels.filter.placeholder')}
-                  value={fileFilter}
-                  autoComplete='off'
-                  spellCheck={false}
-                  onChange={(ev) => setFileFilter(ev.target.value)}
-                />
-              </Input.Root>
-            )}
-            {visibleFiles.length === 0 && (
-              <div className='p-1 text-xs text-subdued'>
-                {t(files.length === 0 ? 'levels.empty' : 'search.no-matches')}
-              </div>
-            )}
-            {visibleFiles.length > 0 && (
-              <Listbox.Root>
-                <Listbox.Content>
-                  {visibleFiles.map((file) => {
-                    const basename = file.split('/').pop() ?? file;
-                    const value = fileLevels.get(file) ?? 'inherit';
-                    return (
-                      <Listbox.Item key={file} id={file} classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0'>
-                        <Listbox.ItemLabel classNames='text-xs' title={file}>
-                          {basename}
-                        </Listbox.ItemLabel>
-                        <Select.Root
-                          value={value}
-                          onValueChange={(next) =>
-                            setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
-                          }
-                        >
-                          <Select.TriggerButton classNames='w-full text-sm' placeholder={t('levels.inherit')} />
-                          <Select.Portal>
-                            <Select.Content>
-                              <Select.ScrollUpButton />
-                              <Select.Viewport>
-                                <Select.Option value='inherit' classNames='text-sm'>
-                                  {t('levels.inherit')}
-                                </Select.Option>
-                                {LEVELS.map((level) => (
-                                  <Select.Option key={level} value={level} classNames='text-sm'>
-                                    {t(`level.${level}`)}
-                                  </Select.Option>
-                                ))}
-                              </Select.Viewport>
-                              <Select.ScrollDownButton />
-                              <Select.Arrow />
-                            </Select.Content>
-                          </Select.Portal>
-                        </Select.Root>
-                      </Listbox.Item>
-                    );
-                  })}
-                </Listbox.Content>
-              </Listbox.Root>
-            )}
+          <Popover.Viewport classNames='w-[24rem] h-[20rem] p-0'>
+            <Panel.Root>
+              <Panel.Toolbar asChild>
+                <Toolbar.Root>
+                  <Input.Root>
+                    <Input.TextInput
+                      placeholder={t('levels.filter.placeholder')}
+                      value={fileFilter}
+                      autoComplete='off'
+                      spellCheck={false}
+                      onChange={(ev) => setFileFilter(ev.target.value)}
+                    />
+                  </Input.Root>
+                </Toolbar.Root>
+              </Panel.Toolbar>
+              <Panel.Content asChild>
+                <ScrollArea.Root orientation='vertical' thin>
+                  <ScrollArea.Viewport>
+                    {visibleFiles.length === 0 && (
+                      <div className='p-2 text-xs text-subdued'>
+                        {t(files.length === 0 ? 'levels.empty' : 'search.no-matches')}
+                      </div>
+                    )}
+                    {visibleFiles.length > 0 && (
+                      <Listbox.Root>
+                        <Listbox.Content>
+                          {visibleFiles.map((file) => {
+                            const basename = file.split('/').pop() ?? file;
+                            const pkg = packageName(file);
+                            const value = fileLevels.get(file) ?? 'inherit';
+                            return (
+                              <Listbox.Item
+                                key={file}
+                                id={file}
+                                classNames='grid grid-cols-[1fr_7rem] items-center gap-1'
+                              >
+                                <Listbox.ItemLabel classNames='text-xs' title={file}>
+                                  {basename}
+                                  {pkg && <span className='text-subdued'> · {pkg}</span>}
+                                </Listbox.ItemLabel>
+                                <Select.Root
+                                  value={value}
+                                  onValueChange={(next) =>
+                                    setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
+                                  }
+                                >
+                                  <Select.TriggerButton classNames='w-full text-sm' placeholder={t('levels.inherit')} />
+                                  <Select.Portal>
+                                    <Select.Content>
+                                      <Select.ScrollUpButton />
+                                      <Select.Viewport>
+                                        <Select.Option value='inherit' classNames='text-sm'>
+                                          {t('levels.inherit')}
+                                        </Select.Option>
+                                        {LEVELS.map((level) => (
+                                          <Select.Option key={level} value={level} classNames='text-sm'>
+                                            {t(`level.${level}`)}
+                                          </Select.Option>
+                                        ))}
+                                      </Select.Viewport>
+                                      <Select.ScrollDownButton />
+                                      <Select.Arrow />
+                                    </Select.Content>
+                                  </Select.Portal>
+                                </Select.Root>
+                              </Listbox.Item>
+                            );
+                          })}
+                        </Listbox.Content>
+                      </Listbox.Root>
+                    )}
+                  </ScrollArea.Viewport>
+                </ScrollArea.Root>
+              </Panel.Content>
+            </Panel.Root>
           </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
