@@ -199,6 +199,15 @@ export const runScenarioHeadless = async (
           if (step.contains) {
             expect(view.state.doc.toString(), label).toContain(step.contains);
           }
+          if (step.none) {
+            const own = doc.history?.branches.find(
+              (candidate) =>
+                candidate.status === 'active' &&
+                candidate.kind === 'suggestion' &&
+                candidate.creator === context.identity.did,
+            );
+            expect(own, label).toBeUndefined();
+          }
           break;
         }
       }

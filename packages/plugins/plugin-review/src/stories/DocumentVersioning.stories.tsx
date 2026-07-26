@@ -45,7 +45,16 @@ import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
 import { ReviewPlugin } from '../plugin';
-import { ReviewStoryLayout, type ReviewStoryPanel, seedComments } from '../testing';
+import {
+  type ReviewScenario,
+  ReviewStoryLayout,
+  type ReviewStoryPanel,
+  editingScenario,
+  seedComments,
+  suggestingDeleteScenario,
+  suggestingScenario,
+} from '../testing';
+import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook';
 import { translations } from '../translations';
 
 const concat = (...lines: string[]) => lines.join('\n');
@@ -735,30 +744,6 @@ const editorReadOnly = (canvasElement: HTMLElement): boolean | undefined => {
 };
 
 /**
- * Open the editor view-mode dropdown and pick an entry by label. The review mode is now folded into
- * this single dropdown: Source ⇒ editing, Read-only/Preview ⇒ viewing, Suggesting ⇒ suggesting.
- */
-const selectViewMode = async (canvasElement: HTMLElement, label: string) => {
-  const body = within(canvasElement.ownerDocument.body);
-  // Both the trigger's accessible name AND its icon track the active item (applyActive), so locate
-  // it structurally: the view-mode dropdown is the last menu-popup button in the editor toolbar.
-  const trigger = await waitFor(
-    () => {
-      const buttons = canvasElement.querySelectorAll('button[aria-haspopup="menu"]');
-      const found = buttons[buttons.length - 1];
-      invariant(found instanceof HTMLElement);
-      return found;
-    },
-    { timeout: 15_000 },
-  );
-  await userEvent.click(trigger);
-  // Scope to the open menu: the trigger renders the ACTIVE item's label too, so a body-wide text
-  // lookup matches both once that mode is selected.
-  const menu = await body.findByRole('menu');
-  await userEvent.click(await within(menu).findByText(label));
-};
-
-/**
  * Ambient review (Milestone A) — the default view, governed by the per-user review mode:
  * - Stays on main and overlays EVERY author's suggestions plus comments (no branch selection).
  * - Editing: both authors' suggestions overlay inline and the comment highlight shows; editor editable.
@@ -998,4 +983,33 @@ export const SuggestingSwapTest: Story = {
     await expect(contentEl()).toBe(before);
     await expect(EditorView.findFromDOM(before)).toBe(view);
   },
+};
+
+//
+// Shared-scenario plays: each runs a `testing/scenarios.ts` definition through the full plugin
+// stack. The SAME definitions run headless in `testing/scenarios.test.tsx`, so the tiers cannot
+// drift — a new step kind fails both executors at compile time until each interprets it.
+//
+
+const scenarioArgs = (scenario: ReviewScenario): StoryArgs => ({
+  content: scenario.setup.content,
+  suggestions: scenario.setup.suggestions,
+});
+
+export const ScenarioEditingTest: Story = {
+  args: scenarioArgs(editingScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(editingScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioSuggestingTest: Story = {
+  args: scenarioArgs(suggestingScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(suggestingScenario, { canvasElement, doc: getDoc }),
+};
+
+export const ScenarioSuggestingDeleteTest: Story = {
+  args: scenarioArgs(suggestingDeleteScenario),
+  parameters: { ambientReview: true },
+  play: ({ canvasElement }) => runScenarioStorybook(suggestingDeleteScenario, { canvasElement, doc: getDoc }),
 };

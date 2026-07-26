@@ -16,6 +16,25 @@ here — this document is the timeless script.
 Conventions: stories seed all state before mount (reload = reset); play-driven stories carry a `Test`
 suffix, hands-on stories the plain name; report failures by step number (e.g. "F1.3").
 
+## Shared scenarios
+
+Core editing behaviour (default and Suggesting typing/deletion) is specified once as data —
+`src/testing/scenarios.ts` defines each scenario as a setup (main content + foreign suggestions)
+plus a step list (mode selections, edits, expectations). Two executors interpret the SAME objects:
+
+- **Headless** (`src/testing/scenario-executor.tsx`, run by `src/testing/scenarios.test.tsx`) —
+  mounts the real binding pipeline (`useMarkdownEditorBinding`) via `renderHook` and a real
+  `EditorView` wired the way `MarkdownEditorContent` wires it (automerge source + binding extensions
+  in a live compartment).
+- **Storybook** (`src/testing/scenario-executor-storybook.ts`, run by the
+  `DocumentVersioning / Scenario*Test` plays) — drives the full plugin stack: the real toolbar
+  dropdown, the mounted editor, and the live decorations.
+
+The tiers cannot drift: a new step kind fails both executors at compile time until each interprets
+it, and a scenario edit re-specifies both tests at once. Add new editing behaviour as a scenario
+first; reach for a bespoke play only when the behaviour is not expressible as scenario steps
+(e.g. DOM-identity assertions like `SuggestingSwapTest`).
+
 ## F1 — Suggesting (own edits)
 
 Story: `DocumentVersioning / Suggesting` (seeded: multi-paragraph document, a bullet list, another

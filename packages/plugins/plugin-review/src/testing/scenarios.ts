@@ -32,8 +32,8 @@ export type ScenarioStep =
   | { kind: 'expect-main'; contains?: string; lacks?: string }
   /** The current user's suggestion branch contains a substring. */
   | { kind: 'expect-own-branch'; contains: string }
-  /** The user's own tracked-change decorations contain a substring. */
-  | { kind: 'expect-own-change'; contains: string };
+  /** The user's own tracked change: contains a substring, or (`none`) no own change/branch exists. */
+  | { kind: 'expect-own-change'; contains?: string; none?: boolean };
 
 export type ReviewScenario = {
   name: string;
@@ -55,7 +55,7 @@ export const editingScenario: ReviewScenario = {
     { kind: 'type', at: 'bravo', text: 'X' },
     { kind: 'expect-doc', contains: 'Xbravo' },
     { kind: 'expect-main', contains: 'Xbravo' },
-    { kind: 'expect-own-change', contains: '' },
+    { kind: 'expect-own-change', none: true },
   ],
 };
 
