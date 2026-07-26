@@ -620,7 +620,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 onClick={() => setCurrent(id)}
                 classNames='group grid grid-cols-[auto_1rem_8rem_1fr_max-content] gap-2 items-center p-0 dx-current'
               >
-                <div className='pl-2'>
+                <div className='flex items-center pl-2'>
                   <Input.Root>
                     <Input.Checkbox
                       tabIndex={-1}
