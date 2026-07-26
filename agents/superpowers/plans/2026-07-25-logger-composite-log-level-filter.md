@@ -1556,10 +1556,14 @@ git commit -m "react-ui-debug: assemble Logger namespace + barrel"
 **Files:**
 
 - Modify: `packages/plugins/plugin-debug/src/containers/LogStatus/LogStatus.tsx`
+- Modify: `packages/plugins/plugin-debug/src/capabilities/react-surface.tsx`
 - Modify: `packages/stories/storybook-testing/src/modules/LoggingModule.tsx`
+- Modify: `packages/devtools/devtools/src/components/performance/panels/LoggingPanel.tsx`
 - Create: `packages/ui/react-ui-debug/src/components/Logger/Logger.stories.tsx`
 
 **Interfaces:** Consumes `Logger` from `@dxos/react-ui-debug`; `Panel` (and `Toolbar` in the story) from `@dxos/react-ui`.
+
+**All four `LogPanel` consumers must be migrated** (grep to confirm none remain: `grep -rn "LogPanel" packages/plugins/plugin-debug/src packages/devtools packages/stories/storybook-testing/src`). `stories-assistant/src/testing/decorators.tsx` only imports `@dxos/react-ui-debug/translations` (unchanged — leave it). Each site inlines the same assembly (`Logger.Root` → `Panel.Root` → Toolbar/Content(List)/Statusbar(Filter)); `Logger.Root` accepts `maxLines` / `initialFilter` / `defaultRecording`, and any container-sizing `classNames` moves onto the inner `Panel.Root`.
 
 - [ ] **Step 1: Update `LogStatus.tsx`**
 
@@ -1615,6 +1619,65 @@ export const LoggingModule = () => (
       </Panel.Statusbar>
     </Panel.Root>
   </Logger.Root>
+);
+```
+
+- [ ] **Step 2b: Update `plugin-debug/src/capabilities/react-surface.tsx`**
+
+Replace `import { LogPanel } from '@dxos/react-ui-debug';` with `import { Logger } from '@dxos/react-ui-debug';`, ensure `Panel` is imported from `@dxos/react-ui` (add if absent), and replace the `logs` surface `component: () => <LogPanel />,` with:
+```tsx
+component: () => (
+  <Logger.Root>
+    <Panel.Root classNames='bs-full'>
+      <Panel.Toolbar asChild>
+        <Logger.Toolbar />
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <Logger.Content>
+          <Logger.List />
+        </Logger.Content>
+      </Panel.Content>
+      <Panel.Statusbar asChild>
+        <Logger.Filter />
+      </Panel.Statusbar>
+    </Panel.Root>
+  </Logger.Root>
+),
+```
+
+- [ ] **Step 2c: Update `devtools/.../performance/panels/LoggingPanel.tsx`**
+
+This file imports its own `Panel` from `'../Panel'`, so import the design-system panel **aliased** to avoid the clash. `Logger.Root` takes the former `LogPanel` props; the `classNames='bs-[280px]'` sizing moves onto the inner `UiPanel.Root`:
+```tsx
+//
+// Copyright 2025 DXOS.org
+//
+
+import React from 'react';
+
+import { Panel as UiPanel } from '@dxos/react-ui';
+import { Logger } from '@dxos/react-ui-debug';
+
+import { type CustomPanelProps, Panel } from '../Panel';
+
+export const LoggingPanel = ({ maxLines = 100, ...props }: CustomPanelProps<{ maxLines?: number }>) => (
+  <Panel {...props} icon='ph--list--regular' title='Logging' maxHeight={0}>
+    <Logger.Root maxLines={maxLines} initialFilter='intent-dispatcher:debug' defaultRecording={false}>
+      <UiPanel.Root classNames='bs-[280px]'>
+        <UiPanel.Toolbar asChild>
+          <Logger.Toolbar />
+        </UiPanel.Toolbar>
+        <UiPanel.Content asChild>
+          <Logger.Content>
+            <Logger.List />
+          </Logger.Content>
+        </UiPanel.Content>
+        <UiPanel.Statusbar asChild>
+          <Logger.Filter />
+        </UiPanel.Statusbar>
+      </UiPanel.Root>
+    </Logger.Root>
+  </Panel>
 );
 ```
 
@@ -1700,11 +1763,11 @@ export const Default: Story = {};
 - [ ] **Step 4: Build + no stale refs**
 
 ```bash
-grep -rn "LogPanel" packages/plugins/plugin-debug/src packages/stories/storybook-testing/src
-moon run react-ui-debug:build && moon run plugin-debug:build
+grep -rn "LogPanel" packages/plugins/plugin-debug/src packages/devtools packages/stories/storybook-testing/src
+~/.proto/shims/moon run react-ui-debug:build && ~/.proto/shims/moon run plugin-debug:build && ~/.proto/shims/moon run devtools:build
 ```
 
-Expected: first command no output; builds PASS.
+Expected: first command no output; all three builds PASS. (The `devtools` moon project id is `devtools`.)
 
 - [ ] **Step 5: Commit**
 
