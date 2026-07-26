@@ -633,9 +633,9 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
                 <div
                   className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-description')}
-                  title={record.package ? `${record.package}/${record.file}` : record.file}
+                  title={record.file}
                 >
-                  <span className='truncate'>{record.file}</span>
+                  <span className='truncate'>{record.file?.split('/').pop() ?? record.file}</span>
                 </div>
                 <span className='truncate' title={record.message}>
                   {record.message}
@@ -652,7 +652,14 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 />
                 {isExpanded && (
                   <div className='col-span-full'>
-                    <JsonHighlighter classNames='p-2' data={{ message: record.message, context: record.context }} />
+                    <JsonHighlighter
+                      classNames='p-2'
+                      data={{
+                        file: record.line ? `${record.file}:${record.line}` : record.file,
+                        message: record.message,
+                        context: record.context,
+                      }}
+                    />
                     {frames && <ErrorStack classNames='p-1 bg-input-surface' frames={frames} />}
                   </div>
                 )}
