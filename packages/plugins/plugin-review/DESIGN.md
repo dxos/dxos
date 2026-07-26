@@ -1,8 +1,7 @@
 # Document Review — Specification
 
-Status: DRAFT for sign-off, 2026-07-25. Supersedes the previous DESIGN.md (see git history), which
-accumulated three weeks of phase notes and no longer described one coherent system. This document is
-the contract: every invariant here either has an enforcing test (linked) or is marked OPEN.
+Status: DRAFT for sign-off. This document is the contract: every invariant either names its
+enforcing test or is marked OPEN.
 
 Three layers, specified separately because they fail separately:
 
@@ -66,7 +65,7 @@ review"). Each user has one posture at a time:
 
 - Checkpoints (named, on main or a branch), time travel (read-only snapshots), fork points always
   addressable in the timeline. The timeline is the git-graph companion.
-- OPEN: author-coloured lanes (S1.8) — requires a colour input on `Timeline`; not designed here.
+- OPEN: author-coloured lanes — requires a colour input on `Timeline`; not designed here.
 
 ---
 
@@ -87,15 +86,14 @@ ancestry, so merges in either direction are CRDT-well-defined.
 
 ### 2.2 The versioning model (`@dxos/versioning`) and its invariants
 
-Each invariant names its enforcing test. **An invariant without a test is a bug report waiting to
-happen — G4 existed because I-2 was never written down.**
+Each invariant names its enforcing test. An invariant without a test is not an invariant.
 
 - **I-1 One branch per author.** `Branch.suggestion(doc, parent, creator)` is find-or-create keyed by
   creator. — `branch.test.ts`
 - **I-2 An own suggestion branch is always `main + that author's suggestions`.** Main's progress never
   reads as the author's deletions. Enforced on every Suggesting entry: unedited stale branch ⇒ retire
   and re-fork at current heads; edited stale branch ⇒ `syncBranch` (main folded in) and the anchor
-  advances. — `useVersionedEditor.test.tsx` (F1.2, G4)
+  advances. — `useVersionedEditor.test.tsx`
 - **I-3 A suggestion's rendered diff is computed against its author's anchor** (the revision they
   wrote on), then rebased into the viewing document's coordinates — never diffed raw against a moving
   document. — `suggest.test.ts` (per-source base), `diff.test.ts` (rebase)
@@ -116,8 +114,8 @@ happen — G4 existed because I-2 was never written down.**
   async-resolution flags in; subject, key, editability, loading out. Stateless, so sequences cannot
   leak history. — `review-lifecycle.test.ts` (13-row table)
 - **I-9 One dropdown gesture writes the whole (posture, view-mode) pair** via
-  `applyViewModeSelection`; a contradictory pair (stale readonly into Suggesting — F1.7) is
-  unrepresentable. — `review-lifecycle.test.ts` (5-row table)
+  `applyViewModeSelection`; a contradictory pair (a stale readonly view mode surviving into
+  Suggesting) is unrepresentable. — `review-lifecycle.test.ts` (5-row table)
 
 ### 2.4 State placement
 
@@ -131,13 +129,13 @@ happen — G4 existed because I-2 was never written down.**
 
 ## 3. Editor (CodeMirror)
 
-### 3.1 The problem with the current architecture (honest statement)
+### 3.1 The structural constraint
 
-Today, entering Suggesting **rebinds the editor to a different document** (the own branch):
-`editorKey` changes, CodeMirror tears down and remounts. This is the single cause of the surviving
-interactive defects — flicker on switch (G1), comment-layer geometry shifts (G3), caret jumping into
-widgets (G5), caret/selection lost across switches (G6), and plausibly the spurious mode toggle (G2).
-No state hygiene fixes a teardown. §3.3 is the target that removes it; §3.2 is what holds until then.
+Entering Suggesting **rebinds the editor to a different document** (the own branch): the editor key
+changes and CodeMirror tears down and remounts. A remount inherently loses caret, selection and
+focus, flashes decorations, and recomputes overlay geometry — so any mode switch that crosses a
+rebind can only approximate continuity. §3.3 is the target architecture that removes the rebind from
+the ambient path; §3.2 is what holds until then.
 
 ### 3.2 Current (shipping) architecture
 
@@ -155,9 +153,8 @@ No state hygiene fixes a teardown. §3.3 is the target that removes it; §3.2 is
   cancels them locally; the suggestions overlay (which already renders every author's branch diff,
   including self as tracked changes) immediately shows the change. The editor document itself is only
   ever changed by main's sync extension and by Accept.
-- Mode switches then change _only_ decorations and the filter's enablement — no teardown, which
-  retires G1/G3/G5/G6 by construction, and caret/selection survive trivially (G6) because the view
-  is never rebuilt.
+- Mode switches then change _only_ decorations and the filter's enablement — no teardown, so caret,
+  selection, focus and overlay geometry survive by construction.
 - **Design obligations before building** (each becomes a test):
   - _Latency & echo_: a routed keystroke must render its overlay update in the same frame batch, or
     typing feels dead. Measure with the existing play harness; budget one frame.
@@ -178,9 +175,9 @@ One control, one event (I-9). Built-ins: Markdown (preview, editing posture), Pl
 editing), Read only (readonly, viewing). Contributed: Suggesting (suggesting posture, keeps an
 editable view mode, stepping off readonly). The article does no mode arithmetic.
 
-### 3.5 Verification policy (the lesson of 2026-07-25)
+### 3.5 Verification policy
 
-Unit tables and hook harnesses verify the _model_; they proved unable to catch remount-class defects.
+Unit tables and hook harnesses verify the _model_; they cannot catch remount-class defects.
 Therefore:
 
 - Every interactive defect gets a **failing test at the real-editor layer first** — a storybook play
@@ -197,9 +194,9 @@ Therefore:
 
 ## 4. Open decisions (blocking sign-off)
 
-1. **Adopt §3.3 (capture layer)?** It is the only path that closes G1/G3/G5/G6 rather than sanding
-   them. Estimated as a multi-day change with the §3.3 obligations as its test plan. The alternative
-   is accepting remount UX on mode switches permanently.
+1. **Adopt §3.3 (capture layer)?** It is the only path that removes the remount class of defects
+   rather than sanding them. A multi-day change with the §3.3 obligations as its test plan; the
+   alternative is accepting remount UX on ambient mode switches permanently.
 2. **Suggest-against-draft (§1.4)** — defer or include in the §3.3 work (the capture layer makes it
    nearly free: route to a branch whose parent is the draft).
-3. **Timeline author colours (S1.8)** — separate `Timeline` API work; prioritize or drop.
+3. **Timeline author colours** — separate `Timeline` API work; prioritize or drop.
