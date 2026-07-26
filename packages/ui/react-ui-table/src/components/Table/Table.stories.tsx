@@ -361,7 +361,7 @@ const ExternalMutationStory = () => {
   }
 
   return (
-    <div className='flex flex-col bs-full'>
+    <div className='flex flex-col h-full'>
       <Toolbar.Root>
         <Toolbar.Button onClick={handleMutate}>Mutate row externally</Toolbar.Button>
       </Toolbar.Root>

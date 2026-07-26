@@ -167,7 +167,7 @@ const DefaultStory = ({ showMap }: { showMap?: boolean }) => {
   return (
     <AttendableContainer id={ATTENDABLE_ID} classNames='dx-container grid grid-cols-2'>
       <TripArticle role='article' subject={trip} attendableId={ATTENDABLE_ID} defaultShowGlobe={showMap} />
-      <div className='min-bs-0 overflow-hidden border-is border-separator'>
+      <div className='min-h-0 overflow-hidden border-is border-separator'>
         {selected && (
           <SegmentArticle role='article' subject={selected} companionTo={trip} attendableId={ATTENDABLE_ID} />
         )}

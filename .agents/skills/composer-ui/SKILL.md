@@ -70,6 +70,20 @@ Themed primitives accept overrides via a `classNames` prop (string or array) —
 Pass functional layout hints (`p-4`, `space-y-4`, `flex`, `@container` queries) freely; pass color/size
 through tokens. If you're writing more than a layout hint by hand, you're probably missing a primitive.
 
+## Sizing vs logical utilities (post-Tailwind-3)
+
+**Sizing is physical.** Use `w-*` / `h-*` / `min-w-*` / `max-h-*` / `size-*` for width and height. The
+custom `is-*` / `bs-*` (inline-size / block-size) utilities were **dropped** — Tailwind core never shipped
+logical *size* utilities and keeps width/height physical, so `is-full` / `bs-[20rem]` are dead classes.
+Prefer `w-full` / `h-[20rem]`.
+
+**Direction-sensitive spacing stays logical** — these Tailwind ships and they flip correctly under RTL, so
+keep using them: `ps-*` / `pe-*` (padding), `ms-*` / `me-*` (margin), `start-*` / `end-*` (inset),
+`border-s` / `border-e` (border side), `text-start` / `text-end` (alignment). Do **not** rewrite these to
+physical (`pl-`, `ml-`, `left-`, `text-left`).
+
+Rule of thumb: **width/height → physical; margin/padding/inset/border-side/text-align → logical.**
+
 ## Icons
 
 Icons are Phosphor sprite references named `ph--<icon>--<weight>` (weights: `regular`, `bold`, `fill`,

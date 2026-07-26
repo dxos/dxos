@@ -54,7 +54,7 @@ export const ReviewStoryLayout = ({ panels = ['comments', 'history'], attendable
     <div className='dx-container grid grid-cols-[3fr_2fr]' {...attentionAttrs}>
       <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
       <div
-        className='grid min-bs-0 divide-y divide-separator'
+        className='grid min-h-0 divide-y divide-separator'
         style={{ gridTemplateRows: `repeat(${companionData.length}, minmax(0, 1fr))` }}
       >
         {companionData.map((data) => (

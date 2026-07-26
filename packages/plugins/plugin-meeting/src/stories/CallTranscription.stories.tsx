@@ -131,7 +131,7 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
           onClick={toggleRecording}
         />
       </Toolbar.Root>
-      <div className='grid grid-cols-2 gap-2 grow min-bs-0'>
+      <div className='grid grid-cols-2 gap-2 grow min-h-0'>
         <div className='dx-expander'>
           <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId }, attendableId: roomId }} limit={1} />
         </div>

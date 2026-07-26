@@ -103,7 +103,7 @@ export const ArtifactsArticle = ({ role, space }: ArtifactsArticleProps) => {
       </Panel.Toolbar>
       <Panel.Content>
         {items.length === 0 ? (
-          <div role='status' className='flex items-center justify-center bs-full text-subdued'>
+          <div role='status' className='flex items-center justify-center h-full text-subdued'>
             {t('empty.message')}
           </div>
         ) : (

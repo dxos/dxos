@@ -166,7 +166,7 @@ export const PopoverContent = () => {
                 {content && 'subject' in content ? (
                   <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} />
                 ) : (
-                  <Card.Body classNames='min-bs-8'>
+                  <Card.Body classNames='min-h-8'>
                     <Card.Row>
                       <Card.Text variant='description'>{t('popover-no-preview.message')}</Card.Text>
                     </Card.Row>
