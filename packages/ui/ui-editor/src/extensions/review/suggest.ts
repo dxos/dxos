@@ -407,22 +407,39 @@ class SuggestionWidget extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
+    // Only the CORE text carries the coloured chrome (underline/bar): leading and trailing newline
+    // runs render as plain unstyled text, so a proposal that starts or ends with a paragraph break
+    // still breaks the layout without drawing stray bar/underline fragments on empty rows — and a
+    // whitespace-only proposal (a bare paragraph break) previews as an unmarked break.
+    const inserted = this.#hunk.inserted;
+    const core = inserted.replace(/^\n+/, '').replace(/\n+$/, '');
+    const leading = inserted.slice(0, inserted.indexOf(core));
+    const trailing = core.length === 0 ? '' : inserted.slice(leading.length + core.length);
     // A pure block insertion occupies its own visual rows, so it carries its own change bar — the
     // shared gutter's full-line bar would tint the host line's text (see the gutter skip in `build`).
-    const block = this.#hunk.removed === '' && this.#hunk.inserted.endsWith('\n');
-    return Domino.of('span')
-      .classNames('cm-suggest-actions')
-      .append(
-        Domino.of('span')
-          .classNames(block ? 'cm-suggest-insert cm-suggest-insert-block' : 'cm-suggest-insert')
-          // The author's colour carries attribution: coloured text underlined in the same colour.
-          .style({
-            color: this.#hunk.colour,
-            borderBottomColor: this.#hunk.colour,
-            ...(block && { borderInlineStartColor: this.#hunk.colour }),
-          })
-          .text(this.#hunk.inserted),
-      ).root;
+    const block = this.#hunk.removed === '' && trailing.includes('\n');
+    const root = Domino.of('span').classNames('cm-suggest-actions');
+    if (core.length === 0) {
+      return root.append(Domino.of('span').text(inserted)).root;
+    }
+    if (leading) {
+      root.append(Domino.of('span').text(leading));
+    }
+    root.append(
+      Domino.of('span')
+        .classNames(block ? 'cm-suggest-insert cm-suggest-insert-block' : 'cm-suggest-insert')
+        // The author's colour carries attribution: coloured text underlined in the same colour.
+        .style({
+          color: this.#hunk.colour,
+          borderBottomColor: this.#hunk.colour,
+          ...(block && { borderInlineStartColor: this.#hunk.colour }),
+        })
+        .text(core + (block ? trailing : '')),
+    );
+    if (!block && trailing) {
+      root.append(Domino.of('span').text(trailing));
+    }
+    return root.root;
   }
 
   // Pointer events must reach the editor: ignoring them left the preview inert, so hovering it never
