@@ -78,8 +78,9 @@ export const useVersionedEditor = ({
     mode,
   } = versioning;
 
-  // Default branch compare to the accept/reject review overlay ('suggest'); the read-only diff
-  // modes (inline/sideBySide/gutter) are opt-in via settings.
+  // Default branch compare to the accept/reject review overlay ('suggest'); the inline/sideBySide/
+  // gutter diff variants are opt-in via settings and keep the branch editable — a reviewer can
+  // adjust the draft while seeing it diffed against the anchor (see useReviewExtensions).
   const diffViewMode = diffView ?? 'suggest';
   const compareActive = versioning.view === 'diff' && !!activeBranch && branchBaseContent !== undefined;
   // The `base` view shows the parent content at the branch anchor read-only (the state the branch

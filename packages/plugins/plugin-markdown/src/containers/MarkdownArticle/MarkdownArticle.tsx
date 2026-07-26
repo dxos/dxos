@@ -57,9 +57,14 @@ const useDefaultEditorBinding: UseEditorBinding = ({ object, viewMode, onViewMod
         onViewModeChange?.(selection.viewMode);
       } else {
         setActiveReviewMode(selection.reviewMode);
+        // Contributed modes are editable postures: step off a stale readonly view mode (mirrors
+        // `applyViewModeSelection` in the review binding) or the mode reads active but cannot type.
+        if (viewMode === 'readonly') {
+          onViewModeChange?.('source');
+        }
       }
     },
-    [onViewModeChange],
+    [onViewModeChange, viewMode],
   );
   return {
     subject: object,

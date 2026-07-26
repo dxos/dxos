@@ -4,10 +4,12 @@
 // @vitest-environment happy-dom
 
 import { act, renderHook, waitFor } from '@testing-library/react';
+import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Text as EchoText, Obj } from '@dxos/echo';
+import { Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Client, ClientProvider, fromHost } from '@dxos/react-client';
@@ -27,12 +29,12 @@ import { useVersioning } from './useVersioning';
  * (typed text struck through after a round-trip, the editor ending read-only) becomes a replayable
  * sequence.
  */
-const useBindingHarness = (doc: Markdown.Document, identity: { did: string }, viewMode: EditorViewMode) => {
+const useBindingHarness = (doc: Markdown.Document, identity: Identity.Info, viewMode: EditorViewMode) => {
   const versioning = useVersioning(doc);
   const editor = useVersionedEditor({
     object: doc,
     versioning,
-    identity: identity as Parameters<typeof useVersionedEditor>[0]['identity'],
+    identity,
     mainContent: doc.content.target?.content,
     diffView: undefined,
     viewMode,
@@ -45,7 +47,7 @@ describe('editor binding lifecycle', () => {
   let client: Client;
   let space: Space;
   let doc: Markdown.Document;
-  let identity: { did: string };
+  let identity: Identity.Info;
 
   beforeEach(async () => {
     client = new Client({ services: fromHost() });
@@ -58,7 +60,7 @@ describe('editor binding lifecycle', () => {
     await doc.content.load();
     const did = client.halo.identity.get()?.did;
     invariant(did, 'identity not initialized');
-    identity = { did };
+    identity = Schema.decodeUnknownSync(Identity.Info)({ did });
   });
 
   afterEach(async () => {

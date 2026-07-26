@@ -61,13 +61,13 @@ review"). Each user has one posture at a time:
 - While a draft is selected the ambient overlay is off — the advanced path shows exactly the branch
   (or its diff), and comments scope to the branch under review.
 - Suggesting _against a draft branch_ (a suggestion whose parent is a draft, not main) is in scope
-  (§4.2): a suggestion branch is a branch whose parent is any Text; the capture layer routes to it.
+  (Decision 2): a suggestion branch is a branch whose parent is any Text; the capture layer routes to it.
 
 ### 1.5 History
 
 - Checkpoints (named, on main or a branch), time travel (read-only snapshots), fork points always
   addressable in the timeline. The timeline is the git-graph companion.
-- Author-coloured lanes: planned (§4.3) — `Timeline` gains a per-branch colour input.
+- Author-coloured lanes: planned (Decision 3) — `Timeline` gains a per-branch colour input.
 
 ---
 

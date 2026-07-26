@@ -240,12 +240,34 @@ export const discardBranch = (doc: VersionedObject, branch: Versioning.Branch): 
   });
 };
 
+// In-flight find-or-create per (doc, creator): two surfaces entering Suggesting concurrently must
+// resolve to ONE branch — without this, both can pass the not-found check and create duplicates.
+const inflightSuggestionBranches = new Map<string, Promise<Versioning.Branch>>();
+
 /**
  * Find-or-create the caller's suggestion branch (one per author). Suggestion branches are keyed by
  * `creator` and reused across edits, so a user accrues a single reviewable set of changes rather than
- * a branch per edit. Idempotent: returns the existing active suggestion branch when present.
+ * a branch per edit. Idempotent: returns the existing active suggestion branch when present; calls
+ * for the same (doc, creator) are serialized through an in-flight cache.
  */
-export const suggestionBranch = async (
+export const suggestionBranch = (
+  doc: VersionedObject,
+  parent: Text.Text,
+  creator: string,
+): Promise<Versioning.Branch> => {
+  const cacheKey = `${doc.id}:${creator}`;
+  const pending = inflightSuggestionBranches.get(cacheKey);
+  if (pending) {
+    return pending;
+  }
+  const run = findOrCreateSuggestionBranch(doc, parent, creator).finally(() => {
+    inflightSuggestionBranches.delete(cacheKey);
+  });
+  inflightSuggestionBranches.set(cacheKey, run);
+  return run;
+};
+
+const findOrCreateSuggestionBranch = async (
   doc: VersionedObject,
   parent: Text.Text,
   creator: string,

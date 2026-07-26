@@ -25,7 +25,7 @@ const DefaultStory = ({ authors }: Pick<SuggestionAuthorsProps, 'authors'>) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-review/SuggestionAuthors',
+  title: 'plugins/plugin-review/components/SuggestionAuthors',
   render: DefaultStory,
   decorators: [withTheme(), withLayout()],
   parameters: {
