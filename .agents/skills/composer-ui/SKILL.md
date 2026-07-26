@@ -74,7 +74,7 @@ through tokens. If you're writing more than a layout hint by hand, you're probab
 
 **Sizing is physical.** Use `w-*` / `h-*` / `min-w-*` / `max-h-*` / `size-*` for width and height. The
 custom `is-*` / `bs-*` (inline-size / block-size) utilities were **dropped** — Tailwind core never shipped
-logical *size* utilities and keeps width/height physical, so `is-full` / `bs-[20rem]` are dead classes.
+logical _size_ utilities and keeps width/height physical, so `is-full` / `bs-[20rem]` are dead classes.
 Prefer `w-full` / `h-[20rem]`.
 
 **Direction-sensitive spacing stays logical** — these Tailwind ships and they flip correctly under RTL, so
