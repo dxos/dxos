@@ -24,7 +24,13 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-list"
+    },
+    {
       "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

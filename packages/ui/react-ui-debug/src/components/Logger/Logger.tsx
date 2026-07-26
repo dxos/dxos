@@ -14,9 +14,13 @@ import {
   type ThemedClassName,
   ToggleIconButton,
   Toolbar,
+  composable,
+  composableProps,
   useTranslation,
 } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
+import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '../../translations';
 import { formatLogEntry } from './format';
@@ -242,9 +246,9 @@ LoggerRoot.displayName = 'Logger.Root';
 // Toolbar
 //
 
-export type LoggerToolbarProps = ThemedClassName<{}>;
+export type LoggerToolbarProps = ComposableProps;
 
-const LoggerToolbar = ({ classNames }: LoggerToolbarProps) => {
+const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const { filter, setFilter, recording, setRecording, clear, copyAll } = useLoggerContext('Logger.Toolbar');
 
@@ -252,7 +256,7 @@ const LoggerToolbar = ({ classNames }: LoggerToolbarProps) => {
   const selectedLevel = (LEVELS as readonly string[]).includes(filter) ? filter : '';
 
   return (
-    <Toolbar.Root classNames={mx(classNames)}>
+    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
       <Input.Root>
         <Input.TextInput
           placeholder={t('filter.placeholder')}
@@ -292,7 +296,7 @@ const LoggerToolbar = ({ classNames }: LoggerToolbarProps) => {
       <Toolbar.IconButton icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
     </Toolbar.Root>
   );
-};
+});
 
 LoggerToolbar.displayName = 'Logger.Toolbar';
 
@@ -305,9 +309,9 @@ LoggerLevels.displayName = 'Logger.Levels';
 // Content
 //
 
-export type LoggerContentProps = ThemedClassName<PropsWithChildren>;
+export type LoggerContentProps = ComposableProps;
 
-const LoggerContent = ({ classNames, children }: LoggerContentProps) => {
+const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { rows } = useLoggerContext('Logger.Content');
 
   // Keep the viewport pinned to the newest entry.
@@ -320,13 +324,13 @@ const LoggerContent = ({ classNames, children }: LoggerContentProps) => {
   }, [rows]);
 
   return (
-    <ScrollArea.Root orientation='vertical' thin classNames={mx(classNames)}>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
         {children}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
 
 LoggerContent.displayName = 'Logger.Content';
 
@@ -345,43 +349,47 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
   }
 
   return (
-    <div className={mx(classNames)}>
-      {rows.map(({ id, entry }) => {
-        const record = formatLogEntry(entry);
-        const expandable = Boolean(record.context || record.error);
-        return (
-          <div key={id} className='group px-1'>
-            <div className='grid grid-cols-[1rem_8rem_1fr_min-content] items-center gap-1'>
-              <div className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</div>
-              <div className='truncate text-subdued'>{record.file}</div>
-              <button
-                type='button'
-                aria-expanded={expandable ? expanded.has(id) : undefined}
-                className='truncate text-start cursor-pointer'
-                title={record.message}
-                onClick={() => toggleExpand(id)}
-              >
-                {record.message}
-              </button>
-              <IconButton
-                icon='ph--clipboard--regular'
-                iconOnly
-                density='xs'
-                label={t('copy-entry.label')}
-                variant='ghost'
-                classNames='p-0 opacity-50 group-hover:opacity-100'
-                onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
-              />
-            </div>
-            {expanded.has(id) && expandable && (
-              <pre className='px-4 py-1 whitespace-pre-wrap text-subdued'>
-                {JSON.stringify({ context: record.context, error: record.error }, null, 2)}
-              </pre>
-            )}
-          </div>
-        );
-      })}
-    </div>
+    <Listbox.Root>
+      <Listbox.Content classNames={mx(classNames)}>
+        {rows.map(({ id, entry }) => {
+          const record = formatLogEntry(entry);
+          const expandable = Boolean(record.context || record.error);
+          return (
+            <Listbox.Item key={id} id={String(id)} classNames='group px-1'>
+              <div className='flex flex-col is-full'>
+                <div className='grid grid-cols-[1rem_8rem_1fr_min-content] items-center gap-1'>
+                  <div className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</div>
+                  <div className='truncate text-subdued'>{record.file}</div>
+                  <button
+                    type='button'
+                    aria-expanded={expandable ? expanded.has(id) : undefined}
+                    className='truncate text-start cursor-pointer'
+                    title={record.message}
+                    onClick={() => toggleExpand(id)}
+                  >
+                    {record.message}
+                  </button>
+                  <IconButton
+                    icon='ph--clipboard--regular'
+                    iconOnly
+                    density='xs'
+                    label={t('copy-entry.label')}
+                    variant='ghost'
+                    classNames='p-0 opacity-50 group-hover:opacity-100'
+                    onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
+                  />
+                </div>
+                {expanded.has(id) && expandable && (
+                  <pre className='px-4 py-1 whitespace-pre-wrap text-subdued'>
+                    {JSON.stringify({ context: record.context, error: record.error }, null, 2)}
+                  </pre>
+                )}
+              </div>
+            </Listbox.Item>
+          );
+        })}
+      </Listbox.Content>
+    </Listbox.Root>
   );
 };
 
