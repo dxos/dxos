@@ -7,7 +7,8 @@ import React from 'react';
 import { type GroupPolicy } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { type SuggestionGroup, buildSuggestionSources } from '../../hooks';
+import { type SuggestionGroup, buildSuggestionSources, suggestionHue } from '../../hooks';
+import { SuggestionAuthors } from './SuggestionAuthors';
 import { SuggestionSources } from './SuggestionSources';
 import { SuggestionThread } from './SuggestionThread';
 
@@ -33,6 +34,10 @@ export type SuggestionsProps = {
   onSelect?: (group: SuggestionGroup) => void;
   /** The current change (author + document range); its card is accented. */
   selected?: { author: string; from: number; to: number };
+  /** Authors whose suggestions the user has hidden (session-local view filter). */
+  hiddenAuthors?: readonly string[];
+  /** Toggle one author's suggestion visibility; enables the author toggle row. */
+  onToggleAuthor?: (author: string) => void;
 };
 
 /**
@@ -51,25 +56,44 @@ export const Suggestions = ({
   onReject,
   onSelect,
   selected,
+  hiddenAuthors,
+  onToggleAuthor,
 }: SuggestionsProps) => {
   if (!document) {
     return null;
   }
 
+  const hidden = new Set(hiddenAuthors ?? []);
+
   return (
     <SuggestionSources document={document} authorHues={authorHues}>
       {(resolved) => (
-        <SuggestionThread
-          base={base}
-          sources={buildSuggestionSources(resolved)}
-          group={group ?? DEFAULT_GROUP}
-          authorLabels={authorLabels}
-          authorHues={authorHues}
-          onAccept={onAccept}
-          onReject={onReject}
-          onSelect={onSelect}
-          selected={selected}
-        />
+        <>
+          {/* The toggle row lists every suggesting author (hidden ones included, or they could never
+              be re-shown); the thread below filters hidden sources out. */}
+          {onToggleAuthor && (
+            <SuggestionAuthors
+              authors={resolved.map(({ author, hue }) => ({
+                author,
+                label: authorLabels?.[author] ?? author,
+                hue: suggestionHue(author, hue),
+                hidden: hidden.has(author),
+              }))}
+              onToggle={onToggleAuthor}
+            />
+          )}
+          <SuggestionThread
+            base={base}
+            sources={buildSuggestionSources(resolved.filter(({ author }) => !hidden.has(author)))}
+            group={group ?? DEFAULT_GROUP}
+            authorLabels={authorLabels}
+            authorHues={authorHues}
+            onAccept={onAccept}
+            onReject={onReject}
+            onSelect={onSelect}
+            selected={selected}
+          />
+        </>
       )}
     </SuggestionSources>
   );

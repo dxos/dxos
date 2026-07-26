@@ -15,7 +15,7 @@ import { type Identity } from '@dxos/halo';
 import { useMembers } from '@dxos/halo-react';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
-import { useViewStateActions } from '@dxos/react-ui-attention';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import {
   type DiffHunk,
@@ -172,14 +172,15 @@ export const useReviewExtensions = ({
   // In Suggesting mode the editor is bound to the user's own branch, so the foreign overlay diffs
   // each source against main (rebased into the document's coordinates) and EXCLUDES the user's own
   // branch — self is shown by `trackChanges`, not doubled here. Off the suggesting path the overlay
-  // diffs sources directly against the editor document (which is main).
-  const overlaySources = useMemo(
-    () =>
-      ambientSuggesting && identity?.did
-        ? suggestionSources.filter((source) => source.author !== identity.did)
-        : suggestionSources,
-    [ambientSuggesting, identity?.did, suggestionSources],
-  );
+  // diffs sources directly against the editor document (which is main). Authors the user has hidden
+  // are filtered at the source (never per-decoration), so bars and counts stay consistent.
+  const { hiddenAuthors } = useViewState(ReviewCapabilities.viewAspect, object.id);
+  const overlaySources = useMemo(() => {
+    const hidden = new Set(hiddenAuthors ?? []);
+    return suggestionSources.filter(
+      (source) => !hidden.has(source.author) && !(ambientSuggesting && identity?.did && source.author === identity.did),
+    );
+  }, [ambientSuggesting, identity?.did, suggestionSources, hiddenAuthors]);
   const overlayBase = ambientSuggesting ? mainContent : undefined;
 
   // The suggestion author's palette colour — the same colour as their banner tag and avatar — so

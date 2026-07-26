@@ -1013,3 +1013,57 @@ export const ScenarioSuggestingDeleteTest: Story = {
   parameters: { ambientReview: true },
   play: ({ canvasElement }) => runScenarioStorybook(suggestingDeleteScenario, { canvasElement, doc: getDoc }),
 };
+
+/**
+ * Per-author suggestion visibility (F2.7): toggling an author off in the companion removes their
+ * overlay decorations and cards for this user only; toggling back restores them. Other authors are
+ * unaffected throughout, and the branches themselves are untouched.
+ */
+export const AuthorVisibilityTest: Story = {
+  args: {
+    content: PROSE,
+    suggestions: [
+      { creator: 'did:alice', content: PROSE_SUGGESTION_ALICE },
+      { creator: 'did:bob', content: PROSE_SUGGESTION_BOB },
+    ],
+  },
+  parameters: {
+    ambientReview: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Both authors overlay in the editor and the companion lists both cards.
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 20_000 });
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('the point of the whole'));
+    // A suggestion card is a thread message tile carrying the Accept control (comment tiles don't).
+    const suggestionCards = () =>
+      Array.from(canvasElement.querySelectorAll('[data-testid="thread.message"]'))
+        .filter((tile) => tile.querySelector('[data-testid="thread.message.accept-change"]'))
+        .map((tile) => tile.textContent ?? '')
+        .join(' ');
+    await waitFor(() => expect(suggestionCards()).toContain('Bob'), { timeout: 15_000 });
+
+    // Toggle Bob off: his overlay and cards disappear; Alice is untouched; his branch survives.
+    const bobToggle = async () => {
+      const toggles = await canvas.findAllByTestId('suggestion-author-toggle');
+      const found = toggles.find((toggle) => toggle.textContent?.includes('did:bob'));
+      invariant(found, 'Bob toggle not found');
+      return found;
+    };
+    await userEvent.click(await bobToggle());
+    await waitFor(() => expect(suggestInserts(canvasElement)).not.toContain('Bob'), { timeout: 15_000 });
+    await expect(suggestInserts(canvasElement)).toContain('the point of the whole');
+    await waitFor(() => expect(suggestionCards()).not.toContain('Bob'));
+    await expect(suggestionCards()).toContain('point of the whole');
+    await expect(
+      getDoc().history?.branches.some(
+        (branch) => branch.status === 'active' && branch.kind === 'suggestion' && branch.creator === 'did:bob',
+      ),
+    ).toBe(true);
+
+    // Toggle Bob back on: overlay and cards return.
+    await userEvent.click(await bobToggle());
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });
+    await waitFor(() => expect(suggestionCards()).toContain('Bob'));
+  },
+};
