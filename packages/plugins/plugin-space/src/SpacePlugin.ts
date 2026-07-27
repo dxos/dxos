@@ -53,7 +53,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
     activate: () => NavigationHandler({ invitationProp }),
   })),
-  Plugin.addModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationTargetResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
@@ -77,6 +76,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addTranslationsModule({
     translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
   }),
+  Plugin.addModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationTargetResolver }),
   Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?

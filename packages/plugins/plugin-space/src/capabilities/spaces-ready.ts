@@ -132,6 +132,9 @@ export default Capability.makeModule(
 
           const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
           if (!node && (isEchoRef(id) || id.length === SPACE_ID_LENGTH)) {
+            // Fire any `resolver` extension for the id first; the timeout below is the fallback when
+            // nothing materializes it.
+            void Graph.initialize(graph, id);
             const timeout = setTimeout(async () => {
               const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
               if (!node) {
