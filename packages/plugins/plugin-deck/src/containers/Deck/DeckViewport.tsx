@@ -3,15 +3,12 @@
 //
 
 import React, {
-  Fragment,
   type PropsWithChildren,
-  type RefObject,
   createContext,
   useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -28,6 +25,7 @@ import {
   Main,
   type MainContentProps,
   ScrollArea,
+  Splitter,
   toLocalizedString,
   useOnTransition,
   useTranslation,
@@ -318,161 +316,67 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
 // TilingDeck
 //
 
-// Minimum fraction of the deck width a tiled plank may be shrunk to via the splitter.
-const MIN_TILING_FRACTION = 0.15;
-
-/** Normalize persisted weights to `count` positive fractions summing to 1; fall back to equal. */
-const normalizeTilingWeights = (weights: readonly number[] | undefined, count: number): number[] => {
-  const valid = !!weights && weights.length === count && weights.every((weight) => weight > 0);
-  const base = valid ? weights.slice() : Array.from({ length: count }, () => 1);
-  const sum = base.reduce((total, weight) => total + weight, 0);
-  return sum > 0 ? base.map((weight) => weight / sum) : Array.from({ length: count }, () => 1 / count);
-};
+/** Trailing delay before a drag is persisted (the Splitter reports a size on every frame). */
+const TILING_PERSIST_DELAY = 250;
 
 /**
- * Tiling presentation: planks split the viewport width proportionally (no horizontal overflow), with a
- * draggable splitter between adjacent planks that adjusts the split ratio. The ratio persists per
- * position via {@link DeckOperation.UpdateTilingSize} (so swapping which plank sits in a slot keeps the
- * split) and is reflected live during a drag through local state.
+ * Tiling presentation: two planks split the viewport flush (no horizontal overflow) across a draggable
+ * seam, using the same {@link Splitter} the companion did before it became a plank of its own. The start
+ * pane's width persists per deck via {@link DeckOperation.UpdateTilingSize} and the end pane fills the
+ * remainder, so the split holds through a viewport resize and through swapping which plank sits where.
  */
-const TilingDeck = ({
-  rendered,
-  active,
-  weights,
-}: {
-  rendered: string[];
-  active: string[];
-  weights: readonly number[] | undefined;
-}) => {
+// TODO(wittjosiah): Two planks only (TILING_MAX), since Splitter is a two-panel primitive; raising
+//   TILING_MAX needs nested Splitters or a weights-based container.
+const TilingDeck = ({ rendered, active, size }: { rendered: string[]; active: string[]; size: number | undefined }) => {
   const { invokePromise } = useOperationInvoker();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [liveWeights, setLiveWeights] = useState<number[] | null>(null);
-  const persisted = useMemo(() => normalizeTilingWeights(weights, rendered.length), [weights, rendered.length]);
-  const applied = liveWeights ?? persisted;
 
-  // Drop the live override once the persisted ratio catches up with the committed drag, so external
-  // changes take effect again without a mid-round-trip flicker.
-  useEffect(() => {
-    if (
-      liveWeights &&
-      liveWeights.length === persisted.length &&
-      liveWeights.every((weight, index) => Math.abs(weight - persisted[index]) < 0.001)
-    ) {
-      setLiveWeights(null);
-    }
-  }, [liveWeights, persisted]);
+  // Drive the controlled Splitter from local state so a drag tracks the pointer without a round-trip per
+  // frame; reseed when the persisted size changes externally.
+  const [liveSize, setLiveSize] = useState(size);
+  useEffect(() => setLiveSize(size), [size]);
 
-  const handleCommit = useCallback(
-    (next: number[]) => {
-      setLiveWeights(next);
-      void invokePromise(DeckOperation.UpdateTilingSize, { weights: next });
+  // Flush the trailing write on unmount so the final size is not dropped inside the debounce window.
+  const pending = useRef<{ timer: ReturnType<typeof setTimeout>; flush: () => void } | undefined>(undefined);
+  useEffect(() => () => pending.current?.flush(), []);
+
+  const handleSizeChange = useCallback(
+    (next: number) => {
+      setLiveSize(next);
+      if (pending.current) {
+        clearTimeout(pending.current.timer);
+      }
+      const flush = () => {
+        pending.current = undefined;
+        void invokePromise(DeckOperation.UpdateTilingSize, { size: next });
+      };
+      pending.current = { timer: setTimeout(flush, TILING_PERSIST_DELAY), flush };
     },
     [invokePromise],
   );
 
+  const [startId, endId] = rendered;
+  const soloLook = active.length === 1;
+
   // Tiling is a flush split view — no `--main-spacing` gap or padding (that spacing is the sliding
-  // deck's encapsulated look); the planks sit edge-to-edge, separated only by the hairline splitter.
+  // deck's encapsulated look); the planks sit edge-to-edge, separated only by the handle's hairline.
   return (
-    // TODO(wittjosiah): Plain flex, so no Mosaic dnd here: Mosaic sizes each tile by absolute extent in
-    //   rem (see Mosaic.ResizeHandle), whereas tiling needs fractions that stay summed to 1 and
-    //   redistribute across the dragged pair — adopting it waits on a fill mode in Mosaic.
-    <div ref={containerRef} className={mx('absolute inset-0 flex', mainPaddingTransitions)}>
-      {rendered.map((id, index) => (
-        <Fragment key={id}>
-          <div className='relative h-full min-w-0' style={{ flexGrow: applied[index], flexBasis: '0%' }}>
-            <DeckPlank id={id} part='main' active={active} soloLook={active.length === 1} classNames='size-full' />
-          </div>
-          {index < rendered.length - 1 && (
-            <TilingSplitter
-              index={index}
-              weights={applied}
-              containerRef={containerRef}
-              onPreview={setLiveWeights}
-              onCommit={handleCommit}
-            />
-          )}
-        </Fragment>
-      ))}
-    </div>
-  );
-};
-
-/**
- * Draggable divider between two tiled planks. Transfers width between the panes on either side (`index`
- * and `index + 1`) as a fraction of the deck width, clamped so neither shrinks below
- * {@link MIN_TILING_FRACTION}. Reports live fractions via `onPreview` during the drag and the final
- * ones via `onCommit` on drop.
- */
-const TilingSplitter = ({
-  index,
-  weights,
-  containerRef,
-  onPreview,
-  onCommit,
-}: {
-  index: number;
-  weights: number[];
-  containerRef: RefObject<HTMLDivElement | null>;
-  onPreview: (weights: number[]) => void;
-  onCommit: (weights: number[]) => void;
-}) => {
-  const handlePointerDown = useCallback(
-    (event: React.PointerEvent<HTMLButtonElement>) => {
-      event.preventDefault();
-      const startX = event.clientX;
-      const startWeights = weights.slice();
-      const controller = new AbortController();
-
-      const compute = (clientX: number): number[] => {
-        const width = containerRef.current?.getBoundingClientRect().width ?? 0;
-        if (width <= 0) {
-          return startWeights;
-        }
-        const raw = (clientX - startX) / width;
-        const delta = Math.min(
-          startWeights[index + 1] - MIN_TILING_FRACTION,
-          Math.max(MIN_TILING_FRACTION - startWeights[index], raw),
-        );
-        const next = startWeights.slice();
-        next[index] += delta;
-        next[index + 1] -= delta;
-        return next;
-      };
-
-      window.addEventListener('pointermove', (moveEvent) => onPreview(compute(moveEvent.clientX)), {
-        signal: controller.signal,
-      });
-      window.addEventListener(
-        'pointerup',
-        (upEvent) => {
-          onCommit(compute(upEvent.clientX));
-          controller.abort();
-        },
-        { signal: controller.signal },
-      );
-    },
-    [index, weights, containerRef, onPreview, onCommit],
-  );
-
-  return (
-    // Zero-width so the tiled planks stay flush; the hairline divider and the (wider) drag hit-area
-    // overlay the seam via absolute positioning.
-    // TODO(wittjosiah): Plain div/button — Mosaic.ResizeHandle (used by the sliding path) and Separator
-    //   would cover this, but both impose their own box, and this control is deliberately zero-width
-    //   with its visible affordance drawn by pseudo-elements.
-    <div className='relative flex-none'>
-      {/* Persistent hairline divider between the tiled planks, matching the solo+companion split. */}
-      <div className='absolute inset-y-0 start-0 w-px -translate-x-1/2 bg-subdued-separator' />
-      <button
-        aria-label='Resize'
-        onPointerDown={handlePointerDown}
-        className={mx(
-          'group absolute inset-y-0 -inset-x-1 z-[1] cursor-col-resize touch-none focus-visible:outline-hidden',
-          'before:absolute before:inset-y-0 before:start-1/2 before:block before:w-1 before:-translate-x-1/2 before:rounded-full before:bg-focus-ring-subtle',
-          'before:opacity-0 before:transition-opacity before:duration-100 hover:before:opacity-100 active:before:opacity-100',
-        )}
-      />
-    </div>
+    <Splitter.Root
+      orientation='horizontal'
+      anchor='start'
+      resizable
+      size={liveSize}
+      minSize={MIN_PLANK_SIZE}
+      onSizeChange={handleSizeChange}
+      classNames={mx('absolute inset-0', mainPaddingTransitions)}
+    >
+      <Splitter.Panel position='start'>
+        <DeckPlank id={startId} part='main' active={active} soloLook={soloLook} classNames='size-full' />
+      </Splitter.Panel>
+      <Splitter.Handle />
+      <Splitter.Panel position='end'>
+        <DeckPlank id={endId} part='main' active={active} soloLook={soloLook} classNames='size-full' />
+      </Splitter.Panel>
+    </Splitter.Root>
   );
 };
 
@@ -729,7 +633,7 @@ export const DeckPlanks = () => {
               classNames={mx('absolute inset-0', mainIntrinsicSize)}
             />
           ) : presentation === 'tiling' ? (
-            <TilingDeck rendered={rendered} active={deck.active} weights={deck.tilingSizing} />
+            <TilingDeck rendered={rendered} active={deck.active} size={deck.tilingSizing} />
           ) : (
             <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
               <ScrollArea.Root orientation='horizontal' classNames='size-full'>
