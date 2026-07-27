@@ -24,7 +24,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => (
     <div className='w-64'>
-      <Slider defaultValue={[50]} max={100} step={1} />
+      <Slider defaultValue={[50]} max={100} step={1} thumbLabels={['Value']} />
     </div>
   ),
 };
@@ -71,7 +71,7 @@ export const Vertical: Story = {
 export const Range: Story = {
   render: () => (
     <div className='w-64'>
-      <Slider defaultValue={[25, 75]} max={100} step={1} />
+      <Slider defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum', 'Maximum']} />
     </div>
   ),
 };

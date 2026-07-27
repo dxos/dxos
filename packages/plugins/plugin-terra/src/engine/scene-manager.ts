@@ -88,6 +88,10 @@ export class SceneManager {
     this.#engine.resize();
   };
 
+  // Declared (not initialized) here because it observes `#canvas`, which is only
+  // assigned in the constructor body, after field initializers run.
+  readonly #resizeObserver: ResizeObserver;
+
   #planetMesh: Mesh | null = null;
   #waterMesh: Mesh | null = null;
   #scatterBases: Mesh[] = [];
@@ -124,6 +128,11 @@ export class SceneManager {
     window.addEventListener('pointermove', this.#handlePointerMove);
     window.addEventListener('resize', this.#handleResize);
 
+    // Composer plank/sidebar resizes don't fire `window.resize`; the canvas's CSS size
+    // (absolute inset-0) follows its container regardless, so watch the container directly.
+    this.#resizeObserver = new ResizeObserver(this.#handleResize);
+    this.#resizeObserver.observe(canvas);
+
     this.#engine.runRenderLoop(() => this.#scene.render());
   }
 
@@ -152,6 +161,7 @@ export class SceneManager {
     window.removeEventListener('pointerup', this.#handlePointerUp);
     window.removeEventListener('pointermove', this.#handlePointerMove);
     window.removeEventListener('resize', this.#handleResize);
+    this.#resizeObserver.disconnect();
     this.#engine.stopRenderLoop();
     this.#disposeMeshes();
     this.#scene.dispose();

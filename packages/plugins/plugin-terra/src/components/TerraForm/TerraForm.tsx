@@ -19,15 +19,16 @@ export type TerraFormProps = {
 
 type SliderKey = 'waterLevel' | 'elevationScale' | 'mountainScale' | 'treeDensity' | 'resolution';
 
-type SliderSpec = { min: number; max: number; step: number; decimals: number };
+type SliderSpec = { min: number; max: number; step: number; decimals: number; label: string };
 
 // Ranges/steps for the five numeric fields that were previously Babylon-GUI sliders (Task 10 spike values).
+// `label` mirrors the schema's `title` annotation, used as the slider thumb's accessible name.
 const SLIDER_SPECS: Record<SliderKey, SliderSpec> = {
-  waterLevel: { min: 0.2, max: 0.7, step: 0.01, decimals: 2 },
-  elevationScale: { min: 0.05, max: 0.3, step: 0.01, decimals: 2 },
-  mountainScale: { min: 0, max: 1.5, step: 0.05, decimals: 2 },
-  treeDensity: { min: 0, max: 1, step: 0.05, decimals: 2 },
-  resolution: { min: 64, max: 512, step: 64, decimals: 0 },
+  waterLevel: { min: 0.2, max: 0.7, step: 0.01, decimals: 2, label: 'Water level' },
+  elevationScale: { min: 0.05, max: 0.3, step: 0.01, decimals: 2, label: 'Elevation scale' },
+  mountainScale: { min: 0, max: 1.5, step: 0.05, decimals: 2, label: 'Mountain scale' },
+  treeDensity: { min: 0, max: 1, step: 0.05, decimals: 2, label: 'Tree density' },
+  resolution: { min: 64, max: 512, step: 64, decimals: 0, label: 'Resolution' },
 };
 
 const FORM_SCHEMA = Terra.TerraConfig.pipe(
@@ -74,6 +75,7 @@ const createSliderField = (key: SliderKey): FormFieldMap[string] => {
             max={spec.max}
             step={spec.step}
             onValueChange={handleValueChange}
+            thumbLabels={[spec.label]}
           />
         )}
       </Form.Row>

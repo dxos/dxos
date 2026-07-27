@@ -8,11 +8,14 @@ import React, { forwardRef } from 'react';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-type SliderProps = ThemedClassName<SliderPrimitive.SliderProps>;
+type SliderProps = ThemedClassName<SliderPrimitive.SliderProps> & {
+  /** Accessible name per thumb, by index — `role="slider"` has no visible text a label's `htmlFor` can reach. */
+  thumbLabels?: string[];
+};
 
 /** Range input built on the Radix slider primitive; supports one or more thumbs. */
 const Slider = forwardRef<HTMLSpanElement, SliderProps>(
-  ({ classNames, orientation = 'horizontal', disabled, ...props }, forwardedRef) => {
+  ({ classNames, orientation = 'horizontal', disabled, thumbLabels, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const styleProps = { orientation, disabled };
     const thumbCount = props.value?.length ?? props.defaultValue?.length ?? 1;
@@ -28,7 +31,11 @@ const Slider = forwardRef<HTMLSpanElement, SliderProps>(
           <SliderPrimitive.Range className={tx('slider.range', styleProps)} />
         </SliderPrimitive.Track>
         {Array.from({ length: thumbCount }, (_unused, index) => (
-          <SliderPrimitive.Thumb key={index} className={tx('slider.thumb', styleProps)} />
+          <SliderPrimitive.Thumb
+            key={index}
+            className={tx('slider.thumb', styleProps)}
+            aria-label={thumbLabels?.[index]}
+          />
         ))}
       </SliderPrimitive.Root>
     );

@@ -53,5 +53,9 @@ describe('TerraForm', () => {
     expect(label.textContent).toBe('Water level');
     // `getByText` throws if no match is found, which is assertion enough that the readout rendered.
     expect(screen.getByText('0.46')).toBeTruthy();
+
+    // `Input.Label`'s `htmlFor` cannot reach the slider thumb (it isn't a labelable form control),
+    // so the thumb needs its own accessible name via `thumbLabels`.
+    expect(screen.getByRole('slider', { name: 'Water level' })).toBeTruthy();
   });
 });

@@ -49,4 +49,15 @@ describe('Slider', () => {
     expect(thumb.className).toMatch(/\bh-\d+\b/);
     expect(thumb.className).toMatch(/\bw-\d+\b/);
   });
+
+  test('gives each thumb an accessible name via thumbLabels', () => {
+    render(<Slider defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum', 'Maximum']} />, {
+      wrapper: Wrapper,
+    });
+
+    // `role="slider"` has no visible text an `Input.Label`'s `htmlFor` can reach; `thumbLabels`
+    // is the only way to give it a name exposed to assistive tech.
+    expect(screen.getByRole('slider', { name: 'Minimum' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Maximum' })).toBeTruthy();
+  });
 });

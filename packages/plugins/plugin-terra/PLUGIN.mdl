@@ -12,6 +12,7 @@ Terrain is generated procedurally — elevation and biome placement derive from 
 noise seeded via `seedrandom` — and rendered as a stylized low-poly sphere with distinct land,
 water, and biome coloring.
 
-Live parameters (seed, noise scale, sea level, biome thresholds) let users reshape the planet
-in real-time without leaving Composer; this scaffold will be filled in with the engine,
-components, and ECHO-backed types in subsequent tasks.
+Live parameters (seed, water level, elevation and mountain scale, tree density, resolution) let
+users reshape the planet in real-time from a config panel without leaving Composer. Biomes are
+assigned from elevation and latitude, and trees/rocks are scattered across land using thin
+instances for cheap rendering at scale.
