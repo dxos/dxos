@@ -606,7 +606,7 @@ export const DeckPlanks = () => {
         });
         // Attention is focus-driven, so move focus to the plank rather than setting attention directly;
         // `preventScroll` stops the focus call from fighting the scroll that triggered it.
-        const plank = best?.tile.querySelector<HTMLElement>('[data-attendable-id]');
+        const plank = best?.tile.querySelector<HTMLElement>(Attention.ATTENDABLE_SELECTOR);
         if (plank && !plank.contains(document.activeElement)) {
           plank.focus({ preventScroll: true });
         }

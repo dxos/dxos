@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, getRootAttendableId, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import {
   Card,
@@ -18,6 +18,7 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 import { Menu } from '@dxos/react-ui-menu';
 
 import { useDeckState } from '#hooks';
@@ -77,7 +78,8 @@ export const PopoverContent = () => {
     state.popoverContent && 'subject' in state.popoverContent ? state.popoverContent.subject : undefined;
   const isObjectPopover = Obj.isObject(popoverSubject);
   // The popover is portaled; resolve the origin plank from the anchor element it was opened from.
-  const pivotId = state.popoverAnchor instanceof Element ? getRootAttendableId(state.popoverAnchor) : undefined;
+  const pivotId =
+    state.popoverAnchor instanceof Element ? Attention.getRootAttendableId(state.popoverAnchor) : undefined;
   const objectMenuItems = useObjectMenuItems(popoverSubject, pivotId);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const icon = isObjectPopover ? (Obj.getIcon(popoverSubject)?.icon ?? 'ph--circle-dashed--regular') : undefined;

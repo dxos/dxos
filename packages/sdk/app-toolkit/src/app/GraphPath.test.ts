@@ -11,7 +11,7 @@ import { EID } from '@dxos/keys';
 
 import * as GraphPath from './GraphPath';
 
-describe('URL routing helpers', () => {
+describe('GraphPath', () => {
   describe('getWorkspaceFromPath', () => {
     test('returns root for bare root', ({ expect }) => {
       expect(GraphPath.getWorkspaceFromPath('root')).toBe('root');

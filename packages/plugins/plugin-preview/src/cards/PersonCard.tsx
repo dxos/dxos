@@ -7,11 +7,12 @@ import React, { useCallback, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface, getRootAttendableId } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Avatar } from '@dxos/react-ui';
 import { Card, Icon } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
@@ -25,7 +26,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
       return;
     }
 
-    const pivotId = cardRef.current ? getRootAttendableId(cardRef.current) : undefined;
+    const pivotId = cardRef.current ? Attention.getRootAttendableId(cardRef.current) : undefined;
     return Effect.gen(function* () {
       const organizationPath = GraphPath.getObjectPathFromObject(organization);
       const db = Obj.getDatabase(organization);

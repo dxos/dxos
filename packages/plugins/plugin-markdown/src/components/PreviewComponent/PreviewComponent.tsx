@@ -6,12 +6,13 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useSta
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { AppSurface, getRootAttendableId } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 
@@ -169,7 +170,7 @@ export const PreviewComponent = ({
       } else {
         void invokePromise?.(LayoutOperation.Open, {
           subject: [GraphPath.getObjectPathFromObject(object)],
-          pivotId: getRootAttendableId(event.currentTarget),
+          pivotId: Attention.getRootAttendableId(event.currentTarget),
           disposition: 'add',
           modifiers: { shift: event.shiftKey },
           navigation: 'immediate',

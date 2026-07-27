@@ -18,26 +18,17 @@ import { LayoutOperation } from '../../operations';
 const OPEN_ICON = 'ph--arrow-square-out--regular';
 
 /**
- * The outermost attendable ancestor of `element` — the plank it is rendered within (the root of the
- * nested stack/section attendables). Card navigation uses it as the Open pivot so an object opens beside
- * the card's own plank; it is structural (real DOM ancestry), so it is correct regardless of what is
- * attended. Resolve it from a click target (in-DOM), not from within a portaled menu.
- */
-export const getRootAttendableId = (element: Element): string | undefined =>
-  Attention.getAttendables('[data-attendable-id]', element).at(-1);
-
-/**
  * Helper for card content that opens objects (e.g. a related-object link): attach `ref` to the card's
  * root element, then pass the returned id as the Open `pivotId` with `disposition: 'add'`, so navigation
- * always adds a plank beside the card's own plank rather than replacing the deck. Resolved once mounted
- * (see {@link getRootAttendableId}) — the plank ancestry is structural, so it holds for the card's
- * lifetime — and `undefined` until then, which no menu action can observe.
+ * always adds a plank beside the card's own plank rather than replacing the deck. The card's outermost
+ * attendable ancestor *is* its plank, so the pivot is resolved structurally once mounted (see
+ * {@link Attention.getRootAttendableId}) and is `undefined` until then, which no menu action can observe.
  */
 export const useCardPivot = (): readonly [RefObject<HTMLDivElement | null>, string | undefined] => {
   const ref = useRef<HTMLDivElement>(null);
   const [pivotId, setPivotId] = useState<string | undefined>();
   useEffect(() => {
-    setPivotId(ref.current ? getRootAttendableId(ref.current) : undefined);
+    setPivotId(ref.current ? Attention.getRootAttendableId(ref.current) : undefined);
   }, []);
   return [ref, pivotId];
 };
@@ -60,7 +51,7 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
  * Returns an onClick handler that opens the subject in the layout, or undefined if the subject is not navigable
  * (e.g. not an Echo object or has hidden annotation). Use with Card.Title for object cards.
  * A card lives inside a plank, so opening its object always adds a plank beside that plank (`add`), never
- * replacing it. The origin plank is resolved structurally from the click target via {@link getRootAttendableId}.
+ * replacing it. The origin plank is resolved structurally from the click target via {@link Attention.getRootAttendableId}.
  */
 export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLElement>) => void) | undefined => {
   const { invokePromise } = useOperationInvoker();
@@ -74,7 +65,7 @@ export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLEle
     return (event: MouseEvent<HTMLElement>) => {
       void invokePromise(LayoutOperation.Open, {
         subject: [subjectPath],
-        pivotId: getRootAttendableId(event.currentTarget),
+        pivotId: Attention.getRootAttendableId(event.currentTarget),
         disposition: 'add',
       });
     };
