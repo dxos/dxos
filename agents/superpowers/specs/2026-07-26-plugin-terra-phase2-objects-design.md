@@ -106,8 +106,8 @@ velocity".
 
 - `surface` (boat, tank): follow waypoints at sea level (boat) or terrain height
   (tank); bearing turns toward the next waypoint bounded by a max turn rate.
-- `altitude` (plane): as `surface` at cruise altitude; climbs after source,
-  descends near target.
+- `altitude` (plane, submarine): as `surface` at cruise altitude; climbs after source,
+  descends near target; sumbarine as inverse of plane.
 - `orbit` (satellite): closed-form circular orbit from `orbit` params + elapsed
   time — exactly deterministic, no integration.
 - `ballistic` (rocket): three phases — vertical `boost` from source, `cruise`
@@ -185,3 +185,9 @@ animating over the planet.
 - Instructions that guide an AI for military strategy (AI-driven command of
   objects via natural-language strategy instructions).
 - Standalone iOS app (the globe + sim outside Composer).
+- Zoom-dependent terrain resolution (regenerate/LOD by camera distance —
+  relates to the Phase 1 per-face quadtree LOD future item).
+- Clouds (stylized, Katamari-like puffs above the terrain).
+- Smooth/blur polygons (soften the faceted look — smoothing pass or normal
+  blending as an alternative rendering style).
+- Trains as another ground object type (rail-bound routes).

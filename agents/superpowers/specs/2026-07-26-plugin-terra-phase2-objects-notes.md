@@ -17,10 +17,10 @@ Status: Requirements captured — needs brainstorm → spec → plan before impl
 
 Movable objects, by domain:
 
-- **Sea:** boats
+- **Sea:** boats (later: submarine)
 - **Air:** planes
 - **Space:** satellites
-- **Ground:** tanks
+- **Ground:** tanks (later: trains)
 - **Rocket** (spans domains — launches from ground, through air, to space)
 
 Create **2 of each type**.
