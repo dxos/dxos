@@ -9,8 +9,8 @@ Implementation complete. **PR is out of draft (ready for review)** as of
 (check, test, build, workerd, storybook, changeset-reminder). Dmytro's review
 rounds addressed and replied to.
 
-Blocking merge: no approving review yet, and the two CodeRabbit durability
-threads below are still unanswered.
+Blocking merge: no approving review yet. Both CodeRabbit durability claims now
+have verdicts (see below) and its review threads are marked addressed.
 
 ## Done
 
@@ -37,9 +37,9 @@ threads below are still unanswered.
 ## Verification
 
 - CI green on `fb5cd015` (all six jobs). Codecov: all modified lines covered.
-- Local at `8608c791`: build 84 tasks; lint 7 packages 0 warnings; `oxfmt` clean;
-  tests `echo` 469, `echo-client` 508 (+7 expected fail), `echo-client-e2e` 282,
-  `compute-runtime` 152, `compute` 46, `index-core` 34, `feed` 19 — all passing.
+- Local at `b5e19d5e`: `echo-client` 509 (+7 expected fail), `echo-client-e2e` 282,
+  `echo` 469, `compute-runtime` 152, `compute` 46, `index-core` 34, `feed` 19 —
+  all passing. Lint 0 warnings, `oxfmt` clean.
 - `moon run :lint :build --affected` cannot complete in the agent sandbox: oxlint
   fails to spawn `tsgolint` in the unrelated `lockfile-explorer` package, which
   aborts the run before reaching our packages. Environmental — CI's `check` runs
@@ -48,24 +48,35 @@ threads below are still unanswered.
 ## Next / open
 
 - [x] Check workflow green (done at `fb5cd015`).
-- [ ] Decide on the two unanswered CodeRabbit durability claims (below) — they
-      target the flush/dispose contract this PR promises, so they should get a
-      verdict (fix or reasoned dismissal) rather than a silent resolve. Green CI
-      is not evidence against them: no test covers either path.
-- [ ] Resolve/reply to the 19 open review threads. Dmytro's 5 all have
-      "Done in `<sha>`" replies but none are marked resolved.
-- [x] Out of draft (`5f720c70`) — this also unblocks CodeRabbit, which refused to
-      re-review while drafted and whose walkthrough still described the removed
-      `isUpdate` / `ignoreUpdates` / `feed-delivery-state.ts`.
-- [ ] Address the incoming CodeRabbit review (first real pass since Jul 16).
+- [x] Out of draft (`5f720c70`) — this also unblocked CodeRabbit, which refused to
+      re-review while drafted.
+- [x] Addressed the CodeRabbit review (`b5e19d5e`); its threads are marked
+      "Addressed in commits 113db73 to b5e19d5".
+- [x] Verdicts on both durability claims (below).
 - [ ] Land: approving review, then merge queue; surface the Composer preview URL.
 
-## Open review questions (not yet answered on the PR)
+## Durability claims — verdicts (`b5e19d5e`)
 
-- `waitForPendingWrites` checks dirty state once and awaits only a _snapshot_ of
-  `#inFlight`, so `Database.flush()` may resolve while a retry is still queued.
-- `dispose()` reaches `#dirtyCores.clear()` before the scheduled append, so a
-  same-tick `Obj.update` followed by close can drop the update.
+Both were **real**, traced against the code rather than taken on the bot's word.
+
+- **`dispose()` dropped a same-tick update — FIXED.** It reached
+  `#dirtyCores.clear()` before the scheduled append ran, so `Obj.update` followed
+  by a close or `evictFeedHandle` lost the write. `dispose()` now drains via
+  `waitForPendingWrites()` first, while the scheduler and service are still live.
+  Proven by regression test `disposing the feed handle flushes a same-tick update
+instead of dropping it` — with the fix reverted it fails on
+  `expected 'john' to deeply equal 'john v2'`. Changeset:
+  `feed-dispose-flushes-pending` (`@dxos/echo` patch).
+- **`flush()` can return with a retry queued — ACKNOWLEDGED, contract unchanged
+  (jdw).** `waitForPendingWrites` stays best-effort, matching the pre-existing
+  append contract, with a `TODO(wittjosiah)` on the method. The obvious drain-loop
+  fix needs a bounded retry policy first: unbounded draining would hang on a
+  permanently failing send, and throwing on the first failed attempt would break
+  the existing `append retries after a failed insertIntoFeed RPC` test, which
+  requires flush to tolerate a failure that later succeeds.
+
+Because the flush contract stayed non-throwing, the dispose drain cannot reject —
+so persisting on teardown can never wedge close.
 
 ## Notes on the no-cast pass (`8608c791`)
 
