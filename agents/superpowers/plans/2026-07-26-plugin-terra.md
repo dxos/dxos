@@ -1232,6 +1232,7 @@ export { Slider };
 /Users/burdon/.proto/shims/moon run plugin-terra:lint -- --fix
 /Users/burdon/.proto/shims/moon run plugin-terra:test
 ```
+
 All must be green. The controller performs storybook visual verification (slider drags regenerate the planet; FPS still ticks; reseed works).
 
 - [ ] **Step 8: Commit.**
