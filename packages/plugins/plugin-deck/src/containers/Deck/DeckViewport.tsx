@@ -373,8 +373,9 @@ const TilingDeck = ({
   // Tiling is a flush split view — no `--main-spacing` gap or padding (that spacing is the sliding
   // deck's encapsulated look); the planks sit edge-to-edge, separated only by the hairline splitter.
   return (
-    // TODO(wittjosiah): Plain flex — the sliding path lays planks out with Mosaic.Stack/Tile; tiling
-    //   could too if it adopted Mosaic's layout instead of its own weights.
+    // TODO(wittjosiah): Plain flex, so no Mosaic dnd here: Mosaic sizes each tile by absolute extent in
+    //   rem (see Mosaic.ResizeHandle), whereas tiling needs fractions that stay summed to 1 and
+    //   redistribute across the dragged pair — adopting it waits on a fill mode in Mosaic.
     <div ref={containerRef} className={mx('absolute inset-0 flex', mainPaddingTransitions)}>
       {rendered.map((id, index) => (
         <Fragment key={id}>
