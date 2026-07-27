@@ -27,8 +27,9 @@ Create **2 of each type**.
 
 ## Object representation (low-poly, simplified primitives)
 
-- Each object is built from simple primitives, e.g. **plane = cylinder + nose cone
-  - 2× wing rectangles + tail**. Define one simplified form per type.
+- Each object is built from simple primitives, e.g.
+  **plane = cylinder + nose cone + 2× wing rectangles + tail**. Define one
+  simplified form per type.
 
 ## Motion model
 
