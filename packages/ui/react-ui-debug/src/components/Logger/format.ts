@@ -14,6 +14,7 @@ export type LogRecord = {
   timestamp: string;
   level: string;
   package?: string;
+  /** Repo-relative source path (…/packages/<group>/<pkg>/…); the row derives the basename for display. */
   file?: string;
   line?: number;
   message?: string;
@@ -34,7 +35,7 @@ export const formatLogEntry = ({
     timestamp: new Date(timestamp).toISOString(),
     level: shortLevelName[level],
     package: computedMeta.filename ? packageName(computedMeta.filename) : undefined,
-    file: computedMeta.filename?.split('/').pop(),
+    file: computedMeta.filename,
     line: computedMeta.line,
     message,
     context: Object.keys(computedContext).length > 0 ? computedContext : undefined,

@@ -8,6 +8,7 @@ import React from 'react';
 import { type CallMetadata, log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { Panel, Toolbar } from '@dxos/react-ui';
+import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -35,36 +36,38 @@ const emit = (file: string, level: 'info' | 'warn' | 'error') => {
 };
 
 const DefaultStory = () => (
-  <Logger.Root initialFilter='info'>
-    <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          {FILES.map((file) => (
-            <Toolbar.Button key={file} onClick={() => emit(file, 'info')}>
-              {file.split('/').pop()}
-            </Toolbar.Button>
-          ))}
-          <Toolbar.Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Toolbar.Button>
-          <Toolbar.Button onClick={() => emit(FILES[1], 'error')}>Error (beta)</Toolbar.Button>
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <Panel.Root>
-          <Panel.Toolbar asChild>
-            <Logger.Toolbar />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
-            <Logger.Content>
-              <Logger.List />
-            </Logger.Content>
-          </Panel.Content>
-          <Panel.Statusbar asChild>
-            <Logger.Filter />
-          </Panel.Statusbar>
-        </Panel.Root>
-      </Panel.Content>
-    </Panel.Root>
-  </Logger.Root>
+  <ViewStateProvider>
+    <Logger.Root initialFilter='info'>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            {FILES.map((file) => (
+              <Toolbar.Button key={file} onClick={() => emit(file, 'info')}>
+                {file.split('/').pop()}
+              </Toolbar.Button>
+            ))}
+            <Toolbar.Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Toolbar.Button>
+            <Toolbar.Button onClick={() => emit(FILES[1], 'error')}>Error (beta)</Toolbar.Button>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <Panel.Root>
+            <Panel.Toolbar asChild>
+              <Logger.Toolbar />
+            </Panel.Toolbar>
+            <Panel.Content asChild>
+              <Logger.Content>
+                <Logger.List />
+              </Logger.Content>
+            </Panel.Content>
+            <Panel.Statusbar asChild>
+              <Logger.Filter />
+            </Panel.Statusbar>
+          </Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Logger.Root>
+  </ViewStateProvider>
 );
 
 const meta = {
