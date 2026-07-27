@@ -39,6 +39,7 @@ catalog:
   '@babel/preset-typescript': ^7.27.1
   '@babel/runtime': ^7.9.6
   '@babylonjs/core': ^7.52.5
+  '@babylonjs/gui': ^7.52.5
   '@babylonjs/loaders': ^7.54.3
   '@bryanguffey/astro-standard-site': ^1.0.3
   '@bufbuild/buf': 1.65.0

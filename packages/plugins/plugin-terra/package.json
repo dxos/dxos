@@ -77,6 +77,7 @@
   ],
   "dependencies": {
     "@babylonjs/core": "catalog:",
+    "@babylonjs/gui": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",

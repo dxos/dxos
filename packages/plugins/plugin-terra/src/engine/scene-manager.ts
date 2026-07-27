@@ -127,6 +127,14 @@ export class SceneManager {
     this.#engine.runRenderLoop(() => this.#scene.render());
   }
 
+  get scene(): Scene {
+    return this.#scene;
+  }
+
+  get engine(): Engine {
+    return this.#engine;
+  }
+
   setWaterSheen(enabled: boolean): void {
     this.#waterSheen = enabled;
     this.#waterMesh?.setEnabled(enabled);

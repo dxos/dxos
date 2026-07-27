@@ -9,3 +9,4 @@ export * from './biomes';
 export * from './palette';
 export * from './generate-planet';
 export * from './scene-manager';
+export * from './scene-gui';
