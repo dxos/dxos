@@ -178,6 +178,10 @@ animating over the planet.
 
 - Explosions, exhaust, smoke, vapor trails (spheres).
 - Sun light source; day/night.
-- Submarines (underwater variant of sea objects).
+- Submarines as another object type (underwater variant of sea objects —
+  submerged depth, hidden-from-surface behavior).
 - Landing-site entities for rockets.
 - MCP server for the game world.
+- Instructions that guide an AI for military strategy (AI-driven command of
+  objects via natural-language strategy instructions).
+- Standalone iOS app (the globe + sim outside Composer).
