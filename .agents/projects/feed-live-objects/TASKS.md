@@ -4,9 +4,12 @@ PR **#12235** (branch `t3code/edb619e9`). See DESIGN.md for architecture.
 
 ## Status
 
-Implementation complete; PR open (draft). Merged `main` up to `0f4bb22993`;
-build green (313 tasks), touched-package tests green, memoized caches
-regenerated. Dmytro's review rounds addressed and replied to.
+Implementation complete; PR open (draft). Merged `main` up to `bf055c8b` at
+`8608c791`; build, lint, format, and all touched-package tests green locally
+(see Verification). Dmytro's review rounds addressed and replied to.
+
+Still in draft deliberately: the two CodeRabbit durability threads below are
+unanswered, and there is no approving review yet.
 
 ## Done
 
@@ -30,13 +33,42 @@ regenerated. Dmytro's review rounds addressed and replied to.
       `Database.add` namespace wrapper drops `opts` (point-free compatibility).
 - [x] Regenerated `assistant-toolkit` agent skill memoized cache after merges.
 
+## Verification (at `8608c791`)
+
+- Build: 84 tasks green across `echo`, `echo-client`, `index-core`, `compute`.
+- Lint: 7 touched packages, 0 warnings / 0 errors. `oxfmt --check` clean.
+- Tests: `echo` 469, `echo-client` 508 (+7 expected fail), `echo-client-e2e` 282,
+  `compute-runtime` 152, `compute` 46, `index-core` 34, `feed` 19 — all passing.
+
 ## Next / open
 
-- [ ] Watch the Check workflow to green on the latest push (`0f4bb22993`);
-      fix any CI failures at root.
-- [ ] Land: take the PR out of draft when ready; use submit-pr/land skill;
-      surface the Composer preview URL.
-- [ ] Address any new review comments.
+- [ ] Watch the Check workflow to green on `8608c791`; fix failures at root.
+- [ ] Decide on the two unanswered CodeRabbit durability claims (below) — they
+      target the flush/dispose contract this PR promises, so they should get a
+      verdict (fix or reasoned dismissal) rather than a silent resolve.
+- [ ] Resolve/reply to the 19 open review threads. Dmytro's 5 all have
+      "Done in `<sha>`" replies but none are marked resolved.
+- [ ] Land: take out of draft, get an approving review, merge queue; surface the
+      Composer preview URL.
+
+## Open review questions (not yet answered on the PR)
+
+- `waitForPendingWrites` checks dirty state once and awaits only a *snapshot* of
+  `#inFlight`, so `Database.flush()` may resolve while a retry is still queued.
+- `dispose()` reaches `#dirtyCores.clear()` before the scheduled append, so a
+  same-tick `Obj.update` followed by close can drop the update.
+
+## Notes on the no-cast pass (`8608c791`)
+
+- `FeedHandle` now validates rather than asserts: `EntityId.make` where an id
+  must be well-formed, `EntityId.isValid` narrowing in `delete`, and no cast in
+  `upsertFromJSON` (the guard above already narrows `json.id`).
+- `EntityId.make` *throws* on a malformed id where the old cast silently stored a
+  bad `#cores` key. Intentional — the inbound poll path already drops ids failing
+  `EntityId.isValid` — but it is a behaviour change on the append path.
+- `getCachedObjectById`'s `as T` is retained: it is exactly what
+  `DatabaseImpl.getObjectById` does in the same package, and diverging for one
+  method is worse than matching precedent.
 
 ## Deferred (not blocking; own follow-ups)
 
