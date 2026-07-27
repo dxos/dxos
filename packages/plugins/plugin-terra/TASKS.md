@@ -74,6 +74,11 @@ definitions. Plan written and committed; execution begins after Phase 1 closes.
 
 ## Backlog (Phase 3+)
 
+- **Collision avoidance strategy for objects** (tracked 2026-07-27) — objects
+  currently route independently and can pass through each other; needs a
+  separation/avoidance model that stays deterministic across peers.
+
+
 Captured in [DESIGN.md](./DESIGN.md#backlog-phase-3) — surface camera + LOD,
 zoom-dependent resolution, sun/day–night, clouds, polygon smoothing, fog, rivers,
 effects (explosions/exhaust/smoke/trails), submarines, trains, rocket landing
