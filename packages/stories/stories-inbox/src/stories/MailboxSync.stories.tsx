@@ -9,7 +9,7 @@ import React from 'react';
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { persistentClientServices } from '@dxos/client/testing';
-import { Operation, Routine, Trigger } from '@dxos/compute';
+import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
@@ -26,7 +26,6 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { translations as progressTranslations } from '@dxos/plugin-progress/translations';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
-import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -48,7 +47,6 @@ const TYPES = [
   Operation.PersistentOperation,
   Organization.Organization,
   Person.Person,
-  Routine.Routine,
   Tag.Tag,
   TagIndex.TagIndex,
   Trigger.Trigger,
@@ -56,7 +54,7 @@ const TYPES = [
 
 // Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
-const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'local' }));
+const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'main' }));
 
 const DECORATORS = [
   withSurfaceDebug(false),
@@ -99,7 +97,7 @@ const DefaultStory = () => (
     layout={[
       [StoryRole.Mailbox, StoryRole.Message],
       [StoryRole.Archive, StoryRole.Stats, StoryRole.SyncState],
-      [StoryRole.Connector, StoryRole.Routines],
+      [StoryRole.Connector, StoryRole.Triggers],
       [StoryRole.Trace],
       [StoryRole.SwarmTrace],
     ]}
@@ -114,7 +112,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...inboxTranslations, ...connectorTranslations, ...progressTranslations, ...routineTranslations],
+    translations: [...inboxTranslations, ...connectorTranslations, ...progressTranslations],
   },
 } satisfies Meta;
 
