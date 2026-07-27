@@ -1,15 +1,15 @@
 # AI Testing Strategy — Tasks
 
-_Resume: **PR #12307 MERGED** (2026-07-23, `ba930200`). Phase 2's eval port is fully landed on `main`;
-the branch for the next step is `claude/ai-testing-strategy-next-3pkl86`, cut clean from `main`
-(`bf055c8b`). Phase 1 item 1 (**G2 → C operation tests driven through the real handler, not mocks**)
-is underway on that branch: the *rescue* half is done (10 mis-gated model-free tests now run in CI)
-and the first *build* tranche is done (9 new `database-operations.test.ts` tests). Remaining live
-backlog: finish the build half (magazine curate, memory skill, AiSummarizer, plugin-level operations
-via `createComposerTestApp`), Phase 1 item 2 (E context-assembly + F schema round-trip), Phase 2
-item 4 (loosen `employerRoleCorrect` / `onlyWebSearchUsed`, then drop explicit skill naming —
+_Resume: **PR #12307 MERGED** (2026-07-23, `ba930200`). Work continues on
+`claude/ai-testing-strategy-next-3pkl86` (PR #12357, draft, cut from `main` `bf055c8b`). Phase 1
+item 1 is underway with the corrected approach — **replace** the memoized tests, do not gate them:
+3 of 10 G2 files fully converted (database skill, plugin-markdown create/update, agent skill), each
+with its `.conversations.json` deleted and zero `runMemoizedTests` left. Remaining live backlog: the
+other 5 G2 files (memory, run-instructions, magazine, AssistantPlugin, AiSummarizer — all harder,
+their handlers call a model internally), Phase 1 item 2 (E context-assembly + F schema round-trip),
+Phase 2 item 4 (loosen `employerRoleCorrect` / `onlyWebSearchUsed`, then drop explicit skill naming —
 **needs a live `DX_ANTHROPIC_API_KEY`**), Phase 3 (G3 → D, then shrink the memoization layer), the
-standalone `.agent/` deletion, and the new `Ref.Ref(Relation.Unknown)` typing defect in Follow-ups.
+standalone `.agent/` deletion, and the `Ref.Ref(Relation.Unknown)` typing defect in Follow-ups.
 Historical detail for #12307: CI green
 (build/check/test/storybook/workerd all pass). All 6 G1 scenarios are ported to scored evals with
 real quality signal beyond existence checks (DB-effect assertions + an LLM judge on
@@ -148,46 +148,47 @@ as primary coverage.
       (would be testing a nonexistent feature). Tool-error / malformed-output branches deferred.
 - [x] ~~Delete G1 (`@dxos/assistant-e2e`) + fixtures; replace with one scripted-model boot-smoke~~
       **Superseded** — see the revised-plan entry above; G1 is gated in place, not deleted.
-- [ ] Convert G2 → deterministic operation (C) tests; golden-args fixture convention; delete each
-      G2 fixture once its unit test lands. **Framing corrected (direct guidance): these are not
-      "mocked unit tests" — they drive the _real_ operation through the app-framework test harness
-      and assert it behaves, which is what the memoized conversation tests were incidentally
-      covering.** The machinery already exists and is proven, just unused here:
-      `createComposerTestApp` (`@dxos/plugin-testing/harness`, wrapping `createTestApp` in
-      `@dxos/app-framework/testing`) boots the real plugins, and `harness.invoke(Op, input)` runs the
-      operation through the real `Capabilities.OperationInvoker` — no mocks, no model.
-      `plugin-sample/src/SamplePlugin.test.ts` is the canonical template (`CreateSampleItem` /
-      `Randomize` / `UpdateStatus`); `plugin-chess` does the same. **Nothing else in the repo calls
-      `harness.invoke`, and `OperationCapture` (`app-framework/testing/operationCapture.ts`, for
-      asserting which operations fired and stubbing side-effecting ones like `LayoutOperation.Open`)
-      has no callers at all** — an empty niche, not a design that needs inventing. Two parts:
-  - [x] **Rescue — DONE.** Ten tests that invoke a handler directly and never reach a model were
-        skipped in CI because the gate sat on the `describe`. Moved onto the individual agent cases
-        (per-test `skipIf`, the #12297 convention), following `skills/planning/skill.test.ts`'s
-        shape: markdown Create (1) + Update (4), database skill (3 — schema-add input decoding,
-        schema-add field creation, the `includeQueues` query operation), agent skill (2 —
-        sync-triggers timer creation and `enabled` propagation). All ten now pass; every
-        agent-driven case still skips without `DX_RUN_LLM_TESTS=1`. Audited but correctly gated:
-        `'query operation: in param can be passed as string'` (agent-driven despite the name),
-        `AssistantPlugin`'s `RunInstructions` case, `memory/skill.test.ts` (no direct invokes at
-        all), magazine's `CurateMagazine`.
-  - [x] **Build (first tranche) — DONE.** New
-        `skills/database/operations/database-operations.test.ts` — 9 tests over the operations that
-        previously had only agent-turn coverage: ObjectCreate (plain + encoded-reference decoding),
-        ObjectUpdate, ObjectDelete, Load, SchemaList (inclusion _and_ the handler's exclusion list),
-        RelationCreate, TagAdd, TagRemove. Follows the package's existing
-        `skills/*/operations/*.test.ts` convention (`update-tasks.test.ts`, `delegate-task.test.ts`)
-        with `AssistantTestLayer({ disableLlmMemoization: true })`, not `createComposerTestApp` —
-        assistant-toolkit is not a plugin, so the plugin harness does not apply here; use
-        `createComposerTestApp` for the plugin packages. Non-vacuous: verified by mutation — breaking
-        `object-update`'s property write fails the test, and reverting restores green.
-        Cast-free per the no-cast rule: operation outputs typed `Schema.Unknown` are narrowed with
-        `Schema.decodeUnknown`, not `as`.
-  - [ ] **Build (remaining).** markdown Create/Update already have direct coverage (rescued above);
-        still to do: magazine curate, memory skill, AiSummarizer, plugin-level operations via
-        `createComposerTestApp`. Then delete each memoized test as its replacement lands.
-        Caution: an `Operation.invoke` is not automatically model-free — `run-instructions` and
-        planning's `PlanReminder` reach a model _inside_ the handler, so they stay gated.
+- [ ] Convert G2 → deterministic operation (C) tests. **Approach corrected twice by direct
+      guidance.** (1) These are not "mocked unit tests" — they drive the _real_ handler and assert it
+      behaves, which is what the memoized conversation tests were incidentally covering. (2) The
+      conversion is a **replacement, not a gating exercise**: per file, write the operation tests,
+      then _delete_ the memoized tests and their `.conversations.json`, leaving **zero
+      `runMemoizedTests` references behind**. An earlier pass that pushed the gate down to per-test
+      `skipIf` was wrong — it multiplied the conditions (one `describe` gate became 17 in
+      `database/skill.test.ts`) instead of removing them.
+      Which harness: plugin packages boot real plugins with `createComposerTestApp`
+      (`@dxos/plugin-testing/harness`) and call `harness.invoke(Op, input)` —
+      `plugin-sample/src/SamplePlugin.test.ts` and `plugin-chess` are the templates, and nothing else
+      in the repo calls it; non-plugin packages (assistant-toolkit, ai) use
+      `AssistantTestLayer({ disableLlmMemoization: true })` with `Operation.invoke`, per the existing
+      `skills/*/operations/*.test.ts` convention (`update-tasks.test.ts`, `delegate-task.test.ts`).
+      `OperationCapture` (`app-framework/testing/operationCapture.ts`) still has no callers anywhere.
+      **What makes deletion safe:** agent-level behaviour now lives in the graded evals from #12307,
+      so a replayed conversation that an eval already covers is pure duplication — and several of the
+      deleted tests asserted nothing at all (two submitted a prompt and awaited completion; one only
+      printed a console dump). Deterministic behaviour lives in the operation tests; the replay tier
+      goes away. Cast-free per the no-cast rule: outputs typed `Schema.Unknown` are narrowed with
+      `Schema.decodeUnknown`. Watch for URI-form mismatches when asserting refs — a same-space ref
+      stores `echo:/<id>` while `Obj.getURI` returns `echo://<space>/<id>`, and handlers differ in
+      which they return (`get-context` returns the qualified form, tags/bindings the local one).
+  - [x] **database skill — DONE.** `skill.test.ts` + `skill.conversations.json` deleted; 16 tests in
+        `operations/database-operations.test.ts`: objects (create, create-with-encoded-reference,
+        update, delete, load), query (by typename, `in`-param feed scoping, `includeQueues`), context
+        (add/remove, asserted on the `Binding` written to the feed), schema (add input decoding, add
+        field creation, list with exclusions), relation create, tag add/remove. Non-vacuous: verified
+        by mutation — breaking `object-update`'s property write fails its test.
+  - [x] **plugin-markdown — DONE.** 4 memoized tests + 2 fixtures deleted (duplicated
+        `markdown.eval.ts`); the 5 direct `MarkdownOperation.Create`/`Update` tests remain. Package
+        now reports 27 passed / **0 skipped**.
+  - [x] **agent skill — DONE.** 4 memoized tests + fixture deleted; added `add-artifact` (appends a
+        resolvable artifact) and `get-context` (reports name/instructions/artifacts) alongside the
+        two existing sync-triggers tests. Both bind the agent to its own chat feed via
+        `AiContext.Binder` so the `Harness.HarnessService`-scoped handlers resolve it.
+  - [ ] **Remaining 5 G2 files:** memory skill, run-instructions, magazine curate, AssistantPlugin,
+        AiSummarizer. Harder than the three above — each handler reaches a model _internally_
+        (`run-instructions` runs an agent; `CurateMagazine` and `AiSummarizer` call the model
+        directly), so there is no straight operation-invoke swap. Tease out the deterministic core
+        per file, or move the behaviour to an eval and delete.
 - [ ] Context-assembly (E) + schema round-trip (F) tests. E: snapshot the assembled prompt
       (system + skill instructions + bound objects + tool descriptions) from `formatSystemPrompt` /
       `AiPreprocessor.preprocessPrompt` — pure function of inputs, no model; catches skill/instruction
