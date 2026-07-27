@@ -11,12 +11,12 @@ import { ControlsModule } from './ControlsModule';
 import { FactsModule } from './FactsModule';
 import { MailboxModule } from './MailboxModule';
 import { MessageModule } from './MessageModule';
+import { RoutinesModule } from './RoutinesModule';
 import { StatsModule } from './StatsModule';
 import { SwarmTraceModule } from './SwarmTraceModule';
 import { SyncStateModule } from './SyncStateModule';
 import { TopicsModule } from './TopicsModule';
 import { TraceModule } from './TraceModule';
-import { TriggersModule } from './TriggersModule';
 
 /**
  * Role tokens for the MailboxSync story columns. Each module is contributed as a dedicated surface
@@ -35,7 +35,7 @@ export const StoryRole = {
   SyncState: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.syncState'),
   Trace: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.trace'),
   SwarmTrace: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.swarmTrace'),
-  Triggers: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.triggers'),
+  Routines: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.routines'),
 };
 
 /** React surfaces for the MailboxSync story columns, one per `StoryRole` token. */
@@ -97,8 +97,8 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: SwarmTraceModule,
   }),
   Surface.create({
-    id: 'inbox.triggers',
-    filter: Surface.makeFilter(StoryRole.Triggers),
-    component: TriggersModule,
+    id: 'inbox.routines',
+    filter: Surface.makeFilter(StoryRole.Routines),
+    component: RoutinesModule,
   }),
 ];
