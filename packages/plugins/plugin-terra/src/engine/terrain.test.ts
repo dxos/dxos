@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { latitude, radiusAt, seaRadius, type TerrainConfig } from './terrain';
+import { type TerrainConfig, latitude, radiusAt, seaRadius } from './terrain';
 
 const config: TerrainConfig = {
   radius: 2,

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { classify, type ClimateConfig } from './biomes';
+import { type ClimateConfig, classify } from './biomes';
 import { colorFor, oceanColor } from './palette';
 
 const climate: ClimateConfig = {
