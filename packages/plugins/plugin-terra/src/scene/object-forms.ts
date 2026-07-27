@@ -11,7 +11,7 @@ import { type Scene } from '@babylonjs/core/scene';
 
 import { type TerraObject } from '../types';
 
-/** Half-turn about X: Babylon builders extrude along +Y, but forms are authored forward-along-+Z. */
+/** Quarter turn (90°): reorients builders that extrude along +Y onto the +Z or +X axis. */
 const HALF_PI = Math.PI / 2;
 
 /** Matte material (no specular highlight), matching Phase 1's NPR style. */
@@ -52,7 +52,17 @@ const makePlane = (scene: Scene): Mesh => {
   const tail = CreateBox('tail', { width: 0.35, height: 0.03, depth: 0.14 }, scene);
   tail.position.z = -0.42;
 
-  return mergeParts('plane', [fuselage, nose, wingLeft, wingRight, tail], scene, new Color3(0.75, 0.75, 0.78));
+  // Vertical stabiliser, perpendicular to the horizontal tailplane, standing on the fuselage.
+  const verticalTail = CreateBox('verticalTail', { width: 0.03, height: 0.22, depth: 0.16 }, scene);
+  verticalTail.position.y = 0.18;
+  verticalTail.position.z = -0.42;
+
+  return mergeParts(
+    'plane',
+    [fuselage, nose, wingLeft, wingRight, tail, verticalTail],
+    scene,
+    new Color3(0.75, 0.75, 0.78),
+  );
 };
 
 const makeRocket = (scene: Scene): Mesh => {
@@ -63,26 +73,47 @@ const makeRocket = (scene: Scene): Mesh => {
   nose.rotation.x = HALF_PI;
   nose.position.z = 0.65;
 
-  const finDistance = 0.09 + 0.14;
+  const finReach = 0.09 + 0.14;
   const fins = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].map((angle, index) => {
     const fin = CreateBox(`fin${index}`, { width: 0.03, height: 0.28, depth: 0.22 }, scene);
-    fin.position.y = finDistance;
+    // Position and orientation both turn by `angle` so the ring sits coaxially around the body,
+    // each fin projecting radially outward at the tail rather than stacking in one spot.
+    fin.position.x = finReach * Math.sin(angle);
+    fin.position.y = finReach * Math.cos(angle);
     fin.position.z = -0.38;
-    // Fins radiate around the body's Z axis, so they rotate about Z, not Y.
     fin.rotation.z = angle;
     return fin;
   });
 
-  return mergeParts('rocket', [body, nose, ...fins], scene, new Color3(0.95, 0.95, 0.95));
+  return mergeParts('rocket', [body, nose, ...fins], scene, new Color3(0.8, 0.15, 0.12));
 };
 
 const makeBoat = (scene: Scene): Mesh => {
-  const hull = CreateBox('hull', { width: 0.3, height: 0.15, depth: 0.9 }, scene);
-  const cabin = CreateBox('cabin', { width: 0.18, height: 0.14, depth: 0.28 }, scene);
-  cabin.position.y = 0.075 + 0.07;
-  cabin.position.z = -0.15;
+  const beam = 0.3;
+  const hullHeight = 0.15;
+  const sternLength = 1.3;
+  const bowLength = 0.5;
+  const sternBack = -0.9;
+  const bowBase = sternBack + sternLength;
+  const bowTip = bowBase + bowLength;
 
-  return mergeParts('boat', [hull, cabin], scene, new Color3(0.18, 0.22, 0.26));
+  const stern = CreateBox('stern', { width: beam, height: hullHeight, depth: sternLength }, scene);
+  stern.position.z = sternBack + sternLength / 2;
+
+  // A tessellation-3 cylinder is an equilateral triangular prism (radius-1 apex 1 unit from
+  // center, base 0.5 units the other way, base half-width sqrt(3)/2) — scaled into a long, narrow
+  // wedge and yawed so its apex points forward, giving the hull a pointed bow.
+  const bow = CreateCylinder('bow', { height: hullHeight, diameter: 2, tessellation: 3 }, scene);
+  bow.scaling.x = bowLength / 1.5;
+  bow.scaling.z = beam / 2 / (Math.sqrt(3) / 2);
+  bow.rotation.y = -HALF_PI;
+  bow.position.z = bowTip - bowLength / 1.5;
+
+  const cabin = CreateBox('cabin', { width: 0.18, height: 0.14, depth: 0.28 }, scene);
+  cabin.position.y = hullHeight / 2 + 0.07;
+  cabin.position.z = -0.3;
+
+  return mergeParts('boat', [stern, bow, cabin], scene, new Color3(0.18, 0.22, 0.26));
 };
 
 const makeTank = (scene: Scene): Mesh => {
@@ -99,7 +130,7 @@ const makeTank = (scene: Scene): Mesh => {
 };
 
 const makeSatellite = (scene: Scene): Mesh => {
-  const body = CreateBox('satBody', { size: 0.3 }, scene);
+  const body = CreateBox('satBody', { width: 0.3, height: 0.15, depth: 0.3 }, scene);
   const panelLeft = CreateBox('panelLeft', { width: 0.6, height: 0.02, depth: 0.25 }, scene);
   panelLeft.position.x = -(0.15 + 0.3);
   const panelRight = CreateBox('panelRight', { width: 0.6, height: 0.02, depth: 0.25 }, scene);
