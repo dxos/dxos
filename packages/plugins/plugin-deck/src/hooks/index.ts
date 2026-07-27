@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './useBreadcrumbs';
 export * from './useBreakpoints';
 export * from './useCompanions';
 export * from './useCompanionSplit';

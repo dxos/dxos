@@ -14,7 +14,7 @@ import React, {
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { type Node } from '@dxos/plugin-graph';
-import { Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -25,11 +25,15 @@ type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
 export type PlankProps = ThemedClassName<{
   node: Node.Node;
+  /** Ancestor chain (outermost → leaf); when it has more than one entry the title renders as breadcrumbs. */
+  breadcrumbs?: Node.Node[];
   /** Attendable id; defaults to the node id. */
   attendableId?: string;
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
   actions?: AttentionSigilAction[][];
   onAction?: (action: AttentionSigilAction) => void;
+  /** Navigate to an ancestor breadcrumb. */
+  onNavigate?: (id: string) => void;
   /** Toolbar controls rendered after the title (e.g. close/solo/fullscreen). */
   controls?: ReactNode;
   /** Toolbar content rendered between the title and the controls (e.g. a NavbarEnd surface). */
@@ -54,6 +58,48 @@ export type PlankProps = ThemedClassName<{
   onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
 }>;
 
+type PlankBreadcrumbsProps = {
+  nodes: Node.Node[];
+  attendableId: string;
+  related?: boolean;
+  onNavigate?: (id: string) => void;
+};
+
+/**
+ * Renders the ancestor chain as a breadcrumb trail: every node but the last is a link that navigates
+ * to that ancestor; the last (the plank's own node) is the current, non-interactive crumb.
+ */
+const PlankBreadcrumbs = ({ nodes, attendableId, related, onNavigate }: PlankBreadcrumbsProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  const label = (node: Node.Node) => toLocalizedString(node.properties?.label ?? '', t);
+  const current = nodes[nodes.length - 1];
+  return (
+    <Breadcrumb.Root aria-label={label(current)} classNames='ps-2'>
+      <Breadcrumb.List classNames='flex items-center gap-1'>
+        {nodes.slice(0, -1).map((node) => (
+          <Fragment key={node.id}>
+            <Breadcrumb.ListItem asChild>
+              <button
+                type='button'
+                className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
+                onClick={() => onNavigate?.(node.id)}
+              >
+                {label(node)}
+              </button>
+            </Breadcrumb.ListItem>
+            <Breadcrumb.Separator />
+          </Fragment>
+        ))}
+        <Breadcrumb.ListItem>
+          <Pane.Title attendableId={attendableId} related={related} classNames='w-auto grow-0'>
+            {label(current)}
+          </Pane.Title>
+        </Breadcrumb.ListItem>
+      </Breadcrumb.List>
+    </Breadcrumb.Root>
+  );
+};
+
 /**
  * A higher-level deck pane bound to a graph {@link Node}: renders the node's sigil, title and content
  * Surface inside a {@link Pane}, and makes itself the node's attendable region. Toolbar controls
@@ -65,9 +111,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     {
       classNames,
       node,
+      breadcrumbs,
       attendableId = node.id,
       actions,
       onAction,
+      onNavigate,
       controls,
       navbarEnd,
       sigilFooter,
@@ -124,9 +172,18 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                 </Pane.Sigil>
               )}
             </ActionRoot>
-            <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
-              {label}
-            </Pane.Title>
+            {breadcrumbs && breadcrumbs.length > 1 ? (
+              <PlankBreadcrumbs
+                nodes={breadcrumbs}
+                attendableId={attendableId}
+                related={related}
+                onNavigate={onNavigate}
+              />
+            ) : (
+              <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
+                {label}
+              </Pane.Title>
+            )}
             {navbarEnd}
             {controls}
           </Pane.Toolbar>
