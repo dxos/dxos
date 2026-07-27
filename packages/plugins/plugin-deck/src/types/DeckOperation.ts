@@ -63,8 +63,8 @@ export const UpdateTilingSize = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    weights: Schema.Array(Schema.Number).annotations({
-      description: 'Relative widths of the tiled planks by position.',
+    split: Schema.Number.annotations({
+      description: 'Fraction of the deck width taken by the first tiled plank.',
     }),
   }),
   output: Schema.Void,

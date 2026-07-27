@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.UpdateTilingSize> = De
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-        updateActiveDeck(state, { tilingSizing: [...input.weights] }),
+        updateActiveDeck(state, { tilingSplit: input.split }),
       );
     }),
   ),

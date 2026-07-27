@@ -28,8 +28,8 @@ export const DeckState = Schema.Struct({
   companionOpen: Schema.Boolean,
   /** Persisted companion frame widths in rem, keyed by frame ID. */
   companionFrameSizing: Schema.mutable(PlankSizing),
-  /** Relative widths of tiled planks by position (the tiling split ratio); absent/empty means equal. */
-  tilingSizing: Schema.optional(Schema.mutable(Schema.Array(Schema.Number))),
+  /** Fraction of the deck width taken by the first of the two tiled planks; absent means an even split. */
+  tilingSplit: Schema.optional(Schema.Number),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
