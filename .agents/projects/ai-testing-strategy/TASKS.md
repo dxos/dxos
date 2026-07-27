@@ -1,6 +1,13 @@
 # AI Testing Strategy — Tasks
 
-_Resume: **PR #12307 is marked ready for review** (no longer draft), CI green
+_Resume: **PR #12307 MERGED** (2026-07-23, `ba930200`). Phase 2's eval port is fully landed on `main`;
+the branch for the next step is `claude/ai-testing-strategy-next-3pkl86`, cut clean from `main`
+(`bf055c8b`). Everything below the "PR #12307" heading is history — the live backlog is: Phase 1
+item 1 (**G2 → C mocked unit tests**, 10 files still gated by `runMemoizedTests()`), Phase 1 item 2
+(E context-assembly + F schema round-trip), Phase 2 item 4 (loosen `employerRoleCorrect` /
+`onlyWebSearchUsed`, then drop explicit skill naming — **needs a live `DX_ANTHROPIC_API_KEY`**),
+Phase 3 (G3 → D, then shrink the memoization layer), and the standalone `.agent/` deletion.
+Historical detail for #12307: CI green
 (build/check/test/storybook/workerd all pass). All 6 G1 scenarios are ported to scored evals with
 real quality signal beyond existence checks (DB-effect assertions + an LLM judge on
 `crm-mailbox`). `@dxos/assistant-e2e` is un-merged back out of `@dxos/assistant-evals` — kept as
@@ -28,7 +35,7 @@ deleting it, remove all committed conversation fixtures, switch the gating mecha
 D-tier tests + `operationServiceLayerNoop`; MERGED);
 [#12307](https://github.com/dxos/dxos/pull/12307) (Phase 2 — DB-effect/tool-invocation/LLM-judge
 assertion helpers + all 6 G1 scenarios ported to `@dxos/assistant-evals`; `@dxos/assistant-e2e`
-kept as its own deprecated package rather than merged in; ready for review).
+kept as its own deprecated package rather than merged in; MERGED).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
@@ -149,7 +156,7 @@ as primary coverage.
 
 ## Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 
-- [x] **PR #12307 (draft):** first DB-effect scorer + first ported G1 scenario:
+- [x] **PR #12307 (MERGED):** first DB-effect scorer + first ported G1 scenario:
       `assistant-evals/src/assertions.ts` (`objectExists(type, predicate)` — dimension-G
       deterministic assertion helper, queries the DB directly rather than trusting the agent's
       `completedCriteria` self-report) and `assistant-evals/src/evals/database.eval.ts` (ported
