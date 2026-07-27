@@ -84,6 +84,13 @@ export class ObjectLayer {
       }
 
       const group = byKind.get(kind) ?? [];
+      // Skip empty kinds outright: a zero-length thin-instance buffer is never useful and keeps
+      // Babylon from having to reason about an instance count of 0.
+      if (group.length === 0) {
+        base.isVisible = false;
+        continue;
+      }
+
       const needed = group.length * 16;
       const existing = this.#buffers.get(kind);
 

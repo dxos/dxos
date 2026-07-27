@@ -118,6 +118,12 @@ export class TrailLayer {
   }
 
   #rebuild(puffs: readonly RenderPuff[]): void {
+    // Skip empty trails outright: a zero-length thin-instance buffer is never useful.
+    if (puffs.length === 0) {
+      this.#base.isVisible = false;
+      return;
+    }
+
     const neededMatrix = puffs.length * 16;
     const neededColor = puffs.length * 4;
     const reallocate = !this.#matrixBuffer || this.#matrixBuffer.length !== neededMatrix;
