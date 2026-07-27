@@ -47,7 +47,6 @@ export default Capability.makeModule(
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(DeckCapabilities.State);
     const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
-    const attention = yield* Capability.get(AttentionCapabilities.Attention);
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
 
     const provideServices = <A, E>(effect: Effect.Effect<A, E, Capability.Service | Operation.Service>) =>
@@ -258,8 +257,8 @@ export default Capability.makeModule(
     // once more here for the outbound (state -> URL) sync closures below.
     const builder = yield* Capability.get(AppCapabilities.AppGraph);
 
-    // Sync URL with layout state changes: deck state (active planks, companion open/closed),
-    // attention (which plank the companion attaches to), and the companion's selected variant.
+    // Sync URL with layout state changes: deck state (active planks, companion open/closed) and the
+    // companion's selected variant. Attention is deliberately absent — it is never serialized.
     // `method: 'replace'` is used once, right after setup, to correct a stale/bare URL against the
     // already-persisted deck without adding a spurious back-history entry; every later firing (a real
     // state change) pushes.
@@ -280,7 +279,7 @@ export default Capability.makeModule(
 
       // The companion is the deck's trailing plank, always attached to the last plank (not the attended
       // one), and serialized as `companion/<variant>` after it.
-      let companion: { attendedId: string; node: PathResolution.RepresentedNode } | undefined;
+      let companion: { plankId: string; node: PathResolution.RepresentedNode } | undefined;
       if (deck.companionOpen && deck.active.length > 0) {
         const plankId = deck.active[deck.active.length - 1];
         const selection = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
@@ -288,7 +287,7 @@ export default Capability.makeModule(
           const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;
           const represented = PathResolution.representNode(builder, companionNodeId);
           if (Option.isSome(represented)) {
-            companion = { attendedId: plankId, node: represented.value };
+            companion = { plankId, node: represented.value };
           }
         }
       }
@@ -297,9 +296,8 @@ export default Capability.makeModule(
       const path = serializeDeckToUrl({ workspace, workspaceKey, active: deck.active, representations, companion });
       const newUrl = `${path}${window.location.search}`;
 
-      // Update only when the derived URL actually differs from the current one — the deck state atom
-      // and the attention/companion-variant atoms all funnel into this same recompute, so most firings
-      // are no-ops.
+      // Update only when the derived URL actually differs from the current one — the deck state and
+      // companion-variant atoms both funnel into this same recompute, so most firings are no-ops.
       if (`${window.location.pathname}${window.location.search}` !== newUrl) {
         if (method === 'replace') {
           history.replaceState(null, '', newUrl);
@@ -310,7 +308,6 @@ export default Capability.makeModule(
     };
 
     const unsubscribeState = registry.subscribe(stateAtom, () => syncUrl());
-    const unsubscribeAttention = attention.subscribeCurrent(() => syncUrl());
     const unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
       syncUrl(),
     );
@@ -324,7 +321,6 @@ export default Capability.makeModule(
           window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
         }
         unsubscribeState();
-        unsubscribeAttention();
         unsubscribeCompanionVariant();
         unlistenDeepLink?.();
       }),

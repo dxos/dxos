@@ -73,7 +73,7 @@ describe('serializeDeckToUrl', () => {
         ['docA', rep('doc', 'A')],
         ['sheetB', rep('sheet', 'B')],
       ]),
-      companion: { attendedId: 'docA', node: { key: 'comments', workspace: WORKSPACE_A } },
+      companion: { plankId: 'docA', node: { key: 'comments', workspace: WORKSPACE_A } },
     });
     expect(path).toBe(`/w/${WORKSPACE_A}/doc/A/comments/sheet/B`);
   });

@@ -9,10 +9,10 @@ import { log } from '@dxos/log';
 /** Reverse-mapped `(key, id?, workspace)` representation of every plank id worth serializing. */
 export type Representations = ReadonlyMap<string, PathResolution.RepresentedNode>;
 
-/** The attended plank's open companion, if any, already reverse-mapped. */
+/** The open companion, if any, already reverse-mapped. */
 export type CompanionRepresentation = {
-  /** Id of the plank the companion is attached to (the attended plank at serialization time). */
-  attendedId: string;
+  /** Id of the plank the companion is attached to (the deck's trailing plank). */
+  plankId: string;
   node: PathResolution.RepresentedNode;
 };
 
@@ -42,7 +42,7 @@ export const serializeDeckToUrl = (params: {
     }
     pairs.push({ key: rep.key, id: rep.id, workspace: rep.workspace });
 
-    if (companion && companion.attendedId === id) {
+    if (companion && companion.plankId === id) {
       pairs.push({ key: companion.node.key, id: companion.node.id, workspace: companion.node.workspace });
     }
   }
