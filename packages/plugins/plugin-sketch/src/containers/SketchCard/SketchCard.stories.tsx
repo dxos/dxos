@@ -9,7 +9,7 @@ import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
-import { SketchBuilder } from '#testing';
+import { SketchBuilder } from '#model';
 import { Sketch } from '#types';
 
 import { SketchCard } from './SketchCard';

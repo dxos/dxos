@@ -10,18 +10,17 @@ import { Script, Skill, Template } from '@dxos/compute';
 import { Filter, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AssistantSkill } from '@dxos/plugin-assistant';
-import { CommentSkill } from '@dxos/plugin-comments/skills';
 import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
+import { CommentSkill } from '@dxos/plugin-review/skills';
 import { Text } from '@dxos/schema';
+import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, addToRootCollection, config, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
+import { StoryRole } from '../modules';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Documents',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -79,16 +78,16 @@ export const WithMarkdown: Story = {
     lazyPlugins: async () => {
       // SpacePlugin contributes the `versioning-state` capability that the Comments article surface
       // (and the versioning UI) reads; without it the story throws "No capability found".
-      const [{ MarkdownPlugin }, { CommentsPlugin }, { SpacePlugin }] = await Promise.all([
+      // ReviewPlugin contributes the `history` companion surface the HistoryModule renders into.
+      const [{ MarkdownPlugin }, { ReviewPlugin }, { SpacePlugin }] = await Promise.all([
         import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-comments/plugin'),
+        import('@dxos/plugin-review/plugin'),
         import('@dxos/plugin-space/plugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), CommentsPlugin(), SpacePlugin({})],
+        plugins: [MarkdownPlugin(), ReviewPlugin(), SpacePlugin({})],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const document = space.db.add(
         Markdown.make({
@@ -96,7 +95,7 @@ export const WithMarkdown: Story = {
           content: addSpellingMistakes(MARKDOWN_DOCUMENT, 3, '!!!').replaceAll(/(?<!\n)\n(?!\n)/g, '\n\n'),
         }),
       );
-      const styleGuide = space.db.add(
+      const guide = space.db.add(
         Markdown.make({
           name: 'Style Guide',
           content: STYLE_GUIDE,
@@ -104,50 +103,20 @@ export const WithMarkdown: Story = {
       );
       // Register the documents in the space root collection so plugin-space builds app-graph nodes
       // for them — this is what makes the editor's comment toolbar (a graph action) resolvable.
-      addToRootCollection(space, [document, styleGuide]);
+      addToRootCollection(space, [document, guide]);
+      return [
+        [StoryRole.Chat],
+        [Cell.article(document)],
+        [Cell.companion(document, 'history'), Cell.companion(document, 'comments')],
+        [StoryRole.Logging],
+      ];
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
-  }),
-  args: {
-    layout: [[Module.Chat], [Module.Document], [Module.History, Module.Comments]],
     skills: [AssistantSkill.key, MarkdownSkill.key, CommentSkill.key],
-  },
-};
-
-/**
- * Enters a prompt into the chat that asks the assistant to rewrite the document to match the style
- * guide (both are bound into the chat context). The assistant uses the markdown update tool to edit
- * the live document in place.
- *
- * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
- * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
- */
-export const WithMarkdownStyleGuide: Story = {
-  ...WithMarkdown,
-  tags: ['!test'],
-  play: async ({ canvasElement }) => {
-    await submitPrompt(canvasElement, 'Update the Document to obey the Style Guide');
-  },
-};
-
-/**
- * As above, but asks the assistant to make the edits on a NEW branch rather than the live document.
- * The assistant creates a branch (create-branch tool) and applies the style-guide edits to it
- * (update tool with the branchId), leaving the branch unmerged for review — the input to Phase 2's
- * branch-diff view.
- *
- * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
- * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
- */
-export const WithMarkdownStyleGuideBranch: Story = {
-  ...WithMarkdown,
-  tags: ['!test'],
-  play: async ({ canvasElement }) => {
-    await submitPrompt(canvasElement, 'Update the Document in a new branch to obey the Style Guide');
-  },
+  }),
 };
 
 /** Types a prompt into the chat's CodeMirror editor and submits it, asserting it lands as a message. */
@@ -183,18 +152,23 @@ export const WithSkills: Story = {
         plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
-      space.db.add(Markdown.make({ name: 'Tasks' }));
+      const document = space.db.add(Markdown.make({ name: 'Tasks' }));
+      const skill = space.db.add(
+        Skill.make({
+          key: 'org.dxos.skill.tasks',
+          name: 'Tasks',
+          instructions: Template.make({ source: 'Help manage the task list.' }),
+        }),
+      );
+      addToRootCollection(space, [document, skill]);
+      return [[StoryRole.Chat], [StoryRole.Tasks, Cell.article(skill)]];
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
-  args: {
-    layout: [[Module.Chat], [Module.Tasks, Module.Skill]],
-  },
 };
 
 export const WithScript: Story = {
@@ -208,7 +182,6 @@ export const WithScript: Story = {
         plugins: [MarkdownPlugin(), ScriptPlugin()],
       };
     },
-    config: config.local,
     types: [Script.Script, Text.Text],
     onInit: async ({ client, space }) => {
       const [{ getAccessCredential }, { templates }] = await Promise.all([
@@ -223,7 +196,7 @@ export const WithScript: Story = {
       invariant(template.name, 'Template name not found');
 
       // Ensure at least one Script exists so the React surface can render.
-      space.db.add(
+      const script = space.db.add(
         Script.make({
           name: template.name,
           description: 'Function to get the exchange rates between two currencies.',
@@ -246,13 +219,45 @@ export const WithScript: Story = {
       );
 
       await space.db.flush();
+      addToRootCollection(space, [script]);
+      return [[StoryRole.Chat], [Cell.article(script)]];
     },
     onChatCreated: async ({ space, binder }) => {
       const skills = await space.db.query(Query.select(Filter.type(Skill.Skill))).run();
       await binder.bind({ skills: skills.map((skill) => Ref.make(skill)) });
     },
   }),
-  args: {
-    layout: [[Module.Chat], [Module.Script]],
+};
+
+/**
+ * Enters a prompt into the chat that asks the assistant to rewrite the document to match the style
+ * guide (both are bound into the chat context). The assistant uses the markdown update tool to edit
+ * the live document in place.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
+ * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithMarkdownStyleGuide: Story = {
+  ...WithMarkdown,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, 'Update the Document to obey the Style Guide');
+  },
+};
+
+/**
+ * As above, but asks the assistant to make the edits on a NEW branch rather than the live document.
+ * The assistant creates a branch (create-branch tool) and applies the style-guide edits to it
+ * (update tool with the branchId), leaving the branch unmerged for review — the input to Phase 2's
+ * branch-diff view.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
+ * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithMarkdownStyleGuideBranch: Story = {
+  ...WithMarkdown,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, 'Update the Document in a new branch to obey the Style Guide');
   },
 };

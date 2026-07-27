@@ -49,6 +49,33 @@ type Settings
     gridType?: SketchGrid        # mesh or dotted pattern
 ```
 
+```mdl
+type Scene
+  desc: |
+    Backend-neutral scene DSL (src/model). A diagram is a set of world objects
+    ("face", "hat") composed of elements in object-local units; a compiler maps
+    the scene to tldraw records with identity stamped in record meta
+    ({ object, element, kind, scale, dialect }) so edits address shapes by id.
+  fields:
+    objects: WorldObject[]
+```
+
+```mdl
+type WorldObject
+  fields:
+    id: string                   # semantic id ("face"); addressing key for edits
+    origin?: Point               # canvas px; derived from bbox top-left on read
+    scale?: number               # canvas px per local unit (default 1)
+    elements: Element[]          # rect | ellipse | circle | diamond | triangle |
+                                 # line | curve | arc | text | arrow
+```
+
+```mdl
+type Command
+  desc: Scene edit commands (D2-Oracle-style, addressed by id).
+  literals: upsert-object | upsert-elements | remove-elements | remove-object | move-object
+```
+
 ## Components
 
 ```mdl
@@ -98,6 +125,33 @@ op createSketch
     content?: Map<string, any>   # optional initial tldraw store snapshot
   output: Sketch
   effects: [echo:write]
+```
+
+```mdl
+op readSketch
+  desc: |
+    Returns the derived Scene (world objects with object-local coordinates) read
+    from the live canvas records, plus a count of unmanaged (hand-drawn) shapes.
+    Origins derive from bounding boxes, so the scene stays coherent after users
+    drag shapes. The agent calls this before editing an existing sketch.
+  input:
+    sketch: Ref<Sketch>
+  output: { scene: Scene, unmanaged: number }
+  requires: [Database]
+```
+
+```mdl
+op editSketch
+  desc: |
+    Applies scene commands atomically (one Obj.update): upsert/move/remove world
+    objects or individual elements by id. Returns the resulting scene so the
+    agent can maintain its mental model across turns.
+  input:
+    sketch: Ref<Sketch>
+    commands: Command[]
+  output: { scene: Scene, unmanaged: number, upserted: string[], removed: number }
+  effects: [echo:write]
+  requires: [Database]
 ```
 
 ## Features
@@ -187,6 +241,28 @@ feat F-7: Create Sketch Operation
     then: a Sketch + Canvas pair is created and returned; the Sketch is added to the target collection
 ```
 
+```mdl
+feat F-8: Scene DSL and Agent Skill
+
+  req F-8.1: The scene model (src/model) is backend-neutral — no tldraw imports in scene.ts;
+    the tldraw compiler (render.ts/read.ts) is one backend, Excalidraw can be added later.
+  req F-8.2: Every DSL-generated tldraw record carries meta { object, element, kind, scale, dialect };
+    record ids are deterministic (shape:<object>/<element>) so re-rendering an element reuses its id.
+  req F-8.3:
+    when: op:editSketch upserts elements of an existing object
+    then: only records with matching element ids are replaced; sibling elements are untouched
+  req F-8.4:
+    when: a shape bound by an arrow is removed
+    then: its bindings are removed too; no dangling binding records remain
+  req F-8.5:
+    when: op:readSketch runs after a user drags shapes in the UI
+    then: the derived scene reflects the moved geometry (origin = bbox top-left)
+  req F-8.6: Plugin contributes the org.dxos.skill.sketch skill (create/read/edit tools +
+    DSL instructions: object-local units, semantic ids, read-before-edit workflow).
+  req F-8.7: A dialect registry (scene only for now) reserves the extension point for
+    mermaid / d2 / sequence / uml-class compilers that emit scene commands.
+```
+
 ## Acceptance
 
 ```mdl
@@ -243,6 +319,30 @@ test T-6: Attention-aware toolbar
   then: tldraw toolbar becomes visible
   when: user clicks away, removing attention
   then: tldraw toolbar is hidden
+```
+
+```mdl
+test T-7: Scene DSL round-trip
+  given: an empty Sketch
+  when: editSketch upserts a "face" object (head/eyes/smile), then upserts a "hat" object and
+    replaces only the "smile" element, then removes the "hat"
+  then:
+    - readSketch returns the face with derived origin and all element ids
+    - the untouched face elements are byte-identical across the hat edit
+    - removing the hat removes exactly its records and no bindings dangle
+  # Covered by src/operations/operations.test.ts and src/model/scene.test.ts.
+```
+
+```mdl
+test T-8: Conversational drawing (live AI)
+  given: the stories-assistant Sketch storybook (config.remote) with the sketch skill bound
+  when: the user prompts "Draw a smiley face", then "Add a hat"
+  then:
+    - the agent creates a "face" world object via editSketch
+    - the follow-up adds a "hat" object WITHOUT redrawing the face (mental-model test)
+  # Manual: stories/stories-assistant/Sketch → DrawAndUpdateTest / Reflection (tags: ['!test']).
+  # Verified live 2026-07-23 (remote EDGE, claude-opus-4-8): face drawn, hat composed on top,
+  # face records untouched.
 ```
 
 ---

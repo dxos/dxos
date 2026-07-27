@@ -12,7 +12,7 @@ import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Obj } from '@dxos/echo';
 import { SPACE_HOME_NODE_TYPE } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -108,7 +108,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: linkedSegment('help'),
+              id: Attention.linkedSegment('help'),
               label: HELP_LABEL,
               icon: 'ph--megaphone--regular',
               data: null,
@@ -131,7 +131,7 @@ export default Capability.makeModule(
           }
           return Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: linkedSegment('discord'),
+              id: Attention.linkedSegment('discord'),
               label: DISCORD_LABEL,
               icon: 'ph--discord-logo--regular',
               data: null,

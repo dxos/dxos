@@ -2,7 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
 
@@ -11,9 +15,10 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, ServiceResolver, type Skill } from '@dxos/compute';
-import { Database, Ref, Tag } from '@dxos/echo';
+import { FeedTraceSink } from '@dxos/compute-runtime';
+import { Database, Feed, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
@@ -27,7 +32,21 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { getDefaultSkills } from './skills';
+
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
+
+/** Per-eval fallback; scenarios with more tool round-trips should pass an explicit `timeout`. */
+const DEFAULT_EVAL_TIMEOUT_MILLIS = 60_000;
+
+class EvalTimeoutError extends Data.TaggedError('EvalTimeoutError')<{ millis: number }> {}
+
+/**
+ * Tags a failure as coming specifically from the agent's own `RunInstructions` invocation —
+ * distinct from a harness setup/disposal problem or other infrastructure failure, neither of
+ * which is "the agent failed as instructed" (see `expect: 'failure'` handling below).
+ */
+class AgentRunFailure extends Data.TaggedError('AgentRunFailure')<{ cause: unknown }> {}
 
 const SYSTEM_INSTRUCTIONS = trim`
   You are running within an evaluation environment.
@@ -74,10 +93,20 @@ const runInstructions = <I>(
   model: DXN.DXN,
   spaceId: SpaceId,
   input: I,
+  sessionChat?: boolean,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedInstructions(instructions);
+
+      let chatRef: Ref.Ref<Chat.Chat> | undefined;
+      if (sessionChat) {
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), name: 'Eval Chat' }));
+        yield* Database.flush();
+        chatRef = Ref.make(chat);
+      }
+
       return yield* Operation.invoke(
         RunInstructions,
         {
@@ -85,6 +114,7 @@ const runInstructions = <I>(
           input,
           systemInstructions: SYSTEM_INSTRUCTIONS,
           model,
+          ...(chatRef ? { chat: chatRef } : {}),
         },
         { spaceId },
       );
@@ -98,7 +128,32 @@ export interface CreateEvalRunnerOptions<I, O> {
   skills?: Ref.Ref<Skill.Skill>[];
   model?: DXN.DXN;
   plugins?: Plugin.Plugin[];
+  /**
+   * Provisions a {@link Chat} on the session feed so planning and other chat-scoped tools work
+   * (e.g. the planning skill's `update-tasks` resolves its plan via `Chat.getFromContext`).
+   */
+  sessionChat?: boolean;
+  /**
+   * `'failure'` inverts the run's success semantics: an agent failure resolves the task as
+   * `{ failed: true }` instead of rejecting, so a scorer can grade "failed as instructed" as a
+   * pass. An unexpected success resolves as `{ failed: false }`, gradeable as a miss.
+   * @default 'success'
+   */
+  expect?: 'success' | 'failure';
+  /**
+   * Milliseconds before the run is aborted. Raise this only for scenarios with more tool
+   * round-trips than a typical single/couple-tool eval (e.g. a multi-step plan, or research across
+   * several tools) — most evals should keep the default.
+   * @default 60_000
+   */
+  timeout?: number;
 }
+
+/** A deterministic DB-state assertion run after the agent completes, before the harness is disposed. */
+export type DbQuery<I, D> = (
+  input: I,
+  spaceId: SpaceId,
+) => Effect.Effect<D, unknown, Database.Service | FeedTraceSink.FeedTraceSink>;
 
 export type VariantConfig =
   | undefined
@@ -115,37 +170,106 @@ export type VariantConfig =
  * initializes an identity, fires `SetupArtifactDefinition`, then invokes `runInstructions` with the
  * resolved model and the personal space. All execution is wrapped in an Effect scope; errors are
  * propagated to the caller via `EffectEx.runAndForwardErrors`.
+ *
+ * Pass `dbQuery` to additionally run a deterministic DB-state assertion (TESTING.md dimension G)
+ * while the space is still open; the task then returns `{ agentOutput, dbQuery }` instead of the
+ * bare agent output, so a Scorer can grade the real effect rather than the model's own
+ * self-reported completion.
+ *
+ * Pass `expect: 'failure'` for scenarios that assert the agent correctly fails; the task then
+ * returns `{ failed: boolean }` instead of throwing, so a Scorer can grade "failed as instructed".
+ * Only a failure of the agent's own `RunInstructions` invocation counts as `{ failed: true }` — a
+ * harness setup/disposal problem or other infrastructure failure still throws, since neither is
+ * evidence the agent behaved as instructed.
+ *
+ * The run is aborted after `timeout` (default 60s, see {@link CreateEvalRunnerOptions.timeout}) —
+ * evalite has no per-scenario timeout of its own, so this is what keeps a hung/slow scenario from
+ * eating vitest's shared `testTimeout` budget. A timeout always throws, even under
+ * `expect: 'failure'` (it is not evidence the agent "failed as instructed").
  */
-export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig> => {
+export function createEvalRunner<I, O>(
+  options: CreateEvalRunnerOptions<I, O> & { expect: 'failure' },
+): Evalite.Task<I, { failed: boolean }, VariantConfig>;
+export function createEvalRunner<I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig>;
+export function createEvalRunner<I, O, D>(
+  options: CreateEvalRunnerOptions<I, O> & { dbQuery: DbQuery<I, D> },
+): Evalite.Task<I, { agentOutput: O; dbQuery: D }, VariantConfig>;
+export function createEvalRunner<I, O, D>(
+  options: CreateEvalRunnerOptions<I, O> & { dbQuery?: DbQuery<I, D> },
+): Evalite.Task<I, O | { agentOutput: O; dbQuery: D } | { failed: boolean }, VariantConfig> {
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
 
     const instructions = Instructions.make({
       text: options.instructions,
-      skills: options.skills ?? [],
+      skills: options.skills ?? getDefaultSkills(),
     });
 
-    return EffectEx.runAndForwardErrors(
-      Effect.scoped(
-        Effect.gen(function* () {
-          const harness = yield* Effect.acquireRelease(
-            Effect.promise(async () =>
-              createComposerTestApp({
-                plugins: await createDefaultPlugins(options),
-              }),
+    const run = Effect.scoped(
+      Effect.gen(function* () {
+        const harness = yield* Effect.acquireRelease(
+          Effect.promise(async () =>
+            createComposerTestApp({
+              plugins: await createDefaultPlugins(options),
+            }),
+          ),
+          (testHarness) => Effect.promise(() => testHarness.dispose()),
+        );
+
+        yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
+
+        const { personalSpace } = yield* Effect.promise(() =>
+          EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
+        );
+
+        const agentOutput = yield* Effect.tryPromise({
+          try: () => runInstructions(harness, instructions, model, personalSpace.id, input, options.sessionChat),
+          catch: (cause) => new AgentRunFailure({ cause }),
+        });
+
+        const dbQueryFn = options.dbQuery;
+        if (!dbQueryFn) {
+          return agentOutput;
+        }
+
+        const dbQuery = yield* Effect.promise(() =>
+          harness.runPromise(
+            dbQueryFn(input, personalSpace.id).pipe(
+              Effect.provide(
+                ServiceResolver.provide({ space: personalSpace.id }, Database.Service, FeedTraceSink.FeedTraceSink),
+              ),
             ),
-            (testHarness) => Effect.promise(() => testHarness.dispose()),
-          );
+          ),
+        );
 
-          yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
-
-          const { personalSpace } = yield* Effect.promise(() =>
-            EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
-          );
-
-          return yield* Effect.promise(() => runInstructions(harness, instructions, model, personalSpace.id, input));
-        }),
-      ),
+        return { agentOutput, dbQuery };
+      }),
     );
+
+    const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
+    const timedRun = run.pipe(
+      Effect.timeoutFail({
+        duration: timeoutMillis,
+        onTimeout: () => new EvalTimeoutError({ millis: timeoutMillis }),
+      }),
+    );
+
+    if (options.expect !== 'failure') {
+      return EffectEx.runAndForwardErrors(timedRun);
+    }
+
+    const exit = await Effect.runPromiseExit(timedRun);
+    if (Exit.isSuccess(exit)) {
+      return { failed: false };
+    }
+
+    // Only a failure of the agent's own RunInstructions invocation counts as "failed as
+    // instructed" — a timeout, harness setup/disposal problem, or other infrastructure failure
+    // means the run never got far enough to demonstrate anything, so it must propagate as a real
+    // error instead of being silently scored as a pass.
+    if (Option.exists(Cause.failureOption(exit.cause), (error) => error instanceof AgentRunFailure)) {
+      return { failed: true };
+    }
+    return EffectEx.unwrapExit(exit);
   };
-};
+}

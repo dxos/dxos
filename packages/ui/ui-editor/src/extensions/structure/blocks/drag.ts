@@ -228,6 +228,12 @@ class PlaceholderWidget extends WidgetType {
     );
   }
 
+  // Without this the height map assumes a default-height widget until the async measure pass corrects
+  // it, and the correction can shift scroll bookkeeping for a frame at drag start.
+  override get estimatedHeight(): number {
+    return this.totalHeight;
+  }
+
   override toDOM(): HTMLElement {
     const element = document.createElement('div');
     element.className = 'cm-blockDropPlaceholder';
@@ -630,13 +636,20 @@ const createDragPlugin = (
       }
 
       // The slot the pointer is over: the first non-source block whose vertical midpoint is below the
-      // pointer. The dragged (collapsed) blocks are skipped, so the drop gap — and thus the placeholder —
-      // always lands on a visible block, above or below the pointer, never inside the lifted group.
+      // pointer. The dragged (collapsed) blocks are skipped — including blocks inside a dragged extent
+      // (a parent's children share its collapse but are not source indices) — so the drop gap, and thus
+      // the placeholder, always lands on a visible block, never inside the lifted group where the
+      // collapse decoration would absorb it.
       #dropIndexAt(clientY: number): number {
         const blocks = getBlocks(this.view.state);
         const sources = new Set(this.#sourceIndices ?? []);
+        const extents = [...sources]
+          .map((sourceIndex) => this.#extentOf(sourceIndex))
+          .filter((extent): extent is Block => extent != null);
+        const collapsed = (block: Block) =>
+          extents.some((extent) => block.from >= extent.from && block.from <= extent.to);
         for (let index = 0; index < blocks.length; index++) {
-          if (sources.has(index)) {
+          if (sources.has(index) || collapsed(blocks[index])) {
             continue;
           }
           const top = this.view.coordsAtPos(blocks[index].from);
@@ -738,13 +751,14 @@ const createDragPlugin = (
           return;
         }
 
-        // A side:-1 block widget sitting at a collapse's END is absorbed by the block-replace and renders
-        // nothing (dropping onto the block right after a source). Snap such positions to that collapse's
-        // START, which renders before it — the source's own slot, a no-op drop, so the position is right.
+        // A side:-1 block widget sitting inside a collapse (including at its end) is absorbed by the
+        // block-replace and renders nothing — the gap would vanish for that update. Snap such positions
+        // to that collapse's START, which renders before it — the source's own slot, a no-op drop, so
+        // the position is right.
         let placeholderPos = dropIndex < blocks.length ? blocks[dropIndex].from : this.view.state.doc.length;
-        const atCollapseEnd = collapses.find((range) => range.to === placeholderPos);
-        if (atCollapseEnd) {
-          placeholderPos = atCollapseEnd.from;
+        const atCollapse = collapses.find((range) => placeholderPos > range.from && placeholderPos <= range.to);
+        if (atCollapse) {
+          placeholderPos = atCollapse.from;
         }
         // The drop level (quantized to indent units) shifts the placeholder so it aligns with the content.
         const indentOffset = this.#dropIndent?.offset ?? 0;
@@ -794,6 +808,12 @@ const dragTheme = EditorView.theme({
   '.cm-scroller.cm-blockDragging': {
     cursor: 'grabbing',
   },
+  // Hide the static overlay grips synchronously at drag start (they are children of the scroller; the
+  // preview grip rides on `view.dom`): the overlay only removes them in the async measure pass, which
+  // would leave both grips visible for a frame.
+  '.cm-scroller.cm-blockDragging .cm-blockDragHandle': {
+    display: 'none',
+  },
   '.cm-scroller.cm-blockDragging .cm-content': {
     userSelect: 'none',
   },
@@ -803,9 +823,9 @@ const dragTheme = EditorView.theme({
     pointerEvents: 'none',
   },
   // Left/width are set inline per drop (they track the drop level so the box aligns with the content).
+  // Unpainted: the drop slot reads as empty space matching the anticipated dropped block.
   '.cm-blockDropPlaceholderBox': {
     boxSizing: 'border-box',
-    backgroundColor: 'color-mix(in oklch, var(--color-accent-text, #3b82f6) 25%, transparent)',
   },
   '.cm-blockDragPreview': {
     position: 'absolute',

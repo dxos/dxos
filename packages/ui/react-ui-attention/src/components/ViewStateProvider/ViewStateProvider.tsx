@@ -9,18 +9,12 @@ import React, { type PropsWithChildren, useContext, useEffect, useMemo, useState
 import { invariant } from '@dxos/invariant';
 import { useDefaultValue } from '@dxos/react-hooks';
 
-import {
-  type SelectionMode,
-  type SelectionResult,
-  resolveSelection,
-  selectionAspect,
-  toggleSelection,
-} from '../../selection';
-import { type AspectDef, ViewStateManager, createDefaultBackends } from '../../view-state';
+import { createDefaultBackends } from '../../core';
+import { Selection, ViewState } from '../../types';
 
 const VIEW_STATE_NAME = 'ViewState';
 
-type ViewStateContextValue = { manager?: ViewStateManager };
+type ViewStateContextValue = { manager?: ViewState.Manager };
 
 // Default value lets consumers render outside a provider (isolated stories/tests) without throwing;
 // `manager` reads as `undefined` and hooks fall back to aspect defaults / no-op actions.
@@ -32,30 +26,30 @@ const [ViewStateContextProvider, useViewStateContext] = createContext<ViewStateC
 export const ViewStateProvider = ({
   children,
   manager: managerProp,
-}: PropsWithChildren<{ manager?: ViewStateManager }>) => {
+}: PropsWithChildren<{ manager?: ViewState.Manager }>) => {
   const registry = useContext(RegistryContext);
   const manager = useDefaultValue(
     managerProp,
-    () => new ViewStateManager({ registry, backends: createDefaultBackends(registry) }),
+    () => new ViewState.Manager({ registry, backends: createDefaultBackends(registry) }),
   );
   return <ViewStateContextProvider manager={manager}>{children}</ViewStateContextProvider>;
 };
 
-/** Access the underlying ViewStateManager from context. Throws when used outside a `ViewStateProvider`. */
-export const useViewStateManager = (): ViewStateManager => {
+/** Access the underlying Manager from context. Throws when used outside a `ViewStateProvider`. */
+export const useManager = (): ViewState.Manager => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
-  invariant(manager, 'useViewStateManager() requires a ViewStateProvider ancestor.');
+  invariant(manager, 'useManager() requires a ViewStateProvider ancestor.');
   return manager;
 };
 
-/** Access the ViewStateManager if a provider is present; `undefined` otherwise (e.g. isolated stories/tests). */
-export const useViewStateManagerOptional = (): ViewStateManager | undefined => {
+/** Access the Manager if a provider is present; `undefined` otherwise (e.g. isolated stories/tests). */
+export const useManagerOptional = (): ViewState.Manager | undefined => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   return manager;
 };
 
 /** Reactive read of an aspect value for a context; yields the aspect default when unset or unprovided. */
-export const useViewState = <T,>(aspect: AspectDef<T>, contextId?: string): T => {
+export const useViewState = <T, Encoded = T>(aspect: ViewState.Aspect<T, Encoded>, contextId?: string): T => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   const [value, setValue] = useState<T>(() =>
     contextId && manager ? manager.get(aspect, contextId) : aspect.defaultValue(),
@@ -77,7 +71,10 @@ export type UseViewStateActions<T> = {
   clear: () => void;
 };
 
-export const useViewStateActions = <T,>(aspect: AspectDef<T>, contextId?: string): UseViewStateActions<T> => {
+export const useViewStateActions = <T, Encoded = T>(
+  aspect: ViewState.Aspect<T, Encoded>,
+  contextId?: string,
+): UseViewStateActions<T> => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   return useMemo<UseViewStateActions<T>>(
     () => ({
@@ -102,8 +99,10 @@ export const useViewStateActions = <T,>(aspect: AspectDef<T>, contextId?: string
 };
 
 /** Resolved selection value for `contextId` in the requested `mode` (default `multi`). */
-export const useSelection = <T extends SelectionMode>(contextId?: string, mode: T = 'multi' as T): SelectionResult<T> =>
-  resolveSelection(useViewState(selectionAspect, contextId), mode);
+export const useSelection = <T extends Selection.SelectionMode>(
+  contextId?: string,
+  mode: T = 'multi' as T,
+): Selection.Result<T> => Selection.resolve(useViewState(Selection.aspect, contextId), mode);
 
 export type UseSelectionActions = {
   single: (id: string) => void;
@@ -115,13 +114,13 @@ export type UseSelectionActions = {
 
 /** Selection mutators for a single context, built on the generic ViewState actions. */
 export const useSelectionActions = (contextId?: string): UseSelectionActions => {
-  const { update, clear } = useViewStateActions(selectionAspect, contextId);
+  const { update, clear } = useViewStateActions(Selection.aspect, contextId);
   return useMemo<UseSelectionActions>(
     () => ({
       single: (id) => update(() => ({ mode: 'single', id })),
       multi: (ids) => update(() => ({ mode: 'multi', ids: [...ids] })),
       range: (from, to) => update(() => ({ mode: 'range', from, to })),
-      toggle: (id) => update((prev) => toggleSelection(prev, id)),
+      toggle: (id) => update((prev) => Selection.toggle(prev, id)),
       clear,
     }),
     [update, clear],

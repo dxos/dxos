@@ -120,8 +120,11 @@ export const toJsonSchema = (
   return jsonSchema;
 };
 
-const _toJsonSchemaAST = (ast: SchemaAST.AST): Types.DeepMutable<JsonSchemaType> => {
-  const withRefinements = withEchoRefinements(ast, '#');
+const _toJsonSchemaAST = (
+  ast: SchemaAST.AST,
+  inProgress: Set<SchemaAST.AST> = new Set(),
+): Types.DeepMutable<JsonSchemaType> => {
+  const withRefinements = withEchoRefinements(ast, '#', new Map(), inProgress);
   const jsonSchema = JSONSchema.fromAST(withRefinements, {
     definitions: {},
   }) as Types.DeepMutable<JsonSchemaType>;
@@ -133,6 +136,9 @@ const withEchoRefinements = (
   ast: SchemaAST.AST,
   path: string | undefined,
   suspendCache = new Map<SchemaAST.AST, string>(),
+  // Suspended ASTs whose expansion is currently in flight — unlike `suspendCache`, this is shared
+  // across the fresh caches each new expansion starts with, so it also catches mutual cycles.
+  inProgress: Set<SchemaAST.AST> = new Set(),
 ): SchemaAST.AST => {
   if (path) {
     suspendCache.set(ast, path);
@@ -144,21 +150,41 @@ const withEchoRefinements = (
     const suspendedAst = ast.f();
     const cachedPath = suspendCache.get(suspendedAst);
     if (cachedPath) {
-      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
+      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
         [SchemaAST.JSONSchemaAnnotationId]: {
           $ref: cachedPath,
         },
       });
+    } else if (inProgress.has(suspendedAst)) {
+      // Reached via a *different* suspended type already being expanded (e.g. two mutually-recursive
+      // schemas, A embedding B and B embedding A) — `suspendCache` alone won't catch this, since each
+      // fresh expansion below starts from an empty one. Stop with a permissive "any" placeholder
+      // instead of expanding again. The `type` key is required: effect's JSONSchema.fromAST only
+      // treats this annotation as a full override (vs. merging it onto a recomputed, and for a bare
+      // Suspend unsupported, structural schema) when it sees type/oneOf/anyOf/$ref.
+      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
+        [SchemaAST.JSONSchemaAnnotationId]: {
+          $id: '/schemas/any',
+          type: ['string', 'number', 'boolean', 'object', 'array', 'null'],
+        },
+      });
     } else {
-      const jsonSchema = _toJsonSchemaAST(suspendedAst);
-      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
+      inProgress.add(suspendedAst);
+      const jsonSchema = _toJsonSchemaAST(suspendedAst, inProgress);
+      inProgress.delete(suspendedAst);
+      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
         [SchemaAST.JSONSchemaAnnotationId]: jsonSchema,
       });
     }
   } else if (SchemaAST.isTypeLiteral(ast)) {
     // Add property order annotations
     recursiveResult = SchemaEx.mapAst(ast, (ast, key) =>
-      withEchoRefinements(ast, path && typeof key === 'string' ? `${path}/${key}` : undefined, suspendCache),
+      withEchoRefinements(
+        ast,
+        path && typeof key === 'string' ? `${path}/${key}` : undefined,
+        suspendCache,
+        inProgress,
+      ),
     );
     recursiveResult = addJsonSchemaFields(recursiveResult, {
       propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
@@ -172,6 +198,7 @@ const withEchoRefinements = (
         ast,
         path && (typeof key === 'string' || typeof key === 'number') ? `${path}/${key}` : undefined,
         suspendCache,
+        inProgress,
       ),
     );
   }

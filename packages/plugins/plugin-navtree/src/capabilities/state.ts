@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
-import { meta } from '#meta';
 import { NavTreeCapabilities } from '#types';
 
-const KEY = `${meta.profile.key}.state.v1`;
+import { navTreeOpenAspect } from './nav-tree-view-state';
 
 /** Default item state for new entries. */
 const defaultItemState: NavTreeCapabilities.NavTreeItemState = { open: false, current: false };
@@ -27,27 +27,24 @@ const defaultStateEntries: [string, NavTreeCapabilities.NavTreeItemState][] = [
   ['root', { open: true, current: false }],
 ];
 
-const getInitialState = (): Map<string, NavTreeCapabilities.NavTreeItemState> => {
-  const stringified = localStorage.getItem(KEY);
-  if (!stringified) {
-    return new Map(defaultStateEntries);
-  }
-
-  try {
-    const cached: [string, { open: boolean; current: boolean }][] = JSON.parse(stringified);
-    return new Map(cached.map(([key, value]) => [key, { open: value.open, current: false }]));
-  } catch {
-    return new Map(defaultStateEntries);
-  }
-};
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
+    // Persistence backend for per-path expansion (`open`); replaces the hand-rolled localStorage blob.
+    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
 
-    // Backing state for persistence (not reactive).
-    const backingState = getInitialState();
+    // Backing state (not reactive), seeded from the persisted `open` values; `current` is ephemeral.
+    const persistedPaths = viewState.contexts(navTreeOpenAspect);
+    const backingState: Map<string, NavTreeCapabilities.NavTreeItemState> =
+      persistedPaths.length === 0
+        ? new Map(defaultStateEntries)
+        : new Map(
+            persistedPaths.map((pathString) => [
+              pathString,
+              { open: viewState.get(navTreeOpenAspect, pathString).open, current: false },
+            ]),
+          );
 
     // Per-path atom family for fine-grained reactivity.
     // keepAlive prevents atoms from being garbage collected when components unmount,
@@ -77,10 +74,11 @@ export default Capability.makeModule(
       const newValue = { ...currentValue, [key]: next };
 
       registry.set(atom, newValue);
-
-      if (!(key === 'open' && isTopLevelPath(path))) {
-        backingState.set(pathString, newValue);
-        localStorage.setItem(KEY, JSON.stringify(Array.from(backingState.entries())));
+      // Track every touched path so the layout subscription can find it; only `open` is durable, and
+      // top-level workspace paths are excluded (their expansion is not part of the tree model).
+      backingState.set(pathString, newValue);
+      if (key === 'open' && !isTopLevelPath(path)) {
+        viewState.set(navTreeOpenAspect, pathString, { open: next });
       }
     };
 

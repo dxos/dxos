@@ -2,7 +2,7 @@
   "name": "@dxos/assistant-evals",
   "version": "0.10.0",
   "private": true,
-  "description": "Evalite-based evaluations for the DXOS assistant.",
+  "description": "Cross-plugin assistant evaluations: evalite-scored evals graded against real DB/tool effects.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -27,18 +27,23 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@effect/ai": "catalog:"
   },
   "devDependencies": {
     "@dxos/vite-plugin-import-source": "workspace:*",

@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Collection, Obj } from '@dxos/echo';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { PresenterOperation } from '#types';
@@ -44,7 +44,7 @@ export default Capability.makeModule(
 
         return Effect.succeed([
           AppNode.makeCompanion({
-            id: linkedSegment('presenter'),
+            id: Attention.linkedSegment('presenter'),
             label: 'Presenter',
             icon: 'ph--presentation--regular',
             data: { type: meta.profile.key, object },

@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = Ro
       invariant(template, `Unknown routine template: ${templateId}`);
 
       // The scaffold returns a fully-wired in-memory routine graph (runnable, owned instructions, and trigger
-      // all parented and bound by `Routine.make`); AddObject's `Database.add` cascades the whole graph.
+      // all parented and bound by `makeRoutine`); AddObject's `Database.add` cascades the whole graph.
       const draft = yield* template
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));

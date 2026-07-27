@@ -28,7 +28,9 @@ message QueryRequest {
 
 message Message {
   dxos.edge.messenger.Peer author = 1;
-  dxos.edge.messenger.Peer recipient = 2;
+  // Point-to-point recipient. Present iff `tags` is empty; a broadcast message leaves this unset and
+  // is routed by tag intersection instead (DX-1125).
+  optional dxos.edge.messenger.Peer recipient = 2;
   google.protobuf.Any payload = 3;
   // Broadcast tags (DX-1125). On a broadcast message the recipient is absent and delivery is by tag
   // intersection; on a point-to-point message this is empty and `recipient` is set.

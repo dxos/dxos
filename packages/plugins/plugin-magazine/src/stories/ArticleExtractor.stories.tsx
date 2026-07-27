@@ -70,7 +70,7 @@ const DefaultStory = () => {
                   void handleFetch();
                 }
               }}
-              classNames='is-full min-is-[24rem]'
+              classNames='w-full min-w-[24rem]'
             />
           </Input.Root>
           <Select.Root

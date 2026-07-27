@@ -8,7 +8,7 @@ import { messengerTests } from './messenger.blueprint-test';
 import { MemorySignalManager, MemorySignalManagerContext } from './signal-manager';
 
 // TODO(mykola): Use EDGE signal server.
-describe('Messenger with WebsocketSignalManager', () => {
+describe('Messenger with MemorySignalManager', () => {
   let context: MemorySignalManagerContext;
   beforeEach(async () => {
     context = new MemorySignalManagerContext();

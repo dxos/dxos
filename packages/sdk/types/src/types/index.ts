@@ -10,6 +10,7 @@ import * as ContentBlock from './ContentBlock';
 import * as DraftMessage from './DraftMessage';
 import * as Employer from './Employer';
 import * as Event from './Event';
+import * as ExternalProject from './ExternalProject';
 import * as File from './File';
 import * as Geo from './Geo';
 import * as HasConnection from './HasConnection';
@@ -19,7 +20,6 @@ import * as Message from './Message';
 import * as Organization from './Organization';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
-import * as Project from './Project';
 import * as Provider from './Provider';
 import * as Task from './Task';
 import * as Thread from './Thread';
@@ -51,6 +51,7 @@ export {
   DraftMessage,
   Employer,
   Event,
+  ExternalProject,
   File,
   Geo,
   HasConnection,
@@ -60,7 +61,6 @@ export {
   Organization,
   Person,
   Pipeline,
-  Project,
   Provider,
   Task,
   Thread,

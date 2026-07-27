@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import { Atom, Registry } from '@effect-atom/atom';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
@@ -31,7 +31,14 @@ import { TriggerStateStore } from './triggers/trigger-state-store';
  * The monitor itself is built per-test via {@link withMonitor} so that its initial
  * state derivation observes triggers seeded by the test body.
  */
-const TestLayer = (options: { timeControl?: 'natural' | 'manual'; startingTime?: Date } = {}) =>
+const TestLayer = (
+  options: {
+    timeControl?: 'natural' | 'manual';
+    startingTime?: Date;
+    /** Stands in for `EdgeTriggerManager`; defaults to the local-only no-op. */
+    remote?: Layer.Layer<RemoteTriggerManager.Service, never, Registry.AtomRegistry>;
+  } = {},
+) =>
   Layer.empty.pipe(
     Layer.provideMerge(
       TriggerDispatcher.layer({
@@ -40,7 +47,7 @@ const TestLayer = (options: { timeControl?: 'natural' | 'manual'; startingTime?:
       }),
     ),
     Layer.provide(TriggerStateStore.layerMemory),
-    Layer.provideMerge(RemoteTriggerManager.layerNoop),
+    Layer.provideMerge(options.remote ?? RemoteTriggerManager.layerNoop),
     Layer.provideMerge(AiService.notAvailable),
     Layer.provideMerge(credentialsLayerConfig([])),
     Layer.provideMerge(FetchHttpClient.layer),
@@ -56,6 +63,27 @@ const TestLayer = (options: { timeControl?: 'natural' | 'manual'; startingTime?:
     Layer.provideMerge(Registry.layer),
     Layer.provideMerge(Trace.layerNoop),
   );
+
+/** Trigger ids the remote manager was handed — reset per test that uses {@link recordingRemoteManager}. */
+const remoteInvocations: string[] = [];
+
+/**
+ * Stands in for `EdgeTriggerManager` (in `@dxos/edge-compute`, which cannot be imported here without a
+ * dependency cycle), recording what the monitor routes to EDGE instead of POSTing it.
+ */
+const recordingRemoteManager: Layer.Layer<RemoteTriggerManager.Service, never, Registry.AtomRegistry> = Layer.effect(
+  RemoteTriggerManager.Service,
+  Effect.gen(function* () {
+    const registry = yield* Registry.AtomRegistry;
+    const triggers = Atom.make<readonly Trigger.State[]>([]);
+    registry.mount(triggers);
+    remoteInvocations.length = 0;
+    return {
+      triggers,
+      invokeTrigger: ({ trigger }) => Effect.sync(() => void remoteInvocations.push(trigger.id)),
+    } satisfies RemoteTriggerManager.Manager;
+  }),
+);
 
 /**
  * Store an operation definition in the in-process registry so a trigger's runnable ref resolves.
@@ -223,6 +251,39 @@ describe('TriggerMonitor', () => {
         }),
       );
     }, Effect.provide(TestLayer())),
+  );
+
+  it.effect(
+    'invokeTrigger sends a remote trigger to the remote manager, not the local dispatcher',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          remote: true,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const registry = yield* Registry.AtomRegistry;
+        yield* withMonitor((monitor) =>
+          Effect.gen(function* () {
+            yield* monitor.invokeTrigger({
+              trigger,
+              event: { data: { tick: 7 } } satisfies TriggerEvent.DirectEvent,
+            });
+
+            // `EdgeTriggerManager` implements this seam as a `forceRunCronTrigger` POST, so reaching it
+            // is what sends the run to EDGE; the local dispatcher must not have run the operation.
+            expect(remoteInvocations).toEqual([trigger.id]);
+            expect(registry.get(dispatcher.state).invocations).toEqual([]);
+          }),
+        );
+      },
+      Effect.provide(TestLayer({ remote: recordingRemoteManager })),
+    ),
   );
 
   it.effect(

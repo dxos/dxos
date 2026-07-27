@@ -104,6 +104,7 @@
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "catalog:",
     "@tanstack/react-virtual": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

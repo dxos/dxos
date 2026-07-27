@@ -78,7 +78,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
   Process.make(
     {
       key: AGENT_PROCESS_KEY,
-      input: Schema.String,
+      // String member keeps queue entries persisted before the block-array widening decodable.
+      input: Schema.Union(Schema.String, Schema.Array(ContentBlock.Any)),
       output: Schema.Void,
       services: [
         Database.Service,
@@ -195,9 +196,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               alarmManager.reconcile(true);
             }),
           }),
-          onInput: Effect.fnUntraced(function* (prompt: string) {
-            log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
-            inputQueue.push({ _tag: 'prompt', content: [ContentBlock.Text.make({ text: prompt })] });
+          onInput: Effect.fnUntraced(function* (prompt: string | readonly ContentBlock.Any[]) {
+            log('agent onInput received', { backlog: inputQueue.length });
+            const content = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
+            inputQueue.push({ _tag: 'prompt', content });
             log('agent onInput persisting queue', { depth: inputQueue.length });
             yield* AgentEventsCell.set(inputQueue);
             log('agent onInput persisted', { depth: inputQueue.length });

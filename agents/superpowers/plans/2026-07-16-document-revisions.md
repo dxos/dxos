@@ -8,7 +8,7 @@
 
 **Tech Stack:** ECHO (`Obj.version`, `checkoutVersion`, `Text.update`), automerge heads, `diff` (jsdiff, already in catalog), `@codemirror/merge` (new catalog dep), Composer plugin surfaces (companion tab + ObjectProperties section), Effect Operations.
 
-**Spec:** `packages/plugins/plugin-markdown/DESIGN.md` (committed). Read it first.
+**Spec:** `packages/plugins/plugin-comments/DESIGN.md` (committed). Read it first.
 
 ---
 
@@ -863,9 +863,7 @@ export const GetHistory = Operation.make({
 
 ```ts
 export type VersionSelection =
-  | { kind: 'current' }
-  | { kind: 'branch'; branchId: string }
-  | { kind: 'checkpoint'; versionId: string };
+  { kind: 'current' } | { kind: 'branch'; branchId: string } | { kind: 'checkpoint'; versionId: string };
 
 export type CompareSelection = { versionId?: string; branchId?: string } | undefined;
 

@@ -5,13 +5,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Thread } from '@dxos/pipeline-email';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { BrainCapabilities } from '@dxos/plugin-brain/types';
-import { useQuery } from '@dxos/react-client/echo';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
 
 import { type EchoObjectItem, OutputPanel } from '../components';
@@ -46,7 +46,15 @@ const useFacts = (spaceId: string): RDF.Fact[] => {
  * RIGHT: the pipeline output. Facts come from Brain's per-space `FactStore` (reactive); stats/details
  * are the run's shared state; the live ECHO objects list is space-derived (Person/Organization/Thread).
  */
-export const OutputModule = ({ space }: ModuleProps) => {
+export const OutputModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <OutputModuleContainer space={space} />;
+};
+
+const OutputModuleContainer = ({ space }: { space: Space }) => {
   const { stats, details } = usePipelineStory();
   const facts = useFacts(space.id);
   const organizations = useQuery(space.db, Query.type(Organization.Organization));

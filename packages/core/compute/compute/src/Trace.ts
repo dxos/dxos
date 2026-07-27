@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Trigger from './types/Trigger';
@@ -329,15 +330,33 @@ export const encodeTraceMessage = (message: Pick<MessageData, 'meta' | 'isEpheme
   );
 
 /**
- * Decode a broadcast trace message back into a {@link Message} object (DX-1125).
+ * Decode a broadcast trace message back into a {@link Message} object (DX-1125). The wire payload
+ * drops both ref meta fields (see {@link encodeMetaForWire}), so `tags` — the broadcast envelope's
+ * tag list — is required to restore them: `trigger` addresses work for cancellation, and
+ * `conversation` is what {@link matchesFilter} compares, so a subscription filtered by it matches
+ * nothing without this. Restored refs are address-only (`.uri`); they are never resolved.
  */
-export const decodeTraceMessage = (bytes: Uint8Array): Message => {
+export const decodeTraceMessage = (bytes: Uint8Array, tags?: readonly string[]): Message => {
   const parsed = JSON.parse(new TextDecoder().decode(bytes)) as Partial<MessageData>;
+  const meta = parsed.meta ?? {};
+  const conversation = meta.conversation ?? refFromTags<Obj.Unknown>(tags, 'conversation:');
+  const trigger = meta.trigger ?? refFromTags<Trigger.Trigger>(tags, 'trigger:');
   return Obj.make(Message, {
-    meta: parsed.meta ?? {},
+    meta: {
+      ...meta,
+      ...(conversation ? { conversation } : {}),
+      ...(trigger ? { trigger } : {}),
+    },
     isEphemeral: parsed.isEphemeral ?? true,
     events: parsed.events ?? [],
   });
+};
+
+/** The ref carried on a broadcast envelope's `<prefix><uri>` tag, when present and parseable. */
+const refFromTags = <T>(tags: readonly string[] | undefined, prefix: string): Ref.Ref<T> | undefined => {
+  const uri = tags?.find((tag) => tag.startsWith(prefix))?.slice(prefix.length);
+  const eid = uri !== undefined ? EID.tryParse(uri) : undefined;
+  return eid !== undefined ? Ref.fromURI(eid) : undefined;
 };
 
 /**

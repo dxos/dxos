@@ -24,6 +24,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../ui-theme"
+    },
+    {
       "path": "../ui-types"
     }
   ]

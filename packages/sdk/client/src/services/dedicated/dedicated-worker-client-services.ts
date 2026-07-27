@@ -29,6 +29,8 @@ export interface DedicatedWorkerClientServicesOptions {
   createCoordinator: () => MaybePromise<WorkerProtocol.WorkerCoordinator>;
   config?: Config;
   leaderTimeouts?: LeaderTimeoutOptions;
+  /** See {@link Client.Options.onPersistentFailure}. */
+  onPersistentFailure?: Client.Options['onPersistentFailure'];
 }
 
 /**
@@ -52,6 +54,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       leaderLockKey: LEADER_LOCK_KEY,
       config: options.config?.values,
       leaderTimeouts: options.leaderTimeouts,
+      onPersistentFailure: options.onPersistentFailure,
       onConnect: async ({ clientToWorker, workerToClient }) => {
         const config = options.config ?? new Config();
         const origin = typeof location !== 'undefined' ? location.origin : 'unknown';

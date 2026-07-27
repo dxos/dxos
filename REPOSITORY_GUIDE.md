@@ -70,11 +70,12 @@ pnpm watch
 ## Run commands
 
 Examples of ways to start up different workloads in dev mode:
-| Command | Description |
-| :-- | :-- |
-| `moon run tasks-app:serve` | Runs the `tasks-app` in dev mode |
-| `moon run composer-app:serve` | Runs the `composer-app` in dev mode |
-| `moon run docs:serve` | Runs the `docs` astro app in dev mode |
+
+| Command                       | Description                           |
+| :---------------------------- | :------------------------------------ |
+| `moon run tasks-app:serve`    | Runs the `tasks-app` in dev mode      |
+| `moon run composer-app:serve` | Runs the `composer-app` in dev mode   |
+| `moon run docs:serve`         | Runs the `docs` astro app in dev mode |
 
 Use `--quiet` to suppress progress output (recommended for LLMs to keep context fresh).
 Use `--on-failure=continue` to continue running other unrelated tasks even if some fail.
@@ -82,12 +83,13 @@ Use `--on-failure=continue` to continue running other unrelated tasks even if so
 ## Test commands
 
 Examples of ways to run different test workloads:
-| Command | Description |
-| :-- | :-- |
-| `moon run client-services:test` | Runs the unit tests for `client-services` |
-| `moon run echo-db:test-watch` | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
-| `moon run todomvc:e2e` | Runs the playwright tests for `halo-app` |
-| `moon run todomvc --debug` | Runs tests with playwright inspector |
+
+| Command                         | Description                                                                              |
+| :------------------------------ | :--------------------------------------------------------------------------------------- |
+| `moon run client-services:test` | Runs the unit tests for `client-services`                                                |
+| `moon run echo-db:test-watch`   | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
+| `moon run todomvc:e2e`          | Runs the playwright tests for `halo-app`                                                 |
+| `moon run todomvc --debug`      | Runs tests with playwright inspector                                                     |
 
 ## Storybooks
 
@@ -300,6 +302,40 @@ Examples:
 ## CI
 
 See [CI docs](./.github/workflows/README.md).
+
+## Trunk (flaky test quarantining / CI Autopilot)
+
+CI already uploads test results to [Trunk](https://trunk.io), which detects
+flaky tests and quarantines (auto-skips) them instead of letting them block
+merges. The org-wide Trunk MCP server ("CI Autopilot") is already configured
+for this repo — it just needs a one-time per-user authentication:
+
+```bash
+claude mcp add --transport http trunk https://mcp.trunk.io/mcp --scope project
+```
+
+Then run `claude .`, run `/mcp`, select `trunk`, and hit Enter to authenticate
+with your own Trunk account.
+
+For how an agent should use the server's tools (investigating a CI failure,
+looking up a flaky test), see the `trunk-quarantine` agent skill
+(`.agents/skills/trunk-quarantine/SKILL.md`).
+
+### Manually quarantining a test
+
+Quarantining is a dashboard-only action — there's no CLI or config-file way to
+do it, and it's gated by each repo's **Manual Quarantine Permissions** setting
+(**Settings → Repositories → [repo] → Flaky Tests**), so admins may need to do
+this step.
+
+- **From a test's details page:** click **Quarantine**, choose **Always** in
+  the quarantine-status control, add a required comment, then **Save**.
+- **From the Flaky Tests table:** open the row's **⋮** actions menu and select
+  **Quarantine test**.
+
+To reverse it, use the same controls: **Remove Quarantine** on the details
+page, or **Unquarantine test** from the table's actions menu. Every override
+is logged in the test's **Events** tab (author, timestamp, comment).
 
 ## Patching third-party repos
 

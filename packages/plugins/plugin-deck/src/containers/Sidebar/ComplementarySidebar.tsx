@@ -8,7 +8,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, type Label, Main, Panel, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { iconSize, mx } from '@dxos/ui-theme';
 
@@ -35,8 +35,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
 
   const companions = useDeckCompanions();
-  const activeCompanion = companions.find((companion) => getLinkedVariant(companion.id) === current);
-  const activeId = activeCompanion && getLinkedVariant(activeCompanion.id);
+  const activeCompanion = companions.find((companion) => Attention.getLinkedVariant(companion.id) === current);
+  const activeId = activeCompanion && Attention.getLinkedVariant(activeCompanion.id);
   const [internalValue, setInternalValue] = useState(activeId);
 
   useEffect(() => {
@@ -93,25 +93,25 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
             {companions.map((companion) => (
-              <Tabs.Tab key={getLinkedVariant(companion.id)} value={getLinkedVariant(companion.id)} asChild>
-                <IconButton
-                  classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-                  label={toLocalizedString(companion.properties.label, t)}
-                  icon={companion.properties.icon}
-                  iconOnly
-                  tooltipSide='left'
-                  data-value={getLinkedVariant(companion.id)}
-                  {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
-                  variant={
-                    activeId === getLinkedVariant(companion.id)
-                      ? state.complementarySidebarState === 'expanded'
-                        ? 'primary'
-                        : 'ghost'
+              <Tabs.IconButton
+                key={Attention.getLinkedVariant(companion.id)}
+                value={Attention.getLinkedVariant(companion.id)}
+                classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
+                label={toLocalizedString(companion.properties.label, t)}
+                icon={companion.properties.icon}
+                iconOnly
+                tooltipSide='left'
+                data-value={Attention.getLinkedVariant(companion.id)}
+                {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
+                variant={
+                  activeId === Attention.getLinkedVariant(companion.id)
+                    ? state.complementarySidebarState === 'expanded'
+                      ? 'primary'
                       : 'ghost'
-                  }
-                  onClick={handleTabClick}
-                />
-              </Tabs.Tab>
+                    : 'ghost'
+                }
+                onClick={handleTabClick}
+              />
             ))}
           </Tabs.Tablist>
           <div
@@ -129,8 +129,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         {activeId &&
           companions.map((companion) => (
             <Tabs.Panel
-              key={getLinkedVariant(companion.id)}
-              value={getLinkedVariant(companion.id)}
+              key={Attention.getLinkedVariant(companion.id)}
+              value={Attention.getLinkedVariant(companion.id)}
               classNames={[
                 'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
                 'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
@@ -157,7 +157,7 @@ type ComplementarySidebarPanelProps = {
 const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
 
-  if (getLinkedVariant(companion.id) !== activeId && !data) {
+  if (Attention.getLinkedVariant(companion.id) !== activeId && !data) {
     return null;
   }
 
@@ -171,7 +171,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
             icon={companion.properties.icon}
             iconOnly
             tooltipSide='left'
-            data-value={getLinkedVariant(companion.id)}
+            data-value={Attention.getLinkedVariant(companion.id)}
             variant='default'
           />
           <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
@@ -179,7 +179,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
       </Panel.Toolbar>
       <Panel.Content classNames='bg-r1-surface'>
         <Surface.Surface
-          type={AppSurface.deckCompanion(getLinkedVariant(companion.id))}
+          type={AppSurface.deckCompanion(Attention.getLinkedVariant(companion.id))}
           data={data}
           fallback={PlankErrorFallback}
           placeholder={<PlankLoading />}

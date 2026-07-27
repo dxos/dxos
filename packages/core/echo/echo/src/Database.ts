@@ -246,6 +246,9 @@ export interface Database extends Queryable {
   /** Merge a branch back into main across the subtree, then switch back to main. */
   mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void>;
 
+  /** Fold main's changes into a branch across the subtree (the reverse of {@link mergeBranch}). */
+  syncBranch(rootObjectId: string, name: string): Promise<void>;
+
   /** Delete a branch (its documents lose their sync reference). Cannot delete `'main'`. */
   deleteBranch(rootObjectId: string, name: string): void;
 

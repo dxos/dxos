@@ -297,7 +297,7 @@ const FeedPaginationStory = () => {
                   min={1}
                   value={addCount}
                   onChange={(event) => setAddCount(event.target.valueAsNumber || 0)}
-                  classNames='is-full'
+                  classNames='w-full'
                 />
               </Input.Root>
             </div>

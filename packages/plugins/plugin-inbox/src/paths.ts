@@ -3,7 +3,7 @@
 //
 
 import { Paths } from '@dxos/app-toolkit';
-import { linkedSegment } from '@dxos/react-ui-attention/types';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { Calendar } from '#types';
 
@@ -53,7 +53,7 @@ export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string
  * The `~` prefix signals attention propagation to the parent node.
  */
 export const getFeedObjectPath = (parentPath: string, childId: string): string =>
-  `${parentPath}/${linkedSegment(childId)}`;
+  `${parentPath}/${Attention.linkedSegment(childId)}`;
 
 /** Canonical qualified path to a message within a mailbox. */
 export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>

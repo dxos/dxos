@@ -54,6 +54,7 @@ export {
   matchKeys,
   mergeBranch,
   switchBranch,
+  syncBranch,
 } from './echo-handler';
 export * from './hypergraph';
 export * from './proxy-db';

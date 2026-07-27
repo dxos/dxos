@@ -442,7 +442,7 @@ const ReactiveBufferedStory = () => {
   return (
     <Tooltip.Provider>
       <TestLayout json={{ source }}>
-        <div className='flex flex-col bs-full'>
+        <div className='flex flex-col h-full'>
           <Toolbar.Root>
             <Toolbar.IconButton
               icon={running ? 'ph--pause--regular' : 'ph--play--regular'}

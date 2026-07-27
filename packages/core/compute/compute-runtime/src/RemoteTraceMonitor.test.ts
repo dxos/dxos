@@ -7,15 +7,19 @@ import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { Trace } from '@dxos/compute';
+import { Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { EID } from '@dxos/keys';
 
 import * as RemoteTraceMonitor from './RemoteTraceMonitor';
 
 // DX-1125: the swarm-backed remote monitor derives the coarse subscription tag from the filter,
 // decodes each broadcast payload, and re-applies the exact filter client-side.
 
-const encode = (meta: Trace.Meta, type: string): Uint8Array =>
-  Trace.encodeTraceMessage({ meta, isEphemeral: true, events: [{ timestamp: 0, type, data: {} }] });
+const broadcast = (meta: Trace.Meta, type: string): RemoteTraceMonitor.SwarmTraceBroadcast => {
+  const message = { meta, isEphemeral: true, events: [{ timestamp: 0, type, data: {} }] };
+  return { payload: Trace.encodeTraceMessage(message), tags: Trace.messageToTags(message) };
+};
 
 describe('createSwarmRemoteTraceMonitor', () => {
   test('subscribes with the coarse tag and re-applies the exact filter', async ({ expect }) => {
@@ -24,9 +28,9 @@ describe('createSwarmRemoteTraceMonitor', () => {
       subscribe: (tags) => {
         requestedTags.push(tags);
         return Stream.fromIterable([
-          encode({ pid: 'p1', space: 'SPACE1' }, 'status.update'), // matches
-          encode({ pid: 'p1', space: 'SPACE1' }, 'operation.end'), // wrong event type
-          encode({ pid: 'p2', space: 'SPACE1' }, 'status.update'), // wrong pid
+          broadcast({ pid: 'p1', space: 'SPACE1' }, 'status.update'), // matches
+          broadcast({ pid: 'p1', space: 'SPACE1' }, 'operation.end'), // wrong event type
+          broadcast({ pid: 'p2', space: 'SPACE1' }, 'status.update'), // wrong pid
         ]);
       },
     });
@@ -54,5 +58,22 @@ describe('createSwarmRemoteTraceMonitor', () => {
     });
     await EffectEx.runPromise(Stream.runCollect(monitor.subscribeToTraceMessages({})));
     expect(requestedTags).toEqual([[]]);
+  });
+
+  // The wire payload drops ref meta fields; the envelope tags must restore `meta.trigger` through
+  // this seam or downstream cancel addressing silently loses its target (the mailbox-sync cancel bug).
+  test('restores meta.trigger from the broadcast envelope tags', async ({ expect }) => {
+    const trigger = Ref.fromURI(EID.make({ entityId: 'TRIGGER1' }));
+    const monitor = RemoteTraceMonitor.createSwarmRemoteTraceMonitor({
+      subscribe: () => Stream.fromIterable([broadcast({ pid: 'p1', space: 'SPACE1', trigger }, 'status.update')]),
+    });
+
+    const collected = await EffectEx.runPromise(
+      Stream.runCollect(monitor.subscribeToTraceMessages({ type: 'status.update' })),
+    );
+    const messages = Chunk.toReadonlyArray(collected);
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0].meta.trigger?.uri.toString()).toBe(trigger.uri.toString());
   });
 });

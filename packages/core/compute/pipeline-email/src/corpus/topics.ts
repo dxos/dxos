@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Topic } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Project } from '@dxos/compute';
 
 import { type Thread } from '../types';
 import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts';
@@ -243,10 +242,10 @@ export const summarizeTopics = async (
   );
 };
 
-/** Materialize drafts as canonical Topic ECHO objects (done last; drafts stay freely mutable). */
-export const materializeTopics = (drafts: readonly TopicDraft[]): Topic.Topic[] =>
+/** Materialize drafts as canonical Project ECHO objects (done last; drafts stay freely mutable). */
+export const materializeTopics = (drafts: readonly TopicDraft[]): Project.Project[] =>
   drafts.map((draft) =>
-    Obj.make(Topic.Topic, {
+    Project.make({
       name: draft.name,
       // summary: draft.summary,
       // threadIds: [...draft.threadIds],

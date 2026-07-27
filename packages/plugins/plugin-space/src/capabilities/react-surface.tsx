@@ -31,7 +31,6 @@ import {
   JoinDialog,
   MembersContainer,
   ObjectCardStack,
-  ObjectHistory,
   RecordArticle,
   RelatedArticle,
   RenamePopover,
@@ -155,16 +154,6 @@ export default Capability.makeModule(
           AppSurface.companion(AppSurface.Article),
         ),
         component: ({ data, role }) => <RelatedArticle role={role} companionTo={data.companionTo} />,
-      }),
-      Surface.create({
-        id: 'companion.objectHistory',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'history'),
-          AppSurface.companion(AppSurface.Article),
-        ),
-        component: ({ data, role, ref }) => (
-          <ObjectHistory role={role} attendableId={data.attendableId} subject={data.companionTo} ref={ref} />
-        ),
       }),
       Surface.create({
         id: 'spaceSettingsProperties',

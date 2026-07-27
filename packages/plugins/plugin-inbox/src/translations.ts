@@ -4,6 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as cardTranslations } from '@dxos/react-ui-card/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { Message } from '@dxos/types';
 
@@ -67,13 +68,6 @@ export const translations = [
         'sync-calendar.label': 'Sync calendar',
         'empty-calendar.message': 'Calendar empty',
 
-        'sync-contacts.label': 'Sync contacts',
-        'sync-contacts-error.title': 'Failed to sync contacts',
-        'sync-contacts-success.title': 'Contacts sync complete',
-
-        'show-contact.label': 'Show contact',
-        'create-contact.label': 'Create contact',
-        'remove-attendee.label': 'Remove attendee',
         'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
         'mailbox-account.label': 'Account',
@@ -169,6 +163,10 @@ export const translations = [
         'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 
+        'draft-to.label': 'To',
+        'draft-to.placeholder': 'Recipients',
+        'draft-cc.label': 'Cc',
+        'draft-bcc.label': 'Bcc',
         'draft-subject.label': 'Subject',
         'draft-subject.placeholder': 'Message subject',
         'draft-body.label': 'Body',
@@ -180,5 +178,6 @@ export const translations = [
       },
     },
   },
+  ...cardTranslations,
   ...componentsTranslations,
 ] as const satisfies Resource[];

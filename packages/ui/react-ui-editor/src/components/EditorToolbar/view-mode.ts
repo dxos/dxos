@@ -4,20 +4,47 @@
 
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
+import { type Label } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
 import { type EditorToolbarState } from './types';
 
-const viewModes = {
-  preview: 'ph--eye--regular',
-  source: 'ph--pencil-simple--regular',
-  readonly: 'ph--pencil-slash--regular',
+/**
+ * One entry in the editor's view-mode dropdown. A built-in entry references an {@link EditorViewMode}
+ * by `id` and relies on the defaults (label `view-mode.<id>.label`, checked when it is the active view
+ * mode, select via `onViewModeChange`). A contributed entry (e.g. a review "Suggesting" mode) supplies
+ * its own `label`, `checked`, and `onSelect` so it can drive state other than the editor view mode.
+ */
+export type ViewModeItem = {
+  id: string;
+  icon: string;
+  label?: Label;
+  checked?: boolean;
+  onSelect?: () => void;
 };
 
-/** Add view mode actions to the builder. */
+/**
+ * The built-in view modes: preview (rendered), source (raw edit), readonly (non-editable source). Typed
+ * so each `id` is an {@link EditorViewMode}, letting callers pass `item.id` to `onViewModeChange` without a cast.
+ */
+export const defaultViewModeItems: Array<ViewModeItem & { id: EditorViewMode }> = [
+  { id: 'preview', icon: 'ph--eye--regular' },
+  { id: 'source', icon: 'ph--pencil-simple--regular' },
+  { id: 'readonly', icon: 'ph--pencil-slash--regular' },
+];
+
+/**
+ * Add view mode actions to the builder. `items` defaults to the three built-in editor view modes;
+ * callers pass an extended list to surface contributed modes (see {@link ViewModeItem}) in the same
+ * single-select dropdown. The trigger tracks the checked item (via the group's `applyActive`).
+ */
 export const addViewMode =
-  (state: EditorToolbarState, onViewModeChange: (mode: EditorViewMode) => void): ActionGroupBuilderFn =>
+  (
+    state: EditorToolbarState,
+    onViewModeChange: (mode: EditorViewMode) => void,
+    items: ViewModeItem[] = defaultViewModeItems,
+  ): ActionGroupBuilderFn =>
   (builder) => {
     const value = state.viewMode ?? 'source';
     builder.group(
@@ -32,16 +59,18 @@ export const addViewMode =
         value,
       } as ToolbarMenuActionGroupProperties,
       (group) => {
-        for (const [viewMode, icon] of Object.entries(viewModes)) {
-          const checked = viewMode === value;
+        for (const item of items) {
+          // A contributed entry may drive non-view-mode state, so honour its explicit `checked`;
+          // a built-in entry is checked when it matches the active editor view mode.
+          const checked = item.checked ?? item.id === value;
           group.action(
-            `view-mode--${viewMode}`,
+            `view-mode--${item.id}`,
             {
-              label: [`view-mode.${viewMode}.label`, { ns: translationKey }],
+              label: item.label ?? [`view-mode.${item.id}.label`, { ns: translationKey }],
               checked,
-              icon,
+              icon: item.icon,
             },
-            () => onViewModeChange(viewMode as EditorViewMode),
+            () => (item.onSelect ? item.onSelect() : onViewModeChange(item.id as EditorViewMode)),
           );
         }
       },

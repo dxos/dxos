@@ -208,7 +208,7 @@ export default Capability.makeModule(
         // binds the connection itself; synced `Person` objects land directly in the
         // space keyed by foreign id.
         getSyncTargets: InboxOperation.GetGoogleContactGroups,
-        sync: InboxOperation.SyncContacts,
+        sync: InboxOperation.GoogleContactsSync,
         onTokenCreated,
         testConnection: testGoogleConnection,
       },

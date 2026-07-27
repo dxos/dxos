@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
 import { useCompanions, useDrawerActions, useSimpleLayoutState } from '#hooks';
@@ -87,7 +87,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
 
     // Try to find companion matching the preferred variant.
     if (preferredVariant) {
-      const preferred = companions.find((c) => getLinkedVariant(c.id) === preferredVariant);
+      const preferred = companions.find((c) => Attention.getLinkedVariant(c.id) === preferredVariant);
       if (preferred) {
         return preferred;
       }
@@ -98,7 +98,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
   }, [companions, preferredVariant]);
 
   const companionId = selectedCompanion?.id;
-  const variant = companionId ? getLinkedVariant(companionId) : undefined;
+  const variant = companionId ? Attention.getLinkedVariant(companionId) : undefined;
 
   return { selectedCompanion, companionId, variant };
 };

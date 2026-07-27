@@ -5,10 +5,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Operation } from '@dxos/compute';
-import { JsonView, PanelContainer, Placeholder, Searchbar } from '@dxos/devtools';
+import { JsonView, Placeholder, Searchbar } from '@dxos/devtools';
 import { Entity, Format, Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
@@ -130,22 +130,23 @@ export const RegistryPanel = () => {
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
-      }
-    >
-      <div className={mx('h-full grid grid-cols-[2fr_1fr] overflow-hidden')}>
-        <div className={mx('flex flex-col min-h-0 overflow-hidden')}>
-          <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClicked} />
+      </Panel.Toolbar>
+      <Panel.Content>
+        <div className={mx('h-full grid grid-cols-[2fr_1fr] overflow-hidden')}>
+          <div className={mx('flex flex-col min-h-0 overflow-hidden')}>
+            <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClicked} />
+          </div>
+          <div className={mx('min-h-0 h-full overflow-auto border-s border-separator text-sm')}>
+            {detailJson ? <JsonView data={detailJson} /> : <Placeholder label='Details' />}
+          </div>
         </div>
-        <div className={mx('min-h-0 h-full overflow-auto border-s border-separator text-sm')}>
-          {detailJson ? <JsonView data={detailJson} /> : <Placeholder label='Details' />}
-        </div>
-      </div>
-    </PanelContainer>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

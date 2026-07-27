@@ -162,8 +162,8 @@ const TranscriptTabs = ({
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>
-              <Tabs.Tab value='transcript'>{t('transcript.tab.label')}</Tabs.Tab>
-              <Tabs.Tab value='summary'>{t('summary.tab.label')}</Tabs.Tab>
+              <Tabs.Button value='transcript'>{t('transcript.tab.label')}</Tabs.Button>
+              <Tabs.Button value='summary'>{t('summary.tab.label')}</Tabs.Button>
             </Tabs.Tablist>
             {tab === 'summary' && (
               <IconButton

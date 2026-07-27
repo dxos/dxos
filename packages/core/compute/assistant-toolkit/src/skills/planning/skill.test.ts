@@ -5,7 +5,7 @@
 import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { AssistantTestLayer, runMemoizedTests } from '@dxos/agent-runtime/testing';
 import { Operation, Process, Skill } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession } from '@dxos/compute/AgentService';
@@ -25,6 +25,8 @@ const TestLayer = AssistantTestLayer({
   types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Skill.Skill, Feed.Feed],
   skills: [PlanningSkill.make()],
 });
+
+// The plan-reminder cases replay a memoized LLM turn; gate them off the default `:test` path.
 
 describe('Planning skill', () => {
   // The hook fires the plan-reminder operation only while the plan has open tasks; cover that
@@ -47,7 +49,7 @@ describe('Planning skill', () => {
   // host on the agent's chat feed and invoking the operation against that conversation dispatches
   // over the process RPC loopback; the host staying live proves the read, the check, and the enqueue
   // resolved end-to-end without failing the process.
-  describe('plan-reminder hook (end-request, Tier B)', () => {
+  describe.skipIf(!runMemoizedTests())('plan-reminder hook (end-request, Tier B)', () => {
     it.scoped(
       'enqueues a continuation reminder when the plan has incomplete tasks',
       Effect.fnUntraced(

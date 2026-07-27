@@ -18,7 +18,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import {
   MemoryTransportFactory,
   type TransportFactory,
@@ -211,7 +211,9 @@ export class TestBuilder {
       }
 
       return {
-        signalManager: new WebsocketSignalManager(signals),
+        // KUBE `WebsocketSignalManager` was removed; use the shared in-memory context (peers in the
+        // same process connect, and the WebRTC/TCP transport still exercises real connections).
+        signalManager: new MemorySignalManager(this.signalManagerContext),
         transportFactory,
       };
     }

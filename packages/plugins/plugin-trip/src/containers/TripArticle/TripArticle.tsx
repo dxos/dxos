@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { MapInline } from '@dxos/plugin-map';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
@@ -97,7 +97,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
           void showItem({
             contextId: id,
             selectionId: action.segmentId,
-            companion: linkedSegment('segment'),
+            companion: Attention.linkedSegment('segment'),
             path: Paths.getObjectPathFromObject(subject),
           });
           break;
@@ -131,7 +131,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       void showItem({
         contextId: id,
         selectionId: segmentId,
-        companion: linkedSegment('segment'),
+        companion: Attention.linkedSegment('segment'),
         path: Paths.getObjectPathFromObject(subject),
       });
     },
@@ -265,7 +265,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         )}
       >
         {/* Row 1: calendar + segment stack. */}
-        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-bs-0 overflow-hidden'>
+        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-h-0 overflow-hidden'>
           <NaturalCalendar.Root>
             <Panel.Root className='hidden @3xl:block border-r border-subdued-separator'>
               <Panel.Toolbar asChild>

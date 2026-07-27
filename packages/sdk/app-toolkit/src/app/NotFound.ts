@@ -11,7 +11,7 @@ import { Graph, Node } from '@dxos/app-graph';
 import { Filter, Key, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { expandAttendableId } from '@dxos/react-ui-attention/types';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { AppCapabilities } from '../app-framework';
 import * as Paths from './Paths';
@@ -39,7 +39,7 @@ export type ExistenceChecker = (echoUri: EID.EID) => Effect.Effect<boolean>;
  * is called as a fallback to trigger resolvers.
  */
 export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): void => {
-  const prefixes = expandAttendableId(qualifiedId);
+  const prefixes = Attention.expandAttendableId(qualifiedId);
   for (const prefix of prefixes) {
     Graph.expand(graph, prefix, 'child');
     if (Option.isNone(Graph.getNode(graph, prefix))) {

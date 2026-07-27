@@ -4,7 +4,7 @@
 
 import { Collection, Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Event, Message, Organization, Person, Pipeline, Project, Task } from '@dxos/types';
+import { Event, ExternalProject, Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -89,16 +89,16 @@ export const translations = [
         'delete-object.label': 'Delete pipeline',
         'object-deleted.label': 'Pipeline deleted',
       },
-      [Type.getTypename(Project.Project)]: {
-        'typename.label': 'Project',
-        'typename.label_zero': 'Projects',
-        'typename.label_one': 'Project',
-        'typename.label_other': 'Projects',
-        'object-name.placeholder': 'New project',
-        'add-object.label': 'Add project',
-        'rename-object.label': 'Rename project',
-        'delete-object.label': 'Delete project',
-        'object-deleted.label': 'Project deleted',
+      [Type.getTypename(ExternalProject.ExternalProject)]: {
+        'typename.label': 'External project',
+        'typename.label_zero': 'External projects',
+        'typename.label_one': 'External project',
+        'typename.label_other': 'External projects',
+        'object-name.placeholder': 'New external project',
+        'add-object.label': 'Add external project',
+        'rename-object.label': 'Rename external project',
+        'delete-object.label': 'Delete external project',
+        'object-deleted.label': 'External project deleted',
       },
       [Type.getTypename(Task.Task)]: {
         'typename.label': 'Task',
@@ -243,17 +243,6 @@ export const translations = [
         'companion-related.label': 'Related',
         'companion-selected-objects.label': 'Selected',
         'field-deleted.label': 'Field deleted',
-
-        'history-panel.title': 'History',
-        'now.label': 'Now',
-        'branch-tip.label': 'Tip',
-        'create.label': 'Create',
-        'create-checkpoint.label': 'Create revision',
-        'create-branch.label': 'New branch',
-        'merge.label': 'Merge',
-        'discard-branch.label': 'Discard branch',
-        'revision-name.placeholder': 'Revision name (optional)',
-        'branch-name.placeholder': 'Branch name…',
 
         'members-panel.label': 'Members',
         'members-verbose.label': 'Manage space members',

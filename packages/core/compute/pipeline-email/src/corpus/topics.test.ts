@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Topic } from '@dxos/compute';
+import { Project } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
@@ -116,9 +116,9 @@ describe('topics', () => {
     // expect(degraded.map((draft) => draft.summary)).toEqual(drafts.map((draft) => draft.summary));
   });
 
-  test('materializeTopics produces Topic ECHO objects', ({ expect }) => {
+  test('materializeTopics produces Project ECHO objects', ({ expect }) => {
     const [first] = materializeTopics(clusterThreads(threads()));
-    expect(Obj.instanceOf(Topic.Topic, first)).toBe(true);
+    expect(Obj.instanceOf(Project.Project, first)).toBe(true);
     // expect(first.threadIds.length).toBeGreaterThan(0);
   });
 });

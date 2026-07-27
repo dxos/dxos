@@ -38,7 +38,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='is-64'>
+    <div className='w-64'>
       <ArtifactCard subject={artifact} />
     </div>
   );

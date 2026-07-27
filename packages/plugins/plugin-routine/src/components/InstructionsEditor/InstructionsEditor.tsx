@@ -18,7 +18,7 @@ const INSTRUCTIONS_SCHEMA = Type.getSchema(Instructions.Instructions);
 const INSTRUCTIONS_FIELDS = new Set(['text', 'skills', 'objects']);
 
 export type InstructionsEditorProps = {
-  db?: Database.Database;
+  db?: Database.Database; // TODO(burdon): Should not be optional if instructions are not.
   instructions: Instructions.Instructions;
   readonly?: boolean;
 };
