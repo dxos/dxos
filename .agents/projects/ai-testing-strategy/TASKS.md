@@ -3,7 +3,8 @@
 _Resume: **PR #12307 MERGED** (2026-07-23, `ba930200`). Phase 2's eval port is fully landed on `main`;
 the branch for the next step is `claude/ai-testing-strategy-next-3pkl86`, cut clean from `main`
 (`bf055c8b`). Everything below the "PR #12307" heading is history — the live backlog is: Phase 1
-item 1 (**G2 → C mocked unit tests**, 10 files still gated by `runMemoizedTests()`), Phase 1 item 2
+item 1 (**G2 → C operation tests driven through the app-framework harness — not mocks**, 10 files
+still gated by `runMemoizedTests()`), Phase 1 item 2
 (E context-assembly + F schema round-trip), Phase 2 item 4 (loosen `employerRoleCorrect` /
 `onlyWebSearchUsed`, then drop explicit skill naming — **needs a live `DX_ANTHROPIC_API_KEY`**),
 Phase 3 (G3 → D, then shrink the memoization layer), and the standalone `.agent/` deletion.
@@ -52,7 +53,8 @@ as primary coverage.
   — once those are ported or dropped, the package can be removed entirely.
 - **G2** — per-operation / skill: plugin-markdown create/update, plugin-magazine, plugin-assistant,
   assistant-toolkit run-instructions + database/memory/planning/agent skills, AiSummarizer.
-  **Convert to mocked C unit tests before deleting.**
+  **Convert to harness-driven operation (C) tests before deleting** — real plugins via
+  `createComposerTestApp` + `harness.invoke(Op, input)`, not mocks.
 - **G3** — agent-runtime session: functions, AgentService, request, xml-response.
   **Convert to scripted-model D tests before deleting.**
 
@@ -142,8 +144,33 @@ as primary coverage.
       (would be testing a nonexistent feature). Tool-error / malformed-output branches deferred.
 - [x] ~~Delete G1 (`@dxos/assistant-e2e`) + fixtures; replace with one scripted-model boot-smoke~~
       **Superseded** — see the revised-plan entry above; G1 is gated in place, not deleted.
-- [ ] Convert G2 → deterministic mocked C unit tests; golden-args fixture convention; delete each
-      G2 fixture once its unit test lands.
+- [ ] Convert G2 → deterministic operation (C) tests; golden-args fixture convention; delete each
+      G2 fixture once its unit test lands. **Framing corrected (direct guidance): these are not
+      "mocked unit tests" — they drive the _real_ operation through the app-framework test harness
+      and assert it behaves, which is what the memoized conversation tests were incidentally
+      covering.** The machinery already exists and is proven, just unused here:
+      `createComposerTestApp` (`@dxos/plugin-testing/harness`, wrapping `createTestApp` in
+      `@dxos/app-framework/testing`) boots the real plugins, and `harness.invoke(Op, input)` runs the
+      operation through the real `Capabilities.OperationInvoker` — no mocks, no model.
+      `plugin-sample/src/SamplePlugin.test.ts` is the canonical template (`CreateSampleItem` /
+      `Randomize` / `UpdateStatus`); `plugin-chess` does the same. **Nothing else in the repo calls
+      `harness.invoke`, and `OperationCapture` (`app-framework/testing/operationCapture.ts`, for
+      asserting which operations fired and stubbing side-effecting ones like `LayoutOperation.Open`)
+      has no callers at all** — an empty niche, not a design that needs inventing. Two parts:
+  - [ ] **Rescue** the model-free operation tests already written but skipped by a `describe`-level
+        gate. `plugin-markdown/src/operations/create.test.ts`'s "call a function to create a markdown
+        document" invokes `MarkdownOperation.Create` and asserts the resulting `Markdown.Document` +
+        content — no model on that path — yet `describe.skipIf(!runMemoizedTests())` wraps it
+        together with the agent-turn test. `skills/planning/skill.test.ts` shows the correct shape
+        (its `hasIncompleteTasks` predicate tests sit outside the gate; only the `plan-reminder`
+        describe, which runs a real stop/continue model check, is gated). Split per-test, not
+        per-file. Also audit `update.test.ts` (4 invokes / 9 agent turns) and
+        `skills/database/skill.test.ts` (4 / 34) the same way.
+  - [ ] **Build** harness operation tests for the G2 operations that today have only LLM coverage —
+        markdown Create/Update, magazine curate, the assistant-toolkit database/memory/agent skill
+        operations, AiSummarizer — then delete each memoized test as its replacement lands.
+        Caution: an `Operation.invoke` is not automatically model-free — `run-instructions` and
+        planning's `PlanReminder` reach a model _inside_ the handler, so they stay gated.
 - [ ] Context-assembly (E) + schema round-trip (F) tests. E: snapshot the assembled prompt
       (system + skill instructions + bound objects + tool descriptions) from `formatSystemPrompt` /
       `AiPreprocessor.preprocessPrompt` — pure function of inputs, no model; catches skill/instruction
