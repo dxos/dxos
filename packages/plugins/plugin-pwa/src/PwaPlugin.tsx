@@ -12,6 +12,8 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
+const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000; // 1h
+
 export const PwaPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -20,7 +22,18 @@ export const PwaPlugin = Plugin.define(meta).pipe(
     activate: Effect.fnUntraced(function* () {
       const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
 
+      let timer: ReturnType<typeof setInterval> | undefined;
+
       const updateSW = registerSW({
+        onRegisteredSW: (_swUrl, registration) => {
+          if (!registration) {
+            return;
+          }
+          // The browser only re-fetches the worker script on navigation, but Composer sessions stay
+          // open for days, so without polling a deployed update is never noticed and the refresh
+          // toast only ever appears on reload.
+          timer = setInterval(() => void registration.update(), UPDATE_CHECK_INTERVAL);
+        },
         onNeedRefresh: () => {
           void invokePromise(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.need-refresh`,
@@ -43,6 +56,8 @@ export const PwaPlugin = Plugin.define(meta).pipe(
           log.error(err);
         },
       });
+
+      return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => clearInterval(timer)));
     }),
   }),
   Plugin.make,

@@ -35,6 +35,13 @@ type AssetCacheMessage =
   | { type: 'dxos:evict-plugin'; pluginId: string }
   | { type: 'dxos:list-plugins' };
 
+/**
+ * Control message workbox-window posts (via `Workbox.messageSkipWaiting`) when the user accepts
+ * plugin-pwa's refresh toast. `injectManifest` builds ship no handler for it — unlike `generateSW`
+ * builds, where workbox-build injects one — so the toast's action button is inert without this.
+ */
+const SKIP_WAITING = 'SKIP_WAITING';
+
 // Lazy single-connection cache. The previous shape opened a fresh IDB connection
 // per call (one per `idbGet` / `idbPut` / `idbDelete` / `idbKeys`) and never
 // closed any of them — a real leak under heavy install/uninstall traffic since
@@ -163,8 +170,12 @@ const evictPlugin = async (pluginId: string): Promise<void> => {
 };
 
 self.addEventListener('message', (event) => {
-  const data = event.data as AssetCacheMessage | undefined;
+  const data = event.data as AssetCacheMessage | { type: typeof SKIP_WAITING } | undefined;
   if (!data || typeof data !== 'object' || !('type' in data)) {
+    return;
+  }
+  if (data.type === SKIP_WAITING) {
+    void self.skipWaiting();
     return;
   }
   const port = event.ports[0];
@@ -214,7 +225,10 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-self.addEventListener('install', () => self.skipWaiting());
+// Deliberately no `skipWaiting()` on install: workbox-window only reports an update once the new
+// worker parks in `waiting` (it suppresses the event when the waiting phase is skipped), so
+// self-activating here silently disabled plugin-pwa's `onNeedRefresh` toast. Activation is instead
+// driven by the SKIP_WAITING message the toast's action sends.
 self.addEventListener('activate', (event) => {
   // Hydrate the in-memory plugin-asset URL set from IDB before the SW starts handling
   // fetches. Without this, the first reload after activation would miss every plugin
