@@ -1,6 +1,6 @@
 # plugin-terra — Tasks
 
-_Resume: visually tune trail/object scale in storybook once the host machine is idle (verification tonight was blocked by macOS indexing daemons pinning the CPU). Uncommitted: none. Last: arrival-driven legs landed, removing the up-to-20s stall a review caught in the first re-targeting pass (92 tests green)._
+_Resume: VISUAL VERIFICATION PENDING — the browser pane reports `visibilityState: hidden` with a 0x0 viewport, so meshes never finish shader compilation and screenshots come back black; check the stories yourself. Uncommitted: none. Last: round-2 visual fixes landed (trail occlusion, true great-circle bearing, world-stable puffs, rocket attitude, mesh refinements, telemetry panel + gizmos) — 103 tests green._
 
 Design and decisions: [DESIGN.md](./DESIGN.md).
 Plans: [Phase 1](../../../agents/superpowers/plans/2026-07-26-plugin-terra.md) ·
@@ -77,7 +77,6 @@ definitions. Plan written and committed; execution begins after Phase 1 closes.
 - **Collision avoidance strategy for objects** (tracked 2026-07-27) — objects
   currently route independently and can pass through each other; needs a
   separation/avoidance model that stays deterministic across peers.
-
 
 Captured in [DESIGN.md](./DESIGN.md#backlog-phase-3) — surface camera + LOD,
 zoom-dependent resolution, sun/day–night, clouds, polygon smoothing, fog, rivers,
