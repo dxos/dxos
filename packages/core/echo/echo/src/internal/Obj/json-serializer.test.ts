@@ -207,7 +207,7 @@ describe('Object JSON serializer', () => {
       const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
 
       expect(() => {
-        (live as any).name = 'Bob';
+        Reflect.set(live, 'name', 'Bob');
       }).toThrow();
     });
 

@@ -255,7 +255,7 @@ export class FeedHandle {
         defineHiddenProperty(item, ParentId, this._parentEntity);
       }
 
-      const id = item.id as EntityId;
+      const id = EntityId.make(item.id);
       const existingCore = this.#cores.get(id);
       const core = existingCore ?? this.#registerCore(item);
       if (existingCore && existingCore.entity !== item) {
@@ -281,10 +281,13 @@ export class FeedHandle {
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
     for (const id of ids) {
-      const core = this.#cores.get(id as EntityId);
+      if (!EntityId.isValid(id)) {
+        continue;
+      }
+      const core = this.#cores.get(id);
       if (core) {
         core.markDeleted();
-        this.#cores.delete(id as EntityId);
+        this.#cores.delete(id);
         this.#dirtyCores.delete(core);
       }
     }
@@ -439,7 +442,7 @@ export class FeedHandle {
       log.verbose('feed object missing valid id; ignored', { json });
       return undefined;
     }
-    const id = json.id as EntityId;
+    const id = json.id;
 
     const existingCore = this.#cores.get(id);
     if (existingCore) {
@@ -494,7 +497,7 @@ export class FeedHandle {
 
   #registerCore(entity: Entity.Unknown): FeedObjectCore {
     const core = new FeedObjectCore(entity, (dirtyCore) => this.#onCoreDirty(dirtyCore));
-    this.#cores.set(entity.id as EntityId, core);
+    this.#cores.set(EntityId.make(entity.id), core);
     return core;
   }
 

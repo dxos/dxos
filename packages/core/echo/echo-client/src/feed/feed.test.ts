@@ -303,9 +303,11 @@ describe('Feed', () => {
       await db.flush();
       expect(callCount).toBeGreaterThanOrEqual(2);
 
-      const results = await db
-        .query(Query.select(Filter.everything()).from(FeedScope.feed(Feed.getFeedUri(feed)!)))
-        .run();
+      const feedUri = Feed.getFeedUri(feed);
+      if (feedUri === undefined) {
+        throw new Error('Expected the feed to have a URI once added to the database.');
+      }
+      const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
       expect(results).toHaveLength(1);
       expect((results[0] as TestSchema.Person).name).toEqual('john');
     });

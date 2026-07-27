@@ -322,7 +322,7 @@ describe('feeds', () => {
       expect(john.name).toEqual('john v2');
 
       expect(() => {
-        (john as any).name = 'john v3';
+        Reflect.set(john, 'name', 'john v3');
       }).toThrow();
     });
 
@@ -621,8 +621,8 @@ describe('feeds', () => {
       expect(john.name).toEqual('john');
 
       // Live: Obj.update works synchronously on the returned instance.
-      Obj.update(john, (mutable) => {
-        mutable.name = 'john v2';
+      Obj.update(john, (john) => {
+        john.name = 'john v2';
       });
       expect(john.name).toEqual('john v2');
 
