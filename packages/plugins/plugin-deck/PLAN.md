@@ -49,12 +49,11 @@ build the sliding/fullbleed presentation directly on `Mosaic.Container`/`ScrollA
 mirroring `Matrix`'s pipeline without depending on it. `Matrix` remains available for other multi-tile
 UIs (see its stories) but is not on the deck's critical path.
 
-The single-mode deck redesign (see
-`agents/superpowers/specs/2026-07-19-url-mapping-deck-structure-design.md`) superseded the original plan
-below: there is one deck mode, with presentation (`fullbleed` for one plank, `sliding` for two or more)
-derived from plank count rather than user-toggled; the companion attaches to the attended plank, not
-fixed to the right-most one; the vertical-stack child-navigation and 'back'-button ideas below were
-never implemented.
+The single-mode deck redesign (see `.agents/projects/url-deck-redesign/DESIGN.md`) superseded the
+original plan below: there is one stored deck mode, with presentation (`fullbleed` for one plank,
+`tiling` for two, `sliding` for three or more) derived from plank count rather than user-toggled; the
+companion is itself a plank, attached to the deck's trailing plank; the vertical-stack child-navigation
+and 'back'-button ideas below were never implemented.
 
 - ~~We will create a new 'multi' plank layout based on the AppGraph and attention.~~
 - ~~The stack contains objects that represent a hierarchy of objects from the root.~~

@@ -133,10 +133,11 @@ Operations relevant to layout:
 
 `capabilities/url-handler.ts` parses the pathname's pair chain (`/w/<workspace>/<key>/<id>/...`) via
 `UrlPath.parse` and `PathResolution.resolveUrl`, dispatches `LayoutOperation.Set` with the resolved plank
-ids, and reverse-serializes `deck.active` (plus the attended plank's open companion) back into the same
-grammar via `serializeDeckToUrl` (`util/serialize-deck-url.ts`) on every deck/attention/companion-variant
-change. Attention itself is never serialized — on load it defaults to the last plank in the chain. See
-`agents/superpowers/specs/2026-07-19-url-mapping-deck-structure-design.md` for the full URL grammar.
+ids, and reverse-serializes `deck.active` (plus the open companion, which attaches to the deck's trailing
+plank) back into the same grammar via `serializeDeckToUrl` (`util/serialize-deck-url.ts`) on every
+deck-state or companion-variant change. Attention is never serialized, and never triggers a sync — on
+load it defaults to the last plank in the chain. See `.agents/projects/url-deck-redesign/DESIGN.md` for
+the full URL grammar.
 
 ---
 

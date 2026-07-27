@@ -138,7 +138,8 @@ single-mode deck) and register the work-stream.
 
 ### Tasks
 
-- [x] **Author design spec** — `agents/superpowers/specs/2026-07-19-url-mapping-deck-structure-design.md`.
+- [x] **Author design spec** — now folded into this project's `DESIGN.md` (superpowers and `$project`
+      are mutually exclusive, so the project keeps one design doc).
 - [x] **Register project** — registry entry + TASKS/DESIGN scaffold.
 
 ## Sequencing
@@ -294,7 +295,7 @@ Land after A3.
 
 ### References
 
-- Spec: `agents/superpowers/specs/2026-07-19-url-mapping-deck-structure-design.md`
+- Design: `.agents/projects/url-deck-redesign/DESIGN.md`
 - `packages/plugins/plugin-deck/src/capabilities/url-handler.ts`
 - `packages/sdk/app-graph/src/graph-builder.ts`
 - `packages/sdk/app-toolkit/src/app/Paths.ts`
