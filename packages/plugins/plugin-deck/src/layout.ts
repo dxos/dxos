@@ -6,61 +6,40 @@ import { produce } from 'immer';
 
 import { type DeckAction } from '#types';
 
-type OpenLayoutEntryOptions = {
-  key?: string;
-};
-
-/**
- * Mutates a deck list using stack semantics: new items open to the right (`push`).
- * Callers that open from a pivot must truncate the deck first (see deck `open` operation).
- */
-export const openEntry = (deck: readonly string[], entryId: string, options?: OpenLayoutEntryOptions): string[] => {
-  return produce([...deck], (draft) => {
-    if (draft.find((id) => id === entryId)) {
-      return;
-    }
-
-    const key = options?.key;
-    if (key) {
-      const index = draft.findIndex((id) => id.split('+')[0] === key);
-      if (index !== -1) {
-        draft.splice(index, 1, entryId);
-        return;
-      }
-    }
-
-    draft.push(entryId);
-  });
-};
-
-export type OpenSubjectsOnActiveDeckOptions = {
+export type AddSubjectsToActiveDeckOptions = {
+  /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */
   pivotId?: string;
+  /** Replace an existing plank whose id shares this key prefix, instead of inserting. */
   key?: string;
 };
 
 /**
- * Computes the next multi-mode `active` list for {@link LayoutOperation.Open}.
- * If `pivotId` is present and found, truncates the deck after that id.
- * Applies each subject with {@link openEntry}.
- * If the pivot is missing, appends onto the full `active` list.
- *
- * When all subjects are already present in the active deck, the deck is returned
- * unchanged so that pivot truncation does not discard open planks when navigating
- * to something that is already visible.
+ * Computes the next `active` list for an `'add'` disposition {@link LayoutOperation.Open}: inserts
+ * subjects immediately after `pivotId` when present, else appends them at the end. Subjects already
+ * open keep their position; a subject whose `key` matches an existing plank replaces it in place.
  */
-export const openSubjectsOnActiveDeck = (
+export const addSubjectsToActiveDeck = (
   active: readonly string[],
   subject: readonly string[],
-  options?: OpenSubjectsOnActiveDeckOptions,
+  options?: AddSubjectsToActiveDeckOptions,
 ): string[] => {
-  if (subject.length > 0 && subject.every((id) => active.includes(id))) {
-    return [...active];
-  }
-
   const { pivotId, key } = options ?? {};
-  const pivotIndex = pivotId ? active.findIndex((id) => id === pivotId) : -1;
-  const baseDeck = pivotIndex !== -1 ? active.slice(0, pivotIndex + 1) : [...active];
-  return subject.reduce((acc, entryId) => openEntry(acc, entryId, { key }), baseDeck);
+  const next = [...active];
+  const pivotIndex = pivotId ? next.indexOf(pivotId) : -1;
+  let insertAt = pivotIndex !== -1 ? pivotIndex + 1 : next.length;
+  for (const entryId of subject) {
+    if (next.includes(entryId)) {
+      continue;
+    }
+    const keyIndex = key ? next.findIndex((id) => id.split('+')[0] === key) : -1;
+    if (keyIndex !== -1) {
+      next[keyIndex] = entryId;
+      continue;
+    }
+    next.splice(insertAt, 0, entryId);
+    insertAt += 1;
+  }
+  return next;
 };
 
 export const closeEntry = (deck: string[], entryId: string): string[] => {

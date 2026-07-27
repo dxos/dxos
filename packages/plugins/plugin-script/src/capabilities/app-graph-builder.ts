@@ -20,7 +20,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'execute',
+              variant: 'execute',
               label: ['script-test.label', { ns: meta.profile.key }],
               icon: 'ph--terminal--regular',
               data: 'execute',
@@ -33,7 +33,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'logs',
+              variant: 'logs',
               label: ['script-logs.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'logs',

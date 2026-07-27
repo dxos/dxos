@@ -30,12 +30,17 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ResolveNavigation
           ? ((spaceId ? client.spaces.get(spaceId) : undefined) ?? AppSpace.getActiveSpace(client, capabilities))
           : undefined;
 
-        // Delegate to contributed resolvers.
+        // Delegate to contributed resolvers. They require `Database.Service`, and an unbound service is
+        // a defect rather than a failure (so the `catchAll` below would not contain it) — with no space
+        // to derive a database from there is nothing to resolve against, so skip them entirely.
+        if (!space) {
+          return { targets: [] };
+        }
+
         const resolvers = capabilities.getAll(AppCapabilities.NavigationTargetResolver);
-        const resolve = Effect.forEach(resolvers, (resolver) =>
+        const results = yield* Effect.forEach(resolvers, (resolver) =>
           resolver(query).pipe(Effect.catchAll(() => Effect.succeed([]))),
-        );
-        const results = yield* space ? resolve.pipe(Effect.provide(Database.layer(space.db))) : resolve;
+        ).pipe(Effect.provide(Database.layer(space.db)));
         return { targets: results.flat() };
       }),
     ),

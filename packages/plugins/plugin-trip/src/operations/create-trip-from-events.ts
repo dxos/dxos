@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -36,7 +36,7 @@ export default TripOperation.CreateTripFromEvents.pipe(
       // Navigate to the trip and kick off the planning skill in the background. Both are
       // side-effects that depend on app capabilities absent in headless/test runs, so failures are
       // logged rather than fatal — the trip is already created and returned.
-      yield* Operation.invoke(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(trip)] }).pipe(
+      yield* Operation.invoke(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(trip)] }).pipe(
         Effect.catchAll((error) => {
           log.catch(error);
           return Effect.void;

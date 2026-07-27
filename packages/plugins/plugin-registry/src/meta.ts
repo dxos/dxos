@@ -3,19 +3,16 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { Paths } from '@dxos/app-toolkit';
+import { GraphPath } from '@dxos/app-toolkit';
 import { DXN } from '@dxos/keys';
 
 import config from '../dx.config';
 
-export const REGISTRY_ID = Paths.pinnedWorkspaceId('dxos:plugin-registry');
-export const REGISTRY_KEY = 'plugin-registry';
+export const REGISTRY_ID = GraphPath.pinnedWorkspaceId('dxos:plugin-registry');
 
-// TODO(wittjosiah): Should this be a special separator or use the standard path separator?
-const CATEGORY_SEPARATOR = '>';
-
-/** Build a registry category node ID. */
-export const registryCategoryId = (category: string): string => `${REGISTRY_KEY}${CATEGORY_SEPARATOR}${category}`;
+// A registry category node id is the bare category name (e.g. `bundled`), which doubles as its URL
+// segment (`category/<name>`); the graph builder, the category surfaces and `getCategoryPredicate` all
+// use the name directly.
 
 /** Qualified graph path to a specific plugin node. */
 export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/${pluginId}`;

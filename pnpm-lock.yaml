@@ -10706,9 +10706,6 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -14209,6 +14206,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -18655,6 +18655,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

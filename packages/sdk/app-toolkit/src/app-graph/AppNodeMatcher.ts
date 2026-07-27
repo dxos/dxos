@@ -64,7 +64,7 @@ export const whenSpaceSettings = (node: Node.Node): Option.Option<Space> => {
  * ```ts
  * GraphBuilder.createExtension({
  *   id: 'myAiSection',
- *   match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
+ *   match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
  *   connector: (space) => Effect.succeed([...]),
  * });
  * ```

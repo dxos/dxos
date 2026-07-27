@@ -5,35 +5,37 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
+import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Breadcrumb, type BreadcrumbRootProps } from './Breadcrumb';
 
 const DefaultStory = (props: BreadcrumbRootProps) => {
   return (
-    <Breadcrumb.Root {...props}>
-      <Breadcrumb.List>
-        <Breadcrumb.ListItem>
-          <Breadcrumb.Link asChild>
-            <Button variant='ghost' classNames='px-0 text-base-fg font-normal'>
-              Grocery
-            </Button>
-          </Breadcrumb.Link>
-          <Breadcrumb.Separator />
-        </Breadcrumb.ListItem>
-        <Breadcrumb.ListItem>
-          <Breadcrumb.Link href='#'>Produce</Breadcrumb.Link>
-          <Breadcrumb.Separator />
-        </Breadcrumb.ListItem>
-        <Breadcrumb.ListItem>
-          <Breadcrumb.Link href='#'>Veggies</Breadcrumb.Link>
-          <Breadcrumb.Separator />
-        </Breadcrumb.ListItem>
-        <Breadcrumb.ListItem>
-          <Breadcrumb.Current>Peppers</Breadcrumb.Current>
-        </Breadcrumb.ListItem>
-      </Breadcrumb.List>
-    </Breadcrumb.Root>
+    <div>
+      <Breadcrumb.Root {...props}>
+        <Breadcrumb.List>
+          <Breadcrumb.ListItem>
+            <Breadcrumb.Link>
+              <Button variant='ghost' classNames='px-0 text-base-fg font-normal'>
+                Home
+              </Button>
+            </Breadcrumb.Link>
+            <Breadcrumb.Separator />
+          </Breadcrumb.ListItem>
+          <Breadcrumb.ListItem>
+            <Breadcrumb.Link href='#'>Mailbox</Breadcrumb.Link>
+            <Breadcrumb.Separator />
+          </Breadcrumb.ListItem>
+          <Breadcrumb.ListItem>
+            <Breadcrumb.Link href='#'>Work</Breadcrumb.Link>
+            <Breadcrumb.Separator />
+          </Breadcrumb.ListItem>
+          <Breadcrumb.ListItem>
+            <Breadcrumb.Current>All</Breadcrumb.Current>
+          </Breadcrumb.ListItem>
+        </Breadcrumb.List>
+      </Breadcrumb.Root>
+    </div>
   );
 };
 
@@ -41,7 +43,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Breadcrumb',
   component: Breadcrumb.Root as any,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
