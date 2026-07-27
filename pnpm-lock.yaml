@@ -9744,6 +9744,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/halo':
         specifier: workspace:*
         version: link:../../core/halo/halo

@@ -3,7 +3,10 @@
 //
 
 import type { Identity } from '@dxos/client/halo';
+import { type PasskeyFailure } from '@dxos/plugin-client';
 import { type MaybePromise } from '@dxos/util';
+
+export type { PasskeyFailure };
 
 export enum WelcomeState {
   INIT = 0,
@@ -17,6 +20,8 @@ export type WelcomeScreenProps = {
   state: WelcomeState;
   identity?: Identity | null;
   error?: boolean;
+  /** Why the last passkey login attempt failed; cleared when a new attempt starts. */
+  passkeyError?: PasskeyFailure | null;
 
   // Login tab.
   /** Existing-account email login. Server returns a recovery token inline (dev)

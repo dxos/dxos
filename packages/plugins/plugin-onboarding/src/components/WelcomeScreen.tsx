@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client';
+import { ClientOperation, type PasskeyFailure, classifyPasskeyFailure } from '@dxos/plugin-client';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
@@ -29,6 +29,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const { invokePromise } = useOperationInvoker();
   const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
   const [error, setError] = useState(false);
+  const [passkeyError, setPasskeyError] = useState<PasskeyFailure | null>(null);
   const pendingRef = useRef(false);
 
   // The welcome screen always renders dark, regardless of the system theme.
@@ -95,8 +96,16 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     [hubUrl, client, invokePromise, error],
   );
 
+  // `invokePromise` resolves with `{ error }` rather than rejecting, so a failed redemption is
+  // invisible unless the result is inspected.
   const handlePasskey = useCallback(async () => {
-    await invokePromise(ClientOperation.RedeemPasskey);
+    setPasskeyError(null);
+    // On success the onboarding manager dismisses this dialog off the back of the new identity.
+    const { error: redeemError } = await invokePromise(ClientOperation.RedeemPasskey);
+    if (redeemError) {
+      log.catch(redeemError);
+      setPasskeyError(classifyPasskeyFailure(redeemError));
+    }
   }, [invokePromise]);
 
   const handleJoinIdentity = useCallback(async () => {
@@ -256,6 +265,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       <Welcome
         state={state}
         error={error}
+        passkeyError={passkeyError}
         identity={identity}
         onEmailLogin={handleLogin}
         onPasskey={!identity ? handlePasskey : undefined}

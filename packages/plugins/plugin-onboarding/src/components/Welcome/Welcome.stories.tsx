@@ -52,6 +52,17 @@ export const Default: Story = {
   },
 };
 
+/** Passkey login failed because the credential isn't a recovery credential for any account. */
+export const PasskeyRejected: Story = {
+  decorators: [withClientProvider()],
+  args: {
+    passkeyError: 'rejected',
+    onPasskey: () => console.log('passkey'),
+    onJoinIdentity: () => console.log('join identity'),
+    onRecoverIdentity: () => console.log('recover identity'),
+  },
+};
+
 /** Email is the primary login method (no passkey handler). Used by welcome-focus.spec.ts. */
 export const EmailPrimary: Story = {
   decorators: [withClientProvider()],

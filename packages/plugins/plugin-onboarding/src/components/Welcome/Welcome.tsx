@@ -24,13 +24,19 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { hero } from './hero-image';
-import { type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
+import { type PasskeyFailure, type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
 
 const supportsPasskeys =
   (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();
 
 /** OAuth provider backing the "Atmosphere account" option (atproto / Bluesky). */
 const ATMOSPHERE_PROVIDER = 'atproto';
+
+const passkeyErrorKeys: Record<PasskeyFailure, string> = {
+  dismissed: 'passkey-dismissed-error.message',
+  rejected: 'passkey-rejected-error.message',
+  failed: 'passkey-failed-error.message',
+};
 
 export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
@@ -55,6 +61,7 @@ type SignupStep = 'collect' | 'auth';
 export const Welcome = ({
   state,
   error,
+  passkeyError,
   identity,
   onEmailLogin,
   onPasskey,
@@ -115,6 +122,19 @@ export const Welcome = ({
   //
   // Login handlers
   //
+
+  // Holds `pending` for the whole WebAuthn ceremony so a second click can't open a duplicate prompt.
+  const handlePasskey = useCallback(async () => {
+    if (pending) {
+      return;
+    }
+    setPending(true);
+    try {
+      await onPasskey?.();
+    } finally {
+      setPending(false);
+    }
+  }, [pending, onPasskey]);
 
   const handleSendSignInLink = useCallback(async () => {
     if (!validEmail(email)) {
@@ -302,8 +322,9 @@ export const Welcome = ({
                   setEmailValue={setEmail}
                   emailRef={emailRef}
                   emailError={error}
+                  passkeyError={passkeyError}
                   pending={pending}
-                  onPasskey={onPasskey}
+                  onPasskey={onPasskey ? handlePasskey : undefined}
                   onSendSignInLink={handleSendSignInLink}
                   onEmailKeyDown={handleEmailKeyDown}
                   onJoinIdentity={onJoinIdentity}
@@ -481,6 +502,7 @@ type LoginTabProps = {
   setEmailValue: (value: string) => void;
   emailRef: React.Ref<HTMLInputElement>;
   emailError?: boolean;
+  passkeyError?: PasskeyFailure | null;
   pending: boolean;
   onPasskey?: () => unknown;
   onSendSignInLink: () => void;
@@ -506,6 +528,7 @@ const LoginTab = ({
   setEmailValue,
   emailRef,
   emailError,
+  passkeyError,
   pending,
   onPasskey,
   onSendSignInLink,
@@ -621,10 +644,22 @@ const LoginTab = ({
       <h2 className='text-2xl'>{identity ? t('existing-identity.title') : t('welcome-back.title')}</h2>
       {/* Primary method */}
       {primary === 'passkey' && supportsPasskeys && onPasskey && (
-        <Button variant='primary' classNames='w-full justify-center gap-2' onClick={onPasskey}>
-          <Icon icon='ph--key--regular' size={5} />
-          <span>{t('sign-in-with-passkey-button.label')}</span>
-        </Button>
+        <div className='flex flex-col gap-2'>
+          <Button
+            variant='primary'
+            classNames='w-full justify-center gap-2 disabled:bg-neutral-800'
+            disabled={pending}
+            onClick={onPasskey}
+          >
+            <Icon icon='ph--key--regular' size={5} />
+            <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
+          </Button>
+          {passkeyError && (
+            <p role='alert' className='px-2 text-sm text-error-text'>
+              {t(passkeyErrorKeys[passkeyError])}
+            </p>
+          )}
+        </div>
       )}
       {primary === 'email' && (
         <div className='flex flex-col gap-2'>

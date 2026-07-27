@@ -32,6 +32,12 @@ export const translations = [
         'signup-tab.label': 'Sign Up',
         'welcome-back.title': 'Welcome back!',
         'sign-in-with-passkey-button.label': 'Log in with passkey',
+        'passkey-pending.label': 'Waiting for passkey…',
+        'passkey-dismissed-error.message':
+          'No passkey was used. The prompt was dismissed, or this device has no passkey for Composer.',
+        'passkey-rejected-error.message':
+          "That passkey isn't linked to an account. Try another passkey, or log in with email or another device.",
+        'passkey-failed-error.message': 'Passkey login failed. Please try again or use another way to log in.',
         'more-ways-to-sign-in.label': 'More ways to log in',
         'login-passkey.label': 'Passkey',
         'login-passkey.description': 'The simplest way to access your data on new devices.',
