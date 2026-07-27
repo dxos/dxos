@@ -4,7 +4,7 @@
 
 **Goal:** Build `@dxos/plugin-terra`, a Composer plugin that renders a deterministic, stylized 3D planet (Babylon.js) from a seed-driven `Terra` ECHO object, with a live parameter panel.
 
-**Architecture:** Pure, deterministic, unit-tested generation in `src/engine/` (cubed-sphere geometry + seeded fBm noise → displaced triangle-soup mesh + biome colors + scatter placements), consumed by a Babylon `SceneManager` and a `TerraArticle` React container. Config lives on the ECHO object and is edited via a `react-ui-form` panel; edits trigger debounced regeneration.
+**Architecture:** Pure, deterministic, unit-tested generation in `src/engine/` (cubed-sphere geometry + seeded fBm noise → displaced triangle-soup mesh + biome colors + scatter placements), consumed by a Babylon `SceneManager` and a `TerraArticle` React container. Config lives on the ECHO object and is edited via in-scene `@babylonjs/gui` controls (plus an FPS widget); edits trigger debounced regeneration. (Plan change 2026-07-26: replaced the original react-ui-form panel.)
 
 **Tech Stack:** TypeScript, Effect Schema, Babylon.js (`@babylonjs/core`), `simplex-noise` + `seedrandom`, React, `@dxos/react-ui*`, Vitest, Storybook, moon.
 
@@ -54,8 +54,7 @@ packages/plugins/plugin-terra/
       TerraArticle/{TerraArticle.tsx, TerraArticle.stories.tsx, index.ts}
       index.ts
     components/
-      TerraForm/{TerraForm.tsx, TerraForm.stories.tsx, index.ts}
-      index.ts
+      index.ts           # empty; config UI is in-scene (engine/scene-gui.ts)
 ```
 
 Responsibilities: `engine/*` (except `scene-manager.ts`) is pure and Babylon-free so it is unit-testable. `scene-manager.ts` owns all Babylon calls. `types/Terra.ts` owns the schema. Containers/components own React. Capabilities own plugin wiring.
@@ -1034,68 +1033,55 @@ git commit -m "plugin-terra: TerraArticle container + story"
 
 ---
 
-### Task 10: TerraForm live params panel + storybook
+### Task 10: Babylon GUI config controls + FPS widget
+
+> Plan change (user directive 2026-07-26): the original react-ui-form `TerraForm`
+> panel is REPLACED by in-scene `@babylonjs/gui` controls plus an FPS widget.
 
 **Files:**
 
-- Create: `packages/plugins/plugin-terra/src/components/TerraForm/TerraForm.tsx`
-- Create: `packages/plugins/plugin-terra/src/components/TerraForm/TerraForm.stories.tsx`
-- Create: `packages/plugins/plugin-terra/src/components/TerraForm/index.ts`
-- Create: `packages/plugins/plugin-terra/src/components/index.ts`
-- Modify: `packages/plugins/plugin-terra/src/containers/TerraArticle/TerraArticle.tsx` (mount the form)
+- Create: `packages/plugins/plugin-terra/src/engine/scene-gui.ts`
+- Modify: `packages/plugins/plugin-terra/src/engine/index.ts` (export scene-gui)
+- Modify: `packages/plugins/plugin-terra/package.json` (add `"@babylonjs/gui": "catalog:"`)
+- Modify: `pnpm-workspace.yaml` (add `'@babylonjs/gui': ^7.52.5` to the catalog, alphabetized)
+- Modify: `packages/plugins/plugin-terra/src/containers/TerraArticle/TerraArticle.tsx` (attach the GUI)
 
 **Interfaces:**
 
-- Consumes: `Terra.TerraConfig` schema; `@dxos/react-ui-form` `Form`.
-- Produces: `TerraForm` component: `{ config: Terra.TerraConfig; onChange(values: Terra.TerraConfig): void }`.
+- Consumes: `Scene`/`Engine` from `@babylonjs/core`; `TerraConfigValues` from `./generate-planet`; GUI controls from `@babylonjs/gui` (`AdvancedDynamicTexture`, `StackPanel`, `Slider`, `TextBlock`, `Checkbox`, `Control`).
+- Produces: `class SceneGui`:
+  - `constructor(options: { scene: Scene; engine: Engine; values: TerraConfigValues; onChange: (patch: SceneGuiPatch) => void; onWaterSheen: (enabled: boolean) => void })`
+  - `type SceneGuiPatch = Partial<Pick<TerraConfigValues, 'waterLevel' | 'elevationScale' | 'mountainScale' | 'treeDensity' | 'resolution' | 'seed'>>`
+  - `setValues(values: TerraConfigValues): void` — refresh control positions without firing `onChange`.
+  - `dispose(): void`
 
-- [ ] **Step 1: Implement `TerraForm.tsx`** using the schema-driven `Form` from `@dxos/react-ui-form` (consult the `composer-ui` skill for the exact `Form` props). It renders `Terra.TerraConfig`, seeded with the current values, and calls `onChange` on edit.
+- [ ] **Step 1: Add `@babylonjs/gui`.** Catalog entry `'@babylonjs/gui': ^7.52.5` in `pnpm-workspace.yaml` (alphabetized, matching `@babylonjs/core`'s range); `"@babylonjs/gui": "catalog:"` in the package's dependencies; `pnpm install`.
 
-```tsx
-//
-// Copyright 2026 DXOS.org
-//
+- [ ] **Step 2: Implement `scene-gui.ts`.** A fullscreen `AdvancedDynamicTexture` (`CreateFullscreenUI`) hosting:
+  - A semi-transparent `StackPanel` docked top-right (`horizontalAlignment: RIGHT`, `verticalAlignment: TOP`, fixed width ~240px, padding) containing, each with a `TextBlock` label showing the live value:
+    - `Slider` waterLevel (0.2–0.7, step 0.01)
+    - `Slider` elevationScale (0.05–0.3, step 0.01)
+    - `Slider` mountainScale (0–1.5, step 0.05)
+    - `Slider` treeDensity (0–1, step 0.05)
+    - `Slider` resolution (64–512, step 64)
+    - `Checkbox` water sheen → calls `onWaterSheen` (render-only; not part of the config patch)
+    - `Button` "reseed" → `onChange({ seed: \`terra-\${counterDerivedFromCurrentSeedOrIncrement}\` })`— implement as a simple numeric suffix increment from the current seed, falling back to`-1`.
+  - Slider changes fire `onChange` with ONLY the changed key (the container debounces regeneration already).
+  - An FPS `TextBlock` docked top-left, updated from `engine.getFps().toFixed(0)` on `scene.onAfterRenderObservable` (observer stored and removed in `dispose()`).
+  - `setValues` updates slider values/labels with an internal `#updating` guard so programmatic sets do not fire `onChange`.
+  - ES `#private` fields; `dispose()` removes the observer and disposes the ADT.
 
-import React from 'react';
+- [ ] **Step 3: Attach in `TerraArticle.tsx`.** After constructing `SceneManager`, construct `SceneGui` with the scene/engine (expose them from `SceneManager` via narrow readonly getters `get scene()` / `get engine()` — add these to `scene-manager.ts`), `values: Terra.toConfigValues(terra)`, `onChange` writing the patch into the ECHO object''s `config` (via the `useObject` updater), and `onWaterSheen: (enabled) => manager.setWaterSheen(enabled)`. Call `gui.setValues(values)` from the existing values-memo effect; dispose the GUI in the unmount cleanup (before the manager).
 
-import { Form } from '@dxos/react-ui-form';
-
-import { Terra } from '#types';
-
-export type TerraFormProps = {
-  config: Terra.TerraConfig;
-  onChange: (values: Terra.TerraConfig) => void;
-};
-
-export const TerraForm = ({ config, onChange }: TerraFormProps) => (
-  <Form schema={Terra.TerraConfig} values={config} onValuesChanged={onChange} />
-);
-
-TerraForm.displayName = 'TerraForm';
-```
-
-(If `Form`'s prop names differ in this repo version, adjust per the `composer-ui` skill — the contract is: render `Terra.TerraConfig`, emit changed values.)
-
-Create `TerraForm/index.ts` and `components/index.ts` (`export * from './TerraForm';`).
-
-- [ ] **Step 2: Mount the form in `TerraArticle`.** Add a `Panel.Toolbar` or side region hosting `TerraForm`, wiring `onChange` to write into the ECHO object's `config` (via `useObject(terra, 'config')`'s updater), which flows through the existing debounced `useEffect` to regenerate. Show the code diff for the toolbar/region addition.
-
-- [ ] **Step 3: Write `TerraForm.stories.tsx`** (standalone form story with local state, mirroring the story pattern; render the form and log changes).
-
-- [ ] **Step 4: Verify in Storybook.** Open the `TerraForm` story and the updated `TerraArticle` story; change `waterLevel`, `landGain`, `resolution`, `seed` and confirm the planet regenerates (debounced) without errors.
-
-Run: reuse storybook on :9009.
-Expected: edits regenerate the planet live.
+- [ ] **Step 4: Verify.** `/Users/burdon/.proto/shims/moon run plugin-terra:build && .../moon run plugin-terra:lint -- --fix && .../moon run plugin-terra:test` all green. Controller performs storybook visual verification (sliders regenerate the planet; FPS counter ticks; reseed works; water-sheen toggles).
 
 - [ ] **Step 5: Commit.**
 
 ```bash
 pnpm format
-git add packages/plugins/plugin-terra/src/components packages/plugins/plugin-terra/src/containers/TerraArticle/TerraArticle.tsx
-git commit -m "plugin-terra: live params form"
+git add packages/plugins/plugin-terra pnpm-workspace.yaml pnpm-lock.yaml
+git commit -m "plugin-terra: Babylon GUI config controls + FPS widget"
 ```
-
----
 
 ### Task 11: Capabilities + plugin wiring
 

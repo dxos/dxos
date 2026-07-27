@@ -221,9 +221,13 @@ are unit-testable without Babylon.
 
 ## Config UX
 
-`TerraForm` = a `react-ui-form` `Form` bound to `TerraConfig`, shown in the
-article's complementary/side region. Edits write to the ECHO object; the article
-observes the object and regenerates (debounced).
+**(Revised 2026-07-26, user directive — replaces the react-ui-form panel.)**
+In-scene `@babylonjs/gui` controls: a fullscreen `AdvancedDynamicTexture`
+hosting a semi-transparent panel of sliders (water level, elevation scale,
+mountain scale, tree density, resolution), a reseed button, a water-sheen
+toggle, and an **FPS widget** (top-left, from `engine.getFps()`). Control
+changes write to the ECHO object's `config`; the article observes the object
+and regenerates (debounced).
 
 ## Plugin wiring
 

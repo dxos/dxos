@@ -191,3 +191,5 @@ animating over the planet.
 - Smooth/blur polygons (soften the faceted look — smoothing pass or normal
   blending as an alternative rendering style).
 - Trains as another ground object type (rail-bound routes).
+- Use versor-style rotation from `react-ui-geo` (quaternion drag rotation of the
+  globe, as in the d3/versor idiom) instead of/alongside ArcRotateCamera orbit.
