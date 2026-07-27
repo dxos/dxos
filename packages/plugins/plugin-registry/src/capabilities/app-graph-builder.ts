@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
-import { REGISTRY_ID, meta, registryCategoryId } from '#meta';
+import { REGISTRY_ID, meta } from '#meta';
 
 import { getCategoryPredicate, getRemotePluginIds } from '../categories';
 import { LOAD_PLUGIN_DIALOG } from '../containers';
@@ -98,55 +98,55 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             Node.make({
-              id: registryCategoryId('bundled'),
+              id: 'bundled',
               type: 'category',
-              data: registryCategoryId('bundled'),
+              data: 'bundled',
               properties: {
                 label: ['bundled-plugins.label', { ns: meta.profile.key }],
                 icon: 'ph--squares-four--regular',
                 testId: 'pluginRegistry.bundled',
-                count: categoryCount(registryCategoryId('bundled')),
+                count: categoryCount('bundled'),
               },
             }),
             Node.make({
-              id: registryCategoryId('installed'),
+              id: 'installed',
               type: 'category',
-              data: registryCategoryId('installed'),
+              data: 'installed',
               properties: {
                 label: ['installed-plugins.label', { ns: meta.profile.key }],
                 icon: 'ph--check--regular',
                 testId: 'pluginRegistry.installed',
-                count: categoryCount(registryCategoryId('installed')),
+                count: categoryCount('installed'),
               },
             }),
             Node.make({
-              id: registryCategoryId('recommended'),
+              id: 'recommended',
               type: 'category',
-              data: registryCategoryId('recommended'),
+              data: 'recommended',
               properties: {
                 label: ['recommended-plugins.label', { ns: meta.profile.key }],
                 icon: 'ph--star--regular',
                 testId: 'pluginRegistry.recommended',
-                count: categoryCount(registryCategoryId('recommended')),
+                count: categoryCount('recommended'),
               },
             }),
             Node.make({
-              id: registryCategoryId('labs'),
+              id: 'labs',
               type: 'category',
-              data: registryCategoryId('labs'),
+              data: 'labs',
               properties: {
                 label: ['labs-plugins.label', { ns: meta.profile.key }],
                 icon: 'ph--flask--regular',
                 testId: 'pluginRegistry.labs',
-                count: categoryCount(registryCategoryId('labs')),
+                count: categoryCount('labs'),
               },
             }),
             ...(registryCount > 0
               ? [
                   Node.make({
-                    id: registryCategoryId('registry'),
+                    id: 'registry',
                     type: 'category',
-                    data: registryCategoryId('registry'),
+                    data: 'registry',
                     properties: {
                       label: ['registry-plugins.label', { ns: meta.profile.key }],
                       icon: 'ph--users-three--regular',

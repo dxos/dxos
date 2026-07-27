@@ -10,12 +10,9 @@ import config from '../dx.config';
 
 export const REGISTRY_ID = GraphPath.pinnedWorkspaceId('dxos:plugin-registry');
 
-/**
- * Registry category node id — the bare category name (e.g. `bundled`). The single source shared by the
- * graph builder, the category surface filters, and {@link getCategoryPredicate} so they agree on the id;
- * it doubles as the URL segment (`category/<name>`).
- */
-export const registryCategoryId = (category: string): string => category;
+// A registry category node id is the bare category name (e.g. `bundled`), which doubles as its URL
+// segment (`category/<name>`); the graph builder, the category surfaces and `getCategoryPredicate` all
+// use the name directly.
 
 /** Qualified graph path to a specific plugin node. */
 export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/${pluginId}`;
