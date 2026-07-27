@@ -6,7 +6,6 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
-import * as Record from 'effect/Record';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
@@ -144,11 +143,11 @@ class GraphImpl implements WritableGraph {
   readonly _onRemoveNode?: GraphProps['onRemoveNode'];
 
   readonly _registry: Registry.Registry;
-  readonly _expanded = Record.empty<string, boolean>();
+  readonly _expanded = new Set<string>();
   readonly _pendingExpands = new Set<string>();
-  readonly _initialized = Record.empty<string, boolean>();
-  readonly _initialEdges = Record.empty<string, Edges>();
-  readonly _initialNodes = Record.fromEntries([
+  readonly _initialized = new Set<string>();
+  readonly _initialEdges = new Map<string, Edges>();
+  readonly _initialNodes = new Map<string, Option.Option<Node.Node>>([
     [
       Node.RootId,
       this._constructNode({
@@ -162,7 +161,7 @@ class GraphImpl implements WritableGraph {
 
   /** @internal */
   readonly _node = Atom.family<string, Atom.Writable<Option.Option<Node.Node>>>((id) => {
-    const initial = Option.flatten(Record.get(this._initialNodes, id));
+    const initial = this._initialNodes.get(id) ?? Option.none();
     return Atom.make<Option.Option<Node.Node>>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:node:${id}`));
   });
 
@@ -175,7 +174,7 @@ class GraphImpl implements WritableGraph {
   });
 
   readonly _edges = Atom.family<string, Atom.Writable<Edges>>((id) => {
-    const initial = Record.get(this._initialEdges, id).pipe(Option.getOrElse(() => ({}) as Edges));
+    const initial = this._initialEdges.get(id) ?? ({} as Edges);
     return Atom.make<Edges>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:edges:${id}`));
   });
 
@@ -243,13 +242,13 @@ class GraphImpl implements WritableGraph {
 
     if (nodes) {
       nodes.forEach((node) => {
-        Record.set(this._initialNodes, node.id, this._constructNode(node));
+        this._initialNodes.set(node.id, this._constructNode(node));
       });
     }
 
     if (edges) {
       Object.entries(edges).forEach(([source, edges]) => {
-        Record.set(this._initialEdges, source, edges);
+        this._initialEdges.set(source, edges);
       });
     }
   }
@@ -667,10 +666,10 @@ export function waitForPath(
  */
 const initializeImpl = async <T extends ExpandableGraph | WritableGraph>(graph: T, id: string): Promise<T> => {
   const internal = getInternal(graph);
-  const initialized = Record.get(internal._initialized, id).pipe(Option.getOrElse(() => false));
+  const initialized = internal._initialized.has(id);
   log('initialize', { id, initialized });
   if (!initialized) {
-    Record.set(internal._initialized, id, true);
+    internal._initialized.add(id);
     await internal._onInitialize?.(id);
   }
   return graph;
@@ -681,8 +680,8 @@ const initializeImpl = async <T extends ExpandableGraph | WritableGraph>(graph: 
  *
  * Fires the `onInitialize` callback to provide initial data for a node.
  *
- * TODO(wittjosiah): Remove? Callers now expand the nodes they need explicitly; the once-per-id latch is
- * incompatible with re-running an expansion (as URL resolution does while a chain materializes).
+ * TODO(wittjosiah): Remove? No graph-builder extension declares a `resolver`, so `onInitialize` has
+ * nothing to run; callers expand the nodes they need explicitly.
  */
 export function initialize<T extends ExpandableGraph | WritableGraph>(graph: T, id: string): Promise<T>;
 export function initialize(id: string): <T extends ExpandableGraph | WritableGraph>(graph: T) => Promise<T>;
@@ -721,10 +720,10 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
     return graph;
   }
 
-  const expanded = Record.get(internal._expanded, key).pipe(Option.getOrElse(() => false));
+  const expanded = internal._expanded.has(key);
   log('expand', { key, expanded });
   if (!expanded) {
-    Record.set(internal._expanded, key, true);
+    internal._expanded.add(key);
     internal._onExpand?.(id, normalizedRelation);
   }
   return graph;
@@ -911,7 +910,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       for (const pendingKey of toApply) {
         internal._pendingExpands.delete(pendingKey);
         const relation = relationFromKey(primaryParts(pendingKey)[1]);
-        Record.set(internal._expanded, pendingKey, true);
+        internal._expanded.add(pendingKey);
         internal._onExpand?.(id, relation);
       }
     },
