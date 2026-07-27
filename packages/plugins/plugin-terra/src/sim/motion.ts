@@ -27,6 +27,8 @@ export type ObjectState = {
   /** Whether the object has reached the end of `route` at this `elapsed`. */
   arrived: boolean;
   phase: RocketPhase;
+  /** A rocket's progress through its ballistic arc, `[0, 1]` (launch to touchdown); `0` for every other kind. */
+  flightFraction: number;
 };
 
 /** `elapsed` is seconds since the object's `spawnedAt` — always absolute, never a per-frame delta. */
@@ -179,6 +181,7 @@ const evaluateRouted = (
     leg: state.leg,
     arrived: done,
     phase: 'cruise',
+    flightFraction: 0,
   };
 };
 
@@ -205,6 +208,7 @@ const evaluateOrbit = (definition: TerraObject.TerraObject, context: MotionConte
       leg: 0,
       arrived: false,
       phase: 'cruise',
+      flightFraction: 0,
     };
   }
 
@@ -223,6 +227,7 @@ const evaluateOrbit = (definition: TerraObject.TerraObject, context: MotionConte
     leg: 0,
     arrived: false,
     phase: 'cruise',
+    flightFraction: 0,
   };
 };
 
@@ -249,6 +254,7 @@ const evaluateRocket = (definition: TerraObject.TerraObject, context: MotionCont
     leg: 0,
     arrived: fraction >= 1,
     phase,
+    flightFraction: fraction,
   };
 };
 
@@ -269,6 +275,7 @@ export const initialState = (definition: TerraObject.TerraObject, config: TerraC
         leg: 0,
         arrived: done,
         phase: 'cruise',
+        flightFraction: 0,
       };
     }
     case 'satellite':

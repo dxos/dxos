@@ -33,18 +33,41 @@ const forwardAt = (unit: Vec3, bearing: number): Vector3 => {
 };
 
 /**
+ * A rocket's nose pitch, in radians, at `flightFraction` through its ballistic arc: `+90°` (nose
+ * along the surface normal) at launch, `0°` (nose along the horizontal tangent) at apex, `-90°`
+ * (nose along the inverse normal) at touchdown. `90 * cos(pi * fraction)` alone gives exactly that
+ * curve — a rocket that noses over smoothly rather than snapping through the horizontal at apex.
+ */
+const rocketPitch = (flightFraction: number): number => 90 * DEG * Math.cos(Math.PI * flightFraction);
+
+/**
+ * `tangentForward` rotated toward `up` by `pitch` radians. `tangentForward` and `up` are already
+ * orthonormal (the tangent frame is perpendicular to the surface normal by construction), so this
+ * stays unit length for any `pitch` without renormalizing.
+ */
+const pitchForward = (tangentForward: Vector3, up: Vector3, pitch: number): Vector3 =>
+  tangentForward.scale(Math.cos(pitch)).add(up.scale(Math.sin(pitch)));
+
+/**
  * The thin-instance matrix for one object: positioned at `scale(state.unit, state.radius)`,
  * oriented with forward along `heading` (the frame-eased render heading, not necessarily
- * `state.bearing` itself — see `heading.ts`) and up along the surface normal (`state.unit`).
+ * `state.bearing` itself — see `heading.ts`) and up along the surface normal (`state.unit`). A
+ * rocket's forward is further pitched toward/away from the normal by `state.flightFraction` (see
+ * `rocketPitch`) so it flies nose-up at launch and nose-down at touchdown rather than nose-level
+ * like every other kind.
  */
-const matrixFor = ({ state }: SimObject, heading: number): Matrix => {
+const matrixFor = ({ state, definition }: SimObject, heading: number): Matrix => {
   const position = scale(state.unit, state.radius);
-  const forward = forwardAt(state.unit, heading);
+  const tangentForward = forwardAt(state.unit, heading);
   const up = new Vector3(state.unit[0], state.unit[1], state.unit[2]);
+  // The rotation axis for a rocket's pitch: computed from the *unpitched* tangent/up pair so it
+  // stays well-defined (unit length) at every pitch angle, including ±90°.
+  const right = Vector3.Cross(up, tangentForward).normalize();
+  const forward =
+    definition.kind === 'rocket' ? pitchForward(tangentForward, up, rocketPitch(state.flightFraction)) : tangentForward;
   // Build the rotation from an explicit left-handed basis rather than `FromLookDirectionLH`, which
   // returns a view-style rotation that lands the mesh's local +Z on -forward — i.e. every object
   // flies tail-first. Mapping local X/Y/Z onto right/up/forward is unambiguous.
-  const right = Vector3.Cross(up, forward).normalize();
   const trueUp = Vector3.Cross(forward, right).normalize();
   const basis = new Matrix();
   Matrix.FromXYZAxesToRef(right, trueUp, forward, basis);

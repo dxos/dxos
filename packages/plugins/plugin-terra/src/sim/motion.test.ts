@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { seaRadius } from '../engine';
+import { makeSampler, radiusAt, seaRadius } from '../engine';
 import { Terra, TerraObject } from '../types';
 import { angleBetween, bearingTo, toUnit } from './geo';
 import { type ObjectState, evaluate, initialState, walkRoute } from './motion';
@@ -249,5 +249,25 @@ describe('rocket motion', () => {
     expect(arrived.unit[0]).toBeCloseTo(target[0], 9);
     expect(arrived.unit[1]).toBeCloseTo(target[1], 9);
     expect(arrived.unit[2]).toBeCloseTo(target[2], 9);
+  });
+
+  test('starts at ground level — its launch-point terrain surface, not an elevated apex', () => {
+    const state = initialState(rocket, config);
+    const atLaunch = evaluate(state, rocket, { config, elapsed: 0 });
+    const { elevation } = makeSampler(config);
+    const groundRadius = Math.max(seaRadius(config), radiusAt(config, elevation(atLaunch.unit)));
+    expect(atLaunch.radius).toBeCloseTo(groundRadius, 9);
+    expect(atLaunch.flightFraction).toBe(0);
+  });
+
+  test('flightFraction rises monotonically from 0 at launch to 1 at touchdown', () => {
+    const state = initialState(rocket, config);
+    const launch = evaluate(state, rocket, { config, elapsed: 0 });
+    const midFlight = evaluate(state, rocket, { config, elapsed: 39 });
+    const landed = evaluate(state, rocket, { config, elapsed: 100_000 });
+    expect(launch.flightFraction).toBe(0);
+    expect(midFlight.flightFraction).toBeGreaterThan(launch.flightFraction);
+    expect(midFlight.flightFraction).toBeLessThan(1);
+    expect(landed.flightFraction).toBe(1);
   });
 });

@@ -4,6 +4,7 @@
 
 import { type TerraConfigValues, type Vec3, scale } from '../engine';
 import { type TerraObject } from '../types';
+import { advance } from './geo';
 import { type MotionContext, type ObjectState, evaluate } from './motion';
 
 /** Per-kind tuning: emission spacing, puff lifetime, sample cap, and render-side sizing/alpha. */
@@ -23,28 +24,28 @@ export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
   rocket: { spacing: 0.01, lifetimeMs: 3000, capacity: 48, startRadius: 0.014, endScale: 2, startAlpha: 0.45 },
 };
 
-/** A historical trail sample: a real past world position the object occupied, and its normalized age in `[0, 1)`. */
+/** A historical trail sample: a stable world position the puff was born at, and its normalized age in `[0, 1)`. */
 export type TrailPuff = { position: Vec3; age: number };
 
 /**
- * The trail is the object's own real past positions, re-derived on demand from its closed-form
- * motion rather than accumulated frame by frame — `sim/` positions are already an exact function of
- * `(definition, config, elapsed)` (see the determinism contract), so the puff at age `a` is simply
- * `evaluate(state, definition, { config, elapsed: nowElapsed - a })`. This has no ring buffer to
- * drift, no dependency on render frame rate, and the same `(state, definition, config, nowMs)`
- * always yields the identical set of puffs.
+ * A puff is born the instant an emission tick falls due, not sampled backward from "now" — that
+ * distinction is what keeps puffs planted in the air instead of sliding along with the object.
+ * Emission ticks sit on a fixed grid of absolute times `t_k = definition.spawnedAt + k * intervalMs`
+ * for integer `k >= 0`, where `intervalMs = (spec.spacing / definition.speed) * 1000` — the interval
+ * that makes consecutive ticks `spec.spacing` radians of *distance* apart at the object's own speed,
+ * not a fixed wall-clock cadence. Puff `k`'s world position is `evaluate(state, definition, {
+ * config, elapsed: (t_k - spawnedAt) / 1000 })`'s position — a pure function of `k` alone, so it is
+ * identical on every frame and for every peer regardless of when `nowMs` sampled it. Its age is
+ * simply `nowMs - t_k`; a puff is shown while that age is within `[0, spec.lifetimeMs)`.
  *
- * Ages are spaced by `spec.spacing / definition.speed` seconds, so puff separation reflects
- * `spec.spacing` radians of *distance* travelled at the object's own speed — a faster object trails
- * a longer wake, not a denser one — capped at `spec.capacity` samples. The nearest sample is one
- * spacing-step behind "now" (age 0 is skipped) so puffs never sample the object's own current hull
- * position; that skip is only ever a side effect of the sampling grid, never itself the mechanism
- * that shapes the trail's path.
+ * Because `t_k` never depends on `nowMs`, the *set* of visible puffs slides forward one tick at a
+ * time as `nowMs` advances, but no individual puff's own position ever changes — it only ages
+ * (fades and grows) in place while the object flies on past it. Capped at `spec.capacity` samples.
  *
  * One caveat: for routed kinds (boat/plane), `state`'s `route`/`leg`/`legStart` are the *current*
- * leg's — correct for any sampled age at or after that leg began, but a sample reaching back past
- * the leg's own start clamps to the leg's start point (see `motion.ts`'s `evaluateRouted`) rather
- * than replaying the previous leg. This only affects puffs within one `lifetimeMs` window of a
+ * leg's — correct for any tick at or after that leg began, but a tick reaching back past the leg's
+ * own start clamps to the leg's start point (see `motion.ts`'s `evaluateRouted`) rather than
+ * replaying the previous leg. This only affects puffs within one `lifetimeMs` window of a
  * re-target, and self-heals as those puffs age out — deliberately not solved by replaying the full
  * leg history here, which would reintroduce the per-frame bookkeeping this approach removes.
  */
@@ -59,16 +60,35 @@ export const trailPuffs = (
     return [];
   }
 
-  const ageStepMs = (spec.spacing / definition.speed) * 1000;
-  const count = Math.min(spec.capacity, Math.floor(spec.lifetimeMs / ageStepMs));
-  const elapsedNow = (nowMs - definition.spawnedAt) / 1000;
+  const intervalMs = (spec.spacing / definition.speed) * 1000;
+  const elapsedNowMs = nowMs - definition.spawnedAt;
+  // The largest tick strictly before `elapsedNowMs`, so the freshest puff never sits exactly on the
+  // object's own current position — `ceil(...) - 1` (rather than `floor`) guarantees strictness even
+  // when `elapsedNowMs` lands exactly on a tick.
+  const latestTick = Math.ceil(elapsedNowMs / intervalMs) - 1;
 
   const puffs: TrailPuff[] = [];
-  for (let index = 1; index <= count; index++) {
-    const ageMs = index * ageStepMs;
-    const context: MotionContext = { config, elapsed: elapsedNow - ageMs / 1000 };
+  for (let tick = latestTick; tick >= 0 && puffs.length < spec.capacity; tick--) {
+    const birthMs = tick * intervalMs;
+    const age = elapsedNowMs - birthMs;
+    // Ages only grow as `tick` decreases, so once the oldest allowed age is passed, every earlier
+    // tick is expired too.
+    if (age >= spec.lifetimeMs) {
+      break;
+    }
+    const context: MotionContext = { config, elapsed: birthMs / 1000 };
     const historical = evaluate(state, definition, context);
-    puffs.push({ position: scale(historical.unit, historical.radius), age: ageMs / spec.lifetimeMs });
+    puffs.push({ position: behindHull(historical, spec), age: age / spec.lifetimeMs });
   }
   return puffs;
+};
+
+/** How many multiples of `spec.startRadius` a puff is nudged opposite the object's own historical
+ * heading — cosmetic clearance from the hull mesh, never a factor in emission timing or spacing. */
+const HULL_CLEARANCE_FACTOR = 3;
+
+/** `historical`'s world position, nudged a small fixed distance behind its own heading at that instant. */
+const behindHull = (historical: ObjectState, spec: TrailSpec): Vec3 => {
+  const behindUnit = advance(historical.unit, historical.bearing, -spec.startRadius * HULL_CLEARANCE_FACTOR);
+  return scale(behindUnit, historical.radius);
 };

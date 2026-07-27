@@ -37,12 +37,24 @@ describe('trailPuffs', () => {
   });
 
   test('puff count is capped at spec.capacity', () => {
-    // A very fast object would otherwise pack far more than `capacity` samples into `lifetimeMs`.
+    // A very fast object would otherwise pack far more than `capacity` emission ticks into `lifetimeMs`.
     const rocket = makeRocket(10);
     const state = initialState(rocket, config);
     const puffs = trailPuffs(state, rocket, config, 10_000, SPEC);
     expect(puffs.length).toBeLessThanOrEqual(SPEC.capacity);
     expect(puffs.length).toBe(SPEC.capacity);
+  });
+
+  test('a puff expires the instant its age reaches spec.lifetimeMs', () => {
+    // capacity raised so the lifetime cutoff (not the capacity cap) is what limits the count here.
+    const spec: TrailSpec = { ...SPEC, capacity: 100 };
+    const rocket = makeRocket(0.02); // 0.01 rad spacing at 0.02 rad/s => a 500ms emission interval.
+    const state = initialState(rocket, config);
+    // spawnedAt is 0, so the tick born at t=0 is exactly 3000ms old at nowMs=3000 — right at the cutoff.
+    const puffs = trailPuffs(state, rocket, config, 3_000, spec);
+    // Ticks born at 500..2500ms old qualify (5 of them); the one born at 0 (exactly `lifetimeMs` old) does not.
+    expect(puffs.length).toBe(5);
+    expect(Math.max(...puffs.map((puff) => puff.age))).toBeLessThan(1);
   });
 
   test('successive puffs are separated by spec.spacing radians of travel, oldest last', () => {
@@ -55,7 +67,6 @@ describe('trailPuffs', () => {
       const a = puffs[index].position;
       const b = puffs[index + 1].position;
       const distance = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
-      // Chord length for a small angular spacing on a unit-radius path is close to the arc length.
       expect(distance).toBeGreaterThan(0);
       expect(puffs[index + 1].age).toBeGreaterThan(puffs[index].age);
     }
@@ -72,11 +83,8 @@ describe('trailPuffs', () => {
   test('the nearest puff is behind the object current position, not on top of it', () => {
     const rocket = makeRocket(0.02);
     const state = initialState(rocket, config);
-    const nowMs = 10_000;
-    const evaluated = state; // trailPuffs re-evaluates internally; use the same base state as the caller would.
-    const puffs = trailPuffs(evaluated, rocket, config, nowMs, SPEC);
-    const nearest = puffs[0];
-    expect(nearest.age).toBeGreaterThan(0);
+    const puffs = trailPuffs(state, rocket, config, 10_000, SPEC);
+    expect(puffs[0].age).toBeGreaterThan(0);
   });
 
   test('determinism: the same state/definition/config/nowMs always yields the same puffs', () => {
@@ -85,5 +93,32 @@ describe('trailPuffs', () => {
     const first = trailPuffs(state, rocket, config, 12_345, SPEC);
     const second = trailPuffs(state, rocket, config, 12_345, SPEC);
     expect(second).toEqual(first);
+  });
+
+  test('a puff does not move as `now` advances (world-stability, no tick crossed)', () => {
+    const rocket = makeRocket(0.02); // 500ms between emission ticks; 10_100/10_101 both fall strictly inside one tick's window.
+    const state = initialState(rocket, config);
+    const earlier = trailPuffs(state, rocket, config, 10_100, SPEC);
+    const later = trailPuffs(state, rocket, config, 10_101, SPEC);
+    expect(later.length).toBe(earlier.length);
+    for (let index = 0; index < earlier.length; index++) {
+      expect(later[index].position).toEqual(earlier[index].position);
+      expect(later[index].age).toBeGreaterThan(earlier[index].age);
+    }
+  });
+
+  test('a puff born at a fixed emission tick sits at the same world point at any later query within its lifetime', () => {
+    const rocket = makeRocket(0.02); // 500ms between emission ticks.
+    const state = initialState(rocket, config);
+    // The tick born at 4000ms is 500ms old at nowMs=4500, and 2500ms old (still < lifetimeMs=3000) at nowMs=6500.
+    const early = trailPuffs(state, rocket, config, 4_500, SPEC);
+    const late = trailPuffs(state, rocket, config, 6_500, SPEC);
+
+    const earlyPuff = early.find((puff) => Math.abs(puff.age * SPEC.lifetimeMs - 500) < 1e-6);
+    const latePuff = late.find((puff) => Math.abs(puff.age * SPEC.lifetimeMs - 2500) < 1e-6);
+    if (!earlyPuff || !latePuff) {
+      throw new Error('expected both queries to include the tick born at 4000ms');
+    }
+    expect(latePuff.position).toEqual(earlyPuff.position);
   });
 });
