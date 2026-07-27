@@ -15,11 +15,11 @@ import {
   LayoutOperation,
   UrlResolution,
 } from '@dxos/app-toolkit';
-import { type Space, isSpace } from '@dxos/client/echo';
+import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Database, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Filter, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { EID, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -162,7 +162,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
       // through a space's collection tree, not just the root collection's direct children. The shape is
       // data-dependent (the object's collection ancestry), so instead of a static `path` it resolves
-      // dynamically: walk incoming `Collection.objects` refs up to the space root collection.
+      // dynamically: index the space's collections once, then walk that index up to the root collection.
       url: {
         key: 'object',
         kind: 'item',
@@ -188,8 +188,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             if (!rootCollection) {
               return null;
             }
-            const chain = yield* Effect.promise(() =>
-              walkCollectionChainToRoot({ space, objectId: id, rootId: rootCollection.id }),
+            const chain = yield* walkCollectionChainToRoot({ objectId: id, rootId: rootCollection.id }).pipe(
+              Effect.provide(Database.layer(space.db)),
             );
             return chain ? GraphPath.getCollectionsPath(workspace, ...chain, id) : null;
           }),
@@ -314,46 +314,54 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 const COLLECTION_WALK_MAX_DEPTH = 32;
 
 /**
- * Depth-first walk up a space's collection tree from `objectId` to the root collection, following
- * incoming `Collection.objects` references. The composer ontology guarantees a tree (an object lives in
- * one collection, no cycles), but a visited-set and depth cap keep bad data — multi-containment or a
- * cycle — from looping; the first branch that reaches the root wins. Returns the intermediate collection
- * ids in root→leaf order (excluding the root collection, whose objects sit directly under
+ * Walk up a space's collection tree from `objectId` to the root collection. A single query loads the
+ * space's collections — each already carries its child refs — so the ancestry is a pure in-memory walk
+ * of a child→parent index rather than a query per step. The composer ontology guarantees a tree (an
+ * object lives in one collection, no cycles); on bad data the first indexed parent wins, and a
+ * visited-set plus depth cap stop a cycle from looping. Returns the intermediate collection ids in
+ * root→leaf order (excluding the root collection, whose objects sit directly under
  * `content/collections`), or null if no path to the root exists.
  */
-const walkCollectionChainToRoot = async ({
-  space,
+const walkCollectionChainToRoot = ({
   objectId,
   rootId,
 }: {
-  space: Space;
   objectId: string;
   rootId: string;
-}): Promise<string[] | null> => {
-  const visited = new Set<string>([objectId]);
-  const stack: Array<{ id: string; chain: string[] }> = [{ id: objectId, chain: [] }];
-  while (stack.length > 0) {
-    const entry = stack.pop();
-    if (!entry) {
-      break;
-    }
-    const parents = await space.db
-      .query(Query.select(Filter.id(entry.id)).referencedBy(Collection.Collection, 'objects'))
-      .run();
-    for (const parent of parents) {
-      if (parent.id === rootId) {
-        // `chain` is leaf→root as built on the way up; the node id wants root→leaf.
-        return [...entry.chain].reverse();
+}): Effect.Effect<string[] | null, never, Database.Service> =>
+  Effect.gen(function* () {
+    const collections = yield* Database.query(Filter.type(Collection.Collection)).run;
+    const parentOf = new Map<string, string>();
+    for (const collection of collections) {
+      for (const ref of collection.objects ?? []) {
+        const childId = EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) : undefined;
+        if (childId && !parentOf.has(childId)) {
+          parentOf.set(childId, collection.id);
+        }
       }
-      if (visited.has(parent.id) || entry.chain.length >= COLLECTION_WALK_MAX_DEPTH) {
-        continue;
-      }
-      visited.add(parent.id);
-      stack.push({ id: parent.id, chain: [...entry.chain, parent.id] });
     }
-  }
-  return null;
-};
+
+    const visited = new Set<string>([objectId]);
+    // Built leaf→root on the way up; the node id wants root→leaf.
+    const chain: string[] = [];
+    let current = objectId;
+    for (let depth = 0; depth < COLLECTION_WALK_MAX_DEPTH; depth++) {
+      const parent = parentOf.get(current);
+      if (!parent) {
+        return null;
+      }
+      if (parent === rootId) {
+        return chain.reverse();
+      }
+      if (visited.has(parent)) {
+        return null;
+      }
+      visited.add(parent);
+      chain.push(parent);
+      current = parent;
+    }
+    return null;
+  });
 
 /** Builds the action list for an ECHO object node. */
 const constructObjectActions = ({
