@@ -93,7 +93,6 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
       void invokePromise(LayoutOperation.Select, { contextId: attendableId, subject: { mode: 'single', id } });
       void invokePromise(LayoutOperation.Open, {
         subject: [GraphPath.getObjectPathFromObject(object)],
-        // Opening a card always adds a plank beside this type node's plank, never replacing it.
         pivotId: attendableId,
         disposition: 'add',
         navigation: 'immediate',

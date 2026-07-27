@@ -157,8 +157,6 @@ export const PreviewComponent = ({
     [view, range, dxn, remSize],
   );
 
-  // Open the referenced object: defer to the caller's handler when provided, else always add a plank
-  // beside this embed's plank (`add`, resolved structurally from the click target) — never replacing it.
   const handleOpen = useCallback(
     (event: MouseEvent) => {
       if (!uri || !object) {
