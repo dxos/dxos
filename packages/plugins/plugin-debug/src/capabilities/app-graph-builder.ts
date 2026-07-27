@@ -53,7 +53,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'debug',
+              variant: 'debug',
               label: ['debug.label', { ns: meta.profile.key }],
               icon: 'ph--bug--regular',
               data: 'debug',

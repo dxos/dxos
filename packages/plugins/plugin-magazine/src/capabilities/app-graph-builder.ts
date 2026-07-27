@@ -13,7 +13,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Attention, Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
@@ -88,7 +88,7 @@ export default Capability.makeModule(
           }
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: Attention.linkedSegment('post'),
+              variant: 'post',
               label: ['post-companion.label', { ns: meta.profile.key }],
               icon: 'ph--article--regular',
               data: post,

@@ -90,7 +90,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: 'meeting',
+                variant: 'meeting',
                 label: [
                   data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label',
                   { ns: meta.profile.key },
@@ -169,7 +169,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: 'transcript',
+                variant: 'transcript',
                 label: ['transcript-companion.label', { ns: meta.profile.key }],
                 icon: 'ph--subtitles--regular',
                 data: get(Obj.atom(meeting.transcript)),
@@ -195,7 +195,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: 'meeting',
+                variant: 'meeting',
                 label: ['meeting-companion.label', { ns: meta.profile.key }],
                 icon: 'ph--handshake--regular',
                 data: meeting,

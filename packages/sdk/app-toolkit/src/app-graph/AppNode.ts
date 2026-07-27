@@ -293,27 +293,29 @@ export const makeObject = ({
  */
 const LINKED_PREFIX = '~';
 
-/** Normalize a companion id to a linked segment (`~<variant>`), leaving an already-linked id as-is. */
-const toLinkedSegment = (id: string): string => (id.startsWith(LINKED_PREFIX) ? id : `${LINKED_PREFIX}${id}`);
+/** The sole place a linked segment is composed: `<variant>` -> `~<variant>`. */
+const linkedSegment = (variant: string): string => `${LINKED_PREFIX}${variant}`;
 
-/** Build a plank-level companion panel node. */
+/**
+ * Build a plank-level companion panel node, addressed by its bare `variant` (e.g. `settings`). The id is
+ * always the linked segment `~<variant>`, so the companion shares the plank's attention and is uniformly
+ * addressable as `companion/<variant>` in the URL; the graph builder stamps the `urlSegment` for these
+ * nodes (the declared `linked` tier).
+ */
 export const makeCompanion = <TData = string>({
-  id,
+  variant,
   label,
   icon,
   data,
   position,
 }: {
-  id: string;
+  variant: string;
   label: Translations.Label;
   icon: string;
   data: TData;
   position?: Position.Position;
 }): Node.NodeArg<TData> => ({
-  // Companion ids are always linked segments (`~<variant>`) so they share the plank's attention and are
-  // uniformly addressable as `companion/<variant>` in the URL; normalize callers that pass a bare id. The
-  // graph builder stamps the `urlSegment` for these `~<variant>` nodes (the declared `linked` tier).
-  id: toLinkedSegment(id),
+  id: linkedSegment(variant),
   type: PLANK_COMPANION_TYPE,
   data,
   properties: {

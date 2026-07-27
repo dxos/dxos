@@ -155,7 +155,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: Attention.linkedSegment(ASSISTANT_COMPANION_VARIANT),
+                variant: ASSISTANT_COMPANION_VARIANT,
                 label: ['assistant-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
@@ -174,7 +174,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'invocations',
+              variant: 'invocations',
               label: ['invocations.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'invocations',
