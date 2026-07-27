@@ -5,38 +5,20 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
-import { Operation, OperationHandlerSet, Skill } from '@dxos/compute';
-import { Collection, Database, Obj, Ref } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { Text } from '@dxos/schema';
 
-import { Agent, Chat, Plan } from '../../../types';
+import { OperationTestLayer } from '../../../testing';
+import { Agent } from '../../../types';
 import AgentSkillDef from '../skill';
 import * as AgentSkillOperations from './definitions';
-import { AgentSkillHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();
-
-const TestLayer = AssistantTestLayer({
-  operationHandlers: OperationHandlerSet.merge(AgentSkillHandlers, MarkdownOperationHandlerSet),
-  types: [
-    Agent.Agent,
-    Plan.Plan,
-    Chat.Chat,
-    Chat.CompanionTo,
-    Skill.Skill,
-    Text.Text,
-    Markdown.Document,
-    Collection.Collection,
-  ],
-  disableLlmMemoization: true,
-});
 
 describe('AddArtifact', () => {
   it.scoped(
@@ -44,12 +26,7 @@ describe('AddArtifact', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent, conversation } = yield* setupBoundAgent();
-        const document = yield* Database.add(
-          Obj.make(Markdown.Document, {
-            name: 'Test Document',
-            content: Ref.make(Text.make({ content: 'This is a test document with some content.' })),
-          }),
-        );
+        const document = yield* Database.add(Text.make({ content: 'This is a test document with some content.' }));
         yield* Database.flush();
         expect(agent.artifacts).toHaveLength(0);
 
@@ -60,9 +37,9 @@ describe('AddArtifact', () => {
 
         expect(agent.artifacts.map((artifact) => artifact.name)).toEqual(['My Test Document']);
         const data = yield* Database.load(agent.artifacts[0].data);
-        expect(Obj.instanceOf(Markdown.Document, data)).toBe(true);
+        expect(Obj.instanceOf(Text.Text, data)).toBe(true);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
     ),
   );

@@ -5,42 +5,19 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
-import { SpaceProperties } from '@dxos/client-protocol';
-import { Operation, OperationHandlerSet, Skill, Trigger } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Operation, Trigger } from '@dxos/compute';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
-import { MarkdownSkill } from '@dxos/plugin-markdown';
-import { Markdown } from '@dxos/plugin-markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
-import { Text } from '@dxos/schema';
 
-import { Agent, Chat, Plan } from '../../../types';
-import { AgentSkillHandlers } from '../../agent/operations';
+import { OperationTestLayer } from '../../../testing';
+import { Agent } from '../../../types';
 import { AgentWorker } from '../../agent/operations/definitions';
 import AgentSkillDef from '../../agent/skill';
-import { AgentWizardHandlers, AgentWizardOperations } from '../index';
+import { AgentWizardOperations } from '../index';
 
 EntityId.dangerouslyDisableRandomness();
-
-const TestLayer = AssistantTestLayerWithTriggers({
-  operationHandlers: OperationHandlerSet.merge(AgentSkillHandlers, AgentWizardHandlers, MarkdownOperationHandlerSet),
-  types: [
-    Agent.Agent,
-    Plan.Plan,
-    Chat.CompanionTo,
-    Chat.Chat,
-    SpaceProperties,
-    Skill.Skill,
-    Trigger.Trigger,
-    Text.Text,
-    Markdown.Document,
-    Collection.Collection,
-  ],
-  disableLlmMemoization: true,
-});
 
 describe('SyncTriggers', () => {
   const skill = AgentSkillDef.make();
@@ -54,7 +31,7 @@ describe('SyncTriggers', () => {
           {
             name: 'Scheduled agent',
             instructions: 'A scheduled agent that runs on a timer.',
-            skills: [Ref.make(MarkdownSkill.make())],
+            skills: [Ref.make(AgentSkillDef.make())],
             cron,
           },
           skill,
@@ -82,7 +59,7 @@ describe('SyncTriggers', () => {
         invariant(Obj.instanceOf(Operation.PersistentOperation, operation));
         expect(Obj.getMeta(operation).key).toBe(AgentWorker.meta.key);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
     ),
   );
@@ -95,7 +72,7 @@ describe('SyncTriggers', () => {
           {
             name: 'Toggle agent',
             instructions: 'Test enabled propagation.',
-            skills: [Ref.make(MarkdownSkill.make())],
+            skills: [Ref.make(AgentSkillDef.make())],
             enabled: false,
             cron: '0 9 * * *',
           },
@@ -122,7 +99,7 @@ describe('SyncTriggers', () => {
         expect(triggersAfter).toHaveLength(triggers.length);
         expect(triggersAfter.every((trigger) => trigger.enabled === true)).toBe(true);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
     ),
   );

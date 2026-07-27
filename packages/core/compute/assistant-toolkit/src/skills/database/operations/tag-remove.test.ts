@@ -5,34 +5,16 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { AiContext } from '@dxos/assistant';
-import { Operation, Skill } from '@dxos/compute';
-import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EID, EntityId } from '@dxos/keys';
-import { Employer, Organization, Person } from '@dxos/types';
+import { Organization } from '@dxos/types';
 
-import DatabaseSkill from '../skill';
+import { OperationTestLayer } from '../../../testing';
 import { TagAdd, TagRemove } from './definitions';
-import { DatabaseHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();
-
-const TestLayer = AssistantTestLayer({
-  operationHandlers: DatabaseHandlers,
-  types: [
-    Organization.Organization,
-    Person.Person,
-    Employer.Employer,
-    Tag.Tag,
-    Skill.Skill,
-    Feed.Feed,
-    AiContext.Binding,
-  ],
-  skills: [DatabaseSkill.make()],
-  disableLlmMemoization: true,
-});
 
 describe('TagRemove', () => {
   it.effect(
@@ -49,7 +31,7 @@ describe('TagRemove', () => {
 
         expect(taggedIds(organization)).not.toContain(tag.id);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
     ),
   );

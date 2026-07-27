@@ -6,34 +6,15 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { AiContext } from '@dxos/assistant';
-import { Operation, Skill } from '@dxos/compute';
-import { Database, Feed, Filter, JsonSchema, Query, Scope, Tag, Type } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Filter, JsonSchema, Query, Scope, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Employer, Organization, Person } from '@dxos/types';
 
-import DatabaseSkill from '../skill';
+import { OperationTestLayer } from '../../../testing';
 import { SchemaAdd } from './definitions';
-import { DatabaseHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();
-
-const TestLayer = AssistantTestLayer({
-  operationHandlers: DatabaseHandlers,
-  types: [
-    Organization.Organization,
-    Person.Person,
-    Employer.Employer,
-    Tag.Tag,
-    Skill.Skill,
-    Feed.Feed,
-    AiContext.Binding,
-  ],
-  skills: [DatabaseSkill.make()],
-  disableLlmMemoization: true,
-});
 
 // A representative draft-07 JSON Schema as a model would emit for the `add-schema` tool.
 const PROJECT_JSON_SCHEMA = {
@@ -85,7 +66,7 @@ describe('SchemaAdd', () => {
         expect(schemas).toHaveLength(1);
         expectSchemaProperties(schemas[0], ['name', 'description', 'status']);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
     ),
   );

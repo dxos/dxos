@@ -5,38 +5,20 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
-import { Operation, OperationHandlerSet, Skill } from '@dxos/compute';
-import { Collection, Database, Obj, Ref } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { Text } from '@dxos/schema';
 
-import { Agent, Chat, Plan } from '../../../types';
+import { OperationTestLayer } from '../../../testing';
+import { Agent } from '../../../types';
 import AgentSkillDef from '../skill';
 import * as AgentSkillOperations from './definitions';
-import { AgentSkillHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();
-
-const TestLayer = AssistantTestLayer({
-  operationHandlers: OperationHandlerSet.merge(AgentSkillHandlers, MarkdownOperationHandlerSet),
-  types: [
-    Agent.Agent,
-    Plan.Plan,
-    Chat.Chat,
-    Chat.CompanionTo,
-    Skill.Skill,
-    Text.Text,
-    Markdown.Document,
-    Collection.Collection,
-  ],
-  disableLlmMemoization: true,
-});
 
 describe('GetContext', () => {
   it.scoped(
@@ -44,12 +26,7 @@ describe('GetContext', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent, conversation } = yield* setupBoundAgent();
-        const document = yield* Database.add(
-          Obj.make(Markdown.Document, {
-            name: 'Test Document',
-            content: Ref.make(Text.make({ content: 'Body.' })),
-          }),
-        );
+        const document = yield* Database.add(Text.make({ content: 'Body.' }));
         yield* Database.flush();
         yield* Operation.invoke(AgentSkillOperations.AddArtifact, {
           name: 'My Test Document',
@@ -65,7 +42,7 @@ describe('GetContext', () => {
           { name: 'My Test Document', type: Obj.getTypename(document), dxn: Obj.getURI(document) },
         ]);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
     ),
   );

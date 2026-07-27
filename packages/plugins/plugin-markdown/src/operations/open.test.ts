@@ -5,27 +5,17 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { SpaceProperties } from '@dxos/client-protocol';
-import { Operation, Skill } from '@dxos/compute';
-import { Collection, Database, Feed, Ref } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
-import { HasSubject } from '@dxos/types';
 
-import { WithProperties } from '#testing';
+import { OperationTestLayer, WithProperties } from '#testing';
 
 import { MarkdownOperation } from '../types';
-import { MarkdownOperationHandlerSet } from './index';
 
 EntityId.dangerouslyDisableRandomness();
-
-const TestLayer = AssistantTestLayer({
-  operationHandlers: MarkdownOperationHandlerSet,
-  types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
-  disableLlmMemoization: true,
-});
 
 describe('Open', () => {
   it.effect(
@@ -41,7 +31,7 @@ describe('Open', () => {
         expect(content).toBe('# Shopping list\n- milk');
       },
       WithProperties,
-      Effect.provide(TestLayer),
+      Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
     ),
   );

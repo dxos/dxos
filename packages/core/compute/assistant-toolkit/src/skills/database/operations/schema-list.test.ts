@@ -6,34 +6,16 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { AiContext } from '@dxos/assistant';
 import { Operation, Skill } from '@dxos/compute';
-import { Feed, Tag, Type } from '@dxos/echo';
+import { Feed, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 
-import DatabaseSkill from '../skill';
+import { OperationTestLayer } from '../../../testing';
 import { SchemaList } from './definitions';
-import { DatabaseHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();
-
-const TestLayer = AssistantTestLayer({
-  operationHandlers: DatabaseHandlers,
-  types: [
-    Organization.Organization,
-    Person.Person,
-    Employer.Employer,
-    Tag.Tag,
-    Skill.Skill,
-    Feed.Feed,
-    AiContext.Binding,
-  ],
-  skills: [DatabaseSkill.make()],
-  disableLlmMemoization: true,
-});
 
 describe('SchemaList', () => {
   it.effect(
@@ -53,7 +35,7 @@ describe('SchemaList', () => {
         expect(typenames).not.toContain(Type.getTypename(Feed.Feed));
         expect(rows.find((row) => row.typename === Type.getTypename(Employer.Employer))?.kind).toBe('relation');
       },
-      Effect.provide(TestLayer),
+      Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
     ),
   );
