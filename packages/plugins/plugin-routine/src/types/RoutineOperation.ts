@@ -86,9 +86,9 @@ export const RunPromptInNewChat = Operation.make({
   }),
 });
 
-// Runs a routine's `runnable` directly (bypassing its triggers). The runnable receives no input;
-// the trigger-driven path is what supplies event-mapped input, so manual runs target runnables that
-// need none.
+// Runs a routine's `runnable` directly, bypassing the trigger dispatcher but still taking the runnable's
+// input from the routine's first trigger — that is where the binding lives (e.g. a sync routine's cursor),
+// so a manual run would otherwise invoke an input-taking runnable with nothing.
 export const RunRoutine = Operation.make({
   meta: {
     key: makeKey('runAutomation'),
