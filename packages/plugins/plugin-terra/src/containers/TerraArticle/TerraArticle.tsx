@@ -69,7 +69,7 @@ export const TerraArticle = ({ subject: terra }: TerraArticleProps) => {
             className='dx-container absolute inset-0 outline-none'
             style={{ touchAction: 'none' }}
           />
-          <div className='absolute top-0 right-0 z-10'>
+          <div className='absolute top-2 right-2 z-10'>
             <TerraForm config={config} onChange={handleChange} onWaterSheen={handleWaterSheen} />
           </div>
         </div>

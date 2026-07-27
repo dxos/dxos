@@ -13,7 +13,7 @@ export type SliderStyleProps = {
 const root: ComponentFunction<SliderStyleProps> = ({ orientation, disabled }, ...etc) =>
   mx(
     'relative flex touch-none select-none items-center',
-    orientation === 'vertical' ? 'h-full w-5 flex-col' : 'w-full h-5',
+    orientation === 'vertical' ? 'h-full w-3 flex-col' : 'w-full h-3',
     disabled && 'opacity-50 pointer-events-none',
     ...etc,
   );

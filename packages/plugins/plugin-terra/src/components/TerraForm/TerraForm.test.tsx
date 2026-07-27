@@ -42,4 +42,16 @@ describe('TerraForm', () => {
     // waterLevel, elevationScale, mountainScale, treeDensity, resolution.
     expect(screen.getAllByRole('slider')).toHaveLength(5);
   });
+
+  test('shows a human label and a live readout, as siblings, on the label line', () => {
+    render(<TerraForm config={config} onChange={() => {}} />, { wrapper: Wrapper });
+
+    // Human `title` annotations on `Terra.TerraConfig`, not raw property names ("waterLevel").
+    const label = screen.getByText('Water level');
+    // Exact textContent match enforces the sibling constraint: `labelEnd`'s readout must never be
+    // nested inside `Input.Label`, or the label's accessible name would churn on every slider drag.
+    expect(label.textContent).toBe('Water level');
+    // `getByText` throws if no match is found, which is assertion enough that the readout rendered.
+    expect(screen.getByText('0.46')).toBeTruthy();
+  });
 });

@@ -47,37 +47,35 @@ const nextSeed = (seed: string): string => {
 };
 
 /**
- * Renders a numeric field as a `Slider` with a live readout in place of the schema's default numeric
- * input. Delegates the label/status/validation chrome to `Form.Row`'s render-prop (field mode) — it,
- * not this renderer, wraps the row in `Input.Root`, which `Input.Label`/`Input.DescriptionAndValidation`
- * require via context. Rendering those parts (or anything relying on them) outside `Form.Row` throws.
+ * Renders a numeric field as a `Slider` with a live readout on the label line, in place of the
+ * schema's default numeric input. Delegates the label/status/validation chrome to `Form.Row`'s
+ * render-prop (field mode) — it, not this renderer, wraps the row in `Input.Root`, which
+ * `Input.Label`/`Input.DescriptionAndValidation` require via context. Rendering those parts (or
+ * anything relying on them) outside `Form.Row` throws.
  */
 const createSliderField = (key: SliderKey): FormFieldMap[string] => {
   const spec = SLIDER_SPECS[key];
-  const SliderField = ({ type, onValueChange, ...rowProps }: FormFieldRendererProps<number>) => {
+  const SliderField = ({ type, getValue, onValueChange, ...rowProps }: FormFieldRendererProps<number>) => {
+    const current = getValue() ?? spec.min;
     const handleValueChange = useCallback(([next]: number[]) => onValueChange(type, next), [type, onValueChange]);
     return (
       <Form.Row<number>
         {...rowProps}
+        getValue={getValue}
+        // A sibling of the label text (never a child) — keeps `Input.Label`'s `textContent` exactly
+        // `label` and avoids re-deriving the input's accessible name on every drag frame.
+        labelEnd={<span className='text-sm text-description tabular-nums'>{current.toFixed(spec.decimals)}</span>}
         renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}
       >
-        {({ value }) => {
-          const current = value ?? spec.min;
-          return (
-            <div className='flex flex-col gap-1 w-full'>
-              <div className='flex justify-end'>
-                <span className='text-sm text-description tabular-nums'>{current.toFixed(spec.decimals)}</span>
-              </div>
-              <Slider
-                value={[current]}
-                min={spec.min}
-                max={spec.max}
-                step={spec.step}
-                onValueChange={handleValueChange}
-              />
-            </div>
-          );
-        }}
+        {({ value }) => (
+          <Slider
+            value={[value ?? spec.min]}
+            min={spec.min}
+            max={spec.max}
+            step={spec.step}
+            onValueChange={handleValueChange}
+          />
+        )}
       </Form.Row>
     );
   };
@@ -112,7 +110,9 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
   const handleWaterSheenChange = useCallback((checked: boolean) => onWaterSheen?.(checked), [onWaterSheen]);
 
   return (
-    <div className='flex flex-col gap-4 p-4 w-72'>
+    // Semi-transparent floating surface (mirrors plugin-voxel's canvas-overlay HUD chrome) so
+    // labels stay legible over the rendered planet regardless of terrain color underneath.
+    <div className='flex flex-col gap-4 p-4 w-72 bg-base-surface/85 backdrop-blur-sm rounded-md shadow-md border border-separator'>
       <Form.Root<TerraFormValues>
         schema={FORM_SCHEMA}
         values={config}
