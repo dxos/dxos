@@ -8,3 +8,4 @@ export * from './terrain';
 export * from './biomes';
 export * from './palette';
 export * from './generate-planet';
+export * from './scene-manager';
