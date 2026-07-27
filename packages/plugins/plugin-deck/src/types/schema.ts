@@ -22,14 +22,22 @@ export const DeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
   /** Item IDs of planks that have been closed; used for state persistence and reopening. */
   inactive: Schema.mutable(Schema.Array(Schema.String)),
-  /** Persisted plank widths in rem, keyed by item ID. */
+  //
+  // Sizing. One field per presentation, because the two measure different things (see
+  // `useDeckPresentation`): a sliding plank has an intrinsic width of its own, while tiled planks only
+  // have shares of the viewport they fill.
+  //
+  /** Sliding: absolute plank widths in rem, keyed by item ID — a plank keeps its width wherever it sits. */
   plankSizing: Schema.mutable(PlankSizing),
+  /**
+   * Tiling: relative widths of the tiled planks, by position rather than by ID, so dragging the split
+   * and then swapping which plank occupies a slot keeps the layout. Absent/empty means an even split.
+   */
+  tilingSizing: Schema.optional(Schema.mutable(Schema.Array(Schema.Number))),
   /** Whether the companion pane is visible alongside the active plank(s). */
   companionOpen: Schema.Boolean,
   /** Persisted companion frame widths in rem, keyed by frame ID. */
   companionFrameSizing: Schema.mutable(PlankSizing),
-  /** Fraction of the deck width taken by the first of the two tiled planks; absent means an even split. */
-  tilingSplit: Schema.optional(Schema.Number),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 

@@ -316,46 +316,51 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
 // Minimum fraction of the deck width a tiled plank may be shrunk to via the splitter.
 const MIN_TILING_FRACTION = 0.15;
 
-/** Clamp a persisted split into range; an absent or out-of-range value falls back to an even split. */
-const clampTilingSplit = (split: number | undefined): number =>
-  split === undefined || !Number.isFinite(split)
-    ? 0.5
-    : Math.min(1 - MIN_TILING_FRACTION, Math.max(MIN_TILING_FRACTION, split));
+/** Normalize persisted weights to `count` positive fractions summing to 1; fall back to equal. */
+const normalizeTilingWeights = (weights: readonly number[] | undefined, count: number): number[] => {
+  const valid = !!weights && weights.length === count && weights.every((weight) => weight > 0);
+  const base = valid ? weights.slice() : Array.from({ length: count }, () => 1);
+  const sum = base.reduce((total, weight) => total + weight, 0);
+  return sum > 0 ? base.map((weight) => weight / sum) : Array.from({ length: count }, () => 1 / count);
+};
 
 /**
- * Tiling presentation: the two planks split the viewport width (no horizontal overflow), with a
- * draggable splitter between them. `tilingSplit` is the first pane's fraction — persisted by position
- * via {@link DeckOperation.UpdateTilingSize}, so swapping which plank sits in a slot keeps the split —
- * and is reflected live during a drag through local state. Tiling only ever renders two planks (see
- * `useDeckPresentation`); a third would need a per-position ratio again.
+ * Tiling presentation: planks split the viewport width proportionally (no horizontal overflow), with a
+ * draggable splitter between adjacent planks that adjusts the split ratio. The ratio persists per
+ * position via {@link DeckOperation.UpdateTilingSize} (so swapping which plank sits in a slot keeps the
+ * split) and is reflected live during a drag through local state.
  */
 const TilingDeck = ({
   rendered,
   active,
-  split,
+  weights,
 }: {
   rendered: string[];
   active: string[];
-  split: number | undefined;
+  weights: readonly number[] | undefined;
 }) => {
   const { invokePromise } = useOperationInvoker();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [liveSplit, setLiveSplit] = useState<number | null>(null);
-  const persisted = useMemo(() => clampTilingSplit(split), [split]);
-  const applied = liveSplit ?? persisted;
+  const [liveWeights, setLiveWeights] = useState<number[] | null>(null);
+  const persisted = useMemo(() => normalizeTilingWeights(weights, rendered.length), [weights, rendered.length]);
+  const applied = liveWeights ?? persisted;
 
   // Drop the live override once the persisted ratio catches up with the committed drag, so external
   // changes take effect again without a mid-round-trip flicker.
   useEffect(() => {
-    if (liveSplit !== null && Math.abs(liveSplit - persisted) < 0.001) {
-      setLiveSplit(null);
+    if (
+      liveWeights &&
+      liveWeights.length === persisted.length &&
+      liveWeights.every((weight, index) => Math.abs(weight - persisted[index]) < 0.001)
+    ) {
+      setLiveWeights(null);
     }
-  }, [liveSplit, persisted]);
+  }, [liveWeights, persisted]);
 
   const handleCommit = useCallback(
-    (next: number) => {
-      setLiveSplit(next);
-      void invokePromise(DeckOperation.UpdateTilingSize, { split: next });
+    (next: number[]) => {
+      setLiveWeights(next);
+      void invokePromise(DeckOperation.UpdateTilingSize, { weights: next });
     },
     [invokePromise],
   );
@@ -366,17 +371,15 @@ const TilingDeck = ({
     <div ref={containerRef} className={mx('absolute inset-0 flex', mainPaddingTransitions)}>
       {rendered.map((id, index) => (
         <Fragment key={id}>
-          <div
-            className='relative h-full min-w-0'
-            style={{ flexGrow: index === 0 ? applied : 1 - applied, flexBasis: '0%' }}
-          >
+          <div className='relative h-full min-w-0' style={{ flexGrow: applied[index], flexBasis: '0%' }}>
             <DeckPlank id={id} part='main' active={active} soloLook={active.length === 1} classNames='size-full' />
           </div>
           {index < rendered.length - 1 && (
             <TilingSplitter
-              split={applied}
+              index={index}
+              weights={applied}
               containerRef={containerRef}
-              onPreview={setLiveSplit}
+              onPreview={setLiveWeights}
               onCommit={handleCommit}
             />
           )}
@@ -387,37 +390,45 @@ const TilingDeck = ({
 };
 
 /**
- * Draggable divider between the two tiled planks. Moves the split as a fraction of the deck width,
- * clamped so neither pane shrinks below {@link MIN_TILING_FRACTION}. Reports the live fraction via
- * `onPreview` during the drag and the final one via `onCommit` on drop.
+ * Draggable divider between two tiled planks. Transfers width between the panes on either side (`index`
+ * and `index + 1`) as a fraction of the deck width, clamped so neither shrinks below
+ * {@link MIN_TILING_FRACTION}. Reports live fractions via `onPreview` during the drag and the final
+ * ones via `onCommit` on drop.
  */
 const TilingSplitter = ({
-  split,
+  index,
+  weights,
   containerRef,
   onPreview,
   onCommit,
 }: {
-  split: number;
+  index: number;
+  weights: number[];
   containerRef: RefObject<HTMLDivElement | null>;
-  onPreview: (split: number) => void;
-  onCommit: (split: number) => void;
+  onPreview: (weights: number[]) => void;
+  onCommit: (weights: number[]) => void;
 }) => {
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLButtonElement>) => {
       event.preventDefault();
       const startX = event.clientX;
-      const startSplit = split;
+      const startWeights = weights.slice();
       const controller = new AbortController();
 
-      const compute = (clientX: number): number => {
+      const compute = (clientX: number): number[] => {
         const width = containerRef.current?.getBoundingClientRect().width ?? 0;
         if (width <= 0) {
-          return startSplit;
+          return startWeights;
         }
-        return Math.min(
-          1 - MIN_TILING_FRACTION,
-          Math.max(MIN_TILING_FRACTION, startSplit + (clientX - startX) / width),
+        const raw = (clientX - startX) / width;
+        const delta = Math.min(
+          startWeights[index + 1] - MIN_TILING_FRACTION,
+          Math.max(MIN_TILING_FRACTION - startWeights[index], raw),
         );
+        const next = startWeights.slice();
+        next[index] += delta;
+        next[index + 1] -= delta;
+        return next;
       };
 
       window.addEventListener('pointermove', (moveEvent) => onPreview(compute(moveEvent.clientX)), {
@@ -432,7 +443,7 @@ const TilingSplitter = ({
         { signal: controller.signal },
       );
     },
-    [split, containerRef, onPreview, onCommit],
+    [index, weights, containerRef, onPreview, onCommit],
   );
 
   return (
@@ -707,7 +718,7 @@ export const DeckPlanks = () => {
               classNames={mx('absolute inset-0', mainIntrinsicSize)}
             />
           ) : presentation === 'tiling' ? (
-            <TilingDeck rendered={rendered} active={deck.active} split={deck.tilingSplit} />
+            <TilingDeck rendered={rendered} active={deck.active} weights={deck.tilingSizing} />
           ) : (
             <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
               <ScrollArea.Root orientation='horizontal' classNames='size-full'>
