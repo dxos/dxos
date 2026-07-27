@@ -1,6 +1,8 @@
 # URL & Deck Redesign — Tasks
 
-_Resume: PR 12273 open (not draft, mergeable), branch at 43995bff6b: 109 commits ahead of main, 8 behind. CI on 515d8c6195 was fully green; the run for the tip has check/build/storybook/workerd green with test still running. Local: app-graph 134 / app-toolkit 109 / plugin-deck 40 + 13 storybook / plugin-space 18 / plugin-inbox 222 + storybook 40. Since the last checkpoint: the 2026-07-19 superpowers spec is folded into this project's DESIGN.md (superpowers and $project are mutually exclusive) and its five referrers plus the registry summary updated; validateNavigationTarget now checks node presence BEFORE expanding, so a click on an already-rendered node no longer re-expands its ancestors (515d8c6195); and app-graph's _expanded / _initialized latches and _initialNodes / _initialEdges seeds were never recording anything -- built with Record.empty() and written with Record.set(), which is immutable in Effect -- so every Graph.expand re-fired the node connector. Now Set/Map (43995bff6b). Measured in the running app: expands logging expanded:true went 0 -> 163 of 226, real expansions 306 -> 14, sqlite queries per navigation ~4700 -> ~550, with no not-found or retry signals. NEXT (all needing a human at the browser): (1) cold-restore a deep link into a fresh profile -- the latch fix means the url-handler retry no longer re-fires an already-expanded connector, and no test covers that path; (2) fold-spine sigil alignment and pinned-plank scroll offset after the Splitter/ScrollIntoView rework; (3) decide whether the app-graph latch fix ships in this PR or is cherry-picked to its own branch (it is a main bug, self-contained: one file + changeset). Still open: companionFrameSizing is dead on DeckState; navtree marks `current` on a 500ms timer that every Layout notification cancels and restarts (main's code, and the likely remaining cause of the reported selected-state lag); 'existing node' churn stayed flat while expansions dropped ~20x, so connector re-emission has a separate cause. GOTCHAS: never import a DOM/UI package into worker-reachable modules; Mosaic.Tile must re-sync size on prop change; a plugin AppGraphBuilder must register on the default SetupAppGraph event; moon's cache hid a broken cold build once (app-graph had @dxos/effect as a dev dep only) -- use --force when a result looks too clean; ALWAYS check git branch --show-current before editing or committing (this worktree was switched under the session once)._
+_Resume: **PR #12273 MERGED 2026-07-27 as `5585ec89`** — the URL/deck redesign plus all pre-land cleanup is on `main`. Remaining work is the post-land Backlog at the bottom of this file; pick an item and start it as a fresh branch off `main`. Uncommitted: none. Historical context from the last pre-merge checkpoint follows._
+
+_Pre-merge checkpoint (historical): PR 12273 open (not draft, mergeable), branch at 43995bff6b: 109 commits ahead of main, 8 behind. CI on 515d8c6195 was fully green; the run for the tip has check/build/storybook/workerd green with test still running. Local: app-graph 134 / app-toolkit 109 / plugin-deck 40 + 13 storybook / plugin-space 18 / plugin-inbox 222 + storybook 40. Since the last checkpoint: the 2026-07-19 superpowers spec is folded into this project's DESIGN.md (superpowers and $project are mutually exclusive) and its five referrers plus the registry summary updated; validateNavigationTarget now checks node presence BEFORE expanding, so a click on an already-rendered node no longer re-expands its ancestors (515d8c6195); and app-graph's \_expanded / \_initialized latches and \_initialNodes / \_initialEdges seeds were never recording anything -- built with Record.empty() and written with Record.set(), which is immutable in Effect -- so every Graph.expand re-fired the node connector. Now Set/Map (43995bff6b). Measured in the running app: expands logging expanded:true went 0 -> 163 of 226, real expansions 306 -> 14, sqlite queries per navigation ~4700 -> ~550, with no not-found or retry signals. NEXT (all needing a human at the browser): (1) cold-restore a deep link into a fresh profile -- the latch fix means the url-handler retry no longer re-fires an already-expanded connector, and no test covers that path; (2) fold-spine sigil alignment and pinned-plank scroll offset after the Splitter/ScrollIntoView rework; (3) decide whether the app-graph latch fix ships in this PR or is cherry-picked to its own branch (it is a main bug, self-contained: one file + changeset). Still open: companionFrameSizing is dead on DeckState; navtree marks `current` on a 500ms timer that every Layout notification cancels and restarts (main's code, and the likely remaining cause of the reported selected-state lag); 'existing node' churn stayed flat while expansions dropped ~20x, so connector re-emission has a separate cause. GOTCHAS: never import a DOM/UI package into worker-reachable modules; Mosaic.Tile must re-sync size on prop change; a plugin AppGraphBuilder must register on the default SetupAppGraph event; moon's cache hid a broken cold build once (app-graph had @dxos/effect as a dev dep only) -- use --force when a result looks too clean; ALWAYS check git branch --show-current before editing or committing (this worktree was switched under the session once)._
 
 ## Companion width position-dependence (debug-mode, fixed)
 
@@ -276,21 +278,17 @@ Land after A3.
 - [x] **End-to-end verification pass** — verified by the user 2026-07-27, covering the deck/URL
       rework plus the Splitter tiling, ScrollIntoView consolidation and app-graph latch fix.
 
-## Pre-land
+## Pre-land — complete (PR #12273 merged 2026-07-27)
 
 ### Tasks
 
-- [ ] **Delete `companionFrameSizing`** — see Phase D above.
-- [ ] **Remove the three non-null assertions** in `app-graph/src/path-resolution.ts` (`extension.url!`)
-      by narrowing `getKeyedExtensions` to `Array<BuilderExtension & { url: UrlBinding }>`. Non-null `!`
-      is not a fix per the no-cast rule.
-- [ ] **Remove the two `as AppCapabilities.NavigationTargetResolver` casts** (plugin-space, plugin-inbox)
-      by adding `Database.Service` to the capability's Effect requirements — the casts exist because the
-      type is wrong upstream.
-- [ ] **Merge `origin/main`** (8 commits behind) and confirm Check is green.
-- [ ] **Decide where the app-graph latch fix lands** — `_expanded`/`_initialized` were never recording
-      (immutable `Record.set`); it is a `main` bug currently riding in this PR, self-contained as one
-      file plus a changeset.
+- [x] **Delete `companionFrameSizing`** — off `DeckState`; survives only in `LegacyDeckState`
+      (`migrate-persisted-state.ts`), which exists to detect and strip it from pre-migration blobs.
+- [x] **Remove the three non-null assertions** in `app-graph/src/path-resolution.ts` —
+      `getKeyedExtensions` now returns `UrlKeyedExtension[]`, so `extension.url!` is gone.
+- [x] **Remove the two `as AppCapabilities.NavigationTargetResolver` casts** (plugin-space, plugin-inbox).
+- [x] **Merge `origin/main`** and confirm Check is green — merged as `5585ec89`.
+- [x] **Decide where the app-graph latch fix lands** — shipped inside PR #12273.
 
 ## Backlog (post-land)
 
