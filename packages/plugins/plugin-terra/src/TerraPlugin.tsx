@@ -8,14 +8,14 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Terra } from '#types';
+import { Terra, TerraObject } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TerraPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addSchemaModule({ schema: [Terra.Terra] }),
+  AppPlugin.addSchemaModule({ schema: [Terra.Terra, TerraObject.TerraObject] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({

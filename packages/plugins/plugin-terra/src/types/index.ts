@@ -3,3 +3,4 @@
 //
 
 export * as Terra from './Terra';
+export * as TerraObject from './TerraObject';
