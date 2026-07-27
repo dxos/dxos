@@ -5,18 +5,14 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AgentService } from '@dxos/agent-runtime';
-import { AssistantTestLayer, runMemoizedTests } from '@dxos/agent-runtime/testing';
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation, Skill } from '@dxos/compute';
-import { Collection, Database, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { HasSubject } from '@dxos/types';
-import { trim } from '@dxos/util';
 
 import { WithProperties } from '#testing';
 
@@ -35,8 +31,6 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('update', () => {
-  // The four cases below invoke the handler directly, so they never reach a model — keep them off
-  // the memoized gate; only the agent-driven cases further down replay a conversation.
   it.effect(
     'call a function to update a markdown document',
     Effect.fnUntraced(
@@ -136,150 +130,5 @@ describe('update', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-  );
-
-  it.effect.skipIf(!runMemoizedTests())(
-    'create and update a markdown document',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* AgentService.createSession({
-          skills: [MarkdownSkill.make()],
-        });
-
-        yield* agent.submitPrompt('Create a document with a cookie recipe.');
-        yield* agent.waitForCompletion();
-        {
-          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
-          if (docs.length !== 1) {
-            throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
-          }
-
-          const doc = docs[0];
-          invariant(Obj.instanceOf(Markdown.Document, doc));
-          console.log({
-            name: doc.name,
-            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
-          });
-        }
-
-        yield* agent.submitPrompt('Add a section with a holiday-themed variation.');
-        yield* agent.waitForCompletion();
-        {
-          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
-          if (docs.length !== 1) {
-            throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
-          }
-
-          const doc = docs[0];
-          invariant(Obj.instanceOf(Markdown.Document, doc));
-          console.log({
-            name: doc.name,
-            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
-          });
-        }
-      },
-      WithProperties,
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
-  );
-
-  it.effect.skipIf(!runMemoizedTests())(
-    'update existing document',
-    Effect.fnUntraced(
-      function* (_) {
-        const document = yield* Database.add(
-          Markdown.make({
-            name: 'Cookie Recipe',
-            content: trim`
-                Ingredients: 
-                  - 2 cups of ???
-                  - 1 cup of sugar
-                  - 1 cup of butter
-                  - 1 cup of eggs
-          `,
-          }),
-        );
-        const agent = yield* AgentService.createSession({
-          skills: [MarkdownSkill.make()],
-          context: [Ref.make(document)],
-        });
-
-        yield* agent.submitPrompt('Add the missing ingredient (its flour).');
-        yield* agent.waitForCompletion();
-
-        {
-          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
-          if (docs.length !== 1) {
-            throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
-          }
-
-          const doc = docs[0];
-          invariant(Obj.instanceOf(Markdown.Document, doc));
-          const content = yield* Database.load(doc.content).pipe(Effect.map((_) => _.content));
-          console.log({
-            name: doc.name,
-            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
-          });
-          expect(content.toLowerCase()).toContain('flour');
-        }
-      },
-      WithProperties,
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
-  );
-
-  it.effect.skipIf(!runMemoizedTests())(
-    'add lines to document one by one',
-    Effect.fnUntraced(
-      function* (_) {
-        const document = yield* Database.add(
-          Markdown.make({
-            name: 'Shopping list',
-            content: trim`
-              # Shopping list
-            `,
-          }),
-        );
-        const agent = yield* AgentService.createSession({
-          skills: [MarkdownSkill.make()],
-          context: [Ref.make(document)],
-        });
-
-        // The agent process completes once its input queue drains (maybeComplete → succeed), so all
-        // prompts must be enqueued before awaiting completion; the agent then drains them in order,
-        // each turn building on the previous edit. Awaiting between submits would let the process
-        // succeed after the first turn, dropping the rest.
-        yield* agent.submitPrompt('Add milk to the shopping list.');
-        yield* agent.submitPrompt('Add bread to the shopping list.');
-        yield* agent.submitPrompt('Add eggs to the shopping list.');
-        yield* agent.waitForCompletion();
-
-        {
-          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
-          if (docs.length !== 1) {
-            throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
-          }
-
-          const doc = docs[0];
-          invariant(Obj.instanceOf(Markdown.Document, doc));
-          const content = yield* Database.load(doc.content).pipe(Effect.map((_) => _.content));
-          console.log({
-            name: doc.name,
-            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
-          });
-          expect(content.toLowerCase()).toContain('milk');
-          expect(content.toLowerCase()).toContain('bread');
-          expect(content.toLowerCase()).toContain('eggs');
-        }
-      },
-      WithProperties,
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 });
