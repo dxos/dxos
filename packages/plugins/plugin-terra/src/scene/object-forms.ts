@@ -53,8 +53,8 @@ const makePlane = (scene: Scene): Mesh => {
   tail.position.z = -0.42;
 
   // Vertical stabiliser, perpendicular to the horizontal tailplane, standing on the fuselage.
-  const verticalTail = CreateBox('verticalTail', { width: 0.03, height: 0.22, depth: 0.16 }, scene);
-  verticalTail.position.y = 0.18;
+  const verticalTail = CreateBox('verticalTail', { width: 0.03, height: 0.22, depth: 0.14 }, scene);
+  verticalTail.position.y = 0.1;
   verticalTail.position.z = -0.42;
 
   return mergeParts(
@@ -76,10 +76,6 @@ const makeRocket = (scene: Scene): Mesh => {
   const finReach = 0.09 + 0.14;
   const fins = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].map((angle, index) => {
     const fin = CreateBox(`fin${index}`, { width: 0.03, height: 0.28, depth: 0.22 }, scene);
-    // Position and orientation both turn by `angle` so the ring sits coaxially around the body,
-    // each fin projecting radially outward at the tail rather than stacking in one spot.
-    fin.position.x = finReach * Math.sin(angle);
-    fin.position.y = finReach * Math.cos(angle);
     fin.position.z = -0.38;
     fin.rotation.z = angle;
     return fin;

@@ -19,9 +19,11 @@ export type TrailSpec = {
 
 /** Only the kinds the "Smoke trails" design calls for; every other kind leaves no trail. */
 export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
-  boat: { spacing: 0.012, lifetimeMs: 6000, capacity: 40, startRadius: 0.012, endScale: 2.5, startAlpha: 0.3 },
-  plane: { spacing: 0.02, lifetimeMs: 8000, capacity: 40, startRadius: 0.01, endScale: 3, startAlpha: 0.35 },
-  rocket: { spacing: 0.01, lifetimeMs: 3000, capacity: 48, startRadius: 0.014, endScale: 2, startAlpha: 0.45 },
+  // `capacity` must exceed `lifetimeMs / (spacing / speed * 1000)` or the trail is truncated
+  // before it fades, so tightening `spacing` requires raising `capacity` in step.
+  boat: { spacing: 0.003, lifetimeMs: 6000, capacity: 72, startRadius: 0.01, endScale: 2.5, startAlpha: 0.3 },
+  plane: { spacing: 0.005, lifetimeMs: 8000, capacity: 72, startRadius: 0.009, endScale: 3, startAlpha: 0.35 },
+  rocket: { spacing: 0.0025, lifetimeMs: 3000, capacity: 96, startRadius: 0.012, endScale: 2, startAlpha: 0.45 },
 };
 
 /** A historical trail sample: a stable world position the puff was born at, and its normalized age in `[0, 1)`. */
