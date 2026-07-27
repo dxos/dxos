@@ -120,14 +120,14 @@ jobs:
       sha: ${{ steps.commit.outputs.sha }}
       version: ${{ steps.bump.outputs.version }}
     steps:
-      # dxos-bot's PAT, not GITHUB_TOKEN: main requires the merge queue and its push allow-list is empty, so
-      # only an admin identity (dxos-bot, with enforce_admins off) can land the bump.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: main # A production release always cuts from main.
-          token: ${{ secrets.GH_DXOS_BOT_PAT }}
+          # Leave no credential in the workspace: persisted, it would be readable by the repo-controlled
+          # bump/sync scripts below, turning "can land a commit on main" into "can read dxos-bot's PAT".
+          persist-credentials: false
 
       # composer-app + composer-crx share the desktop/extension version line; bump-composer-version.mjs bumps
       # both in lockstep and prints the new version. sync-versions.mjs then stamps the derived files.
@@ -139,31 +139,36 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Composer -> $version"
 
+      # dxos-bot's PAT reaches only this step: main requires the merge queue and its push allow-list is
+      # empty, so only an admin identity (dxos-bot, with enforce_admins off) can land the bump.
       - name: Commit + tag on main
         id: commit
+        env:
+          GH_TOKEN: ${{ secrets.GH_DXOS_BOT_PAT }}
         run: |
           git config user.name 'dxos-bot'
           git config user.email 'bot@dxos.org'
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}"
           git add -A
           # `[skip ci]` because a PAT push (unlike GITHUB_TOKEN) triggers workflows, and a Check + `main`
           # deploy of a version-bump-only commit would race this run's production deploy.
-          git commit -m "chore(composer): release v${{ steps.bump.outputs.version }} [skip ci]"
+          git commit -m "composer: release v${{ steps.bump.outputs.version }} [skip ci]"
 
           # Rebase onto anything the merge queue landed while this run was bumping, rather than losing the
           # release to a non-fast-forward rejection.
           attempt=1
-          while ! git push origin HEAD:main; do
+          while ! git push "$remote" HEAD:main; do
             if [ "$attempt" -ge 3 ]; then
               echo "::error::main moved under the release commit 3 times — rerun the workflow"
               exit 1
             fi
             attempt=$((attempt + 1))
-            git pull --rebase origin main
+            git pull --rebase "$remote" main
           done
 
           # Tagged after the push so the tag names the commit that actually landed (a rebase rewrites it).
           git tag "composer-v${{ steps.bump.outputs.version }}"
-          git push origin "refs/tags/composer-v${{ steps.bump.outputs.version }}"
+          git push "$remote" "refs/tags/composer-v${{ steps.bump.outputs.version }}"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   # Build Composer's web bundle ONCE and share it as an artifact so the web deploy + native (Tauri) jobs
