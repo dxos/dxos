@@ -156,6 +156,17 @@ as primary coverage.
       `runMemoizedTests` references behind**. An earlier pass that pushed the gate down to per-test
       `skipIf` was wrong — it multiplied the conditions (one `describe` gate became 17 in
       `database/skill.test.ts`) instead of removing them.
+      **File layout (direct guidance): one `.test.ts` per operation handler, beside the handler**,
+      with at least one test per handler — not one combined suite per skill. This is the convention
+      the packages already used (`update-tasks.test.ts`, `delegate-task.test.ts`,
+      `accept-change.test.ts`); a first pass wrote combined `database-operations.test.ts` /
+      `skill.test.ts` suites and had to be split. Put the file beside the handler it exercises —
+      `sync-triggers` belongs under `agent-wizard/operations/`, not the agent skill. Name the suite
+      after the operation, and rename tests whose filename does not match their handler
+      (`update.test.ts` → `update-markdown.test.ts`).
+      **Converting a package must not be net-negative:** if deleting a memoized test leaves a handler
+      with no coverage, add the handler test in the same change. plugin-markdown initially lost 4
+      tests and gained none; it now covers `CreateMarkdown` and `Open`, which had never been tested.
       Which harness: plugin packages boot real plugins with `createComposerTestApp`
       (`@dxos/plugin-testing/harness`) and call `harness.invoke(Op, input)` —
       `plugin-sample/src/SamplePlugin.test.ts` and `plugin-chess` are the templates, and nothing else
