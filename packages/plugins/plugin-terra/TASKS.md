@@ -77,6 +77,11 @@ definitions. Plan written and committed; execution begins after Phase 1 closes.
 - **Collision avoidance strategy for objects** (tracked 2026-07-27) — objects
   currently route independently and can pass through each other; needs a
   separation/avoidance model that stays deterministic across peers.
+- **Simulate actual propulsion** (tracked 2026-07-27) — objects skid: motion is
+  closed-form arc-length along a route at a constant speed, so heading eases
+  visually while the position track ignores it. Needs thrust/drag and a turn
+  radius that bends the _path_, not just the mesh — while staying closed-form in
+  absolute time (or otherwise peer-deterministic).
 
 Captured in [DESIGN.md](./DESIGN.md#backlog-phase-3) — surface camera + LOD,
 zoom-dependent resolution, sun/day–night, clouds, polygon smoothing, fog, rivers,

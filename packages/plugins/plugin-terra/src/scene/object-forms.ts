@@ -85,6 +85,7 @@ const makeRocket = (scene: Scene): Mesh => {
 
 const makeBoat = (scene: Scene): Mesh => {
   const beam = 0.3;
+  const bowRadius = beam / Math.sqrt(3);
   const hullHeight = 0.15;
   const sternLength = 1.3;
 
@@ -95,12 +96,6 @@ const makeBoat = (scene: Scene): Mesh => {
   const stern = CreateBox('stern', { width: beam, height: hullHeight, depth: sternLength }, scene);
   stern.position.z = sternLength / 2 - cabinZ;
 
-  // A 3-tessellation cylinder is a triangular prism: apex one radius ahead of centre, base half a
-  // radius behind. The radius is chosen so the base spans exactly the beam, so no scaling is needed
-  // and the base butts flush against the hull's front face. The joint must be exact, not overlapped:
-  // sinking the prism into the hull hides the widest part of the taper, so the bow would emerge
-  // narrower than the hull and read as a separate piece stuck on the front.
-  const bowRadius = beam / Math.sqrt(3);
   const bow = CreateCylinder('bow', { height: hullHeight, diameter: bowRadius * 2, tessellation: 3 }, scene);
   bow.rotation.y = -HALF_PI;
   bow.position.z = sternLength + bowRadius / 2 - cabinZ;
