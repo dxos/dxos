@@ -33,15 +33,6 @@ export const DeckState = Schema.Struct({
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
-export type LayoutMode = 'multi' | 'solo' | 'solo--fullscreen';
-
-/**
- * The `Layout` capability's mode: a fullscreen plank renders alone and headless, so it reports as
- * `solo--fullscreen`; otherwise the mode follows the active plank count (companions excluded).
- */
-export const getMode = (deck: { active: readonly string[] }, fullscreen: boolean): LayoutMode =>
-  fullscreen ? 'solo--fullscreen' : deck.active.length > 1 ? 'multi' : 'solo';
-
 export const defaultDeck: DeckState = {
   active: [],
   inactive: [],
@@ -49,6 +40,21 @@ export const defaultDeck: DeckState = {
   companionOpen: false,
   companionFrameSizing: {},
 };
+
+//
+// Layout
+//
+
+const LayoutMode = Schema.Literal('multi', 'solo', 'solo--fullscreen');
+export type LayoutMode = Schema.Schema.Type<typeof LayoutMode>;
+export const isLayoutMode = (value: any): value is LayoutMode => Schema.is(LayoutMode)(value);
+
+/**
+ * The `Layout` capability's mode: a fullscreen plank renders alone and headless, so it reports as
+ * `solo--fullscreen`; otherwise the mode follows the active plank count (companions excluded).
+ */
+export const getMode = (deck: { active: readonly string[] }, fullscreen: boolean): LayoutMode =>
+  fullscreen ? 'solo--fullscreen' : deck.active.length > 1 ? 'multi' : 'solo';
 
 // Persisted plugin state (stored in KVS/localStorage).
 export const StoredDeckState = Schema.Struct({
