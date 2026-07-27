@@ -2,12 +2,14 @@
 
 _Resume: **PR #12307 MERGED** (2026-07-23, `ba930200`). Phase 2's eval port is fully landed on `main`;
 the branch for the next step is `claude/ai-testing-strategy-next-3pkl86`, cut clean from `main`
-(`bf055c8b`). Everything below the "PR #12307" heading is history — the live backlog is: Phase 1
-item 1 (**G2 → C operation tests driven through the app-framework harness — not mocks**, 10 files
-still gated by `runMemoizedTests()`), Phase 1 item 2
-(E context-assembly + F schema round-trip), Phase 2 item 4 (loosen `employerRoleCorrect` /
-`onlyWebSearchUsed`, then drop explicit skill naming — **needs a live `DX_ANTHROPIC_API_KEY`**),
-Phase 3 (G3 → D, then shrink the memoization layer), and the standalone `.agent/` deletion.
+(`bf055c8b`). Phase 1 item 1 (**G2 → C operation tests driven through the real handler, not mocks**)
+is underway on that branch: the *rescue* half is done (10 mis-gated model-free tests now run in CI)
+and the first *build* tranche is done (9 new `database-operations.test.ts` tests). Remaining live
+backlog: finish the build half (magazine curate, memory skill, AiSummarizer, plugin-level operations
+via `createComposerTestApp`), Phase 1 item 2 (E context-assembly + F schema round-trip), Phase 2
+item 4 (loosen `employerRoleCorrect` / `onlyWebSearchUsed`, then drop explicit skill naming —
+**needs a live `DX_ANTHROPIC_API_KEY`**), Phase 3 (G3 → D, then shrink the memoization layer), the
+standalone `.agent/` deletion, and the new `Ref.Ref(Relation.Unknown)` typing defect in Follow-ups.
 Historical detail for #12307: CI green
 (build/check/test/storybook/workerd all pass). All 6 G1 scenarios are ported to scored evals with
 real quality signal beyond existence checks (DB-effect assertions + an LLM judge on
@@ -53,8 +55,10 @@ as primary coverage.
   — once those are ported or dropped, the package can be removed entirely.
 - **G2** — per-operation / skill: plugin-markdown create/update, plugin-magazine, plugin-assistant,
   assistant-toolkit run-instructions + database/memory/planning/agent skills, AiSummarizer.
-  **Convert to harness-driven operation (C) tests before deleting** — real plugins via
-  `createComposerTestApp` + `harness.invoke(Op, input)`, not mocks.
+  **Convert to operation (C) tests that drive the real handler before deleting**, not mocks. Which
+  harness depends on the package: plugin packages boot real plugins with `createComposerTestApp` and
+  call `harness.invoke(Op, input)`; non-plugin packages (assistant-toolkit, ai) use
+  `AssistantTestLayer({ disableLlmMemoization: true })` with `Operation.invoke`.
 - **G3** — agent-runtime session: functions, AgentService, request, xml-response.
   **Convert to scripted-model D tests before deleting.**
 
@@ -157,18 +161,31 @@ as primary coverage.
       `harness.invoke`, and `OperationCapture` (`app-framework/testing/operationCapture.ts`, for
       asserting which operations fired and stubbing side-effecting ones like `LayoutOperation.Open`)
       has no callers at all** — an empty niche, not a design that needs inventing. Two parts:
-  - [ ] **Rescue** the model-free operation tests already written but skipped by a `describe`-level
-        gate. `plugin-markdown/src/operations/create.test.ts`'s "call a function to create a markdown
-        document" invokes `MarkdownOperation.Create` and asserts the resulting `Markdown.Document` +
-        content — no model on that path — yet `describe.skipIf(!runMemoizedTests())` wraps it
-        together with the agent-turn test. `skills/planning/skill.test.ts` shows the correct shape
-        (its `hasIncompleteTasks` predicate tests sit outside the gate; only the `plan-reminder`
-        describe, which runs a real stop/continue model check, is gated). Split per-test, not
-        per-file. Also audit `update.test.ts` (4 invokes / 9 agent turns) and
-        `skills/database/skill.test.ts` (4 / 34) the same way.
-  - [ ] **Build** harness operation tests for the G2 operations that today have only LLM coverage —
-        markdown Create/Update, magazine curate, the assistant-toolkit database/memory/agent skill
-        operations, AiSummarizer — then delete each memoized test as its replacement lands.
+  - [x] **Rescue — DONE.** Ten tests that invoke a handler directly and never reach a model were
+        skipped in CI because the gate sat on the `describe`. Moved onto the individual agent cases
+        (per-test `skipIf`, the #12297 convention), following `skills/planning/skill.test.ts`'s
+        shape: markdown Create (1) + Update (4), database skill (3 — schema-add input decoding,
+        schema-add field creation, the `includeQueues` query operation), agent skill (2 —
+        sync-triggers timer creation and `enabled` propagation). All ten now pass; every
+        agent-driven case still skips without `DX_RUN_LLM_TESTS=1`. Audited but correctly gated:
+        `'query operation: in param can be passed as string'` (agent-driven despite the name),
+        `AssistantPlugin`'s `RunInstructions` case, `memory/skill.test.ts` (no direct invokes at
+        all), magazine's `CurateMagazine`.
+  - [x] **Build (first tranche) — DONE.** New
+        `skills/database/operations/database-operations.test.ts` — 9 tests over the operations that
+        previously had only agent-turn coverage: ObjectCreate (plain + encoded-reference decoding),
+        ObjectUpdate, ObjectDelete, Load, SchemaList (inclusion _and_ the handler's exclusion list),
+        RelationCreate, TagAdd, TagRemove. Follows the package's existing
+        `skills/*/operations/*.test.ts` convention (`update-tasks.test.ts`, `delegate-task.test.ts`)
+        with `AssistantTestLayer({ disableLlmMemoization: true })`, not `createComposerTestApp` —
+        assistant-toolkit is not a plugin, so the plugin harness does not apply here; use
+        `createComposerTestApp` for the plugin packages. Non-vacuous: verified by mutation — breaking
+        `object-update`'s property write fails the test, and reverting restores green.
+        Cast-free per the no-cast rule: operation outputs typed `Schema.Unknown` are narrowed with
+        `Schema.decodeUnknown`, not `as`.
+  - [ ] **Build (remaining).** markdown Create/Update already have direct coverage (rescued above);
+        still to do: magazine curate, memory skill, AiSummarizer, plugin-level operations via
+        `createComposerTestApp`. Then delete each memoized test as its replacement lands.
         Caution: an `Operation.invoke` is not automatically model-free — `run-instructions` and
         planning's `PlanReminder` reach a model _inside_ the handler, so they stay gated.
 - [ ] Context-assembly (E) + schema round-trip (F) tests. E: snapshot the assembled prompt
@@ -316,6 +333,17 @@ as primary coverage.
 
 ## Follow-ups (out of band)
 
+- [ ] **`Ref.Ref(Relation.Unknown)` is `Ref<never>` — found while writing the database operation
+      tests.** The last overload in `echo/src/Ref.ts` is kind-blind:
+      `<S extends internal.UnknownTypeSchema<any, any>>(schema: S): RefSchema<Schema.Schema.Type<S> &
+Obj.Unknown>`. For a relation schema that intersects the relation and object kind brands, which
+      collapse to `never` — the exact failure the _preceding_ overload's comment warns about, but the
+      guard was never applied to this one. Consequence: any operation declaring
+      `Ref.Ref(Relation.Unknown)` cannot be invoked from typed code without a cast. Exactly one does
+      today — `DatabaseOperations.RelationDelete` — so its test is deferred with a TODO rather than
+      cast around (see `database-operations.test.ts`). Fix is to split the overload on
+      `Entity.Kind.Relation` and intersect with `Relation.Unknown`, mirroring the typed-schema
+      overload above it. Core `@dxos/echo` typing change — own PR, needs a repo-wide typecheck.
 - [x] **Blocking evals — FIXED:** root-caused the evalite-specific `plugin-routine` registry-sync
       race (`registry-sync.ts:74`, `handler.meta` read before population). Reproduced
       deterministically on a fresh worktree/machine (not sandbox-specific), then bisected the cause
