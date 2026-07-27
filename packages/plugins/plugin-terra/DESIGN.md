@@ -9,8 +9,6 @@ Babylon.js, and (Phase 2) simulates movable objects over it.
 - **Phase 2 plan:** [`agents/superpowers/plans/2026-07-27-plugin-terra-phase2-objects.md`](../../../agents/superpowers/plans/2026-07-27-plugin-terra-phase2-objects.md)
 - **Validated spike (reference code):** [`agents/superpowers/specs/2026-07-26-plugin-terra-spike/`](../../../agents/superpowers/specs/2026-07-26-plugin-terra-spike/)
 
----
-
 ## Phase 1 — Deterministic planet
 
 ### What it delivers
@@ -30,19 +28,19 @@ Non-photorealistic but semi-realistic: flat/faceted shading (per-face normals),
 ### Architecture
 
 ```
-src/engine/     # pure, deterministic, unit-tested (except scene-*)
-  noise.ts           seeded fBm + ridged mountains -> elevation/moisture
-  cubed-sphere.ts    6 face bases + unit-sphere mapping + vector helpers
-  terrain.ts         radiusAt / seaRadius / latitude (landGain displacement)
-  biomes.ts          classify(elevation, latitude, moisture)
-  palette.ts         biome colors + depth-shaded ocean
-  generate-planet.ts triangle-soup mesh + scatter placements
-  scene-manager.ts   IMPURE: Babylon engine/scene/camera/lights/meshes
-  scene-fps.ts       IMPURE: in-scene FPS readout (@babylonjs/gui)
-src/types/Terra.ts   ECHO object + TerraConfig schema + defaults
-src/containers/      TerraArticle (canvas host + debounced regeneration)
-src/components/      TerraForm (react-ui-form config panel)
-src/capabilities/    create-object, react-surface
+src/engine/           pure, deterministic, unit-tested (except scene-*)
+  noise.ts            seeded fBm + ridged mountains -> elevation/moisture
+  cubed-sphere.ts     6 face bases + unit-sphere mapping + vector helpers
+  terrain.ts          radiusAt / seaRadius / latitude (landGain displacement)
+  biomes.ts           classify(elevation, latitude, moisture)
+  palette.ts          biome colors + depth-shaded ocean
+  generate-planet.ts  triangle-soup mesh + scatter placements
+  scene-manager.ts    IMPURE: Babylon engine/scene/camera/lights/meshes
+  scene-fps.ts        IMPURE: in-scene FPS readout (@babylonjs/gui)
+src/types/Terra.ts    ECHO object + TerraConfig schema + defaults
+src/containers/       TerraArticle (canvas host + debounced regeneration)
+src/components/       TerraForm (react-ui-form config panel)
+src/capabilities/     create-object, react-surface
 ```
 
 `engine/*` is Babylon-free apart from `scene-*.ts`, so generation is unit-tested
@@ -74,8 +72,6 @@ above. Reference code is checked in under the spike directory.
 One static mesh is fine for the orbit view up to ~512²/face. A future surface
 camera needs per-face quadtree LOD, not a bigger single mesh.
 
----
-
 ## Phase 2 — Objects & simulation
 
 ### What it delivers
@@ -87,15 +83,15 @@ primitives, two of each kind, advanced every frame by a small game engine.
 ### Architecture
 
 ```
-src/sim/        # pure, Babylon-free, unit-tested
-  geo.ts        GeoPoint <-> Vec3, tangent frame, bearing, great-circle advance
-  nav-grid.ts   coarse cubed-sphere cells + cross-face neighbors + passability
-  route.ts      A* over the grid + line-of-sight smoothing
-  motion.ts     surface | altitude | orbit | ballistic controllers
-  engine.ts     SimEngine: clock, deterministic replan schedule, per-tick step
-src/scene/      # Babylon visuals for objects
-  object-forms.ts  one merged low-poly mesh per kind
-  object-layer.ts  sim state -> thin instances, per-frame transforms
+src/sim/                  pure, Babylon-free, unit-tested
+  geo.ts                  GeoPoint <-> Vec3, tangent frame, bearing, great-circle advance
+  nav-grid.ts             coarse cubed-sphere cells + cross-face neighbors + passability
+  route.ts                A* over the grid + line-of-sight smoothing
+  motion.ts               surface | altitude | orbit | ballistic controllers
+  engine.ts               SimEngine: clock, deterministic replan schedule, per-tick step
+src/scene/                Babylon visuals for objects
+  object-forms.ts         one merged low-poly mesh per kind
+  object-layer.ts         sim state -> thin instances, per-frame transforms
 src/types/TerraObject.ts  ECHO definition (kind, speed, source/target, orbit, spawnedAt)
 ```
 

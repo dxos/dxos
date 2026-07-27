@@ -75,3 +75,33 @@ export const Range: Story = {
     </div>
   ),
 };
+
+/**
+ * Regression guard for the thumb-visibility bug (an invalid `is-*`/`bs-*` size utility collapsed
+ * the thumb to zero size). Exercises default/disabled/vertical/two-thumb side by side so a visual
+ * pass catches a missing knob in any state at a glance.
+ */
+export const ThumbVisibility: Story = {
+  render: () => (
+    <div className='flex items-start gap-8'>
+      <div className='flex flex-col gap-2 w-48'>
+        <span className='text-sm text-description'>Default</span>
+        <Slider defaultValue={[50]} max={100} step={1} />
+      </div>
+      <div className='flex flex-col gap-2 w-48'>
+        <span className='text-sm text-description'>Disabled</span>
+        <Slider defaultValue={[50]} max={100} step={1} disabled />
+      </div>
+      <div className='flex flex-col gap-2 w-48'>
+        <span className='text-sm text-description'>Two-thumb</span>
+        <Slider defaultValue={[25, 75]} max={100} step={1} />
+      </div>
+      <div className='flex flex-col gap-2 items-center'>
+        <span className='text-sm text-description'>Vertical</span>
+        <div className='h-48'>
+          <Slider defaultValue={[50]} max={100} step={1} orientation='vertical' />
+        </div>
+      </div>
+    </div>
+  ),
+};

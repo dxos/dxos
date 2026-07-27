@@ -17,7 +17,14 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ seed }: StoryArgs) => {
-  const terra = useMemo(() => Terra.make({ config: { seed: seed ?? 'terra-1', resolution: 128 } }), [seed]);
+  const terra = useMemo(
+    () =>
+      Terra.make({
+        config: { seed: seed ?? 'terra-1', resolution: 256 },
+      }),
+    [seed],
+  );
+
   return <TerraArticle subject={terra} attendableId='story' role='article' />;
 };
 

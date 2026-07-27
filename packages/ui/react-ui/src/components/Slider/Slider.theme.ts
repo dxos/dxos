@@ -30,7 +30,7 @@ const range: ComponentFunction<SliderStyleProps> = ({ orientation }, ...etc) =>
 
 const thumb: ComponentFunction<SliderStyleProps> = (_props, ...etc) =>
   mx(
-    'block is-4 bs-4 rounded-full bg-base-surface border border-separator shadow-sm transition-colors dx-focus-ring',
+    'block h-3 w-3 shrink-0 rounded-full bg-base-surface border-2 border-accent-bg shadow-sm transition-colors dx-focus-ring',
     'hover:bg-hover-surface',
     ...etc,
   );
