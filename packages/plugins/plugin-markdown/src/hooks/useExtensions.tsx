@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities, NotFound } from '@dxos/app-toolkit';
+import { AppCapabilities, UrlResolution } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
@@ -295,7 +295,7 @@ const createRenderLink =
         if (!builder) {
           return;
         }
-        const nodeId = await EffectEx.runPromise(NotFound.resolveInternalLink(builder, pathname));
+        const nodeId = await EffectEx.runPromise(UrlResolution.resolveInternalLink(builder, pathname));
         if (Option.isNone(nodeId)) {
           log.warn('internal link did not resolve to a node', { url });
           return;

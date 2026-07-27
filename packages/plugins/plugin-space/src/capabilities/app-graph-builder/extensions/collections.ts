@@ -6,7 +6,15 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppAnnotation, AppCapabilities, AppNode, AppNodeMatcher, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import {
+  AppAnnotation,
+  AppCapabilities,
+  AppNode,
+  AppNodeMatcher,
+  GraphPath,
+  LayoutOperation,
+  UrlResolution,
+} from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Filter, Obj, Query, Type } from '@dxos/echo';
@@ -416,7 +424,7 @@ const constructObjectActions = ({
             data: () =>
               Effect.gen(function* () {
                 const builder = yield* Capability.get(AppCapabilities.AppGraph);
-                const path = GraphPath.getShareableLinkPath(builder, nodeId);
+                const path = UrlResolution.getShareableLinkPath(builder, nodeId);
                 if (Option.isNone(path)) {
                   log.warn('object has no URL representation; cannot copy link', { nodeId });
                   return;

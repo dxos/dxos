@@ -6,12 +6,10 @@
 
 import * as Option from 'effect/Option';
 
-import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
+import { Graph, Node } from '@dxos/app-graph';
 import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, type URI } from '@dxos/keys';
-
-import * as UrlPath from './UrlPath';
 
 /**
  * Prefix for pinned (non-space) workspace IDs in the graph.
@@ -179,27 +177,6 @@ export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Op
     return Option.none();
   }
   return Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId }));
-};
-
-/**
- * Build a single-object shareable link pathname (`/w/<workspace>/<key>/<id>`) for a graph node, the
- * outbound counterpart to {@link tryGetEid}/{@link resolveInternalLink}: reverse-maps the node via
- * `PathResolution.representNode` and formats it under the pair-chain grammar. Returns `Option.none()`
- * for a node with no key-declaring producer (unmapped — see `PathResolution.representNode`).
- */
-export const getShareableLinkPath = (builder: GraphBuilder.GraphBuilder, nodeId: string): Option.Option<string> => {
-  // Compose the full link from the node's own stamped `urlSegment` (`/<key>[/<id>]`) plus the workspace
-  // prefix — the segment is the single source; `representNode` remains the multi-pair (deck) machinery.
-  const urlSegment: string | undefined = Option.getOrUndefined(Graph.getNode(builder.graph, nodeId))?.properties
-    ?.urlSegment;
-  const workspace = nodeId.split('/')[1];
-  if (!urlSegment || !workspace) {
-    return Option.none();
-  }
-  // The declared workspace-anchor key; falls back to the canonical constant when no anchor extension is
-  // registered (e.g. a bare builder in a test).
-  const workspaceKey = UrlPath.WORKSPACE_KEY;
-  return Option.some(`/${workspaceKey}/${workspace}${urlSegment}`);
 };
 
 /**

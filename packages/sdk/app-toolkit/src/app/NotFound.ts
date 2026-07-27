@@ -7,14 +7,13 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Graph, GraphBuilder, Node, PathResolution } from '@dxos/app-graph';
+import { Graph, Node } from '@dxos/app-graph';
 import { Filter, Key, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Attention } from '@dxos/react-ui-attention/types';
 
 import * as GraphPath from './GraphPath';
-import * as UrlPath from './UrlPath';
 
 export const NOT_FOUND_NODE_ID = 'not-found';
 
@@ -111,35 +110,6 @@ export const validateNavigationTarget = (params: {
     return NOT_FOUND_PATH;
   });
 };
-
-/**
- * Resolve a browser pathname under the pair-chain URL grammar (`UrlPath`) to a graph node id, for
- * in-app internal-link click-through (e.g. plugin-markdown's internal markdown links) where only a
- * pathname is on hand rather than an already-parsed pair chain. Only the first plank (id-bearing)
- * pair is resolved — a link always targets a single node, so anything past it (a companion pair, or
- * a second plank copied from a shared deck link) is ignored. Returns `Option.none()` for a pathname
- * that doesn't parse under the grammar, or whose target pair doesn't resolve to an existing node.
- */
-export const resolveInternalLink = (
-  builder: GraphBuilder.GraphBuilder,
-  pathname: string,
-): Effect.Effect<Option.Option<string>> =>
-  Effect.gen(function* () {
-    const keyTable = PathResolution.buildUrlKeyTable(builder);
-    const parsed = UrlPath.parse(pathname, keyTable);
-    if (Option.isNone(parsed)) {
-      return Option.none();
-    }
-
-    const { workspace, pairs } = parsed.value;
-    const plankPair = pairs.find((pair) => pair.id !== undefined);
-    if (!plankPair) {
-      return Option.none();
-    }
-
-    const resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs: [plankPair] });
-    return Option.fromNullable(resolved[0]?.nodeId);
-  });
 
 /**
  * Create an ExistenceChecker backed by an edge execQuery function (remote existence).
