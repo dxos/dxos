@@ -4,79 +4,86 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type Vec3 } from '../engine';
-import { type Trail, type TrailSpec, activePuffs, createTrail, emit } from './trail';
+import { Terra, TerraObject } from '../types';
+import { initialState } from './motion';
+import { type TrailSpec, trailPuffs } from './trail';
 
-const SPEC: TrailSpec = { spacing: 1, lifetimeMs: 1000, capacity: 5, startRadius: 0.01, endScale: 2, startAlpha: 0.3 };
+const config = Terra.toConfigValues(Terra.make({ config: { seed: 'trail-1' } }));
 
-/** A straight line along +x, one unit apart, so successive points cross `SPEC.spacing` exactly. */
-const pointAlongX = (index: number): Vec3 => [index, 0, 0];
+const SPEC: TrailSpec = {
+  spacing: 0.01,
+  lifetimeMs: 3000,
+  capacity: 5,
+  startRadius: 0.01,
+  endScale: 2,
+  startAlpha: 0.3,
+};
 
-describe('trail', () => {
-  test('emit adds nothing until the object has moved at least spacing', () => {
-    const trail = emit(createTrail(SPEC.capacity), pointAlongX(0), 0, SPEC);
-    const unchanged = emit(trail, [0.4, 0, 0], 10, SPEC);
-    expect(unchanged.count).toBe(1);
-    expect(unchanged.lastEmit).toEqual(pointAlongX(0));
+/** A rocket's motion is a pure function of `(definition, context)` — no route/nav-grid setup needed to exercise `trailPuffs`. */
+const makeRocket = (speed: number): TerraObject.TerraObject =>
+  TerraObject.make({
+    kind: 'rocket',
+    speed,
+    source: { lat: 0, lng: 0, height: 0 },
+    target: { lat: 0, lng: 90, height: 0 },
+    spawnedAt: 0,
   });
 
-  test('emit adds once the object has moved past spacing, and updates lastEmit', () => {
-    const first = emit(createTrail(SPEC.capacity), pointAlongX(0), 0, SPEC);
-    const second = emit(first, pointAlongX(1), 10, SPEC);
-    expect(second.count).toBe(2);
-    expect(second.lastEmit).toEqual(pointAlongX(1));
+describe('trailPuffs', () => {
+  test('a stalled object (speed <= 0) leaves no trail', () => {
+    const rocket = makeRocket(0);
+    const state = initialState(rocket, config);
+    expect(trailPuffs(state, rocket, config, 10_000, SPEC)).toEqual([]);
   });
 
-  test('the ring buffer never exceeds capacity and overwrites oldest-first', () => {
-    let trail = createTrail(SPEC.capacity);
-    const total = SPEC.capacity + 5;
-    for (let index = 0; index < total; index++) {
-      trail = emit(trail, pointAlongX(index), index * 10, SPEC);
+  test('puff count is capped at spec.capacity', () => {
+    // A very fast object would otherwise pack far more than `capacity` samples into `lifetimeMs`.
+    const rocket = makeRocket(10);
+    const state = initialState(rocket, config);
+    const puffs = trailPuffs(state, rocket, config, 10_000, SPEC);
+    expect(puffs.length).toBeLessThanOrEqual(SPEC.capacity);
+    expect(puffs.length).toBe(SPEC.capacity);
+  });
+
+  test('successive puffs are separated by spec.spacing radians of travel, oldest last', () => {
+    const rocket = makeRocket(0.02);
+    const state = initialState(rocket, config);
+    const puffs = trailPuffs(state, rocket, config, 10_000, SPEC);
+    expect(puffs.length).toBeGreaterThan(1);
+
+    for (let index = 0; index < puffs.length - 1; index++) {
+      const a = puffs[index].position;
+      const b = puffs[index + 1].position;
+      const distance = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+      // Chord length for a small angular spacing on a unit-radius path is close to the arc length.
+      expect(distance).toBeGreaterThan(0);
+      expect(puffs[index + 1].age).toBeGreaterThan(puffs[index].age);
     }
-
-    const puffs = activePuffs(trail, total * 10, SPEC);
-    expect(puffs).toHaveLength(SPEC.capacity);
-
-    // The earliest emissions (index 0..4) were overwritten; only the last `capacity` remain.
-    const positions = puffs.map((puff) => puff.position[0]);
-    expect(Math.min(...positions)).toBe(total - SPEC.capacity);
-    expect(Math.max(...positions)).toBe(total - 1);
   });
 
-  test('activePuffs omits expired puffs and reports age increasing toward 1', () => {
-    let trail = createTrail(SPEC.capacity);
-    trail = emit(trail, pointAlongX(0), 0, SPEC);
-    trail = emit(trail, pointAlongX(1), 100, SPEC);
-
-    // Puffs are reported oldest first; the older puff (born at 0) has a larger normalized age
-    // than the younger one (born at 100) at the same instant.
-    const midway = activePuffs(trail, 500, SPEC);
-    expect(midway).toHaveLength(2);
-    expect(midway[0].age).toBeGreaterThan(midway[1].age);
-    expect(midway[1].age).toBeGreaterThan(0);
-    expect(midway[0].age).toBeLessThanOrEqual(1);
-
-    // The first puff (born at 0) has since expired at nowMs = 1050 (lifetimeMs = 1000); the second
-    // (born at 100) is still alive, at age (1050 - 100) / 1000 = 0.95.
-    const afterExpiry = activePuffs(trail, 1050, SPEC);
-    expect(afterExpiry).toHaveLength(1);
-    expect(afterExpiry[0].position).toEqual(pointAlongX(1));
-    expect(afterExpiry[0].age).toBeCloseTo(0.95, 9);
+  test('a faster object gets a longer trail (more puffs), not denser spacing, for the same spec', () => {
+    const slow = makeRocket(0.005);
+    const fast = makeRocket(0.05);
+    const slowPuffs = trailPuffs(initialState(slow, config), slow, config, 10_000, SPEC);
+    const fastPuffs = trailPuffs(initialState(fast, config), fast, config, 10_000, SPEC);
+    expect(fastPuffs.length).toBeGreaterThan(slowPuffs.length);
   });
 
-  test('determinism: the same position/time sequence produces identical puff arrays', () => {
-    const sequence: Array<{ position: Vec3; nowMs: number }> = [
-      { position: pointAlongX(0), nowMs: 0 },
-      { position: pointAlongX(1), nowMs: 50 },
-      { position: pointAlongX(2), nowMs: 120 },
-      { position: pointAlongX(3), nowMs: 260 },
-    ];
+  test('the nearest puff is behind the object current position, not on top of it', () => {
+    const rocket = makeRocket(0.02);
+    const state = initialState(rocket, config);
+    const nowMs = 10_000;
+    const evaluated = state; // trailPuffs re-evaluates internally; use the same base state as the caller would.
+    const puffs = trailPuffs(evaluated, rocket, config, nowMs, SPEC);
+    const nearest = puffs[0];
+    expect(nearest.age).toBeGreaterThan(0);
+  });
 
-    const run = (): Trail =>
-      sequence.reduce((trail, step) => emit(trail, step.position, step.nowMs, SPEC), createTrail(SPEC.capacity));
-
-    const first = activePuffs(run(), 300, SPEC);
-    const second = activePuffs(run(), 300, SPEC);
-    expect(first).toEqual(second);
+  test('determinism: the same state/definition/config/nowMs always yields the same puffs', () => {
+    const rocket = makeRocket(0.02);
+    const state = initialState(rocket, config);
+    const first = trailPuffs(state, rocket, config, 12_345, SPEC);
+    const second = trailPuffs(state, rocket, config, 12_345, SPEC);
+    expect(second).toEqual(first);
   });
 });

@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { seaRadius } from '../engine';
 import { Terra, TerraObject } from '../types';
-import { toUnit } from './geo';
+import { angleBetween, bearingTo, toUnit } from './geo';
 import { type ObjectState, evaluate, initialState, walkRoute } from './motion';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'motion-1' } }));
@@ -61,6 +61,41 @@ describe('walkRoute', () => {
     const result = walkRoute(duplicated, 0.001);
     expect(Number.isFinite(result.unit[0])).toBe(true);
     expect(Number.isFinite(result.bearing)).toBe(true);
+  });
+
+  // Regression: on an inclined (non-equatorial, non-meridian) great-circle segment, the true course
+  // drifts continuously along its length, so mid-segment bearing must track the traveled-to point —
+  // not the segment's start point, which only agrees with the true course at fraction 0.
+  test('mid-segment bearing matches the true course at the traveled-to point, not the segment start', () => {
+    const start = toUnit({ lat: 10, lng: 10 });
+    const end = toUnit({ lat: 50, lng: 70 });
+    const inclined = [start, end];
+    const total = angleBetween(start, end);
+
+    const midway = walkRoute(inclined, total * 0.5);
+    const justAhead = walkRoute(inclined, total * 0.5001);
+    const trueCourseAtMidpoint = bearingTo(midway.unit, justAhead.unit);
+
+    expect(midway.bearing).toBeCloseTo(trueCourseAtMidpoint, 1);
+    // The segment's initial bearing is a meaningfully different angle on an inclined segment —
+    // guards against silently reverting to `bearingTo(start, end)`.
+    let driftFromStart = Math.abs(midway.bearing - bearingTo(start, end));
+    driftFromStart = driftFromStart > 180 ? 360 - driftFromStart : driftFromStart;
+    expect(driftFromStart).toBeGreaterThan(1);
+  });
+
+  test('the arrival bearing is the course at the route end, not the last segment start', () => {
+    const start = toUnit({ lat: 10, lng: 10 });
+    const end = toUnit({ lat: 50, lng: 70 });
+    const inclined = [start, end];
+    const total = angleBetween(start, end);
+
+    const arrived = walkRoute(inclined, total * 1.1);
+    const justBefore = walkRoute(inclined, total * 0.9999);
+    const trueCourseAtEnd = bearingTo(justBefore.unit, arrived.unit);
+
+    expect(arrived.done).toBe(true);
+    expect(arrived.bearing).toBeCloseTo(trueCourseAtEnd, 1);
   });
 });
 

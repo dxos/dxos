@@ -76,7 +76,12 @@ export class ObjectLayer {
 
   /** This frame's eased heading for `object`, remembered for the next call; never fed back into `state`. */
   #headingFor(object: SimObject, deltaMs: number): number {
-    const heading = easeHeading(this.#headings.get(object.definition), object.state.bearing, deltaMs);
+    const heading = easeHeading(
+      this.#headings.get(object.definition),
+      object.state.bearing,
+      deltaMs,
+      object.definition.kind,
+    );
     this.#headings.set(object.definition, heading);
     return heading;
   }

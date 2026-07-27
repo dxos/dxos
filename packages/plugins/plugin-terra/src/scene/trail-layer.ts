@@ -11,46 +11,19 @@ import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { type Mesh } from '@babylonjs/core/Meshes/mesh';
 import { type Scene } from '@babylonjs/core/scene';
 
-import { type Vec3, scale, sub } from '../engine';
+import { type TerraConfigValues, type Vec3 } from '../engine';
 import { type SimObject } from '../sim/engine';
-import { tangentFrame } from '../sim/geo';
-import { type Trail, TRAIL_SPECS, type TrailSpec, activePuffs, createTrail, emit } from '../sim/trail';
-import { type TerraObject } from '../types';
-
-const DEG = Math.PI / 180;
+import { TRAIL_SPECS, type TrailSpec, trailPuffs } from '../sim/trail';
 
 /** Puffs are small, numerous, and never seen up close, so a low-poly sphere is indistinguishable from a smooth one. */
 const PUFF_SEGMENTS = 6;
 
-/** Renders after the planet's default group 0, so trails never appear to sink beneath the terrain they float over. */
-const TRAIL_RENDERING_GROUP = 1;
-
 /** A puff ready to render: its world position, instance scale, and instance alpha. */
 type RenderPuff = { position: Vec3; radius: number; alpha: number };
 
-/**
- * World-space forward tangent at `unit`, derived from `bearing` (degrees) via the local north/east
- * frame — mirrors `object-layer.ts`'s `forwardAt`, kept separate since that one returns a Babylon
- * `Vector3` and this one stays in plain `Vec3` for reuse with `sim/trail`'s pure arithmetic.
- */
-const forwardAt = (unit: Vec3, bearing: number): Vec3 => {
-  const { north, east } = tangentFrame(unit);
-  const radians = bearing * DEG;
-  const cos = Math.cos(radians);
-  const sin = Math.sin(radians);
-  return [north[0] * cos + east[0] * sin, north[1] * cos + east[1] * sin, north[2] * cos + east[2] * sin];
-};
-
-/**
- * The point behind an object's hull, opposite its direction of travel, where a fresh puff is
- * emitted — so the trail reads as a wake rather than spheres intersecting the object.
- */
-const emissionPoint = (state: SimObject['state'], spec: TrailSpec): Vec3 =>
-  sub(scale(state.unit, state.radius), scale(forwardAt(state.unit, state.bearing), spec.spacing));
-
-/** Puffs younger than `spec.lifetimeMs` for one object, grown and faded by their normalized age. */
-const renderPuffsFor = (trail: Trail, nowMs: number, spec: TrailSpec): RenderPuff[] =>
-  activePuffs(trail, nowMs, spec).map(({ position, age }) => ({
+/** Puffs for one object, grown and faded by their normalized age. */
+const renderPuffsFor = (object: SimObject, config: TerraConfigValues, nowMs: number, spec: TrailSpec): RenderPuff[] =>
+  trailPuffs(object.state, object.definition, config, nowMs, spec).map(({ position, age }) => ({
     position,
     radius: spec.startRadius * (1 + (spec.endScale - 1) * age),
     alpha: spec.startAlpha * (1 - age),
@@ -58,13 +31,12 @@ const renderPuffsFor = (trail: Trail, nowMs: number, spec: TrailSpec): RenderPuf
 
 /**
  * Renders ephemeral smoke/wake trails for ships, planes, and rockets as thin-instanced spheres
- * that grow and fade with age. Trails are pure render state derived from `SimObject` positions —
- * never persisted, never replicated — so a `Trail` here is keyed by object identity and rebuilt
- * from scratch whenever `TerraArticle` swaps in a fresh `SimEngine`.
+ * that grow and fade with age. Trails are the object's own real past positions, re-derived each
+ * frame from `sim/trail`'s closed-form sampling — never persisted, never replicated, and never
+ * accumulated across frames, so there is nothing here to key or drop by object identity.
  */
 export class TrailLayer {
   readonly #base: Mesh;
-  readonly #trails = new Map<TerraObject.TerraObject, Trail>();
   #matrixBuffer: Float32Array | undefined;
   #colorBuffer: Float32Array | undefined;
 
@@ -72,7 +44,11 @@ export class TrailLayer {
     this.#base = CreateSphere('trailPuff', { diameter: 1, segments: PUFF_SEGMENTS }, options.scene);
     this.#base.material = this.#createMaterial(options.scene);
     this.#base.isVisible = false;
-    this.#base.renderingGroupId = TRAIL_RENDERING_GROUP;
+    // Stays in the planet's default rendering group (0) rather than a later one: Babylon auto-clears
+    // the depth buffer between rendering groups, so a later group has no depth information from the
+    // planet and nothing in it can be occluded by opaque terrain. Sharing the group keeps puffs
+    // depth-*tested* against the planet (far-side puffs are hidden) while `disableDepthWrite` below
+    // still lets overlapping puffs blend with each other instead of z-fighting.
   }
 
   /** Matte, unlit-white, alpha-blended, depth-write-disabled so overlapping puffs blend rather than z-fight. */
@@ -89,8 +65,7 @@ export class TrailLayer {
     return material;
   }
 
-  update(objects: readonly SimObject[], nowMs: number): void {
-    const live = new Set<TerraObject.TerraObject>();
+  update(objects: readonly SimObject[], config: TerraConfigValues, nowMs: number): void {
     const rendered: RenderPuff[] = [];
 
     for (const object of objects) {
@@ -98,20 +73,7 @@ export class TrailLayer {
       if (!spec) {
         continue;
       }
-      live.add(object.definition);
-
-      const trail = this.#trails.get(object.definition) ?? createTrail(spec.capacity);
-      const updated = emit(trail, emissionPoint(object.state, spec), nowMs, spec);
-      this.#trails.set(object.definition, updated);
-
-      rendered.push(...renderPuffsFor(updated, nowMs, spec));
-    }
-
-    // Drops trails for objects no longer simulated — removed, or orphaned by a freshly rebuilt SimEngine.
-    for (const definition of this.#trails.keys()) {
-      if (!live.has(definition)) {
-        this.#trails.delete(definition);
-      }
+      rendered.push(...renderPuffsFor(object, config, nowMs, spec));
     }
 
     this.#rebuild(rendered);

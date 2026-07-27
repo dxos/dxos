@@ -4,7 +4,7 @@
 
 import { type TerraConfigValues, type Vec3, add, makeSampler, normalize, radiusAt, scale, seaRadius } from '../engine';
 import { type TerraObject } from '../types';
-import { angleBetween, bearingTo, toUnit } from './geo';
+import { angleBetween, bearingOfTangent, bearingTo, geodesicTangent, toUnit } from './geo';
 
 /** Flight stage of a rocket, derived from flight fraction — never stored across calls. */
 export type RocketPhase = 'boost' | 'cruise' | 'descent';
@@ -64,11 +64,17 @@ const slerp = (from: Vec3, to: Vec3, fraction: number): Vec3 => {
   return normalize(add(scale(from, left), scale(to, right)));
 };
 
-/** Bearing of the last non-degenerate segment in a route, or 0 if every segment is degenerate. */
+/**
+ * Bearing at the end of the last non-degenerate segment in a route (the course an object arrives
+ * on), or 0 if every segment is degenerate. Evaluated at the segment's end point via
+ * `geodesicTangent`, not at its start — a great circle's course drifts along its length, so the
+ * arrival bearing is generally not the same as the segment's initial `bearingTo`.
+ */
 const finalBearing = (route: readonly Vec3[]): number => {
   for (let index = route.length - 2; index >= 0; index--) {
-    if (angleBetween(route[index], route[index + 1]) >= 1e-12) {
-      return bearingTo(route[index], route[index + 1]);
+    const to = route[index + 1];
+    if (angleBetween(route[index], to) >= 1e-12) {
+      return bearingOfTangent(to, geodesicTangent(route[index], to, 1));
     }
   }
   return 0;
@@ -101,7 +107,9 @@ export const walkRoute = (route: readonly Vec3[], distance: number): { unit: Vec
     }
     if (traveled + segment >= target) {
       const fraction = (target - traveled) / segment;
-      return { unit: slerp(from, to, fraction), bearing: bearingTo(from, to), done: false };
+      const point = slerp(from, to, fraction);
+      // Bearing at the *traveled-to point*, not the segment's start — see `geodesicTangent`'s doc.
+      return { unit: point, bearing: bearingOfTangent(point, geodesicTangent(from, to, fraction)), done: false };
     }
     traveled += segment;
   }

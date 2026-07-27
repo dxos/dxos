@@ -40,12 +40,30 @@ export const tangentFrame = (unit: Vec3): { north: Vec3; east: Vec3 } => {
 /** Central angle between two unit vectors, in radians. */
 export const angleBetween = (from: Vec3, to: Vec3): number => Math.acos(Math.min(1, Math.max(-1, dot(from, to))));
 
-/** Initial great-circle bearing from one point to another, in degrees [0, 360). */
-export const bearingTo = (from: Vec3, to: Vec3): number => {
-  const { north, east } = tangentFrame(from);
-  const tangent = sub(to, scale(from, dot(from, to)));
-  const degrees = Math.atan2(dot(tangent, east), dot(tangent, north)) * RAD;
+/** Bearing (degrees, [0, 360)) of tangent direction `direction` as observed at point `at`. */
+export const bearingOfTangent = (at: Vec3, direction: Vec3): number => {
+  const { north, east } = tangentFrame(at);
+  const degrees = Math.atan2(dot(direction, east), dot(direction, north)) * RAD;
   return (degrees + 360) % 360;
+};
+
+/** Initial great-circle bearing from one point to another, in degrees [0, 360). */
+export const bearingTo = (from: Vec3, to: Vec3): number => bearingOfTangent(from, sub(to, scale(from, dot(from, to))));
+
+/**
+ * The exact tangent direction of the great-circle geodesic from `from` to `to`, at `fraction` of
+ * the way along it (`slerp(from, to, fraction)`'s point) — the derivative of that same
+ * parametrization, not an approximation. Degenerate (zero) when `from` and `to` coincide. Feeding
+ * this to `bearingOfTangent` gives the true course *at the traveled-to point*, which is not the
+ * same as `bearingTo(from, to)` except at `fraction === 0`: a great circle's course drifts
+ * continuously along its length unless it runs along the equator or a meridian.
+ */
+export const geodesicTangent = (from: Vec3, to: Vec3, fraction: number): Vec3 => {
+  const angle = angleBetween(from, to);
+  if (angle < 1e-12) {
+    return [0, 0, 0];
+  }
+  return add(scale(from, -Math.cos((1 - fraction) * angle)), scale(to, Math.cos(fraction * angle)));
 };
 
 /** Moves along the great circle leaving `unit` on `bearing` by `angularDistance` radians. */

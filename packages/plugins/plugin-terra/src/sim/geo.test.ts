@@ -4,7 +4,17 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { advance, angleBetween, bearingTo, tangentFrame, toGeo, toUnit, turnToward } from './geo';
+import {
+  advance,
+  angleBetween,
+  bearingOfTangent,
+  bearingTo,
+  geodesicTangent,
+  tangentFrame,
+  toGeo,
+  toUnit,
+  turnToward,
+} from './geo';
 
 describe('geo', () => {
   test('toUnit places the poles and the prime meridian', () => {
@@ -55,6 +65,19 @@ describe('geo', () => {
   test('advance stays on the unit sphere', () => {
     const moved = advance(toUnit({ lat: 45, lng: 30 }), 217, 0.4);
     expect(Math.hypot(moved[0], moved[1], moved[2])).toBeCloseTo(1, 9);
+  });
+
+  test('geodesicTangent at fraction 0 agrees with bearingTo(from, to)', () => {
+    const from = toUnit({ lat: 5, lng: 15 });
+    const to = toUnit({ lat: 40, lng: 65 });
+    const bearing = bearingOfTangent(from, geodesicTangent(from, to, 0));
+    expect(bearing).toBeCloseTo(bearingTo(from, to), 9);
+  });
+
+  test('geodesicTangent is degenerate (zero) when from and to coincide', () => {
+    const point = toUnit({ lat: 12, lng: 34 });
+    const tangent = geodesicTangent(point, point, 0.5);
+    expect(tangent).toEqual([0, 0, 0]);
   });
 
   test('turnToward takes the short way around the wrap', () => {

@@ -41,6 +41,10 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   const objectLayerRef = useRef<ObjectLayer | null>(null);
   const trailLayerRef = useRef<TrailLayer | null>(null);
   const simEngineRef = useRef<SimEngine | null>(null);
+  // The config `simEngineRef`'s current engine was built with — kept in lockstep with it (set
+  // wherever `simEngineRef.current` is) so trail sampling always re-evaluates motion under the same
+  // config its states' `route`/`leg`/`legStart` were produced under.
+  const configRef = useRef<TerraConfigValues | null>(null);
   // Mutated directly by `handleTogglePlaying` and read fresh each frame by the mount-once render-loop
   // observer below — mirrors `simEngineRef`'s ref-for-freshness pattern so the closure never goes stale.
   const clockRef = useRef<SimClock>({ pausedTotalMs: 0, pausedAtMs: null });
@@ -65,11 +69,14 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     objectLayerRef.current = layer;
     const trails = new TrailLayer({ scene: manager.scene });
     trailLayerRef.current = trails;
-    simEngineRef.current = buildSimEngine(Terra.toConfigValues(terra), resolveDefinitions(terra));
+    const initialValues = Terra.toConfigValues(terra);
+    simEngineRef.current = buildSimEngine(initialValues, resolveDefinitions(terra));
+    configRef.current = initialValues;
 
     const observer: Observer<Scene> = manager.scene.onBeforeRenderObservable.add(() => {
       const engine = simEngineRef.current;
-      if (!engine) {
+      const engineConfig = configRef.current;
+      if (!engine || !engineConfig) {
         return;
       }
       // Always an absolute time, whether running or paused, so the engine stays closed-form: while
@@ -83,7 +90,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       // rendering concern independent of whether the sim is paused.
       layer.update(engine.objects, manager.engine.getDeltaTime());
       // Shares the same pause-adjusted clock as the sim, so trails freeze in place with everything else.
-      trails.update(engine.objects, nowMs);
+      trails.update(engine.objects, engineConfig, nowMs);
     });
 
     return () => {
@@ -119,6 +126,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     // only changes `definitions`) rebuilds the sim engine without re-rendering the planet mesh.
     const handle = setTimeout(() => {
       simEngineRef.current = buildSimEngine(values, definitions);
+      configRef.current = values;
     }, 150);
     return () => clearTimeout(handle);
   }, [values, definitions]);

@@ -2,20 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Vec3, sub } from '../engine';
+import { type TerraConfigValues, type Vec3, scale } from '../engine';
 import { type TerraObject } from '../types';
+import { type MotionContext, type ObjectState, evaluate } from './motion';
 
-/** A single trail marker: where it was emitted, and when. */
-export type Puff = { position: Vec3; bornAt: number };
-
-/**
- * A fixed-capacity ring buffer of puffs. `head` is the next write slot; `count` is how many slots
- * currently hold a live puff (saturates at `puffs.length`). `lastEmit` is the position at which the
- * most recent puff was appended, so `emit` can gate on distance without scanning the buffer.
- */
-export type Trail = { puffs: Puff[]; head: number; count: number; lastEmit: Vec3 | undefined };
-
-/** Per-kind tuning: emission spacing, puff lifetime, ring-buffer capacity, and render-side sizing/alpha. */
+/** Per-kind tuning: emission spacing, puff lifetime, sample cap, and render-side sizing/alpha. */
 export type TrailSpec = {
   spacing: number;
   lifetimeMs: number;
@@ -32,54 +23,52 @@ export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
   rocket: { spacing: 0.01, lifetimeMs: 3000, capacity: 48, startRadius: 0.014, endScale: 2, startAlpha: 0.45 },
 };
 
-/** A fresh, empty trail with room for `capacity` live puffs. */
-export const createTrail = (capacity: number): Trail => ({
-  puffs: new Array<Puff>(capacity),
-  head: 0,
-  count: 0,
-  lastEmit: undefined,
-});
-
-/** Squared Euclidean distance between two points, avoiding a square root at the `emit` gate. */
-const distanceSquared = (a: Vec3, b: Vec3): number => {
-  const delta = sub(a, b);
-  return delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2];
-};
+/** A historical trail sample: a real past world position the object occupied, and its normalized age in `[0, 1)`. */
+export type TrailPuff = { position: Vec3; age: number };
 
 /**
- * Appends a puff at `position` only once the object has moved at least `spec.spacing` from the
- * last emission point — distance-based, not time-based, so a faster object leaves a longer trail
- * rather than a denser one. Returns `trail` unchanged (same reference) when the gate is not met.
+ * The trail is the object's own real past positions, re-derived on demand from its closed-form
+ * motion rather than accumulated frame by frame — `sim/` positions are already an exact function of
+ * `(definition, config, elapsed)` (see the determinism contract), so the puff at age `a` is simply
+ * `evaluate(state, definition, { config, elapsed: nowElapsed - a })`. This has no ring buffer to
+ * drift, no dependency on render frame rate, and the same `(state, definition, config, nowMs)`
+ * always yields the identical set of puffs.
+ *
+ * Ages are spaced by `spec.spacing / definition.speed` seconds, so puff separation reflects
+ * `spec.spacing` radians of *distance* travelled at the object's own speed — a faster object trails
+ * a longer wake, not a denser one — capped at `spec.capacity` samples. The nearest sample is one
+ * spacing-step behind "now" (age 0 is skipped) so puffs never sample the object's own current hull
+ * position; that skip is only ever a side effect of the sampling grid, never itself the mechanism
+ * that shapes the trail's path.
+ *
+ * One caveat: for routed kinds (boat/plane), `state`'s `route`/`leg`/`legStart` are the *current*
+ * leg's — correct for any sampled age at or after that leg began, but a sample reaching back past
+ * the leg's own start clamps to the leg's start point (see `motion.ts`'s `evaluateRouted`) rather
+ * than replaying the previous leg. This only affects puffs within one `lifetimeMs` window of a
+ * re-target, and self-heals as those puffs age out — deliberately not solved by replaying the full
+ * leg history here, which would reintroduce the per-frame bookkeeping this approach removes.
  */
-export const emit = (trail: Trail, position: Vec3, nowMs: number, spec: TrailSpec): Trail => {
-  if (trail.lastEmit && distanceSquared(position, trail.lastEmit) < spec.spacing * spec.spacing) {
-    return trail;
+export const trailPuffs = (
+  state: ObjectState,
+  definition: TerraObject.TerraObject,
+  config: TerraConfigValues,
+  nowMs: number,
+  spec: TrailSpec,
+): TrailPuff[] => {
+  if (definition.speed <= 0) {
+    return [];
   }
 
-  const capacity = trail.puffs.length;
-  const puffs = trail.puffs.slice();
-  puffs[trail.head] = { position, bornAt: nowMs };
+  const ageStepMs = (spec.spacing / definition.speed) * 1000;
+  const count = Math.min(spec.capacity, Math.floor(spec.lifetimeMs / ageStepMs));
+  const elapsedNow = (nowMs - definition.spawnedAt) / 1000;
 
-  return {
-    puffs,
-    head: (trail.head + 1) % capacity,
-    count: Math.min(trail.count + 1, capacity),
-    lastEmit: position,
-  };
-};
-
-/** Live puffs, oldest first, younger than `spec.lifetimeMs`, with `age` normalized to `[0, 1]`. */
-export const activePuffs = (trail: Trail, nowMs: number, spec: TrailSpec): { position: Vec3; age: number }[] => {
-  const capacity = trail.puffs.length;
-  const oldestIndex = (trail.head - trail.count + capacity) % capacity;
-
-  const result: { position: Vec3; age: number }[] = [];
-  for (let offset = 0; offset < trail.count; offset++) {
-    const puff = trail.puffs[(oldestIndex + offset) % capacity];
-    const elapsed = nowMs - puff.bornAt;
-    if (elapsed >= 0 && elapsed < spec.lifetimeMs) {
-      result.push({ position: puff.position, age: Math.min(1, Math.max(0, elapsed / spec.lifetimeMs)) });
-    }
+  const puffs: TrailPuff[] = [];
+  for (let index = 1; index <= count; index++) {
+    const ageMs = index * ageStepMs;
+    const context: MotionContext = { config, elapsed: elapsedNow - ageMs / 1000 };
+    const historical = evaluate(state, definition, context);
+    puffs.push({ position: scale(historical.unit, historical.radius), age: ageMs / spec.lifetimeMs });
   }
-  return result;
+  return puffs;
 };
