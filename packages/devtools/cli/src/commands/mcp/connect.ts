@@ -11,8 +11,11 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, FormBuilder, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { BaseError } from '@dxos/errors';
 
 import { authorize, initialize, saveSession } from './client';
+
+class McpConnectError extends BaseError.extend('McpConnectError', 'MCP connect failed') {}
 
 export const connect = Command.make(
   'connect',
@@ -35,26 +38,41 @@ export const connect = Command.make(
 
     const identity = client.halo.identity.get();
     if (!identity) {
-      return yield* Effect.fail(new Error('Identity not available. Run `dx account login` first.'));
+      return yield* Effect.fail(
+        new McpConnectError({ message: 'Identity not available. Run `dx account login` first.' }),
+      );
     }
 
-    // The server scopes the session to these spaces; default to the profile's first space so the
+    // The server scopes the session to these spaces; default to the profile's spaces so the
     // common case ("connect this space") needs no flags.
     const spaceIds = spaceId.length > 0 ? [...spaceId] : client.spaces.get().map((space) => space.id);
     if (spaceIds.length === 0) {
-      return yield* Effect.fail(new Error('No spaces available. Create one with `dx space create`.'));
+      return yield* Effect.fail(
+        new McpConnectError({ message: 'No spaces available. Create one with `dx space create`.' }),
+      );
     }
 
-    const session = yield* Effect.tryPromise(() =>
-      authorize({
-        serverUrl: url,
-        identityKey: identity.identityKey.toHex(),
-        spaceIds,
-        haloSpaceId: Option.getOrUndefined(haloSpaceId),
-      }),
-    );
-    yield* Effect.tryPromise(() => initialize(session));
-    yield* Effect.promise(() => saveSession(profile, session));
+    const session = yield* Effect.tryPromise({
+      try: () =>
+        authorize({
+          serverUrl: url,
+          identityKey: identity.identityKey.toHex(),
+          spaceIds,
+          haloSpaceId: Option.getOrUndefined(haloSpaceId),
+        }),
+      catch: (error) => new McpConnectError({ message: `Authorization failed for ${url}`, cause: error }),
+    });
+    // Persist before initializing: `initialize` may refresh the token internally, and passing
+    // `{ profile }` lets that refresh be stored. Saving afterwards would write the pre-refresh
+    // session back over it, leaving a consumed refresh token on disk.
+    yield* Effect.tryPromise({
+      try: () => saveSession(profile, session),
+      catch: (error) => new McpConnectError({ message: 'Failed to store the MCP session', cause: error }),
+    });
+    yield* Effect.tryPromise({
+      try: () => initialize(session, { profile }),
+      catch: (error) => new McpConnectError({ message: `MCP initialize failed for ${url}`, cause: error }),
+    });
 
     if (json) {
       yield* Console.log(
