@@ -52,8 +52,12 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
         );
 
         const getLabel = (object: Obj.Unknown): Label => {
-          const type = Obj.getTypename(object)!;
-          return Obj.getLabel(object) ?? ['object-name.placeholder', { ns: type, defaultValue: 'New object' }];
+          const typename = Obj.getTypename(object);
+          // A typeless object cannot key a translation namespace, so it falls back to the literal.
+          const placeholder: Label = typename
+            ? ['object-name.placeholder', { ns: typename, defaultValue: 'New object' }]
+            : 'New object';
+          return Obj.getLabel(object) ?? placeholder;
         };
 
         const items = results
@@ -93,10 +97,10 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
           icon: 'ph--plus--regular',
           onSelect: ({ view, head }) => {
             const doc = Markdown.make({ name: name || undefined });
-            // Added up-front so the link below can read its URI synchronously.
-            db.add(doc);
             void invokePromise?.(SpaceOperation.AddObject, { object: doc, target });
             const label = name || t('object-name.placeholder', { ns: Type.getTypename(Markdown.Document) });
+            // `AddObject` attaches the object asynchronously, so this is the space-relative form of
+            // its URI; the anchor/preview path resolves that against the current space.
             const link = `[${label}](${Obj.getURI(doc)})`;
             if (query?.startsWith('@')) {
               insertAtLineStart(view, head, `!${link}\n`);

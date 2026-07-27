@@ -1,5 +1,5 @@
 ---
-'@dxos/app-toolkit': patch
+'@dxos/echo': patch
 '@dxos/plugin-markdown': patch
 ---
 
