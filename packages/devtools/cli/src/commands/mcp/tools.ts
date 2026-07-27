@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig, FormBuilder, print } from '@dxos/cli-util';
 
-import { initialize, request } from './client';
+import { McpProtocolError, ToolsListResult, initialize, request } from './client';
 import { requireSession, serverUrlOption } from './util';
 
 export const tools = Command.make(
@@ -20,14 +20,18 @@ export const tools = Command.make(
     const { json, profile } = yield* CommandConfig;
     const session = yield* requireSession(profile, url);
 
-    yield* Effect.tryPromise(() => initialize(session, { profile }));
-    const result = yield* Effect.tryPromise(() => request(session, 'tools/list', {}, { profile }));
-    const entries = (result.tools ?? []) as Array<{ name: string; description?: string }>;
+    const result = yield* Effect.tryPromise({
+      try: async () => {
+        await initialize(session, { profile });
+        return request(session, 'tools/list', {}, ToolsListResult, { profile });
+      },
+      catch: (error) => new McpProtocolError({ message: `Failed to list tools on ${session.serverUrl}`, cause: error }),
+    });
 
     if (json) {
-      yield* Console.log(JSON.stringify(entries, null, 2));
+      yield* Console.log(JSON.stringify(result.tools, null, 2));
     } else {
-      const builder = entries.reduce(
+      const builder = result.tools.reduce(
         (acc, tool) => acc.pipe(FormBuilder.set(tool.name, tool.description ?? '')),
         FormBuilder.make({ title: 'Tools' }),
       );

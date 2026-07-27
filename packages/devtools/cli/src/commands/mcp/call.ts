@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { CommandConfig } from '@dxos/cli-util';
 
-import { initialize, request } from './client';
+import { McpProtocolError, ToolCallResult, initialize, request } from './client';
 import { requireSession, serverUrlOption } from './util';
 
 export const call = Command.make(
@@ -27,21 +27,32 @@ export const call = Command.make(
     url: serverUrlOption,
   },
   Effect.fn(function* ({ tool, input, url }) {
-    const { json, profile } = yield* CommandConfig;
+    const { profile } = yield* CommandConfig;
     const session = yield* requireSession(profile, url);
 
-    yield* Effect.tryPromise(() => initialize(session, { profile }));
-    const result = yield* Effect.tryPromise(() =>
-      request(session, 'tools/call', { name: tool, arguments: Option.getOrElse(input, () => ({})) }, { profile }),
-    );
+    const result = yield* Effect.tryPromise({
+      try: async () => {
+        await initialize(session, { profile });
+        return request(
+          session,
+          'tools/call',
+          { name: tool, arguments: Option.getOrElse(input, () => ({})) },
+          ToolCallResult,
+          { profile },
+        );
+      },
+      catch: (error) => new McpProtocolError({ message: `Tool ${tool} failed`, cause: error }),
+    });
 
     // A tool can fail without failing the RPC; surface that as a command error rather than
     // printing an error payload as if it were a result.
     if (result.isError) {
-      return yield* Effect.fail(new Error(`Tool ${tool} failed: ${JSON.stringify(result.content)}`));
+      return yield* Effect.fail(
+        new McpProtocolError({ message: `Tool ${tool} failed: ${JSON.stringify(result.content)}` }),
+      );
     }
 
-    const output = result.structuredContent ?? result.content;
-    yield* Console.log(json ? JSON.stringify(output, null, 2) : JSON.stringify(output, null, 2));
+    // Output is JSON either way: tool results are structured data, not a summary to format.
+    yield* Console.log(JSON.stringify(result.structuredContent ?? result.content, null, 2));
   }),
 ).pipe(Command.withDescription('Call a tool on a connected MCP server.'));
