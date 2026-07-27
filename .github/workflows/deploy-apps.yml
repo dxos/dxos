@@ -51,7 +51,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write # Push the per-app deploy pointer tags (the version bump to main uses dxos-bot's PAT).
+  contents: read # Only `deploy` writes (its pointer tags); the version bump to main uses dxos-bot's PAT.
 
 jobs:
   # Resolve the run into named booleans so downstream `if:` conditions stay readable. Outputs:
@@ -227,6 +227,8 @@ jobs:
     needs: [plan, release, build-bundle]
     # Run once the prep jobs succeeded or were skipped (main / static-only); skip only on a failure.
     if: ${{ !cancelled() && needs.plan.result == 'success' && needs.release.result != 'failure' && needs.build-bundle.result != 'failure' }}
+    permissions:
+      contents: write # Force-updates the per-app `<app>/<env>` deploy pointer tags.
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
