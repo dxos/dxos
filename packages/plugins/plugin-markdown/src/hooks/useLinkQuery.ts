@@ -5,9 +5,12 @@
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { CollectionModel } from '@dxos/app-toolkit';
 import { Annotation, type Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
@@ -16,6 +19,7 @@ import { Markdown } from '../types';
 
 export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Unknown) => {
   const { t } = useTranslation();
+  const { invokePromise } = useOperationInvoker();
 
   const filter = useMemo(
     () =>
@@ -32,7 +36,10 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
     async (query?: string): Promise<EditorMenuGroup[]> => {
       // A second "@" switches the link query into block-embed mode, so "@@foo" searches for "foo".
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
-      const results = await db?.query(Query.select(filter)).run();
+      const [results, containing] = await Promise.all([
+        db?.query(Query.select(filter)).run(),
+        db && current ? db.query(CollectionModel.containing(current)).run() : Promise.resolve([]),
+      ]);
 
       const getLabel = (object: Obj.Unknown): Label => {
         const type = Obj.getTypename(object)!;
@@ -66,6 +73,10 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
             };
           }) ?? [];
 
+      // File new objects in the current document's collection rather than the space root; with no
+      // containing collection `AddObject` applies its own default.
+      const target = containing[0] ?? db;
+
       // Add "Create new document" option at the end.
       const createItem: EditorMenuItem = {
         id: 'create-document',
@@ -73,7 +84,11 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
         icon: 'ph--plus--regular',
         onSelect: ({ view, head }) => {
           const doc = Markdown.make({ name: name || undefined });
+          // Added up-front so the link below can read its URI synchronously.
           db?.add(doc);
+          if (target) {
+            void invokePromise?.(SpaceOperation.AddObject, { object: doc, target });
+          }
           const label = name || t('object-name.placeholder', { ns: Type.getTypename(Markdown.Document) });
           const link = `[${label}](${Obj.getURI(doc)})`;
           if (query?.startsWith('@')) {
@@ -89,7 +104,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
         { id: 'create', items: [createItem] },
       ];
     },
-    [db, filter, t, current],
+    [db, filter, t, current, invokePromise],
   );
 
   return handleLinkQuery;
