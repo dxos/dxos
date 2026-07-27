@@ -43,7 +43,6 @@ export const RelatedToOrganization = ({
         yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
         yield* invoke(LayoutOperation.Open, {
           subject: [contactPath],
-          // A card always opens beside the plank it lives in, never replacing it.
           pivotId,
           disposition: 'add',
           workspace: db ? GraphPath.getSpacePath(db.spaceId) : undefined,

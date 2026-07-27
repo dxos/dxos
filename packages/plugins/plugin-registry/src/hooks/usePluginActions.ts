@@ -74,7 +74,6 @@ export const usePluginActions = ({
   const specPath = getPluginSpecPath(pluginId);
   const hasSpecNode = !!useNode(graph, specPath);
   const handleOpenSpec = useCallback(() => {
-    // Open the spec beside this plugin's plank (a card navigation), never replacing it.
     void invokePromise(LayoutOperation.Open, {
       subject: [specPath],
       pivotId: getPluginPath(pluginId),

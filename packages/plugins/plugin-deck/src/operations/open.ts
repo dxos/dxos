@@ -115,8 +115,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // - 'solo' (default): navigate — the deck becomes just the subjects, unless they are all already
       //   open (scroll-into-view only).
       // - 'add': always insert the subjects as new planks, immediately after `pivotId` when provided,
-      //   else at the end; never replaces. Card navigation passes the card's own plank as `pivotId`
-      //   (see `usePivotId`), so opened objects appear beside the plank the card lives in.
+      //   else at the end; never replaces. A card passes its own plank as `pivotId` (see
+      //   `useCardPivot`), so opened objects appear beside the plank the card lives in.
       // - 'auto': follow the deck — add beside the origin (`pivotId`, falling back to the attended
       //   plank) when already sliding (2+ planks), otherwise navigate solo. In-plank inline references
       //   use this so they grow a sliding deck but replace a solo one.

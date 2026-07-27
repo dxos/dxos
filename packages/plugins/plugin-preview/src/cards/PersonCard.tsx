@@ -33,7 +33,6 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
       yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       yield* invoke(LayoutOperation.Open, {
         subject: [organizationPath],
-        // A card always opens beside the plank it lives in, never replacing it.
         pivotId,
         disposition: 'add',
         workspace: db ? GraphPath.getSpacePath(db.spaceId) : undefined,
