@@ -222,8 +222,7 @@ export const Default: Story = {
 export const MeetingAction: Story = {
   // TODO(burdon): Skipped — the event toolbar's overflow dropdown does not yet render contributed
   //   graph actions, so the "Open meeting" menu item isn't surfaced (pending react-ui-menu work).
-  // TODO(graph-path-ids): Also blocked on the hidden Event.Event node not materializing here; needs a
-  //   urlKey-addressed connector (see `@dxos/app-graph`'s path-resolution.ts) once phase A2/A3 lands.
+  // TODO(wittjosiah): Also blocked on the hidden Event.Event node not materializing in this story.
   tags: ['!test'],
   args: {
     withMeeting: true,
