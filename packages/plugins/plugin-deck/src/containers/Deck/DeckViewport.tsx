@@ -4,11 +4,13 @@
 
 import React, {
   type PropsWithChildren,
+  type RefObject,
   createContext,
   useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -19,8 +21,6 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { useNode } from '@dxos/plugin-graph';
 import {
-  Button,
-  Icon,
   IconButton,
   Main,
   type MainContentProps,
@@ -35,6 +35,7 @@ import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
+import { FoldSpine, SPINE_PX } from '#components';
 import {
   useBreakpoints,
   useCompanions,
@@ -74,19 +75,35 @@ const PLANK_SPACING = `${PLANK_SPACING_REM}rem`;
 const COMPANION_SIZE_KEY = 'companion';
 
 // EXPERIMENT (stacked notes): while sliding, planks are sticky and pile on the left as you scroll.
-// Each pinned plank reveals a `SPINE_PX`-wide sliver; once a plank's visible width drops below
-// `FOLD_THRESHOLD_PX` (no room for its header) it folds to a vertical spine sigil.
-const SPINE_PX = 44;
+// Each pinned plank reveals a `SPINE_PX`-wide sliver (owned by `FoldSpine`, which draws it); once a
+// plank's visible width drops below `FOLD_THRESHOLD_PX` (no room for its header) it folds to a spine.
 // A plank folds to its spine once the sliver still showing narrows below a spine plus the inter-plank
 // gap — i.e. just as it would otherwise tuck fully behind its neighbor.
 const FOLD_THRESHOLD_PX = SPINE_PX + PLANK_SPACING_REM * REM_PX;
 
-// Scrolls a plank back into view when its folded spine is clicked (see fold behavior below).
-const ScrollToPlankContext = createContext<(id: string, index: number) => void>(() => {});
+type DeckGeometry = {
+  /** Scrolls a plank back into view when its folded spine is clicked. */
+  scrollToPlank: (id: string, index: number) => void;
+  /**
+   * Upper bound (px) on a sliding plank's width, measured from the viewport so the current plank's
+   * trailing controls never disappear behind the piled spines of the other planks. Infinity until measured.
+   */
+  maxPlankWidthPx: number;
+};
 
-// Upper bound (px) on a sliding plank's width, measured from the viewport so the current plank's
-// trailing controls never disappear behind the piled spines of the other planks. Infinity until measured.
-const MaxPlankWidthContext = createContext<number>(Number.POSITIVE_INFINITY);
+/**
+ * Viewport-measured geometry that the plank tiles need. A context rather than props because
+ * `Mosaic.Stack` instantiates the tile itself, passing a closed prop set with no consumer passthrough
+ * — and building the tile component inline would give it a new identity per measurement, remounting
+ * every plank on each resize.
+ */
+// TODO(wittjosiah): Drop this if Mosaic.Stack grows a way to forward consumer props to its tiles.
+const DeckGeometryContext = createContext<DeckGeometry>({
+  scrollToPlank: () => {},
+  maxPlankWidthPx: Number.POSITIVE_INFINITY,
+});
+
+const useDeckGeometry = () => useContext(DeckGeometryContext);
 
 //
 // DeckViewport
@@ -215,13 +232,12 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { t } = useTranslation(meta.profile.key);
   const spineLabel = toLocalizedString(node?.properties?.label ?? '', t) || id;
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
-  const scrollToPlank = useContext(ScrollToPlankContext);
+  const { scrollToPlank, maxPlankWidthPx } = useDeckGeometry();
   // The companion plank keeps one shared width across its variants (a companion id is
   // `<plank>/~<variant>`), so switching tabs never resizes it; ordinary planks size per id.
   const sizingKey = Attention.isLinkedSegment(id) ? COMPANION_SIZE_KEY : id;
-  // Clamp the plank to a viewport-derived cap so its trailing controls stay clear of the piled spines;
+  // Clamp the plank to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
-  const maxPlankWidthPx = useContext(MaxPlankWidthContext);
   const maxSize = Math.max(MIN_PLANK_SIZE, Math.min(MAX_PLANK_SIZE, maxPlankWidthPx / REM_PX));
   const plankSize = Math.min(deck.plankSizing[sizingKey] ?? DEFAULT_PLANK_SIZE, maxSize);
   const plankWidthPx = plankSize * REM_PX;
@@ -288,25 +304,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
         soloLook={soloLook}
         classNames='dx-fold-content size-full transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-none group-data-[folded]/tile:opacity-0'
       />
-      {/* Fold spine: a book-spine sigil (icon + vertical title) that crossfades in as the plank collapses
-          (DeckPlanks toggles `data-folded`). It sits at the plank's leading edge — the sliver that stays
-          visible in either pile — with its icon aligned to the plank toolbar's sigil, and returns the
-          plank to view on click. The `dx-fold-spine` hook lets stories retime/restyle the transition. */}
-      <Button
-        variant='ghost'
-        onClick={() => scrollToPlank(id, index)}
-        aria-label={spineLabel}
-        classNames='dx-fold-spine absolute inset-y-0 left-0 z-[1] flex w-11 flex-col items-center justify-start gap-0 rounded-none p-0 border-ie border-separator bg-base-surface opacity-0 pointer-events-none transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-auto group-data-[folded]/tile:opacity-100'
-      >
-        {/* Icon box matches the plank toolbar height so the sigil stays put as the plank folds. */}
-        <div className='flex h-(--dx-rail-content) shrink-0 items-center justify-center'>
-          <Icon icon={spineIcon} size={5} classNames='shrink-0 text-subdued' />
-        </div>
-        {/* TODO(wittjosiah): Plain span — no react-ui primitive renders a vertical (writing-mode) label. */}
-        <span className='truncate text-sm font-normal text-description [writing-mode:vertical-rl] rotate-180'>
-          {spineLabel}
-        </span>
-      </Button>
+      <FoldSpine icon={spineIcon} label={spineLabel} onClick={() => scrollToPlank(id, index)} />
       <Mosaic.ResizeHandle />
     </Mosaic.Tile>
   );
@@ -380,45 +378,82 @@ const TilingDeck = ({ rendered, active, size }: { rendered: string[]; active: st
   );
 };
 
-/**
- * Renders `deck.active` through a single {@link Mosaic.Container} > {@link ScrollArea} >
- * {@link Mosaic.Stack} pipeline, parameterized by the derived presentation (fullbleed for a
- * singleton deck, sliding for two or more, always sliding below the `md` breakpoint). Planks stay
- * mounted in the same {@link Mosaic.Stack} across 1↔2 transitions — only their tile styling changes,
- * so opening a second plank (or closing the second-to-last) never remounts a plank's content.
- *
- * Fullscreen is a transient overlay independent of `active`, driven by `EphemeralDeckState.fullscreen`:
- * it renders only that plank, headless, replacing the deck entirely until the user exits (Escape or
- * the fullscreen toggle), matching the existing `DeckOperation.Adjust({ type: 'fullscreen' })` wiring.
- */
-export const DeckPlanks = () => {
-  const { state, deck } = useDeckContext('DeckPlanks');
-  const { rendered } = useRenderedPlanks();
-  const { invokePromise } = useOperationInvoker();
-  const breakpoint = useBreakpoints();
-  const presentation = useDeckPresentation(rendered.length);
-  const fullscreenId = state.fullscreen;
-  const fullscreen = !!fullscreenId;
-  const topbar = layoutAppliesTopbar(breakpoint, fullscreen);
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const stackRef = useRef<HTMLDivElement>(null);
-  const isSliding = presentation === 'sliding';
-  // Viewport-derived cap on a sliding plank's width (see the measuring layout effect below); consumed by
-  // tiles via `MaxPlankWidthContext` and by the fold effect so folds track the capped width.
-  const [maxPlankWidthPx, setMaxPlankWidthPx] = useState(Number.POSITIVE_INFINITY);
+//
+// DeckPlanks geometry
+//
+// Each concern below is a named hook rather than an inline effect: the deck's stacking geometry is read
+// from the DOM in several independent passes, and naming them keeps `DeckPlanks` a readable sequence.
+//
 
-  // The deck's own plank tiles are the *direct* children of the Mosaic stack. Scoping to them keeps
-  // nested `role="listitem"` content (CRM lists, markdown bullets, embedded mosaics) out of the fold and
-  // scroll geometry — otherwise a plank whose content contains list items measures wrong, folds
-  // spuriously, and sticks as a spine.
-  const getPlankTiles = useCallback(
+/**
+ * The deck's own plank tiles — the *direct* children of the Mosaic stack. Scoping to them keeps nested
+ * `role="listitem"` content (CRM lists, markdown bullets, embedded mosaics) out of the fold and scroll
+ * geometry; otherwise a plank whose content contains list items measures wrong, folds spuriously, and
+ * sticks as a spine.
+ */
+const usePlankTiles = (stackRef: RefObject<HTMLDivElement | null>) =>
+  useCallback(
     () => Array.from(stackRef.current?.querySelectorAll<HTMLElement>(':scope > [role="listitem"]') ?? []),
-    [],
+    [stackRef],
   );
 
-  // Preserve horizontal scroll position across fullbleed↔sliding transitions; a window resize
-  // invalidates it.
+/**
+ * Caps a sliding plank's width to the viewport, reserving a spine plus gap for every other plank (and
+ * the stack's own padding), so the current plank's trailing controls stay clear of the piled spines. A
+ * layout effect, so the cap lands before first paint — no flash of full-width planks on load.
+ */
+const useMaxPlankWidth = ({
+  viewportRef,
+  stackRef,
+  isSliding,
+  plankCount,
+}: {
+  viewportRef: RefObject<HTMLDivElement | null>;
+  stackRef: RefObject<HTMLDivElement | null>;
+  isSliding: boolean;
+  plankCount: number;
+}): number => {
+  const [maxPlankWidthPx, setMaxPlankWidthPx] = useState(Number.POSITIVE_INFINITY);
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || !isSliding) {
+      setMaxPlankWidthPx(Number.POSITIVE_INFINITY);
+      return;
+    }
+    const measure = () => {
+      const stack = stackRef.current;
+      const styles = stack && getComputedStyle(stack);
+      const gap = styles ? parseFloat(styles.columnGap) || 0 : 0;
+      const padding = styles
+        ? (parseFloat(styles.paddingInlineStart) || 0) + (parseFloat(styles.paddingInlineEnd) || 0)
+        : 0;
+      const others = Math.max(0, plankCount - 1);
+      const max = viewport.clientWidth - padding - others * (SPINE_PX + gap);
+      setMaxPlankWidthPx(max > 0 ? max : Number.POSITIVE_INFINITY);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [isSliding, plankCount, viewportRef, stackRef]);
+
+  return maxPlankWidthPx;
+};
+
+/**
+ * Preserves horizontal scroll position across fullbleed↔sliding transitions; a window resize invalidates
+ * it. The scroll listener is explicit because `ScrollArea.Viewport` does not forward `onScroll`.
+ */
+const usePreservedScroll = ({
+  viewportRef,
+  isSliding,
+}: {
+  viewportRef: RefObject<HTMLDivElement | null>;
+  isSliding: boolean;
+}) => {
   const scrollLeftRef = useRef<number | null>(null);
+
   useEffect(
     () =>
       addEventListener(window, 'resize', () => {
@@ -426,13 +461,14 @@ export const DeckPlanks = () => {
       }),
     [],
   );
+
   const restoreScroll = useCallback(() => {
     if (viewportRef.current && scrollLeftRef.current != null) {
       viewportRef.current.scrollLeft = scrollLeftRef.current;
     }
-  }, []);
+  }, [viewportRef]);
   useOnTransition(isSliding, (value) => !value, true, restoreScroll);
-  // Save scroll position as the user scrolls (ScrollArea.Viewport does not forward `onScroll`).
+
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) {
@@ -441,13 +477,25 @@ export const DeckPlanks = () => {
     return addEventListener(viewport, 'scroll', () => {
       scrollLeftRef.current = viewport.scrollLeft;
     });
-  }, []);
+  }, [viewportRef]);
+};
 
-  // Scroll a folded plank back into view (reveal it just past the left pile of `index` spines). A plank's
-  // natural offset can't come from `offsetLeft`: the tiles are position:sticky and their offsetParent
-  // doesn't scroll, so offsetLeft reports the pinned position (clustered for planks in a pile). Sum the
-  // actual plank widths + gaps instead, so the scroll distance tracks plank size for any index.
-  const scrollToPlank = useCallback(
+/**
+ * Scrolls a folded plank back into view, revealing it just past the left pile of `index` spines. The
+ * natural offset can't come from `offsetLeft`: the tiles are `position: sticky` and their offsetParent
+ * doesn't scroll, so `offsetLeft` reports the pinned position (clustered for planks in a pile). Summing
+ * the actual plank widths and gaps instead makes the scroll distance track plank size at any index.
+ */
+const useScrollToPlank = ({
+  viewportRef,
+  stackRef,
+  getPlankTiles,
+}: {
+  viewportRef: RefObject<HTMLDivElement | null>;
+  stackRef: RefObject<HTMLDivElement | null>;
+  getPlankTiles: () => HTMLElement[];
+}) =>
+  useCallback(
     (_id: string, index: number) => {
       const viewport = viewportRef.current;
       const stack = stackRef.current;
@@ -463,14 +511,30 @@ export const DeckPlanks = () => {
       }
       viewport.scrollTo({ left: Math.max(0, naturalLeft - index * SPINE_PX), behavior: 'smooth' });
     },
-    [getPlankTiles],
+    [getPlankTiles, viewportRef, stackRef],
   );
 
-  // Fold detection (experiment): pinning is entirely native CSS `sticky` (see the tile style), so this
-  // effect never repositions anything — it only reads the already-pinned rects to decide when a plank has
-  // collapsed to a sliver, then shows its spine on the edge it pinned to. Reading stable positions means
-  // the spines never lag or flicker during a scroll.
+/**
+ * Fold detection (experiment): pinning is entirely native CSS `sticky` (see the tile style), so this
+ * never repositions anything — it only reads the already-pinned rects to decide when a plank has
+ * collapsed to a sliver, then shows its spine on the edge it pinned to. Reading stable positions means
+ * the spines never lag or flicker during a scroll. It also keeps attention on a plank the user can see.
+ */
+const useFoldedPlanks = ({
+  viewportRef,
+  getPlankTiles,
+  isSliding,
+  plankCount,
+  maxPlankWidthPx,
+}: {
+  viewportRef: RefObject<HTMLDivElement | null>;
+  getPlankTiles: () => HTMLElement[];
+  isSliding: boolean;
+  plankCount: number;
+  maxPlankWidthPx: number;
+}) => {
   const { attention } = useAttentionContext(DECK_VIEWPORT_NAME);
+
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport || !isSliding) {
@@ -536,49 +600,41 @@ export const DeckPlanks = () => {
     };
     // `maxPlankWidthPx` is a dep so the fold state recomputes when the width cap shrinks planks (else a
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
-  }, [isSliding, rendered.length, maxPlankWidthPx, getPlankTiles, attention]);
+  }, [isSliding, plankCount, maxPlankWidthPx, getPlankTiles, attention, viewportRef]);
+};
 
-  // Cap plank width to the viewport (reserving a spine + gap per other plank, minus stack padding) so
-  // the current plank's trailing controls stay clear of the piled spines. A layout effect so the cap
-  // lands before first paint — no flash of full-width planks on load.
-  useLayoutEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport || !isSliding) {
-      setMaxPlankWidthPx(Number.POSITIVE_INFINITY);
-      return;
-    }
-    const measure = () => {
-      const stack = stackRef.current;
-      const styles = stack && getComputedStyle(stack);
-      const gap = styles ? parseFloat(styles.columnGap) || 0 : 0;
-      const padding = styles
-        ? (parseFloat(styles.paddingInlineStart) || 0) + (parseFloat(styles.paddingInlineEnd) || 0)
-        : 0;
-      const others = Math.max(0, rendered.length - 1);
-      const max = viewport.clientWidth - padding - others * (SPINE_PX + gap);
-      setMaxPlankWidthPx(max > 0 ? max : Number.POSITIVE_INFINITY);
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(viewport);
-    return () => observer.disconnect();
-  }, [isSliding, rendered.length]);
+/** Scrolls the just-navigated plank into view, then clears the one-shot flag. */
+const useScrollIntoView = ({
+  viewportRef,
+  stackRef,
+  scrollIntoViewId,
+}: {
+  viewportRef: RefObject<HTMLDivElement | null>;
+  stackRef: RefObject<HTMLDivElement | null>;
+  scrollIntoViewId: string | undefined;
+}) => {
+  const { invokePromise } = useOperationInvoker();
 
-  // Scroll the just-navigated plank into view, then clear the one-shot flag.
   useEffect(() => {
-    const id = state.scrollIntoView;
     const viewport = viewportRef.current;
-    if (!id || !viewport) {
+    if (!scrollIntoViewId || !viewport) {
       return;
     }
 
-    const tile = stackRef.current?.querySelector<HTMLElement>(`:scope > [data-object-id="${CSS.escape(id)}"]`);
+    const tile = stackRef.current?.querySelector<HTMLElement>(
+      `:scope > [data-object-id="${CSS.escape(scrollIntoViewId)}"]`,
+    );
     if (tile) {
       const offset = tile.getBoundingClientRect().left - viewport.getBoundingClientRect().left + viewport.scrollLeft;
       viewport.scrollTo({ left: offset, behavior: 'smooth' });
     }
     void invokePromise(LayoutOperation.ScrollIntoView, { subject: undefined });
-  }, [state.scrollIntoView, invokePromise]);
+  }, [scrollIntoViewId, invokePromise, viewportRef, stackRef]);
+};
+
+/** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
+const useFullscreen = (fullscreenId: string | undefined) => {
+  const { invokePromise } = useOperationInvoker();
 
   const toggleFullscreen = useCallback(() => {
     if (!fullscreenId) {
@@ -588,7 +644,7 @@ export const DeckPlanks = () => {
   }, [invokePromise, fullscreenId]);
 
   useEffect(() => {
-    if (!fullscreen) {
+    if (!fullscreenId) {
       return;
     }
 
@@ -602,69 +658,103 @@ export const DeckPlanks = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [fullscreen, toggleFullscreen]);
+  }, [fullscreenId, toggleFullscreen]);
+
+  return toggleFullscreen;
+};
+
+/**
+ * Renders `deck.active` through a single {@link Mosaic.Container} > {@link ScrollArea} >
+ * {@link Mosaic.Stack} pipeline, parameterized by the derived presentation (fullbleed for a
+ * singleton deck, sliding for two or more, always sliding below the `md` breakpoint). Planks stay
+ * mounted in the same {@link Mosaic.Stack} across 1↔2 transitions — only their tile styling changes,
+ * so opening a second plank (or closing the second-to-last) never remounts a plank's content.
+ *
+ * Fullscreen is a transient overlay independent of `active`, driven by `EphemeralDeckState.fullscreen`:
+ * it renders only that plank, headless, replacing the deck entirely until the user exits (Escape or
+ * the fullscreen toggle), matching the existing `DeckOperation.Adjust({ type: 'fullscreen' })` wiring.
+ */
+export const DeckPlanks = () => {
+  const { state, deck } = useDeckContext('DeckPlanks');
+  const { rendered } = useRenderedPlanks();
+  const breakpoint = useBreakpoints();
+  const presentation = useDeckPresentation(rendered.length);
+  const fullscreenId = state.fullscreen;
+  const fullscreen = !!fullscreenId;
+  const topbar = layoutAppliesTopbar(breakpoint, fullscreen);
+  const isSliding = presentation === 'sliding';
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const stackRef = useRef<HTMLDivElement>(null);
+
+  const getPlankTiles = usePlankTiles(stackRef);
+  const maxPlankWidthPx = useMaxPlankWidth({ viewportRef, stackRef, isSliding, plankCount: rendered.length });
+  usePreservedScroll({ viewportRef, isSliding });
+  const scrollToPlank = useScrollToPlank({ viewportRef, stackRef, getPlankTiles });
+  useFoldedPlanks({ viewportRef, getPlankTiles, isSliding, plankCount: rendered.length, maxPlankWidthPx });
+  useScrollIntoView({ viewportRef, stackRef, scrollIntoViewId: state.scrollIntoView });
+  const toggleFullscreen = useFullscreen(fullscreenId);
+
+  const geometry = useMemo<DeckGeometry>(() => ({ scrollToPlank, maxPlankWidthPx }), [scrollToPlank, maxPlankWidthPx]);
 
   return (
-    <ScrollToPlankContext.Provider value={scrollToPlank}>
-      <MaxPlankWidthContext.Provider value={maxPlankWidthPx}>
-        <div className='relative bg-deck-surface overflow-hidden'>
-          <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
-          {fullscreen && fullscreenId ? (
-            <>
-              <ExitFullscreenButton onExit={toggleFullscreen} />
-              <DeckPlank
-                id={fullscreenId}
-                part='main'
-                fullscreen
-                classNames={mx('absolute inset-0', mainIntrinsicSize)}
-              />
-            </>
-          ) : presentation === 'fullbleed' && rendered[0] ? (
-            // A singleton deck renders the plank directly as an absolute-inset child of this filled
-            // container (today's solo look). Routing it through the horizontal Mosaic.Stack/ScrollArea
-            // collapses it — an `absolute inset-0` plank contributes no intrinsic size to a flex tile.
+    <DeckGeometryContext.Provider value={geometry}>
+      <div className='relative bg-deck-surface overflow-hidden'>
+        <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
+        {fullscreen && fullscreenId ? (
+          <>
+            <ExitFullscreenButton onExit={toggleFullscreen} />
             <DeckPlank
-              id={rendered[0]}
+              id={fullscreenId}
               part='main'
-              // Pass the real deck.active (not the collapsed `rendered`) so flat mode can derive the
-              // breadcrumb trail from the planks preceding the current one.
-              active={deck.active}
-              soloLook
+              fullscreen
               classNames={mx('absolute inset-0', mainIntrinsicSize)}
             />
-          ) : presentation === 'tiling' ? (
-            <TilingDeck rendered={rendered} active={deck.active} size={deck.tilingSizing} />
-          ) : (
-            <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
-              <ScrollArea.Root orientation='horizontal' classNames='size-full'>
-                <ScrollArea.Viewport ref={viewportRef} classNames={breakpoint === 'mobile' && 'snap-x snap-mandatory'}>
-                  <Mosaic.Stack
-                    ref={stackRef}
-                    orientation='horizontal'
-                    // Mobile pins the stack to the viewport width (`w-full`) so each plank's `w-full`
-                    // resolves to one screen — the planks overflow the scroll viewport and snap one-to-next
-                    // rather than the stack shrink-wrapping to their intrinsic width. The `--main-spacing`
-                    // gap/padding (which encapsulates each plank in its own container) only applies to the
-                    // desktop sliding deck, matching today's multi-mode look.
-                    classNames={
-                      breakpoint === 'mobile'
-                        ? 'h-full w-full'
-                        : isSliding
-                          ? 'h-full gap-(--main-spacing) px-(--main-spacing)'
-                          : 'h-full'
-                    }
-                    getId={getPlankId}
-                    items={rendered}
-                    Tile={DeckPlankTile}
-                    draggable={false}
-                  />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          )}
-        </div>
-      </MaxPlankWidthContext.Provider>
-    </ScrollToPlankContext.Provider>
+          </>
+        ) : presentation === 'fullbleed' && rendered[0] ? (
+          // A singleton deck renders the plank directly as an absolute-inset child of this filled
+          // container (today's solo look). Routing it through the horizontal Mosaic.Stack/ScrollArea
+          // collapses it — an `absolute inset-0` plank contributes no intrinsic size to a flex tile.
+          <DeckPlank
+            id={rendered[0]}
+            part='main'
+            // Pass the real deck.active (not the collapsed `rendered`) so flat mode can derive the
+            // breadcrumb trail from the planks preceding the current one.
+            active={deck.active}
+            soloLook
+            classNames={mx('absolute inset-0', mainIntrinsicSize)}
+          />
+        ) : presentation === 'tiling' ? (
+          <TilingDeck rendered={rendered} active={deck.active} size={deck.tilingSizing} />
+        ) : (
+          <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
+            <ScrollArea.Root orientation='horizontal' classNames='size-full'>
+              <ScrollArea.Viewport ref={viewportRef} classNames={breakpoint === 'mobile' && 'snap-x snap-mandatory'}>
+                <Mosaic.Stack
+                  ref={stackRef}
+                  orientation='horizontal'
+                  // Mobile pins the stack to the viewport width (`w-full`) so each plank's `w-full`
+                  // resolves to one screen — the planks overflow the scroll viewport and snap one-to-next
+                  // rather than the stack shrink-wrapping to their intrinsic width. The `--main-spacing`
+                  // gap/padding (which encapsulates each plank in its own container) only applies to the
+                  // desktop sliding deck, matching today's multi-mode look.
+                  classNames={
+                    breakpoint === 'mobile'
+                      ? 'h-full w-full'
+                      : isSliding
+                        ? 'h-full gap-(--main-spacing) px-(--main-spacing)'
+                        : 'h-full'
+                  }
+                  getId={getPlankId}
+                  items={rendered}
+                  Tile={DeckPlankTile}
+                  draggable={false}
+                />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Mosaic.Container>
+        )}
+      </div>
+    </DeckGeometryContext.Provider>
   );
 };
 
