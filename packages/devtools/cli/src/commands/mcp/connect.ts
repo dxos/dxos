@@ -62,13 +62,16 @@ export const connect = Command.make(
         }),
       catch: (error) => new McpConnectError({ message: `Authorization failed for ${url}`, cause: error }),
     });
-    yield* Effect.tryPromise({
-      try: () => initialize(session),
-      catch: (error) => new McpConnectError({ message: `MCP initialize failed for ${url}`, cause: error }),
-    });
+    // Persist before initializing: `initialize` may refresh the token internally, and passing
+    // `{ profile }` lets that refresh be stored. Saving afterwards would write the pre-refresh
+    // session back over it, leaving a consumed refresh token on disk.
     yield* Effect.tryPromise({
       try: () => saveSession(profile, session),
       catch: (error) => new McpConnectError({ message: 'Failed to store the MCP session', cause: error }),
+    });
+    yield* Effect.tryPromise({
+      try: () => initialize(session, { profile }),
+      catch: (error) => new McpConnectError({ message: `MCP initialize failed for ${url}`, cause: error }),
     });
 
     if (json) {

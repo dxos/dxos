@@ -55,17 +55,26 @@ const lastSession = (profile: string): Effect.Effect<McpSession | undefined, Mcp
     const dir = sessionDir(profile);
     const files = yield* Effect.tryPromise({
       try: () => readdir(dir),
-      // No session directory yet is the normal first-run state, not an error.
-      catch: () => new McpSessionError({ message: `No stored sessions in ${dir}.` }),
-    }).pipe(Effect.orElseSucceed(() => [] as string[]));
-
-    const stamped = yield* Effect.promise(() =>
-      Promise.all(
-        files
-          .filter((file) => file.endsWith('.json'))
-          .map(async (file) => ({ file, mtime: (await stat(join(dir, file))).mtimeMs })),
+      catch: (error) => new McpSessionError({ message: `Failed to read session directory ${dir}`, cause: error }),
+    }).pipe(
+      // Only a missing directory is normal (first run); permission and I/O errors must surface.
+      Effect.catchIf(
+        (error) => (error.cause as NodeJS.ErrnoException | undefined)?.code === 'ENOENT',
+        () => Effect.succeed([] as string[]),
       ),
     );
+
+    // A session file can disappear between `readdir` and `stat`; fail typed rather than letting
+    // the rejection become an unrecoverable defect.
+    const stamped = yield* Effect.tryPromise({
+      try: () =>
+        Promise.all(
+          files
+            .filter((file) => file.endsWith('.json'))
+            .map(async (file) => ({ file, mtime: (await stat(join(dir, file))).mtimeMs })),
+        ),
+      catch: (error) => new McpSessionError({ message: `Failed to inspect sessions in ${dir}`, cause: error }),
+    });
     const latest = stamped.sort((left, right) => right.mtime - left.mtime)[0];
     if (!latest) {
       return undefined;
