@@ -22,6 +22,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { useNode } from '@dxos/plugin-graph';
 import {
+  Button,
   Icon,
   IconButton,
   Main,
@@ -293,17 +294,21 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           (DeckPlanks toggles `data-folded`). It sits at the plank's leading edge — the sliver that stays
           visible in either pile — with its icon aligned to the plank toolbar's sigil, and returns the
           plank to view on click. The `dx-fold-spine` hook lets stories retime/restyle the transition. */}
-      <button
+      <Button
+        variant='ghost'
         onClick={() => scrollToPlank(id, index)}
         aria-label={spineLabel}
-        className='dx-fold-spine absolute inset-y-0 left-0 z-[1] flex w-11 flex-col items-center border-ie border-separator bg-base-surface opacity-0 pointer-events-none transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-auto group-data-[folded]/tile:opacity-100'
+        classNames='dx-fold-spine absolute inset-y-0 left-0 z-[1] flex w-11 flex-col items-center gap-0 rounded-none p-0 border-ie border-separator bg-base-surface opacity-0 pointer-events-none transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-auto group-data-[folded]/tile:opacity-100'
       >
         {/* Icon box matches the plank toolbar height so the sigil stays put as the plank folds. */}
         <div className='flex h-(--dx-rail-content) shrink-0 items-center justify-center'>
           <Icon icon={spineIcon} size={5} classNames='shrink-0 text-subdued' />
         </div>
-        <span className='truncate text-sm text-description [writing-mode:vertical-rl] rotate-180'>{spineLabel}</span>
-      </button>
+        {/* TODO(wittjosiah): Plain span — no react-ui primitive renders a vertical (writing-mode) label. */}
+        <span className='truncate text-sm font-normal text-description [writing-mode:vertical-rl] rotate-180'>
+          {spineLabel}
+        </span>
+      </Button>
       <Mosaic.ResizeHandle />
     </Mosaic.Tile>
   );
@@ -368,6 +373,8 @@ const TilingDeck = ({
   // Tiling is a flush split view — no `--main-spacing` gap or padding (that spacing is the sliding
   // deck's encapsulated look); the planks sit edge-to-edge, separated only by the hairline splitter.
   return (
+    // TODO(wittjosiah): Plain flex — the sliding path lays planks out with Mosaic.Stack/Tile; tiling
+    //   could too if it adopted Mosaic's layout instead of its own weights.
     <div ref={containerRef} className={mx('absolute inset-0 flex', mainPaddingTransitions)}>
       {rendered.map((id, index) => (
         <Fragment key={id}>
@@ -449,6 +456,9 @@ const TilingSplitter = ({
   return (
     // Zero-width so the tiled planks stay flush; the hairline divider and the (wider) drag hit-area
     // overlay the seam via absolute positioning.
+    // TODO(wittjosiah): Plain div/button — Mosaic.ResizeHandle (used by the sliding path) and Separator
+    //   would cover this, but both impose their own box, and this control is deliberately zero-width
+    //   with its visible affordance drawn by pseudo-elements.
     <div className='relative flex-none'>
       {/* Persistent hairline divider between the tiled planks, matching the solo+companion split. */}
       <div className='absolute inset-y-0 start-0 w-px -translate-x-1/2 bg-subdued-separator' />
