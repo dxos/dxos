@@ -4,9 +4,9 @@ PR **#12235** (branch `t3code/edb619e9`). See DESIGN.md for architecture.
 
 ## Status
 
-Implementation complete; PR open (draft). Merged `main` up to `bf055c8b` at
-`8608c791`; build, lint, format, and all touched-package tests green locally
-(see Verification). Dmytro's review rounds addressed and replied to.
+Implementation complete; PR open (draft). Merged `main` up to `5585ec89` at
+`fb5cd015`; **CI fully green on `fb5cd015`** (check, test, build, workerd,
+storybook, changeset-reminder). Dmytro's review rounds addressed and replied to.
 
 Still in draft deliberately: the two CodeRabbit durability threads below are
 unanswered, and there is no approving review yet.
@@ -33,23 +33,30 @@ unanswered, and there is no approving review yet.
       `Database.add` namespace wrapper drops `opts` (point-free compatibility).
 - [x] Regenerated `assistant-toolkit` agent skill memoized cache after merges.
 
-## Verification (at `8608c791`)
+## Verification
 
-- Build: 84 tasks green across `echo`, `echo-client`, `index-core`, `compute`.
-- Lint: 7 touched packages, 0 warnings / 0 errors. `oxfmt --check` clean.
-- Tests: `echo` 469, `echo-client` 508 (+7 expected fail), `echo-client-e2e` 282,
+- CI green on `fb5cd015` (all six jobs). Codecov: all modified lines covered.
+- Local at `8608c791`: build 84 tasks; lint 7 packages 0 warnings; `oxfmt` clean;
+  tests `echo` 469, `echo-client` 508 (+7 expected fail), `echo-client-e2e` 282,
   `compute-runtime` 152, `compute` 46, `index-core` 34, `feed` 19 — all passing.
+- `moon run :lint :build --affected` cannot complete in the agent sandbox: oxlint
+  fails to spawn `tsgolint` in the unrelated `lockfile-explorer` package, which
+  aborts the run before reaching our packages. Environmental — CI's `check` runs
+  the same oxlint 1.74 / tsgolint 0.25 and passes. Lint our packages explicitly.
 
 ## Next / open
 
-- [ ] Watch the Check workflow to green on `8608c791`; fix failures at root.
+- [x] Check workflow green (done at `fb5cd015`).
 - [ ] Decide on the two unanswered CodeRabbit durability claims (below) — they
       target the flush/dispose contract this PR promises, so they should get a
-      verdict (fix or reasoned dismissal) rather than a silent resolve.
+      verdict (fix or reasoned dismissal) rather than a silent resolve. Green CI
+      is not evidence against them: no test covers either path.
 - [ ] Resolve/reply to the 19 open review threads. Dmytro's 5 all have
       "Done in `<sha>`" replies but none are marked resolved.
 - [ ] Land: take out of draft, get an approving review, merge queue; surface the
-      Composer preview URL.
+      Composer preview URL. Note CodeRabbit refuses to re-review while the PR is
+      a draft, so its walkthrough still describes the removed `isUpdate` /
+      `ignoreUpdates` / `feed-delivery-state.ts` — misleading to a cold reviewer.
 
 ## Open review questions (not yet answered on the PR)
 
@@ -70,8 +77,34 @@ unanswered, and there is no approving review yet.
   `DatabaseImpl.getObjectById` does in the same package, and diverging for one
   method is worse than matching precedent.
 
+## Scope: core-only, no consumer integration
+
+Every changed file is under `packages/core/`; nothing in `packages/plugins/` or
+`packages/apps/`. The additive surfaces ship with no callers — `db.add(obj, { to })`
+has none outside core tests, and `SubscriptionEvent.type` is written by the
+dispatcher and read by nobody (no runnable gates on `type === 'created'`, the
+documented replacement for `ignoreUpdates`).
+
+The part that is _not_ additive is the exposure: live feed objects are opt-out
+free, so ~14 production feed call sites change behaviour with no code change, and
+direct assignment outside `Obj.update` now **throws** where it previously mutated
+in memory silently — `plugin-inbox` (MailboxArticle, app-graph-builder),
+`plugin-magazine` (FeedArticle, Subscription), `plugin-transcription`,
+`plugin-chess-com`, `plugin-pipeline`, `plugin-space` (ViewEditor, queue/query),
+`plugin-assistant/feed-logger`, plus scripts/presets. None were reviewed or
+tested against the new semantics. This is also why the two durability claims
+matter: `feed-logger` and `text-content` are write-then-dispose shapes.
+
+- [ ] Audit those call sites for assignment outside `Obj.update` before landing,
+      or accept the risk explicitly.
+
 ## Deferred (not blocking; own follow-ups)
 
+- Wire `insertionId` through the codec + index path so the version axis is always
+  present. Today it is `KEY_QUEUE_POSITION`, which is null unless
+  `assignQueuePositions` is on — Dmytro asked for `insertionId`, and CodeRabbit
+  independently flagged that live objects lean on a default-off ordering
+  guarantee. Correctness-shaped, not an optimisation.
 - Partial-object update blocks + field-level LWW merge at the index; compaction/
   retention of superseded feed blocks (`Feed.RetentionOptions`).
 - Bounded subscription-dedup state for the edge dispatcher (TTL / high-water
