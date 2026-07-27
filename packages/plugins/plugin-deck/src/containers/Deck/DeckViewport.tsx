@@ -10,6 +10,7 @@ import React, {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -80,20 +81,24 @@ const COMPANION_SIZE_KEY = 'companion';
 // gap — i.e. just as it would otherwise tuck fully behind its neighbor.
 const FOLD_THRESHOLD_PX = SPINE_PX + PLANK_SPACING_REM * REM_PX;
 
-/**
- * Upper bound (px) on a sliding plank's width, measured from the viewport so the current plank's trailing
- * controls never disappear behind the piled spines of the other planks. Infinity until measured.
- *
- * A context rather than a prop because `Mosaic.Stack` instantiates the tile itself, passing a closed prop
- * set with no consumer passthrough — and building the tile component inline would give it a new identity
- * per measurement, remounting every plank on each resize. Not deck state: it is a DOM measurement,
- * meaningless outside this subtree, and routing it through the shared ephemeral atom would re-render every
- * other `useDeckState` consumer on each resize frame.
- */
-// TODO(wittjosiah): Drop this if Mosaic.Stack grows a way to forward consumer props to its tiles.
-const MaxPlankWidthContext = createContext<number>(Number.POSITIVE_INFINITY);
+type PlankContextValue = {
+  /**
+   * Upper bound (px) on a sliding plank's width, measured from the viewport so the current plank's
+   * trailing controls never disappear behind the piled spines of the other planks. Infinity until measured.
+   */
+  maxPlankWidthPx: number;
+};
 
-const useMaxPlankWidthPx = () => useContext(MaxPlankWidthContext);
+/**
+ * What a plank tile needs from the deck around it. A context rather than props because `Mosaic.Stack`
+ * instantiates the tile itself, passing a closed prop set with no consumer passthrough — and building the
+ * tile component inline would give it a new identity per measurement, remounting every plank on each
+ * resize. Not deck state: these are DOM measurements, meaningless outside this subtree, and routing them
+ * through the shared ephemeral atom would re-render every other `useDeckState` consumer per resize frame.
+ */
+const PlankContext = createContext<PlankContextValue>({ maxPlankWidthPx: Number.POSITIVE_INFINITY });
+
+const usePlankContext = () => useContext(PlankContext);
 
 //
 // DeckViewport
@@ -222,7 +227,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { t } = useTranslation(meta.profile.key);
   const spineLabel = toLocalizedString(node?.properties?.label ?? '', t) || id;
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
-  const maxPlankWidthPx = useMaxPlankWidthPx();
+  const { maxPlankWidthPx } = usePlankContext();
   // The companion plank keeps one shared width across its variants (a companion id is
   // `<plank>/~<variant>`), so switching tabs never resizes it; ordinary planks size per id.
   const sizingKey = Attention.isLinkedSegment(id) ? COMPANION_SIZE_KEY : id;
@@ -670,8 +675,10 @@ export const DeckPlanks = () => {
   useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView });
   const toggleFullscreen = useFullscreen(fullscreenId);
 
+  const plankContext = useMemo<PlankContextValue>(() => ({ maxPlankWidthPx }), [maxPlankWidthPx]);
+
   return (
-    <MaxPlankWidthContext.Provider value={maxPlankWidthPx}>
+    <PlankContext.Provider value={plankContext}>
       <div className='relative bg-deck-surface overflow-hidden'>
         <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
         {fullscreen && fullscreenId ? (
@@ -728,7 +735,7 @@ export const DeckPlanks = () => {
           </Mosaic.Container>
         )}
       </div>
-    </MaxPlankWidthContext.Provider>
+    </PlankContext.Provider>
   );
 };
 
