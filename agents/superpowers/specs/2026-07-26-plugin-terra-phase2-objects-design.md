@@ -27,8 +27,10 @@ module layered on top.
   (Babylon). `src/engine/` stays pure terrain. Extract to packages only when a
   second consumer appears.
 - **Motion architecture:** data-driven motion controllers over plain data
-  records (`surface | altitude | orbit | ballistic`), not class-per-type, not
-  ECS. Sim core is a pure `step(ctx, object, dt) → object`.
+  records (`routed | orbit | ballistic`), not class-per-type, not ECS. Sim core
+  is a pure `evaluate(state, definition, { config, elapsed }) → state` — state is
+  **evaluated at an absolute time, never accumulated per frame** (see the
+  determinism contract below for why a `dt`-stepped core was rejected).
 
 ## Determinism contract (first-class invariant)
 
@@ -76,8 +78,8 @@ src/sim/        # NEW: pure, Babylon-free simulation
                 # 2D->3D velocity mapping on the sphere
   nav-grid.ts   # coarse cubed-sphere passability grid from engine elevation
   route.ts      # A* over nav-grid per domain -> smoothed waypoint list
-  motion.ts     # controllers: surface | altitude | orbit | ballistic
-  engine.ts     # SimEngine: clock, replan scheduling, per-tick stepping
+  motion.ts     # controllers: routed | orbit | ballistic (all closed-form)
+  engine.ts     # SimEngine: absolute-time evaluation + replan-window recurrence
   index.ts
 src/scene/      # NEW: Babylon object visuals (impure)
   object-forms.ts  # primitive-built low-poly form per type
