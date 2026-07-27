@@ -46,20 +46,39 @@ const nextSeed = (seed: string): string => {
   return `${prefix}${Number(digits) + 1}`;
 };
 
-/** Renders a numeric field as a `Slider` with a live readout in place of the schema's default numeric input. */
+/**
+ * Renders a numeric field as a `Slider` with a live readout in place of the schema's default numeric
+ * input. Delegates the label/status/validation chrome to `Form.Row`'s render-prop (field mode) — it,
+ * not this renderer, wraps the row in `Input.Root`, which `Input.Label`/`Input.DescriptionAndValidation`
+ * require via context. Rendering those parts (or anything relying on them) outside `Form.Row` throws.
+ */
 const createSliderField = (key: SliderKey): FormFieldMap[string] => {
   const spec = SLIDER_SPECS[key];
-  const SliderField = ({ type, label, getValue, onValueChange }: FormFieldRendererProps<number>) => {
-    const value = getValue() ?? spec.min;
+  const SliderField = ({ type, onValueChange, ...rowProps }: FormFieldRendererProps<number>) => {
     const handleValueChange = useCallback(([next]: number[]) => onValueChange(type, next), [type, onValueChange]);
     return (
-      <div className='flex flex-col gap-1 w-full'>
-        <div className='flex items-center justify-between'>
-          <Form.Label label={label} />
-          <span className='text-sm text-description tabular-nums'>{value.toFixed(spec.decimals)}</span>
-        </div>
-        <Slider value={[value]} min={spec.min} max={spec.max} step={spec.step} onValueChange={handleValueChange} />
-      </div>
+      <Form.Row<number>
+        {...rowProps}
+        renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}
+      >
+        {({ value }) => {
+          const current = value ?? spec.min;
+          return (
+            <div className='flex flex-col gap-1 w-full'>
+              <div className='flex justify-end'>
+                <span className='text-sm text-description tabular-nums'>{current.toFixed(spec.decimals)}</span>
+              </div>
+              <Slider
+                value={[current]}
+                min={spec.min}
+                max={spec.max}
+                step={spec.step}
+                onValueChange={handleValueChange}
+              />
+            </div>
+          );
+        }}
+      </Form.Row>
     );
   };
   SliderField.displayName = `TerraForm.SliderField(${key})`;
