@@ -296,25 +296,46 @@ Recorded 2026-07-27 from review of the landed deck.
 
 ### Tasks
 
-- [ ] **Spine click should attend the plank** — clicking a folded spine scrolls the plank into view; it
-      should also become the attended plank. Attention is focus-driven, so this means focusing the plank
-      (see `useFoldedPlanks`' hysteresis, which deliberately moves focus rather than setting attention).
-- [ ] **Reconcile the deck's residual mode-specific behaviour** — `mode` is derived (`getMode`) and no
-      longer stored, but the deck still branches on solo in places. The goal: the deck behaves the same
-      regardless of mode, and mode is purely an outward-facing derivation for other plugins. Partially
-      achieved; audit the remaining `soloLook`/solo paths.
+- [x] **Spine click should attend the plank** — the plank already focused itself off the `scrollIntoView`
+      one-shot; `useFoldedPlanks`' hysteresis then took the focus straight back, because on the first
+      scroll frame the target is still folded in the pile and so reads as "attended but not visible".
+      A `scrollIntentRef` shared by `useScrollIntoView` and `useFoldedPlanks` holds the focus until the
+      target is unfolded and on screen, and the plank's own focus call gained `preventScroll` so it stops
+      fighting the deck's smooth scroll.
+- [x] **Reconcile the deck's residual mode-specific behaviour** — `soloLook` is gone from the deck
+      (`DeckViewport` → `DeckPlank` → `PlankControls`). Fullscreen is offered on any plank (it is an
+      ephemeral per-plank overlay, so it was never solo-specific) and close is offered on every plank
+      (closing the last one lands on `Deck.ContentEmpty`, an already-supported state). The commented-out
+      increment controls no longer need the wrapper — `capabilities.incrementStart/End` already encode
+      ordering, so a lone plank can move in neither direction.
 - [ ] **Tiling beyond two planks** — `TILING_MAX` is 2 because `Splitter` is a two-panel primitive.
       Needs nested Splitters or a proportional/fill mode in Mosaic (tiles sized by fraction, the handle
       redistributing across the dragged pair). See the TODO in `DeckViewport.tsx`.
 - [ ] **Sliding deck on mobile, and unifying with the simple layout** — mobile is always sliding today;
       decide how that and `plugin-simple-layout` converge rather than being two layout implementations.
-- [ ] **Navtree selected-state latency** (main, not this PR) — `current` is marked on a 500ms
-      `setTimeout` that every Layout-atom notification cancels and restarts, and the Layout atom emits a
-      fresh object on any deck write. The file's own TODO names the real fix: make the navtree location a
-      path, not an id.
-- [ ] **Connector re-emission churn** — after the latch fix, real expansions per navigation fell ~36x
-      but `existing node` churn stayed flat, so connectors are re-running for another reason (likely atom
-      recomputation). Unmeasured.
+- [x] **Navtree selected-state latency** — the 500ms `setTimeout` in `plugin-navtree/capabilities/state.ts`
+      is gone; the layout subscription now defers only to a microtask. The timer existed because an item
+      registers its path on its first render, which can land after the layout change that made it current,
+      so a synchronous pass would miss it — that race is closed at the other end instead: a new entry
+      derives `current` from a mirror of the layout's active planks when it registers. (Correction to the
+      earlier note: the callback's `return () => clearTimeout(timeout)` was never a cancel — an atom
+      subscription ignores its listener's return value — so the old behaviour was a flat 500ms delay per
+      notification, not an indefinitely-restarting timer.)
+- [ ] **Connector re-emission churn** — DIAGNOSED, fix not landed (needs a decision, see below).
+      Mechanism: `_expandRelation`'s guard skips a connector update when the produced ids and
+      `nodeArgsUnchanged` both match, but `nodeArgsUnchanged` compares `data` by identity and an action's
+      `data` _is_ its invoke closure, which connectors build inline and therefore rebuild on every run. So
+      any connector emitting action-bearing nodes always fails the guard → `Graph.addNodes` → an atom
+      write and an `onNodeChanged` emission per re-emission, no matter that nothing observable changed.
+      Pinned by `app-graph/src/util.test.ts` ('a re-created action closure reads as changed').
+      Also corrected the metric: `log('existing node')` fired _before_ the change check, so counting those
+      lines measured how often a node was re-offered, not how often it changed — it now carries `changed`.
+      **Decision needed before fixing:** (1) treat two functions as equal in `nodeArgsUnchanged` — one
+      line, but the graph then keeps the _first_ closure, which is stale if it captured something that
+      changed without altering any other node field; or (2) store action `data` behind a stable wrapper
+      whose target is swapped on each re-emission — no staleness and identity stays stable, but it puts a
+      wrapper between every action and its handler. Neither should be picked without knowing how much
+      connector closures capture beyond the node itself.
 - [ ] **`Graph.initialize` + the builder `resolver` mechanism** — kept, TODO-marked. No extension
       declares a resolver and `initialize` was called zero times in a live session; remove once
       something either needs it or clearly never will.
