@@ -3,19 +3,14 @@
 //
 
 import { type ViewUpdate } from '@codemirror/view';
-import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities, UrlResolution } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
 import { type Identity } from '@dxos/halo';
-import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import { Selection, ViewState } from '@dxos/react-ui-attention';
@@ -73,10 +68,11 @@ export type ExtensionsOptions = {
    */
   identity?: Identity.Info | null;
   /**
-   * Callback when an internal link is clicked. `modifiers.shift` reflects the originating
+   * Callback when an internal link is clicked, with the link's URL pathname — resolving one to a node
+   * walks the app graph, which only a container may reach. `modifiers.shift` reflects the originating
    * click/keydown event, so callers can invert the deck's navigation disposition.
    */
-  onSelectObject?: (objectId: string, modifiers?: { shift: boolean }) => void;
+  onSelectLink?: (pathname: string, modifiers?: { shift: boolean }) => void;
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
@@ -90,12 +86,9 @@ export const useExtensions = ({
   editorStateStore,
   setWidgets,
   identity,
-  onSelectObject,
+  onSelectLink,
 }: ExtensionsOptions): Extension[] => {
   const { platform } = useThemeContext();
-  // Optional: the low-level MarkdownEditor renders outside a plugin manager (e.g. in storybook),
-  // where no app graph is available; internal-link resolution simply no-ops without it.
-  const builder = useOptionalCapability(AppCapabilities.AppGraph);
   const space = getSpace(object);
 
   // Get the content reference from Document objects.
@@ -122,8 +115,7 @@ export const useExtensions = ({
         viewState,
         setWidgets,
         platform,
-        onSelectObject,
-        builder,
+        onSelectLink,
       }),
     [
       id,
@@ -139,8 +131,7 @@ export const useExtensions = ({
       settings?.folding,
       settings?.numberedHeadings,
       platform,
-      onSelectObject,
-      builder,
+      onSelectLink,
     ],
   );
 
@@ -179,15 +170,14 @@ const createBaseExtensions = ({
   id,
   object,
   space,
-  onSelectObject,
+  onSelectLink,
   settings,
   compact,
   viewMode,
   viewState,
   setWidgets,
   platform,
-  builder,
-}: ExtensionsOptions & { space?: Space; builder?: AppCapabilities.AppGraph }): Extension[] => {
+}: ExtensionsOptions & { space?: Space }): Extension[] => {
   const extensions: Extension[] = [
     viewState && selectionChange(viewState),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
@@ -205,7 +195,7 @@ const createBaseExtensions = ({
           selectionChangeDelay: 100,
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
-          renderLinkButton: onSelectObject && createRenderLink(onSelectObject, builder),
+          renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
           // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
           skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:'),
         }),
@@ -274,10 +264,7 @@ const selectionChange = (viewState: ViewState.Manager) => {
 };
 
 const createRenderLink =
-  (
-    onSelectObject: (id: string, modifiers?: { shift: boolean }) => void,
-    builder: AppCapabilities.AppGraph | undefined,
-  ): RenderCallback<{ url: string }> =>
+  (onSelectLink: (pathname: string, modifiers?: { shift: boolean }) => void): RenderCallback<{ url: string }> =>
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
@@ -288,27 +275,12 @@ const createRenderLink =
     if (isInternal) {
       const pathname = new URL(url, window.location.origin).pathname;
 
-      // Resolution walks the graph, so it's async; the click handler stays enabled throughout and
-      // simply no-ops (with a warning) if the link doesn't resolve to a node.
-      const handleSelect = async (modifiers?: { shift: boolean }) => {
-        // No app graph (e.g. the standalone editor in storybook): internal links can't be resolved.
-        if (!builder) {
-          return;
-        }
-        const nodeId = await EffectEx.runPromise(UrlResolution.resolveInternalLink(builder, pathname));
-        if (Option.isNone(nodeId)) {
-          log.warn('internal link did not resolve to a node', { url });
-          return;
-        }
-        onSelectObject(nodeId.value, modifiers);
-      };
-
       icon
         .attributes({ role: 'button', tabindex: '0' })
         .on('click', (event) => {
           event.preventDefault();
           event.stopPropagation();
-          void handleSelect({ shift: event.shiftKey });
+          onSelectLink(pathname, { shift: event.shiftKey });
         })
         .on('keydown', (event) => {
           if (event.key !== 'Enter' && event.key !== ' ') {
@@ -317,7 +289,7 @@ const createRenderLink =
 
           event.preventDefault();
           event.stopPropagation();
-          void handleSelect({ shift: event.shiftKey });
+          onSelectLink(pathname, { shift: event.shiftKey });
         });
     }
 
