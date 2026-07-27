@@ -59,7 +59,7 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
  */
 export const createTypeSectionExtension = (
   type: Type.AnyEntity,
-  options?: {
+  options: {
     /** Position hint for the section in the sidebar. */
     position?: Position.Position;
     /**
@@ -86,11 +86,11 @@ export const createTypeSectionExtension = (
      */
     createObject?: (space: Space) => Effect.Effect<any, any, any>;
     /**
-     * Override the registered URL prefix key for this section's connector. Takes precedence over
-     * {@link AppAnnotation.UrlPrefixAnnotation} on the schema — use when annotating the schema is
-     * awkward (e.g. the schema lives in a package that cannot depend on `@dxos/app-toolkit`).
+     * Registered URL prefix key for this section's connector (e.g. `doc`, `mail`). Keys are global, so
+     * it is declared here rather than derived — see `@dxos/app-graph`'s `path-resolution.ts` for how
+     * registered keys resolve and serialize URLs.
      */
-    urlKey?: string;
+    urlKey: string;
   },
 ): Effect.Effect<GraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -102,14 +102,6 @@ export const createTypeSectionExtension = (
   const defaultQuery = Query.select(filter);
   const testId = `${typename}.section`;
 
-  // Sourced from the explicit override, then the schema's own annotation, then a fallback derived
-  // from the typename — every type section is URL-addressable out of the box, no manual wiring
-  // needed for the common case (see `@dxos/app-graph`'s `path-resolution.ts`).
-  const urlKey =
-    options?.urlKey ??
-    Option.getOrUndefined(AppAnnotation.UrlPrefixAnnotation.get(Type.getSchema(type))) ??
-    (typename.split('.').pop() ?? typename).toLowerCase();
-
   const label = AppNode.getDynamicLabel('typename.label', typename, { count: 2 });
 
   // Only allow reordering within this section — reject drops from other type sections.
@@ -118,10 +110,14 @@ export const createTypeSectionExtension = (
 
   const sectionExtension = GraphBuilder.createExtension({
     id: typename,
-    url: { key: urlKey, kind: 'item', path: options?.groupSegment ? [options.groupSegment, typename] : [typename] },
-    match: options?.match ?? AppNodeMatcher.whenSpace,
+    url: {
+      key: options.urlKey,
+      kind: 'item',
+      path: options.groupSegment ? [options.groupSegment, typename] : [typename],
+    },
+    match: options.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
-      const objects = get(space.db.query(options?.query ?? defaultQuery).atom) as Obj.Unknown[];
+      const objects = get(space.db.query(options.query ?? defaultQuery).atom) as Obj.Unknown[];
       if (objects.length === 0) {
         return Effect.succeed([]);
       }
@@ -172,7 +168,7 @@ export const createTypeSectionExtension = (
             droppable: false,
             space,
             testId,
-            ...(options?.position ? { position: options.position } : {}),
+            ...(options.position ? { position: options.position } : {}),
           },
           nodes: orderedObjects
             .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange, canDrop: canDropSameType }))
@@ -182,7 +178,7 @@ export const createTypeSectionExtension = (
     },
   });
 
-  if (!options?.createObject) {
+  if (!options.createObject) {
     return sectionExtension;
   }
 
