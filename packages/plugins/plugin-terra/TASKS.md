@@ -1,6 +1,6 @@
 # plugin-terra — Tasks
 
-_Resume: dispatch Phase 1 Task 11 (capabilities + plugin wiring). Uncommitted: none. Last: `react-ui-form: add labelEnd slot; plugin-terra: polish config panel` + Phase 2 plan committed; a slider-thumb visibility fix is in flight._
+_Resume: visually tune trail/object scale in storybook once the host machine is idle (verification tonight was blocked by macOS indexing daemons pinning the CPU). Uncommitted: none. Last: Phase 2 complete through P2.9 (smoke trails); PR #12353 open and green._
 
 Design and decisions: [DESIGN.md](./DESIGN.md).
 Plans: [Phase 1](../../../agents/superpowers/plans/2026-07-26-plugin-terra.md) ·
@@ -36,7 +36,7 @@ orbiting camera, and a live config panel — rendered from a `Terra` ECHO object
 - [x] **Task 11 — Capabilities + plugin wiring** — `create-object`, `react-surface` (Article + Section), lazy `capabilities/index.ts`; `TerraPlugin.tsx` registers create-object, schema, surface, translations, and the `PLUGIN.mdl` asset. Terra is now creatable in a space.
 - [x] **Task 12 — Full verification** — `plugin-terra` test/lint/build green (24 tests); `react-ui` and `react-ui-form` suites green.
 - [x] **Task 13 — Changeset** — `.changeset/react-ui-slider-primitive.md`, `@dxos/react-ui: minor` (the consumer-visible part is the new `Slider` primitive + `labelEnd` slot; plugin-terra itself is private).
-- [ ] **Final whole-branch review** — most-capable-model reviewer over `merge-base..HEAD`; triage the Minor findings collected during the per-task gates (redundant `normalize()` in `cubed-sphere.test.ts`; JSDoc on vector primitives; `biomes.ts` field comments state what not why).
+- [x] **Final whole-branch review** — returned READY TO MERGE. Fix wave applied: ResizeObserver for container resize (real bug — canvas only resized on `window.resize`), Radix slider pin bump to clear React 19 warnings, PLUGIN.mdl text, Slider thumb a11y names, dependency trim. **PR #12353 opened; Check green.** All 14 CodeRabbit review comments addressed and replied to.
 
 ### References
 
@@ -53,16 +53,17 @@ definitions. Plan written and committed; execution begins after Phase 1 closes.
 
 - [x] **Brainstorm + design spec** — hybrid state model, determinism contract, module layout, motion models, A\* routing; spec committed.
 - [x] **Implementation plan** — 9 tasks with interfaces, full test code, and verification commands.
-- [ ] **P2.1 — Spherical geometry (`sim/geo.ts`)** — `GeoPoint`↔`Vec3`, tangent frame, `bearingTo`, `advance`, `turnToward`.
-- [ ] **P2.2 — Navigation grid (`sim/nav-grid.ts`)** — cells from the Phase 1 sampler, cross-face neighbor stitching, per-domain passability.
-- [ ] **P2.3 — Route planning (`sim/route.ts`)** — A\* over the grid + line-of-sight smoothing.
-- [ ] **P2.4 — `TerraObject` ECHO type** — kind/speed/heading/source/target/orbit/`spawnedAt`; register the schema.
-- [ ] **P2.5 — Motion controllers (`sim/motion.ts`)** — surface, altitude, closed-form orbit, ballistic rocket.
-- [ ] **P2.6 — Simulation engine (`sim/engine.ts`)** — clock, `spawnedAt`-derived replan schedule, determinism tests.
-- [ ] **P2.7 — Object meshes (`scene/object-forms.ts`)** — one merged flat-shaded mesh per kind from primitives.
-- [ ] **P2.8 — Object layer + article integration** — thin instances, surface-normal orientation, render-loop tick, `makeDemoWorld` (two per kind), animated story.
-- [ ] **P2.9 — Smoke trails** — `sim/trail.ts` (pure ring buffer of puffs, spacing-based emission) + `scene/trail-layer.ts` (thin-instance translucent white spheres that grow and fade); ships, planes, rockets.
-- [ ] **P2.10 — Changeset.**
+- [x] **P2.1 — Spherical geometry (`sim/geo.ts`)** — `GeoPoint`↔`Vec3`, tangent frame, `bearingTo`, `advance`, `turnToward`.
+- [x] **P2.2 — Navigation grid (`sim/nav-grid.ts`)** — cells from the Phase 1 sampler, cross-face neighbor stitching, per-domain passability.
+- [x] **P2.3 — Route planning (`sim/route.ts`)** — A\* over the grid + line-of-sight smoothing.
+- [x] **P2.4 — `TerraObject` ECHO type** — kind/speed/heading/source/target/orbit/`spawnedAt`; register the schema.
+- [x] **P2.5 — Motion controllers (`sim/motion.ts`)** — **all closed-form in absolute time.** Redesigned mid-flight after PR review caught that per-frame `dt` integration breaks peer determinism; routed objects now walk their route polyline by arc length.
+- [x] **P2.6 — Simulation engine (`sim/engine.ts`)** — absolute-time evaluation + replan-window recurrence; the key test asserts stepped-through and jumped-to evaluation reach identical state for routed objects.
+- [x] **P2.7 — Object meshes (`scene/object-forms.ts`)** — one merged flat-shaded mesh per kind from primitives.
+- [x] **P2.8 — Object layer + article integration** — thin instances, surface-normal orientation, render-loop tick, `makeDemoWorld` (two per kind), animated story.
+- [x] **P2.9 — Smoke trails** — `sim/trail.ts` (pure ring buffer of puffs, spacing-based emission) + `scene/trail-layer.ts` (thin-instance translucent white spheres that grow and fade); ships, planes, rockets.
+- [x] **P2.10 — Changeset** — none required: Phase 2 is entirely inside the private `plugin-terra` package. The only public-API change on this branch (the `react-ui` `Slider` + `react-ui-form` `labelEnd` slot) is already covered by `.changeset/react-ui-slider-primitive.md`.
+- [x] **Article toolbar** (user directive) — `react-ui-menu` toolbar with play/pause and add-random-object. Pause holds a clock offset rather than halting evaluation, so the closed-form determinism model is preserved.
 
 ### References
 
