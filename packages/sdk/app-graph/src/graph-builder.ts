@@ -67,15 +67,15 @@ export type BuilderExtension = Readonly<{
  * with this key resolves against.
  *
  * - `'anchor'`    — Resolves at the graph root and *establishes the base* that subsequent pairs resolve
- *                   against; consumed as a workspace rebase, never opened as a plank. Carries an id (the
+ *                   against; consumed as a workspace rebase, never opened as an item. Carries an id (the
  *                   workspace). The workspace tier (`w/<workspace>`).
  * - `'item'`      — Resolves against the current anchor (workspace) base, addressed by a variable id.
  *                   The default addressable node; may itself have children (e.g. a mailbox). (`doc/<id>`).
  * - `'singleton'` — Resolves against the current anchor base, but is a single fixed node per anchor, so
  *                   it carries no id — its terminal node-id segment is the key itself. (`settings`).
  * - `'linked'`    — Resolves against the *immediately preceding item*, not the anchor, addressed by a
- *                   variant id. A sub-view attached to a plank — e.g. a companion (`companion/<variant>`,
- *                   whose node is the plank's `~<variant>` linked-segment child). Has no `path`:
+ *                   variant id. A sub-view attached to an item, whose node is the item's `~<variant>`
+ *                   linked-segment child (`<key>/<variant>`). Has no `path`:
  *                   resolution is structural (find the preceding item's `~<variant>` child), and its
  *                   `urlSegment` is stamped from the linked-segment convention, not a path.
  *
@@ -146,7 +146,7 @@ export const urlRepresentation = (nodeId: string, url: UrlBinding): { key: strin
 };
 
 /**
- * The single declared linked-tier key (`kind: 'linked'`, conventionally `companion`), used to stamp and
+ * The single declared linked-tier key (`kind: 'linked'`), used to stamp and
  * reverse-map `~<variant>` nodes. Returns undefined if no linked extension is registered.
  */
 export const getLinkedKey = (builder: GraphBuilder): string | undefined => {
@@ -442,7 +442,7 @@ class GraphBuilderImpl implements GraphBuilder {
         const linkedKey = getLinkedKey(this);
         // Stamp `properties.urlSegment` on each produced node (and its inline descendants) so the computed
         // segment is readable off the node (see `BuilderNode`): `/<key>[/<id>]` from the producing
-        // extension's binding, or `/<linkedKey>/<variant>` for a `~<variant>` linked (companion) node.
+        // extension's binding, or `/<linkedKey>/<variant>` for a `~<variant>` linked node.
         const nodes = qualifyNodeArgs(id)(entries.map((entry) => entry.node)).map((node, index) =>
           stampUrlSegment(node, extensions[entries[index].extensionId]?.url, linkedKey),
         );

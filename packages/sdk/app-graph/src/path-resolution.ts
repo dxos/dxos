@@ -31,14 +31,14 @@ export type UrlPair = {
 /**
  * A resolved pair: the index it occupied in the parsed chain, and the qualified graph node id it
  * resolved to. `null` in the caller's result array means the pair didn't resolve (unknown key or
- * no matching node) — callers route that to a not-found page.
+ * no matching node); how an unresolved pair is surfaced is the caller's concern.
  */
 export type ResolvedPair = {
   pairIndex: number;
   nodeId: string;
 };
 
-/** The graph-path representation of a node, the reverse of a `UrlPair` (minus the `id` for companions). */
+/** The graph-path representation of a node, the reverse of a `UrlPair` (`id` is absent for singleton keys). */
 export type RepresentedNode = {
   key: string;
   id?: string;
@@ -46,9 +46,8 @@ export type RepresentedNode = {
 };
 
 /** Reserved words that can never be registered as a `urlKey`, duplicated from `UrlPath.isReservedKey`
- * (rather than imported) to keep app-graph free of an app-toolkit dependency. The workspace (`w`, an
- * `anchor` binding) and companion (`companion`, a `linked` binding) keys are NOT reserved — they are
- * declared bindings (see the workspace-anchor and companion extensions). */
+ * (rather than imported) to keep app-graph free of an app-toolkit dependency. A key declared by a
+ * binding — including the `anchor` and `linked` tiers — is never reserved. */
 const RESERVED_URL_KEYS = new Set(['reset', 'redirect', 'not-found']);
 
 const isReservedUrlKey = (key: string): boolean =>
@@ -113,7 +112,7 @@ export type UrlKeyTableEntry = { key: string; hasId: boolean; anchor: boolean };
 /**
  * Build the `urlKey -> { key, hasId }` table consumed by `UrlPath.parse`, straight from the
  * builder's current `urlKey`/`urlKeyHasId` declarations — the "registration, not parser" property
- * the URL grammar requires. Callers (deck/simple-layout url-handlers) pass this to `UrlPath.parse`
+ * the URL grammar requires. Callers (the layout url-handler) pass this to `UrlPath.parse`
  * to tokenize a pathname into a pair chain.
  */
 export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, UrlKeyTableEntry> => {
@@ -179,7 +178,7 @@ const materializeCandidate = async (
  *      no resolver — split the id back into segments and expand the exact path.
  *   2. A dynamic {@link GraphBuilder.PathResolver} (recursive/mutable shapes, i.e. nested collections),
  *      whose candidate is materialized and verified the same way.
- * Static paths are tried before resolvers; an unmatched pair yields `null` (routed to a not-found page).
+ * Static paths are tried before resolvers; an unmatched pair yields `null`.
  */
 const resolveKeyId = async (
   builder: GraphBuilder.GraphBuilder,
@@ -222,12 +221,12 @@ const resolveKeyId = async (
 };
 
 /**
- * Resolve a `companion/<variant>` pair against the plank it attaches to: the linked-segment child
- * (`<precedingNodeId>/~<variant>`) of `precedingNodeId`. A single expand, no BFS — a companion is
- * always a direct child of the plank it attaches to. Matched by the variant (the `~`-stripped last
- * segment), so it works for every companion regardless of which extension produced it.
+ * Resolve a linked pair (`<key>/<variant>`) against the item it attaches to: the linked-segment child
+ * (`<precedingNodeId>/~<variant>`) of `precedingNodeId`. A single expand, no BFS — a linked node is
+ * always a direct child of the item it attaches to. Matched by the variant (the `~`-stripped last
+ * segment), so it works regardless of which extension produced the node.
  */
-const resolveCompanion = async (
+const resolveLinked = async (
   builder: GraphBuilder.GraphBuilder,
   precedingNodeId: string,
   variant: string,
@@ -249,9 +248,9 @@ const resolveUrlAsync = async (
   const keyTable = buildKeyTable(builder);
   const allExtensions = builder.getExtensions();
   const results: Array<ResolvedPair | null> = [];
-  // Tracks the most recently resolved *item* (plank) node, the base for `linked` pairs — a linked pair
+  // Tracks the most recently resolved *item* node, the base for `linked` pairs — a linked pair
   // always attaches to the preceding item, never to another linked pair.
-  let lastPlankNodeId: string | undefined;
+  let lastItemNodeId: string | undefined;
 
   for (let pairIndex = 0; pairIndex < parsed.pairs.length; pairIndex++) {
     const pair = parsed.pairs[pairIndex];
@@ -261,16 +260,16 @@ const resolveUrlAsync = async (
       log.warn('unknown URL prefix key', { key: pair.key });
       results.push(null);
       if (pair.id !== undefined) {
-        lastPlankNodeId = undefined;
+        lastItemNodeId = undefined;
       }
       continue;
     }
 
-    // Linked pair (`kind: 'linked'`, e.g. `companion/<variant>`): resolves against the preceding item by
-    // variant, not the workspace base — the linked resolution tier. Not itself a plank, so it does not
-    // become the base for a following linked pair.
+    // Linked pair (`kind: 'linked'`): resolves against the preceding item by variant, not the workspace
+    // base — the linked resolution tier. Not itself an item, so it does not become the base for a
+    // following linked pair.
     if (extensionIdList.some((extensionId) => allExtensions[extensionId]?.url?.kind === 'linked')) {
-      const nodeId = lastPlankNodeId && pair.id ? await resolveCompanion(builder, lastPlankNodeId, pair.id) : null;
+      const nodeId = lastItemNodeId && pair.id ? await resolveLinked(builder, lastItemNodeId, pair.id) : null;
       results.push(nodeId ? { pairIndex, nodeId } : null);
       continue;
     }
@@ -288,7 +287,7 @@ const resolveUrlAsync = async (
     // (`root/<ws>/<...path>/<key>`).
     const nodeId = await resolveKeyId(builder, workspaceBaseId, pair.workspace, extensions, pair.id ?? pair.key);
     results.push(nodeId ? { pairIndex, nodeId } : null);
-    lastPlankNodeId = nodeId ?? undefined;
+    lastItemNodeId = nodeId ?? undefined;
   }
 
   return results;
@@ -301,8 +300,8 @@ const resolveUrlAsync = async (
  * provenance the builder tracks (see `GraphBuilder.getNodeExtensionId`).
  *
  * An unknown key, or a key whose extension produces no matching node, yields `null` at that index;
- * callers route a `null` to a not-found page. A companion (id-less) pair resolves against the
- * *preceding plank's* node, not the raw preceding pair.
+ * how a `null` is surfaced is the caller's concern. A linked pair resolves against the *preceding
+ * item's* node, not the raw preceding pair.
  */
 export const resolveUrl = (
   builder: GraphBuilder.GraphBuilder,
@@ -311,8 +310,8 @@ export const resolveUrl = (
 
 /**
  * Reverse-map a graph node id back to its `(key, id?, workspace)` representation, the inverse of
- * `resolveUrl`. A companion node (a linked `~<variant>` segment) maps to the generic `companion` key
- * with the variant as its id — independent of any extension declaration, so every companion is
+ * `resolveUrl`. A linked node (a `~<variant>` segment) maps to the declared `linked` key
+ * with the variant as its id — independent of the producing extension, so every linked node is
  * addressable. Any other node maps via its producing extension's `urlKey` (`getNodeExtensionId`);
  * a node with no key-declaring producer returns `Option.none()` (unmapped — serialization skips it
  * with a dev-time warning one layer up, per the design's "unmapped nodes" rule).
@@ -327,7 +326,7 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
 
   const lastSegment = segments[segments.length - 1];
   if (lastSegment.startsWith(GraphBuilder.LINKED_PREFIX)) {
-    // Linked node (e.g. a companion): keyed by the declared `linked` key, with the variant (the
+    // Linked node: keyed by the declared `linked` key, with the variant (the
     // `~`-stripped segment) as its id — matched by the convention, independent of the producing extension.
     const linkedKey = GraphBuilder.getLinkedKey(builder);
     if (linkedKey) {
