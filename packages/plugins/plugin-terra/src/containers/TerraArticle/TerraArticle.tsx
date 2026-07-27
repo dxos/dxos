@@ -235,7 +235,6 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
           },
           () => handleTogglePlaying(),
         )
-        .separator()
         .action(
           'add-random-object',
           {
