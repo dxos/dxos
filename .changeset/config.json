@@ -299,6 +299,7 @@
       "@dxos/plugin-support",
       "@dxos/plugin-table",
       "@dxos/plugin-template",
+      "@dxos/plugin-terra",
       "@dxos/plugin-testing",
       "@dxos/plugin-theme",
       "@dxos/plugin-thread",

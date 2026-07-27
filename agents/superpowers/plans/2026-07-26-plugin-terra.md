@@ -65,6 +65,7 @@ Responsibilities: `engine/*` (except `scene-manager.ts`) is pure and Babylon-fre
 ### Task 1: Scaffold the package
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/package.json`
 - Create: `packages/plugins/plugin-terra/dx.config.ts`
 - Create: `packages/plugins/plugin-terra/PLUGIN.mdl`
@@ -75,6 +76,7 @@ Responsibilities: `engine/*` (except `scene-manager.ts`) is pure and Babylon-fre
 - Modify: `pnpm-workspace.yaml` (add `simplex-noise` to catalog)
 
 **Interfaces:**
+
 - Produces: `TerraPlugin` (default export of `TerraPlugin.tsx`), `meta` (from `meta.ts`), `translations` (from `translations.ts`).
 
 - [ ] **Step 1: Create `package.json`** (mirror `plugin-voxel/package.json`; set `"name": "@dxos/plugin-terra"`, `"private": true`, `"version": "0.1.0"`). Include `imports` for `#capabilities`, `#components`, `#containers`, `#meta`, `#plugin`, `#translations`, `#types` and `exports` for `.`, `./plugin`, `./translations` (copy the shapes from `plugin-spacetime/package.json`). Dependencies:
@@ -131,12 +133,14 @@ import { Plugin } from '@dxos/app-framework';
 import config from '../dx.config';
 export const meta = Plugin.getMetaFromConfig(config);
 ```
+
 ```ts
 // plugin.ts
 import { Plugin } from '@dxos/app-framework';
 import { meta } from './meta';
 export const TerraPlugin = Plugin.lazy(meta, () => import('#plugin'));
 ```
+
 `vite-env.d.ts`: copy from `plugin-voxel/src/vite-env.d.ts`.
 
 - [ ] **Step 5: Create `src/translations.ts`** with the plugin namespace and object typename label:
@@ -173,10 +177,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-export const TerraPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.make,
-);
+export const TerraPlugin = Plugin.define(meta).pipe(AppPlugin.addTranslationsModule({ translations }), Plugin.make);
 
 export default TerraPlugin;
 ```
@@ -196,10 +197,12 @@ export * from './meta';
 - [ ] **Step 9: Install and build.**
 
 Run:
+
 ```bash
 pnpm install
 moon run plugin-terra:build
 ```
+
 Expected: install succeeds; build PASSES (empty-ish plugin compiles).
 
 - [ ] **Step 10: Commit.**
@@ -215,10 +218,12 @@ git commit -m "plugin-terra: scaffold package"
 ### Task 2: Seeded fBm noise sampler
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/engine/noise.ts`
 - Test: `packages/plugins/plugin-terra/src/engine/noise.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `type Vec3 = readonly [number, number, number]`
   - `type NoiseConfig = { seed: string; frequency: number; octaves: number; persistence: number; lacunarity: number; continentPower: number; waterLevel: number; mountainScale: number; maskFrequency: number; maskThreshold: number }`
@@ -263,7 +268,11 @@ describe('noise', () => {
 
   test('elevation is non-negative; moisture is in [0, 1]', () => {
     const { elevation, moisture } = makeSampler(config);
-    for (const point of [[1, 0, 0], [0, 1, 0], [0.3, -0.4, 0.86]] as const) {
+    for (const point of [
+      [1, 0, 0],
+      [0, 1, 0],
+      [0.3, -0.4, 0.86],
+    ] as const) {
       expect(elevation(point)).toBeGreaterThanOrEqual(0); // may exceed 1 for mountains.
       expect(moisture(point)).toBeGreaterThanOrEqual(0);
       expect(moisture(point)).toBeLessThanOrEqual(1);
@@ -297,10 +306,12 @@ git commit -m "plugin-terra: seeded fBm noise sampler"
 ### Task 3: Cubed-sphere geometry
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/engine/cubed-sphere.ts`
 - Test: `packages/plugins/plugin-terra/src/engine/cubed-sphere.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Vec3` from `./noise`.
 - Produces:
   - `const FACE_UPS: Vec3[]` (6 faces)
@@ -378,10 +389,12 @@ git commit -m "plugin-terra: cubed-sphere geometry"
 ### Task 4: Terrain displacement
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/engine/terrain.ts`
 - Test: `packages/plugins/plugin-terra/src/engine/terrain.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Vec3` from `./noise`.
 - Produces:
   - `type TerrainConfig = { radius: number; elevationScale: number; waterLevel: number; landGain: number; oceanDepthBias: number }`
@@ -468,11 +481,13 @@ git commit -m "plugin-terra: terrain displacement"
 ### Task 5: Biomes and palette
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/engine/biomes.ts`
 - Create: `packages/plugins/plugin-terra/src/engine/palette.ts`
 - Test: `packages/plugins/plugin-terra/src/engine/biomes.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Vec3` from `./noise`.
 - Produces (`biomes.ts`):
   - `type Biome = 'ocean' | 'beach' | 'grass' | 'forest' | 'rock' | 'snow'`
@@ -558,11 +573,13 @@ git commit -m "plugin-terra: biomes and depth-shaded palette"
 ### Task 6: Planet assembly (mesh + scatter)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/engine/generate-planet.ts`
 - Create: `packages/plugins/plugin-terra/src/engine/index.ts`
 - Test: `packages/plugins/plugin-terra/src/engine/generate-planet.test.ts`
 
 **Interfaces:**
+
 - Consumes: all prior engine modules.
 - Produces:
   - `type TerraConfigValues = NoiseConfig & TerrainConfig & ClimateConfig & { resolution: number; treeDensity: number; rockDensity: number; trees: boolean; rocks: boolean }`
@@ -653,6 +670,7 @@ export * from './palette';
 export * from './generate-planet';
 export * from './scene-manager';
 ```
+
 (Add the `scene-manager` export line in Task 8 when that file exists; until then omit it.)
 
 - [ ] **Step 4: Run to verify it passes.**
@@ -673,6 +691,7 @@ git commit -m "plugin-terra: planet mesh + scatter assembly"
 ### Task 7: Terra ECHO type + config schema
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/types/Terra.ts`
 - Create: `packages/plugins/plugin-terra/src/types/index.ts`
 - Test: `packages/plugins/plugin-terra/src/types/Terra.test.ts`
@@ -680,6 +699,7 @@ git commit -m "plugin-terra: planet mesh + scatter assembly"
 - Modify: `packages/plugins/plugin-terra/src/translations.ts` (add typename label)
 
 **Interfaces:**
+
 - Consumes: `TerraConfigValues` (structurally) from `engine/generate-planet`.
 - Produces:
   - `Terra.TerraConfig` (Effect Schema struct) and `Terra.Terra` (ECHO object class with `name?`, `config`).
@@ -812,6 +832,7 @@ export const toConfigValues = (terra: Terra): TerraConfigValues => {
   return { ...defaults, ...Object.fromEntries(Object.entries(config).filter(([, value]) => value !== undefined)) };
 };
 ```
+
 Note: `radius` is intentionally NOT in `TerraConfig` (fixed at 2 for the orbit view). Then create `types/index.ts`:
 
 ```ts
@@ -821,6 +842,7 @@ Note: `radius` is intentionally NOT in `TerraConfig` (fixed at 2 for the orbit v
 
 export * as Terra from './Terra';
 ```
+
 Add to `src/index.ts`: `export * from './types';`. Add to `translations.ts` under the `en-US` block: `[Type.getTypename(Terra.Terra)]: { 'typename label': 'Terra' }` (import `Terra` from `./types`).
 
 - [ ] **Step 4: Run to verify it passes.**
@@ -841,10 +863,12 @@ git commit -m "plugin-terra: Terra ECHO type and config schema"
 ### Task 8: Babylon SceneManager
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/engine/scene-manager.ts`
 - Modify: `packages/plugins/plugin-terra/src/engine/index.ts` (add `export * from './scene-manager'`)
 
 **Interfaces:**
+
 - Consumes: `Planet`, `generatePlanet`, `TerraConfigValues` from the engine; `palette` from `./palette`.
 - Produces:
   - `class SceneManager` with:
@@ -885,12 +909,14 @@ git commit -m "plugin-terra: Babylon scene manager"
 ### Task 9: TerraArticle container + storybook
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/containers/TerraArticle/TerraArticle.tsx`
 - Create: `packages/plugins/plugin-terra/src/containers/TerraArticle/TerraArticle.stories.tsx`
 - Create: `packages/plugins/plugin-terra/src/containers/TerraArticle/index.ts`
 - Create: `packages/plugins/plugin-terra/src/containers/index.ts`
 
 **Interfaces:**
+
 - Consumes: `SceneManager`, `generatePlanet` from `#engine` (add `#engine` to `package.json` imports, or import via relative path `../../engine`); `Terra` from `#types`.
 - Produces: `TerraArticle` React component: `AppSurface.ObjectArticleProps<Terra.Terra>`.
 
@@ -954,6 +980,7 @@ export const TerraArticle = ({ subject: terra }: TerraArticleProps) => {
 
 TerraArticle.displayName = 'TerraArticle';
 ```
+
 Create `TerraArticle/index.ts` (`export * from './TerraArticle';`) and `containers/index.ts` (`export * from './TerraArticle';`).
 
 - [ ] **Step 2: Write `TerraArticle.stories.tsx`** (mirror `VoxelArticle.stories.tsx`):
@@ -1010,6 +1037,7 @@ git commit -m "plugin-terra: TerraArticle container + story"
 ### Task 10: TerraForm live params panel + storybook
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/components/TerraForm/TerraForm.tsx`
 - Create: `packages/plugins/plugin-terra/src/components/TerraForm/TerraForm.stories.tsx`
 - Create: `packages/plugins/plugin-terra/src/components/TerraForm/index.ts`
@@ -1017,6 +1045,7 @@ git commit -m "plugin-terra: TerraArticle container + story"
 - Modify: `packages/plugins/plugin-terra/src/containers/TerraArticle/TerraArticle.tsx` (mount the form)
 
 **Interfaces:**
+
 - Consumes: `Terra.TerraConfig` schema; `@dxos/react-ui-form` `Form`.
 - Produces: `TerraForm` component: `{ config: Terra.TerraConfig; onChange(values: Terra.TerraConfig): void }`.
 
@@ -1044,6 +1073,7 @@ export const TerraForm = ({ config, onChange }: TerraFormProps) => (
 
 TerraForm.displayName = 'TerraForm';
 ```
+
 (If `Form`'s prop names differ in this repo version, adjust per the `composer-ui` skill — the contract is: render `Terra.TerraConfig`, emit changed values.)
 
 Create `TerraForm/index.ts` and `components/index.ts` (`export * from './TerraForm';`).
@@ -1070,12 +1100,14 @@ git commit -m "plugin-terra: live params form"
 ### Task 11: Capabilities + plugin wiring
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/capabilities/create-object.ts`
 - Create: `packages/plugins/plugin-terra/src/capabilities/react-surface.tsx`
 - Create: `packages/plugins/plugin-terra/src/capabilities/index.ts`
 - Modify: `packages/plugins/plugin-terra/src/TerraPlugin.tsx`
 
 **Interfaces:**
+
 - Consumes: `Terra` from `#types`, `TerraArticle` from `#containers`.
 - Produces: `CreateObject`, `ReactSurface` capabilities; fully wired `TerraPlugin`.
 
@@ -1174,6 +1206,7 @@ git commit -m "plugin-terra: verification fixes"
 ### Task 13: Changeset
 
 **Files:**
+
 - Create: `.changeset/<generated-name>.md`
 
 - [ ] **Step 1: Add a changeset** (see `agents/instructions/changesets.md`). Since `@dxos/plugin-terra` is new and private, add a `patch` entry naming the app(s) that will register it if applicable; otherwise a minimal changeset for `@dxos/plugin-terra`.

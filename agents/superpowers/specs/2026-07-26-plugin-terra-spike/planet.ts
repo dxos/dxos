@@ -4,8 +4,8 @@
 // plus scatter placements. No Babylon imports here so it stays portable/testable.
 //
 
-import { createNoise3D } from 'simplex-noise';
 import seedrandom from 'seedrandom';
+import { createNoise3D } from 'simplex-noise';
 
 export type Vec3 = [number, number, number];
 

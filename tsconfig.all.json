@@ -580,6 +580,9 @@
       "path": "packages/plugins/plugin-template/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-terra/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-testing/tsconfig.json"
     },
     {

@@ -2,18 +2,19 @@
 // Terra spike — Babylon scene. NPR: flat shading, no shadows, matte materials.
 //
 
+import '@babylonjs/core/Meshes/thinInstanceMesh';
+
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Color3, Color4, Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
 import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
 import { CreatePolyhedron } from '@babylonjs/core/Meshes/Builders/polyhedronBuilder';
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
-import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Scene } from '@babylonjs/core/scene';
-import '@babylonjs/core/Meshes/thinInstanceMesh';
 
 import { defaultConfig, generatePlanet, palette, type Planet, type Vec3 } from './planet';
 
@@ -215,7 +216,9 @@ const build = () => {
   (document.getElementById('seedLabel') as HTMLElement).textContent = `seed: ${currentSeed}`;
   (document.getElementById('resLabel') as HTMLElement).textContent =
     `${currentResolution}² · ${(planet.mesh.positions.length / 9 / 1000).toFixed(0)}k tris`;
-  console.log(`[terra] res=${currentResolution} tris=${planet.mesh.positions.length / 9} scatter=${planet.scatter.length}`);
+  console.log(
+    `[terra] res=${currentResolution} tris=${planet.mesh.positions.length / 9} scatter=${planet.scatter.length}`,
+  );
 };
 
 const applyWireframe = () => {
