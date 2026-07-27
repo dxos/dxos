@@ -1,14 +1,14 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation, Skill } from '@dxos/compute';
-import { Collection, Database, EID, Feed } from '@dxos/echo';
+import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -16,7 +16,6 @@ import { HasSubject } from '@dxos/types';
 
 import { WithProperties } from '#testing';
 
-import MarkdownSkill from '../skills/markdown-skill';
 import { MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';
 
@@ -25,26 +24,21 @@ EntityId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   operationHandlers: MarkdownOperationHandlerSet,
   types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
-  skills: [MarkdownSkill.make()],
   disableLlmMemoization: true,
 });
 
-describe('Create', () => {
+describe('Open', () => {
   it.effect(
-    'call a function to create a markdown document',
+    'returns the document content',
     Effect.fnUntraced(
-      function* (_) {
-        const name = 'BlueYard';
-        const content = 'Founders and portfolio of BlueYard.';
-        const result = yield* Operation.invoke(MarkdownOperation.Create, {
-          name,
-          content,
-        });
+      function* ({ expect }) {
+        const doc = Markdown.make({ name: 'Shopping list', content: '# Shopping list\n- milk' });
+        yield* Database.add(doc);
+        yield* Database.flush();
 
-        const doc = yield* Database.resolve(EID.parse(result.id), Markdown.Document);
-        expect(doc.name).toBe(name);
-        const text = yield* Database.load(doc.content);
-        expect(text.content).toBe(content);
+        const { content } = yield* Operation.invoke(MarkdownOperation.Open, { doc: Ref.make(doc) });
+
+        expect(content).toBe('# Shopping list\n- milk');
       },
       WithProperties,
       Effect.provide(TestLayer),

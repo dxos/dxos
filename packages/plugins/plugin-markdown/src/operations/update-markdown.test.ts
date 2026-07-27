@@ -23,14 +23,13 @@ import { MarkdownOperationHandlerSet } from './index';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  aiServicePreset: 'edge-remote',
   operationHandlers: MarkdownOperationHandlerSet,
   types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
   skills: [MarkdownSkill.make()],
-  tracing: 'pretty',
+  disableLlmMemoization: true,
 });
 
-describe('update', () => {
+describe('Update', () => {
   it.effect(
     'call a function to update a markdown document',
     Effect.fnUntraced(
