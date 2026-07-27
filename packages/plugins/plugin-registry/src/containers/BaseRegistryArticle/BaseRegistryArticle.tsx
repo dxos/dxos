@@ -114,7 +114,6 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       (pluginId: string) =>
         invokePromise(LayoutOperation.Open, {
           subject: [getPluginPath(pluginId)],
-          // The pivot must be the qualified path the deck stores, not the bare category id.
           pivotId: getPluginPath(id),
           disposition: 'add',
         }),
