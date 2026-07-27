@@ -17,6 +17,11 @@ tasks:
       - '#vendor:build'
       # See `serve` — plugin-sketch static assets must exist before storybook builds.
       - plugin-sketch:prebuild
+      # Stories that import a *generated* source file. Storybook resolves every other package straight
+      # from source, but these two only exist after their generator runs, and both carry `ts-vite-build`
+      # rather than `ts-build`/`ts-compile`, so the tag deps above never build them.
+      - react-ui-gameboard:gen-pieces
+      - react-ui-experimental:glsl
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
@@ -43,6 +48,9 @@ tasks:
       # is missing. It hangs off plugin-sketch's `build`, which the tag deps above do not run, so a
       # fresh worktree has no assets. Generate them explicitly.
       - plugin-sketch:prebuild
+      # See `bundle` — stories importing generated sources, which the tag deps above never build.
+      - react-ui-gameboard:gen-pieces
+      - react-ui-experimental:glsl
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
@@ -64,6 +72,9 @@ tasks:
       - '#ts-compile:build'
       - '#vendor:build'
       - plugin-sketch:prebuild
+      # See `bundle` — stories importing generated sources, which the tag deps above never build.
+      - react-ui-gameboard:gen-pieces
+      - react-ui-experimental:glsl
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
