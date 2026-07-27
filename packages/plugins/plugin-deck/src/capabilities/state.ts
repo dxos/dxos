@@ -11,7 +11,7 @@ import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
-import { DeckCapabilities, type EphemeralDeckState, StoredDeckState, defaultDeck } from '#types';
+import { DeckCapabilities, type EphemeralDeckState, StoredDeckState, defaultDeck, getMode } from '#types';
 
 import { migratePersistedState } from '../util';
 
@@ -68,9 +68,7 @@ export default Capability.makeModule(
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        variant: 'deck',
-        layoutMode: deck.active.length > 1 ? 'multi' : 'solo',
-        fullscreen: !!ephemeral.fullscreen,
+        mode: getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',

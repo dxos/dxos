@@ -24,9 +24,7 @@ export default Capability.makeModule(() =>
     const layoutAtom = Atom.make((get): AppCapabilities.Layout => {
       const state = get(stateAtom);
       return {
-        variant: 'spotlight',
-        layoutMode: 'solo',
-        fullscreen: false,
+        mode: 'spotlight',
         dialogOpen: state.dialogOpen,
         sidebarOpen: false,
         complementarySidebarOpen: false,

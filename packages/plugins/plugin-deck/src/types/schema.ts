@@ -33,6 +33,15 @@ export const DeckState = Schema.Struct({
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
+export type LayoutMode = 'multi' | 'solo' | 'solo--fullscreen';
+
+/**
+ * The `Layout` capability's mode: a fullscreen plank renders alone and headless, so it reports as
+ * `solo--fullscreen`; otherwise the mode follows the active plank count (companions excluded).
+ */
+export const getMode = (deck: { active: readonly string[] }, fullscreen: boolean): LayoutMode =>
+  fullscreen ? 'solo--fullscreen' : deck.active.length > 1 ? 'multi' : 'solo';
+
 export const defaultDeck: DeckState = {
   active: [],
   inactive: [],

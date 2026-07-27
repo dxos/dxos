@@ -40,7 +40,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
           });
 
           const companion = Attention.linkedSegment('feed');
-          if (layout.variant === 'simple') {
+          if (layout.mode === 'simple') {
             void invokePromise(LayoutOperation.UpdateComplementary, {
               subject: companion,
               state: 'expanded',
@@ -74,7 +74,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
         }
       }
     },
-    [attendableId, layout.variant, feeds, invokePromise],
+    [attendableId, layout.mode, feeds, invokePromise],
   );
 
   const handleCreate = useCallback(() => {

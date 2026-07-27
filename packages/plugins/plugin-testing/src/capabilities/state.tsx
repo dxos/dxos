@@ -26,9 +26,7 @@ export default Capability.makeModule(
     const layoutAtom = Atom.make((get): AppCapabilities.Layout => {
       const state = get(stateAtom);
       return {
-        variant: 'storybook',
-        layoutMode: 'solo',
-        fullscreen: false,
+        mode: 'storybook',
         dialogOpen: state.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',

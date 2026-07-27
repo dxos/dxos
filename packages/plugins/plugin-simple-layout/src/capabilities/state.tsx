@@ -32,10 +32,7 @@ export default Capability.makeModule(({ initialState }: SimpleLayoutStateOptions
     const layoutAtom = Atom.make((get): AppCapabilities.Layout => {
       const state = get(stateAtom);
       return {
-        variant: 'simple',
-        // Simple layout shows a single pane, so it is always `solo`.
-        layoutMode: 'solo',
-        fullscreen: false,
+        mode: 'simple',
         dialogOpen: state.dialogOpen,
         sidebarOpen: false,
         complementarySidebarOpen: false,

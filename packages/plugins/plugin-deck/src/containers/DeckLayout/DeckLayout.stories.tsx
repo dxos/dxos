@@ -34,6 +34,7 @@ import {
   type Settings,
   type StoredDeckState,
   defaultDeck,
+  getMode,
 } from '#types';
 
 import { DeckLayout } from './DeckLayout';
@@ -94,9 +95,7 @@ const storyDeckState = Capability.makeModule(() =>
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        variant: 'deck',
-        layoutMode: deck.active.length > 1 ? 'multi' : 'solo',
-        fullscreen: !!ephemeral.fullscreen,
+        mode: getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',

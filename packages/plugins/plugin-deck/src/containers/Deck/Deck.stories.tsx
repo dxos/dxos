@@ -21,7 +21,14 @@ import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import { DeckCapabilities, type EphemeralDeckState, type Settings, type StoredDeckState, defaultDeck } from '#types';
+import {
+  DeckCapabilities,
+  type EphemeralDeckState,
+  type Settings,
+  type StoredDeckState,
+  defaultDeck,
+  getMode,
+} from '#types';
 
 import { Deck } from './Deck';
 
@@ -82,9 +89,7 @@ const storyDeckState = Capability.makeModule(() =>
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        variant: 'deck',
-        layoutMode: deck.active.length > 1 ? 'multi' : 'solo',
-        fullscreen: !!ephemeral.fullscreen,
+        mode: getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
