@@ -66,7 +66,7 @@ describe('RunRoutine', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         received.length = 0;
-        const routine = yield* addRoutine({ label: 'from-trigger' });
+        const { routine } = yield* addRoutine({ label: 'from-trigger' });
 
         yield* Operation.invoke(RoutineOperation.RunRoutine, { routine: Ref.make(routine) });
 
@@ -82,7 +82,7 @@ describe('RunRoutine', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         received.length = 0;
-        const routine = yield* addRoutine({ label: '{{event.tick}}' });
+        const { routine } = yield* addRoutine({ label: '{{event.tick}}' });
 
         yield* Operation.invoke(RoutineOperation.RunRoutine, { routine: Ref.make(routine) });
 
@@ -100,12 +100,12 @@ describe('RunRoutine', () => {
       function* ({ expect }) {
         received.length = 0;
         monitorInvocations.length = 0;
-        const routine = yield* addRoutine({ label: 'on-edge' }, true);
+        const { routine, trigger } = yield* addRoutine({ label: 'on-edge' }, true);
 
         yield* Operation.invoke(RoutineOperation.RunRoutine, { routine: Ref.make(routine) });
 
         // The monitor sends it to the EDGE dispatcher; nothing runs in this process.
-        expect(monitorInvocations).toEqual([routine.triggers[0].target!.id]);
+        expect(monitorInvocations).toEqual([trigger.id]);
         expect(received).toEqual([]);
       },
       Effect.provide(TestLayer),
@@ -119,7 +119,7 @@ describe('RunRoutine', () => {
       function* ({ expect }) {
         received.length = 0;
         monitorInvocations.length = 0;
-        const routine = yield* addRoutine({ label: 'on-client' });
+        const { routine } = yield* addRoutine({ label: 'on-client' });
 
         yield* Operation.invoke(RoutineOperation.RunRoutine, { routine: Ref.make(routine) });
 
@@ -132,15 +132,19 @@ describe('RunRoutine', () => {
   );
 });
 
-/** A routine whose action is `TestRunnable`, with the runnable's input carried on its timer trigger. */
+/**
+ * A routine whose action is `TestRunnable`, with the runnable's input carried on its timer trigger.
+ * Returns the trigger alongside so assertions can name its id without re-deriving it from the ref.
+ */
 const addRoutine = Effect.fnUntraced(function* (input: Record<string, unknown>, remote?: boolean) {
   const operation = yield* Database.add(Operation.serialize(TestRunnable));
+  const trigger = Trigger.make({ enabled: true, remote, spec: Trigger.specTimer('*/10 * * * *'), input });
   const routine = makeRoutine({
     name: 'Test',
     spec: { kind: 'runnable', runnable: Ref.make(operation) },
-    trigger: Trigger.make({ enabled: true, remote, spec: Trigger.specTimer('*/10 * * * *'), input }),
+    trigger,
   });
   yield* Database.add(routine);
   yield* Database.flush();
-  return routine;
+  return { routine, trigger };
 });
