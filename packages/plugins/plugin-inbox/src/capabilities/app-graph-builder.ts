@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
@@ -42,7 +42,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'mailboxesSection',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.communications),
         connector: (space, get) => {
           const mailboxes = get(space.db.query(Filter.type(Mailbox.Mailbox)).atom);
           if (mailboxes.length === 0) {
@@ -65,7 +65,7 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'mailboxListing',
-        url: { key: 'mail', kind: 'item', path: [Paths.GroupSegments.communications, getMailboxesSectionId()] },
+        url: { key: 'mail', kind: 'item', path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -227,7 +227,7 @@ export default Capability.makeModule(
       // the surrounding conversation is looked up by `MessageArticle` when the message is opened.
       GraphBuilder.createExtension({
         id: 'mailboxMessages',
-        url: { key: 'message', kind: 'item', path: [Paths.GroupSegments.communications, getMailboxesSectionId()] },
+        url: { key: 'message', kind: 'item', path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()] },
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
@@ -286,8 +286,8 @@ export default Capability.makeModule(
 
       TypeSection.createTypeSectionExtension(Calendar.Calendar, {
         urlKey: 'calendar',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
-        groupSegment: Paths.GroupSegments.communications,
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.communications),
+        groupSegment: GraphPath.GroupSegments.communications,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,
@@ -301,7 +301,7 @@ export default Capability.makeModule(
       // deep-link shape.
       GraphBuilder.createExtension({
         id: 'calendarEvents',
-        url: { key: 'event', kind: 'item', path: [Paths.GroupSegments.communications, calendarTypename] },
+        url: { key: 'event', kind: 'item', path: [GraphPath.GroupSegments.communications, calendarTypename] },
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (calendar, get) => {
           const db = Obj.getDatabase(calendar);

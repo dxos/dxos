@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, getRootAttendableId } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
@@ -168,7 +168,7 @@ export const PreviewComponent = ({
         onOpen(uri);
       } else {
         void invokePromise?.(LayoutOperation.Open, {
-          subject: [Paths.getObjectPathFromObject(object)],
+          subject: [GraphPath.getObjectPathFromObject(object)],
           pivotId: getRootAttendableId(event.currentTarget),
           disposition: 'add',
           modifiers: { shift: event.shiftKey },

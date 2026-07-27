@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useCardPivot } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -25,7 +25,7 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
   const { invokePromise } = useOperationInvoker();
   const [cardRef, pivotId] = useCardPivot();
   const db = Obj.getDatabase(contact);
-  const workspace = db ? Paths.getSpacePath(db.spaceId) : undefined;
+  const workspace = db ? GraphPath.getSpacePath(db.spaceId) : undefined;
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
 

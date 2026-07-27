@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, PathResolution } from '@dxos/app-graph';
-import { AppCapabilities, LayoutOperation, NotFound, Paths, UrlPath } from '@dxos/app-toolkit';
+import { AppCapabilities, GraphPath, LayoutOperation, NotFound, UrlPath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -116,7 +116,7 @@ export default Capability.makeModule(
       }
 
       const { workspace, pairs } = parsed.value;
-      const workspacePath = Paths.getSpacePath(workspace);
+      const workspacePath = GraphPath.getSpacePath(workspace);
       const state = getState();
       if (workspacePath !== state.activeDeck) {
         yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath });
@@ -293,7 +293,7 @@ export default Capability.makeModule(
         }
       }
 
-      const workspaceKey = PathResolution.getAnchorKey(builder) ?? Paths.WORKSPACE_URL_KEY;
+      const workspaceKey = PathResolution.getAnchorKey(builder) ?? UrlPath.WORKSPACE_KEY;
       const path = serializeDeckToUrl({ workspace, workspaceKey, active: deck.active, representations, companion });
       const newUrl = `${path}${window.location.search}`;
 

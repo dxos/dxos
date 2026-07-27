@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, type AppCapabilities as AppCaps, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, type AppCapabilities as AppCaps, GraphPath } from '@dxos/app-toolkit';
 import { Database, Entity } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
@@ -46,7 +46,7 @@ export default Capability.makeModule(
 
         return [
           {
-            path: Paths.getObjectPath(db.spaceId, typename, object.id),
+            path: GraphPath.getObjectPath(db.spaceId, typename, object.id),
             label: Entity.getLabel(object) ?? '',
             type: typename,
           },

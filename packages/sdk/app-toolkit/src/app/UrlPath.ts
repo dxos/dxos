@@ -50,6 +50,13 @@ export type ParsedUrl = {
 };
 
 /**
+ * The prefix key for the workspace tier (`/w/<workspace>/…`). The canonical declaration: the
+ * workspace-anchor graph extension declares its `url.key` from this, and serializers fall back to it
+ * when no anchor extension is registered (see `PathResolution.getAnchorKey`).
+ */
+export const WORKSPACE_KEY = 'w';
+
+/**
  * The single well-known key for every plank companion (`companion/<variant>`), resolved against the
  * preceding plank. Declared once as a `kind: 'linked'` binding (see `createCompanionExtension`).
  */

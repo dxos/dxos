@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -35,8 +35,8 @@ export default Capability.makeModule(
       // Magazine type section in the content group.
       TypeSection.createTypeSectionExtension(Magazine.Magazine, {
         urlKey: 'magazine',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
-        groupSegment: Paths.GroupSegments.content,
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
+        groupSegment: GraphPath.GroupSegments.content,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,

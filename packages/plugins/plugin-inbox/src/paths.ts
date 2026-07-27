@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Paths } from '@dxos/app-toolkit';
+import { GraphPath } from '@dxos/app-toolkit';
 
 import { Calendar } from '#types';
 
-const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Paths.createTypeSectionPaths(
+const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = GraphPath.createTypeSectionPaths(
   Calendar.Calendar,
-  { groupId: Paths.GroupSegments.communications },
+  { groupId: GraphPath.GroupSegments.communications },
 );
 
 /** Well-known local segment names (private — use the path helpers below). */
@@ -25,7 +25,7 @@ export const getMailboxesSectionId = (): string => Segments.mailboxes;
 
 /** Canonical qualified path to the mailboxes section of a space. */
 export const getMailboxesPath = (spaceId: string): string =>
-  Paths.getSpacePath(spaceId, Paths.GroupSegments.communications, Segments.mailboxes);
+  GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.communications, Segments.mailboxes);
 
 /** Canonical qualified path to a specific mailbox within a space. */
 export const getMailboxPath = (spaceId: string, mailboxId: string): string =>

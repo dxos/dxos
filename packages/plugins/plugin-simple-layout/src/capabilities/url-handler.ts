@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { PathResolution } from '@dxos/app-graph';
-import { AppCapabilities, LayoutOperation, NotFound, Paths, UrlPath } from '@dxos/app-toolkit';
+import { AppCapabilities, GraphPath, LayoutOperation, NotFound, UrlPath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -80,7 +80,7 @@ export default Capability.makeModule(
       }
 
       const { workspace, pairs } = parsed.value;
-      const workspacePath = Paths.getSpacePath(workspace);
+      const workspacePath = GraphPath.getSpacePath(workspace);
       if (workspacePath !== getState().workspace) {
         yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath });
       }
@@ -151,7 +151,7 @@ export default Capability.makeModule(
         }
       }
 
-      const workspaceKey = PathResolution.getAnchorKey(builder) ?? Paths.WORKSPACE_URL_KEY;
+      const workspaceKey = PathResolution.getAnchorKey(builder) ?? UrlPath.WORKSPACE_KEY;
       const path = UrlPath.format({ workspace, workspaceKey, pairs });
       const newUrl = `${path}${window.location.search}`;
       if (`${window.location.pathname}${window.location.search}` !== newUrl) {
@@ -180,7 +180,7 @@ export default Capability.makeModule(
 /** Check if a path is a redirect path handled elsewhere (e.g., OAuth). */
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
-/** Paths with file extensions are not graph node paths. */
+/** GraphPath with file extensions are not graph node paths. */
 const isFilePath = (pathname: string): boolean => /\.[a-z]+$/i.test(pathname);
 
 /** Handle a deep link URL string. Merges query params into window.location and navigates. */

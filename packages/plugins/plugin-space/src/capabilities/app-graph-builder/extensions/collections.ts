@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppAnnotation, AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, AppNode, AppNodeMatcher, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Filter, Obj, Query, Type } from '@dxos/echo';
@@ -44,13 +44,13 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Content section group — created alongside collections so the group always
     // appears when the space plugin is active and hides when there are no children.
     GraphBuilder.createExtension({
-      id: Paths.GroupSegments.content,
+      id: GraphPath.GroupSegments.content,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           AppNode.makeGroup({
-            id: Paths.GroupSegments.content,
-            type: Paths.GroupTypes.content,
+            id: GraphPath.GroupSegments.content,
+            type: GraphPath.GroupTypes.content,
             label: ['nav-tree-group-content.label', { ns: meta.profile.key }],
             space,
             position: 200,
@@ -61,7 +61,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Collections section virtual node under the content group.
     GraphBuilder.createExtension({
       id: 'collectionsSection',
-      match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
+      match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
       connector: (space, get) => {
         get(Obj.atom(space.properties));
         const collectionRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
@@ -77,7 +77,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
         return Effect.succeed([
           Node.make({
-            id: Paths.Segments.collections,
+            id: GraphPath.Segments.collections,
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
             properties: {
@@ -102,7 +102,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // the database subgraph addresses the same object under `db`).
     GraphBuilder.createExtension({
       id: 'collections',
-      url: { key: 'object', kind: 'item', path: [Paths.GroupSegments.content, Paths.Segments.collections] },
+      url: { key: 'object', kind: 'item', path: [GraphPath.GroupSegments.content, GraphPath.Segments.collections] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -183,7 +183,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             const chain = yield* Effect.promise(() =>
               walkCollectionChainToRoot({ space, objectId: id, rootId: rootCollection.id }),
             );
-            return chain ? Paths.getCollectionsPath(workspace, ...chain, id) : null;
+            return chain ? GraphPath.getCollectionsPath(workspace, ...chain, id) : null;
           }),
       },
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
@@ -283,7 +283,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   // Qualified id of the collections section node (root/<spaceId>/collections), so the new
                   // object's navigation path resolves under the section — the bare segment would not.
                   target: rootCollection ?? space.db,
-                  targetNodeId: Paths.getCollectionsPath(space.id),
+                  targetNodeId: GraphPath.getCollectionsPath(space.id),
                 });
               }),
             properties: {
@@ -416,7 +416,7 @@ const constructObjectActions = ({
             data: () =>
               Effect.gen(function* () {
                 const builder = yield* Capability.get(AppCapabilities.AppGraph);
-                const path = Paths.getShareableLinkPath(builder, nodeId);
+                const path = GraphPath.getShareableLinkPath(builder, nodeId);
                 if (Option.isNone(path)) {
                   log.warn('object has no URL representation; cannot copy link', { nodeId });
                   return;
@@ -435,7 +435,7 @@ const constructObjectActions = ({
       : []),
     Node.makeAction({
       id: LayoutOperation.Expose.meta.key,
-      data: () => Operation.invoke(LayoutOperation.Expose, { subject: Paths.getObjectPathFromObject(object) }),
+      data: () => Operation.invoke(LayoutOperation.Expose, { subject: GraphPath.getObjectPathFromObject(object) }),
       properties: {
         label: EXPOSE_OBJECT_LABEL,
         icon: 'ph--eye--regular',

@@ -3,12 +3,12 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { Paths } from '@dxos/app-toolkit';
+import { GraphPath } from '@dxos/app-toolkit';
 import { DXN } from '@dxos/keys';
 
 import config from '../dx.config';
 
-export const REGISTRY_ID = Paths.pinnedWorkspaceId('dxos:plugin-registry');
+export const REGISTRY_ID = GraphPath.pinnedWorkspaceId('dxos:plugin-registry');
 
 /**
  * Registry category node id — the bare category name (e.g. `bundled`). The single source shared by the

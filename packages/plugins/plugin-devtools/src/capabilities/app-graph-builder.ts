@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath } from '@dxos/app-toolkit';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
@@ -37,7 +37,7 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'devtools',
-        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.system)),
+        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system)),
         connector: (_nodeOrSpace: Node.Node | Space, get) =>
           Effect.gen(function* () {
             const [graph] = get(yield* Capability.atom(AppCapabilities.AppGraph));

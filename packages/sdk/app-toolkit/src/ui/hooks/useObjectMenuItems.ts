@@ -12,7 +12,7 @@ import { Attention } from '@dxos/react-ui-attention';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { Paths } from '../../app';
+import { GraphPath } from '../../app';
 import { LayoutOperation } from '../../operations';
 
 const OPEN_ICON = 'ph--arrow-square-out--regular';
@@ -70,7 +70,7 @@ export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLEle
       return;
     }
 
-    const subjectPath = Paths.getObjectPathFromObject(subject);
+    const subjectPath = GraphPath.getObjectPathFromObject(subject);
     return (event: MouseEvent<HTMLElement>) => {
       void invokePromise(LayoutOperation.Open, {
         subject: [subjectPath],
@@ -99,7 +99,7 @@ export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[]
       return [];
     }
 
-    const subjectPath = Paths.getObjectPathFromObject(subject);
+    const subjectPath = GraphPath.getObjectPathFromObject(subject);
     return [
       createMenuAction(
         'navigate',

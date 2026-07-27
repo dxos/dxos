@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Column, Dialog, useTranslation } from '@dxos/react-ui';
@@ -37,8 +37,8 @@ export const CreateSpaceDialog = () => {
       return Effect.gen(function* () {
         const { space } = yield* invoke(SpaceOperation.Create, data);
         yield* invoke(LayoutOperation.Open, {
-          subject: [Paths.getSpaceHomePath(space.id)],
-          workspace: Paths.getSpacePath(space.id),
+          subject: [GraphPath.getSpaceHomePath(space.id)],
+          workspace: GraphPath.getSpacePath(space.id),
           navigation: 'immediate',
         });
         yield* invoke(LayoutOperation.UpdateDialog, { state: false });

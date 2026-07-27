@@ -12,8 +12,8 @@ import {
   AppNode,
   AppNodeMatcher,
   AppSpace,
+  GraphPath,
   LayoutOperation,
-  Paths,
   TypeSection,
 } from '@dxos/app-toolkit';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
@@ -49,13 +49,13 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // AI section group — created here so it shows only when the assistant plugin is active.
       GraphBuilder.createExtension({
-        id: Paths.GroupSegments.ai,
+        id: GraphPath.GroupSegments.ai,
         match: AppNodeMatcher.whenSpace,
         connector: (space) =>
           Effect.succeed([
             AppNode.makeGroup({
-              id: Paths.GroupSegments.ai,
-              type: Paths.GroupTypes.ai,
+              id: GraphPath.GroupSegments.ai,
+              type: GraphPath.GroupTypes.ai,
               label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
               space,
               position: 300,
@@ -205,8 +205,8 @@ export default Capability.makeModule(
           Query.select(Filter.type(Chat.Chat)),
           Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
         ),
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
-        groupSegment: Paths.GroupSegments.ai,
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
+        groupSegment: GraphPath.GroupSegments.ai,
         urlKey: 'chat',
       }),
 

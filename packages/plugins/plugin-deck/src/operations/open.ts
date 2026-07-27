@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, NotFound, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, GraphPath, LayoutOperation, NotFound } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -88,7 +88,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           // Build EID → deck item ID map for active items.
           const deckEidMap = new Map<string, string>();
           for (const deckId of active) {
-            const eid = Paths.tryGetEid(graph, deckId);
+            const eid = GraphPath.tryGetEid(graph, deckId);
             if (Option.isSome(eid)) {
               deckEidMap.set(eid.value, deckId);
             }
@@ -97,7 +97,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           // Remap subjects whose EID matches an existing deck item.
           if (deckEidMap.size > 0) {
             const remapped = input.subject.map((subjectId) => {
-              const eid = Paths.tryGetEid(graph, subjectId);
+              const eid = GraphPath.tryGetEid(graph, subjectId);
               if (Option.isSome(eid)) {
                 const existing = deckEidMap.get(eid.value);
                 if (existing && existing !== subjectId) {

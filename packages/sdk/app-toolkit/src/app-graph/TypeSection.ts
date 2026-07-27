@@ -49,7 +49,7 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
  * typename and annotations — no manual wiring needed. The section is suppressed
  * when the space has no matching objects.
  *
- * Requires two coordinated pieces: `Paths.createTypeSectionPaths` and this extension, with a
+ * Requires two coordinated pieces: `GraphPath.createTypeSectionPaths` and this extension, with a
  * {@link SpaceCapabilities.CreateObjectEntry} set to
  * `targetNodeId: options.targetNodeId ?? getSectionPath(spaceId)`. URL resolution (both directions)
  * is automatic — no path resolver to register — since the extension's `urlKey` declaration is all
@@ -74,7 +74,7 @@ export const createTypeSectionExtension = (
      */
     match?: (node: Node.Node) => Option.Option<Space>;
     /**
-     * Group segment the section nests under (e.g. `Paths.GroupSegments.ai`), when `match` places it
+     * Group segment the section nests under (e.g. `GraphPath.GroupSegments.ai`), when `match` places it
      * beneath a navtree group rather than directly under the space. Included in the forward-resolution
      * `urlPath` so section objects at `root/<space>/<groupSegment>/<typename>/<id>` resolve
      * deterministically. Omit for a space-direct section (`root/<space>/<typename>/<id>`).

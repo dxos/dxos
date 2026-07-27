@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Paths } from '@dxos/app-toolkit';
+import { GraphPath } from '@dxos/app-toolkit';
 import { Instructions, Operation, Project } from '@dxos/compute';
 import { Collection, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
@@ -51,9 +51,9 @@ export default Capability.makeModule(
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object: project,
             target: options.target,
-            targetNodeId: Paths.getSpacePath(
+            targetNodeId: GraphPath.getSpacePath(
               options.db.spaceId,
-              Paths.GroupSegments.ai,
+              GraphPath.GroupSegments.ai,
               Type.getTypename(Project.Project),
             ),
           });

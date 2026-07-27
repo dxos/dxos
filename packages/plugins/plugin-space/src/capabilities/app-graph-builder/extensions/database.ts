@@ -8,7 +8,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
@@ -45,13 +45,13 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // System section group — created alongside database/settings so the group always
     // appears when the space plugin is active and hides when there are no children.
     GraphBuilder.createExtension({
-      id: Paths.GroupSegments.system,
+      id: GraphPath.GroupSegments.system,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           AppNode.makeGroup({
-            id: Paths.GroupSegments.system,
-            type: Paths.GroupTypes.system,
+            id: GraphPath.GroupSegments.system,
+            type: GraphPath.GroupTypes.system,
             label: ['nav-tree-group-system.label', { ns: meta.profile.key }],
             space,
             position: 900,
@@ -62,11 +62,11 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // Types section virtual node under the system group.
     GraphBuilder.createExtension({
       id: 'databaseSection',
-      match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.system),
+      match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
       connector: (space) => {
         return Effect.succeed([
           AppNode.makeSection({
-            id: Paths.Segments.database,
+            id: GraphPath.Segments.database,
             type: DATABASE_SECTION_TYPE,
             label: ['database-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
@@ -80,7 +80,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
       id: 'database',
-      url: { key: 'type', kind: 'item', path: [Paths.GroupSegments.system, Paths.Segments.database] },
+      url: { key: 'type', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === DATABASE_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -151,7 +151,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // {All} virtual node + view objects under each schema node.
     GraphBuilder.createExtension({
       id: 'schemaChildren',
-      url: { key: 'view', kind: 'item', path: [Paths.GroupSegments.system, Paths.Segments.database] },
+      url: { key: 'view', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         // Scoped to the Database section's own type nodes (both static and database schemas — see
@@ -196,7 +196,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // subgraph.
     GraphBuilder.createExtension({
       id: 'databaseObjects',
-      url: { key: 'db', kind: 'item', path: [Paths.GroupSegments.system, Paths.Segments.database] },
+      url: { key: 'db', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)
@@ -281,7 +281,7 @@ const createSchemaNode = ({
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
   // a stored schema's entity id, or a static schema's typename.
-  const slug = Paths.getTypeSlug(schema);
+  const slug = GraphPath.getTypeSlug(schema);
   const iconAnnotation =
     Type.getDatabase(schema) == null
       ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))

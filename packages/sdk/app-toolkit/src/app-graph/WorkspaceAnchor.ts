@@ -4,7 +4,7 @@
 
 import { GraphBuilder } from '@dxos/app-graph';
 
-import { Paths } from '../app';
+import { UrlPath } from '../app';
 
 /**
  * Declaration-only graph extension that registers the workspace tier as a URL {@link GraphBuilder.UrlBinding}
@@ -17,5 +17,5 @@ import { Paths } from '../app';
 export const createWorkspaceAnchorExtension = (): GraphBuilder.BuilderExtension[] =>
   GraphBuilder.createExtensionRaw({
     id: 'workspaceAnchor',
-    url: { key: Paths.WORKSPACE_URL_KEY, kind: 'anchor', path: [] },
+    url: { key: UrlPath.WORKSPACE_KEY, kind: 'anchor', path: [] },
   });

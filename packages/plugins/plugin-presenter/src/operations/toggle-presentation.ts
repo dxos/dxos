@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof PresenterOperation.TogglePresentatio
           return;
         }
 
-        const objectPath = Paths.getObjectPathFromObject(object);
+        const objectPath = GraphPath.getObjectPathFromObject(object);
         const presenterId = getPresentationPath(objectPath);
         const ephemeral = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
         const presenting = ephemeral.fullscreen === presenterId;
@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof PresenterOperation.TogglePresentatio
           }
           yield* Operation.invoke(LayoutOperation.Open, {
             subject: [presenterId],
-            workspace: Paths.getSpacePath(db.spaceId),
+            workspace: GraphPath.getSpacePath(db.spaceId),
           });
         } else {
           if (presenting) {
@@ -51,7 +51,7 @@ const handler: Operation.WithHandler<typeof PresenterOperation.TogglePresentatio
           }
           yield* Operation.invoke(LayoutOperation.Open, {
             subject: [objectPath],
-            workspace: Paths.getSpacePath(db.spaceId),
+            workspace: GraphPath.getSpacePath(db.spaceId),
           });
         }
       }),

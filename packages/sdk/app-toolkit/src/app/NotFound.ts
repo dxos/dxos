@@ -13,7 +13,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Attention } from '@dxos/react-ui-attention/types';
 
-import * as Paths from './Paths';
+import * as GraphPath from './GraphPath';
 import * as UrlPath from './UrlPath';
 
 export const NOT_FOUND_NODE_ID = 'not-found';
@@ -47,7 +47,7 @@ export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): v
  * Validate a navigation target by expanding the graph path and checking existence.
  * Returns the original subjectId if valid, or NOT_FOUND_PATH if the target doesn't exist.
  *
- * Resolution is three independent steps: `Paths.tryGetEid` parses the path into an EID (structure
+ * Resolution is three independent steps: `GraphPath.tryGetEid` parses the path into an EID (structure
  * only — it does not validate the full container path), then existence is checked against that EID
  * locally and, failing that, remotely. The path is considered valid if the object exists in either
  * store — we render it best-effort even if intermediate path segments (collection, feed, etc.) no
@@ -63,7 +63,7 @@ export const validateNavigationTarget = (params: {
   const { graph, subjectId, checkLocalExistence, checkRemoteExistence } = params;
 
   // Skip validation for system paths.
-  if (subjectId === NOT_FOUND_PATH || subjectId === Node.RootId || Paths.isPinnedWorkspace(subjectId)) {
+  if (subjectId === NOT_FOUND_PATH || subjectId === Node.RootId || GraphPath.isPinnedWorkspace(subjectId)) {
     return Effect.succeed(subjectId);
   }
 
@@ -78,7 +78,7 @@ export const validateNavigationTarget = (params: {
 
   return Effect.gen(function* () {
     // Parse the path into an EID. If it doesn't parse, there's nothing to open.
-    const id = Paths.tryGetEid(graph, subjectId);
+    const id = GraphPath.tryGetEid(graph, subjectId);
     if (Option.isNone(id)) {
       return NOT_FOUND_PATH;
     }

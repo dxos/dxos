@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -33,7 +33,7 @@ export default Capability.makeModule(
        */
       GraphBuilder.createExtension({
         id: 'studioSection',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
         connector: (space) =>
           Effect.succeed([
             AppNode.makeSection({
@@ -50,7 +50,7 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'studioArtifactsNode',
-        url: { key: 'studio', kind: 'item', path: [Paths.GroupSegments.content, STUDIO_SEGMENT] },
+        url: { key: 'studio', kind: 'item', path: [GraphPath.GroupSegments.content, STUDIO_SEGMENT] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === STUDIO_SECTION_TYPE && space ? Option.some(space) : Option.none();

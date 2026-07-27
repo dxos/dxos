@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, getRootAttendableId } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -27,7 +27,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
 
     const pivotId = cardRef.current ? getRootAttendableId(cardRef.current) : undefined;
     return Effect.gen(function* () {
-      const organizationPath = Paths.getObjectPathFromObject(organization);
+      const organizationPath = GraphPath.getObjectPathFromObject(organization);
       const db = Obj.getDatabase(organization);
       yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       yield* invoke(LayoutOperation.Open, {
@@ -35,7 +35,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
         // A card always opens beside the plank it lives in, never replacing it.
         pivotId,
         disposition: 'add',
-        workspace: db ? Paths.getSpacePath(db.spaceId) : undefined,
+        workspace: db ? GraphPath.getSpacePath(db.spaceId) : undefined,
       });
     }).pipe(EffectEx.runAndForwardErrors);
   }, [invoke, organization]);

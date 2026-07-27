@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -231,7 +231,9 @@ export default Capability.makeModule(
                 {
                   id: 'action.openMeetingForEvent',
                   data: Effect.fnUntraced(function* () {
-                    yield* invoker.invoke(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(meeting)] });
+                    yield* invoker.invoke(LayoutOperation.Open, {
+                      subject: [GraphPath.getObjectPathFromObject(meeting)],
+                    });
                   }),
                   properties: {
                     label: ['open-meeting-for-event.label', { ns: meta.profile.key }],

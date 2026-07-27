@@ -11,12 +11,7 @@ import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, type URI } from '@dxos/keys';
 
-/**
- * The URL prefix key for the workspace tier (`/w/<workspace>/…`). The canonical declaration: the
- * workspace-anchor graph extension declares its `url.key` from this, and serializers fall back to it
- * when no anchor extension is registered (see `PathResolution.getAnchorKey`).
- */
-export const WORKSPACE_URL_KEY = 'w';
+import * as UrlPath from './UrlPath';
 
 /**
  * Prefix for pinned (non-space) workspace IDs in the graph.
@@ -203,7 +198,7 @@ export const getShareableLinkPath = (builder: GraphBuilder.GraphBuilder, nodeId:
   }
   // The declared workspace-anchor key; falls back to the canonical constant when no anchor extension is
   // registered (e.g. a bare builder in a test).
-  const workspaceKey = PathResolution.getAnchorKey(builder) ?? WORKSPACE_URL_KEY;
+  const workspaceKey = PathResolution.getAnchorKey(builder) ?? UrlPath.WORKSPACE_KEY;
   return Option.some(`/${workspaceKey}/${workspace}${urlSegment}`);
 };
 
@@ -231,7 +226,7 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  *
  * ```ts
  * const { getSectionPath: getChatsPath, getObjectPath: getChatPath } =
- *   createTypeSectionPaths(Chat.Chat, { groupId: Paths.GroupSegments.ai });
+ *   createTypeSectionPaths(Chat.Chat, { groupId: GraphPath.GroupSegments.ai });
  * export { getChatsPath, getChatPath };
  * ```
  *
