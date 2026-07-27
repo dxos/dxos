@@ -63,17 +63,21 @@ const isReservedUrlKey = (key: string): boolean =>
  * resolution matches a node produced by any of them. Shared with {@link buildUrlKeyTable} so the
  * reservation rule is expressed exactly once.
  */
-const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): GraphBuilder.BuilderExtension[] => {
+type UrlKeyedExtension = GraphBuilder.BuilderExtension & { url: GraphBuilder.UrlBinding };
+
+/** Narrows to an extension that declared a URL binding, so callers need no non-null assertion. */
+const isUrlKeyed = (extension: GraphBuilder.BuilderExtension): extension is UrlKeyedExtension => !!extension.url?.key;
+
+const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtension[] => {
   const extensions = Function.pipe(Record.values(builder.getExtensions()), Array.sortBy(Position.compare));
 
-  const keyed: GraphBuilder.BuilderExtension[] = [];
+  const keyed: UrlKeyedExtension[] = [];
   for (const extension of extensions) {
-    const key = extension.url?.key;
-    if (!key) {
+    if (!isUrlKeyed(extension)) {
       continue;
     }
-    if (isReservedUrlKey(key)) {
-      log.warn('reserved URL prefix key', { key, extension: extension.id });
+    if (isReservedUrlKey(extension.url.key)) {
+      log.warn('reserved URL prefix key', { key: extension.url.key, extension: extension.id });
       continue;
     }
     keyed.push(extension);
@@ -91,7 +95,7 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): GraphBuilder.Bu
 const buildKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, string[]> => {
   const table = new Map<string, string[]>();
   for (const extension of getKeyedExtensions(builder)) {
-    const key = extension.url!.key;
+    const key = extension.url.key;
     const existing = table.get(key);
     if (existing) {
       existing.push(extension.id);
@@ -127,9 +131,9 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
     table.set(linkedKey, { key: linkedKey, hasId: true, anchor: false });
   }
   for (const extension of getKeyedExtensions(builder)) {
-    const key = extension.url!.key;
+    const key = extension.url.key;
     // The tokenizer's flat lookup is derived from `kind`: a singleton has no id.
-    const hasId = extension.url!.kind !== 'singleton';
+    const hasId = extension.url.kind !== 'singleton';
     const anchor = false;
     const existing = table.get(key);
     if (existing && existing.hasId !== hasId) {

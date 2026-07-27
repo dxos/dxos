@@ -299,9 +299,14 @@ export type NavigationQuery = {
  * Resolves a query to navigation targets.
  * Each plugin interprets the query and returns matching targets.
  * When called without a query, returns the plugin's default navigable pages.
+ *
+ * Requires `Database.Service`: a resolver turns an object URI into a path, which means loading the
+ * object. The caller derives the database from the query's space and provides the layer.
  * @category Capability
  */
-export type NavigationTargetResolver = (query?: NavigationQuery) => Effect$.Effect<NavigationTarget[]>;
+export type NavigationTargetResolver = (
+  query?: NavigationQuery,
+) => Effect$.Effect<NavigationTarget[], never, Database.Service>;
 
 export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
   'org.dxos.app-framework.capability.navigationTargetResolver',

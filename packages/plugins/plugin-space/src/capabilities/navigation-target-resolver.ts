@@ -14,8 +14,7 @@ import { meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // TODO(wittjosiah): Remove cast once NavigationTargetResolver type includes Database.Service.
-    const resolver: AppCaps.NavigationTargetResolver = ((query) =>
+    const resolver: AppCaps.NavigationTargetResolver = (query) =>
       Effect.gen(function* () {
         if (!query?.uri) {
           return [
@@ -51,7 +50,7 @@ export default Capability.makeModule(
             type: typename,
           },
         ];
-      })) as AppCaps.NavigationTargetResolver;
+      });
 
     return Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver);
   }),

@@ -37,7 +37,6 @@ const newDeck = (overrides: Partial<Record<string, unknown>> = {}) => ({
   inactive: [],
   plankSizing: {},
   companionOpen: false,
-  companionFrameSizing: {},
   ...overrides,
 });
 
@@ -93,6 +92,18 @@ describe('migratePersistedState', () => {
 
     const migrated = JSON.parse(storage.getItem(STORAGE_KEY)!);
     expect(migrated.decks.default.companionOrientation).toBeUndefined();
+  });
+
+  test('strips companionFrameSizing when migrating', ({ expect }) => {
+    const storage = makeStorage(
+      legacyBlob({ default: newDeck({ companionFrameSizing: { companion: 24 }, solo: 'item-a' }) }),
+    );
+
+    migratePersistedState(STORAGE_KEY, storage);
+
+    const migrated = JSON.parse(storage.getItem(STORAGE_KEY)!);
+    expect(migrated.decks.default.companionFrameSizing).toBeUndefined();
+    expect(migrated.decks.default.active).toEqual(['item-a']);
   });
 
   test('leaves an already new-shaped blob untouched', ({ expect }) => {

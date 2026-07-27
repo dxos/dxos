@@ -17,8 +17,7 @@ import { getMailboxPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // TODO(wittjosiah): Remove cast once NavigationTargetResolver type includes Database.Service.
-    const resolver: AppCapabilities.NavigationTargetResolver = ((query) =>
+    const resolver: AppCapabilities.NavigationTargetResolver = (query) =>
       Effect.gen(function* () {
         if (!query?.uri) {
           return [
@@ -49,7 +48,7 @@ export default Capability.makeModule(
             type: Type.getTypename(Mailbox.Mailbox),
           },
         ];
-      })) as AppCapabilities.NavigationTargetResolver;
+      });
 
     return Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver);
   }),

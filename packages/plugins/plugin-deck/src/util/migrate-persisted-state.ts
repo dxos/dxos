@@ -11,15 +11,15 @@ import { PlankSizing } from '#types';
 
 /**
  * Superset of the current on-disk deck shape that additionally accepts fields absent from the current
- * deck schema (`solo`, `initialized`, `fullscreen`, `companionOrientation`), so a pre-migration blob
- * decodes without error and its legacy fields can be detected and stripped.
+ * deck schema (`solo`, `initialized`, `fullscreen`, `companionOrientation`, `companionFrameSizing`), so
+ * a pre-migration blob decodes without error and its legacy fields can be detected and stripped.
  */
 const LegacyDeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
   plankSizing: Schema.mutable(PlankSizing),
   companionOpen: Schema.Boolean,
-  companionFrameSizing: Schema.mutable(PlankSizing),
+  companionFrameSizing: Schema.optional(Schema.mutable(PlankSizing)),
   solo: Schema.optional(Schema.String),
   initialized: Schema.optional(Schema.Boolean),
   fullscreen: Schema.optional(Schema.Boolean),
@@ -57,6 +57,7 @@ const migrateDeck = ({
   initialized: _initialized,
   fullscreen: _fullscreen,
   companionOrientation: _companionOrientation,
+  companionFrameSizing: _companionFrameSizing,
   ...deck
 }: LegacyDeckState) => ({
   ...deck,

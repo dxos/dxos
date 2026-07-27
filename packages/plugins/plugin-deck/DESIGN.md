@@ -101,7 +101,6 @@ type DeckState = {
   plankSizing: Record<string, number>; // rem widths keyed by plank id; sliding presentation only
   tilingSizing?: number; // tiling: start pane width in rem; the end pane fills the remainder
   companionOpen: boolean;
-  companionFrameSizing: Record<string, number>;
 };
 
 type EphemeralDeckState = {

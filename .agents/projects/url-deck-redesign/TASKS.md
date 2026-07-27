@@ -317,8 +317,6 @@ Recorded 2026-07-27 from review of the landed deck.
 - [ ] **Connector re-emission churn** — after the latch fix, real expansions per navigation fell ~36x
       but `existing node` churn stayed flat, so connectors are re-running for another reason (likely atom
       recomputation). Unmeasured.
-- [ ] **`QueryExecutor` dispose-callback leak** (echo, not this PR) — "Context has a large number of
-      dispose callbacks" warns in every session.
 - [ ] **`Graph.initialize` + the builder `resolver` mechanism** — kept, TODO-marked. No extension
       declares a resolver and `initialize` was called zero times in a live session; remove once
       something either needs it or clearly never will.

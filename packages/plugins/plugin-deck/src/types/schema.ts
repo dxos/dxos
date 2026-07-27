@@ -35,8 +35,6 @@ export const DeckState = Schema.Struct({
   tilingSizing: Schema.optional(Schema.Number),
   /** Whether the companion pane is visible alongside the active plank(s). */
   companionOpen: Schema.Boolean,
-  /** Persisted companion frame widths in rem, keyed by frame ID. */
-  companionFrameSizing: Schema.mutable(PlankSizing),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
@@ -45,7 +43,6 @@ export const defaultDeck: DeckState = {
   inactive: [],
   plankSizing: {},
   companionOpen: false,
-  companionFrameSizing: {},
 };
 
 //

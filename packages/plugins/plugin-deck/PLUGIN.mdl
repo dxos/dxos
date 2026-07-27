@@ -48,7 +48,6 @@ type DeckState
     plankSizing: Record<string, number>   # persisted plank widths in rem, keyed by item ID (sliding presentation only)
     tilingSizing?: number         # tiling: start pane width in rem (the end pane fills the remainder); absent means an even split
     companionOpen: boolean        # whether the companion pane is visible
-    companionFrameSizing: Record<string, number>  # companion frame widths in rem
     # NOTE: the selected companion variant lives in react-ui-attention view state (global,
     # localStorage), not on DeckState — see util/companion-view-state.ts. The companion's width is
     # tilingSizing: it is a plank, so a plank plus its companion is the tiling presentation.
