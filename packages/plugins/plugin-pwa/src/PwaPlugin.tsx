@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Predicate from 'effect/Predicate';
+import * as Schedule from 'effect/Schedule';
 import { registerSW } from 'virtual:pwa-register';
 
 import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
@@ -13,7 +16,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000; // 1h
+const UPDATE_CHECK_INTERVAL = Duration.hours(1);
 
 /**
  * Progress envelope posted by the host's service worker while it precaches a build. The contract is
@@ -40,17 +43,11 @@ export const PwaPlugin = Plugin.define(meta).pipe(
     activate: Effect.fnUntraced(function* () {
       const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
 
-      let timer: ReturnType<typeof setInterval> | undefined;
+      let registration: ServiceWorkerRegistration | undefined;
 
       const updateSW = registerSW({
-        onRegisteredSW: (_swUrl, registration) => {
-          if (!registration) {
-            return;
-          }
-          // The browser only re-fetches the worker script on navigation, but Composer sessions stay
-          // open for days, so without polling a deployed update is never noticed and the refresh
-          // toast only ever appears on reload.
-          timer = setInterval(() => void registration.update(), UPDATE_CHECK_INTERVAL);
+        onRegisteredSW: (_swUrl, swRegistration) => {
+          registration = swRegistration;
         },
         onNeedRefresh: () => {
           void invokePromise(LayoutOperation.AddToast, {
@@ -75,7 +72,17 @@ export const PwaPlugin = Plugin.define(meta).pipe(
         },
       });
 
-      return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => clearInterval(timer)));
+      // The browser only re-fetches the worker script on navigation, but Composer sessions stay open
+      // for days, so without polling a deployed update is never noticed and the refresh toast only
+      // ever appears on reload. `Effect.repeat` runs the first check straight away, before
+      // `onRegisteredSW` has fired — the optional call makes that opening tick a no-op.
+      const fiber = yield* Effect.promise(async () => {
+        await registration?.update();
+      }).pipe(Effect.repeat(Schedule.fixed(UPDATE_CHECK_INTERVAL)), Effect.forkDaemon);
+
+      // Return the interruption effect directly; Fiber.interrupt is async and would throw
+      // AsyncFiberException if wrapped in Effect.runSync.
+      return Capability.contributes(Capabilities.Null, null, () => Fiber.interrupt(fiber));
     }),
   }),
   // Separate from `register-pwa` so that an app without the progress registry still registers the
