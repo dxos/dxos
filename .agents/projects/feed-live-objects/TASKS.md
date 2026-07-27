@@ -4,12 +4,13 @@ PR **#12235** (branch `t3code/edb619e9`). See DESIGN.md for architecture.
 
 ## Status
 
-Implementation complete; PR open (draft). Merged `main` up to `5585ec89` at
-`fb5cd015`; **CI fully green on `fb5cd015`** (check, test, build, workerd,
-storybook, changeset-reminder). Dmytro's review rounds addressed and replied to.
+Implementation complete. **PR is out of draft (ready for review)** as of
+`5f720c70`. Merged `main` up to `5585ec89`; CI fully green on `fb5cd015`
+(check, test, build, workerd, storybook, changeset-reminder). Dmytro's review
+rounds addressed and replied to.
 
-Still in draft deliberately: the two CodeRabbit durability threads below are
-unanswered, and there is no approving review yet.
+Blocking merge: no approving review yet, and the two CodeRabbit durability
+threads below are still unanswered.
 
 ## Done
 
@@ -53,10 +54,11 @@ unanswered, and there is no approving review yet.
       is not evidence against them: no test covers either path.
 - [ ] Resolve/reply to the 19 open review threads. Dmytro's 5 all have
       "Done in `<sha>`" replies but none are marked resolved.
-- [ ] Land: take out of draft, get an approving review, merge queue; surface the
-      Composer preview URL. Note CodeRabbit refuses to re-review while the PR is
-      a draft, so its walkthrough still describes the removed `isUpdate` /
-      `ignoreUpdates` / `feed-delivery-state.ts` — misleading to a cold reviewer.
+- [x] Out of draft (`5f720c70`) — this also unblocks CodeRabbit, which refused to
+      re-review while drafted and whose walkthrough still described the removed
+      `isUpdate` / `ignoreUpdates` / `feed-delivery-state.ts`.
+- [ ] Address the incoming CodeRabbit review (first real pass since Jul 16).
+- [ ] Land: approving review, then merge queue; surface the Composer preview URL.
 
 ## Open review questions (not yet answered on the PR)
 
@@ -86,17 +88,18 @@ dispatcher and read by nobody (no runnable gates on `type === 'created'`, the
 documented replacement for `ignoreUpdates`).
 
 The part that is _not_ additive is the exposure: live feed objects are opt-out
-free, so ~14 production feed call sites change behaviour with no code change, and
-direct assignment outside `Obj.update` now **throws** where it previously mutated
-in memory silently — `plugin-inbox` (MailboxArticle, app-graph-builder),
-`plugin-magazine` (FeedArticle, Subscription), `plugin-transcription`,
-`plugin-chess-com`, `plugin-pipeline`, `plugin-space` (ViewEditor, queue/query),
-`plugin-assistant/feed-logger`, plus scripts/presets. None were reviewed or
-tested against the new semantics. This is also why the two durability claims
-matter: `feed-logger` and `text-content` are write-then-dispose shapes.
+free, so ~14 production feed call sites inherit the new semantics with no code
+change, and direct assignment outside `Obj.update` now **throws** where it
+previously mutated in memory silently.
 
-- [ ] Audit those call sites for assignment outside `Obj.update` before landing,
-      or accept the risk explicitly.
+- [x] Audited those call sites — **clean, risk accepted (jdw)**. Nothing was
+      mutating feed objects before: in every production consumer `Scope.feed(...)`
+      only scopes a _query_, and the feed-derived objects are read-only (rendered
+      in lists/articles). The objects actually mutated — `view` in
+      `ViewEditor`/`PipelineProperties`, `space.properties` in `feed-logger` — are
+      space-db-backed and already had the throw-on-direct-assignment contract, and
+      all of them go through `Obj.update` or `useObject`'s updater. So the
+      opt-out-free change reaches no existing mutation path.
 
 ## Deferred (not blocking; own follow-ups)
 
