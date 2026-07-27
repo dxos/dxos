@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useManager } from '@dxos/react-ui-attention';
-import { DraftMessage, Message as MessageType } from '@dxos/types';
+import { Message as MessageType } from '@dxos/types';
 
 import {
   ConversationStack,
@@ -33,14 +33,14 @@ import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
 const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false });
 
 /**
- * `subject` is either a single message or its whole conversation (thread). The companion graph node
+ * `subject` is the opened message; its whole conversation (thread) is looked up here. The companion graph node
  * assigns the thread directly (see the `mailboxMessage` connector) so the article renders it without
  * re-querying; section/other callers may pass a single message. The thread already includes any
  * inline reply/forward drafts (the connector merges synced feed messages and local drafts in one
  * combined-scope query), interleaved chronologically.
  */
 export type MessageArticleProps = AppSurface.ArticleProps<
-  MessageType.Message | MessageType.Message[],
+  MessageType.Message,
   {
     mailbox?: Mailbox.Mailbox;
     testId?: string;
@@ -66,31 +66,27 @@ export const MessageArticle = ({
     attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
 
-  // When opened as its own plank the subject is a single message (an Echo object, so it gets the
-  // standard object companions); look up its whole conversation from the mailbox feed here, correlated
-  // by threadId across space + feed (one combined query).
-  // Array callers (sections) already pass the thread and skip the lookup.
-  const singleMessage = Array.isArray(subject) ? undefined : subject;
+  // The subject is one message; its conversation is correlated by threadId across space + feed in one
+  // combined query.
   const mailboxDb = mailbox ? Obj.getDatabase(mailbox) : undefined;
   const feed = useResolveRef(mailbox?.feed);
   const feedUri = feed ? Obj.getURI(feed, { prefer: 'absolute' }) : undefined;
   const conversation = useQuery(
     mailboxDb,
-    singleMessage && feedUri
-      ? Query.select(Filter.type(MessageType.Message, { threadId: singleMessage.threadId }))
+    feedUri
+      ? Query.select(Filter.type(MessageType.Message, { threadId: subject.threadId }))
           .from([Scope.space(), Scope.feed(feedUri)])
           .orderBy(Order.property('created', 'asc'))
       : Query.select(Filter.nothing()),
   ) as MessageType.Message[];
 
-  // Normalize the singular-or-plural subject to a conversation (chronological, drafts interleaved).
-  const messages: MessageType.Message[] = useMemo(() => {
-    if (Array.isArray(subject)) {
-      return subject;
-    }
-    // Synced messages always pass; drafts pass only when scoped to this mailbox and not yet superseded.
-    return mailbox && conversation.length > 0 ? dedupeSupersededDrafts(conversation, Obj.getURI(mailbox)) : [subject];
-  }, [subject, mailbox, conversation]);
+  // The conversation (chronological, drafts interleaved), falling back to the subject alone until the
+  // lookup resolves. Synced messages always pass; drafts pass only when scoped to this mailbox and not
+  // yet superseded.
+  const messages: MessageType.Message[] = useMemo(
+    () => (mailbox && conversation.length > 0 ? dedupeSupersededDrafts(conversation, Obj.getURI(mailbox)) : [subject]),
+    [subject, mailbox, conversation],
+  );
 
   // Contact extraction targets the conversation's space; any message resolves the same db.
   const db = Obj.getDatabase(messages[0]);
@@ -102,9 +98,8 @@ export const MessageArticle = ({
 
   // Expanded state.
   const { expanded, onExpandedChange, onCollapseAll, onExpandAll } = useMessageExpansion({
-    messages,
     messageIds,
-    singleMessage,
+    subject,
   });
 
   // Settings + view state.
@@ -230,24 +225,17 @@ export const MessageArticle = ({
 MessageArticle.displayName = 'MessageArticle';
 
 type UseMessageExpansionProps = {
-  messages: MessageType.Message[];
   messageIds: readonly string[];
-  /** The opened plank subject, when a single message was opened (drives the default-expanded anchor). */
-  singleMessage?: MessageType.Message;
+  /** The opened plank subject, which is expanded by default. */
+  subject: MessageType.Message;
 };
 
 // Expanded state lives here so the thread toolbar's collapse-all/expand-all can fold or unfold every message.
-const useMessageExpansion = ({ messages, messageIds, singleMessage }: UseMessageExpansionProps) => {
-  // The opened message (the plank's subject) is worth reading first; expand it by default and leave the
-  // rest collapsed. Array callers (no single subject) fall back to the most recent non-draft message.
-  // Drafts always render their composer, so they are irrelevant to the anchor.
-  const mostRecentId = useMemo(() => {
-    const recent = [...messages].reverse().find((message) => !DraftMessage.instanceOf(message));
-    return recent ? keyOf(recent) : undefined;
-  }, [messages]);
-  const openId = singleMessage ? keyOf(singleMessage) : mostRecentId;
+const useMessageExpansion = ({ messageIds, subject }: UseMessageExpansionProps) => {
+  // The opened message is worth reading first; expand it by default and leave the rest collapsed.
+  const openId = keyOf(subject);
 
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(openId ? [openId] : []));
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set([openId]));
   const onExpandedChange = useCallback((id: string, isExpanded: boolean) => {
     setExpanded((prev) => {
       const next = new Set(prev);
