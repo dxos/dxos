@@ -52,7 +52,7 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
       await invokePromise(LayoutOperation.Open, {
         subject: [qualifiedPath],
         pivotId,
-        positioning: 'end',
+        disposition: 'add',
       });
     },
     [pivotId, invokePromise],

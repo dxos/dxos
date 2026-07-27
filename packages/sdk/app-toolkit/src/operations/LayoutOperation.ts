@@ -310,7 +310,6 @@ export const Open = Operation.make({
         description: 'Navigation paths of the items to open.',
       }),
     ),
-    state: Schema.optional(Schema.Literal(true).annotations({ description: 'The items are being added.' })),
     variant: Schema.optional(Schema.String.annotations({ description: 'The variant of the item to open.' })),
     key: Schema.optional(
       Schema.String.annotations({
@@ -327,12 +326,6 @@ export const Open = Operation.make({
     ),
     pivotId: Schema.optional(
       Schema.String.annotations({ description: 'The id of the item to place new items next to.' }),
-    ),
-    positioning: Schema.optional(
-      Schema.Union(
-        Schema.Literal('start').annotations({ description: 'The items are being added before the pivot item.' }),
-        Schema.Literal('end').annotations({ description: 'The items are being added after the pivot item.' }),
-      ),
     ),
     disposition: Schema.optional(
       Schema.Literal('solo', 'add', 'auto').annotations({
