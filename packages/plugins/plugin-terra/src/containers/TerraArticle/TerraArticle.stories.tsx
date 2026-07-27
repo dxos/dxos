@@ -48,3 +48,12 @@ export const Hires: Story = {
     seed: 'terra-4',
   },
 };
+
+const ObjectsStory = () => {
+  const terra = useMemo(() => Terra.makeDemoWorld({ config: { seed: 'terra-4', resolution: 128 } }), []);
+  return <TerraArticle subject={terra} attendableId='story' role='article' />;
+};
+
+export const Objects: Story = {
+  render: () => <ObjectsStory />,
+};
