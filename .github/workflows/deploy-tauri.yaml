@@ -60,7 +60,7 @@ jobs:
         id: bump-version
         run: |
           # composer-app/package.json is the source of truth for the version: bumped by deploy-apps' release
-          # job for a production release, current otherwise. Production ships the clean version to the primary
+          # job for a production release, current otherwise. Production ships the clean version to the `main`
           # CrabNebula channel; labs/staging get a unique per-commit prerelease tagged with the env name
           # (which selects its channel).
           BASE=$(jq -r '.version' packages/apps/composer-app/package.json)
@@ -79,6 +79,7 @@ jobs:
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
         with:
+          environment: ${{ inputs.environment }}
           version: ${{ steps.bump-version.outputs.version }}
           ios-bundle-version: ${{ steps.bump-version.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
@@ -86,6 +87,7 @@ jobs:
       - name: Create draft non-production release
         uses: ./.github/actions/cn-release
         with:
+          environment: ${{ inputs.environment }}
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: draft
@@ -129,6 +131,7 @@ jobs:
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
         with:
+          environment: ${{ inputs.environment }}
           version: ${{ needs.draft_tauri.outputs.version }}
           ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
@@ -280,6 +283,7 @@ jobs:
         timeout-minutes: 30
         uses: ./.github/actions/cn-release
         with:
+          environment: ${{ inputs.environment }}
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
@@ -323,6 +327,7 @@ jobs:
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
         with:
+          environment: ${{ inputs.environment }}
           version: ${{ needs.draft_tauri.outputs.version }}
           ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
@@ -425,6 +430,7 @@ jobs:
         timeout-minutes: 30
         uses: ./.github/actions/cn-release
         with:
+          environment: ${{ inputs.environment }}
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
@@ -480,6 +486,7 @@ jobs:
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
         with:
+          environment: ${{ inputs.environment }}
           version: ${{ needs.draft_tauri.outputs.version }}
           ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
@@ -487,6 +494,7 @@ jobs:
       - name: Publish release
         uses: ./.github/actions/cn-release
         with:
+          environment: ${{ inputs.environment }}
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: publish
