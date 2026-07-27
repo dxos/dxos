@@ -15,7 +15,7 @@ projects:
     tasks: packages/plugins/plugin-terra/TASKS.md
     design: packages/plugins/plugin-terra/DESIGN.md
     prs: [12353]
-    resume: 'Phase 1 COMPLETE and in PR #12353 (Check green): deterministic Babylon planet, Terra ECHO type, TerraForm config panel, plus a new react-ui Slider primitive and react-ui-form labelEnd slot. Phase 2 COMPLETE through P2.9: pure sim core (geo, nav-grid, A* route, closed-form motion, SimEngine), TerraObject ECHO type, object meshes + thin-instance layer, smoke trails, and a play/pause + add-object toolbar. 82 tests green. Next: (1) visually tune object/trail scale in storybook once the host machine is idle — tonight's checks were blocked by macOS indexing daemons pinning the CPU; (2) land PR #12353; (3) Phase 3 backlog in DESIGN.md (surface camera + LOD, sun, clouds, explosions, submarines, MCP server).'
+    resume: 'Phase 1 COMPLETE and in PR #12353: deterministic Babylon planet, Terra ECHO type, TerraForm config panel, plus a new react-ui Slider primitive and react-ui-form labelEnd slot. Phase 2 COMPLETE through P2.9: pure sim core (geo, nav-grid, A* route, closed-form motion, SimEngine), TerraObject ECHO type, object meshes + thin-instance layer, smoke trails, and a play/pause + add-object toolbar. 82 tests green. Next: (1) visually tune object and trail scale in storybook once the host machine is idle, since verification was blocked by macOS indexing daemons pinning the CPU; (2) land PR #12353; (3) Phase 3 backlog in DESIGN.md (surface camera + LOD, sun, clouds, explosions, submarines, MCP server).'
 
   - name: plugin-projects
     status: active
