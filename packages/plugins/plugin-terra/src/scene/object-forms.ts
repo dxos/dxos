@@ -88,12 +88,9 @@ const makeBoat = (scene: Scene): Mesh => {
   const hullHeight = 0.15;
   const sternLength = 1.3;
   const bowLength = 0.2;
-  const sternBack = -0.9;
-  const bowBase = sternBack + sternLength;
-  const bowTip = bowBase + bowLength;
 
   const stern = CreateBox('stern', { width: beam, height: hullHeight, depth: sternLength }, scene);
-  stern.position.z = sternBack + sternLength / 2;
+  stern.position.z = sternLength / 2;
 
   // A tessellation-3 cylinder is an equilateral triangular prism (radius-1 apex 1 unit from
   // center, base 0.5 units the other way, base half-width sqrt(3)/2) — scaled into a long, narrow
@@ -102,11 +99,16 @@ const makeBoat = (scene: Scene): Mesh => {
   bow.scaling.x = bowLength / 1.5;
   bow.scaling.z = beam / 2 / (Math.sqrt(3) / 2);
   bow.rotation.y = -HALF_PI;
-  bow.position.z = bowTip - bowLength / 1.5;
+  // The prism's base sits 0.5 local units behind its origin, so after the x-scale its base plane is
+  // this far back; deriving the offset (rather than eyeballing one) puts the base exactly on the
+  // hull's front face, and the overlap buries the seam so the merged hull reads as one solid piece.
+  const bowBaseOffset = (bowLength / 1.5) * 0.5;
+  const hullOverlap = hullHeight / 4;
+  bow.position.z = sternLength + bowBaseOffset - hullOverlap;
 
-  const cabin = CreateBox('cabin', { width: 0.18, height: 0.14, depth: 0.28 }, scene);
-  cabin.position.y = hullHeight / 2 + 0.07;
-  cabin.position.z = -0.7;
+  const cabin = CreateBox('cabin', { width: 0.18, height: 0.1, depth: 0.2 }, scene);
+  cabin.position.y = hullHeight / 2 + 0.05;
+  cabin.position.z = 0.15;
 
   return mergeParts('boat', [stern, bow, cabin], scene, new Color3(0.18, 0.22, 0.26));
 };
