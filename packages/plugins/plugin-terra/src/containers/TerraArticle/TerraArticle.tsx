@@ -23,6 +23,7 @@ export const TerraArticle = ({ subject: terra }: TerraArticleProps) => {
     if (!canvasRef.current) {
       return;
     }
+
     const manager = new SceneManager(canvasRef.current);
     managerRef.current = manager;
     return () => {
@@ -38,6 +39,7 @@ export const TerraArticle = ({ subject: terra }: TerraArticleProps) => {
     if (!manager) {
       return;
     }
+
     // Debounce regeneration so slider/form drags do not thrash the mesh builder.
     const handle = setTimeout(() => manager.render(generatePlanet(values)), 150);
     return () => clearTimeout(handle);
@@ -45,9 +47,14 @@ export const TerraArticle = ({ subject: terra }: TerraArticleProps) => {
 
   return (
     <Panel.Root>
+      <Panel.Toolbar />
       <Panel.Content asChild>
         <div className='relative grow'>
-          <canvas ref={canvasRef} className='dx-container absolute inset-0' style={{ touchAction: 'none' }} />
+          <canvas
+            ref={canvasRef}
+            className='dx-container absolute inset-0 outline-none'
+            style={{ touchAction: 'none' }}
+          />
         </div>
       </Panel.Content>
     </Panel.Root>
