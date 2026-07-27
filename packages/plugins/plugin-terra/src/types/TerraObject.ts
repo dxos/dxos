@@ -60,6 +60,7 @@ export type MakeProps = {
   spawnedAt: number;
 };
 
+/** Creates a `TerraObject` from the given properties; positions are derived at runtime, never stored. */
 export const make = (props: MakeProps): TerraObject => Obj.make(TerraObject, props);
 
 /** The medium a kind travels through, which selects its passability rule when routing. */
