@@ -53,7 +53,7 @@ unanswered, and there is no approving review yet.
 
 ## Open review questions (not yet answered on the PR)
 
-- `waitForPendingWrites` checks dirty state once and awaits only a *snapshot* of
+- `waitForPendingWrites` checks dirty state once and awaits only a _snapshot_ of
   `#inFlight`, so `Database.flush()` may resolve while a retry is still queued.
 - `dispose()` reaches `#dirtyCores.clear()` before the scheduled append, so a
   same-tick `Obj.update` followed by close can drop the update.
@@ -63,7 +63,7 @@ unanswered, and there is no approving review yet.
 - `FeedHandle` now validates rather than asserts: `EntityId.make` where an id
   must be well-formed, `EntityId.isValid` narrowing in `delete`, and no cast in
   `upsertFromJSON` (the guard above already narrows `json.id`).
-- `EntityId.make` *throws* on a malformed id where the old cast silently stored a
+- `EntityId.make` _throws_ on a malformed id where the old cast silently stored a
   bad `#cores` key. Intentional — the inbound poll path already drops ids failing
   `EntityId.isValid` — but it is a behaviour change on the append path.
 - `getCachedObjectById`'s `as T` is retained: it is exactly what
