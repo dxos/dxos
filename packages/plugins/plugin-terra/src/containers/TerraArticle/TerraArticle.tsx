@@ -17,7 +17,7 @@ import { meta } from '#meta';
 import { Terra, TerraObject } from '#types';
 
 import { SceneFpsWidget, SceneManager, type TerraConfigValues, generatePlanet } from '../../engine';
-import { ObjectLayer } from '../../scene';
+import { ObjectLayer, TrailLayer } from '../../scene';
 import { SimEngine, buildNavGrid } from '../../sim';
 
 /** Tracks pause state for the render-loop clock: while paused, `pausedAtMs` freezes the sim time; on resume, the elapsed pause duration is folded into `pausedTotalMs` so the clock continues from where it froze rather than jumping ahead. */
@@ -39,6 +39,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
   const objectLayerRef = useRef<ObjectLayer | null>(null);
+  const trailLayerRef = useRef<TrailLayer | null>(null);
   const simEngineRef = useRef<SimEngine | null>(null);
   // Mutated directly by `handleTogglePlaying` and read fresh each frame by the mount-once render-loop
   // observer below — mirrors `simEngineRef`'s ref-for-freshness pattern so the closure never goes stale.
@@ -62,6 +63,8 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 
     const layer = new ObjectLayer({ scene: manager.scene });
     objectLayerRef.current = layer;
+    const trails = new TrailLayer({ scene: manager.scene });
+    trailLayerRef.current = trails;
     simEngineRef.current = buildSimEngine(Terra.toConfigValues(terra), resolveDefinitions(terra));
 
     const observer: Observer<Scene> = manager.scene.onBeforeRenderObservable.add(() => {
@@ -77,11 +80,15 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       const nowMs = (clock.pausedAtMs ?? performance.now()) - clock.pausedTotalMs;
       engine.evaluateAt(nowMs);
       layer.update(engine.objects);
+      // Shares the same pause-adjusted clock as the sim, so trails freeze in place with everything else.
+      trails.update(engine.objects, nowMs);
     });
 
     return () => {
       manager.scene.onBeforeRenderObservable.remove(observer);
       simEngineRef.current = null;
+      trails.dispose();
+      trailLayerRef.current = null;
       layer.dispose();
       objectLayerRef.current = null;
       fps.dispose();

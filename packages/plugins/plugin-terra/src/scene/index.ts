@@ -4,3 +4,4 @@
 
 export * from './object-forms';
 export * from './object-layer';
+export * from './trail-layer';
