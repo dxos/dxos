@@ -33,13 +33,9 @@ orbiting camera, and a live config panel — rendered from a `Terra` ECHO object
 - [x] **Task 10b — react-ui `Slider` + `TerraForm` panel** — new Radix-based `Slider` primitive in `@dxos/react-ui`; `TerraForm` via `react-ui-form` `fieldMap`; `labelEnd` slot added to `FormRow` so the value sits on the label line; schema `title` annotations for human labels; panel background. Sliders verified to regenerate the planet live.
   - Fixed: slider fields threw `Input must be used within Input` (renderer bypassed `Form.Row`'s `Input.Root`); added `TerraForm.test.tsx` and switched the node test project to `happy-dom`.
   - In flight: slider thumb circle is invisible (`is-4`/`bs-4` generate no CSS) — must always show, except when disabled.
-- [ ] **Task 11 — Capabilities + plugin wiring**
-  - `capabilities/create-object.ts` (mirror plugin-voxel), `capabilities/react-surface.tsx` (Article + Section filters), `capabilities/index.ts`.
-  - Wire `TerraPlugin.tsx`: create-object, schema, surface, translations, `PLUGIN.mdl` asset.
-- [ ] **Task 12 — Full verification**
-  - `plugin-terra:test` / `:lint` / `:build` green; storybook regression incl. a top-down angle (winding guard).
-  - Audit the diff for casts, non-null `!`, and narrative comments.
-- [ ] **Task 13 — Changeset** — `.changeset/*.md` naming `@dxos/plugin-terra`.
+- [x] **Task 11 — Capabilities + plugin wiring** — `create-object`, `react-surface` (Article + Section), lazy `capabilities/index.ts`; `TerraPlugin.tsx` registers create-object, schema, surface, translations, and the `PLUGIN.mdl` asset. Terra is now creatable in a space.
+- [x] **Task 12 — Full verification** — `plugin-terra` test/lint/build green (24 tests); `react-ui` and `react-ui-form` suites green.
+- [x] **Task 13 — Changeset** — `.changeset/react-ui-slider-primitive.md`, `@dxos/react-ui: minor` (the consumer-visible part is the new `Slider` primitive + `labelEnd` slot; plugin-terra itself is private).
 - [ ] **Final whole-branch review** — most-capable-model reviewer over `merge-base..HEAD`; triage the Minor findings collected during the per-task gates (redundant `normalize()` in `cubed-sphere.test.ts`; JSDoc on vector primitives; `biomes.ts` field comments state what not why).
 
 ### References
