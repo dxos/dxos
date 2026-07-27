@@ -366,6 +366,14 @@ export class FeedHandle {
    * Wait for every pending local `Obj.update` to be captured and sent (not for it to be echoed back
    * through polling — the index that serves queries is caught up synchronously by the query host
    * itself, so callers don't need to wait on our own poll cycle). Mirrors `RepoProxy.flush`.
+   *
+   * Best-effort, matching the pre-existing append contract: a failed send re-queues its cores and
+   * reschedules, so this can return with a retry still pending, and the failure surfaces only via
+   * {@link error} rather than rejecting.
+   *
+   * TODO(wittjosiah): Drain until `#dirtyCores` and `#inFlight` both settle and propagate a
+   *   persistent failure, so `db.flush()` cannot report success over unwritten state. Needs a
+   *   bounded retry policy first — an unbounded drain would hang on a permanently failing send.
    */
   async waitForPendingWrites(): Promise<void> {
     if (this.#dirtyCores.size > 0) {
@@ -561,6 +569,11 @@ export class FeedHandle {
   }
 
   async dispose() {
+    // Persist before teardown: a same-tick `Obj.update` is still queued for the background append,
+    // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still
+    // live, and cannot reject — `waitForPendingWrites` is best-effort by contract.
+    await this.waitForPendingWrites();
+
     this._pollingHandlers = 0;
     if (this._pollingInterval) {
       clearTimeout(this._pollingInterval);

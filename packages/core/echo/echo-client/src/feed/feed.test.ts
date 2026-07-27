@@ -311,6 +311,30 @@ describe('Feed', () => {
       expect(results).toHaveLength(1);
       expect((results[0] as TestSchema.Person).name).toEqual('john');
     });
+
+    test('disposing the feed handle flushes a same-tick update instead of dropping it', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      const feed = db.add(Feed.make({ name: 'people' }));
+      const john = db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      await db.flush();
+
+      // Mutate and immediately tear the handle down, with no intervening flush: the append is only
+      // queued for the background scheduler, so disposal has to drain it first.
+      Obj.update(john, (john) => {
+        john.name = 'john v2';
+      });
+      await db.evictFeedHandle(feed);
+
+      const feedUri = Feed.getFeedUri(feed);
+      if (feedUri === undefined) {
+        throw new Error('Expected the feed to have a URI once added to the database.');
+      }
+      const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
+      expect(results).toHaveLength(1);
+      expect((results[0] as TestSchema.Person).name).toEqual('john v2');
+    });
   });
 
   test('Ref.make on a feed item stores a Queue DXN and does not leak into space.db', async ({ expect }) => {
