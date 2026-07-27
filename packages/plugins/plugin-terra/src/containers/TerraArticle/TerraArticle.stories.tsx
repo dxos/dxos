@@ -21,7 +21,7 @@ const DefaultStory = ({ seed }: StoryArgs) => {
     () =>
       Terra.make({
         config: {
-          seed: seed ?? 'terra-1',
+          seed: seed ?? 'terra-4',
           resolution: 256,
         },
       }),
