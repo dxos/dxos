@@ -66,20 +66,15 @@ export type BuilderExtension = Readonly<{
  * the whole URL contract for the nodes it produces. The `kind` is the *resolution tier*: what a pair
  * with this key resolves against.
  *
- * - `'anchor'`    — Resolves at the graph root and *establishes the base* that subsequent pairs resolve
- *                   against; consumed as a workspace rebase, never opened as an item. Carries an id (the
- *                   workspace). The workspace tier (`w/<workspace>`).
  * - `'item'`      — Resolves against the current anchor (workspace) base, addressed by a variable id.
  *                   The default addressable node; may itself have children (e.g. a mailbox). (`doc/<id>`).
  * - `'singleton'` — Resolves against the current anchor base, but is a single fixed node per anchor, so
  *                   it carries no id — its terminal node-id segment is the key itself. (`settings`).
- * - `'linked'`    — Resolves against the *immediately preceding item*, not the anchor, addressed by a
- *                   variant id. A sub-view attached to an item, whose node is the item's `~<variant>`
- *                   linked-segment child (`<key>/<variant>`). Has no `path`:
- *                   resolution is structural (find the preceding item's `~<variant>` child), and its
- *                   `urlSegment` is stamped from the linked-segment convention, not a path.
  *
- * `path` (on the non-`linked` kinds) is how the node is located, in one of two forms:
+ * The anchor and linked tiers are not declared per extension: they are fixed keys of the URL grammar,
+ * configured once on the builder as {@link UrlKeys}.
+ *
+ * `path` is how the node is located, in one of two forms:
  * - `string[]` — fixed ancestor node-id segments between the workspace base and the node (the common,
  *   deterministic case): the node is `${Node.RootId}/<workspace>/<...segments>/<id>`. Fixed-depth
  *   dynamic tails beyond the segments are `+`-encoded into the id.
@@ -89,9 +84,15 @@ export type BuilderExtension = Readonly<{
  * Read by `path-resolution.ts` (which derives the parse table's `hasId`/`anchor` from `kind`) and
  * consumed by `UrlPath.parse`.
  */
-export type UrlBinding =
-  | { key: string; kind: 'anchor' | 'item' | 'singleton'; path: string[] | PathResolver }
-  | { key: string; kind: 'linked' };
+export type UrlBinding = { key: string; kind: 'item' | 'singleton'; path: string[] | PathResolver };
+
+/**
+ * The two fixed keys of the URL grammar, configured on the builder rather than declared by an extension
+ * (no connector produces their nodes): `anchor` establishes the base that following pairs resolve
+ * against and is consumed as a rebase (`w/<workspace>`); `linked` addresses the `~<variant>`
+ * linked-segment child of the preceding item (`companion/<variant>`), resolved structurally.
+ */
+export type UrlKeys = { anchor: string; linked: string };
 
 /** Prefix marking a "linked segment" node id (`<parent>/~<variant>`) — a child sharing its parent's
  * identity, the structural form of a `kind: 'linked'` node. Mirrors `@dxos/react-ui-attention`'s
@@ -133,8 +134,8 @@ export const TAIL_SEPARATOR = '+';
  * the id, `+`-joined (empty when the node sits at the path — a container whose children are the items).
  */
 export const urlRepresentation = (nodeId: string, url: UrlBinding): { key: string; id?: string } => {
-  // Singleton (no id) and linked (id derived structurally, not from `path`) carry no path-based id here.
-  if (url.kind === 'singleton' || url.kind === 'linked') {
+  // A singleton carries no path-based id: its terminal node-id segment is the key itself.
+  if (url.kind === 'singleton') {
     return { key: url.key };
   }
   const segments = nodeId.split('/');
@@ -143,19 +144,6 @@ export const urlRepresentation = (nodeId: string, url: UrlBinding): { key: strin
       ? segments[segments.length - 1]
       : segments.slice(2 + url.path.length).join(TAIL_SEPARATOR);
   return { key: url.key, id };
-};
-
-/**
- * The single declared linked-tier key (`kind: 'linked'`), used to stamp and
- * reverse-map `~<variant>` nodes. Returns undefined if no linked extension is registered.
- */
-export const getLinkedKey = (builder: GraphBuilder): string | undefined => {
-  for (const extension of Object.values(builder.getExtensions())) {
-    if (extension.url?.kind === 'linked') {
-      return extension.url.key;
-    }
-  }
-  return undefined;
 };
 
 /**
@@ -228,6 +216,8 @@ export interface GraphBuilder extends Pipeable.Pipeable {
   readonly [GraphBuilderTypeId]: GraphBuilderTypeId;
   readonly graph: Graph.ExpandableGraph;
   readonly extensions: Atom.Atom<Record<string, BuilderExtension>>;
+  /** The URL grammar's fixed keys, if this builder was configured with them. */
+  readonly urlKeys?: UrlKeys;
   /** Read the currently registered extensions synchronously (used for URL key-table derivation). */
   getExtensions(): Record<string, BuilderExtension>;
   /**
@@ -285,6 +275,8 @@ class GraphBuilderImpl implements GraphBuilder {
    * `path-resolution.ts` can look up the producing extension without a reactive read.
    */
   readonly _nodeExtensions = new Map<string, string>();
+  /** The URL grammar's fixed keys (see {@link UrlKeys}); undefined when URLs are not in play. */
+  readonly urlKeys?: UrlKeys;
   /** Shared atom registry for reactive subscriptions. */
   readonly _registry: Registry.Registry;
   /** Backing graph with internal accessors for node atoms and construction. */
@@ -293,7 +285,8 @@ class GraphBuilderImpl implements GraphBuilder {
     _constructNode: (node: Node.NodeArg<any>) => Option.Option<Node.Node>;
   };
 
-  constructor({ registry, ...params }: Pick<Graph.GraphProps, 'registry' | 'nodes' | 'edges'> = {}) {
+  constructor({ registry, urlKeys, ...params }: GraphBuilderProps = {}) {
+    this.urlKeys = urlKeys;
     this._registry = registry ?? Registry.make();
     const graph = Graph.make({
       ...params,
@@ -439,7 +432,7 @@ class GraphBuilderImpl implements GraphBuilder {
       connectors,
       (entries) => {
         const extensions = this.getExtensions();
-        const linkedKey = getLinkedKey(this);
+        const linkedKey = this.urlKeys?.linked;
         // Stamp `properties.urlSegment` on each produced node (and its inline descendants) so the computed
         // segment is readable off the node (see `BuilderNode`): `/<key>[/<id>]` from the producing
         // extension's binding, or `/<linkedKey>/<variant>` for a `~<variant>` linked node.
@@ -485,23 +478,26 @@ class GraphBuilderImpl implements GraphBuilder {
   }
 }
 
+/** Construction params: the backing graph's props plus the URL grammar's fixed keys. */
+export type GraphBuilderProps = Pick<Graph.GraphProps, 'registry' | 'nodes' | 'edges'> & { urlKeys?: UrlKeys };
+
 /**
  * Creates a new GraphBuilder instance.
  */
-export const make = (params?: Pick<Graph.GraphProps, 'registry' | 'nodes' | 'edges'>): GraphBuilder => {
+export const make = (params?: GraphBuilderProps): GraphBuilder => {
   return new GraphBuilderImpl(params);
 };
 
 /**
  * Creates a GraphBuilder from a serialized pickle string.
  */
-export const from = (pickle?: string, registry?: Registry.Registry): GraphBuilder => {
+export const from = (pickle?: string, registry?: Registry.Registry, urlKeys?: UrlKeys): GraphBuilder => {
   if (!pickle) {
-    return make({ registry });
+    return make({ registry, urlKeys });
   }
 
   const { nodes, edges } = JSON.parse(pickle);
-  return make({ nodes, edges, registry });
+  return make({ nodes, edges, registry, urlKeys });
 };
 
 /**

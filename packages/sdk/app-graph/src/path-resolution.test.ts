@@ -42,7 +42,8 @@ const WORKSPACE_B = 'workspaceB';
  */
 const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const registry = Registry.make();
-  const builder = GraphBuilder.make({ registry });
+  // The grammar's fixed tiers are builder config, not extensions (see `GraphBuilder.UrlKeys`).
+  const builder = GraphBuilder.make({ registry, urlKeys: { anchor: 'w', linked: 'companion' } });
 
   const workspaces = Effect.runSync(
     GraphBuilder.createExtension({
@@ -177,19 +178,6 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     }),
   );
 
-  // A declaration-only workspace anchor: registers the `w` tier for the parser/serializer, produces no nodes.
-  const workspaceAnchor = GraphBuilder.createExtensionRaw({
-    id: 'workspaceAnchor',
-    url: { key: 'w', kind: 'anchor', path: [] },
-  });
-
-  // A declaration-only linked tier: registers the `companion` key (`kind: 'linked'`), so `companion/<variant>`
-  // pairs resolve against the preceding plank and `~<variant>` nodes reverse-map + stamp as `/companion/…`.
-  const companionAnchor = GraphBuilder.createExtensionRaw({
-    id: 'companion',
-    url: { key: 'companion', kind: 'linked' },
-  });
-
   GraphBuilder.addExtension(builder, [
     workspaces,
     docs,
@@ -202,8 +190,6 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     subGroup,
     nestedDocs,
     homes,
-    workspaceAnchor,
-    companionAnchor,
   ]);
   return builder;
 };
@@ -466,11 +452,6 @@ describe('path-resolution', () => {
       expect(table.get('w')).toEqual({ key: 'w', hasId: true, anchor: true });
       expect(table.get('doc')).toEqual({ key: 'doc', hasId: true, anchor: false });
       expect(table.get('home')).toEqual({ key: 'home', hasId: false, anchor: false });
-    });
-
-    test('getAnchorKey returns the declared anchor key', ({ expect }) => {
-      const builder = buildTestBuilder();
-      expect(PathResolution.getAnchorKey(builder)).toBe('w');
     });
   });
 

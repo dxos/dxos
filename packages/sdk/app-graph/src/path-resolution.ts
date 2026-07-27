@@ -117,12 +117,17 @@ export type UrlKeyTableEntry = { key: string; hasId: boolean; anchor: boolean };
  */
 export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, UrlKeyTableEntry> => {
   const table = new Map<string, UrlKeyTableEntry>();
+  // The grammar's fixed tiers are configured on the builder, not declared by any extension: the anchor
+  // rebases the chain, and the linked key addresses a `~<variant>` child of the preceding item.
+  if (builder.urlKeys) {
+    table.set(builder.urlKeys.anchor, { key: builder.urlKeys.anchor, hasId: true, anchor: true });
+    table.set(builder.urlKeys.linked, { key: builder.urlKeys.linked, hasId: true, anchor: false });
+  }
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.url!.key;
-    const kind = extension.url!.kind;
-    // The tokenizer's flat lookup is derived from `kind`: a singleton has no id; an anchor rebases.
-    const hasId = kind !== 'singleton';
-    const anchor = kind === 'anchor';
+    // The tokenizer's flat lookup is derived from `kind`: a singleton has no id.
+    const hasId = extension.url!.kind !== 'singleton';
+    const anchor = false;
     const existing = table.get(key);
     if (existing && existing.hasId !== hasId) {
       // Extensions that share a key must agree on their kind — the parse table has one entry per key.
@@ -134,13 +139,6 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
   }
   return table;
 };
-
-/**
- * The single declared workspace-anchor key (`kind: 'anchor'`, conventionally `w`), used by serializers
- * to emit the leading workspace pair. Returns undefined if no anchor extension is registered.
- */
-export const getAnchorKey = (builder: GraphBuilder.GraphBuilder): string | undefined =>
-  getKeyedExtensions(builder).find((extension) => extension.url?.kind === 'anchor')?.url?.key;
 
 /**
  * Expand every ancestor prefix of a qualified node id (including the id itself), then flush once.
@@ -255,6 +253,15 @@ const resolveUrlAsync = async (
   for (let pairIndex = 0; pairIndex < parsed.pairs.length; pairIndex++) {
     const pair = parsed.pairs[pairIndex];
 
+    // Linked pair: resolves against the preceding item by variant, not the workspace base — the linked
+    // resolution tier. Produced by no extension (it is a grammar key), so it is matched before the key
+    // table, and it is not itself an item, so it does not become the base for a following linked pair.
+    if (pair.key === builder.urlKeys?.linked) {
+      const nodeId = lastItemNodeId && pair.id ? await resolveLinked(builder, lastItemNodeId, pair.id) : null;
+      results.push(nodeId ? { pairIndex, nodeId } : null);
+      continue;
+    }
+
     const extensionIdList = keyTable.get(pair.key);
     if (!extensionIdList || extensionIdList.length === 0) {
       log.warn('unknown URL prefix key', { key: pair.key });
@@ -265,20 +272,11 @@ const resolveUrlAsync = async (
       continue;
     }
 
-    // Linked pair (`kind: 'linked'`): resolves against the preceding item by variant, not the workspace
-    // base — the linked resolution tier. Not itself an item, so it does not become the base for a
-    // following linked pair.
-    if (extensionIdList.some((extensionId) => allExtensions[extensionId]?.url?.kind === 'linked')) {
-      const nodeId = lastItemNodeId && pair.id ? await resolveLinked(builder, lastItemNodeId, pair.id) : null;
-      results.push(nodeId ? { pairIndex, nodeId } : null);
-      continue;
-    }
-
     const workspaceBaseId = `${Node.RootId}/${pair.workspace}`;
     const extensions: KeyedExtension[] = [];
     for (const extensionId of extensionIdList) {
       const url = allExtensions[extensionId]?.url;
-      if (url && url.kind !== 'linked') {
+      if (url) {
         extensions.push({ id: extensionId, path: url.path });
       }
     }
@@ -326,9 +324,9 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
 
   const lastSegment = segments[segments.length - 1];
   if (lastSegment.startsWith(GraphBuilder.LINKED_PREFIX)) {
-    // Linked node: keyed by the declared `linked` key, with the variant (the
-    // `~`-stripped segment) as its id — matched by the convention, independent of the producing extension.
-    const linkedKey = GraphBuilder.getLinkedKey(builder);
+    // Linked node: keyed by the grammar's `linked` key, with the variant (the `~`-stripped segment) as
+    // its id — matched by the convention, independent of the producing extension.
+    const linkedKey = builder.urlKeys?.linked;
     if (linkedKey) {
       return Option.some({ key: linkedKey, id: lastSegment.slice(GraphBuilder.LINKED_PREFIX.length), workspace });
     }

@@ -50,20 +50,18 @@ export type ParsedUrl = {
 };
 
 /**
- * The prefix key for the workspace tier (`/w/<workspace>/…`). The canonical declaration: the
- * workspace-anchor graph extension declares its `url.key` from this, and serializers fall back to it
- * when no anchor extension is registered (see `PathResolution.getAnchorKey`).
+ * The prefix key for the workspace tier (`/w/<workspace>/…`) — the canonical declaration, from which the
+ * graph builder is configured (`GraphBuilder.UrlKeys.anchor`) and serializers emit the leading pair.
  */
 export const WORKSPACE_KEY = 'w';
 
 /**
  * The single well-known key for every plank companion (`companion/<variant>`), resolved against the
- * preceding plank. Declared once as a `kind: 'linked'` binding (see `createCompanionExtension`).
+ * preceding plank. Configured as the builder's linked key (see `GraphBuilder.UrlKeys`).
  */
 export const COMPANION_KEY = 'companion';
 
-// The workspace (`w`, an `anchor` binding) and companion (`companion`, a `linked` binding) keys are NOT
-// reserved — they are declared bindings.
+// The workspace and companion keys are NOT reserved — they are the grammar's own configured keys.
 const RESERVED_KEYS = new Set(['reset', 'redirect', 'not-found']);
 
 /**

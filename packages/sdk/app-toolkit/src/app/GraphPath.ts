@@ -6,7 +6,7 @@
 
 import * as Option from 'effect/Option';
 
-import { Graph, GraphBuilder, Node, PathResolution } from '@dxos/app-graph';
+import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, type URI } from '@dxos/keys';
@@ -198,7 +198,7 @@ export const getShareableLinkPath = (builder: GraphBuilder.GraphBuilder, nodeId:
   }
   // The declared workspace-anchor key; falls back to the canonical constant when no anchor extension is
   // registered (e.g. a bare builder in a test).
-  const workspaceKey = PathResolution.getAnchorKey(builder) ?? UrlPath.WORKSPACE_KEY;
+  const workspaceKey = UrlPath.WORKSPACE_KEY;
   return Option.some(`/${workspaceKey}/${workspace}${urlSegment}`);
 };
 

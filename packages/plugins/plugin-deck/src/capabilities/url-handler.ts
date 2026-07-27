@@ -293,7 +293,7 @@ export default Capability.makeModule(
         }
       }
 
-      const workspaceKey = PathResolution.getAnchorKey(builder) ?? UrlPath.WORKSPACE_KEY;
+      const workspaceKey = UrlPath.WORKSPACE_KEY;
       const path = serializeDeckToUrl({ workspace, workspaceKey, active: deck.active, representations, companion });
       const newUrl = `${path}${window.location.search}`;
 
