@@ -43,7 +43,7 @@ const WORKSPACE_B = 'workspaceB';
 const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const registry = Registry.make();
   // The grammar's fixed tiers are builder config, not extensions (see `GraphBuilder.UrlKeys`).
-  const builder = GraphBuilder.make({ registry, urlKeys: { anchor: 'w', linked: 'companion' } });
+  const builder = GraphBuilder.make({ registry, urlGrammar: { anchorKey: 'w', linkedKey: 'companion' } });
 
   const workspaces = Effect.runSync(
     GraphBuilder.createExtension({
@@ -492,7 +492,7 @@ describe('path-resolution', () => {
         }),
       );
       const node = Option.getOrThrow(
-        Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/docA/${GraphBuilder.LINKED_PREFIX}comments`),
+        Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/docA/${builder.urlGrammar.linkedPrefix}comments`),
       );
       expect(node.properties.urlSegment).toBe('/companion/comments');
     });
@@ -503,14 +503,18 @@ describe('path-resolution', () => {
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
           pairs: [
-            { key: 'nested', id: `${SUBGROUP_ID}${GraphBuilder.TAIL_SEPARATOR}nestedDocA`, workspace: WORKSPACE_A },
+            {
+              key: 'nested',
+              id: `${SUBGROUP_ID}${builder.urlGrammar.tailSeparator}nestedDocA`,
+              workspace: WORKSPACE_A,
+            },
           ],
         }),
       );
       const node = Option.getOrThrow(
         Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA`),
       );
-      expect(node.properties.urlSegment).toBe(`/nested/${SUBGROUP_ID}${GraphBuilder.TAIL_SEPARATOR}nestedDocA`);
+      expect(node.properties.urlSegment).toBe(`/nested/${SUBGROUP_ID}${builder.urlGrammar.tailSeparator}nestedDocA`);
     });
   });
 });

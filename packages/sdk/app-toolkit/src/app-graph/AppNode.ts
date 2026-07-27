@@ -13,6 +13,7 @@ import * as Option from 'effect/Option';
 import { Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
 import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
@@ -286,17 +287,6 @@ export const makeObject = ({
 //
 
 /**
- * Prefix marking a "linked segment" companion node id (`<parent>/~<variant>`). Inlined here (rather
- * than importing `linkedSegment`/`isLinkedSegment` from the UI-layer `@dxos/react-ui-attention`) so
- * this module — reachable from the client dedicated worker — stays free of any DOM dependency. Mirrors
- * the same convention duplicated in `@dxos/app-graph`'s `path-resolution.ts`.
- */
-const LINKED_PREFIX = '~';
-
-/** The sole place a linked segment is composed: `<variant>` -> `~<variant>`. */
-const linkedSegment = (variant: string): string => `${LINKED_PREFIX}${variant}`;
-
-/**
  * Build a plank-level companion panel node, addressed by its bare `variant` (e.g. `settings`). The id is
  * always the linked segment `~<variant>`, so the companion shares the plank's attention and is uniformly
  * addressable as `companion/<variant>` in the URL; the graph builder stamps the `urlSegment` for these
@@ -315,7 +305,7 @@ export const makeCompanion = <TData = string>({
   data: TData;
   position?: Position.Position;
 }): Node.NodeArg<TData> => ({
-  id: linkedSegment(variant),
+  id: Attention.linkedSegment(variant),
   type: PLANK_COMPANION_TYPE,
   data,
   properties: {

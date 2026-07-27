@@ -20,10 +20,10 @@ export default Capability.makeModule(
     const extensionsByModuleAtom = yield* Capability.atomByModule(AppCapabilities.AppGraphBuilder);
 
     // The grammar's fixed tiers, configured here rather than declared by an extension: no connector
-    // produces their nodes (see `GraphBuilder.UrlKeys`).
+    // produces their nodes (see `GraphBuilder.UrlGrammar`).
     const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry, {
-      anchor: UrlPath.WORKSPACE_KEY,
-      linked: UrlPath.COMPANION_KEY,
+      anchorKey: UrlPath.WORKSPACE_KEY,
+      linkedKey: UrlPath.COMPANION_KEY,
     });
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());

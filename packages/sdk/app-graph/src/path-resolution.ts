@@ -119,9 +119,12 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
   const table = new Map<string, UrlKeyTableEntry>();
   // The grammar's fixed tiers are configured on the builder, not declared by any extension: the anchor
   // rebases the chain, and the linked key addresses a `~<variant>` child of the preceding item.
-  if (builder.urlKeys) {
-    table.set(builder.urlKeys.anchor, { key: builder.urlKeys.anchor, hasId: true, anchor: true });
-    table.set(builder.urlKeys.linked, { key: builder.urlKeys.linked, hasId: true, anchor: false });
+  const { anchorKey, linkedKey } = builder.urlGrammar;
+  if (anchorKey) {
+    table.set(anchorKey, { key: anchorKey, hasId: true, anchor: true });
+  }
+  if (linkedKey) {
+    table.set(linkedKey, { key: linkedKey, hasId: true, anchor: false });
   }
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.url!.key;
@@ -186,7 +189,7 @@ const resolveKeyId = async (
   id: string,
 ): Promise<string | null> => {
   // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
-  const idSegments = id.split(GraphBuilder.TAIL_SEPARATOR);
+  const idSegments = id.split(builder.urlGrammar.tailSeparator);
   for (const extension of extensions) {
     if (Array.isArray(extension.path)) {
       const resolved = await materializeCandidate(
@@ -232,7 +235,7 @@ const resolveLinked = async (
   Graph.expand(builder.graph, precedingNodeId, 'child');
   await GraphBuilder.flush(builder);
 
-  const linkedSegment = `${GraphBuilder.LINKED_PREFIX}${variant}`;
+  const linkedSegment = `${builder.urlGrammar.linkedPrefix}${variant}`;
   const match = Graph.getConnections(builder.graph, precedingNodeId, 'child').find(
     (child) => child.id.slice(child.id.lastIndexOf('/') + 1) === linkedSegment,
   );
@@ -256,7 +259,7 @@ const resolveUrlAsync = async (
     // Linked pair: resolves against the preceding item by variant, not the workspace base — the linked
     // resolution tier. Produced by no extension (it is a grammar key), so it is matched before the key
     // table, and it is not itself an item, so it does not become the base for a following linked pair.
-    if (pair.key === builder.urlKeys?.linked) {
+    if (pair.key === builder.urlGrammar.linkedKey) {
       const nodeId = lastItemNodeId && pair.id ? await resolveLinked(builder, lastItemNodeId, pair.id) : null;
       results.push(nodeId ? { pairIndex, nodeId } : null);
       continue;
@@ -323,12 +326,12 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
   }
 
   const lastSegment = segments[segments.length - 1];
-  if (lastSegment.startsWith(GraphBuilder.LINKED_PREFIX)) {
+  if (lastSegment.startsWith(builder.urlGrammar.linkedPrefix)) {
     // Linked node: keyed by the grammar's `linked` key, with the variant (the `~`-stripped segment) as
     // its id — matched by the convention, independent of the producing extension.
-    const linkedKey = builder.urlKeys?.linked;
+    const linkedKey = builder.urlGrammar.linkedKey;
     if (linkedKey) {
-      return Option.some({ key: linkedKey, id: lastSegment.slice(GraphBuilder.LINKED_PREFIX.length), workspace });
+      return Option.some({ key: linkedKey, id: lastSegment.slice(builder.urlGrammar.linkedPrefix.length), workspace });
     }
   }
 
@@ -344,5 +347,5 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
   // The (key, id?) representation is derived from the node id + binding (a singleton has no id; a
   // resolver-backed key keeps just the object id; a static path `+`-joins the segments after the path) —
   // the same derivation the builder uses to stamp `urlSegment`.
-  return Option.some({ ...GraphBuilder.urlRepresentation(nodeId, url), workspace });
+  return Option.some({ ...GraphBuilder.urlRepresentation(nodeId, url, builder.urlGrammar.tailSeparator), workspace });
 };

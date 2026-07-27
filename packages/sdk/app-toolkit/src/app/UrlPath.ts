@@ -51,13 +51,13 @@ export type ParsedUrl = {
 
 /**
  * The prefix key for the workspace tier (`/w/<workspace>/…`) — the canonical declaration, from which the
- * graph builder is configured (`GraphBuilder.UrlKeys.anchor`) and serializers emit the leading pair.
+ * graph builder is configured (`GraphBuilder.UrlGrammar.anchorKey`) and serializers emit the leading pair.
  */
 export const WORKSPACE_KEY = 'w';
 
 /**
  * The single well-known key for every plank companion (`companion/<variant>`), resolved against the
- * preceding plank. Configured as the builder's linked key (see `GraphBuilder.UrlKeys`).
+ * preceding plank. Configured as the builder's linked key (see `GraphBuilder.UrlGrammar`).
  */
 export const COMPANION_KEY = 'companion';
 
