@@ -1,23 +1,6 @@
 # URL & Deck Redesign — Tasks
 
-_Resume: PR #12273 is pushed through a2a2244d9c and green locally (app-graph 134 / app-toolkit 109 /
-plugin-deck 40 + 13 storybook / plugin-space 18 / plugin-inbox 222 + 17 storybook files). Since the
-cold-restore fix: whole-PR comment audit; `LayoutMode` restored as derived state; `Paths` → `GraphPath`
-
-- `UrlResolution` extracted; app-graph `companion` → `linked`; `disposition`/`positioning` merged;
-  `UrlPrefixAnnotation` and the `explore` capability dropped; resolver/`Graph.initialize` revert completed
-  (TODO-marked, no resolvers declared anywhere); tiling moved onto the `Splitter` primitive (`tilingSizing`
-  is now a rem extent, not a weights array) and `useCompanionSplit` deleted; DeckViewport refactored —
-  `FoldSpine` component, seven named geometry hooks, one `PlankContext`, and spine clicks routed through
-  `LayoutOperation.ScrollIntoView` so there is a single scroll path; `MessageArticle` takes a single
-  message; **app-graph's `@dxos/effect` was dev-only, so cold builds failed and dependent packages tested
-  against a stale dist — fixed, and it was the cause of a phantom plugin-inbox sync failure**. Docs pass
-  done (this file, project DESIGN, plugin-deck DESIGN/PLUGIN.mdl, both changesets, composer-plugins
-  MEMORY). Next: visual checks the test suites can't cover (fold-spine sigil alignment, pinned-plank
-  scroll offset), then mark the PR ready. Gotchas in memory: never import a DOM/UI package into
-  worker-reachable modules; `Mosaic.Tile` must re-sync `size` on prop change; a plugin's AppGraphBuilder
-  must register on the default `SetupAppGraph` event; ALWAYS check `git branch --show-current` before
-  editing or committing — this worktree got switched under the session once._
+_Resume: PR 12273 open (not draft, mergeable), branch at 43995bff6b: 109 commits ahead of main, 8 behind. CI on 515d8c6195 was fully green; the run for the tip has check/build/storybook/workerd green with test still running. Local: app-graph 134 / app-toolkit 109 / plugin-deck 40 + 13 storybook / plugin-space 18 / plugin-inbox 222 + storybook 40. Since the last checkpoint: the 2026-07-19 superpowers spec is folded into this project's DESIGN.md (superpowers and $project are mutually exclusive) and its five referrers plus the registry summary updated; validateNavigationTarget now checks node presence BEFORE expanding, so a click on an already-rendered node no longer re-expands its ancestors (515d8c6195); and app-graph's _expanded / _initialized latches and _initialNodes / _initialEdges seeds were never recording anything -- built with Record.empty() and written with Record.set(), which is immutable in Effect -- so every Graph.expand re-fired the node connector. Now Set/Map (43995bff6b). Measured in the running app: expands logging expanded:true went 0 -> 163 of 226, real expansions 306 -> 14, sqlite queries per navigation ~4700 -> ~550, with no not-found or retry signals. NEXT (all needing a human at the browser): (1) cold-restore a deep link into a fresh profile -- the latch fix means the url-handler retry no longer re-fires an already-expanded connector, and no test covers that path; (2) fold-spine sigil alignment and pinned-plank scroll offset after the Splitter/ScrollIntoView rework; (3) decide whether the app-graph latch fix ships in this PR or is cherry-picked to its own branch (it is a main bug, self-contained: one file + changeset). Still open: companionFrameSizing is dead on DeckState; navtree marks `current` on a 500ms timer that every Layout notification cancels and restarts (main's code, and the likely remaining cause of the reported selected-state lag); 'existing node' churn stayed flat while expansions dropped ~20x, so connector re-emission has a separate cause. GOTCHAS: never import a DOM/UI package into worker-reachable modules; Mosaic.Tile must re-sync size on prop change; a plugin AppGraphBuilder must register on the default SetupAppGraph event; moon's cache hid a broken cold build once (app-graph had @dxos/effect as a dev dep only) -- use --force when a result looks too clean; ALWAYS check git branch --show-current before editing or committing (this worktree was switched under the session once)._
 
 ## Companion width position-dependence (debug-mode, fixed)
 
