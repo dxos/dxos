@@ -1083,6 +1083,167 @@ git add packages/plugins/plugin-terra pnpm-workspace.yaml pnpm-lock.yaml
 git commit -m "plugin-terra: Babylon GUI config controls + FPS widget"
 ```
 
+### Task 10b: react-ui Slider primitive + TerraForm panel (replaces Babylon GUI)
+
+> Plan change (user directive 2026-07-26, supersedes Task 10): remove the
+> `@babylonjs/gui` controls and drive config from a React panel built on
+> `@dxos/react-ui-form`, backed by a NEW `Slider` primitive added to
+> `@dxos/react-ui` (Radix-based, in the style of shadcn/MUI sliders). The FPS
+> widget stays in-scene (it is a render-loop readout, not config).
+
+**Files:**
+
+- Create: `packages/ui/react-ui/src/components/Slider/Slider.tsx`
+- Create: `packages/ui/react-ui/src/components/Slider/Slider.theme.ts`
+- Create: `packages/ui/react-ui/src/components/Slider/Slider.stories.tsx`
+- Create: `packages/ui/react-ui/src/components/Slider/index.ts`
+- Modify: `packages/ui/react-ui/src/components/index.ts` (export Slider)
+- Modify: `packages/ui/react-ui/src/theme/defaultTheme.ts` (register `slider: sliderTheme`)
+- Modify: `packages/ui/react-ui/package.json` (add `"@radix-ui/react-slider": "catalog:"`)
+- Modify: `pnpm-workspace.yaml` (add `'@radix-ui/react-slider'` to the catalog, alphabetized, matching the version range of the sibling `@radix-ui/react-*` entries)
+- Create: `packages/plugins/plugin-terra/src/components/TerraForm/TerraForm.tsx`
+- Create: `packages/plugins/plugin-terra/src/components/TerraForm/TerraForm.stories.tsx`
+- Create: `packages/plugins/plugin-terra/src/components/TerraForm/index.ts`
+- Modify: `packages/plugins/plugin-terra/src/components/index.ts` (export TerraForm)
+- Modify: `packages/plugins/plugin-terra/src/containers/TerraArticle/TerraArticle.tsx` (mount TerraForm; drop SceneGui config controls)
+- Modify: `packages/plugins/plugin-terra/src/engine/scene-gui.ts` (reduce to the FPS widget only) and its export
+- Modify: `packages/plugins/plugin-terra/package.json` (drop `@babylonjs/gui` ONLY if the FPS widget no longer needs it — see Step 4)
+
+**Interfaces:**
+
+- Consumes: `@radix-ui/react-slider`; `useThemeContext`/`ThemedClassName` from `@dxos/react-ui`; `Form` from `@dxos/react-ui-form`; `Terra.TerraConfig`.
+- Produces:
+  - `Slider` (react-ui): `ThemedClassName<SliderPrimitive.SliderProps>` forwardRef component rendering Root/Track/Range/Thumb, themed via `tx('slider.root'|'slider.track'|'slider.range'|'slider.thumb', ...)`; `sliderTheme: Theme<SliderStyleProps>` with `SliderStyleProps = { orientation?: 'horizontal' | 'vertical'; disabled?: boolean }`.
+  - `TerraForm` (plugin-terra): `{ config: Terra.TerraConfig; onChange: (values: Terra.TerraConfig) => void }`.
+
+- [ ] **Step 1: Add the Radix dep.** `'@radix-ui/react-slider'` in the `pnpm-workspace.yaml` catalog (alphabetized between `react-separator` and `react-slot`; use the same major/range style as its siblings) and `"@radix-ui/react-slider": "catalog:"` in `packages/ui/react-ui/package.json` dependencies. Run `pnpm install`.
+
+- [ ] **Step 2: Implement the `Slider` primitive.** Follow the existing single-part primitive pattern exactly — read `packages/ui/react-ui/src/components/Separator/{Separator.tsx,Separator.theme.ts,index.ts}` first and mirror its structure (Radix import, `forwardRef`, `useThemeContext()` + `tx(...)`, `ThemedClassName`, `export type` + `export` at the bottom, copyright header).
+
+`Slider.theme.ts`:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import { mx } from '@dxos/ui-theme';
+import { type ComponentFunction, type Theme } from '@dxos/ui-types';
+
+export type SliderStyleProps = {
+  orientation?: 'horizontal' | 'vertical';
+  disabled?: boolean;
+};
+
+const root: ComponentFunction<SliderStyleProps> = ({ orientation, disabled }, ...etc) =>
+  mx(
+    'relative flex touch-none select-none items-center',
+    orientation === 'vertical' ? 'h-full w-5 flex-col' : 'w-full h-5',
+    disabled && 'opacity-50 pointer-events-none',
+    ...etc,
+  );
+
+const track: ComponentFunction<SliderStyleProps> = ({ orientation }, ...etc) =>
+  mx(
+    'relative grow overflow-hidden rounded-full bg-input',
+    orientation === 'vertical' ? 'w-1 h-full' : 'h-1 w-full',
+    ...etc,
+  );
+
+const range: ComponentFunction<SliderStyleProps> = ({ orientation }, ...etc) =>
+  mx('absolute bg-accentSurface', orientation === 'vertical' ? 'w-full' : 'h-full', ...etc);
+
+const thumb: ComponentFunction<SliderStyleProps> = (_props, ...etc) =>
+  mx(
+    'block is-4 bs-4 rounded-full bg-baseSurface border border-separator shadow-sm transition-colors',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accentFocusIndicator',
+    'hover:bg-hoverSurface',
+    ...etc,
+  );
+
+export const sliderTheme: Theme<SliderStyleProps> = { root, track, range, thumb };
+```
+
+`Slider.tsx`:
+
+```tsx
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as SliderPrimitive from '@radix-ui/react-slider';
+import React, { forwardRef } from 'react';
+
+import { useThemeContext } from '../../hooks';
+import { type ThemedClassName } from '../../util';
+
+type SliderProps = ThemedClassName<SliderPrimitive.SliderProps>;
+
+/** Range input built on the Radix slider primitive; supports one or more thumbs. */
+const Slider = forwardRef<HTMLSpanElement, SliderProps>(
+  ({ classNames, orientation = 'horizontal', disabled, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const styleProps = { orientation, disabled };
+    const thumbCount = props.value?.length ?? props.defaultValue?.length ?? 1;
+    return (
+      <SliderPrimitive.Root
+        {...props}
+        orientation={orientation}
+        disabled={disabled}
+        className={tx('slider.root', styleProps, classNames)}
+        ref={forwardedRef}
+      >
+        <SliderPrimitive.Track className={tx('slider.track', styleProps)}>
+          <SliderPrimitive.Range className={tx('slider.range', styleProps)} />
+        </SliderPrimitive.Track>
+        {Array.from({ length: thumbCount }, (_unused, index) => (
+          <SliderPrimitive.Thumb key={index} className={tx('slider.thumb', styleProps)} />
+        ))}
+      </SliderPrimitive.Root>
+    );
+  },
+);
+
+export type { SliderProps };
+
+export { Slider };
+```
+
+`index.ts`: `export * from './Slider';` plus the copyright header. Add `export * from './Slider';` to `packages/ui/react-ui/src/components/index.ts` (alphabetical position). Register in `packages/ui/react-ui/src/theme/defaultTheme.ts`: import `sliderTheme` alongside the other theme imports and add `slider: sliderTheme,` to the theme object (alphabetical position). If `tx` keys are typed by a union/interface, add `slider` there too — grep for how `separator` is typed and mirror it.
+
+- [ ] **Step 3: Story for the Slider.** `Slider.stories.tsx` mirroring an existing react-ui component story (read a sibling story in `packages/ui/react-ui/src/components/` for the exact decorator/meta idiom). Cover: default (uncontrolled), controlled with a value readout, `min`/`max`/`step`, `disabled`, vertical orientation, and a two-thumb range.
+
+- [ ] **Step 4: Reduce `scene-gui.ts` to the FPS widget.** Delete the panel/sliders/checkbox/reseed and the `onChange`/`onWaterSheen`/`setValues` surface; keep the fullscreen ADT with only the top-left FPS `TextBlock` (observer stored, removed in `dispose()`), keeping `idealHeight = 1024`. Rename the class to `SceneFpsWidget` (constructor `{ scene, engine }`, plus `dispose()`), rename the file to `scene-fps.ts`, and update the `engine/index.ts` export and the article import. `@babylonjs/gui` REMAINS a dependency (the FPS widget still uses it) — do NOT remove it from `package.json`/catalog.
+
+- [ ] **Step 5: Implement `TerraForm`.** A React panel bound to the config. Read `packages/ui/react-ui-form/src/...` (the `Form` component's actual props) plus a consumer such as `packages/plugins/plugin-spacetime` for the in-repo idiom BEFORE writing. Requirements:
+  - Renders `Terra.TerraConfig` and calls `onChange` with changed values.
+  - The five previously-GUI-controlled numeric fields (`waterLevel`, `elevationScale`, `mountainScale`, `treeDensity`, `resolution`) render as the new `Slider` with a live numeric readout and the ranges/steps from Task 10 (`waterLevel` 0.2–0.7/0.01, `elevationScale` 0.05–0.3/0.01, `mountainScale` 0–1.5/0.05, `treeDensity` 0–1/0.05, `resolution` 64–512/64). If `Form` supports per-field custom inputs (a custom-input registry / `inputs` prop keyed by property), use it; otherwise compose the sliders directly in `TerraForm` and use `Form` only for the remaining scalar/boolean fields. Report which approach the real `Form` API supports.
+  - A `seed` text field and a "Reseed" `IconButton`/`Button` that increments a numeric suffix (fallback `-1`), matching Task 10's behavior.
+  - A water-sheen toggle is NOT part of config — expose it as a separate prop callback `onWaterSheen?: (enabled: boolean) => void` rendered as a checkbox/switch in the panel.
+
+- [ ] **Step 6: Mount in `TerraArticle`.** Render `TerraForm` inside the existing `<Panel.Toolbar />` region (or a right-side overlay panel above the canvas — pick one and keep the canvas `outline-none` + `Panel.Toolbar` structure the user hand-edited). Wire `onChange` to the existing `useObject` updater (`updateConfigRef.current((draft) => Object.assign(draft, patch))`) and `onWaterSheen` to `manager.setWaterSheen`. Keep the debounced 150ms regeneration effect unchanged. Remove the `SceneGui` config wiring, leaving the FPS widget construction.
+
+- [ ] **Step 7: Story + verification.** Update/keep `TerraArticle.stories.tsx`; add `TerraForm.stories.tsx` (standalone panel with local state, ECHO object built via `useMemo` in a render function — never module-level). Then:
+
+```bash
+/Users/burdon/.proto/shims/moon run react-ui:build
+/Users/burdon/.proto/shims/moon run react-ui:lint -- --fix
+/Users/burdon/.proto/shims/moon run plugin-terra:build
+/Users/burdon/.proto/shims/moon run plugin-terra:lint -- --fix
+/Users/burdon/.proto/shims/moon run plugin-terra:test
+```
+All must be green. The controller performs storybook visual verification (slider drags regenerate the planet; FPS still ticks; reseed works).
+
+- [ ] **Step 8: Commit.**
+
+```bash
+pnpm format
+git add packages/ui/react-ui packages/plugins/plugin-terra pnpm-workspace.yaml pnpm-lock.yaml
+git commit -m "react-ui: add Slider primitive; plugin-terra: replace Babylon GUI with TerraForm"
+```
+
+---
+
 ### Task 11: Capabilities + plugin wiring
 
 **Files:**
