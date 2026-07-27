@@ -1668,7 +1668,79 @@ git commit -m "plugin-terra: render and animate simulation objects"
 
 ---
 
-### Task 9: Changeset
+### Task 9: Smoke trails (`sim/trail.ts`, `scene/trail-layer.ts`)
+
+> Added 2026-07-27 (user directive): ships and planes leave chains of small
+> translucent white spheres that trail and fade; rockets reuse it as exhaust.
+> Design: the "Smoke trails" section of the Phase 2 spec.
+
+**Files:**
+
+- Create: `packages/plugins/plugin-terra/src/sim/trail.ts`
+- Test: `packages/plugins/plugin-terra/src/sim/trail.test.ts`
+- Create: `packages/plugins/plugin-terra/src/scene/trail-layer.ts`
+- Modify: `packages/plugins/plugin-terra/src/sim/index.ts`, `src/scene/index.ts`
+- Modify: `packages/plugins/plugin-terra/src/containers/TerraArticle/TerraArticle.tsx`
+
+**Interfaces:**
+
+- Consumes: `Vec3`, `sub`, `scale`, `add`, `normalize` from `../engine`; `SimObject` from `./engine`; `TerraObject.Kind`.
+- Produces (`sim/trail.ts`, pure — NO Babylon):
+  - `type Puff = { position: Vec3; bornAt: number }`
+  - `type Trail = { puffs: Puff[]; head: number; count: number; lastEmit: Vec3 | undefined }`
+  - `type TrailSpec = { spacing: number; lifetimeMs: number; capacity: number; startRadius: number; endScale: number; startAlpha: number }`
+  - `const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>>` — boat, plane, rocket only.
+  - `createTrail(capacity: number): Trail`
+  - `emit(trail: Trail, position: Vec3, nowMs: number, spec: TrailSpec): Trail` — appends only when the object has moved `spec.spacing` from `lastEmit`; otherwise returns the trail unchanged.
+  - `activePuffs(trail: Trail, nowMs: number, spec: TrailSpec): { position: Vec3; age: number }[]` — `age` normalized `[0, 1]`; expired puffs omitted.
+- Produces (`scene/trail-layer.ts`, Babylon):
+  - `class TrailLayer { constructor(options: { scene: Scene }); update(objects: readonly SimObject[], nowMs: number): void; dispose(): void }`
+
+- [ ] **Step 1: Write the failing test** (`sim/trail.test.ts`). Cover, with real assertions:
+  - `emit` adds nothing until the object has moved at least `spacing` from the last emission point;
+  - `emit` DOES add once it has moved past `spacing`, and updates `lastEmit`;
+  - the ring buffer never exceeds `capacity` and overwrites oldest-first (emit `capacity + 5` puffs along a straight line, assert `activePuffs` length is `capacity` and the earliest positions are gone);
+  - `activePuffs` omits puffs older than `lifetimeMs` and reports `age` increasing with puff age, bounded to `[0, 1]`;
+  - determinism: the same position/time sequence produces identical puff arrays.
+
+- [ ] **Step 2: Run to verify it fails.**
+
+Run: `/Users/burdon/.proto/shims/moon run plugin-terra:test -- src/sim/trail.test.ts`
+Expected: FAIL (`./trail` not found).
+
+- [ ] **Step 3: Implement `sim/trail.ts`.** A fixed-size array of `capacity` puffs with a `head` write cursor and a `count` of how many slots are live — no allocation after warm-up. `emit` compares squared distance against `spacing²` to avoid a square root. `activePuffs` walks the live slots oldest-first and filters by `nowMs - bornAt < lifetimeMs`. `TRAIL_SPECS` supplies per-kind values; suggested starting points (tune during visual verification): boat `{ spacing: 0.012, lifetimeMs: 6000, capacity: 40, startRadius: 0.012, endScale: 2.5, startAlpha: 0.3 }`, plane `{ spacing: 0.02, lifetimeMs: 8000, capacity: 40, startRadius: 0.01, endScale: 3, startAlpha: 0.35 }`, rocket `{ spacing: 0.01, lifetimeMs: 3000, capacity: 48, startRadius: 0.014, endScale: 2, startAlpha: 0.45 }`. Export from `sim/index.ts`.
+
+- [ ] **Step 4: Run to verify it passes.**
+
+Run: `/Users/burdon/.proto/shims/moon run plugin-terra:test -- src/sim/trail.test.ts`
+Expected: PASS.
+
+- [ ] **Step 5: Implement `scene/trail-layer.ts`.** One `CreateSphere` base mesh (low segment count, e.g. 6), matte white `StandardMaterial` with `alpha` set, `isVisible = false`, rendered as thin instances.
+  - Keep a `Map<TerraObject, Trail>` keyed by definition; on each `update`, emit at a point offset **behind** the object (subtract the forward direction scaled by a small factor from `position = scale(state.unit, state.radius)`), then rebuild the instance matrix buffer from every object's `activePuffs`.
+  - Scale per puff interpolates `startRadius → startRadius * endScale` with `age`.
+  - **Per-instance alpha:** attempt `thinInstanceSetBuffer('color', colors, 4)` with the material configured to consume instance colour, so each puff fades independently. **Verify this actually renders varying alpha.** If it does not, fall back to scale-only fade at constant material alpha (documented fallback) and say so in your report — do NOT leave a non-working colour buffer in place.
+  - The material must not write depth, so overlapping puffs blend rather than z-fight; render after the planet.
+  - `dispose()` disposes the base mesh and its material (`dispose(false, true)`), matching the existing `SceneManager` convention.
+  - Export from `scene/index.ts`.
+
+- [ ] **Step 6: Wire into `TerraArticle`.** Construct `TrailLayer` alongside `ObjectLayer` in the mount-once effect; call `layer.update(engine.objects, performance.now())` in the same `onBeforeRenderObservable` callback that ticks the sim; dispose it before the manager. Do not disturb the existing `Panel.Toolbar`, canvas classes, `TerraForm` overlay, or the debounced regeneration.
+
+- [ ] **Step 7: Verify.**
+
+Run: `/Users/burdon/.proto/shims/moon run plugin-terra:build && /Users/burdon/.proto/shims/moon run plugin-terra:lint -- --fix && /Users/burdon/.proto/shims/moon run plugin-terra:test`
+Expected: all green, output pristine. The controller performs storybook visual verification (boats and planes leave visible fading white chains; trails sit behind the object, not through it; no z-fighting; FPS unaffected).
+
+- [ ] **Step 8: Commit.**
+
+```bash
+pnpm format
+git add packages/plugins/plugin-terra/src
+git commit -m "plugin-terra: smoke trails for ships, planes, and rockets"
+```
+
+---
+
+### Task 10: Changeset
 
 **Files:**
 

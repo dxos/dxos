@@ -163,6 +163,80 @@ Vitest on `sim/` (pure):
 Storybook: `TerraArticle` story with the seeded demo world (2×5 objects)
 animating over the planet.
 
+## Smoke trails (added 2026-07-27, user directive)
+
+Ships and planes leave **chains of small translucent white spheres that trail and
+fade** behind them. Rockets reuse the same mechanism for exhaust.
+
+### Model
+
+A trail is **ephemeral local render state**, never persisted and never in ECHO —
+it is derived from an object's position history, which is itself deterministic,
+so peers see equivalent trails without replicating anything.
+
+`sim/trail.ts` (pure) keeps a fixed-capacity ring buffer of puffs per emitting
+object:
+
+- `type Puff = { position: Vec3; bornAt: number }` — world position (not unit),
+  captured at emission.
+- `type Trail = { puffs: Puff[]; head: number; lastEmitAt: Vec3 | undefined }`
+- `emit(trail, position, nowMs, spacing): Trail` — appends a puff only once the
+  object has travelled `spacing` from the previous emission point, so puff
+  spacing is speed-independent (a fast plane doesn't produce a denser trail than
+  a slow boat, it produces a longer one).
+- `activePuffs(trail, nowMs, lifetimeMs): { position: Vec3; age: number }[]` —
+  puffs younger than `lifetimeMs`, with `age` normalized to `[0, 1]`.
+
+Puffs are emitted **behind** the object (offset opposite its velocity direction)
+and slightly above the surface for ships, so the chain reads as a wake rather
+than as spheres intersecting the hull.
+
+### Rendering (`scene/trail-layer.ts`)
+
+One small low-poly sphere base mesh, matte white, alpha-blended, `isVisible =
+false`, drawn as **thin instances** — one instance per live puff across all
+objects.
+
+Fade combines two effects driven by `age`:
+
+- **Growth:** scale interpolates from a small radius to roughly 2.5× as the puff
+  ages, so smoke visibly expands.
+- **Alpha:** opacity falls from a low starting value (~0.35) to zero.
+
+Per-instance alpha is the one real technical risk: Babylon thin instances share a
+material. Preferred implementation is a per-instance colour buffer
+(`thinInstanceSetBuffer('color', buffer, 4)`, with the material configured to
+consume instance colour) so each puff fades independently. **Verify that path
+works before relying on it**; the documented fallback is scale-only fade (puffs
+shrink to nothing at end of life) at a constant low material alpha, which reads
+acceptably because overlapping translucent spheres already build density.
+
+Depth: the material writes no depth (`needDepthPrePass = false`,
+`disableDepthWrite`-equivalent) so overlapping puffs blend instead of z-fighting;
+they are rendered after the planet.
+
+### Configuration
+
+Per-kind defaults, not ECHO fields (this is a visual affordance, not world data):
+boats and planes emit by default, rockets emit denser/shorter-lived exhaust,
+tanks and satellites emit nothing. A single `TRAIL_SPECS: Record<Kind, TrailSpec
+| undefined>` table holds `spacing`, `lifetimeMs`, `capacity`, `startRadius`,
+`endScale`, and `startAlpha`.
+
+### Budget
+
+Capacity is capped per object (~40 puffs), so ten objects yield a few hundred
+instances — negligible next to the terrain's millions of triangles. The ring
+buffer means emission never allocates after warm-up.
+
+### Testing
+
+`sim/trail.ts` is pure and unit-tested: emission respects `spacing` (no puff
+until the object has moved far enough), the ring buffer never exceeds capacity
+and overwrites oldest-first, `activePuffs` drops expired puffs and reports
+monotonically increasing age, and the same position sequence yields the same
+puffs. The visual result is verified in the storybook.
+
 ## Phasing (Phase 2 tasks; execution follows Phase 1 Tasks 6–13)
 
 - **P2.1** `geo.ts` (+tests)
@@ -173,10 +247,12 @@ animating over the planet.
 - **P2.6** `TerraObject` ECHO type + demo-world seeding in `Terra.make()`
 - **P2.7** `object-forms.ts` (Babylon primitives per type)
 - **P2.8** `object-layer.ts` + scene-manager hook + animated story
+- **P2.9** `trail.ts` (+tests) + `trail-layer.ts` — smoke trails for ships/planes/rockets
 
 ## Out of scope (Phase 3 backlog)
 
-- Explosions, exhaust, smoke, vapor trails (spheres).
+- Explosions and other one-shot effects (the continuous smoke/exhaust/vapor
+  trails are now in scope as P2.9).
 - Sun light source; day/night.
 - Submarines as another object type (underwater variant of sea objects —
   submerged depth, hidden-from-surface behavior).

@@ -61,7 +61,8 @@ definitions. Plan written and committed; execution begins after Phase 1 closes.
 - [ ] **P2.6 — Simulation engine (`sim/engine.ts`)** — clock, `spawnedAt`-derived replan schedule, determinism tests.
 - [ ] **P2.7 — Object meshes (`scene/object-forms.ts`)** — one merged flat-shaded mesh per kind from primitives.
 - [ ] **P2.8 — Object layer + article integration** — thin instances, surface-normal orientation, render-loop tick, `makeDemoWorld` (two per kind), animated story.
-- [ ] **P2.9 — Changeset.**
+- [ ] **P2.9 — Smoke trails** — `sim/trail.ts` (pure ring buffer of puffs, spacing-based emission) + `scene/trail-layer.ts` (thin-instance translucent white spheres that grow and fade); ships, planes, rockets.
+- [ ] **P2.10 — Changeset.**
 
 ### References
 
