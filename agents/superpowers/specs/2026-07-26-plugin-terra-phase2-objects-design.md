@@ -38,13 +38,34 @@ opening the same `Terra` ECHO object reconstructs the same world sim mid-flight:
 
 - Terrain, nav-grid, biomes derive from `Terra.config.seed` (Phase 1 already
   guarantees this).
-- Object runtime state is closed-form (orbits) or integrated (routed types) from
-  ECHO definitions + the object's `spawnedAt` epoch.
-- **Replan times are deterministic too**: scheduled at
-  `spawnedAt + n · replanInterval`, never from a local timer start, so peers
-  replan identical routes at identical sim-times.
-- No `Math.random()` / `Date.now()` inside `sim/` step logic — time is always a
-  parameter; any randomness is seeded from ECHO data.
+- **No frame-rate-dependent integration.** _(Revised 2026-07-27 after review: the
+  original design integrated routed objects with a per-frame `dt`, which silently
+  broke this contract — two peers at different frame cadences accumulate different
+  paths. Variable-`dt` integration is now prohibited in `sim/`.)_
+- **Every object's state is closed-form in absolute time**, evaluated rather than
+  accumulated:
+  - **orbit** (satellite) — circular orbit from `orbit` params + elapsed time.
+  - **ballistic** (rocket) — slerp source→target by flight fraction.
+  - **routed** (boat, tank, plane) — position is the point at arc length
+    `speed × (t − windowStart)` along the current route polyline. Walking a
+    polyline by distance is a pure function of `(waypoints, speed, elapsed)`,
+    so it needs no accumulator.
+- **Replan windows make routing a deterministic recurrence.** Window `n` spans
+  `[spawnedAt + n·replanInterval, spawnedAt + (n+1)·replanInterval)`. The route
+  for window `n` is a pure function of `(navGrid, positionAtWindowStart, target)`,
+  and `positionAtWindowStart` is itself pure by induction from `spawnedAt`. A peer
+  joining late reproduces state by evaluating windows in order — a bounded
+  recurrence (one route plan per 20 s of world time), not a per-frame replay.
+- **Bearing never feeds back into position.** Turn-rate smoothing is applied to
+  _orientation only_, downstream of the position calculation, so a peer that
+  renders at a different cadence sees the same positions even if the visual
+  heading eases slightly differently.
+- No `Math.random()` / `Date.now()` inside `sim/` — time is always a parameter;
+  any randomness is seeded from ECHO data.
+- **Catch-up is bounded.** Evaluating windows is capped (see `MAX_CATCHUP_WINDOWS`);
+  beyond the cap the engine snaps to the latest window start, trading exact replay
+  for not hanging after a long-backgrounded tab. This is the one documented place
+  where two peers can differ, and they re-converge at the next replan boundary.
 
 ## Module layout (within plugin-terra)
 
@@ -92,27 +113,30 @@ satellites on 2 different orbits. Seed placement is derived from the terrain
 
 ## Simulation model
 
-**Runtime state per object (local only):** `position: Vec3`,
-`velocity2d: { bearing, speed }`, `altitude`, `waypoints: Vec3[]`,
-`waypointIndex`, `phase` (rockets: `boost | cruise | descent`).
+**Runtime state per object (local only, all derived — never accumulated):**
+`position: Vec3`, `radius`, `bearing`, `route: Vec3[]`, `windowIndex`,
+`phase` (rockets: `boost | cruise | descent`).
 
-**2D→3D velocity mapping (`geo.ts`):** velocity is bearing+speed in the local
-tangent plane; each tick the object advances along the great circle in that
-bearing and is re-projected to its domain's radius (sea level / cruise altitude
-/ orbit radius / terrain height). This realizes "plane on heading NW at a given
-velocity".
+**2D→3D mapping (`geo.ts`):** a heading is a bearing in the local tangent plane
+(0° = north, 90° = east); moving along that bearing follows the great circle, and
+the result is re-projected to the domain's radius (sea level / terrain height /
+cruise altitude / orbit radius). This realizes "plane on heading NW at a given
+velocity" — but the _evaluated_ form below is what determines position.
 
-**Motion controllers (`motion.ts`):**
+**Motion controllers (`motion.ts`) — all closed-form in absolute time:**
 
-- `surface` (boat, tank): follow waypoints at sea level (boat) or terrain height
-  (tank); bearing turns toward the next waypoint bounded by a max turn rate.
-- `altitude` (plane, submarine): as `surface` at cruise altitude; climbs after source,
-  descends near target; sumbarine as inverse of plane.
+- `routed` (boat, tank, plane): position is the point at arc length
+  `speed × (t − windowStart)` along the current route polyline, walked with
+  great-circle segment lengths; radius is sea level (boat), terrain height
+  (tank), or cruise altitude (plane). Bearing is the polyline tangent at that
+  point. No per-frame accumulation, so frame cadence cannot change the path.
 - `orbit` (satellite): closed-form circular orbit from `orbit` params + elapsed
-  time — exactly deterministic, no integration.
-- `ballistic` (rocket): three phases — vertical `boost` from source, `cruise`
-  arc toward target (slerp with altitude bump), `descent`; phase timing derived
-  from distance and `speed`.
+  time.
+- `ballistic` (rocket): slerp source→target by flight fraction with a sine
+  altitude bump; `boost`/`cruise`/`descent` phases derived from that fraction.
+
+Turn-rate smoothing, if used, applies to the rendered orientation only and must
+not feed back into position.
 
 **Course plotting (`route.ts`):** A* over the nav-grid. Passability by domain:
 

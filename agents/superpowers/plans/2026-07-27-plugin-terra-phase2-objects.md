@@ -960,7 +960,13 @@ git commit -m "plugin-terra: TerraObject ECHO type"
 
 ---
 
-### Task 5: Motion controllers (`motion.ts`)
+### Task 5: Motion controllers (`sim/motion.ts`)
+
+> **Design revised 2026-07-27 after PR review.** The original design integrated
+> routed objects with a per-frame `dt`, which breaks peer determinism — two
+> clients at different frame cadences accumulate different paths. **All motion is
+> now closed-form in absolute time: evaluated, never accumulated.** No controller
+> takes a `dt` parameter.
 
 **Files:**
 
@@ -969,114 +975,23 @@ git commit -m "plugin-terra: TerraObject ECHO type"
 
 **Interfaces:**
 
-- Consumes: `Vec3`, `TerraConfigValues`, `radiusAt`, `seaRadius`, `makeSampler` from `../engine`; `advance`, `angleBetween`, `bearingTo`, `toUnit`, `turnToward` from `./geo`; `TerraObject` types.
+- Consumes: `Vec3`, `TerraConfigValues`, `radiusAt`, `seaRadius`, `makeSampler`, `normalize`, `add`, `scale` from `../engine`; `angleBetween`, `bearingTo`, `toUnit` from `./geo`; `TerraObject` from `../types`.
 - Produces:
-  - `type ObjectState = { unit: Vec3; radius: number; bearing: number; waypoints: Vec3[]; waypointIndex: number; phase: RocketPhase }`
   - `type RocketPhase = 'boost' | 'cruise' | 'descent'`
-  - `type MotionContext = { config: TerraConfigValues; elapsed: number }` — `elapsed` is simulated seconds since the object's `spawnedAt`.
+  - `type ObjectState = { unit: Vec3; radius: number; bearing: number; route: Vec3[]; windowIndex: number; phase: RocketPhase }`
+  - `type MotionContext = { config: TerraConfigValues; elapsed: number }` — `elapsed` = seconds since the object's `spawnedAt`.
+  - `walkRoute(route: readonly Vec3[], distance: number): { unit: Vec3; bearing: number; done: boolean }` — the point at arc length `distance` along a great-circle polyline, its forward tangent as a bearing, and whether the end was reached. **Exported and independently tested** — it is the core of the determinism guarantee.
   - `initialState(definition, config): ObjectState`
-  - `stepSurface(state, definition, context, dt): ObjectState` — boats and tanks.
-  - `stepAltitude(state, definition, context, dt): ObjectState` — planes.
-  - `stepOrbit(state, definition, context): ObjectState` — closed form, ignores `dt`.
-  - `stepBallistic(state, definition, context): ObjectState` — rockets; closed form from elapsed time.
-  - `step(state, definition, context, dt): ObjectState` — dispatches on `definition.kind`.
+  - `evaluate(state, definition, context): ObjectState` — returns the object's state AT `context.elapsed`; pure, idempotent, no `dt`.
 
-`radius` is the distance from the planet centre: surface objects sit at `max(seaRadius, radiusAt(elevation))`; planes at `seaRadius × (1 + CRUISE_ALTITUDE)`; satellites at `seaRadius × (1 + orbit.altitude)`; rockets interpolate from surface to `seaRadius × (1 + BALLISTIC_APEX)` and back.
+Radius by kind: boat → `seaRadius`; tank → `max(seaRadius, radiusAt(elevation))`; plane → `seaRadius × (1 + CRUISE_ALTITUDE)`; satellite → `seaRadius × (1 + orbit.altitude)`; rocket → `max(surface, seaRadius × (1 + BALLISTIC_APEX · sin(π·fraction)))`.
 
-- [ ] **Step 1: Write the failing test.**
-
-```ts
-//
-// Copyright 2026 DXOS.org
-//
-
-import { describe, expect, test } from 'vitest';
-
-import { Terra, TerraObject } from '../types';
-import { angleBetween, toUnit } from './geo';
-import { initialState, step } from './motion';
-
-const config = Terra.toConfigValues(Terra.make({ config: { seed: 'motion-1' } }));
-
-const boat = TerraObject.make({
-  kind: 'boat',
-  speed: 0.05,
-  source: { lat: 0, lng: 0, height: 0 },
-  target: { lat: 0, lng: 30, height: 0 },
-  spawnedAt: 0,
-});
-
-const satellite = TerraObject.make({
-  kind: 'satellite',
-  speed: 0,
-  orbit: { altitude: 0.5, inclination: 30, phase: 0, period: 60 },
-  spawnedAt: 0,
-});
-
-const rocket = TerraObject.make({
-  kind: 'rocket',
-  speed: 0.05,
-  source: { lat: 0, lng: 0, height: 0 },
-  target: { lat: 20, lng: 20, height: 0 },
-  spawnedAt: 0,
-});
-
-describe('motion', () => {
-  test('initial state sits on the source point', () => {
-    const state = initialState(boat, config);
-    const source = toUnit({ lat: 0, lng: 0 });
-    expect(angleBetween(state.unit, source)).toBeCloseTo(0, 6);
-  });
-
-  test('a surface object moves toward its waypoint', () => {
-    const start = { ...initialState(boat, config), waypoints: [toUnit({ lat: 0, lng: 30 })], waypointIndex: 0 };
-    const moved = step(start, boat, { config, elapsed: 1 }, 1);
-    const target = toUnit({ lat: 0, lng: 30 });
-    expect(angleBetween(moved.unit, target)).toBeLessThan(angleBetween(start.unit, target));
-  });
-
-  test('a surface object never leaves the planet surface', () => {
-    let state = { ...initialState(boat, config), waypoints: [toUnit({ lat: 0, lng: 30 })], waypointIndex: 0 };
-    for (let tick = 0; tick < 20; tick++) {
-      state = step(state, boat, { config, elapsed: tick }, 0.5);
-      expect(Math.hypot(...state.unit)).toBeCloseTo(1, 9);
-      expect(state.radius).toBeGreaterThan(0);
-    }
-  });
-
-  test('an orbit is closed form: the same elapsed time gives the same position', () => {
-    const first = step(initialState(satellite, config), satellite, { config, elapsed: 12.5 }, 0.016);
-    const second = step(initialState(satellite, config), satellite, { config, elapsed: 12.5 }, 0.016);
-    expect(first.unit).toEqual(second.unit);
-  });
-
-  test('an orbit returns to its start after one period', () => {
-    const atZero = step(initialState(satellite, config), satellite, { config, elapsed: 0 }, 0.016);
-    const atPeriod = step(initialState(satellite, config), satellite, { config, elapsed: 60 }, 0.016);
-    expect(angleBetween(atZero.unit, atPeriod.unit)).toBeCloseTo(0, 6);
-  });
-
-  test('an orbiting object stays above the surface', () => {
-    const state = step(initialState(satellite, config), satellite, { config, elapsed: 7 }, 0.016);
-    expect(state.radius).toBeGreaterThan(config.radius);
-  });
-
-  test('a rocket climbs then descends through its phases', () => {
-    const boost = step(initialState(rocket, config), rocket, { config, elapsed: 0.1 }, 0.016);
-    const cruise = step(initialState(rocket, config), rocket, { config, elapsed: 5 }, 0.016);
-    const descent = step(initialState(rocket, config), rocket, { config, elapsed: 100 }, 0.016);
-    expect(boost.phase).toBe('boost');
-    expect(cruise.phase).toBe('cruise');
-    expect(descent.phase).toBe('descent');
-    expect(cruise.radius).toBeGreaterThan(boost.radius);
-  });
-
-  test('a rocket ends at its target', () => {
-    const landed = step(initialState(rocket, config), rocket, { config, elapsed: 1e6 }, 0.016);
-    expect(angleBetween(landed.unit, toUnit({ lat: 20, lng: 20 }))).toBeCloseTo(0, 4);
-  });
-});
-```
+- [ ] **Step 1: Write the failing test.** Cover, with real assertions:
+  - `walkRoute` at distance 0 returns the first point; at a distance beyond total length returns the last point with `done: true`; at half the total length of a two-equal-segment route returns the midpoint; the returned bearing points along the segment.
+  - **Idempotence/determinism (the key property):** `evaluate` called twice with the same `elapsed` returns identical state; and evaluating directly at `elapsed = 10` equals evaluating at `elapsed = 10` after first evaluating at 1, 3, and 7 (i.e. history cannot affect the result).
+  - A routed object with a known two-waypoint route is farther along at larger `elapsed`, and clamps at the destination.
+  - Orbit: same `elapsed` → same position; returns to start after one period; radius above the surface.
+  - Rocket: `boost` / `cruise` / `descent` at increasing fractions; apex radius greater than at launch; ends at the target.
 
 - [ ] **Step 2: Run to verify it fails.**
 
@@ -1084,225 +999,26 @@ Run: `/Users/burdon/.proto/shims/moon run plugin-terra:test -- src/sim/motion.te
 Expected: FAIL.
 
 - [ ] **Step 3: Implement `motion.ts`.**
+  - `walkRoute`: accumulate great-circle segment lengths (`angleBetween`) until the running total exceeds `distance`, then slerp within that segment by the remainder; bearing from the segment's forward tangent via `bearingTo`. Handle the empty and single-point routes without throwing.
+  - `evaluate` dispatches on `definition.kind`: routed kinds walk `state.route` by `definition.speed × (elapsed − windowStart)` where `windowStart` comes from `state.windowIndex` (see Task 6); satellites and rockets use their closed forms.
+  - Constants: `CRUISE_ALTITUDE = 0.06`, `BALLISTIC_APEX = 0.35`, `BOOST_FRACTION = 0.15`, `DESCENT_FRACTION = 0.85`.
+  - **No `dt` parameter anywhere in this module.**
 
-```ts
-//
-// Copyright 2026 DXOS.org
-//
-
-import {
-  type TerraConfigValues,
-  type Vec3,
-  add,
-  cross,
-  makeSampler,
-  normalize,
-  radiusAt,
-  scale,
-  seaRadius,
-} from '../engine';
-import { type TerraObject } from '../types';
-import { advance, angleBetween, bearingTo, toUnit, turnToward } from './geo';
-
-export type RocketPhase = 'boost' | 'cruise' | 'descent';
-
-export type ObjectState = {
-  unit: Vec3;
-  radius: number;
-  bearing: number;
-  waypoints: Vec3[];
-  waypointIndex: number;
-  phase: RocketPhase;
-};
-
-export type MotionContext = {
-  config: TerraConfigValues;
-  /** Simulated seconds since the object's `spawnedAt`. */
-  elapsed: number;
-};
-
-/** Cruise height for aircraft, as a fraction of the sea-level radius. */
-const CRUISE_ALTITUDE = 0.06;
-
-/** Apex height for a ballistic arc, as a fraction of the sea-level radius. */
-const BALLISTIC_APEX = 0.35;
-
-/** Fraction of a rocket's flight spent climbing, and the fraction at which descent begins. */
-const BOOST_FRACTION = 0.15;
-const DESCENT_FRACTION = 0.85;
-
-/** Degrees per second a surface object may turn; keeps tracks readable rather than instant. */
-const TURN_RATE = 90;
-
-/** Distance (radians) within which a waypoint counts as reached. */
-const ARRIVAL_ANGLE = 0.01;
-
-const surfaceRadius = (config: TerraConfigValues, unit: Vec3): number => {
-  const { elevation } = makeSampler(config);
-  // Clamp to the sea surface so boats float rather than sinking to the ocean floor.
-  return Math.max(seaRadius(config), radiusAt(config, elevation(unit)));
-};
-
-/** Starting state for an object, placed at its source (or at the sub-orbital point for satellites). */
-export const initialState = (definition: TerraObject.TerraObject, config: TerraConfigValues): ObjectState => {
-  const unit = definition.source ? toUnit(definition.source) : toUnit({ lat: 0, lng: 0 });
-  return {
-    unit,
-    radius: surfaceRadius(config, unit),
-    bearing: definition.heading ?? 0,
-    waypoints: [],
-    waypointIndex: 0,
-    phase: 'boost',
-  };
-};
-
-/** Advances a waypoint-following object across the surface. */
-export const stepSurface = (
-  state: ObjectState,
-  definition: TerraObject.TerraObject,
-  { config }: MotionContext,
-  dt: number,
-): ObjectState => {
-  const waypoint = state.waypoints[state.waypointIndex];
-  if (!waypoint) {
-    return state;
-  }
-
-  const reached = angleBetween(state.unit, waypoint) < ARRIVAL_ANGLE;
-  const waypointIndex = reached ? Math.min(state.waypointIndex + 1, state.waypoints.length) : state.waypointIndex;
-  const active = state.waypoints[waypointIndex];
-  if (!active) {
-    return { ...state, waypointIndex };
-  }
-
-  const bearing = turnToward(state.bearing, bearingTo(state.unit, active), TURN_RATE * dt);
-  const unit = advance(state.unit, bearing, definition.speed * dt);
-  return { ...state, unit, bearing, waypointIndex, radius: surfaceRadius(config, unit) };
-};
-
-/** As `stepSurface`, but held at cruise altitude. */
-export const stepAltitude = (
-  state: ObjectState,
-  definition: TerraObject.TerraObject,
-  context: MotionContext,
-  dt: number,
-): ObjectState => {
-  const moved = stepSurface(state, definition, context, dt);
-  return { ...moved, radius: seaRadius(context.config) * (1 + CRUISE_ALTITUDE) };
-};
-
-/** Closed-form circular orbit; position depends only on elapsed time, so peers always agree. */
-export const stepOrbit = (
-  state: ObjectState,
-  definition: TerraObject.TerraObject,
-  { config, elapsed }: MotionContext,
-): ObjectState => {
-  const orbit = definition.orbit;
-  if (!orbit) {
-    return state;
-  }
-
-  const angle = orbit.phase + (elapsed / orbit.period) * Math.PI * 2;
-  const inclination = orbit.inclination * (Math.PI / 180);
-  // Build the orbital plane from an equatorial circle tilted by the inclination.
-  const equatorial: Vec3 = [Math.cos(angle), 0, Math.sin(angle)];
-  const unit = normalize([equatorial[0], equatorial[2] * Math.sin(inclination), equatorial[2] * Math.cos(inclination)]);
-  const ahead = angle + 1e-3;
-  const nextEquatorial: Vec3 = [Math.cos(ahead), 0, Math.sin(ahead)];
-  const next = normalize([
-    nextEquatorial[0],
-    nextEquatorial[2] * Math.sin(inclination),
-    nextEquatorial[2] * Math.cos(inclination),
-  ]);
-  return {
-    ...state,
-    unit,
-    radius: seaRadius(config) * (1 + orbit.altitude),
-    bearing: bearingTo(unit, next),
-    phase: 'cruise',
-  };
-};
-
-/** Closed-form ballistic arc from source to target, climbing to an apex and descending. */
-export const stepBallistic = (
-  state: ObjectState,
-  definition: TerraObject.TerraObject,
-  { config, elapsed }: MotionContext,
-): ObjectState => {
-  const { source, target } = definition;
-  if (!source || !target) {
-    return state;
-  }
-
-  const from = toUnit(source);
-  const to = toUnit(target);
-  const total = angleBetween(from, to);
-  const duration = definition.speed > 0 ? total / definition.speed : 0;
-  const fraction = duration > 0 ? Math.min(1, elapsed / duration) : 1;
-
-  const angle = angleBetween(from, to);
-  const unit =
-    angle < 1e-9
-      ? from
-      : normalize(
-          add(
-            scale(from, Math.sin((1 - fraction) * angle) / Math.sin(angle)),
-            scale(to, Math.sin(fraction * angle) / Math.sin(angle)),
-          ),
-        );
-
-  // A sine bump gives zero extra height at both ends and the apex at mid-flight.
-  const altitude = BALLISTIC_APEX * Math.sin(fraction * Math.PI);
-  const phase: RocketPhase = fraction < BOOST_FRACTION ? 'boost' : fraction < DESCENT_FRACTION ? 'cruise' : 'descent';
-  const surface = surfaceRadius(config, unit);
-  return {
-    ...state,
-    unit,
-    radius: Math.max(surface, seaRadius(config) * (1 + altitude)),
-    bearing: angle < 1e-9 ? state.bearing : bearingTo(unit, to),
-    phase,
-  };
-};
-
-/** Advances one object by its kind's motion model. */
-export const step = (
-  state: ObjectState,
-  definition: TerraObject.TerraObject,
-  context: MotionContext,
-  dt: number,
-): ObjectState => {
-  switch (definition.kind) {
-    case 'boat':
-    case 'tank':
-      return stepSurface(state, definition, context, dt);
-    case 'plane':
-      return stepAltitude(state, definition, context, dt);
-    case 'satellite':
-      return stepOrbit(state, definition, context);
-    case 'rocket':
-      return stepBallistic(state, definition, context);
-  }
-};
-```
-
-Note: `cross` is imported for the orbital-plane construction only if you need a general basis; if the implementation above does not use it, remove the unused import rather than leaving it.
-
-- [ ] **Step 4: Run to verify it passes.**
-
-Run: `/Users/burdon/.proto/shims/moon run plugin-terra:test -- src/sim/motion.test.ts`
-Expected: PASS (8 tests).
+- [ ] **Step 4: Run to verify it passes; then the whole package suite.**
 
 - [ ] **Step 5: Commit.**
 
 ```bash
 pnpm format
 git add packages/plugins/plugin-terra/src/sim
-git commit -m "plugin-terra: motion controllers for each object kind"
+git commit -m "plugin-terra: closed-form motion controllers"
 ```
 
 ---
 
-### Task 6: Simulation engine (`engine.ts`, `sim/index.ts`)
+### Task 6: Simulation engine (`sim/engine.ts`, `sim/index.ts`)
+
+> Revised alongside Task 5: the engine advances **replan windows**, not frames.
 
 **Files:**
 
@@ -1312,247 +1028,40 @@ git commit -m "plugin-terra: motion controllers for each object kind"
 
 **Interfaces:**
 
-- Consumes: everything above.
 - Produces:
+  - `const REPLAN_INTERVAL_MS = 20_000`
+  - `const MAX_CATCHUP_WINDOWS = 8` — bounds the recurrence after a long-backgrounded tab.
   - `type SimObject = { definition: TerraObject.TerraObject; state: ObjectState }`
   - `class SimEngine`:
     - `constructor(options: { config: TerraConfigValues; definitions: readonly TerraObject.TerraObject[]; grid?: NavGrid })`
     - `get objects(): readonly SimObject[]`
-    - `tick(nowMs: number): void` — advances every object; the first call establishes the clock origin without moving anything.
+    - `evaluateAt(nowMs: number): void` — brings every object to its state at absolute `nowMs`.
     - `reset(): void`
-  - `REPLAN_INTERVAL_MS` — exported so tests and callers agree on the schedule.
 
-Determinism: replans for an object happen when `floor((nowMs - spawnedAt) / REPLAN_INTERVAL_MS)` increases, so the schedule is a function of wall-clock and `spawnedAt` only — never of when the local session started.
+**How the recurrence works (this is the determinism guarantee — implement exactly):**
+For an object with `source`/`target`, window `n` spans `[spawnedAt + n·REPLAN_INTERVAL_MS, …)`. The route for window `n` is `planRoute({ grid, domain: TerraObject.domainFor(kind), from: <position at window n's start>, to: toUnit(target) })`. Position at window `n`'s start is obtained by evaluating window `n−1` at its full duration. So `evaluateAt(nowMs)`:
 
-- [ ] **Step 1: Write the failing test.**
+1. computes `targetWindow = floor((nowMs − spawnedAt) / REPLAN_INTERVAL_MS)`;
+2. while `state.windowIndex < targetWindow` (capped at `MAX_CATCHUP_WINDOWS` iterations), advances one window: evaluate the current route to its end, then replan from that position and increment `windowIndex`;
+3. if the gap exceeded the cap, snaps `windowIndex` to `targetWindow` and replans from the current position — the one documented divergence point;
+4. finally calls `evaluate(state, definition, { config, elapsed: (nowMs − spawnedAt)/1000 })`.
 
-```ts
-//
-// Copyright 2026 DXOS.org
-//
+Closed-form kinds (satellite, rocket) skip windows entirely — just call `evaluate`.
 
-import { describe, expect, test } from 'vitest';
+**Import `TerraObject.domainFor`** from Task 4 rather than re-deriving the kind→domain mapping. If that creates an import cycle (`types` → `sim/nav-grid` → `engine`), move `Domain` into `sim/types.ts` and have both import from there; report which you did.
 
-import { Terra, TerraObject } from '../types';
-import { SimEngine } from './engine';
+- [ ] **Step 1: Write the failing test.** Must include these determinism assertions:
+  - two engines given the same definitions and the same FINAL `nowMs` reach identical state, even when one was stepped through many intermediate times and the other jumped straight there (**this is the test that would have caught the original variable-`dt` bug**);
+  - `evaluateAt` is idempotent: calling it twice with the same `nowMs` changes nothing;
+  - objects do move as `nowMs` advances;
+  - a routed object's `windowIndex` increments at `spawnedAt + n·REPLAN_INTERVAL_MS`;
+  - `reset()` restores initial state.
 
-const config = Terra.toConfigValues(Terra.make({ config: { seed: 'engine-1' } }));
+- [ ] **Step 2: RED.** — [ ] **Step 3: Implement.** — [ ] **Step 4: GREEN + full suite.**
 
-const definitions = [
-  TerraObject.make({
-    kind: 'satellite',
-    speed: 0,
-    orbit: { altitude: 0.5, inclination: 20, phase: 0, period: 30 },
-    spawnedAt: 0,
-  }),
-  TerraObject.make({
-    kind: 'rocket',
-    speed: 0.02,
-    source: { lat: 0, lng: 0, height: 0 },
-    target: { lat: 30, lng: 45, height: 0 },
-    spawnedAt: 0,
-  }),
-];
+- [ ] **Step 5:** Create `sim/index.ts` re-exporting `./geo`, `./nav-grid`, `./route`, `./motion`, `./engine`.
 
-const runTo = (engine: SimEngine, times: number[]): void => {
-  for (const time of times) {
-    engine.tick(time);
-  }
-};
-
-describe('SimEngine', () => {
-  test('exposes one runtime object per definition', () => {
-    const engine = new SimEngine({ config, definitions });
-    expect(engine.objects).toHaveLength(definitions.length);
-  });
-
-  test('the first tick establishes the clock without moving anything', () => {
-    const engine = new SimEngine({ config, definitions });
-    const before = engine.objects.map((object) => object.state.unit);
-    engine.tick(1_000);
-    expect(engine.objects.map((object) => object.state.unit)).toEqual(before);
-  });
-
-  test('objects move once time advances', () => {
-    const engine = new SimEngine({ config, definitions });
-    const before = engine.objects[0].state.unit;
-    runTo(engine, [1_000, 6_000]);
-    expect(engine.objects[0].state.unit).not.toEqual(before);
-  });
-
-  test('identical definitions and clocks give identical positions', () => {
-    const first = new SimEngine({ config, definitions });
-    const second = new SimEngine({ config, definitions });
-    const schedule = [0, 500, 1_200, 3_400, 9_000];
-    runTo(first, schedule);
-    runTo(second, schedule);
-    expect(first.objects.map((object) => object.state)).toEqual(second.objects.map((object) => object.state));
-  });
-
-  test('replays to the same place regardless of tick granularity for closed-form objects', () => {
-    const coarse = new SimEngine({ config, definitions });
-    const fine = new SimEngine({ config, definitions });
-    runTo(coarse, [0, 10_000]);
-    runTo(fine, [0, 2_000, 4_000, 6_000, 8_000, 10_000]);
-    // The satellite is closed form, so its position depends only on the final clock reading.
-    expect(coarse.objects[0].state.unit).toEqual(fine.objects[0].state.unit);
-  });
-
-  test('reset returns objects to their initial state', () => {
-    const engine = new SimEngine({ config, definitions });
-    const before = engine.objects.map((object) => object.state.unit);
-    runTo(engine, [0, 5_000]);
-    engine.reset();
-    expect(engine.objects.map((object) => object.state.unit)).toEqual(before);
-  });
-});
-```
-
-- [ ] **Step 2: Run to verify it fails.**
-
-Run: `/Users/burdon/.proto/shims/moon run plugin-terra:test -- src/sim/engine.test.ts`
-Expected: FAIL.
-
-- [ ] **Step 3: Implement `engine.ts`.**
-
-```ts
-//
-// Copyright 2026 DXOS.org
-//
-
-import { type TerraConfigValues } from '../engine';
-import { type TerraObject } from '../types';
-import { type ObjectState, type MotionContext, initialState, step } from './motion';
-import { type NavGrid, buildNavGrid } from './nav-grid';
-import { planRoute } from './route';
-import { toUnit } from './geo';
-
-/** How often a routed object recomputes its course, in milliseconds of simulated clock. */
-export const REPLAN_INTERVAL_MS = 20_000;
-
-export type SimObject = {
-  definition: TerraObject.TerraObject;
-  state: ObjectState;
-};
-
-export type SimEngineOptions = {
-  config: TerraConfigValues;
-  definitions: readonly TerraObject.TerraObject[];
-  /** Prebuilt grid; supplied by callers that already built one for the same config. */
-  grid?: NavGrid;
-};
-
-/**
- * Advances every object each frame. Positions are derived from the ECHO definitions and the clock
- * alone, so any peer replaying the same definitions reaches the same state.
- */
-export class SimEngine {
-  readonly #config: TerraConfigValues;
-  readonly #grid: NavGrid;
-  #objects: SimObject[];
-  #lastTick: number | undefined;
-  #replanCounters = new Map<TerraObject.TerraObject, number>();
-
-  constructor({ config, definitions, grid }: SimEngineOptions) {
-    this.#config = config;
-    this.#grid = grid ?? buildNavGrid(config);
-    this.#objects = definitions.map((definition) => ({
-      definition,
-      state: initialState(definition, config),
-    }));
-  }
-
-  get objects(): readonly SimObject[] {
-    return this.#objects;
-  }
-
-  /** Advances the simulation to `nowMs`. The first call only establishes the clock origin. */
-  tick(nowMs: number): void {
-    const previous = this.#lastTick;
-    this.#lastTick = nowMs;
-    if (previous === undefined) {
-      return;
-    }
-
-    const dt = Math.max(0, (nowMs - previous) / 1000);
-    this.#objects = this.#objects.map(({ definition, state }) => {
-      const context: MotionContext = { config: this.#config, elapsed: (nowMs - definition.spawnedAt) / 1000 };
-      const routed = this.#maybeReplan(definition, state, nowMs);
-      return { definition, state: step(routed, definition, context, dt) };
-    });
-  }
-
-  /** Restores every object to its spawn state and forgets the clock. */
-  reset(): void {
-    this.#objects = this.#objects.map(({ definition }) => ({
-      definition,
-      state: initialState(definition, this.#config),
-    }));
-    this.#lastTick = undefined;
-    this.#replanCounters.clear();
-  }
-
-  /**
-   * Recomputes a route when the object crosses a replan boundary. The boundary is derived from
-   * `spawnedAt`, not from when this session started, so peers replan in lockstep.
-   */
-  #maybeReplan(definition: TerraObject.TerraObject, state: ObjectState, nowMs: number): ObjectState {
-    const { source, target, kind } = definition;
-    if (!source || !target || kind === 'satellite' || kind === 'rocket') {
-      return state;
-    }
-
-    const period = Math.floor((nowMs - definition.spawnedAt) / REPLAN_INTERVAL_MS);
-    if (this.#replanCounters.get(definition) === period && state.waypoints.length > 0) {
-      return state;
-    }
-    this.#replanCounters.set(definition, period);
-
-    const waypoints = planRoute({
-      grid: this.#grid,
-      domain: TerraObjectDomain(definition),
-      from: state.unit,
-      to: toUnit(target),
-    });
-    return waypoints.length > 0 ? { ...state, waypoints, waypointIndex: 0 } : state;
-  }
-}
-
-/** Local helper kept out of the class so the domain mapping stays a pure function. */
-const TerraObjectDomain = (definition: TerraObject.TerraObject) => {
-  switch (definition.kind) {
-    case 'boat':
-      return 'sea' as const;
-    case 'tank':
-      return 'land' as const;
-    default:
-      return 'air' as const;
-  }
-};
-```
-
-Then create `sim/index.ts`:
-
-```ts
-//
-// Copyright 2026 DXOS.org
-//
-
-export * from './geo';
-export * from './nav-grid';
-export * from './route';
-export * from './motion';
-export * from './engine';
-```
-
-- [ ] **Step 4: Run to verify it passes, then the whole package.**
-
-Run: `/Users/burdon/.proto/shims/moon run plugin-terra:test -- src/sim/engine.test.ts`
-Expected: PASS (6 tests).
-Run: `/Users/burdon/.proto/shims/moon run plugin-terra:test`
-Expected: all suites green.
-
-- [ ] **Step 5: Commit.**
+- [ ] **Step 6: Commit.**
 
 ```bash
 pnpm format
