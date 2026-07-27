@@ -12,20 +12,15 @@ import { Terra } from '#types';
 
 import { TerraArticle } from './TerraArticle';
 
-type StoryArgs = {
-  seed?: string;
-};
+type StoryArgs = Partial<Terra.TerraConfig>;
 
-const DefaultStory = ({ seed }: StoryArgs) => {
+const DefaultStory = (props: StoryArgs) => {
   const terra = useMemo(
     () =>
       Terra.make({
-        config: {
-          seed: seed ?? 'terra-4',
-          resolution: 256,
-        },
+        config: props,
       }),
-    [seed],
+    [props],
   );
 
   return <TerraArticle subject={terra} attendableId='story' role='article' />;
@@ -45,6 +40,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {},
+export const Default: Story = {};
+
+export const Hires: Story = {
+  args: {
+    resolution: 512,
+    seed: 'terra-4',
+  },
 };

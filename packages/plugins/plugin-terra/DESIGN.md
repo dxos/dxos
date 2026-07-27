@@ -123,12 +123,12 @@ src/types/TerraObject.ts  ECHO definition (kind, speed, source/target, orbit, sp
 
 Tracked in the Phase 2 spec; summarized here.
 
+- Effects: explosions, exhaust, smoke, vapor trails (spheres).
 - Surface (flyover/walk) camera with per-face quadtree LOD and chunk streaming.
 - Zoom-dependent terrain resolution.
 - Sun/directional light; day–night.
 - Clouds (stylized, Katamari-like); smooth/blur polygons as an alternate style.
 - Fog; rivers as flow lines; fields as ground-texture variation.
-- Effects: explosions, exhaust, smoke, vapor trails (spheres).
 - More object kinds: submarines, trains.
 - Rocket landing sites as first-class entities.
 - Versor-style quaternion drag rotation (from `react-ui-geo`).
