@@ -11,7 +11,7 @@ export type RocketPhase = 'boost' | 'cruise' | 'descent';
 
 /**
  * A movable object's state at a single instant. Everything here is a pure function of
- * `(definition, config, elapsed)` — `route` and `windowIndex` are carried forward unchanged by
+ * `(definition, config, elapsed)` — `route`, `legStart`, and `leg` are carried forward unchanged by
  * `evaluate` (routed kinds) or recomputed fresh each call (satellite, rocket); neither ever
  * accumulates history.
  */
@@ -20,10 +20,11 @@ export type ObjectState = {
   radius: number;
   bearing: number;
   route: Vec3[];
-  windowIndex: number;
-  /** Which destination in this object's re-targeting sequence it is currently walking toward; `sim/engine.ts` owns the recurrence that advances it on arrival. */
+  /** Elapsed seconds (since `spawnedAt`) at which the current `leg` began; `route`'s arc length is walked starting from this instant, not from a fixed-cadence window. */
+  legStart: number;
+  /** Which destination in this object's re-targeting sequence it is currently walking toward; `sim/engine.ts` owns the arrival-driven recurrence that advances it. */
   leg: number;
-  /** Whether the object has reached the end of `route` at this `elapsed` — `sim/engine.ts` uses this to decide when to advance `leg`. */
+  /** Whether the object has reached the end of `route` at this `elapsed`. */
   arrived: boolean;
   phase: RocketPhase;
 };
@@ -42,14 +43,6 @@ const BOOST_FRACTION = 0.15;
 
 /** Flight fraction above which a rocket has entered descent. */
 const DESCENT_FRACTION = 0.85;
-
-/**
- * Length, in seconds, of a replan window. `evaluate` uses this only to turn a routed object's
- * `windowIndex` into an elapsed offset (`windowStart`); Task 6's `sim/engine.ts` owns the actual
- * replan recurrence and should import this value (× 1000 for its own ms-based scheduling) rather
- * than redefining it, so the two modules cannot drift apart.
- */
-export const REPLAN_INTERVAL_SECONDS = 20;
 
 /** Degrees to radians. */
 const DEG = Math.PI / 180;
@@ -116,6 +109,20 @@ export const walkRoute = (route: readonly Vec3[], distance: number): { unit: Vec
   return { unit: route[route.length - 1], bearing: finalBearing(route), done: true };
 };
 
+/**
+ * Total arc length of `route`, in radians — the sum of each segment's central angle. Zero for
+ * empty or single-point routes. `sim/engine.ts` divides this by an object's `speed` to get how long
+ * (in seconds) a leg takes to walk end to end, which is what makes leg duration variable rather
+ * than tied to a fixed clock.
+ */
+export const routeLength = (route: readonly Vec3[]): number => {
+  let total = 0;
+  for (let index = 0; index < route.length - 1; index++) {
+    total += angleBetween(route[index], route[index + 1]);
+  }
+  return total;
+};
+
 /** A straight great-circle route between an object's source and target, used until Task 6 replans it over the nav grid. */
 const routeFromEndpoints = (definition: TerraObject.TerraObject): Vec3[] => {
   const source = definition.source ? toUnit(definition.source) : undefined;
@@ -153,15 +160,14 @@ const evaluateRouted = (
   definition: TerraObject.TerraObject,
   context: MotionContext,
 ): ObjectState => {
-  const windowStart = state.windowIndex * REPLAN_INTERVAL_SECONDS;
-  const distance = definition.speed * clampNonNegative(context.elapsed - windowStart);
+  const distance = definition.speed * clampNonNegative(context.elapsed - state.legStart);
   const { unit, bearing, done } = walkRoute(state.route, distance);
   return {
     unit,
     radius: routedRadius(definition.kind, context.config, unit),
     bearing,
     route: state.route,
-    windowIndex: state.windowIndex,
+    legStart: state.legStart,
     leg: state.leg,
     arrived: done,
     phase: 'cruise',
@@ -187,7 +193,7 @@ const evaluateOrbit = (definition: TerraObject.TerraObject, context: MotionConte
       radius: seaRadius(context.config),
       bearing: 0,
       route: [],
-      windowIndex: 0,
+      legStart: 0,
       leg: 0,
       arrived: false,
       phase: 'cruise',
@@ -205,7 +211,7 @@ const evaluateOrbit = (definition: TerraObject.TerraObject, context: MotionConte
     radius: seaRadius(context.config) * (1 + orbit.altitude),
     bearing: bearingTo(unit, ahead),
     route: [],
-    windowIndex: 0,
+    legStart: 0,
     leg: 0,
     arrived: false,
     phase: 'cruise',
@@ -231,7 +237,7 @@ const evaluateRocket = (definition: TerraObject.TerraObject, context: MotionCont
     radius: Math.max(surface, apex),
     bearing,
     route: [source, target],
-    windowIndex: 0,
+    legStart: 0,
     leg: 0,
     arrived: fraction >= 1,
     phase,
@@ -251,7 +257,7 @@ export const initialState = (definition: TerraObject.TerraObject, config: TerraC
         radius: routedRadius(definition.kind, config, unit),
         bearing,
         route,
-        windowIndex: 0,
+        legStart: 0,
         leg: 0,
         arrived: done,
         phase: 'cruise',

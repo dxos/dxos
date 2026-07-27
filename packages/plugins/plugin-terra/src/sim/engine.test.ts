@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import seedrandom from 'seedrandom';
 import { describe, expect, test } from 'vitest';
 
+import { type Vec3 } from '../engine';
 import { Terra, TerraObject } from '../types';
-import { MAX_CATCHUP_WINDOWS, REPLAN_INTERVAL_MS, SimEngine } from './engine';
-import { toGeo } from './geo';
-import { REPLAN_INTERVAL_SECONDS } from './motion';
+import { MAX_CATCHUP_LEGS, SimEngine } from './engine';
+import { angleBetween, toGeo, toUnit } from './geo';
 import { buildNavGrid, isPassable } from './nav-grid';
+import { pickReachableTarget } from './reachable';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'engine-1' } }));
 const grid = buildNavGrid(config, 16);
@@ -90,7 +92,7 @@ const definitions = [boat, tank, plane, satellite];
 
 describe('SimEngine — determinism (the property that must survive)', () => {
   test('jumping straight to a final time matches stepping through many intermediate times', () => {
-    const finalMs = 3 * REPLAN_INTERVAL_MS + 15_000;
+    const finalMs = 75_000;
 
     const direct = new SimEngine({ config, definitions, grid });
     direct.evaluateAt(finalMs);
@@ -126,19 +128,6 @@ describe('SimEngine — determinism (the property that must survive)', () => {
     }
   });
 
-  test("a routed object's windowIndex increments at spawnedAt + n * REPLAN_INTERVAL_MS", () => {
-    const engine = new SimEngine({ config, definitions: [boat], grid });
-
-    engine.evaluateAt(REPLAN_INTERVAL_MS - 1);
-    expect(engine.objects[0].state.windowIndex).toBe(0);
-
-    engine.evaluateAt(REPLAN_INTERVAL_MS);
-    expect(engine.objects[0].state.windowIndex).toBe(1);
-
-    engine.evaluateAt(2 * REPLAN_INTERVAL_MS + 500);
-    expect(engine.objects[0].state.windowIndex).toBe(2);
-  });
-
   test('reset() restores initial state', () => {
     const engine = new SimEngine({ config, definitions, grid });
     const initial = engine.objects;
@@ -148,86 +137,134 @@ describe('SimEngine — determinism (the property that must survive)', () => {
     expect(engine.objects).toEqual(initial);
   });
 
-  test('a closed-form kind (satellite) never advances windows', () => {
+  test('a closed-form kind (satellite) never advances legs', () => {
     const engine = new SimEngine({ config, definitions: [satellite], grid });
-    engine.evaluateAt(10 * REPLAN_INTERVAL_MS);
-    expect(engine.objects[0].state.windowIndex).toBe(0);
+    engine.evaluateAt(500_000);
+    expect(engine.objects[0].state.leg).toBe(0);
   });
 
-  test('REPLAN_INTERVAL_MS is derived from motion.REPLAN_INTERVAL_SECONDS, not redefined', () => {
-    expect(REPLAN_INTERVAL_MS).toBe(REPLAN_INTERVAL_SECONDS * 1000);
-  });
-
-  test('a long gap beyond MAX_CATCHUP_WINDOWS still settles without throwing', () => {
+  test('a long gap still settles without throwing, bounded by MAX_CATCHUP_LEGS', () => {
     const engine = new SimEngine({ config, definitions: [boat], grid });
-    const farMs = (MAX_CATCHUP_WINDOWS + 20) * REPLAN_INTERVAL_MS;
+    const farMs = 5_000_000;
     expect(() => engine.evaluateAt(farMs)).not.toThrow();
-    expect(engine.objects[0].state.windowIndex).toBe(Math.floor(farMs / REPLAN_INTERVAL_MS));
+    // A single `evaluateAt` from spawn can only walk MAX_CATCHUP_LEGS legs before snapping ahead —
+    // the one documented divergence point — so `leg` can never exceed that bound in one jump.
+    expect(engine.objects[0].state.leg).toBeGreaterThan(0);
+    expect(engine.objects[0].state.leg).toBeLessThanOrEqual(MAX_CATCHUP_LEGS + 1);
   });
 });
 
-// An absurdly fast tank: covers any route the grid can produce (at most a few radians) within a
-// single 20s window regardless of path length, so arrival is guaranteed by every window boundary —
-// which is what these tests need to exercise re-targeting deterministically rather than depending
-// on the fixture's actual (unpredictable) route length.
-const fastTank = TerraObject.make({
-  kind: 'tank',
-  speed: 5,
-  source: { ...tankSource, height: 0 },
-  target: { ...tankTarget, height: 0 },
+// A plane whose domain ('air') has no impassable cells — `nav-grid.ts`'s `isPassable('air', ...)`
+// defaults `cruiseElevation` to `Infinity` when none is given, and `route.ts`'s line-of-sight
+// smoothing then always collapses a leg's route to exactly `[from, to]`. That makes a leg's arc
+// length just `angleBetween(from, to)`, so — unlike the tank/boat fixtures above, whose land/sea
+// routes can detour around terrain — this fixture's leg boundaries can be computed exactly instead
+// of guessed at, which is what the precision-sensitive tests below need.
+const fastPlane = TerraObject.make({
+  kind: 'plane',
+  speed: 1,
+  source: { lat: 0, lng: 0, height: 0 },
+  target: { lat: 0, lng: 30, height: 0 },
   spawnedAt: 0,
 });
 
-describe('SimEngine — re-targeting on arrival (the property Feature 1 adds)', () => {
-  test('an object that reaches its target gets a new one and keeps moving', () => {
-    const engine = new SimEngine({ config, definitions: [fastTank], grid });
+/**
+ * The absolute elapsed-ms instant each of `fastPlane`'s first `legs` re-targets begins, computed by
+ * mirroring `engine.ts`'s own `(config.seed, definition.id, leg)`-keyed `pickReachableTarget` call —
+ * the same exported reachability helper `engine.ts` uses, not a reimplementation of it — so this
+ * fixture stays in lockstep with production rather than duplicating its recurrence.
+ */
+const planeLegBoundaries = (definition: TerraObject.TerraObject, legs: number): number[] => {
+  const domain = TerraObject.domainFor(definition.kind);
+  let from: Vec3 = toUnit({ lat: 0, lng: 0 });
+  let to: Vec3 = toUnit({ lat: 0, lng: 30 });
+  let elapsedMs = 0;
+  const boundaries: number[] = [];
+  for (let leg = 1; leg <= legs; leg++) {
+    elapsedMs += (angleBetween(from, to) / definition.speed) * 1000;
+    boundaries.push(elapsedMs);
+    from = to;
+    to = pickReachableTarget({ grid, domain, from, random: seedrandom(`${config.seed}:${definition.id}:${leg}`) });
+  }
+  return boundaries;
+};
 
-    engine.evaluateAt(REPLAN_INTERVAL_MS);
-    const afterWindow1 = engine.objects[0].state;
-    // Arrived well inside window 0, so by its end the recurrence must have already moved on to a new leg.
-    expect(afterWindow1.leg).toBeGreaterThan(0);
+const positionsDiffer = (a: Vec3, b: Vec3): boolean => a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2];
 
-    engine.evaluateAt(2 * REPLAN_INTERVAL_MS);
-    const afterWindow2 = engine.objects[0].state;
-    expect(afterWindow2.leg).toBeGreaterThan(afterWindow1.leg);
+describe('SimEngine — arrival-driven legs (no stall at arrival)', () => {
+  test("a routed object's leg advances exactly when its own route finishes, not on a fixed clock", () => {
+    const [arrivalMs] = planeLegBoundaries(fastPlane, 1);
+    const engine = new SimEngine({ config, definitions: [fastPlane], grid });
 
-    const moved =
-      afterWindow1.unit[0] !== afterWindow2.unit[0] ||
-      afterWindow1.unit[1] !== afterWindow2.unit[1] ||
-      afterWindow1.unit[2] !== afterWindow2.unit[2];
-    expect(moved).toBe(true);
+    engine.evaluateAt(Math.max(0, arrivalMs - 50));
+    expect(engine.objects[0].state.leg).toBe(0);
+
+    engine.evaluateAt(arrivalMs + 50);
+    expect(engine.objects[0].state.leg).toBe(1);
+  });
+
+  test('re-targeting never stalls — position keeps changing at every closely-sampled instant across an arrival', () => {
+    const [arrivalMs] = planeLegBoundaries(fastPlane, 1);
+
+    // Densely sampled straddling the first arrival, spanning well under a second in total: under the
+    // fixed-window bug this recurrence replaces, the object would have sat frozen at the destination
+    // for up to a whole 20s window after `arrivalMs` — any frozen stretch found here can only be that
+    // bug, not legitimate travel time.
+    const offsetsMs = [-40, -10, 10, 40, 90, 160, 260];
+    const positions = offsetsMs.map((offset) => {
+      const engine = new SimEngine({ config, definitions: [fastPlane], grid });
+      engine.evaluateAt(Math.max(0, arrivalMs + offset));
+      return engine.objects[0].state.unit;
+    });
+
+    for (let index = 1; index < positions.length; index++) {
+      expect(positionsDiffer(positions[index - 1], positions[index])).toBe(true);
+    }
   });
 
   test('the same definitions + same final time produce the same destination sequence whether stepped or jumped to directly', () => {
-    const finalMs = 6 * REPLAN_INTERVAL_MS + 7_000;
+    const boundaries = planeLegBoundaries(fastPlane, 3);
+    const finalMs = boundaries[2] + 500;
 
-    const direct = new SimEngine({ config, definitions: [fastTank], grid });
+    const direct = new SimEngine({ config, definitions: [fastPlane], grid });
     direct.evaluateAt(finalMs);
 
-    const stepped = new SimEngine({ config, definitions: [fastTank], grid });
-    for (const at of [1_000, 5_500, 20_000, 33_000, 50_000, 80_000, 100_000]) {
+    const stepped = new SimEngine({ config, definitions: [fastPlane], grid });
+    for (const at of [
+      boundaries[0] / 2,
+      boundaries[0] + 50,
+      boundaries[1] / 2,
+      boundaries[1] + 50,
+      boundaries[2] / 2,
+    ]) {
       stepped.evaluateAt(at);
     }
     stepped.evaluateAt(finalMs);
 
-    // Several re-targets happened over this span, so this is a meaningful check of the leg
-    // sequence, not a vacuous one where leg never left 0.
-    expect(direct.objects[0].state.leg).toBeGreaterThan(1);
+    // Three re-targets happened over this span, so this is a meaningful check of the leg sequence,
+    // not a vacuous one where leg never left 0 — and well under MAX_CATCHUP_LEGS, so neither path
+    // needed the documented catch-up-cap divergence.
+    expect(direct.objects[0].state.leg).toBe(3);
     expect(stepped.objects).toEqual(direct.objects);
   });
 
   test('a peer starting fresh at a later time reproduces the same state as one running continuously', () => {
-    const finalMs = 5 * REPLAN_INTERVAL_MS + 12_000;
+    const boundaries = planeLegBoundaries(fastPlane, 2);
+    const finalMs = boundaries[1] + 300;
 
     // Simulates a peer that has been rendering continuously since spawn, at roughly a 60fps cadence.
-    const runningSinceStart = new SimEngine({ config, definitions: [fastTank], grid });
+    // The loop lands on whichever 16ms tick is <= finalMs, so the trailing call pins the exact
+    // instant being compared — otherwise this would compare two different times, not two paths to
+    // the same one.
+    const runningSinceStart = new SimEngine({ config, definitions: [fastPlane], grid });
     for (let atMs = 0; atMs <= finalMs; atMs += 16) {
       runningSinceStart.evaluateAt(atMs);
     }
+    runningSinceStart.evaluateAt(finalMs);
 
     // Simulates a peer that opens the same ECHO `Terra` object for the first time at `finalMs`, with
     // no history to replay — the SimEngine constructor always spawns fresh, so this is exactly that.
-    const lateJoiner = new SimEngine({ config, definitions: [fastTank], grid });
+    const lateJoiner = new SimEngine({ config, definitions: [fastPlane], grid });
     lateJoiner.evaluateAt(finalMs);
 
     expect(lateJoiner.objects).toEqual(runningSinceStart.objects);

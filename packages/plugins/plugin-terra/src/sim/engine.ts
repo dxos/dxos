@@ -7,16 +7,17 @@ import seedrandom from 'seedrandom';
 import { type TerraConfigValues, type Vec3 } from '../engine';
 import { TerraObject } from '../types';
 import { toUnit } from './geo';
-import { type MotionContext, type ObjectState, REPLAN_INTERVAL_SECONDS, evaluate, initialState } from './motion';
+import { type MotionContext, type ObjectState, evaluate, initialState, routeLength } from './motion';
 import { type NavGrid } from './nav-grid';
 import { pickReachableTarget } from './reachable';
 import { planRoute } from './route';
 
-/** Millisecond form of `motion.REPLAN_INTERVAL_SECONDS`, derived here so the two modules share one source of truth. */
-export const REPLAN_INTERVAL_MS = REPLAN_INTERVAL_SECONDS * 1000;
-
-/** Bounds the per-`evaluateAt` catch-up recurrence after a long-backgrounded tab. */
-export const MAX_CATCHUP_WINDOWS = 8;
+/**
+ * Bounds the per-`evaluateAt` leg catch-up recurrence after a long-backgrounded tab (or a run of
+ * legs whose picked destinations happen to be very short). Without a cap, a long-idle client could
+ * otherwise need to replay an unbounded number of legs to reach `nowMs`.
+ */
+export const MAX_CATCHUP_LEGS = 8;
 
 /** An object paired with its current simulated state. */
 export type SimObject = { definition: TerraObject.TerraObject; state: ObjectState };
@@ -54,41 +55,86 @@ const legTarget = (
   });
 };
 
-/** A route beginning at `from` (the object's position at the window's start) and ending at `target`. */
+/** A route beginning at `from` (a leg's start position) and ending at `target`. */
 const routeFrom = (grid: NavGrid, definition: TerraObject.TerraObject, target: Vec3, from: Vec3): Vec3[] => {
   const domain = TerraObject.domainFor(definition.kind);
   return [from, ...planRoute({ grid, domain, from, to: target })];
 };
 
 /**
- * Advances one replan window: evaluates the current route to its full duration, then replans a
- * fresh route from that position — toward a newly seeded destination if the object reached the end
- * of its route during the window (advancing `leg`), or toward the same destination otherwise. Pure
- * given `(state, definition, config, grid, initialTarget)` — the position at window `n`'s start
- * follows by induction from spawn, never from wall-clock deltas between calls.
+ * How long, in seconds, constant-`speed` travel takes to walk `route` end to end. `Infinity` when
+ * `speed` is non-positive, so a stalled object is never considered to have finished its leg (and
+ * `cursorAt`'s loop below terminates rather than spinning on a zero-duration leg).
  */
-const advanceWindow = (
-  state: ObjectState,
+const legDuration = (route: readonly Vec3[], speed: number): number =>
+  speed > 0 ? routeLength(route) / speed : Infinity;
+
+/** A leg in progress: its number, the (spawn-relative) elapsed second it began, and its route. */
+type LegCursor = { leg: number; legStart: number; route: Vec3[] };
+
+/** The unit-sphere point `cursor`'s route currently ends at — i.e. where its next leg, if any, begins. */
+const cursorEnd = (cursor: LegCursor, fallback: Vec3): Vec3 => cursor.route.at(-1) ?? fallback;
+
+/**
+ * The leg after `cursor`: a fresh destination seeded by `(config.seed, definition.id, leg)`, routed
+ * from wherever the previous leg ended, starting the instant the previous leg's own arc length was
+ * fully walked at `speed`. Pure given its arguments — a leg's start position and time follow by
+ * induction from spawn, never from wall-clock deltas between calls, so legs are variable-length but
+ * still a closed-form recurrence.
+ */
+const advanceLeg = (
   definition: TerraObject.TerraObject,
   config: TerraConfigValues,
   grid: NavGrid,
   initialTarget: Vec3,
-): ObjectState => {
-  const windowEndElapsed = (state.windowIndex + 1) * REPLAN_INTERVAL_SECONDS;
-  const advanced = evaluate(state, definition, { config, elapsed: windowEndElapsed });
-  const leg = advanced.arrived ? state.leg + 1 : state.leg;
-  const target = legTarget(definition, leg, initialTarget, config, grid, advanced.unit);
+  cursor: LegCursor,
+): LegCursor => {
+  const from = cursorEnd(cursor, initialTarget);
+  const leg = cursor.leg + 1;
+  const target = legTarget(definition, leg, initialTarget, config, grid, from);
   return {
-    ...advanced,
-    route: routeFrom(grid, definition, target, advanced.unit),
-    windowIndex: state.windowIndex + 1,
     leg,
+    legStart: cursor.legStart + legDuration(cursor.route, definition.speed),
+    route: routeFrom(grid, definition, target, from),
   };
 };
 
 /**
- * The state at `nowMs`, replaying replan windows in order up to `MAX_CATCHUP_WINDOWS`. Closed-form
- * kinds, and routed kinds placed with no target to begin with, skip the recurrence entirely.
+ * The leg containing `elapsed`, walking forward one arrival at a time from `start` — each leg's own
+ * duration (its route's arc length over `speed`) decides when the next begins, so a re-target never
+ * waits on a fixed clock: a fast object's legs are short, a slow object's are long, and there is no
+ * dead time at an arrival. Bounded by `MAX_CATCHUP_LEGS`; past the cap, snaps straight to a leg
+ * starting at `elapsed` rather than replaying an unbounded number of legs. The one documented
+ * divergence point (mirrors the old fixed-window design's catch-up cap).
+ */
+const cursorAt = (
+  definition: TerraObject.TerraObject,
+  config: TerraConfigValues,
+  grid: NavGrid,
+  initialTarget: Vec3,
+  elapsed: number,
+  start: LegCursor,
+): LegCursor => {
+  let cursor = start;
+  let iterations = 0;
+  while (elapsed - cursor.legStart >= legDuration(cursor.route, definition.speed) && iterations < MAX_CATCHUP_LEGS) {
+    cursor = advanceLeg(definition, config, grid, initialTarget, cursor);
+    iterations++;
+  }
+
+  if (elapsed - cursor.legStart >= legDuration(cursor.route, definition.speed)) {
+    const from = cursorEnd(cursor, initialTarget);
+    const leg = cursor.leg + 1;
+    const target = legTarget(definition, leg, initialTarget, config, grid, from);
+    cursor = { leg, legStart: elapsed, route: routeFrom(grid, definition, target, from) };
+  }
+
+  return cursor;
+};
+
+/**
+ * The state at `nowMs`, walking the leg recurrence forward from `state`. Closed-form kinds, and
+ * routed kinds placed with no target to begin with, skip the recurrence entirely.
  */
 const evaluateObject = (
   definition: TerraObject.TerraObject,
@@ -97,40 +143,24 @@ const evaluateObject = (
   config: TerraConfigValues,
   grid: NavGrid | undefined,
 ): ObjectState => {
-  const context: MotionContext = { config, elapsed: (nowMs - definition.spawnedAt) / 1000 };
+  const elapsed = (nowMs - definition.spawnedAt) / 1000;
+  const context: MotionContext = { config, elapsed };
   const initialTarget = grid ? initialTargetFor(definition) : undefined;
 
   if (!grid || !initialTarget) {
     return evaluate(state, definition, context);
   }
 
-  const targetWindow = Math.floor((nowMs - definition.spawnedAt) / REPLAN_INTERVAL_MS);
+  const cursor = cursorAt(definition, config, grid, initialTarget, elapsed, {
+    leg: state.leg,
+    legStart: state.legStart,
+    route: state.route,
+  });
 
-  let next = state;
-  let iterations = 0;
-  while (next.windowIndex < targetWindow && iterations < MAX_CATCHUP_WINDOWS) {
-    next = advanceWindow(next, definition, config, grid, initialTarget);
-    iterations++;
-  }
-
-  if (next.windowIndex < targetWindow) {
-    // The gap exceeded the catch-up cap: snap ahead and replan from the best position estimate
-    // rather than replaying an unbounded number of windows. The one documented divergence point.
-    const positionNow = evaluate(next, definition, context);
-    const leg = positionNow.arrived ? next.leg + 1 : next.leg;
-    const target = legTarget(definition, leg, initialTarget, config, grid, positionNow.unit);
-    next = {
-      ...positionNow,
-      route: routeFrom(grid, definition, target, positionNow.unit),
-      windowIndex: targetWindow,
-      leg,
-    };
-  }
-
-  return evaluate(next, definition, context);
+  return evaluate({ ...state, leg: cursor.leg, legStart: cursor.legStart, route: cursor.route }, definition, context);
 };
 
-/** The spawn-time state for `definition`: window 0's route, planned from its source, if a grid is available. */
+/** The spawn-time state for `definition`: leg 0's route, planned from its source, if a grid is available. */
 const spawn = (
   definition: TerraObject.TerraObject,
   config: TerraConfigValues,
