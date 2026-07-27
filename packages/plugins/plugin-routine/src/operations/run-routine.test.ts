@@ -47,19 +47,6 @@ const TestLayer = AssistantTestLayer({
   extraServices: Layer.succeed(Capability.Service, CapabilityManager.make({ registry: Registry.make() })),
 });
 
-/** A routine whose action is `TestRunnable`, with the runnable's input carried on its timer trigger. */
-const addRoutine = Effect.fnUntraced(function* (input: Record<string, unknown>) {
-  const operation = yield* Database.add(Operation.serialize(TestRunnable));
-  const routine = makeRoutine({
-    name: 'Test',
-    spec: { kind: 'runnable', runnable: Ref.make(operation) },
-    trigger: Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *'), input }),
-  });
-  yield* Database.add(routine);
-  yield* Database.flush();
-  return routine;
-});
-
 describe('RunRoutine', () => {
   it.effect(
     'passes the trigger input to the runnable',
@@ -93,4 +80,17 @@ describe('RunRoutine', () => {
       TestHelpers.provideTestContext,
     ),
   );
+});
+
+/** A routine whose action is `TestRunnable`, with the runnable's input carried on its timer trigger. */
+const addRoutine = Effect.fnUntraced(function* (input: Record<string, unknown>) {
+  const operation = yield* Database.add(Operation.serialize(TestRunnable));
+  const routine = makeRoutine({
+    name: 'Test',
+    spec: { kind: 'runnable', runnable: Ref.make(operation) },
+    trigger: Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *'), input }),
+  });
+  yield* Database.add(routine);
+  yield* Database.flush();
+  return routine;
 });
