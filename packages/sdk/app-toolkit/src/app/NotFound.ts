@@ -66,12 +66,16 @@ export const validateNavigationTarget = (params: {
     return Effect.succeed(subjectId);
   }
 
-  // Expand the graph path to trigger loading.
-  expandPath(graph, subjectId);
+  // Fast path: the target is already a node in the local graph, so it needs no expansion to be
+  // confirmed. Checking before expanding keeps a click on an already-rendered node (the nav tree, a
+  // breadcrumb) from re-expanding every ancestor and churning the graph on every navigation.
+  if (Option.isSome(Graph.getNode(graph, subjectId))) {
+    return Effect.succeed(subjectId);
+  }
 
-  // Fast path: the object is already a node in the local graph.
-  const nodeAfterExpand = Graph.getNode(graph, subjectId);
-  if (Option.isSome(nodeAfterExpand)) {
+  // Not present: expand the path to trigger the loads that may materialize it.
+  expandPath(graph, subjectId);
+  if (Option.isSome(Graph.getNode(graph, subjectId))) {
     return Effect.succeed(subjectId);
   }
 
