@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { makeSampler, type NoiseConfig } from './noise';
+import { type NoiseConfig, makeSampler } from './noise';
 
 const config: NoiseConfig = {
   seed: 'terra-1',
