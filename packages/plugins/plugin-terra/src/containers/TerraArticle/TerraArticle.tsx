@@ -79,7 +79,9 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       const clock = clockRef.current;
       const nowMs = (clock.pausedAtMs ?? performance.now()) - clock.pausedTotalMs;
       engine.evaluateAt(nowMs);
-      layer.update(engine.objects);
+      // Real (wall-clock) frame delta, not the pause-adjusted sim clock — turn easing is a
+      // rendering concern independent of whether the sim is paused.
+      layer.update(engine.objects, manager.engine.getDeltaTime());
       // Shares the same pause-adjusted clock as the sim, so trails freeze in place with everything else.
       trails.update(engine.objects, nowMs);
     });

@@ -126,6 +126,30 @@ describe('routed motion (boat)', () => {
   });
 });
 
+describe('ObjectState — leg/arrived (feature 1 support)', () => {
+  const boat = TerraObject.make({
+    kind: 'boat',
+    speed: 0.02,
+    source: { lat: 0, lng: 0, height: 0 },
+    target: { lat: 0, lng: 5, height: 0 },
+    spawnedAt: 0,
+  });
+
+  test('arrived is false before the route is walked and true once it completes', () => {
+    const state = initialState(boat, config);
+    const midway = evaluate(state, boat, { config, elapsed: 1 });
+    expect(midway.arrived).toBe(false);
+    const arrived = evaluate(state, boat, { config, elapsed: 100_000 });
+    expect(arrived.arrived).toBe(true);
+  });
+
+  test('leg is carried forward unchanged by evaluate — sim/engine.ts alone advances it', () => {
+    const state: ObjectState = { ...initialState(boat, config), leg: 3 };
+    const result = evaluate(state, boat, { config, elapsed: 5 });
+    expect(result.leg).toBe(3);
+  });
+});
+
 describe('orbit motion (satellite)', () => {
   const satellite = TerraObject.make({
     kind: 'satellite',

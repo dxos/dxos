@@ -1,6 +1,6 @@
 # plugin-terra — Tasks
 
-_Resume: visually tune trail/object scale in storybook once the host machine is idle (verification tonight was blocked by macOS indexing daemons pinning the CPU). Uncommitted: none. Last: Phase 2 complete through P2.9 (smoke trails); PR #12353 open and green._
+_Resume: visually tune trail/object scale in storybook once the host machine is idle (verification tonight was blocked by macOS indexing daemons pinning the CPU). Uncommitted: none. Last: re-targeting on arrival + gradual turning landed (93 tests green)._
 
 Design and decisions: [DESIGN.md](./DESIGN.md).
 Plans: [Phase 1](../../../agents/superpowers/plans/2026-07-26-plugin-terra.md) ·
@@ -64,6 +64,7 @@ definitions. Plan written and committed; execution begins after Phase 1 closes.
 - [x] **P2.9 — Smoke trails** — `sim/trail.ts` (pure ring buffer of puffs, spacing-based emission) + `scene/trail-layer.ts` (thin-instance translucent white spheres that grow and fade); ships, planes, rockets.
 - [x] **P2.10 — Changeset** — none required: Phase 2 is entirely inside the private `plugin-terra` package. The only public-API change on this branch (the `react-ui` `Slider` + `react-ui-form` `labelEnd` slot) is already covered by `.changeset/react-ui-slider-primitive.md`.
 - [x] **Article toolbar** (user directive) — `react-ui-menu` toolbar with play/pause and add-random-object. Pause holds a clock offset rather than halting evaluation, so the closed-form determinism model is preserved.
+- [x] **Re-targeting on arrival + gradual turning** (user directive) — routed objects (boat/tank/plane) now pick a new, reachable destination on arrival and keep moving, fit into the existing replan-window recurrence in `sim/engine.ts` (`leg`/`arrived` added to `ObjectState`; each leg's destination is seeded from `` `${config.seed}:${definition.id}:${leg}` `` via `seedrandom`, never `Math.random()`). Extracted `sim/reachable.ts` (`domainCandidates`, `pickReachableTarget`) out of `types/Terra.ts` so placement and re-targeting share one reachability helper instead of duplicating it. Rendered heading now eases toward `state.bearing` via a new `scene/heading.ts` (`easeHeading`, reusing `sim/geo.ts`'s `turnToward`) driven by real per-frame delta time in `object-layer.ts` — orientation-only, never fed back into position, matching the determinism contract. New tests in `motion.test.ts`/`engine.test.ts` (leg/arrived fields, re-targeting keeps moving, stepped-vs-direct and late-joiner determinism with multiple legs) and a new `scene/heading.test.ts` for the easing helper itself.
 
 ### References
 

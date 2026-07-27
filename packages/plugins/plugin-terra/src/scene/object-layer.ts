@@ -12,6 +12,7 @@ import { type Vec3, scale } from '../engine';
 import { type SimObject } from '../sim/engine';
 import { tangentFrame } from '../sim/geo';
 import { type TerraObject } from '../types';
+import { easeHeading } from './heading';
 import { createObjectForm } from './object-forms';
 
 /** Every kind `createObjectForm` builds a base mesh for, in a fixed iteration order. */
@@ -33,12 +34,12 @@ const forwardAt = (unit: Vec3, bearing: number): Vector3 => {
 
 /**
  * The thin-instance matrix for one object: positioned at `scale(state.unit, state.radius)`,
- * oriented with forward along the velocity direction (from `bearing`) and up along the surface
- * normal (`state.unit`) — satellites' orbit tangent is already stored as `bearing` by `stepOrbit`.
+ * oriented with forward along `heading` (the frame-eased render heading, not necessarily
+ * `state.bearing` itself — see `heading.ts`) and up along the surface normal (`state.unit`).
  */
-const matrixFor = ({ state }: SimObject): Matrix => {
+const matrixFor = ({ state }: SimObject, heading: number): Matrix => {
   const position = scale(state.unit, state.radius);
-  const forward = forwardAt(state.unit, state.bearing);
+  const forward = forwardAt(state.unit, heading);
   const up = new Vector3(state.unit[0], state.unit[1], state.unit[2]);
   // Build the rotation from an explicit left-handed basis rather than `FromLookDirectionLH`, which
   // returns a view-style rotation that lands the mesh's local +Z on -forward — i.e. every object
@@ -64,6 +65,8 @@ const matrixFor = ({ state }: SimObject): Matrix => {
 export class ObjectLayer {
   readonly #bases = new Map<TerraObject.Kind, Mesh>();
   readonly #buffers = new Map<TerraObject.Kind, Float32Array>();
+  /** Each object's last-rendered heading, eased toward `state.bearing` a little further every frame; keyed by definition identity like `TrailLayer`'s trail map. */
+  readonly #headings = new Map<TerraObject.TerraObject, number>();
 
   constructor(options: { scene: Scene }) {
     for (const kind of KINDS) {
@@ -71,10 +74,27 @@ export class ObjectLayer {
     }
   }
 
-  update(objects: readonly SimObject[]): void {
+  /** This frame's eased heading for `object`, remembered for the next call; never fed back into `state`. */
+  #headingFor(object: SimObject, deltaMs: number): number {
+    const heading = easeHeading(this.#headings.get(object.definition), object.state.bearing, deltaMs);
+    this.#headings.set(object.definition, heading);
+    return heading;
+  }
+
+  /** `deltaMs` is real (wall-clock) time since the previous frame, driving turn-rate easing only — never the sim clock. */
+  update(objects: readonly SimObject[], deltaMs: number): void {
     const byKind = new Map<TerraObject.Kind, SimObject[]>(KINDS.map((kind) => [kind, []]));
+    const live = new Set<TerraObject.TerraObject>();
     for (const object of objects) {
       byKind.get(object.definition.kind)?.push(object);
+      live.add(object.definition);
+    }
+
+    // Drops headings for objects no longer simulated — removed, or orphaned by a freshly rebuilt SimEngine.
+    for (const definition of this.#headings.keys()) {
+      if (!live.has(definition)) {
+        this.#headings.delete(definition);
+      }
     }
 
     for (const kind of KINDS) {
@@ -96,14 +116,18 @@ export class ObjectLayer {
 
       if (!existing || existing.length !== needed) {
         const buffer = new Float32Array(needed);
-        group.forEach((object, index) => matrixFor(object).copyToArray(buffer, index * 16));
+        group.forEach((object, index) =>
+          matrixFor(object, this.#headingFor(object, deltaMs)).copyToArray(buffer, index * 16),
+        );
         // `staticBuffer: false` is load-bearing — Babylon builds the GPU buffer with
         // `updatable = !staticBuffer`, so a static buffer silently ignores every later
         // `thinInstanceBufferUpdated` and the objects render frozen at their first position.
         base.thinInstanceSetBuffer('matrix', buffer, 16, false);
         this.#buffers.set(kind, buffer);
       } else {
-        group.forEach((object, index) => matrixFor(object).copyToArray(existing, index * 16));
+        group.forEach((object, index) =>
+          matrixFor(object, this.#headingFor(object, deltaMs)).copyToArray(existing, index * 16),
+        );
         base.thinInstanceBufferUpdated('matrix');
       }
 
@@ -116,5 +140,6 @@ export class ObjectLayer {
     this.#bases.forEach((base) => base.dispose(false, true));
     this.#bases.clear();
     this.#buffers.clear();
+    this.#headings.clear();
   }
 }

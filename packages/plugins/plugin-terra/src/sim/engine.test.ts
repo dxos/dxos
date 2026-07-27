@@ -165,3 +165,71 @@ describe('SimEngine — determinism (the property that must survive)', () => {
     expect(engine.objects[0].state.windowIndex).toBe(Math.floor(farMs / REPLAN_INTERVAL_MS));
   });
 });
+
+// An absurdly fast tank: covers any route the grid can produce (at most a few radians) within a
+// single 20s window regardless of path length, so arrival is guaranteed by every window boundary —
+// which is what these tests need to exercise re-targeting deterministically rather than depending
+// on the fixture's actual (unpredictable) route length.
+const fastTank = TerraObject.make({
+  kind: 'tank',
+  speed: 5,
+  source: { ...tankSource, height: 0 },
+  target: { ...tankTarget, height: 0 },
+  spawnedAt: 0,
+});
+
+describe('SimEngine — re-targeting on arrival (the property Feature 1 adds)', () => {
+  test('an object that reaches its target gets a new one and keeps moving', () => {
+    const engine = new SimEngine({ config, definitions: [fastTank], grid });
+
+    engine.evaluateAt(REPLAN_INTERVAL_MS);
+    const afterWindow1 = engine.objects[0].state;
+    // Arrived well inside window 0, so by its end the recurrence must have already moved on to a new leg.
+    expect(afterWindow1.leg).toBeGreaterThan(0);
+
+    engine.evaluateAt(2 * REPLAN_INTERVAL_MS);
+    const afterWindow2 = engine.objects[0].state;
+    expect(afterWindow2.leg).toBeGreaterThan(afterWindow1.leg);
+
+    const moved =
+      afterWindow1.unit[0] !== afterWindow2.unit[0] ||
+      afterWindow1.unit[1] !== afterWindow2.unit[1] ||
+      afterWindow1.unit[2] !== afterWindow2.unit[2];
+    expect(moved).toBe(true);
+  });
+
+  test('the same definitions + same final time produce the same destination sequence whether stepped or jumped to directly', () => {
+    const finalMs = 6 * REPLAN_INTERVAL_MS + 7_000;
+
+    const direct = new SimEngine({ config, definitions: [fastTank], grid });
+    direct.evaluateAt(finalMs);
+
+    const stepped = new SimEngine({ config, definitions: [fastTank], grid });
+    for (const at of [1_000, 5_500, 20_000, 33_000, 50_000, 80_000, 100_000]) {
+      stepped.evaluateAt(at);
+    }
+    stepped.evaluateAt(finalMs);
+
+    // Several re-targets happened over this span, so this is a meaningful check of the leg
+    // sequence, not a vacuous one where leg never left 0.
+    expect(direct.objects[0].state.leg).toBeGreaterThan(1);
+    expect(stepped.objects).toEqual(direct.objects);
+  });
+
+  test('a peer starting fresh at a later time reproduces the same state as one running continuously', () => {
+    const finalMs = 5 * REPLAN_INTERVAL_MS + 12_000;
+
+    // Simulates a peer that has been rendering continuously since spawn, at roughly a 60fps cadence.
+    const runningSinceStart = new SimEngine({ config, definitions: [fastTank], grid });
+    for (let atMs = 0; atMs <= finalMs; atMs += 16) {
+      runningSinceStart.evaluateAt(atMs);
+    }
+
+    // Simulates a peer that opens the same ECHO `Terra` object for the first time at `finalMs`, with
+    // no history to replay — the SimEngine constructor always spawns fresh, so this is exactly that.
+    const lateJoiner = new SimEngine({ config, definitions: [fastTank], grid });
+    lateJoiner.evaluateAt(finalMs);
+
+    expect(lateJoiner.objects).toEqual(runningSinceStart.objects);
+  });
+});

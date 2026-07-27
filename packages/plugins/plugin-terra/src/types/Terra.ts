@@ -11,7 +11,8 @@ import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 import { type TerraConfigValues } from '../engine';
 import { toGeo } from '../sim/geo';
-import { type Domain, type NavCell, type NavGrid, buildNavGrid, isPassable } from '../sim/nav-grid';
+import { type Domain, type NavCell, type NavGrid, buildNavGrid } from '../sim/nav-grid';
+import { domainCandidates } from '../sim/reachable';
 import * as TerraObject from './TerraObject';
 
 /** Deterministic parameters for a Terra world. All fields optional so a bare seed works. */
@@ -108,70 +109,11 @@ export const toConfigValues = (terra: Terra): TerraConfigValues => mergeConfigVa
 type GeoPoint = Schema.Schema.Type<typeof TerraObject.GeoPointSchema>;
 type Orbit = Schema.Schema.Type<typeof TerraObject.Orbit>;
 
-/**
- * Cells of `domain`, grouped into connected components via BFS over nav-grid neighbors, largest
- * first. Demo endpoints are drawn only from the largest component so any two of them are
- * guaranteed mutually reachable — arbitrary passable cells can sit on disconnected landmasses (or,
- * rarely, disconnected seas), which is the routing footgun `sim/engine.test.ts` documents.
- */
-const largestComponent = (grid: NavGrid, domain: Domain): NavCell[] => {
-  const componentOf = new Map<number, number>();
-  const components: number[][] = [];
-  for (const cell of grid.cells) {
-    if (!isPassable(grid, cell.index, domain) || componentOf.has(cell.index)) {
-      continue;
-    }
-    const members: number[] = [];
-    const frontier = [cell.index];
-    componentOf.set(cell.index, components.length);
-    while (frontier.length > 0) {
-      const current = frontier.shift() as number;
-      members.push(current);
-      for (const neighbor of grid.cells[current].neighbors) {
-        if (!componentOf.has(neighbor) && isPassable(grid, neighbor, domain)) {
-          componentOf.set(neighbor, components.length);
-          frontier.push(neighbor);
-        }
-      }
-    }
-    components.push(members);
-  }
-  if (components.length === 0) {
-    throw new Error(`makeDemoWorld: no passable ${domain} cells for this seed.`);
-  }
-  const best = components.reduce((largest, candidate) => (candidate.length > largest.length ? candidate : largest));
-  return best.map((index) => grid.cells[index]);
-};
-
-/**
- * Cells solidly inside `domain`'s elevation band, away from its sea/land or slope-ceiling
- * threshold. A demo endpoint's lat/lng round-trips through the object's schema before it is
- * evaluated again, and a boundary cell can nudge onto an impassable neighbor after that round
- * trip — the same edge case `sim/engine.test.ts` guards its tank fixture against.
- */
-const safeCells = (grid: NavGrid, domain: Domain, cells: readonly NavCell[]): NavCell[] => {
-  switch (domain) {
-    case 'land': {
-      const mid = grid.waterLevel + 0.175 * (1 - grid.waterLevel);
-      const halfWidth = 0.175 * (1 - grid.waterLevel);
-      return cells.filter((cell) => Math.abs(cell.elevation - mid) < halfWidth * 0.5);
-    }
-    case 'sea':
-      return cells.filter((cell) => cell.elevation < grid.waterLevel * 0.9);
-    case 'air':
-      return [...cells];
-  }
-};
-
 /** `count` cells spread evenly across `cells` (sorted by grid index), for endpoints that land well apart. */
 const spread = (cells: readonly NavCell[], count: number): NavCell[] => {
   const sorted = [...cells].sort((left, right) => left.index - right.index);
   return Array.from({ length: count }, (_, index) => sorted[Math.floor((index * (sorted.length - 1)) / (count - 1))]);
 };
-
-/** `domain`'s safely-passable cells: the largest reachable component, narrowed to `safeCells`. Shared by `demoPairs` and `randomPair` so both draw endpoints from the same reachability guarantee. */
-const domainCandidates = (grid: NavGrid, domain: Domain): NavCell[] =>
-  safeCells(grid, domain, largestComponent(grid, domain));
 
 /** `count` source/target pairs for `domain`, each endpoint drawn from the same connected component so it is reachable. */
 const demoPairs = (grid: NavGrid, domain: Domain, count: number): Array<{ source: GeoPoint; target: GeoPoint }> => {

@@ -21,6 +21,10 @@ export type ObjectState = {
   bearing: number;
   route: Vec3[];
   windowIndex: number;
+  /** Which destination in this object's re-targeting sequence it is currently walking toward; `sim/engine.ts` owns the recurrence that advances it on arrival. */
+  leg: number;
+  /** Whether the object has reached the end of `route` at this `elapsed` — `sim/engine.ts` uses this to decide when to advance `leg`. */
+  arrived: boolean;
   phase: RocketPhase;
 };
 
@@ -151,13 +155,15 @@ const evaluateRouted = (
 ): ObjectState => {
   const windowStart = state.windowIndex * REPLAN_INTERVAL_SECONDS;
   const distance = definition.speed * clampNonNegative(context.elapsed - windowStart);
-  const { unit, bearing } = walkRoute(state.route, distance);
+  const { unit, bearing, done } = walkRoute(state.route, distance);
   return {
     unit,
     radius: routedRadius(definition.kind, context.config, unit),
     bearing,
     route: state.route,
     windowIndex: state.windowIndex,
+    leg: state.leg,
+    arrived: done,
     phase: 'cruise',
   };
 };
@@ -182,6 +188,8 @@ const evaluateOrbit = (definition: TerraObject.TerraObject, context: MotionConte
       bearing: 0,
       route: [],
       windowIndex: 0,
+      leg: 0,
+      arrived: false,
       phase: 'cruise',
     };
   }
@@ -198,6 +206,8 @@ const evaluateOrbit = (definition: TerraObject.TerraObject, context: MotionConte
     bearing: bearingTo(unit, ahead),
     route: [],
     windowIndex: 0,
+    leg: 0,
+    arrived: false,
     phase: 'cruise',
   };
 };
@@ -222,6 +232,8 @@ const evaluateRocket = (definition: TerraObject.TerraObject, context: MotionCont
     bearing,
     route: [source, target],
     windowIndex: 0,
+    leg: 0,
+    arrived: fraction >= 1,
     phase,
   };
 };
@@ -233,13 +245,15 @@ export const initialState = (definition: TerraObject.TerraObject, config: TerraC
     case 'tank':
     case 'plane': {
       const route = routeFromEndpoints(definition);
-      const { unit, bearing } = walkRoute(route, 0);
+      const { unit, bearing, done } = walkRoute(route, 0);
       return {
         unit,
         radius: routedRadius(definition.kind, config, unit),
         bearing,
         route,
         windowIndex: 0,
+        leg: 0,
+        arrived: done,
         phase: 'cruise',
       };
     }
