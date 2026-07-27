@@ -151,9 +151,11 @@ export class SceneManager {
   }
 
   #disposeMeshes(): void {
-    this.#planetMesh?.dispose();
-    this.#waterMesh?.dispose();
-    this.#scatterBases.forEach((mesh) => mesh.dispose());
+    // Mesh.dispose() defaults to leaving materials alive; each regenerate would
+    // otherwise orphan the prior planetMat/waterMat/treeMat*/rockMat* in scene.materials.
+    this.#planetMesh?.dispose(false, true);
+    this.#waterMesh?.dispose(false, true);
+    this.#scatterBases.forEach((mesh) => mesh.dispose(false, true));
     this.#planetMesh = null;
     this.#waterMesh = null;
     this.#scatterBases = [];
