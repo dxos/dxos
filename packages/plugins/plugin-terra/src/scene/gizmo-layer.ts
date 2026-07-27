@@ -11,8 +11,7 @@ import { type Mesh } from '@babylonjs/core/Meshes/mesh';
 import { type Scene } from '@babylonjs/core/scene';
 
 import { type Vec3, scale } from '../engine';
-import { type SimObject } from '../sim/engine';
-import { tangentFrame } from '../sim/geo';
+import { type SimObject, tangentFrame } from '../sim';
 import { type TerraObject } from '../types';
 import { easeHeading } from './heading';
 

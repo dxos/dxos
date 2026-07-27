@@ -5,9 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { generatePlanet } from '../engine';
-import { toUnit } from '../sim/geo';
-import { buildNavGrid, isPassable } from '../sim/nav-grid';
-import { planRoute } from '../sim/route';
+import { buildNavGrid, isPassable, planRoute, toUnit } from '../sim';
 import { Terra, TerraObject } from './index';
 
 /** Resolves `terra.objects` (an array of refs) to their loaded definitions. */

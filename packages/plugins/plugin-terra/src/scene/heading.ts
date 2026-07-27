@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { turnToward } from '../sim/geo';
+import { turnToward } from '../sim';
 import { type TerraObject } from '../types';
 
 /**

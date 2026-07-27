@@ -115,7 +115,7 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
   return (
     // Semi-transparent floating surface (mirrors plugin-voxel's canvas-overlay HUD chrome) so
     // labels stay legible over the rendered planet regardless of terrain color underneath.
-    <div className='flex flex-col gap-4 p-4 w-72 bg-base-surface/85 backdrop-blur-sm rounded-md shadow-md border border-separator'>
+    <div className='flex flex-col gap-4 p-3 w-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator'>
       <Form.Root<TerraFormValues>
         schema={FORM_SCHEMA}
         values={config}

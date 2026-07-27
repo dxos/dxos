@@ -10,9 +10,7 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 import { type TerraConfigValues } from '../engine';
-import { toGeo } from '../sim/geo';
-import { type Domain, type NavCell, type NavGrid, buildNavGrid } from '../sim/nav-grid';
-import { domainCandidates } from '../sim/reachable';
+import { type Domain, type NavCell, type NavGrid, buildNavGrid, domainCandidates, toGeo } from '../sim';
 import * as TerraObject from './TerraObject';
 
 /** Deterministic parameters for a Terra world. All fields optional so a bare seed works. */
@@ -232,7 +230,7 @@ const randomOrbit = (): Orbit => ({
   altitude: 0.4 + Math.random() * 0.6,
   inclination: Math.random() * 180,
   phase: Math.random() * Math.PI * 2,
-  period: 60 + Math.random() * 120,
+  period: 60 + Math.random() * 60,
 });
 
 /**

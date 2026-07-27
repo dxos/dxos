@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { type Domain } from '../sim/nav-grid';
+import { type Domain } from '../sim';
 
 /** The kinds of movable object the simulation supports. */
 export const Kind = Schema.Literal('boat', 'plane', 'satellite', 'tank', 'rocket');
