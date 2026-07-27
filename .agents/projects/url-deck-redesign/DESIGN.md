@@ -3,16 +3,16 @@
 Composer's URL structure and deck-layout state model are being redesigned
 together: URLs move to Macro-style chained `(prefix, id)` pairs anchored by a
 `/w/<workspaceId>` workspace base with mid-chain rebasing, the
-`NavigationPathResolver` capability dissolves into the graph builder via a
-static, global `urlKey` table, and the deck collapses from three explicit
-modes to a single mode whose presentation (fullbleed vs. sliding) derives from
-plank count.
+`NavigationPathResolver` capability dissolves into the graph builder via
+per-extension `url` bindings, and the deck collapses from three explicit modes to
+a single stored mode whose presentation (fullbleed / tiling / sliding) derives
+from plank count.
 
 Full spec: `agents/superpowers/specs/2026-07-19-url-mapping-deck-structure-design.md`
 
 > **Execution policy** — of paramount importance for all execution: delegate the
 > bulk of the work to cheaper models. Sonnet subagents do the file-by-file
-> writing (mechanical sweeps, per-plugin `urlKey` declarations, tests, consumer
+> writing (mechanical sweeps, per-plugin `url` bindings, tests, consumer
 > updates); the premier model (Fable) only drives and validates (decompose,
 > prompt, review, build/test, integrate).
 
@@ -20,12 +20,15 @@ Full spec: `agents/superpowers/specs/2026-07-19-url-mapping-deck-structure-desig
 
 - Workspace base via reserved `w` pair with mid-chain rebasing — no compound
   `spaceId:entityId` ids.
-- `urlKey` is optional, defaults to the plugin id; short keys for primary
-  types; global uniqueness with drop+warn on duplicates.
-- No per-extension resolve/path function — mapping is static both directions.
+- Each extension declares `url: { key, kind, path }`; short keys for primary
+  types, and a key may be shared by several extensions (see Phase C).
+- Mapping is declarative both directions: `path` is a static template, or a
+  resolver function for recursive shapes (see Phase C).
 - Attention is never in the URL — ephemeral, like cursors.
-- One deck mode, derived from plank count; no tiling for now.
-- `navigationDefault` setting defaults to `'replace'`; shift-click inverts.
+- One stored deck mode; presentation derives from plank count (tiling landed
+  later — see "As built" below).
+- Navigation is gesture-based, not a setting: `disposition: solo | add | auto`,
+  with shift forcing an add.
 - Vertical companions dropped for now.
 - No compatibility shims anywhere in the cutover.
 
@@ -52,3 +55,18 @@ See TASKS.md in this directory for the phased execution ledger.
   resolution for loader-confirmed planks until ancestors materialize. Deferred optimization (per
   user): persist the learned key→ancestor-template cache to localStorage so warm devices skip the
   search entirely; true cold-start on a new device still needs the loader + retry.
+
+## As built (deltas from the locked decisions above)
+
+- **Tiling landed.** Exactly two planks tile (`TILING_MIN`/`TILING_MAX` are both 2), rendered with
+  `Splitter.Root` — the same primitive the companion used before it became a plank. `tilingSizing` is
+  the start pane's width in rem; the end pane fills the remainder. Three or more planks slide.
+- **`LayoutMode` was kept**, as derived state rather than stored: `solo | multi | solo--fullscreen`
+  from `getMode(deck, fullscreen)`, and `AppCapabilities.Layout.mode` stays a `string`. Only
+  `LayoutOperation.SetLayoutMode` was removed.
+- **The companion is a plank**, so a solo plank plus its companion _is_ the tiling presentation. Its
+  width is `tilingSizing`; only the selected variant remains in view state.
+- **No graph-builder `resolver` is declared anywhere.** The mechanism (and `Graph.initialize`) survives
+  in app-graph, TODO-marked, but every URL target is reached through a declared `url` binding.
+- **Naming:** `Paths` → `GraphPath` (graph paths, not URL paths), URL↔node bridging extracted as
+  `UrlResolution`, and app-graph's `companion` vocabulary is `linked`.

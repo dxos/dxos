@@ -1,6 +1,23 @@
 # URL & Deck Redesign — Tasks
 
-_Resume: Cold-restore not-found for grouped planks fixed + committed/pushed to PR #12273 (9e41c78fcb: InboxPlugin activation event, database `type` url binding, url-handler loader compound-id extraction — all browser-verified). Then a whole-PR pass (uncommitted, about to commit): (1) comments audit — removed the per-connector url-config comments across every graph builder (user: "unnecessary"), fixed history-narration comments (CompanionBinding/WorkspaceAnchor/Paths/inbox/database/MessageArticle/EventCall/migrate-persisted-state), trimmed two DeckViewport essays; (2) reverted packages/plugins/plugin-deck/src/components/Matrix/SPEC.md to base (Matrix component untouched, should have no diff). Formatted + 14 touched packages lint-green. Next: commit + push this cleanup; watch PR #12273 Check; then deferred cleanups (delete dead useCompanionSplit + companionFrameSizing schema field), then mark PR ready. Gotchas in memory: never import a DOM/UI package (@dxos/react-ui-attention) into worker-reachable modules (app-toolkit AppNode) — crashes the client dedicated worker; `Mosaic.Tile` seeds size from the prop but must re-sync on prop change; plugin AppGraphBuilder must register on the default SetupAppGraph event (not gated on AttentionReady) or its URL keys miss the deck's startup parse._
+_Resume: PR #12273 is pushed through a2a2244d9c and green locally (app-graph 134 / app-toolkit 109 /
+plugin-deck 40 + 13 storybook / plugin-space 18 / plugin-inbox 222 + 17 storybook files). Since the
+cold-restore fix: whole-PR comment audit; `LayoutMode` restored as derived state; `Paths` → `GraphPath`
+
+- `UrlResolution` extracted; app-graph `companion` → `linked`; `disposition`/`positioning` merged;
+  `UrlPrefixAnnotation` and the `explore` capability dropped; resolver/`Graph.initialize` revert completed
+  (TODO-marked, no resolvers declared anywhere); tiling moved onto the `Splitter` primitive (`tilingSizing`
+  is now a rem extent, not a weights array) and `useCompanionSplit` deleted; DeckViewport refactored —
+  `FoldSpine` component, seven named geometry hooks, one `PlankContext`, and spine clicks routed through
+  `LayoutOperation.ScrollIntoView` so there is a single scroll path; `MessageArticle` takes a single
+  message; **app-graph's `@dxos/effect` was dev-only, so cold builds failed and dependent packages tested
+  against a stale dist — fixed, and it was the cause of a phantom plugin-inbox sync failure**. Docs pass
+  done (this file, project DESIGN, plugin-deck DESIGN/PLUGIN.mdl, both changesets, composer-plugins
+  MEMORY). Next: visual checks the test suites can't cover (fold-spine sigil alignment, pinned-plank
+  scroll offset), then mark the PR ready. Gotchas in memory: never import a DOM/UI package into
+  worker-reachable modules; `Mosaic.Tile` must re-sync `size` on prop change; a plugin's AppGraphBuilder
+  must register on the default `SetupAppGraph` event; ALWAYS check `git branch --show-current` before
+  editing or committing — this worktree got switched under the session once._
 
 ## Companion width position-dependence (debug-mode, fixed)
 
@@ -103,8 +120,10 @@ ALL companions. Turning it on in solo → deck mode (counts as a plank). Contrib
       `/w/<ws>/collection/<id>/companion/comments`; variant switch updates it; cold reload preserves and
       restores it. Committed 655a35d7ee, pushed to PR #12273. app-graph 114 / app-toolkit 101 /
       plugin-deck 49 tests green; lint + format clean.
-- [ ] **Deferred cleanup** — delete now-dead `useCompanionSplit` + the `companionFrameSizing` schema
-      field (unused after the split pane was removed).
+- [x] **Deferred cleanup (part)** — `useCompanionSplit` deleted, along with the companion aspect's
+      per-orientation split fields (only the selected variant remains in view state).
+- [ ] **Deferred cleanup (rest)** — `companionFrameSizing` is still on `DeckState` and still unread;
+      deleting it also touches the migration superset and a test fixture.
 
 > **Execution policy** — of paramount importance for all execution: delegate the
 > bulk of the work to cheaper models. Sonnet subagents do the file-by-file

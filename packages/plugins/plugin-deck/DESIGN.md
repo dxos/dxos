@@ -99,7 +99,7 @@ type DeckState = {
   active: string[]; // presentation derives from length + breakpoint
   inactive: string[];
   plankSizing: Record<string, number>; // rem widths keyed by plank id; sliding presentation only
-  tilingSizing?: number[]; // tiling split ratio, relative widths keyed by position
+  tilingSizing?: number; // tiling: start pane width in rem; the end pane fills the remainder
   companionOpen: boolean;
   companionFrameSizing: Record<string, number>;
 };
@@ -226,5 +226,6 @@ Sequencing keeps the build green: 1–2 (additive), 3–4 (solo first, verify), 
    `DeckViewport.tsx`), each wired to `plankSizing`/`DeckOperation.UpdatePlankSize`.
 2. **`PlankControls` location**: resolved — it lives in `containers/Deck/PlankControls.tsx`,
    capability-aware, composed by `DeckPlank`.
-3. **Solo companion ratio**: resolved — the fixed ratio was dropped in favour of a resizable
-   `Splitter.Root`, persisting its split size via `useCompanionSplit`.
+3. **Solo companion ratio**: resolved — the companion is a plank, so a solo plank plus its companion
+   is the tiling presentation: a resizable `Splitter.Root` whose start-pane width persists per deck as
+   `tilingSizing`.

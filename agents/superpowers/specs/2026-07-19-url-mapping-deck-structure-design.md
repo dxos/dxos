@@ -441,3 +441,22 @@ mirroring react-ui-menu's node wrappers). Core `Node` stays URL-agnostic.
   makeCompanion-stamps-it approach.)
 - `Paths.getShareableLinkPath` composes the full link as `/w/<workspace>` +
   `node.urlSegment`.
+
+---
+
+## As built (2026-07-27)
+
+This spec is the design as of 2026-07-19 and is kept as written. Where the implementation diverged:
+
+- **`urlKey` + `UrlPrefixAnnotation`** became a single per-extension binding, `url: { key, kind, path }`,
+  declared on the graph-builder extension. The annotation was dropped — the key belongs with the builder.
+- **`navigationDefault` / `'replace' | 'new-plank'`** was dropped in favour of gesture-based navigation:
+  `LayoutOperation.Open`'s `disposition` is `solo | add | auto`, with shift forcing an add.
+- **Tiling exists**, for exactly two planks, via `Splitter.Root`. `plankSizing` (rem by plank id) covers
+  sliding; `tilingSizing` (rem, start pane) covers tiling.
+- **`LayoutMode` survives** as derived state (`solo | multi | solo--fullscreen`) and
+  `AppCapabilities.Layout.mode` remains a `string`; only `SetLayoutMode` was deleted.
+- **`Paths.ts`** became `GraphPath.ts` (it builds fully-qualified graph paths, not URL paths); URL parsing
+  and formatting live in `UrlPath`, and the URL↔node bridge in `UrlResolution`.
+- **Resolvers**: `NavigationPathResolver` is gone as designed, and no graph-builder `resolver` is declared
+  anywhere; the mechanism and `Graph.initialize` remain in app-graph, TODO-marked for removal.

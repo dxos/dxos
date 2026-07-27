@@ -46,11 +46,12 @@ type DeckState
     active: string[]              # item IDs of the deck's planks; presentation derives from length + breakpoint
     inactive: string[]            # item IDs that have been closed; persisted for reopening
     plankSizing: Record<string, number>   # persisted plank widths in rem, keyed by item ID (sliding presentation only)
-    tilingSizing?: number[]       # relative widths of tiled planks keyed by position (tiling split ratio); absent/empty means equal
+    tilingSizing?: number         # tiling: start pane width in rem (the end pane fills the remainder); absent means an even split
     companionOpen: boolean        # whether the companion pane is visible
     companionFrameSizing: Record<string, number>  # companion frame widths in rem
-    # NOTE: the selected companion variant and per-orientation split size live in react-ui-attention
-    # view state (global, localStorage), not on DeckState — see util/companion-view-state.ts.
+    # NOTE: the selected companion variant lives in react-ui-attention view state (global,
+    # localStorage), not on DeckState — see util/companion-view-state.ts. The companion's width is
+    # tilingSizing: it is a plank, so a plank plus its companion is the tiling presentation.
 ```
 
 ```mdl
@@ -286,10 +287,10 @@ op UpdatePlankSize
 ```mdl
 op UpdateTilingSize
   desc: |
-    Persist the tiling split ratio as relative plank widths keyed by position (not plank ID), so
-    swapping which plank occupies a slot keeps the layout.
+    Persist the tiling split as the start pane's width in rem (the end pane fills the remainder).
+    Keyed by position rather than plank ID, so swapping which plank occupies a slot keeps the layout.
   input:
-    weights: number[]
+    size: number
   output: void
   effects: [layout:state]
   requires: [DeckCapabilities]
@@ -439,10 +440,10 @@ feat F-5: URL Navigation & Deep Linking
   desc: |
     The URL is a pair chain (`/w/<workspace>/<key>/<id>/…`) with one pair per plank path segment;
     id-less keys (singletons like `settings`, `members`) consume no id segment. Mapping is fully
-    explicit: a graph node is URL-addressable only if its builder extension declares a `urlKey`
-    plus either a static `urlPath` template (fixed-depth dynamic segments are `+`-encoded into the
-    id) or a `resolve` effect for variable-depth subtrees (collections, native filesystem). There
-    is no search fallback.
+    explicit: a graph node is URL-addressable only if its builder extension declares a
+    `url: { key, kind, path }` binding, where `path` is either a static template (fixed-depth dynamic
+    segments are `+`-encoded into the id) or a resolver function for variable-depth subtrees
+    (collections, native filesystem). There is no search fallback.
 
   req F-5.1:
     when: app loads with a URL referencing items
@@ -645,11 +646,11 @@ test T-7: Toast is shown and dismissed
 ```mdl
 test T-8: Two planks render tiling with a persisted split ratio
   given: deck has plank A active (fullbleed presentation, desktop)
-  when: Open({ subject: ['B'], disposition: 'new-plank' }) is dispatched and the user drags the divider
+  when: Open({ subject: ['B'], disposition: 'add' }) is dispatched and the user drags the divider
   then:
     - presentation becomes tiling — A and B split the viewport with a hairline divider and no
       horizontal overflow
-    - the new ratio is persisted in tilingSizing keyed by position via UpdateTilingSize
+    - the split is persisted as tilingSizing (the start pane's width in rem) via UpdateTilingSize
 ```
 
 ```mdl

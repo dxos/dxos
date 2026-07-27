@@ -197,8 +197,8 @@ feat F-3: Item Selection
 
   req F-3.1:
     when: user selects a non-current item
-    then: LayoutOperation.Open is invoked with a disposition resolved from the modifier key
-          (shift-click → inverse, else default)
+    then: LayoutOperation.Open is invoked with disposition 'solo' and the shift modifier forwarded
+          (the Open handler upgrades any disposition to 'add' when shift is held)
   req F-3.2:
     when: user option-clicks a currently active item
     then: LayoutOperation.Close is invoked for that item
@@ -289,8 +289,8 @@ test T-3: Expose navigates to nested item
 test T-4: Select item
   given: item not currently active
   when: user selects a tree item
-  then: LayoutOperation.Open is invoked with the item id and a disposition resolved from the
-        modifier key (shift-click → inverse, else default)
+  then: LayoutOperation.Open is invoked with the item id, disposition 'solo' and the shift modifier
+        forwarded (shift-click therefore adds a plank instead of navigating)
 ```
 
 ```mdl
