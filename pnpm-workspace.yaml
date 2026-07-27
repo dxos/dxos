@@ -164,6 +164,7 @@ catalog:
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
   '@phosphor-icons/react': 2.1.10
+  '@pierre/diffs': ^1.2.11
   '@playwright/test': 1.57.0
   '@posthog/cli': ^0.5.29
   '@radix-ui/primitive': 1.1.1
@@ -833,3 +834,6 @@ trustPolicyExclude:
   - semver@5.7.2
   - ua-parser-js@1.0.41
   - graphql@15.10.2
+  # `@pierre/diffs@1.2.12` hard-pins this exact version, which dropped the provenance
+  # attestation earlier releases had; excluded so the trust guard stays on elsewhere.
+  - '@pierre/theme@1.1.0'
