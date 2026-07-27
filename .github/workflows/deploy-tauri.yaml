@@ -56,16 +56,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
-      - name: Install CrabNebula CLI
-        run: |
-          # Download the latest cn CLI for Linux
-          curl -L -o cn https://cdn.crabnebula.app/download/crabnebula/cn-cli/latest/cn_linux
-          chmod +x cn
-          sudo mv cn /usr/local/bin/
-
-          # Verify installation
-          cn --version
-
       - name: Compute Tauri version
         id: bump-version
         run: |
@@ -114,7 +104,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    timeout-minutes: 45
+    # A production build (no remote cache) already runs ~30 min before the upload starts; the headroom is for
+    # the retries in cn-release, which must not be cut off mid-flight.
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v5
@@ -285,12 +277,28 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Upload assets
+        timeout-minutes: 30
         uses: ./.github/actions/cn-release
         with:
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
           working-directory: ./packages/apps/composer-app/src-tauri/
+
+      # The web deploy is a sibling job that ships independently, so a red run here reads as "the release
+      # failed" when only the desktop half did — announce which half, as build_tauri_ios already does.
+      - name: Notify Discord on desktop build failure
+        if: failure() || cancelled()
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          REF_NAME: ${{ inputs.environment }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg ref "$REF_NAME" --arg url "$RUN_URL" \
+            '{content: (":warning: **build_tauri** failed on `" + $ref + "` — the web deploy is unaffected.\nRun: " + $url)}')
+          curl -sS -X POST "$DX_DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$payload"
 
   build_tauri_ios:
     needs: draft_tauri
