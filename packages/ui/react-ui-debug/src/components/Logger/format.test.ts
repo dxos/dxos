@@ -9,7 +9,7 @@ import { LogEntry, LogLevel } from '@dxos/log';
 import { formatLogEntry } from './format';
 
 describe('formatLogEntry', () => {
-  test('extracts level letter, file basename, message and context', ({ expect }) => {
+  test('extracts level letter, file path, message and context', ({ expect }) => {
     const entry = new LogEntry({
       level: LogLevel.INFO,
       message: 'hello',
@@ -20,7 +20,7 @@ describe('formatLogEntry', () => {
 
     const record = formatLogEntry(entry);
     expect(record.level).to.equal('I');
-    expect(record.file).to.equal('bar.ts');
+    expect(record.file).to.equal('packages/foo/src/bar.ts');
     expect(record.line).to.equal(42);
     expect(record.message).to.equal('hello');
     expect(record.context).to.deep.equal({ count: 3 });

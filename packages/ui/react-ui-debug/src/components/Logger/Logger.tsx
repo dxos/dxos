@@ -3,6 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -32,6 +33,7 @@ import {
   parseCaptureOwnerStack,
   useTranslation,
 } from '@dxos/react-ui';
+import { ViewState, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -46,6 +48,21 @@ import { formatLogEntry, packageName } from './format';
 
 export const LEVELS = ['trace', 'debug', 'verbose', 'info', 'warn', 'error'] as const;
 export type LevelName = (typeof LEVELS)[number];
+
+/** Per-file level overrides are global to the logger, not scoped to an attention context. */
+const LOG_LEVELS_CONTEXT = 'logger';
+
+/**
+ * Per-file log level overrides, keyed by source path. Persisted (localStorage) via react-ui-attention
+ * view state so the levels a developer dials in survive reloads; requires a `ViewStateProvider` ancestor
+ * to persist (degrades to session defaults without one).
+ */
+export const logLevelsAspect = ViewState.define<Record<string, LevelName>>({
+  key: 'debug-logger-levels',
+  backend: 'local',
+  schema: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Literal(...LEVELS) })),
+  defaultValue: () => ({}),
+});
 
 const DEFAULT_MAX_LINES = 1_000;
 
@@ -187,7 +204,14 @@ const LoggerRoot = ({
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [current, setCurrent] = useState<number>();
   const [checked, setChecked] = useState<Set<number>>(new Set());
-  const [fileLevels, setFileLevels] = useState<Map<string, LevelName>>(new Map());
+  // Per-file level overrides live in persisted view state; expose them as a Map for `composeFilter`
+  // and the Levels list.
+  const fileLevelsRecord = useViewState(logLevelsAspect, LOG_LEVELS_CONTEXT);
+  const { update: updateFileLevels, clear: clearFileLevelsAction } = useViewStateActions(
+    logLevelsAspect,
+    LOG_LEVELS_CONTEXT,
+  );
+  const fileLevels = useMemo(() => new Map(Object.entries(fileLevelsRecord)), [fileLevelsRecord]);
   // Set membership is O(1); the sorted view is memoized so a high-volume stream never re-sorts per entry.
   const filesRef = useRef<Set<string>>(new Set(logFileRegistry.getFiles()));
   const [filesEpoch, setFilesEpoch] = useState(0);
@@ -280,18 +304,21 @@ const LoggerRoot = ({
     setChecked(prune);
   }, [rows]);
 
-  const setFileLevel = useCallback((file: string, level: LevelName | undefined) => {
-    setFileLevels((prev) => {
-      const next = new Map(prev);
-      if (level) {
-        next.set(file, level);
-      } else {
-        next.delete(file);
-      }
-      return next;
-    });
-  }, []);
-  const clearFileLevels = useCallback(() => setFileLevels(new Map()), []);
+  const setFileLevel = useCallback(
+    (file: string, level: LevelName | undefined) => {
+      updateFileLevels((prev) => {
+        const next = { ...prev };
+        if (level) {
+          next[file] = level;
+        } else {
+          delete next[file];
+        }
+        return next;
+      });
+    },
+    [updateFileLevels],
+  );
+  const clearFileLevels = useCallback(() => clearFileLevelsAction(), [clearFileLevelsAction]);
   const clear = useCallback(() => {
     setRows([]);
     setExpanded(new Set());
@@ -633,9 +660,9 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
                 <div
                   className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-description')}
-                  title={record.package ? `${record.package}/${record.file}` : record.file}
+                  title={record.file}
                 >
-                  <span className='truncate'>{record.file}</span>
+                  <span className='truncate'>{record.file?.split('/').pop() ?? record.file}</span>
                 </div>
                 <span className='truncate' title={record.message}>
                   {record.message}
@@ -652,7 +679,14 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 />
                 {isExpanded && (
                   <div className='col-span-full'>
-                    <JsonHighlighter classNames='p-2' data={{ message: record.message, context: record.context }} />
+                    <JsonHighlighter
+                      classNames='p-2'
+                      data={{
+                        file: record.line ? `${record.file}:${record.line}` : record.file,
+                        message: record.message,
+                        context: record.context,
+                      }}
+                    />
                     {frames && <ErrorStack classNames='p-1 bg-input-surface' frames={frames} />}
                   </div>
                 )}

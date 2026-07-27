@@ -9,8 +9,9 @@ tags:
 tasks:
   build:
     deps:
-      - glsl
-  glsl:
+      - prebuild
+  # Named `prebuild` so storybook's `#storybook:prebuild` reaches it; the gen dir does not exist until it runs.
+  prebuild:
     command: pnpm run --silent glsl
     inputs:
       - src/shaders/glsl/*.*
