@@ -71,6 +71,11 @@ several load-bearing details the implementation must carry over:
    vertex colours works cleanly; scatter base meshes use `convertToFlatShadedMesh`.
 8. Determinism confirmed (`simplex-noise` seeded by `seedrandom`); cubed-sphere
    edges meet seamlessly (verified in wireframe).
+9. **Terrain realism:** plain fBm scatters peaks and makes small lakes. For a
+   believable planet, use **low base frequency + `continentPower`** for large
+   contiguous oceans/continents, and **clump mountains into ranges** with a
+   belt mask × ridged noise. Latitude ice caps look artificial for many worlds —
+   make them opt-in (`poles`, default off).
 
 ## Prior art / references (in-repo)
 
@@ -145,14 +150,19 @@ good planet):
 - **terrain:** `elevationScale`, `frequency`, `octaves`, `persistence`,
   `lacunarity`, `continentPower` (land/water bias), `resolution` (subdivisions per
   cube face)
+- **mountains:** `mountainScale` (added relief in belts), `maskFrequency` (low →
+  large, few belts), `maskThreshold` (higher → fewer/tighter belts)
 - **water:** `waterLevel` (normalized 0–1 elevation of the sea surface),
   `landGain` (relief multiplier above the waterline — required so continents rise
   clearly)
-- **climate:** `treeLine`, `snowLine`, `beachWidth` (thresholds)
+- **climate:** `treeLine`, `snowLine`, `beachWidth` (thresholds), `poles` (bool —
+  latitude ice caps, **default false**)
 - **scatter:** `treeDensity`, `rockDensity`, `trees` (bool), `rocks` (bool)
 
 Spike defaults that produced a good planet: `elevationScale ≈ 0.16`,
-`continentPower ≈ 1.15`, `waterLevel ≈ 0.44`, `landGain ≈ 2.5–5`,
+`frequency ≈ 0.9` (low → large oceans/continents), `continentPower ≈ 1.35`,
+`waterLevel ≈ 0.46`, `landGain ≈ 2.5`, `mountainScale ≈ 0.5`,
+`maskFrequency ≈ 0.9`, `maskThreshold ≈ 0.42`, `poles false`,
 `resolution 128–512`.
 
 ## Generation pipeline
@@ -166,6 +176,11 @@ are unit-testable without Babylon.
 2. **noise** (`noise.ts`): `simplex-noise` seeded via `seedrandom(seed)`; fBm
    using `octaves`/`persistence`/`lacunarity`, sampled at the 3D unit position —
    seamless across the whole sphere because sampling is in 3D (no UV seam).
+   Elevation = low-frequency continents (ocean-biased by `continentPower`) **plus
+   clumped mountains**: a low-frequency `maskFrequency`/`maskThreshold` belt mask ×
+   **ridged** multifractal detail × `mountainScale`, gated to land. **Do not clamp
+   elevation to 1** — clamping flattens tall peaks into plateaus; let mountains
+   exceed 1 and let displacement/thresholds handle the extended range.
 3. **terrain** (`terrain.ts`): displace radius with land clearly above the
    waterline —
    `r = radius * (1 + (waterLevel + (rel >= 0 ? rel*landGain : rel*oceanDepthBias)) * elevationScale)`
@@ -173,8 +188,10 @@ are unit-testable without Babylon.
    latitude derived from `y`.
 4. **biomes** (`biomes.ts`): `classify(elevation, latitude, moisture)` →
    `ocean | beach | grass | forest | rock | snow`, using `waterLevel`,
-   `beachWidth`, `treeLine`, `snowLine`. Ocean colour is **depth-shaded** (shallow
-   → light teal, deep → dark navy) so opaque water reads as water.
+   `beachWidth`, `treeLine`, `snowLine`. Mountain (elevation) snow always applies;
+   latitude ice caps apply only when `poles` is enabled. Ocean colour is
+   **depth-shaded** (shallow → light teal, deep → dark navy) so opaque water reads
+   as water.
 5. **mesh** (`scene-manager.ts`): unindexed (per-face) geometry with per-face
    normals → flat shading; per-face vertex colours from `palette.ts` /
    depth-shaded ocean. **Reverse triangle winding for Babylon's left-handed
@@ -252,3 +269,15 @@ observes the object and regenerates (debounced).
 - Surface (flyover/walk) camera with per-face quadtree LOD and chunk streaming.
 - Fog; rivers as flow lines; fields as ground-texture variation.
 - More scatter variety and biome-specific vegetation.
+
+### Tracked backlog
+
+- **Light source (sun):** a directional "sun" light (position/angle, optional
+  day–night), replacing/augmenting the flat hemispheric ambient. Would introduce
+  directional shading — reconcile with the current no-shadow NPR style.
+- **Landing points for rockets:** designated surface landing sites/markers on the
+  planet (placement, selection, per-site metadata).
+- **Boats and submarines:** water-borne/underwater craft on the seas — surface
+  navigation and submerged movement over the depth-shaded ocean.
+- **Satellites:** orbiting bodies around the planet (orbital paths, moons/craft
+  above the surface).

@@ -21,11 +21,16 @@ export type TerraConfig = {
   lacunarity: number;
   continentPower: number; // >1 flattens lowlands into oceans, sharpens continents
   landGain: number; // relief multiplier above the waterline (continents rise clearly)
+  // Mountains — clumped into ranges via a low-frequency mask + ridged detail.
+  mountainScale: number; // extra elevation added inside mountain belts (0 = none)
+  maskFrequency: number; // low → large, few mountain belts
+  maskThreshold: number; // 0..1; higher → mountains confined to fewer, tighter belts
   // Water.
   waterLevel: number; // 0..1 in elevation space
   // Climate (all relative-height 0..1 unless noted).
   beachWidth: number;
   treeLine: number;
+  poles: boolean; // latitude-based ice caps
   snowLine: number; // absolute latitude 0..1 (poles = 1)
   snowElevation: number;
   // Scatter.
@@ -38,15 +43,19 @@ export const defaultConfig = (seed = 'terra'): TerraConfig => ({
   radius: 2,
   resolution: 512,
   elevationScale: 0.16,
-  frequency: 1.6,
+  frequency: 0.9, // lower → larger continents and oceans
   octaves: 6,
   persistence: 0.5,
   lacunarity: 2.0,
-  continentPower: 1.15,
+  continentPower: 1.35, // higher → more ocean, chunkier landmasses
   landGain: 2.5,
-  waterLevel: 0.44,
+  mountainScale: 0.5,
+  maskFrequency: 0.9,
+  maskThreshold: 0.42,
+  waterLevel: 0.46,
   beachWidth: 0.05,
   treeLine: 0.55,
+  poles: false,
   snowLine: 0.82,
   snowElevation: 0.78,
   treeDensity: 0.28,
@@ -103,11 +112,18 @@ const cross = (a: Vec3, b: Vec3): Vec3 => [
 const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const scale = (a: Vec3, s: number): Vec3 => [a[0] * s, a[1] * s, a[2] * s];
 
+const smoothstep = (edge0: number, edge1: number, x: number): number => {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+};
+
 /** Deterministic seeded fBm sampler over the unit sphere (seamless: sampled in 3D). */
 export const makeSampler = (config: TerraConfig) => {
   const rng = seedrandom(config.seed);
   const elevationNoise = createNoise3D(rng);
   const moistureNoise = createNoise3D(rng);
+  const maskNoise = createNoise3D(rng);
+  const ridgeNoise = createNoise3D(rng);
 
   const fbm = (noise: (x: number, y: number, z: number) => number, p: Vec3, freq: number): number => {
     let amp = 1;
@@ -123,10 +139,33 @@ export const makeSampler = (config: TerraConfig) => {
     return sum / norm; // [-1, 1]
   };
 
-  // Elevation in [0, 1]; continentPower biases toward oceans/continents.
+  // Ridged multifractal: sharp crests (mountain ridges) rather than rolling hills.
+  const ridged = (p: Vec3, freq: number): number => {
+    let amp = 1;
+    let f = freq;
+    let sum = 0;
+    let norm = 0;
+    for (let o = 0; o < config.octaves; o++) {
+      const value = 1 - Math.abs(ridgeNoise(p[0] * f, p[1] * f, p[2] * f));
+      sum += amp * value * value;
+      norm += amp;
+      amp *= config.persistence;
+      f *= config.lacunarity;
+    }
+    return sum / norm; // [0, 1]
+  };
+
+  // Elevation in [0, 1]: low-frequency continents (ocean-biased) plus ridged mountains
+  // confined to belts by a low-frequency mask, and only rising on land.
   const elevation = (unit: Vec3): number => {
-    const raw = (fbm(elevationNoise, unit, config.frequency) + 1) / 2;
-    return Math.pow(raw, config.continentPower);
+    const base = Math.pow((fbm(elevationNoise, unit, config.frequency) + 1) / 2, config.continentPower);
+    const maskRaw = (fbm(maskNoise, unit, config.maskFrequency) + 1) / 2;
+    const belt = smoothstep(config.maskThreshold, 1, maskRaw);
+    const onLand = smoothstep(config.waterLevel - 0.02, config.waterLevel + 0.12, base);
+    const mountains = belt * onLand * ridged(unit, config.frequency * 3) * config.mountainScale;
+    // No upper clamp: clamping flattens tall peaks into plateaus. Elevation may exceed 1
+    // for mountains; biome thresholds and displacement handle the extended range.
+    return base + mountains;
   };
   const moisture = (unit: Vec3): number => (fbm(moistureNoise, unit, config.frequency * 0.7) + 1) / 2;
 
@@ -141,7 +180,8 @@ export const classify = (
 ): Biome => {
   if (elevation < config.waterLevel) return 'ocean';
   const rel = (elevation - config.waterLevel) / (1 - config.waterLevel);
-  if (latitude > config.snowLine || rel > config.snowElevation) return 'snow';
+  // Elevation snow (mountain peaks) always; latitude ice caps only when poles enabled.
+  if ((config.poles && latitude > config.snowLine) || rel > config.snowElevation) return 'snow';
   if (rel < config.beachWidth) return 'beach';
   if (rel > config.treeLine) return 'rock';
   return moisture > 0.5 ? 'forest' : 'grass';
