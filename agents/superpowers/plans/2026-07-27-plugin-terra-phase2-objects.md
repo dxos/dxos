@@ -33,13 +33,22 @@ From `packages/plugins/plugin-terra/src/engine/` (all re-exported by `engine/ind
 ```ts
 // noise.ts
 type Vec3 = readonly [number, number, number];
-type NoiseConfig = { seed: string; frequency: number; octaves: number; persistence: number;
-  lacunarity: number; continentPower: number; waterLevel: number; mountainScale: number;
-  maskFrequency: number; maskThreshold: number };
+type NoiseConfig = {
+  seed: string;
+  frequency: number;
+  octaves: number;
+  persistence: number;
+  lacunarity: number;
+  continentPower: number;
+  waterLevel: number;
+  mountainScale: number;
+  maskFrequency: number;
+  maskThreshold: number;
+};
 const makeSampler: (config: NoiseConfig) => { elevation(unit: Vec3): number; moisture(unit: Vec3): number };
 
 // cubed-sphere.ts
-const FACE_UPS: Vec3[];                                    // 6 faces
+const FACE_UPS: Vec3[]; // 6 faces
 const normalize: (v: Vec3) => Vec3;
 const add: (a: Vec3, b: Vec3) => Vec3;
 const sub: (a: Vec3, b: Vec3) => Vec3;
@@ -50,8 +59,13 @@ const faceBasis: (up: Vec3) => { axisA: Vec3; axisB: Vec3 };
 const unitOnFace: (up: Vec3, axisA: Vec3, axisB: Vec3, i: number, j: number, resolution: number) => Vec3;
 
 // terrain.ts
-type TerrainConfig = { radius: number; elevationScale: number; waterLevel: number;
-  landGain: number; oceanDepthBias: number };
+type TerrainConfig = {
+  radius: number;
+  elevationScale: number;
+  waterLevel: number;
+  landGain: number;
+  oceanDepthBias: number;
+};
 const seaRadius: (config: TerrainConfig) => number;
 const radiusAt: (config: TerrainConfig, elevation: number) => number;
 const latitude: (unit: Vec3) => number;
@@ -61,8 +75,9 @@ type Biome = 'ocean' | 'beach' | 'grass' | 'forest' | 'rock' | 'snow';
 const classify: (config: ClimateConfig, elevation: number, latitude: number, moisture: number) => Biome;
 
 // generate-planet.ts
-type TerraConfigValues = NoiseConfig & TerrainConfig & ClimateConfig &
-  { resolution: number; treeDensity: number; rockDensity: number; trees: boolean; rocks: boolean };
+type TerraConfigValues = NoiseConfig &
+  TerrainConfig &
+  ClimateConfig & { resolution: number; treeDensity: number; rockDensity: number; trees: boolean; rocks: boolean };
 
 // scene-manager.ts
 class SceneManager {
@@ -106,10 +121,12 @@ packages/plugins/plugin-terra/src/
 ### Task 1: Spherical geometry (`geo.ts`)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/sim/geo.ts`
 - Test: `packages/plugins/plugin-terra/src/sim/geo.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Vec3`, `normalize`, `sub`, `cross`, `dot`, `scale`, `add` from `../engine`.
 - Produces:
   - `type GeoPoint = { lat: number; lng: number; height: number }` — degrees; `height` is a fraction of planet radius above the sea surface.
@@ -262,7 +279,7 @@ export const advance = (unit: Vec3, bearing: number, angularDistance: number): V
 export const turnToward = (current: number, target: number, maxDelta: number): number => {
   const delta = ((((target - current) % 360) + 540) % 360) - 180;
   const step = Math.max(-maxDelta, Math.min(maxDelta, delta));
-  return ((current + step) % 360 + 360) % 360;
+  return (((current + step) % 360) + 360) % 360;
 };
 ```
 
@@ -284,10 +301,12 @@ git commit -m "plugin-terra: spherical geometry helpers for the simulation"
 ### Task 2: Navigation grid (`nav-grid.ts`)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/sim/nav-grid.ts`
 - Test: `packages/plugins/plugin-terra/src/sim/nav-grid.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Vec3`, `FACE_UPS`, `faceBasis`, `unitOnFace`, `dot`, `makeSampler`, `TerraConfigValues` from `../engine`; `angleBetween` from `./geo`.
 - Produces:
   - `type Domain = 'sea' | 'land' | 'air'`
@@ -512,10 +531,7 @@ export const isPassable = (grid: NavGrid, index: number, domain: Domain, cruiseE
     case 'sea':
       return elevation < grid.waterLevel;
     case 'land':
-      return (
-        elevation >= grid.waterLevel &&
-        elevation < grid.waterLevel + LAND_SLOPE_CEILING * (1 - grid.waterLevel)
-      );
+      return elevation >= grid.waterLevel && elevation < grid.waterLevel + LAND_SLOPE_CEILING * (1 - grid.waterLevel);
     case 'air':
       return elevation < cruiseElevation;
   }
@@ -540,10 +556,12 @@ git commit -m "plugin-terra: cubed-sphere navigation grid"
 ### Task 3: Route planning (`route.ts`)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/sim/route.ts`
 - Test: `packages/plugins/plugin-terra/src/sim/route.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Vec3`, `dot` from `../engine`; `NavGrid`, `Domain`, `isPassable` from `./nav-grid`; `angleBetween` from `./geo`.
 - Produces:
   - `type RouteRequest = { grid: NavGrid; domain: Domain; from: Vec3; to: Vec3; cruiseElevation?: number }`
@@ -770,12 +788,14 @@ git commit -m "plugin-terra: A* route planning over the nav grid"
 ### Task 4: `TerraObject` ECHO type
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/types/TerraObject.ts`
 - Test: `packages/plugins/plugin-terra/src/types/TerraObject.test.ts`
 - Modify: `packages/plugins/plugin-terra/src/types/index.ts` (add `export * as TerraObject from './TerraObject';`)
 - Modify: `packages/plugins/plugin-terra/src/TerraPlugin.tsx` (register the schema)
 
 **Interfaces:**
+
 - Consumes: `Terra` type patterns from `./Terra`.
 - Produces:
   - `TerraObject.Kind = 'boat' | 'plane' | 'satellite' | 'tank' | 'rocket'`
@@ -943,10 +963,12 @@ git commit -m "plugin-terra: TerraObject ECHO type"
 ### Task 5: Motion controllers (`motion.ts`)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/sim/motion.ts`
 - Test: `packages/plugins/plugin-terra/src/sim/motion.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Vec3`, `TerraConfigValues`, `radiusAt`, `seaRadius`, `makeSampler` from `../engine`; `advance`, `angleBetween`, `bearingTo`, `toUnit`, `turnToward` from `./geo`; `TerraObject` types.
 - Produces:
   - `type ObjectState = { unit: Vec3; radius: number; bearing: number; waypoints: Vec3[]; waypointIndex: number; phase: RocketPhase }`
@@ -1068,7 +1090,17 @@ Expected: FAIL.
 // Copyright 2026 DXOS.org
 //
 
-import { type TerraConfigValues, type Vec3, add, cross, makeSampler, normalize, radiusAt, scale, seaRadius } from '../engine';
+import {
+  type TerraConfigValues,
+  type Vec3,
+  add,
+  cross,
+  makeSampler,
+  normalize,
+  radiusAt,
+  scale,
+  seaRadius,
+} from '../engine';
 import { type TerraObject } from '../types';
 import { advance, angleBetween, bearingTo, toUnit, turnToward } from './geo';
 
@@ -1174,11 +1206,7 @@ export const stepOrbit = (
   const inclination = orbit.inclination * (Math.PI / 180);
   // Build the orbital plane from an equatorial circle tilted by the inclination.
   const equatorial: Vec3 = [Math.cos(angle), 0, Math.sin(angle)];
-  const unit = normalize([
-    equatorial[0],
-    equatorial[2] * Math.sin(inclination),
-    equatorial[2] * Math.cos(inclination),
-  ]);
+  const unit = normalize([equatorial[0], equatorial[2] * Math.sin(inclination), equatorial[2] * Math.cos(inclination)]);
   const ahead = angle + 1e-3;
   const nextEquatorial: Vec3 = [Math.cos(ahead), 0, Math.sin(ahead)];
   const next = normalize([
@@ -1277,11 +1305,13 @@ git commit -m "plugin-terra: motion controllers for each object kind"
 ### Task 6: Simulation engine (`engine.ts`, `sim/index.ts`)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/sim/engine.ts`
 - Create: `packages/plugins/plugin-terra/src/sim/index.ts`
 - Test: `packages/plugins/plugin-terra/src/sim/engine.test.ts`
 
 **Interfaces:**
+
 - Consumes: everything above.
 - Produces:
   - `type SimObject = { definition: TerraObject.TerraObject; state: ObjectState }`
@@ -1535,10 +1565,12 @@ git commit -m "plugin-terra: deterministic simulation engine"
 ### Task 7: Object meshes (`scene/object-forms.ts`)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/scene/object-forms.ts`
 - Create: `packages/plugins/plugin-terra/src/scene/index.ts`
 
 **Interfaces:**
+
 - Consumes: `@babylonjs/core` builders (`CreateBox`, `CreateCylinder`, `CreateSphere`), `Mesh`, `StandardMaterial`, `Color3`, `Scene`.
 - Produces: `createObjectForm(kind: TerraObject.Kind, scene: Scene): Mesh` — a merged, flat-shaded, matte base mesh for one kind, `isVisible = false` (thin instances render it).
 
@@ -1574,6 +1606,7 @@ git commit -m "plugin-terra: low-poly object meshes"
 ### Task 8: Object layer + article integration + story
 
 **Files:**
+
 - Create: `packages/plugins/plugin-terra/src/scene/object-layer.ts`
 - Modify: `packages/plugins/plugin-terra/src/scene/index.ts`
 - Modify: `packages/plugins/plugin-terra/src/types/Terra.ts` (add the `objects` ref array and demo seeding)
@@ -1582,6 +1615,7 @@ git commit -m "plugin-terra: low-poly object meshes"
 - Test: `packages/plugins/plugin-terra/src/types/Terra.test.ts` (extend for demo seeding)
 
 **Interfaces:**
+
 - Produces:
   - `class ObjectLayer`:
     - `constructor(options: { scene: Scene; kinds: readonly TerraObject.Kind[]; radius: number })`
@@ -1637,6 +1671,7 @@ git commit -m "plugin-terra: render and animate simulation objects"
 ### Task 9: Changeset
 
 **Files:**
+
 - Create: `.changeset/<generated-name>.md`
 
 - [ ] **Step 1: Add the changeset.**
