@@ -14,9 +14,9 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     description: trim`
       A deterministic 3D planet plugin for DXOS Composer, rendering seed-driven stylized worlds
-      with Babylon.js. Each planet is generated procedurally from a single seed, so the same seed
-      always yields the same land, water, and biome layout, while live parameters let users
-      reshape the terrain in real-time.
+      with Babylon.js. Each planet is generated procedurally from a seed and its configuration, so
+      the same seed and configuration always yield the same land, water, and biome layout, while
+      live parameters let users reshape the terrain in real-time.
     `,
     icon: { key: 'ph--globe-hemisphere-west--regular', hue: 'green' },
     tags: ['labs'],

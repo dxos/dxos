@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TerraConfigValues, type Vec3, FACE_UPS, dot, faceBasis, makeSampler, unitOnFace } from '../engine';
+import { FACE_UPS, type TerraConfigValues, type Vec3, dot, faceBasis, makeSampler, unitOnFace } from '../engine';
 
 /** Movement medium; each has its own passability rule over the same grid. */
 export type Domain = 'sea' | 'land' | 'air';

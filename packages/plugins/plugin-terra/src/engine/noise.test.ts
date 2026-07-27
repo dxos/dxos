@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { type NoiseConfig, makeSampler } from './noise';
 
@@ -20,19 +20,19 @@ const config: NoiseConfig = {
 };
 
 describe('noise', () => {
-  test('is deterministic for a seed', () => {
+  test('is deterministic for a seed', ({ expect }) => {
     const a = makeSampler(config);
     const b = makeSampler(config);
     expect(a.elevation([0.1, 0.2, 0.97])).toBe(b.elevation([0.1, 0.2, 0.97]));
   });
 
-  test('different seeds differ', () => {
+  test('different seeds differ', ({ expect }) => {
     const a = makeSampler(config);
     const b = makeSampler({ ...config, seed: 'terra-2' });
     expect(a.elevation([0.1, 0.2, 0.97])).not.toBe(b.elevation([0.1, 0.2, 0.97]));
   });
 
-  test('elevation is non-negative; moisture is in [0, 1]', () => {
+  test('elevation is non-negative; moisture is in [0, 1]', ({ expect }) => {
     const { elevation, moisture } = makeSampler(config);
     for (const point of [
       [1, 0, 0],

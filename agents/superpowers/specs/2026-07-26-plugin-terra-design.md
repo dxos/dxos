@@ -20,7 +20,7 @@ structured so a surface (flyover/walk) camera can be added later without rework.
 ### Non-photorealistic style
 
 - Flat / faceted shading (per-face normals).
-- No shadows (no shadow generators); a single `HemisphericLight` for flat ambient.
+- No shadows (no shadow generators); two `HemisphericLight`s (key + fill) for flat ambient.
 - `specularColor` black for a matte, semi-realistic look.
 - Fog left as a documented hook (`scene.fogMode`) for a later milestone.
 
@@ -92,7 +92,7 @@ several load-bearing details the implementation must carry over:
 Mirrors spacetime (Babylon `SceneManager`) + voxel (container/story/capability
 layout).
 
-```
+```text
 packages/plugins/plugin-terra/
   package.json (private:true)  dx.config.ts  PLUGIN.mdl  moon.yml
   tsconfig.json  vite.config.ts
@@ -221,13 +221,14 @@ are unit-testable without Babylon.
 
 ## Config UX
 
-**(Revised 2026-07-26, user directive — replaces the react-ui-form panel.)**
-In-scene `@babylonjs/gui` controls: a fullscreen `AdvancedDynamicTexture`
-hosting a semi-transparent panel of sliders (water level, elevation scale,
-mountain scale, tree density, resolution), a reseed button, a water-sheen
-toggle, and an **FPS widget** (top-left, from `engine.getFps()`). Control
-changes write to the ECHO object's `config`; the article observes the object
-and regenerates (debounced).
+**(Revised 2026-07-27 — the in-scene `@babylonjs/gui` panel below was itself
+superseded by a React `TerraForm`; only the FPS widget remains in-scene.)**
+`TerraForm` (a React panel using the `Slider` primitive contributed to
+`@dxos/react-ui`) renders sliders for water level, elevation scale, mountain
+scale, tree density, and resolution, plus a reseed button and a water-sheen
+toggle. Control changes write to the ECHO object's `config`; the article
+observes the object and regenerates (debounced). The only surviving in-scene
+Babylon GUI control is the **FPS widget** (top-left, from `engine.getFps()`).
 
 ## Plugin wiring
 

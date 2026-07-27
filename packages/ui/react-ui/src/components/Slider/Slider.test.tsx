@@ -20,7 +20,9 @@ describe('Slider', () => {
   });
 
   test('renders one thumb per value with real (non-logical) size utility classes', () => {
-    render(<Slider defaultValue={[25, 75]} max={100} step={1} />, { wrapper: Wrapper });
+    render(<Slider defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum', 'Maximum']} />, {
+      wrapper: Wrapper,
+    });
 
     const thumbs = screen.getAllByRole('slider');
     expect(thumbs).toHaveLength(2);
@@ -41,7 +43,7 @@ describe('Slider', () => {
   });
 
   test('keeps the thumb rendered (never removed) when disabled', () => {
-    render(<Slider defaultValue={[50]} max={100} step={1} disabled />, { wrapper: Wrapper });
+    render(<Slider defaultValue={[50]} max={100} step={1} disabled aria-label='Value' />, { wrapper: Wrapper });
 
     // Disabled state is expressed via the root's `opacity-50` (visually muted), not by unmounting
     // the thumb — assert it is still present with its sizing classes intact.
@@ -59,5 +61,37 @@ describe('Slider', () => {
     // is the only way to give it a name exposed to assistive tech.
     expect(screen.getByRole('slider', { name: 'Minimum' })).toBeTruthy();
     expect(screen.getByRole('slider', { name: 'Maximum' })).toBeTruthy();
+  });
+
+  test('gives a single thumb an accessible name via a plain aria-label', () => {
+    render(<Slider defaultValue={[50]} max={100} step={1} aria-label='Volume' />, { wrapper: Wrapper });
+
+    // Ergonomic shorthand for the common one-thumb case: no need to wrap the label in `thumbLabels`.
+    expect(screen.getByRole('slider', { name: 'Volume' })).toBeTruthy();
+  });
+
+  test('every rendered thumb, across default and multi-thumb usage, exposes an accessible name', () => {
+    const { unmount } = render(<Slider defaultValue={[50]} max={100} step={1} aria-label='Value' />, {
+      wrapper: Wrapper,
+    });
+    for (const thumb of screen.getAllByRole('slider')) {
+      expect(thumb.getAttribute('aria-label')).toBeTruthy();
+    }
+    unmount();
+
+    render(<Slider defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum', 'Maximum']} />, {
+      wrapper: Wrapper,
+    });
+    for (const thumb of screen.getAllByRole('slider')) {
+      expect(thumb.getAttribute('aria-label')).toBeTruthy();
+    }
+  });
+
+  test('throws when thumbLabels does not cover every rendered thumb', () => {
+    // Guards against silently rendering an unnamed thumb when a two-thumb slider is passed a
+    // single label (or no label at all) — the mismatch must fail loudly, not slip through.
+    expect(() =>
+      render(<Slider defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum']} />, { wrapper: Wrapper }),
+    ).toThrow();
   });
 });

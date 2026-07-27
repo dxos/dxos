@@ -27,7 +27,7 @@ Non-photorealistic but semi-realistic: flat/faceted shading (per-face normals),
 
 ### Architecture
 
-```
+```text
 src/engine/           pure, deterministic, unit-tested (except scene-*)
   noise.ts            seeded fBm + ridged mountains -> elevation/moisture
   cubed-sphere.ts     6 face bases + unit-sphere mapping + vector helpers
@@ -82,7 +82,7 @@ primitives, two of each kind, advanced every frame by a small game engine.
 
 ### Architecture
 
-```
+```text
 src/sim/                  pure, Babylon-free, unit-tested
   geo.ts                  GeoPoint <-> Vec3, tangent frame, bearing, great-circle advance
   nav-grid.ts             coarse cubed-sphere cells + cross-face neighbors + passability

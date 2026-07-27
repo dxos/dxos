@@ -71,7 +71,7 @@ opening the same `Terra` ECHO object reconstructs the same world sim mid-flight:
 
 ## Module layout (within plugin-terra)
 
-```
+```text
 src/engine/     # Phase 1: pure terrain (unchanged, reusable)
 src/sim/        # NEW: pure, Babylon-free simulation
   geo.ts        # lat/lng/height <-> Vec3, bearings, great-circle math,

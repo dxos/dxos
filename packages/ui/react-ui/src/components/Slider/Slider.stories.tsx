@@ -35,7 +35,7 @@ export const Controlled: Story = {
       const [value, setValue] = useState([25]);
       return (
         <div className='flex flex-col gap-2 w-64'>
-          <Slider value={value} onValueChange={setValue} max={100} step={1} />
+          <Slider value={value} onValueChange={setValue} max={100} step={1} aria-label='Controlled value' />
           <div className='text-sm text-description'>{value[0]}</div>
         </div>
       );
@@ -47,7 +47,7 @@ export const Controlled: Story = {
 export const MinMaxStep: Story = {
   render: () => (
     <div className='w-64'>
-      <Slider defaultValue={[0.4]} min={0.2} max={0.7} step={0.01} />
+      <Slider defaultValue={[0.4]} min={0.2} max={0.7} step={0.01} aria-label='Min/max/step value' />
     </div>
   ),
 };
@@ -55,7 +55,7 @@ export const MinMaxStep: Story = {
 export const Disabled: Story = {
   render: () => (
     <div className='w-64'>
-      <Slider defaultValue={[50]} max={100} step={1} disabled />
+      <Slider defaultValue={[50]} max={100} step={1} disabled aria-label='Disabled value' />
     </div>
   ),
 };
@@ -63,7 +63,7 @@ export const Disabled: Story = {
 export const Vertical: Story = {
   render: () => (
     <div className='h-64'>
-      <Slider defaultValue={[50]} max={100} step={1} orientation='vertical' />
+      <Slider defaultValue={[50]} max={100} step={1} orientation='vertical' aria-label='Vertical value' />
     </div>
   ),
 };
@@ -86,20 +86,20 @@ export const ThumbVisibility: Story = {
     <div className='flex items-start gap-8'>
       <div className='flex flex-col gap-2 w-48'>
         <span className='text-sm text-description'>Default</span>
-        <Slider defaultValue={[50]} max={100} step={1} />
+        <Slider defaultValue={[50]} max={100} step={1} aria-label='Default value' />
       </div>
       <div className='flex flex-col gap-2 w-48'>
         <span className='text-sm text-description'>Disabled</span>
-        <Slider defaultValue={[50]} max={100} step={1} disabled />
+        <Slider defaultValue={[50]} max={100} step={1} disabled aria-label='Disabled value' />
       </div>
       <div className='flex flex-col gap-2 w-48'>
         <span className='text-sm text-description'>Two-thumb</span>
-        <Slider defaultValue={[25, 75]} max={100} step={1} />
+        <Slider defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum', 'Maximum']} />
       </div>
       <div className='flex flex-col gap-2 items-center'>
         <span className='text-sm text-description'>Vertical</span>
         <div className='h-48'>
-          <Slider defaultValue={[50]} max={100} step={1} orientation='vertical' />
+          <Slider defaultValue={[50]} max={100} step={1} orientation='vertical' aria-label='Vertical value' />
         </div>
       </div>
     </div>

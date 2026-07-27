@@ -12,7 +12,8 @@ import { Terra } from '#types';
 
 export type TerraFormProps = {
   config: Terra.TerraConfig;
-  onChange: (values: Terra.TerraConfig) => void;
+  /** Fires with only the changed fields — callers must merge, not replace, the existing config. */
+  onChange: (patch: Partial<Terra.TerraConfig>) => void;
   /** Water sheen is a scene-only effect, not a stored config field. */
   onWaterSheen?: (enabled: boolean) => void;
 };

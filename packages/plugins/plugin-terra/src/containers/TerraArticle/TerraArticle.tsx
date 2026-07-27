@@ -53,7 +53,7 @@ export const TerraArticle = ({ subject: terra }: TerraArticleProps) => {
   }, [values]);
 
   const handleChange = useCallback(
-    (patch: Terra.TerraConfig) => updateConfig((draft) => Object.assign(draft, patch)),
+    (patch: Partial<Terra.TerraConfig>) => updateConfig((draft) => Object.assign(draft, patch)),
     [updateConfig],
   );
 

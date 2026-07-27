@@ -14,8 +14,8 @@ projects:
     summary: Deterministic stylized 3D planet (Babylon.js) from a seed-driven Terra ECHO object; Phase 2 adds movable objects (boats/planes/satellites/tanks/rockets) with a deterministic sim engine.
     tasks: packages/plugins/plugin-terra/TASKS.md
     design: packages/plugins/plugin-terra/DESIGN.md
-    prs: []
-    resume: 'Phase 1 is 10/13 done (engine, Terra type, SceneManager, TerraArticle, react-ui Slider + TerraForm panel all landed and reviewed; planet renders and regenerates live in storybook). Next: Task 11 capabilities + plugin wiring, then Task 12 verification, Task 13 changeset, final whole-branch review. In flight: slider-thumb visibility fix (is-4/bs-4 generate no CSS). Phase 2 plan is written/committed; execution follows Phase 1.'
+    prs: [12353]
+    resume: 'Phase 1 complete and in PR #12353 (capabilities/wiring, verification, changeset all shipped); Phase 2 underway with P2.1 (geo), P2.2 (nav-grid), P2.3 (route) landed; next is P2.4 (TerraObject ECHO type).'
 
   - name: plugin-projects
     status: active

@@ -5,8 +5,8 @@ version: 0.1.0
 ---
 
 A deterministic 3D planet plugin for `DXOS` Composer, rendering seed-driven stylized worlds
-with `Babylon.js`. A single seed always produces the same land, water, and biome layout, so
-planets are fully reproducible and shareable by seed alone.
+with `Babylon.js`. The same seed and configuration always produce the same land, water, and
+biome layout, so planets are fully reproducible and shareable by seed plus configuration.
 
 Terrain is generated procedurally — elevation and biome placement derive from layered simplex
 noise seeded via `seedrandom` — and rendered as a stylized low-poly sphere with distinct land,
