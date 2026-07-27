@@ -15,15 +15,42 @@ export type TrailSpec = {
   startRadius: number;
   endScale: number;
   startAlpha: number;
+  /** Angular distance the emission point sits behind the object's own origin, clearing its tail. */
+  aftOffset: number;
 };
 
 /** Only the kinds the "Smoke trails" design calls for; every other kind leaves no trail. */
 export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
-  // `capacity` must exceed `lifetimeMs / (spacing / speed * 1000)` or the trail is truncated
-  // before it fades, so tightening `spacing` requires raising `capacity` in step.
-  boat: { spacing: 0.003, lifetimeMs: 6000, capacity: 72, startRadius: 0.01, endScale: 2.5, startAlpha: 0.3 },
-  plane: { spacing: 0.005, lifetimeMs: 8000, capacity: 72, startRadius: 0.009, endScale: 3, startAlpha: 0.35 },
-  rocket: { spacing: 0.0025, lifetimeMs: 3000, capacity: 96, startRadius: 0.012, endScale: 2, startAlpha: 0.45 },
+  // Live puff count is `lifetimeMs / (spacing / speed * 1000)`, capped by `capacity`. Spacing is
+  // tight so the puffs read as a continuous plume, and the lifetime is short so only ~20 are alive
+  // at once — each stays planted where it was emitted, so the wake is visibly left behind.
+  boat: {
+    spacing: 0.003,
+    lifetimeMs: 3000,
+    capacity: 24,
+    startRadius: 0.01,
+    endScale: 2.5,
+    startAlpha: 0.3,
+    aftOffset: 0.005,
+  },
+  plane: {
+    spacing: 0.005,
+    lifetimeMs: 3500,
+    capacity: 24,
+    startRadius: 0.009,
+    endScale: 3,
+    startAlpha: 0.35,
+    aftOffset: 0.02,
+  },
+  rocket: {
+    spacing: 0.0025,
+    lifetimeMs: 1400,
+    capacity: 30,
+    startRadius: 0.012,
+    endScale: 2,
+    startAlpha: 0.45,
+    aftOffset: 0.024,
+  },
 };
 
 /** A historical trail sample: a stable world position the puff was born at, and its normalized age in `[0, 1)`. */
@@ -80,17 +107,26 @@ export const trailPuffs = (
     }
     const context: MotionContext = { config, elapsed: birthMs / 1000 };
     const historical = evaluate(state, definition, context);
+    // A rocket only exhausts on the way up. Testing the puff's own birth-time fraction (not the
+    // rocket's current one) keeps ascent puffs visible as it falls, instead of the plume vanishing
+    // the instant it tips over the apex.
+    if (definition.kind === 'rocket' && historical.flightFraction >= APEX_FRACTION) {
+      continue;
+    }
     puffs.push({ position: behindHull(historical, spec), age: age / spec.lifetimeMs });
   }
   return puffs;
 };
 
-/** How many multiples of `spec.startRadius` a puff is nudged opposite the object's own historical
- * heading — cosmetic clearance from the hull mesh, never a factor in emission timing or spacing. */
-const HULL_CLEARANCE_FACTOR = 3;
+/** Flight fraction at which a ballistic arc stops climbing; past this the rocket is descending. */
+const APEX_FRACTION = 0.5;
 
-/** `historical`'s world position, nudged a small fixed distance behind its own heading at that instant. */
+/**
+ * `historical`'s world position, moved back along its own heading at that instant by the kind's
+ * `aftOffset` so the puff leaves the tail rather than the middle of the form. Purely cosmetic — it
+ * never affects emission timing or spacing.
+ */
 const behindHull = (historical: ObjectState, spec: TrailSpec): Vec3 => {
-  const behindUnit = advance(historical.unit, historical.bearing, -spec.startRadius * HULL_CLEARANCE_FACTOR);
+  const behindUnit = advance(historical.unit, historical.bearing, -spec.aftOffset);
   return scale(behindUnit, historical.radius);
 };

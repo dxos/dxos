@@ -17,6 +17,7 @@ const SPEC: TrailSpec = {
   startRadius: 0.01,
   endScale: 2,
   startAlpha: 0.3,
+  aftOffset: 0.03,
 };
 
 /** A rocket's motion is a pure function of `(definition, context)` — no route/nav-grid setup needed to exercise `trailPuffs`. */
@@ -38,9 +39,11 @@ describe('trailPuffs', () => {
 
   test('puff count is capped at spec.capacity', () => {
     // A very fast object would otherwise pack far more than `capacity` emission ticks into `lifetimeMs`.
+    // At speed 10 the quarter-turn flight lasts ~157ms, so sampling at 70ms keeps the rocket below
+    // its apex — rockets only exhaust while climbing, and a post-apex sample would emit nothing.
     const rocket = makeRocket(10);
     const state = initialState(rocket, config);
-    const puffs = trailPuffs(state, rocket, config, 10_000, SPEC);
+    const puffs = trailPuffs(state, rocket, config, 70, SPEC);
     expect(puffs.length).toBeLessThanOrEqual(SPEC.capacity);
     expect(puffs.length).toBe(SPEC.capacity);
   });

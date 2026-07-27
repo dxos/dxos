@@ -87,28 +87,26 @@ const makeBoat = (scene: Scene): Mesh => {
   const beam = 0.3;
   const hullHeight = 0.15;
   const sternLength = 1.3;
-  const bowLength = 0.2;
+
+  // Every part is placed relative to the cabin so the form's origin — the point the object layer
+  // positions and rotates about — sits at the cabin's centre rather than out at the stern.
+  const cabinZ = 0.15;
 
   const stern = CreateBox('stern', { width: beam, height: hullHeight, depth: sternLength }, scene);
-  stern.position.z = sternLength / 2;
+  stern.position.z = sternLength / 2 - cabinZ;
 
-  // A tessellation-3 cylinder is an equilateral triangular prism (radius-1 apex 1 unit from
-  // center, base 0.5 units the other way, base half-width sqrt(3)/2) — scaled into a long, narrow
-  // wedge and yawed so its apex points forward, giving the hull a pointed bow.
-  const bow = CreateCylinder('bow', { height: hullHeight, diameter: 2, tessellation: 3 }, scene);
-  bow.scaling.x = bowLength / 1.5;
-  bow.scaling.z = beam / 2 / (Math.sqrt(3) / 2);
+  // A 3-tessellation cylinder is a triangular prism: apex one radius ahead of centre, base half a
+  // radius behind. The radius is chosen so the base spans exactly the beam, so no scaling is needed
+  // and the base butts flush against the hull's front face. The joint must be exact, not overlapped:
+  // sinking the prism into the hull hides the widest part of the taper, so the bow would emerge
+  // narrower than the hull and read as a separate piece stuck on the front.
+  const bowRadius = beam / Math.sqrt(3);
+  const bow = CreateCylinder('bow', { height: hullHeight, diameter: bowRadius * 2, tessellation: 3 }, scene);
   bow.rotation.y = -HALF_PI;
-  // The prism's base sits 0.5 local units behind its origin, so after the x-scale its base plane is
-  // this far back; deriving the offset (rather than eyeballing one) puts the base exactly on the
-  // hull's front face, and the overlap buries the seam so the merged hull reads as one solid piece.
-  const bowBaseOffset = (bowLength / 1.5) * 0.5;
-  const hullOverlap = hullHeight / 4;
-  bow.position.z = sternLength + bowBaseOffset - hullOverlap;
+  bow.position.z = sternLength + bowRadius / 2 - cabinZ;
 
   const cabin = CreateBox('cabin', { width: 0.18, height: 0.1, depth: 0.2 }, scene);
   cabin.position.y = hullHeight / 2 + 0.05;
-  cabin.position.z = 0.15;
 
   return mergeParts('boat', [stern, bow, cabin], scene, new Color3(0.18, 0.22, 0.26));
 };
