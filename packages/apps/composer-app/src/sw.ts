@@ -4,10 +4,69 @@
 
 /// <reference lib="webworker" />
 
-import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
+import { addPlugins, cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 
 declare const self: ServiceWorkerGlobalScope;
+
+const precacheManifest = self.__WB_MANIFEST;
+
+/**
+ * Progress envelope consumed by `@dxos/plugin-pwa`'s update-progress module, which projects it into
+ * the app's progress registry. Declared here rather than imported so the worker bundle stays free of
+ * host code, mirroring `AssetCacheMessage` in `./asset-cache/service-worker.ts` — keep both in sync.
+ */
+const PRECACHE_PROGRESS = 'dxos:precache-progress';
+
+/** Batches the per-entry ticks: a full manifest is thousands of entries, one message each is noise. */
+const PROGRESS_POST_INTERVAL = 25;
+
+// An installing worker controls no clients, so uncontrolled windows must be included or the page
+// showing the meter never hears about the download it is waiting on.
+const postPrecacheProgress = async (current: number, done: boolean): Promise<void> => {
+  const clients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
+  for (const client of clients) {
+    client.postMessage({
+      type: PRECACHE_PROGRESS,
+      current,
+      total: precacheManifest.length,
+      // A worker installing alongside an active one is an update; a first install has no active peer.
+      isUpdate: Boolean(self.registration.active),
+      done,
+    });
+  }
+};
+
+let precached = 0;
+const tickPrecache = (): void => {
+  precached += 1;
+  const done = precached >= precacheManifest.length;
+  if (done || precached % PROGRESS_POST_INTERVAL === 0) {
+    void postPrecacheProgress(precached, done);
+  }
+};
+
+// Workbox precaches entries strictly one at a time and settles each through exactly one of these
+// hooks — `cachedResponseWillBeUsed` with a hit when the entry is already cached, `cacheDidUpdate`
+// once it has been downloaded — so counting both yields one tick per completed manifest entry. This
+// is the only progress workbox exposes for the install-time download that *is* the app update.
+addPlugins([
+  {
+    cachedResponseWillBeUsed: async ({ event, cachedResponse }) => {
+      if (event?.type === 'install' && cachedResponse) {
+        tickPrecache();
+      }
+      // The return value replaces the cached response; dropping it would make workbox re-download
+      // every entry that is already precached.
+      return cachedResponse;
+    },
+    cacheDidUpdate: async ({ event }) => {
+      if (event?.type === 'install') {
+        tickPrecache();
+      }
+    },
+  },
+]);
 
 // Precache all assets injected by VitePWA at build time (the app shell).
 //
@@ -15,7 +74,7 @@ declare const self: ServiceWorkerGlobalScope;
 // (and any other cache-busting query the host adds at runtime) from the precached
 // `icons.svg` entry. Without this, query-bearing URLs miss the precache and fall
 // through to the network — a guaranteed offline failure for the icons sprite.
-precacheAndRoute(self.__WB_MANIFEST, {
+precacheAndRoute(precacheManifest, {
   ignoreURLParametersMatching: [/^nocache$/],
 });
 cleanupOutdatedCaches();
