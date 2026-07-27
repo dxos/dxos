@@ -42,12 +42,14 @@ const PROJECT_JSON_SCHEMA = {
   required: ['name'],
 };
 
-describe.skipIf(!runMemoizedTests())('Database Skill', () => {
+describe('Database Skill', () => {
+  // Cases that invoke a handler directly never reach a model; only the agent-driven cases
+  // below replay a memoized conversation and carry the gate.
   //
   // Schema
   //
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'schema-list: list available schemas',
     Effect.fnUntraced(
       function* (_) {
@@ -104,7 +106,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     ),
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'schema-add: add a new schema',
     Effect.fnUntraced(
       function* (_) {
@@ -134,7 +136,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
   // Objects
   //
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'object-create: create an object',
     Effect.fnUntraced(
       function* (_) {
@@ -152,7 +154,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'object-create: create an object with a reference',
     Effect.fnUntraced(
       function* (_) {
@@ -175,7 +177,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'object-delete: delete an object',
     Effect.fnUntraced(
       function* (_) {
@@ -193,7 +195,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'object-update: update an object',
     Effect.fnUntraced(
       function* (_) {
@@ -215,7 +217,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
   // Query & Load
   //
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'query: search for objects',
     Effect.fnUntraced(
       function* (_) {
@@ -233,7 +235,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'load: load object details',
     Effect.fnUntraced(
       function* (_) {
@@ -257,7 +259,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
   // Relations
   //
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'relation-create: create a relation between objects',
     Effect.fnUntraced(
       function* (_) {
@@ -279,7 +281,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'relation-delete: delete a relation',
     Effect.fnUntraced(
       function* (_) {
@@ -310,7 +312,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
   // Tags
   //
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'tag-add: add a tag to an object',
     Effect.fnUntraced(
       function* (_) {
@@ -332,7 +334,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'tag-remove: remove a tag from an object',
     Effect.fnUntraced(
       function* (_) {
@@ -359,7 +361,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
   // Context
   //
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'context-add: add object to chat context',
     Effect.fnUntraced(
       function* (_) {
@@ -378,7 +380,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'context-remove: remove object from chat context',
     Effect.fnUntraced(
       function* (_) {
@@ -402,7 +404,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'query: includeQueues finds mock email in feed (agent uses Query tool)',
     Effect.fnUntraced(
       function* (_) {
@@ -510,7 +512,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     ),
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'query: in param scopes to feed children (agent uses Query tool)',
     Effect.fnUntraced(
       function* (_) {
@@ -545,7 +547,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'query operation: in param can be passed as string',
     Effect.fnUntraced(
       function* (_) {

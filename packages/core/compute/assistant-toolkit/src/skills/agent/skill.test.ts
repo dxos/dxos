@@ -69,10 +69,12 @@ const SYSTEM = trim`
   DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
 
-describe.skipIf(!runMemoizedTests())('Agent', () => {
+describe('Agent', () => {
+  // The sync-triggers cases invoke the handler directly and never reach a model; only the
+  // agent-driven cases replay a memoized conversation and carry the gate.
   const skill = AgentSkillDef.make();
 
-  it.scoped(
+  it.scoped.skipIf(!runMemoizedTests())(
     'agent adds artifact to agent',
     Effect.fnUntraced(
       function* (_) {
@@ -126,7 +128,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  it.scoped(
+  it.scoped.skipIf(!runMemoizedTests())(
     'shopping list',
     Effect.fnUntraced(
       function* (_) {
@@ -162,7 +164,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  it.scoped(
+  it.scoped.skipIf(!runMemoizedTests())(
     'expense tracking list',
     Effect.fnUntraced(
       function* (_) {
@@ -258,7 +260,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
     ),
   );
 
-  it.scoped(
+  it.scoped.skipIf(!runMemoizedTests())(
     'planning',
     Effect.fnUntraced(
       function* (_) {

@@ -34,7 +34,9 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-describe.skipIf(!runMemoizedTests())('update', () => {
+describe('update', () => {
+  // The four cases below invoke the handler directly, so they never reach a model — keep them off
+  // the memoized gate; only the agent-driven cases further down replay a conversation.
   it.effect(
     'call a function to update a markdown document',
     Effect.fnUntraced(
@@ -136,7 +138,7 @@ describe.skipIf(!runMemoizedTests())('update', () => {
     ),
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'create and update a markdown document',
     Effect.fnUntraced(
       function* (_) {
@@ -183,7 +185,7 @@ describe.skipIf(!runMemoizedTests())('update', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'update existing document',
     Effect.fnUntraced(
       function* (_) {
@@ -230,7 +232,7 @@ describe.skipIf(!runMemoizedTests())('update', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'add lines to document one by one',
     Effect.fnUntraced(
       function* (_) {

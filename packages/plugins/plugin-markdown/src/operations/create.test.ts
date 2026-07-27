@@ -33,7 +33,8 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-describe.skipIf(!runMemoizedTests())('create', () => {
+describe('create', () => {
+  // Invokes the handler directly, so it never reaches a model — keep it off the memoized gate.
   it.effect(
     'call a function to create a markdown document',
     Effect.fnUntraced(
@@ -56,7 +57,7 @@ describe.skipIf(!runMemoizedTests())('create', () => {
     ),
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'create a markdown document',
     Effect.fnUntraced(
       function* (_) {
