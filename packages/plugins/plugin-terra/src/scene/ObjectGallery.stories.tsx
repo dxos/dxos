@@ -6,8 +6,6 @@ import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Color3, Color4, Vector3 } from '@babylonjs/core/Maths/math';
-import { CreateLineSystem } from '@babylonjs/core/Meshes/Builders/linesBuilder';
-import { type LinesMesh } from '@babylonjs/core/Meshes/linesMesh';
 import { type Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture';
@@ -20,6 +18,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { type TerraObject } from '#types';
 
+import { createGizmo } from './gizmo-layer';
 import { createObjectForm } from './object-forms';
 
 /** Every kind the gallery renders, left to right, in the same order `ObjectLayer` iterates. */
@@ -31,34 +30,17 @@ const SPACING = 2.4;
 /** Neutral space backdrop, matching the planet scene's clear color. */
 const BACKGROUND_COLOR = new Color4(0.043, 0.051, 0.071, 1);
 
-/** Bright and saturated so the forward indicator reads clearly against every object's matte material. */
-const ARROW_COLOR = new Color3(1, 0.3, 0.15);
-
-/** Height above each object's own origin the forward arrow and label are drawn at, clear of every form's silhouette. */
+/** Height above each object's own origin the gizmo and label are drawn at, clear of every form's silhouette. */
 const INDICATOR_HEIGHT = 0.55;
 
+/** Rod scale for the gallery's gizmo — sized to read clearly at this scene's fixed camera distance. */
+const GIZMO_SCALE = 0.35;
+
 /**
- * Draws a thin arrow along local +Z, from just behind the object's origin out past where every
- * form's nose sits. A mis-oriented mesh is obvious because the arrow no longer points down the row.
+ * Every form here keeps its authored orientation (right along +X, up along +Y, forward along +Z, no
+ * extra rotation — see `object-forms.ts`), so the gizmo's basis is simply the world axes.
  */
-const createForwardArrow = (scene: Scene): LinesMesh => {
-  const shaftEnd = 0.95;
-  const headBack = 0.7;
-  const headSpread = 0.12;
-  const arrow = CreateLineSystem(
-    'forward-arrow',
-    {
-      lines: [
-        [new Vector3(0, 0, -0.4), new Vector3(0, 0, shaftEnd)],
-        [new Vector3(-headSpread, 0, headBack), new Vector3(0, 0, shaftEnd), new Vector3(headSpread, 0, headBack)],
-      ],
-    },
-    scene,
-  );
-  arrow.color = ARROW_COLOR;
-  arrow.isPickable = false;
-  return arrow;
-};
+const GALLERY_BASIS = { right: Vector3.Right(), up: Vector3.Up(), forward: Vector3.Forward() };
 
 /** A label docked above `mesh`'s on-screen projection, following the camera every frame. */
 const createLabel = (adt: AdvancedDynamicTexture, mesh: Mesh, kind: TerraObject.Kind): TextBlock => {
@@ -76,10 +58,12 @@ const createLabel = (adt: AdvancedDynamicTexture, mesh: Mesh, kind: TerraObject.
 /**
  * Builds one visible instance of every object kind, laid out left to right along X. Every form
  * keeps its authored orientation (nose along +Z, no extra rotation), so the row itself is the
- * reference: a correctly oriented object's forward arrow points the same way as its neighbors'.
+ * reference: a correctly oriented object's gizmo forward (blue) axis points the same way as its
+ * neighbors'. Uses the same `createGizmo` the live scene's `GizmoLayer` draws, so the gallery and
+ * the running simulation share one representation of orientation.
  */
-const buildGallery = (scene: Scene, adt: AdvancedDynamicTexture): (Mesh | LinesMesh | TextBlock)[] => {
-  const nodes: (Mesh | LinesMesh | TextBlock)[] = [];
+const buildGallery = (scene: Scene, adt: AdvancedDynamicTexture): (Mesh | TextBlock)[] => {
+  const nodes: (Mesh | TextBlock)[] = [];
   KINDS.forEach((kind, index) => {
     const offset = (index - (KINDS.length - 1) / 2) * SPACING;
 
@@ -90,10 +74,12 @@ const buildGallery = (scene: Scene, adt: AdvancedDynamicTexture): (Mesh | LinesM
     form.position.x = offset;
     nodes.push(form);
 
-    const arrow = createForwardArrow(scene);
-    arrow.position.x = offset;
-    arrow.position.y = INDICATOR_HEIGHT;
-    nodes.push(arrow);
+    const gizmo = createGizmo(scene, {
+      position: new Vector3(offset, INDICATOR_HEIGHT, 0),
+      basis: GALLERY_BASIS,
+      scale: GIZMO_SCALE,
+    });
+    nodes.push(...gizmo);
 
     nodes.push(createLabel(adt, form, kind));
   });
@@ -140,7 +126,7 @@ const ObjectGalleryScene = () => {
       window.removeEventListener('resize', handleResize);
       engine.stopRenderLoop();
       nodes.forEach((node) => {
-        // TextBlock has no `dispose(...)` overload matching Mesh/LinesMesh; the ADT disposes its controls itself.
+        // TextBlock has no `dispose(...)` overload matching Mesh; the ADT disposes its controls itself.
         if (node instanceof TextBlock) {
           return;
         }
