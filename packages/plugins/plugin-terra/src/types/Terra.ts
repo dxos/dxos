@@ -169,9 +169,13 @@ const spread = (cells: readonly NavCell[], count: number): NavCell[] => {
   return Array.from({ length: count }, (_, index) => sorted[Math.floor((index * (sorted.length - 1)) / (count - 1))]);
 };
 
+/** `domain`'s safely-passable cells: the largest reachable component, narrowed to `safeCells`. Shared by `demoPairs` and `randomPair` so both draw endpoints from the same reachability guarantee. */
+const domainCandidates = (grid: NavGrid, domain: Domain): NavCell[] =>
+  safeCells(grid, domain, largestComponent(grid, domain));
+
 /** `count` source/target pairs for `domain`, each endpoint drawn from the same connected component so it is reachable. */
 const demoPairs = (grid: NavGrid, domain: Domain, count: number): Array<{ source: GeoPoint; target: GeoPoint }> => {
-  const candidates = safeCells(grid, domain, largestComponent(grid, domain));
+  const candidates = domainCandidates(grid, domain);
   if (candidates.length < count * 2) {
     throw new Error(`makeDemoWorld: not enough safe ${domain} cells for ${count} pairs.`);
   }
@@ -180,6 +184,20 @@ const demoPairs = (grid: NavGrid, domain: Domain, count: number): Array<{ source
     source: { ...toGeo(endpoints[index * 2].unit), height: 0 },
     target: { ...toGeo(endpoints[index * 2 + 1].unit), height: 0 },
   }));
+};
+
+/** One random source/target pair for `domain`, drawn from the same reachable candidates `demoPairs` uses — for a single ad hoc placement rather than an evenly-spread set. */
+const randomPair = (grid: NavGrid, domain: Domain): { source: GeoPoint; target: GeoPoint } => {
+  const candidates = domainCandidates(grid, domain);
+  if (candidates.length < 2) {
+    throw new Error(`makeRandomObject: not enough safe ${domain} cells for a pair.`);
+  }
+  const sourceIndex = Math.floor(Math.random() * candidates.length);
+  const targetIndex = (sourceIndex + 1 + Math.floor(Math.random() * (candidates.length - 1))) % candidates.length;
+  return {
+    source: { ...toGeo(candidates[sourceIndex].unit), height: 0 },
+    target: { ...toGeo(candidates[targetIndex].unit), height: 0 },
+  };
 };
 
 /** Long, seed-independent separations: air routing has no terrain dependency, so fixed geo pairs work for any seed. */
@@ -249,4 +267,50 @@ export const makeDemoWorld = (props?: { name?: string; config?: Partial<TerraCon
   });
   definitions.forEach((definition) => Obj.setParent(definition, terra));
   return terra;
+};
+
+/** Every kind `makeRandomObject` may pick, one weight each. */
+const RANDOM_KINDS: readonly TerraObject.Kind[] = ['boat', 'tank', 'plane', 'rocket', 'satellite'];
+
+const SPEED_BY_KIND: Record<Exclude<TerraObject.Kind, 'satellite'>, number> = {
+  boat: BOAT_SPEED,
+  tank: TANK_SPEED,
+  plane: PLANE_SPEED,
+  rocket: ROCKET_SPEED,
+};
+
+/** A random orbit spanning the same altitude/inclination/period ranges `SATELLITE_ORBITS` samples from. */
+const randomOrbit = (): Orbit => ({
+  altitude: 0.4 + Math.random() * 0.6,
+  inclination: Math.random() * 180,
+  phase: Math.random() * Math.PI * 2,
+  period: 60 + Math.random() * 120,
+});
+
+/**
+ * A single new object of a randomly chosen kind, ready to be pushed onto `terra.objects`. Boats,
+ * tanks, planes, and rockets are placed via `randomPair` — the same nav-grid-derived reachability
+ * logic `makeDemoWorld` uses — while satellites get a random orbit instead of a surface placement.
+ * `spawnedAt` is the caller's clock origin (matching `SimEngine.evaluateAt`'s domain) so the object
+ * starts moving immediately. Adding an object is a deliberate user action, not simulation state, so
+ * `Math.random()` is fine here — it must never appear in `src/sim/`.
+ */
+export const makeRandomObject = (terra: Terra, spawnedAt: number): TerraObject.TerraObject => {
+  const kind = RANDOM_KINDS[Math.floor(Math.random() * RANDOM_KINDS.length)];
+  const name = `${kind}-${terra.objects.length + 1}`;
+
+  if (kind === 'satellite') {
+    return TerraObject.make({ kind, name, speed: 0, orbit: randomOrbit(), spawnedAt });
+  }
+
+  const grid = buildNavGrid(toConfigValues(terra));
+  const pair = randomPair(grid, TerraObject.domainFor(kind));
+  return TerraObject.make({
+    kind,
+    name,
+    speed: SPEED_BY_KIND[kind],
+    source: pair.source,
+    target: pair.target,
+    spawnedAt,
+  });
 };

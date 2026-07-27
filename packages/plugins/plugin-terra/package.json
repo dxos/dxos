@@ -86,6 +86,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "seedrandom": "catalog:",

@@ -24,6 +24,9 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Terra',
+        'play.label': 'Play',
+        'pause.label': 'Pause',
+        'add-random-object.label': 'Add random object',
       },
     },
   },

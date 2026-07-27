@@ -4,18 +4,24 @@
 
 import { type Observer } from '@babylonjs/core/Misc/observable';
 import { type Scene } from '@babylonjs/core/scene';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { TerraForm } from '#components';
+import { meta } from '#meta';
 import { Terra, TerraObject } from '#types';
 
 import { SceneFpsWidget, SceneManager, type TerraConfigValues, generatePlanet } from '../../engine';
 import { ObjectLayer } from '../../scene';
 import { SimEngine, buildNavGrid } from '../../sim';
+
+/** Tracks pause state for the render-loop clock: while paused, `pausedAtMs` freezes the sim time; on resume, the elapsed pause duration is folded into `pausedTotalMs` so the clock continues from where it froze rather than jumping ahead. */
+type SimClock = { pausedTotalMs: number; pausedAtMs: number | null };
 
 export type TerraArticleProps = AppSurface.ObjectArticleProps<Terra.Terra>;
 
@@ -29,15 +35,20 @@ const resolveDefinitions = (terra: Terra.Terra): TerraObject.TerraObject[] =>
 const buildSimEngine = (values: TerraConfigValues, definitions: readonly TerraObject.TerraObject[]): SimEngine =>
   new SimEngine({ config: values, definitions, grid: buildNavGrid(values) });
 
-export const TerraArticle = ({ subject: terra }: TerraArticleProps) => {
+export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticleProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
   const objectLayerRef = useRef<ObjectLayer | null>(null);
   const simEngineRef = useRef<SimEngine | null>(null);
+  // Mutated directly by `handleTogglePlaying` and read fresh each frame by the mount-once render-loop
+  // observer below — mirrors `simEngineRef`'s ref-for-freshness pattern so the closure never goes stale.
+  const clockRef = useRef<SimClock>({ pausedTotalMs: 0, pausedAtMs: null });
   const [config, updateConfig] = useObject(terra, 'config');
+  const [objectRefs] = useObject(terra, 'objects');
+  const [isPlaying, setIsPlaying] = useState(true);
 
   const values = useMemo(() => Terra.toConfigValues(terra), [config, terra]);
-  const definitions = useMemo(() => resolveDefinitions(terra), [terra]);
+  const definitions = useMemo(() => resolveDefinitions(terra), [terra, objectRefs]);
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -58,7 +69,13 @@ export const TerraArticle = ({ subject: terra }: TerraArticleProps) => {
       if (!engine) {
         return;
       }
-      engine.evaluateAt(performance.now());
+      // Always an absolute time, whether running or paused, so the engine stays closed-form: while
+      // paused, `pausedAtMs` is frozen and `pausedTotalMs` is unchanged, so this yields the same
+      // instant every frame; on resume, `pausedTotalMs` absorbs the pause duration so the clock
+      // continues from that frozen instant rather than jumping ahead.
+      const clock = clockRef.current;
+      const nowMs = (clock.pausedAtMs ?? performance.now()) - clock.pausedTotalMs;
+      engine.evaluateAt(nowMs);
       layer.update(engine.objects);
     });
 
@@ -84,6 +101,14 @@ export const TerraArticle = ({ subject: terra }: TerraArticleProps) => {
     // Debounce regeneration so slider/form drags do not thrash the mesh builder.
     const handle = setTimeout(() => {
       manager.render(generatePlanet(values));
+    }, 150);
+    return () => clearTimeout(handle);
+  }, [values]);
+
+  useEffect(() => {
+    // Debounced like the terrain regen above, but kept in its own effect so adding an object (which
+    // only changes `definitions`) rebuilds the sim engine without re-rendering the planet mesh.
+    const handle = setTimeout(() => {
       simEngineRef.current = buildSimEngine(values, definitions);
     }, 150);
     return () => clearTimeout(handle);
@@ -96,22 +121,74 @@ export const TerraArticle = ({ subject: terra }: TerraArticleProps) => {
 
   const handleWaterSheen = useCallback((enabled: boolean) => managerRef.current?.setWaterSheen(enabled), []);
 
+  const handleTogglePlaying = useCallback(() => {
+    const clock = clockRef.current;
+    const nowMs = performance.now();
+    if (clock.pausedAtMs === null) {
+      clock.pausedAtMs = nowMs;
+    } else {
+      clock.pausedTotalMs += nowMs - clock.pausedAtMs;
+      clock.pausedAtMs = null;
+    }
+    setIsPlaying((current) => !current);
+  }, []);
+
+  const handleAddRandomObject = useCallback(() => {
+    const definition = Terra.makeRandomObject(terra, performance.now());
+    Obj.setParent(definition, terra);
+    Obj.update(terra, (terra) => {
+      terra.objects.push(Ref.make(definition));
+    });
+  }, [terra]);
+
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action(
+          'toggle-playing',
+          {
+            label: isPlaying ? ['pause.label', { ns: meta.profile.key }] : ['play.label', { ns: meta.profile.key }],
+            icon: isPlaying ? 'ph--pause--regular' : 'ph--play--regular',
+            disposition: 'toolbar',
+            testId: 'terra.toolbar.toggle-playing',
+          },
+          () => handleTogglePlaying(),
+        )
+        .separator()
+        .action(
+          'add-random-object',
+          {
+            label: ['add-random-object.label', { ns: meta.profile.key }],
+            icon: 'ph--dice-five--regular',
+            disposition: 'toolbar',
+            testId: 'terra.toolbar.add-random-object',
+          },
+          () => handleAddRandomObject(),
+        )
+        .build(),
+    [isPlaying, handleTogglePlaying, handleAddRandomObject],
+  );
+
   return (
-    <Panel.Root>
-      <Panel.Toolbar />
-      <Panel.Content asChild>
-        <div className='relative grow'>
-          <canvas
-            ref={canvasRef}
-            className='dx-container absolute inset-0 outline-none'
-            style={{ touchAction: 'none' }}
-          />
-          <div className='absolute top-2 right-2 z-10'>
-            <TerraForm config={config} onChange={handleChange} onWaterSheen={handleWaterSheen} />
+    <Menu.Root {...menuActions} attendableId={attendableId}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild classNames='dx-container'>
+          <Menu.Toolbar />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <div className='relative grow'>
+            <canvas
+              ref={canvasRef}
+              className='dx-container absolute inset-0 outline-none'
+              style={{ touchAction: 'none' }}
+            />
+            <div className='absolute top-2 right-2 z-10'>
+              <TerraForm config={config} onChange={handleChange} onWaterSheen={handleWaterSheen} />
+            </div>
           </div>
-        </div>
-      </Panel.Content>
-    </Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Menu.Root>
   );
 };
 
