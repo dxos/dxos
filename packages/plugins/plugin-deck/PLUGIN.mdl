@@ -517,9 +517,10 @@ feat F-7: Navigation Model
           and `pivotId` = the plank the card is rendered within, resolved structurally from the click
           target via `getRootAttendableId` — the outermost attendable ancestor, not the attended plank,
           so it is correct even when another plank is attended, e.g. opening a card from a type node's
-          masonry view while attending elsewhere; the portaled card menu instead passes its plank's
-          `pivotId` in from the caller). It never replaces the current plank, since the breadcrumb trail
-          makes an ever-growing deck navigable; a solo deck becomes a two-plank sliding deck
+          masonry view while attending elsewhere; the portaled card menu cannot see its plank's DOM, so
+          the caller supplies the `pivot` id — via `useCardPivot`). It never replaces the current
+          plank, since the breadcrumb trail makes an ever-growing deck navigable; a solo deck becomes
+          a two-plank sliding deck
 
   req F-7.4:
     when: desktop — user closes a plank
@@ -682,7 +683,7 @@ test T-11: Desktop modifier-click appends
 test T-11a: Card navigation always adds beside the card's plank (add)
   tags: [F-7]
   given: a card navigation dispatches Open({ subject: ['C'], disposition: 'add', pivotId: 'A' })
-         (pivotId is the plank the card is rendered within, resolved via useHostAttendableId)
+         (pivotId is the plank the card is rendered within, resolved via Attention.getRootAttendableId)
   when: the deck is solo [A]
   then:
     - active deck becomes [A, C] (a new plank beside A, never replacing)

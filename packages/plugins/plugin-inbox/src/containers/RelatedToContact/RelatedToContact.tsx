@@ -83,9 +83,6 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
       // database path (which does not resolve for feed objects).
       const messagePath = getMailboxMessagePath(db.spaceId, mailbox.id, message.id);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      // `immediate` skips the existence check: the message is a feed object (absent from `space.db`, so
-      // the loader cannot confirm it), but the card already holds it — expanding the mailbox chain
-      // materializes its node.
       await invokePromise(LayoutOperation.Open, {
         subject: [messagePath],
         pivotId,
@@ -107,9 +104,6 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
       // database path (which does not resolve for feed objects).
       const eventPath = getCalendarEventPath(db.spaceId, calendar.id, event.id);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      // `immediate` skips the existence check: the event is a feed object (absent from `space.db`, so
-      // the loader cannot confirm it), but the card already holds it — expanding the calendar chain
-      // materializes its node.
       await invokePromise(LayoutOperation.Open, {
         subject: [eventPath],
         pivotId,
