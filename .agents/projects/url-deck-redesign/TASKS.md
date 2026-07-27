@@ -69,8 +69,8 @@ plugin-id fallback key instead of `collection`; (2) reload/deep-link to an objec
       on a Routine: select → `/w/<ws>/routine/<id>`; cold reload resolves + renders. app-graph 114 green.
 - [x] **Fold Phase C into PR #12273** — committed (25ebc0842a urlKey/cold-restore, 73312a99de
       inline-child provenance) and pushed to `claude/url-mapping-deck-structure-s6rpnk`.
-- [ ] **Re-verify nested-collection deep link** — root-collection + type-section (routine) + warm cases
-      done; still confirm a _nested_-collection object (BFS fallback) cold-load.
+- [x] **Re-verify nested-collection deep link** — verified by the user 2026-07-27 (root-collection,
+      type-section, warm and nested-collection cold-load).
 
 ## Phase D: Companions as ordinary planks
 
@@ -105,8 +105,8 @@ ALL companions. Turning it on in solo → deck mode (counts as a plank). Contrib
       plugin-deck 49 tests green; lint + format clean.
 - [x] **Deferred cleanup (part)** — `useCompanionSplit` deleted, along with the companion aspect's
       per-orientation split fields (only the selected variant remains in view state).
-- [ ] **Deferred cleanup (rest)** — `companionFrameSizing` is still on `DeckState` and still unread;
-      deleting it also touches the migration superset and a test fixture.
+- [ ] **Delete `companionFrameSizing`** (pre-land) — dead on `DeckState`; also touches the migration
+      superset and a test fixture. User: "if it's dead we should just remove it now".
 
 > **Execution policy** — of paramount importance for all execution: delegate the
 > bulk of the work to cheaper models. Sonnet subagents do the file-by-file
@@ -273,8 +273,55 @@ Land after A3.
 
 ### Tasks
 
-- [ ] **End-to-end verification pass** — manual script in the spec + devtools
-      `composer.urlPrefixes`.
+- [x] **End-to-end verification pass** — verified by the user 2026-07-27, covering the deck/URL
+      rework plus the Splitter tiling, ScrollIntoView consolidation and app-graph latch fix.
+
+## Pre-land
+
+### Tasks
+
+- [ ] **Delete `companionFrameSizing`** — see Phase D above.
+- [ ] **Remove the three non-null assertions** in `app-graph/src/path-resolution.ts` (`extension.url!`)
+      by narrowing `getKeyedExtensions` to `Array<BuilderExtension & { url: UrlBinding }>`. Non-null `!`
+      is not a fix per the no-cast rule.
+- [ ] **Remove the two `as AppCapabilities.NavigationTargetResolver` casts** (plugin-space, plugin-inbox)
+      by adding `Database.Service` to the capability's Effect requirements — the casts exist because the
+      type is wrong upstream.
+- [ ] **Merge `origin/main`** (8 commits behind) and confirm Check is green.
+- [ ] **Decide where the app-graph latch fix lands** — `_expanded`/`_initialized` were never recording
+      (immutable `Record.set`); it is a `main` bug currently riding in this PR, self-contained as one
+      file plus a changeset.
+
+## Backlog (post-land)
+
+Recorded 2026-07-27 from review of the landed deck.
+
+### Tasks
+
+- [ ] **Spine click should attend the plank** — clicking a folded spine scrolls the plank into view; it
+      should also become the attended plank. Attention is focus-driven, so this means focusing the plank
+      (see `useFoldedPlanks`' hysteresis, which deliberately moves focus rather than setting attention).
+- [ ] **Reconcile the deck's residual mode-specific behaviour** — `mode` is derived (`getMode`) and no
+      longer stored, but the deck still branches on solo in places. The goal: the deck behaves the same
+      regardless of mode, and mode is purely an outward-facing derivation for other plugins. Partially
+      achieved; audit the remaining `soloLook`/solo paths.
+- [ ] **Tiling beyond two planks** — `TILING_MAX` is 2 because `Splitter` is a two-panel primitive.
+      Needs nested Splitters or a proportional/fill mode in Mosaic (tiles sized by fraction, the handle
+      redistributing across the dragged pair). See the TODO in `DeckViewport.tsx`.
+- [ ] **Sliding deck on mobile, and unifying with the simple layout** — mobile is always sliding today;
+      decide how that and `plugin-simple-layout` converge rather than being two layout implementations.
+- [ ] **Navtree selected-state latency** (main, not this PR) — `current` is marked on a 500ms
+      `setTimeout` that every Layout-atom notification cancels and restarts, and the Layout atom emits a
+      fresh object on any deck write. The file's own TODO names the real fix: make the navtree location a
+      path, not an id.
+- [ ] **Connector re-emission churn** — after the latch fix, real expansions per navigation fell ~36x
+      but `existing node` churn stayed flat, so connectors are re-running for another reason (likely atom
+      recomputation). Unmeasured.
+- [ ] **`QueryExecutor` dispose-callback leak** (echo, not this PR) — "Context has a large number of
+      dispose callbacks" warns in every session.
+- [ ] **`Graph.initialize` + the builder `resolver` mechanism** — kept, TODO-marked. No extension
+      declares a resolver and `initialize` was called zero times in a live session; remove once
+      something either needs it or clearly never will.
 
 ### References
 
