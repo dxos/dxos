@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -20,6 +20,16 @@ import RunRoutineHandler from './run-routine';
 
 /** Captures the input each run receives so the test can assert on it after the invocation. */
 const received: unknown[] = [];
+
+/** Trigger ids the monitor was asked to invoke — the seam a `remote` trigger must reach instead of running here. */
+const monitorInvocations: string[] = [];
+
+/** Stands in for the aggregate monitor, whose real implementation routes `remote` triggers to EDGE over HTTP. */
+const TestMonitor = Layer.succeed(Trigger.TriggerMonitorService, {
+  triggers: Atom.make<readonly Trigger.State[]>([]),
+  localDispatcherEnabled: false,
+  invokeTrigger: ({ trigger }) => Effect.sync(() => void monitorInvocations.push(trigger.id)),
+});
 
 /**
  * Stand-in for a connector's sync operation: like `InboxOperation.GoogleMailSync` it destructures a
@@ -44,7 +54,10 @@ const TestLayer = AssistantTestLayer({
   types: [Routine.Routine, Trigger.Trigger, Operation.PersistentOperation],
   disableLlmMemoization: true,
   // `RunRoutine` declares `Capability.Service`; an empty manager discharges it (the handler never reads it).
-  extraServices: Layer.succeed(Capability.Service, CapabilityManager.make({ registry: Registry.make() })),
+  extraServices: Layer.mergeAll(
+    Layer.succeed(Capability.Service, CapabilityManager.make({ registry: Registry.make() })),
+    TestMonitor,
+  ),
 });
 
 describe('RunRoutine', () => {
@@ -80,15 +93,52 @@ describe('RunRoutine', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'routes a remote trigger to the monitor instead of running the runnable locally',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        received.length = 0;
+        monitorInvocations.length = 0;
+        const routine = yield* addRoutine({ label: 'on-edge' }, true);
+
+        yield* Operation.invoke(RoutineOperation.RunRoutine, { routine: Ref.make(routine) });
+
+        // The monitor sends it to the EDGE dispatcher; nothing runs in this process.
+        expect(monitorInvocations).toEqual([routine.triggers[0].target!.id]);
+        expect(received).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'runs a local trigger in-process without touching the monitor',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        received.length = 0;
+        monitorInvocations.length = 0;
+        const routine = yield* addRoutine({ label: 'on-client' });
+
+        yield* Operation.invoke(RoutineOperation.RunRoutine, { routine: Ref.make(routine) });
+
+        expect(received).toEqual(['on-client']);
+        expect(monitorInvocations).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
 
 /** A routine whose action is `TestRunnable`, with the runnable's input carried on its timer trigger. */
-const addRoutine = Effect.fnUntraced(function* (input: Record<string, unknown>) {
+const addRoutine = Effect.fnUntraced(function* (input: Record<string, unknown>, remote?: boolean) {
   const operation = yield* Database.add(Operation.serialize(TestRunnable));
   const routine = makeRoutine({
     name: 'Test',
     spec: { kind: 'runnable', runnable: Ref.make(operation) },
-    trigger: Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *'), input }),
+    trigger: Trigger.make({ enabled: true, remote, spec: Trigger.specTimer('*/10 * * * *'), input }),
   });
   yield* Database.add(routine);
   yield* Database.flush();

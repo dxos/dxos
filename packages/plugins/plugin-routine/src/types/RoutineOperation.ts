@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Instructions, Operation, Routine } from '@dxos/compute';
+import { Instructions, Operation, Routine, Trigger } from '@dxos/compute';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 // Value-side `EID` import keeps TS declaration emit portable — `TriggerTemplate`
 // references `EID.Schema` and the inferred `CreateTriggerFromTemplate` type
@@ -86,16 +86,18 @@ export const RunPromptInNewChat = Operation.make({
   }),
 });
 
-// Runs a routine's `runnable` directly, bypassing the trigger dispatcher but still taking the runnable's
-// input from the routine's first trigger — that is where the binding lives (e.g. a sync routine's cursor),
-// so a manual run would otherwise invoke an input-taking runnable with nothing.
+// Runs a routine's action now, routed by its first trigger — that is where both the runnable's input
+// (e.g. a sync routine's binding cursor) and the `remote` flag live. A `remote` trigger force-runs on the
+// EDGE dispatcher over HTTP, since that is the only runtime it is registered on; a local one runs
+// in-process. Without the trigger a manual run would invoke an input-taking runnable with nothing, and
+// would silently run an edge routine on the client.
 export const RunRoutine = Operation.make({
   meta: {
     key: makeKey('runAutomation'),
     name: 'Run Routine',
     icon: 'ph--play--regular',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, Trigger.TriggerMonitorService],
   input: Schema.Struct({
     routine: Ref.Ref(Routine.Routine),
   }),
