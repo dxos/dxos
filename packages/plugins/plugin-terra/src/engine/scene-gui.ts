@@ -26,9 +26,13 @@ type SliderSpec = { title: string; minimum: number; maximum: number; step: numbe
 
 type SliderEntry = { slider: Slider; label: TextBlock; format: (value: number) => string };
 
+// Controls are authored against the ADT's ideal coordinate space (see idealHeight below),
+// not device pixels, so these sizes read the same on hi-DPI displays as on standard ones.
+const IDEAL_HEIGHT = 1024;
+
 // Panel geometry shared by the background rectangle and its stack panel.
-const PANEL_WIDTH_PX = 240;
-const PANEL_PADDING_PX = 10;
+const PANEL_WIDTH_PX = 300;
+const PANEL_PADDING_PX = 16;
 
 const SLIDER_KEYS: readonly SliderKey[] = [
   'waterLevel',
@@ -104,6 +108,9 @@ export class SceneGui {
     this.#currentSeed = options.values.seed;
 
     this.#adt = AdvancedDynamicTexture.CreateFullscreenUI('terra-gui', true, this.#scene);
+    // Author against a fixed ideal space so control sizes are DPI-independent: without this the
+    // ADT renders at the engine's device-ratio-scaled buffer and controls appear at half size or less.
+    this.#adt.idealHeight = IDEAL_HEIGHT;
 
     this.#fpsText = this.#createFpsText();
     this.#adt.addControl(this.#fpsText);
@@ -148,14 +155,14 @@ export class SceneGui {
   #createFpsText(): TextBlock {
     const text = new TextBlock('fps', 'FPS 0');
     text.color = 'white';
-    text.fontSize = 14;
+    text.fontSize = 18;
     text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
     text.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
     text.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
-    text.width = '120px';
-    text.height = '24px';
-    text.paddingLeft = '12px';
-    text.paddingTop = '12px';
+    text.width = '160px';
+    text.height = '32px';
+    text.paddingLeft = '16px';
+    text.paddingTop = '16px';
     return text;
   }
 
@@ -173,7 +180,7 @@ export class SceneGui {
 
     const stack = new StackPanel('gui-stack');
     stack.isVertical = true;
-    stack.spacing = 4;
+    stack.spacing = 10;
     // Centered at (panel width - 2*padding) inside the fixed-width background gives even left/right insets.
     stack.width = `${PANEL_WIDTH_PX - PANEL_PADDING_PX * 2}px`;
     stack.adaptHeightToChildren = true;
@@ -191,8 +198,8 @@ export class SceneGui {
 
     const label = new TextBlock(`${key}-label`, format(initialValue));
     label.color = 'white';
-    label.fontSize = 12;
-    label.height = '18px';
+    label.fontSize = 16;
+    label.height = '24px';
     label.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
 
     const slider = new Slider(`${key}-slider`);
@@ -200,7 +207,7 @@ export class SceneGui {
     slider.maximum = spec.maximum;
     slider.step = spec.step;
     slider.value = initialValue;
-    slider.height = '20px';
+    slider.height = '32px';
     slider.width = '100%';
     slider.color = '#8ac4ff';
     slider.background = 'rgba(255, 255, 255, 0.15)';
@@ -220,11 +227,11 @@ export class SceneGui {
   #createWaterSheenRow(onWaterSheen: (enabled: boolean) => void): StackPanel {
     const row = new StackPanel('sheen-row');
     row.isVertical = false;
-    row.height = '24px';
+    row.height = '36px';
 
     const checkbox = new Checkbox('sheen');
-    checkbox.width = '18px';
-    checkbox.height = '18px';
+    checkbox.width = '24px';
+    checkbox.height = '24px';
     checkbox.color = 'white';
     checkbox.isChecked = false;
     checkbox.onIsCheckedChangedObservable.add((enabled) => {
@@ -237,10 +244,10 @@ export class SceneGui {
 
     const label = new TextBlock('sheen-label', 'water sheen');
     label.color = 'white';
-    label.fontSize = 12;
-    label.width = '140px';
-    label.height = '18px';
-    label.paddingLeft = '6px';
+    label.fontSize = 16;
+    label.width = '180px';
+    label.height = '24px';
+    label.paddingLeft = '10px';
     label.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
     row.addControl(label);
 
@@ -249,8 +256,9 @@ export class SceneGui {
 
   #createReseedButton(): Button {
     const button = Button.CreateSimpleButton('reseed', 'reseed');
-    button.height = '28px';
+    button.height = '36px';
     button.color = 'white';
+    button.fontSize = 16;
     button.background = 'rgba(255, 255, 255, 0.12)';
     button.cornerRadius = 4;
     button.thickness = 0;
