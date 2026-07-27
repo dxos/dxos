@@ -593,7 +593,7 @@ export const DeckPlanks = () => {
         : -1;
       if (attendedIndex !== -1 && (folded[attendedIndex] || offscreen(rects[attendedIndex]))) {
         const vpCenter = vpRect.left + vpRect.width / 2;
-        let best: { id: string; distance: number } | undefined;
+        let best: { tile: HTMLElement; distance: number } | undefined;
         tiles.forEach((tile, index) => {
           const id = tile.getAttribute('data-object-id');
           if (!id || folded[index] || offscreen(rects[index])) {
@@ -601,11 +601,14 @@ export const DeckPlanks = () => {
           }
           const distance = Math.abs((rects[index].left + rects[index].right) / 2 - vpCenter);
           if (!best || distance < best.distance) {
-            best = { id, distance };
+            best = { tile, distance };
           }
         });
-        if (best) {
-          attention.update([best.id]);
+        // Attention is focus-driven, so move focus to the plank rather than setting attention directly;
+        // `preventScroll` stops the focus call from fighting the scroll that triggered it.
+        const plank = best?.tile.querySelector<HTMLElement>('[data-attendable-id]');
+        if (plank && !plank.contains(document.activeElement)) {
+          plank.focus({ preventScroll: true });
         }
       }
     };
