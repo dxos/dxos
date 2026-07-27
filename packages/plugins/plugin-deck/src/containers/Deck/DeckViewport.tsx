@@ -298,7 +298,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
         variant='ghost'
         onClick={() => scrollToPlank(id, index)}
         aria-label={spineLabel}
-        classNames='dx-fold-spine absolute inset-y-0 left-0 z-[1] flex w-11 flex-col items-center gap-0 rounded-none p-0 border-ie border-separator bg-base-surface opacity-0 pointer-events-none transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-auto group-data-[folded]/tile:opacity-100'
+        classNames='dx-fold-spine absolute inset-y-0 left-0 z-[1] flex w-11 flex-col items-center justify-start gap-0 rounded-none p-0 border-ie border-separator bg-base-surface opacity-0 pointer-events-none transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-auto group-data-[folded]/tile:opacity-100'
       >
         {/* Icon box matches the plank toolbar height so the sigil stays put as the plank folds. */}
         <div className='flex h-(--dx-rail-content) shrink-0 items-center justify-center'>
