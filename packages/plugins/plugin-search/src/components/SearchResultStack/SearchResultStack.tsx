@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
 import { Card, IconButton } from '@dxos/react-ui';
 import { ScrollArea } from '@dxos/react-ui';
@@ -79,8 +79,8 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
     const { result, query } = data;
     const label = result.label ?? (result.object && Entity.getLabel(result.object)) ?? '';
     // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
-    const cardRef = useRef<HTMLDivElement>(null);
-    const menuItems = useObjectMenuItems(result.object, cardRef);
+    const [cardRef, pivotId] = useCardPivot();
+    const menuItems = useObjectMenuItems(result.object, pivotId);
     const { setCurrentId } = useMosaicContainer('SearchResultTile');
 
     const handleCurrentChange = useCallback(() => {

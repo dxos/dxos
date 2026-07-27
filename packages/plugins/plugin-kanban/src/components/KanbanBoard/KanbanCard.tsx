@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
@@ -32,8 +32,8 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
     const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
 
     // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
-    const cardRef = useRef<HTMLDivElement>(null);
-    const objectMenuItems = useObjectMenuItems(data, cardRef);
+    const [cardRef, pivotId] = useCardPivot();
+    const objectMenuItems = useObjectMenuItems(data, pivotId);
 
     const menuItems = useMemo(
       () => [

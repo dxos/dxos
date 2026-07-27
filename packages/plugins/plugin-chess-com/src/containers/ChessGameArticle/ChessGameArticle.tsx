@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Game } from '@dxos/plugin-game/types';
@@ -88,8 +88,8 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
 const GameTile = ({ data: game }: { data: Game.Game }) => {
   const { t } = useTranslation(meta.profile.key);
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
-  const cardRef = useRef<HTMLDivElement>(null);
-  const objectMenuItems = useObjectMenuItems(game, cardRef);
+  const [cardRef, pivotId] = useCardPivot();
+  const objectMenuItems = useObjectMenuItems(game, pivotId);
   const icon = Obj.getIcon(game)?.icon ?? 'ph--sword--regular';
 
   return (

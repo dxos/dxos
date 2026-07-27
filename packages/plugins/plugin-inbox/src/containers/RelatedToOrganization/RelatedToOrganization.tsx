@@ -22,7 +22,7 @@ export const RelatedToOrganization = ({
   subject: organization,
 }: AppSurface.ObjectArticleProps<Organization.Organization>) => {
   const { invoke } = useOperationInvoker();
-  const [cardRef, getPivotId] = useCardPivot();
+  const [cardRef, pivotId] = useCardPivot();
   const db = Obj.getDatabase(organization);
 
   const contacts = useQuery(db, Filter.type(Person.Person));
@@ -40,7 +40,6 @@ export const RelatedToOrganization = ({
     (contact: Person.Person) =>
       Effect.gen(function* () {
         const contactPath = Paths.getObjectPathFromObject(contact);
-        const pivotId = getPivotId();
         yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
         yield* invoke(LayoutOperation.Open, {
           subject: [contactPath],
@@ -50,7 +49,7 @@ export const RelatedToOrganization = ({
           workspace: db ? Paths.getSpacePath(db.spaceId) : undefined,
         });
       }).pipe(EffectEx.runAndForwardErrors),
-    [invoke, db, contacts, spaceContactTable, getPivotId],
+    [invoke, db, contacts, spaceContactTable, pivotId],
   );
 
   return (

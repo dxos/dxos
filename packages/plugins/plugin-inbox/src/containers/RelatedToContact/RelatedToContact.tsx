@@ -23,7 +23,7 @@ export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>
 
 export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) => {
   const { invokePromise } = useOperationInvoker();
-  const [cardRef, getPivotId] = useCardPivot();
+  const [cardRef, pivotId] = useCardPivot();
   const db = Obj.getDatabase(contact);
   const workspace = db ? Paths.getSpacePath(db.spaceId) : undefined;
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
@@ -88,13 +88,13 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
       // confirm it), but the card already holds it — expanding the mailbox chain materializes its node.
       await invokePromise(LayoutOperation.Open, {
         subject: [messagePath],
-        pivotId: getPivotId(),
+        pivotId,
         disposition: 'add',
         navigation: 'immediate',
         workspace,
       });
     },
-    [invokePromise, workspace, getPivotId, db, mailbox],
+    [invokePromise, workspace, pivotId, db, mailbox],
   );
 
   // Open the event directly as its own (standalone) plank, not the calendar with the event selected.
@@ -112,13 +112,13 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
       // it), but the card already holds it — expanding the calendar chain materializes its node.
       await invokePromise(LayoutOperation.Open, {
         subject: [eventPath],
-        pivotId: getPivotId(),
+        pivotId,
         disposition: 'add',
         navigation: 'immediate',
         workspace,
       });
     },
-    [invokePromise, workspace, getPivotId, db, calendar],
+    [invokePromise, workspace, pivotId, db, calendar],
   );
 
   return (

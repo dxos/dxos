@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import { type MouseEvent, type RefObject, useCallback, useMemo, useRef } from 'react';
+import { type MouseEvent, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
@@ -28,14 +28,18 @@ export const getRootAttendableId = (element: Element): string | undefined =>
 
 /**
  * Helper for card content that opens objects (e.g. a related-object link): attach `ref` to the card's
- * root element, then pass `getPivotId()` as the Open `pivotId` with `disposition: 'add'`, so navigation
- * always adds a plank beside the card's own plank rather than replacing the deck. Resolves the plank
- * structurally from the DOM (see {@link getRootAttendableId}), computed lazily at click time.
+ * root element, then pass the returned id as the Open `pivotId` with `disposition: 'add'`, so navigation
+ * always adds a plank beside the card's own plank rather than replacing the deck. Resolved once mounted
+ * (see {@link getRootAttendableId}) — the plank ancestry is structural, so it holds for the card's
+ * lifetime — and `undefined` until then, which no menu action can observe.
  */
-export const useCardPivot = (): readonly [RefObject<HTMLDivElement | null>, () => string | undefined] => {
+export const useCardPivot = (): readonly [RefObject<HTMLDivElement | null>, string | undefined] => {
   const ref = useRef<HTMLDivElement>(null);
-  const getPivotId = useCallback(() => (ref.current ? getRootAttendableId(ref.current) : undefined), []);
-  return [ref, getPivotId];
+  const [pivotId, setPivotId] = useState<string | undefined>();
+  useEffect(() => {
+    setPivotId(ref.current ? getRootAttendableId(ref.current) : undefined);
+  }, []);
+  return [ref, pivotId];
 };
 
 /** True when subject is an Echo object and its schema does not have the hidden annotation. */
@@ -83,10 +87,10 @@ export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLEle
  * Use with useMenu(CONTRIBUTOR_NAME).addMenuItems from a component inside Card.Root to register with the card menu.
  * A card lives inside a plank, so opening its object always adds a plank beside that plank (`add`), never
  * replacing it. The menu renders in a portal, so it cannot resolve the plank from its own DOM: the caller
- * supplies `pivot` — either the plank's attendable id directly, or a ref to an element inside the card, from
- * which the plank is resolved structurally at click time (see {@link getRootAttendableId}).
+ * supplies the plank's attendable id as `pivot` — via {@link useCardPivot} when the card knows only its
+ * own element.
  */
-export const useObjectMenuItems = (subject: unknown, pivot?: string | RefObject<Element | null>): MenuItem[] => {
+export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[] => {
   const { invokePromise } = useOperationInvoker();
   const { t } = useTranslation(osTranslations);
 
@@ -100,11 +104,9 @@ export const useObjectMenuItems = (subject: unknown, pivot?: string | RefObject<
       createMenuAction(
         'navigate',
         (params) => {
-          const pivotId =
-            typeof pivot === 'string' ? pivot : pivot?.current ? getRootAttendableId(pivot.current) : undefined;
           void invokePromise(LayoutOperation.Open, {
             subject: [subjectPath],
-            pivotId,
+            pivotId: pivot,
             disposition: 'add',
             modifiers: params?.modifiers,
           });

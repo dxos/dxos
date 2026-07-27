@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { Card, Icon, IconButton, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -92,8 +92,8 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
-  const cardRef = useRef<HTMLDivElement>(null);
-  const menuItems = useObjectMenuItems(subject, cardRef);
+  const [cardRef, pivotId] = useCardPivot();
+  const menuItems = useObjectMenuItems(subject, pivotId);
 
   return (
     <Menu.Root>

@@ -5,10 +5,10 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useSpaceCallback } from '@dxos/app-framework/ui';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -141,8 +141,8 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
 
 const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ data, ...props }, forwardedRef) => {
   // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
-  const cardRef = useRef<HTMLDivElement>(null);
-  const objectMenuItems = useObjectMenuItems(data, cardRef);
+  const [cardRef, pivotId] = useCardPivot();
+  const objectMenuItems = useObjectMenuItems(data, pivotId);
   const icon = Obj.getIcon(data)?.icon ?? 'ph--circle-dashed--regular';
 
   return (
