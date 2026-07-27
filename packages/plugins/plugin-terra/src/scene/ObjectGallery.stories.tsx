@@ -30,9 +30,6 @@ const SPACING = 2.4;
 /** Neutral space backdrop, matching the planet scene's clear color. */
 const BACKGROUND_COLOR = new Color4(0.043, 0.051, 0.071, 1);
 
-/** Height above each object's own origin the gizmo and label are drawn at, clear of every form's silhouette. */
-const INDICATOR_HEIGHT = 0.55;
-
 /** Rod scale for the gallery's gizmo — sized to read clearly at this scene's fixed camera distance. */
 const GIZMO_SCALE = 0.35;
 
@@ -74,8 +71,10 @@ const buildGallery = (scene: Scene, adt: AdvancedDynamicTexture): (Mesh | TextBl
     form.position.x = offset;
     nodes.push(form);
 
+    // Centred on the object's own origin so the axes read as that object's local frame rather than
+    // as a separate marker floating above it.
     const gizmo = createGizmo(scene, {
-      position: new Vector3(offset, INDICATOR_HEIGHT, 0),
+      position: new Vector3(offset, 0, 0),
       basis: GALLERY_BASIS,
       scale: GIZMO_SCALE,
     });
@@ -101,7 +100,7 @@ const ObjectGalleryScene = () => {
 
     // Radius scales with the row's width so all five objects stay framed regardless of `SPACING`.
     const rowWidth = (KINDS.length - 1) * SPACING;
-    const camera = new ArcRotateCamera('camera', Math.PI * 0.6, Math.PI * 0.42, rowWidth * 1.15, Vector3.Zero(), scene);
+    const camera = new ArcRotateCamera('camera', 0, -Math.PI, rowWidth * 2, Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
     camera.wheelPrecision = 40;
     camera.lowerRadiusLimit = 2;

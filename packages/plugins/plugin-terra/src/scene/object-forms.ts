@@ -73,7 +73,6 @@ const makeRocket = (scene: Scene): Mesh => {
   nose.rotation.x = HALF_PI;
   nose.position.z = 0.65;
 
-  const finReach = 0.09 + 0.14;
   const fins = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].map((angle, index) => {
     const fin = CreateBox(`fin${index}`, { width: 0.03, height: 0.28, depth: 0.22 }, scene);
     fin.position.z = -0.38;
@@ -88,7 +87,7 @@ const makeBoat = (scene: Scene): Mesh => {
   const beam = 0.3;
   const hullHeight = 0.15;
   const sternLength = 1.3;
-  const bowLength = 0.5;
+  const bowLength = 0.2;
   const sternBack = -0.9;
   const bowBase = sternBack + sternLength;
   const bowTip = bowBase + bowLength;
@@ -107,14 +106,14 @@ const makeBoat = (scene: Scene): Mesh => {
 
   const cabin = CreateBox('cabin', { width: 0.18, height: 0.14, depth: 0.28 }, scene);
   cabin.position.y = hullHeight / 2 + 0.07;
-  cabin.position.z = -0.3;
+  cabin.position.z = -0.7;
 
   return mergeParts('boat', [stern, bow, cabin], scene, new Color3(0.18, 0.22, 0.26));
 };
 
 const makeTank = (scene: Scene): Mesh => {
   const hull = CreateBox('hull', { width: 0.4, height: 0.2, depth: 0.7 }, scene);
-  const turret = CreateBox('turret', { width: 0.25, height: 0.15, depth: 0.25 }, scene);
+  const turret = CreateBox('turret', { width: 0.2, height: 0.15, depth: 0.3 }, scene);
   turret.position.y = 0.1 + 0.075;
 
   const barrel = CreateCylinder('barrel', { height: 0.45, diameter: 0.05, tessellation: 8 }, scene);
