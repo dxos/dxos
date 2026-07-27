@@ -204,17 +204,23 @@ const randomPair = (grid: NavGrid, domain: Domain): { source: GeoPoint; target: 
 const PLANE_PAIRS: Array<{ source: GeoPoint; target: GeoPoint }> = [
   { source: { lat: 35, lng: -100, height: 0 }, target: { lat: 10, lng: 120, height: 0 } },
   { source: { lat: -20, lng: 30, height: 0 }, target: { lat: 45, lng: -60, height: 0 } },
+  { source: { lat: 55, lng: 15, height: 0 }, target: { lat: -30, lng: 150, height: 0 } },
+  { source: { lat: -10, lng: -70, height: 0 }, target: { lat: 50, lng: 100, height: 0 } },
 ];
 
 const ROCKET_PAIRS: Array<{ source: GeoPoint; target: GeoPoint }> = [
   { source: { lat: 0, lng: 0, height: 0 }, target: { lat: 60, lng: 170, height: 0 } },
   { source: { lat: -45, lng: -90, height: 0 }, target: { lat: 40, lng: 90, height: 0 } },
+  { source: { lat: 25, lng: 60, height: 0 }, target: { lat: -55, lng: -20, height: 0 } },
+  { source: { lat: -15, lng: 175, height: 0 }, target: { lat: 35, lng: -45, height: 0 } },
 ];
 
-/** Two orbits with different inclination and period, one near-equatorial, one near-polar. */
+/** Distinct inclinations, altitudes, phases, and periods so the orbits never overlap visually. */
 const SATELLITE_ORBITS: Orbit[] = [
   { altitude: 0.5, inclination: 28, phase: 0, period: 90 },
   { altitude: 0.9, inclination: 97, phase: Math.PI / 2, period: 140 },
+  { altitude: 0.7, inclination: 55, phase: Math.PI, period: 110 },
+  { altitude: 1.2, inclination: 145, phase: Math.PI * 1.5, period: 180 },
 ];
 
 const BOAT_SPEED = 0.02;
@@ -251,8 +257,8 @@ export const makeDemoWorld = (props?: { name?: string; config?: Partial<TerraCon
   const grid = buildNavGrid(values);
 
   const definitions: TerraObject.TerraObject[] = [
-    ...objectsFromPairs('boat', demoPairs(grid, 'sea', 2), BOAT_SPEED),
-    ...objectsFromPairs('tank', demoPairs(grid, 'land', 2), TANK_SPEED),
+    ...objectsFromPairs('boat', demoPairs(grid, 'sea', 4), BOAT_SPEED),
+    ...objectsFromPairs('tank', demoPairs(grid, 'land', 4), TANK_SPEED),
     ...objectsFromPairs('plane', PLANE_PAIRS, PLANE_SPEED),
     ...objectsFromPairs('rocket', ROCKET_PAIRS, ROCKET_SPEED),
     ...SATELLITE_ORBITS.map((orbit, index) =>

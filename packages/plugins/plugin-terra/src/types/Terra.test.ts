@@ -35,11 +35,11 @@ describe('Terra', () => {
     test('seeds exactly two objects of each kind', () => {
       const terra = Terra.makeDemoWorld({ config: { seed: 'demo-1' } });
       const definitions = resolveDefinitions(terra);
-      expect(definitions).toHaveLength(10);
+      expect(definitions).toHaveLength(20);
 
       const kinds: TerraObject.Kind[] = ['boat', 'plane', 'satellite', 'tank', 'rocket'];
       for (const kind of kinds) {
-        expect(definitions.filter((definition) => definition.kind === kind)).toHaveLength(2);
+        expect(definitions.filter((definition) => definition.kind === kind)).toHaveLength(4);
       }
     });
 
@@ -49,7 +49,7 @@ describe('Terra', () => {
       const definitions = resolveDefinitions(terra);
 
       const boats = definitions.filter((definition) => definition.kind === 'boat');
-      expect(boats).toHaveLength(2);
+      expect(boats).toHaveLength(4);
       for (const boat of boats) {
         if (!boat.source) {
           throw new Error('demo boat is missing a source');
@@ -59,7 +59,7 @@ describe('Terra', () => {
       }
 
       const tanks = definitions.filter((definition) => definition.kind === 'tank');
-      expect(tanks).toHaveLength(2);
+      expect(tanks).toHaveLength(4);
       for (const tank of tanks) {
         if (!tank.source) {
           throw new Error('demo tank is missing a source');

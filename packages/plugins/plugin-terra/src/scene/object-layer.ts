@@ -18,7 +18,7 @@ import { createObjectForm } from './object-forms';
 const KINDS: readonly TerraObject.Kind[] = ['boat', 'plane', 'satellite', 'tank', 'rocket'];
 
 /** Instance scale relative to each object's own surface/orbit radius, so scale stays planet-relative at any zoom. */
-const SCALE_FACTOR = 0.02;
+const SCALE_FACTOR = 0.04;
 
 const DEG = Math.PI / 180;
 
@@ -40,7 +40,14 @@ const matrixFor = ({ state }: SimObject): Matrix => {
   const position = scale(state.unit, state.radius);
   const forward = forwardAt(state.unit, state.bearing);
   const up = new Vector3(state.unit[0], state.unit[1], state.unit[2]);
-  const rotation = Quaternion.FromLookDirectionLH(forward, up);
+  // Build the rotation from an explicit left-handed basis rather than `FromLookDirectionLH`, which
+  // returns a view-style rotation that lands the mesh's local +Z on -forward — i.e. every object
+  // flies tail-first. Mapping local X/Y/Z onto right/up/forward is unambiguous.
+  const right = Vector3.Cross(up, forward).normalize();
+  const trueUp = Vector3.Cross(forward, right).normalize();
+  const basis = new Matrix();
+  Matrix.FromXYZAxesToRef(right, trueUp, forward, basis);
+  const rotation = Quaternion.FromRotationMatrix(basis);
   const scaling = state.radius * SCALE_FACTOR;
   return Matrix.Compose(
     new Vector3(scaling, scaling, scaling),
@@ -83,7 +90,10 @@ export class ObjectLayer {
       if (!existing || existing.length !== needed) {
         const buffer = new Float32Array(needed);
         group.forEach((object, index) => matrixFor(object).copyToArray(buffer, index * 16));
-        base.thinInstanceSetBuffer('matrix', buffer, 16, true);
+        // `staticBuffer: false` is load-bearing — Babylon builds the GPU buffer with
+        // `updatable = !staticBuffer`, so a static buffer silently ignores every later
+        // `thinInstanceBufferUpdated` and the objects render frozen at their first position.
+        base.thinInstanceSetBuffer('matrix', buffer, 16, false);
         this.#buffers.set(kind, buffer);
       } else {
         group.forEach((object, index) => matrixFor(object).copyToArray(existing, index * 16));

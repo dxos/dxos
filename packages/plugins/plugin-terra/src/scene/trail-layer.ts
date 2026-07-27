@@ -139,8 +139,11 @@ export class TrailLayer {
     });
 
     if (reallocate) {
-      this.#base.thinInstanceSetBuffer('matrix', matrixBuffer, 16, true);
-      this.#base.thinInstanceSetBuffer('color', colorBuffer, 4, true);
+      // `staticBuffer: false` is load-bearing — Babylon builds the GPU buffer with
+      // `updatable = !staticBuffer`, so a static buffer silently ignores every later
+      // `thinInstanceBufferUpdated` and puffs freeze at their first position and alpha.
+      this.#base.thinInstanceSetBuffer('matrix', matrixBuffer, 16, false);
+      this.#base.thinInstanceSetBuffer('color', colorBuffer, 4, false);
       this.#matrixBuffer = matrixBuffer;
       this.#colorBuffer = colorBuffer;
     } else {
