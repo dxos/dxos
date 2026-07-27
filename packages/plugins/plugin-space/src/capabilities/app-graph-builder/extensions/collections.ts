@@ -6,11 +6,22 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppAnnotation, AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import {
+  AppAnnotation,
+  AppCapabilities,
+  AppNode,
+  AppNodeMatcher,
+  GraphPath,
+  LayoutOperation,
+  UrlResolution,
+} from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Filter, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { EID, SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
@@ -41,13 +52,13 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Content section group — created alongside collections so the group always
     // appears when the space plugin is active and hides when there are no children.
     GraphBuilder.createExtension({
-      id: Paths.GroupSegments.content,
+      id: GraphPath.GroupSegments.content,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           AppNode.makeGroup({
-            id: Paths.GroupSegments.content,
-            type: Paths.GroupTypes.content,
+            id: GraphPath.GroupSegments.content,
+            type: GraphPath.GroupTypes.content,
             label: ['nav-tree-group-content.label', { ns: meta.profile.key }],
             space,
             position: 200,
@@ -58,7 +69,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Collections section virtual node under the content group.
     GraphBuilder.createExtension({
       id: 'collectionsSection',
-      match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
+      match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
       connector: (space, get) => {
         get(Obj.atom(space.properties));
         const collectionRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
@@ -74,7 +85,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
         return Effect.succeed([
           Node.make({
-            id: Paths.Segments.collections,
+            id: GraphPath.Segments.collections,
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
             properties: {
@@ -93,9 +104,13 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       },
     }),
 
-    // Root collection objects under the Collections virtual node.
+    // Root collection objects under the Collections virtual node. Shares the `object` urlKey with the
+    // nested-collection `objects` connector below so an object is addressed the same way wherever it
+    // sits in the collection tree (the key names the *collection subgraph*, not the container's type;
+    // the database subgraph addresses the same object under `db`).
     GraphBuilder.createExtension({
       id: 'collections',
+      url: { key: 'object', kind: 'item', path: [GraphPath.GroupSegments.content, GraphPath.Segments.collections] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -144,6 +159,41 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Children of Collection.Collection nodes.
     GraphBuilder.createExtension({
       id: 'objects',
+      // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
+      // through a space's collection tree, not just the root collection's direct children. The shape is
+      // data-dependent (the object's collection ancestry), so instead of a static `path` it resolves
+      // dynamically: index the space's collections once, then walk that index up to the root collection.
+      url: {
+        key: 'object',
+        kind: 'item',
+        path: ({ id, workspace }) =>
+          Effect.gen(function* () {
+            if (!SpaceId.isValid(workspace)) {
+              return null;
+            }
+            // Look the Client up lazily (at resolve time) rather than at graph-setup time — it is not yet
+            // available when the AppGraphBuilder activates, and forward resolution only runs much later.
+            const client = capabilities.get(ClientCapabilities.Client);
+            const space = client.spaces.get(workspace);
+            if (!space) {
+              return null;
+            }
+            const rootRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+              Option.getOrUndefined,
+            );
+            if (!rootRef) {
+              return null;
+            }
+            const rootCollection = yield* Database.load(rootRef).pipe(Effect.orElseSucceed(() => undefined));
+            if (!rootCollection) {
+              return null;
+            }
+            const chain = yield* walkCollectionChainToRoot({ objectId: id, rootId: rootCollection.id }).pipe(
+              Effect.provide(Database.layer(space.db)),
+            );
+            return chain ? GraphPath.getCollectionsPath(workspace, ...chain, id) : null;
+          }),
+      },
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
       connector: (collection, get) => {
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
@@ -177,8 +227,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             .filter(isNonNullable),
         );
       },
-      // TODO(graph-path-ids): Resolver temporarily disabled; redesign needed for path-based IDs.
-      // resolver: (id, get) => { ... },
     }),
 
     // Object actions.
@@ -243,7 +291,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   // Qualified id of the collections section node (root/<spaceId>/collections), so the new
                   // object's navigation path resolves under the section — the bare segment would not.
                   target: rootCollection ?? space.db,
-                  targetNodeId: Paths.getCollectionsPath(space.id),
+                  targetNodeId: GraphPath.getCollectionsPath(space.id),
                 });
               }),
             properties: {
@@ -261,6 +309,59 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 //
 // Helpers
 //
+
+/** Depth cap for the collection-ancestry walk; the composer nav tree is shallow, this only guards bad data. */
+const COLLECTION_WALK_MAX_DEPTH = 32;
+
+/**
+ * Walk up a space's collection tree from `objectId` to the root collection. A single query loads the
+ * space's collections — each already carries its child refs — so the ancestry is a pure in-memory walk
+ * of a child→parent index rather than a query per step. The composer ontology guarantees a tree (an
+ * object lives in one collection, no cycles); on bad data the first indexed parent wins, and a
+ * visited-set plus depth cap stop a cycle from looping. Returns the intermediate collection ids in
+ * root→leaf order (excluding the root collection, whose objects sit directly under
+ * `content/collections`), or null if no path to the root exists.
+ */
+const walkCollectionChainToRoot = ({
+  objectId,
+  rootId,
+}: {
+  objectId: string;
+  rootId: string;
+}): Effect.Effect<string[] | null, never, Database.Service> =>
+  Effect.gen(function* () {
+    const collections = yield* Database.query(Filter.type(Collection.Collection)).run;
+    const parentOf = new Map<string, string>();
+    for (const collection of collections) {
+      for (const ref of collection.objects ?? []) {
+        const childId = EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) : undefined;
+        if (childId && !parentOf.has(childId)) {
+          parentOf.set(childId, collection.id);
+        }
+      }
+    }
+
+    const visited = new Set<string>([objectId]);
+    // Built leaf→root on the way up; the node id wants root→leaf.
+    const chain: string[] = [];
+    let current = objectId;
+    for (let depth = 0; depth < COLLECTION_WALK_MAX_DEPTH; depth++) {
+      const parent = parentOf.get(current);
+      if (!parent) {
+        return null;
+      }
+      if (parent === rootId) {
+        return chain.reverse();
+      }
+      if (visited.has(parent)) {
+        return null;
+      }
+      visited.add(parent);
+      chain.push(parent);
+      current = parent;
+    }
+    return null;
+  });
 
 /** Builds the action list for an ECHO object node. */
 const constructObjectActions = ({
@@ -329,9 +430,15 @@ const constructObjectActions = ({
           Node.makeAction({
             id: 'copyLink',
             data: () =>
-              Effect.promise(async () => {
-                const url = new URL(Paths.toUrlPath(nodeId), shareableLinkOrigin);
-                await navigator.clipboard.writeText(url.toString());
+              Effect.gen(function* () {
+                const builder = yield* Capability.get(AppCapabilities.AppGraph);
+                const path = UrlResolution.getShareableLinkPath(builder, nodeId);
+                if (Option.isNone(path)) {
+                  log.warn('object has no URL representation; cannot copy link', { nodeId });
+                  return;
+                }
+                const url = new URL(path.value, shareableLinkOrigin);
+                yield* Effect.promise(() => navigator.clipboard.writeText(url.toString()));
               }),
             properties: {
               label: COPY_LINK_LABEL,
@@ -344,7 +451,7 @@ const constructObjectActions = ({
       : []),
     Node.makeAction({
       id: LayoutOperation.Expose.meta.key,
-      data: () => Operation.invoke(LayoutOperation.Expose, { subject: Paths.getObjectPathFromObject(object) }),
+      data: () => Operation.invoke(LayoutOperation.Expose, { subject: GraphPath.getObjectPathFromObject(object) }),
       properties: {
         label: EXPOSE_OBJECT_LABEL,
         icon: 'ph--eye--regular',

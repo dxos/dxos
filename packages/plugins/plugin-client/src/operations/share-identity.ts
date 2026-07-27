@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
@@ -14,9 +14,9 @@ import { ShareIdentity } from './definitions';
 const handler: Operation.WithHandler<typeof ShareIdentity> = ShareIdentity.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(Account.id) });
+      yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(Account.id) });
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [Paths.getSpacePath(Account.id, Account.Profile)],
+        subject: [GraphPath.getSpacePath(Account.id, Account.Profile)],
       });
       yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
     }),

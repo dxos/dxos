@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
@@ -47,12 +47,12 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
         return;
       }
 
-      const qualifiedPath = Paths.getObjectPathFromObject(result.object);
+      const qualifiedPath = GraphPath.getObjectPathFromObject(result.object);
       await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       await invokePromise(LayoutOperation.Open, {
         subject: [qualifiedPath],
         pivotId,
-        positioning: 'end',
+        disposition: 'add',
       });
     },
     [pivotId, invokePromise],

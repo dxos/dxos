@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Paths } from '@dxos/app-toolkit';
-import { Attention } from '@dxos/react-ui-attention/types';
+import { GraphPath } from '@dxos/app-toolkit';
 
 import { Calendar } from '#types';
 
-const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Paths.createTypeSectionPaths(
+const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = GraphPath.createTypeSectionPaths(
   Calendar.Calendar,
-  { groupId: Paths.GroupSegments.communications },
+  { groupId: GraphPath.GroupSegments.communications },
 );
 
 /** Well-known local segment names (private — use the path helpers below). */
@@ -26,7 +25,7 @@ export const getMailboxesSectionId = (): string => Segments.mailboxes;
 
 /** Canonical qualified path to the mailboxes section of a space. */
 export const getMailboxesPath = (spaceId: string): string =>
-  Paths.getSpacePath(spaceId, Paths.GroupSegments.communications, Segments.mailboxes);
+  GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.communications, Segments.mailboxes);
 
 /** Canonical qualified path to a specific mailbox within a space. */
 export const getMailboxPath = (spaceId: string, mailboxId: string): string =>
@@ -48,12 +47,9 @@ export const getSubscriptionsId = (): string => Segments.subscriptions;
 export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxPath(spaceId, mailboxId)}/${Segments.drafts}`;
 
-/**
- * Appends a linked-segment child ID to a parent path for feed-object navigation.
- * The `~` prefix signals attention propagation to the parent node.
- */
-export const getFeedObjectPath = (parentPath: string, childId: string): string =>
-  `${parentPath}/${Attention.linkedSegment(childId)}`;
+/** Appends a feed-object child id to a parent path as a plain child segment (message/event planks are
+ * ordinary hidden children of their mailbox/calendar, not linked companions). */
+export const getFeedObjectPath = (parentPath: string, childId: string): string => `${parentPath}/${childId}`;
 
 /** Canonical qualified path to a message within a mailbox. */
 export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>

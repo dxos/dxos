@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Paths } from '@dxos/app-toolkit';
+import { GraphPath } from '@dxos/app-toolkit';
 import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -137,7 +137,7 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
         contextId: id,
         selectionId: reportId,
         companion: Attention.linkedSegment('report'),
-        path: Paths.getObjectPathFromObject(subject),
+        path: GraphPath.getObjectPathFromObject(subject),
       });
     },
     [id, showItem, subject],
