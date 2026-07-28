@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: reconciliation A-D DONE, shipped as PR #12370 (OPEN). CI: import-cycle failure FIXED (Agent co-located with Chat in one module, Agent.\* namespace via re-export facade, commit 8c89461e49); storybook job failed on a react-ui dist-chunk resolve error (package untouched by this branch — suspected stale CI cache; fresh run in progress on the fixed tip, poll armed). Verified: projects.eval 100% live post-D; memoized agent suite regenerated + replay-deterministic (planning gated to planning.eval.ts); 298 unit tests green. NEXT: get #12370 green (storybook verdict), handle CodeRabbit, land; then Phase 3 UI (ProjectOperation.CreateChat, navtree chat children, Chats exclusion, toolbar). Uncommitted: user's project.drawio.svg edit (committed with next change)._
+_Resume: PR #12370 MERGED 2026-07-28 (f9ba47af93) — reconciliation A-D (Agent 0.2.0 identity/preset, Chat.agent inversion, relay onto durable session, no data migration) is on main, as are #12335 and #12365. NEXT: Phase 3 UI, in order — `ProjectOperation.CreateChat`, `projectChats` graph extension (navtree chat children), exclude project chats from the top-level Chats section, `ProjectArticle` toolbar, then the Phase 3 test row. After that: commands-authoring UI / outliner skill. Uncommitted: none._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
