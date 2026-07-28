@@ -61,6 +61,52 @@ semantics over both the space database and feeds.
 - Package moves on main during this work: `functions-runtime` → `compute-runtime`;
   `compute/src/Trigger.ts` → `compute/src/types/Trigger.ts`.
 
+## Roadmap (post-#12235)
+
+Informed by an architectural comparison of ECHO feeds against event-sourcing
+systems (LiveStore in particular). The feed substrate is already event-log-grade
+— server-assigned total order, idempotent replication, partial/tail replication —
+but the semantic layers above it are missing, and several of this project's
+documented workarounds (content-signature change detection, the unbounded
+`processedVersions` map, last-flush-wins data loss) are downstream symptoms of
+those gaps. Phases are ordered so each fixes a debt of this project and unlocks
+the next: 1 → 2 → 3 → 4 land independently as their own PRs; 5 is exploratory.
+
+1. **Version/order axis (correctness).** Wire `insertionId` through the codec +
+   index path so live objects stop leaning on `KEY_QUEUE_POSITION` (null unless
+   `assignQueuePositions` is on — flagged by Dmytro and CodeRabbit). The client
+   must always hold a total provisional order (`position`, else Lamport
+   `(sequence, actorId)`, else `insertionId`) before server positions arrive;
+   document the reorder-on-position-arrival semantics.
+2. **Consumer cursors + subscription discipline.** Implement the stubbed
+   `Feed.cursor`/`Feed.next` (Effect streams) on the phase-1 axis. Rebase the
+   trigger dispatcher onto a durable high-water cursor per subscription —
+   replacing `processedVersions` and, eventually, content-signature diffing —
+   and add the `SubscriptionSpec.options.mutationTypes` filter at the same seam.
+   Pull-from-cursor is also the seam that lets `FeedHandle`'s 1s polling give
+   way to the sync protocol's existing subscription mechanism.
+3. **Delta blocks: give blocks intent.** Partial-object update blocks +
+   field-level LWW merge at the index. The block vocabulary grows from
+   {snapshot, tombstone} to {create, patch, delete}, with the index as the
+   built-in deterministic materializer folding in log order. Shrinks the
+   last-flush-wins data-loss mode to field granularity. Position arrival now
+   changes merge results (not just sort order), so this phase needs a per-object
+   rollback/replay of the fold — cheap, since folds are per-object.
+4. **Retention + compaction.** Implement `Feed.setRetention` and compaction of
+   superseded blocks. Feeds can compact by rewriting a prefix into a snapshot
+   block (self-contained state — unlike a pure event log). Addresses the ~10k
+   blocks/feed ceiling, which phase 3's patch blocks make more pressing.
+5. **App-defined projections (exploratory, demand-gated).** User-defined
+   deterministic folds over a feed (typed event objects in, derived ECHO state
+   out) with rematerialization keyed on a reducer/schema hash. Candidate
+   consumers: trigger pipelines, inbox sync, audit views, composer-search's
+   feed-synced index.
+
+Cross-cutting (attach to whichever phase touches the code): an explicit policy
+for schema-invalid feed items (today silently dropped at `log.verbose`) —
+`warn`/`ignore`/`fail`/callback, per LiveStore's `unknownEventHandling`; and
+surfacing `getSyncState` (`blocksToPull`/`blocksToPush`) in devtools.
+
 ## Source map
 
 - Live materialization: `echo/src/internal/common/proxy/make-object.ts`
