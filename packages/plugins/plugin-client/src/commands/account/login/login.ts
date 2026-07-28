@@ -16,13 +16,13 @@ import { CommandConfig, performRecoveryOAuthFlow, print } from '@dxos/cli-util';
 import { type Client, ClientService } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
-import { HubHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
 
 import { ClientOperation } from '#operations';
 
 import { printIdentity, waitForState } from '../../halo/util';
+import { hubClient } from '../util';
 
 type LoginMethod = 'email' | 'atproto' | 'device-invitation' | 'recovery-code';
 
@@ -124,9 +124,7 @@ const loginWithRecoveryCode = (client: Client, recoveryCode: string) =>
  */
 const loginWithEmail = (client: Client, email: string, invoke: Capabilities.OperationInvoker['invoke']) =>
   Effect.gen(function* () {
-    const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
-    invariant(hubUrl, 'Hub URL not configured (runtime.app.env.DX_HUB_URL).');
-    const hub = new HubHttpClient(hubUrl);
+    const hub = yield* hubClient;
     const result = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email }));
 
     if (result.needsIdentity) {
