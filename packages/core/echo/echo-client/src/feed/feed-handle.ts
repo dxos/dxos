@@ -569,7 +569,7 @@ export class FeedHandle {
   }
 
   async dispose() {
-    // Persist before teardown: a same-tick `Obj.update` is still queued for the background append,
+    // Drain before teardown: a same-tick `Obj.update` is still queued for the background append,
     // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still
     // live, and cannot reject — `waitForPendingWrites` is best-effort by contract.
     await this.waitForPendingWrites();
