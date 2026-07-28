@@ -136,6 +136,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",

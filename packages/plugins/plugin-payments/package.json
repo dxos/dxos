@@ -81,7 +81,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "@x402/core": "catalog:",
     "@x402/evm": "catalog:",
     "@x402/fetch": "catalog:",

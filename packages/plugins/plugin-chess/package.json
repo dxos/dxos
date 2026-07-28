@@ -126,6 +126,7 @@
     "@dxos/react-ui-gameboard": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "chess.js": "catalog:",
     "effect": "catalog:"

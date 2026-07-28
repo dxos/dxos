@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';

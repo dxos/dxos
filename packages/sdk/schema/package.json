@@ -40,7 +40,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:"
   },

@@ -7,7 +7,7 @@
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
 export type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import type { Atom } from '@effect-atom/atom-react';
+import type { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';

@@ -55,6 +55,7 @@
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "effect": "catalog:",

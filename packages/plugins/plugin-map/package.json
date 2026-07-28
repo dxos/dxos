@@ -133,7 +133,8 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-geo": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",

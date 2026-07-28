@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Atom, type Registry } from '@effect-atom/atom-react';
+import { type Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import localforage from 'localforage';
 

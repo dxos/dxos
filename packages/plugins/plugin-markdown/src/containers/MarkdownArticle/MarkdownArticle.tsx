@@ -3,7 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 

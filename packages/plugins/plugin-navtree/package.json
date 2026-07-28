@@ -117,7 +117,8 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-attention": "workspace:*",

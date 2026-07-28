@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Registry as AtomRegistry } from '@effect-atom/atom-react';
+import { type Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
