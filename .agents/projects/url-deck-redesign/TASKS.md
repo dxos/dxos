@@ -314,6 +314,15 @@ encoded the pre-pair-chain URL shape.
       spec dies. Verified by bisecting the two imports against `playwright test --list`.
 - [ ] **Consider gating a smoke subset of e2e on PRs** — the whole suite is too slow for every PR, but a
       single spec covering create-space/create-object would have caught this before merge.
+- [ ] **Cold load of the registry workspace never boots the app** — NOT introduced here; `/w/!dxos:plugin-registry`
+      is exactly what the app generates when the pinned registry node is clicked (verified by driving the UI,
+      where it renders fine), but navigating to it cold leaves the page on the boot splash: no
+      `treeView.userAccount` after 60s, against ~20s for a cold `/` in the same run. So `openPluginRegistry()`
+      now holds the right URL but cannot work until this is fixed. Nothing covers it — both call sites
+      (`basic.spec.ts:81,88`) sit in `test.skip`ped tests, skipped for an unrelated reason, which is why the
+      break went unnoticed. Two follow-ups: find why that route wedges startup, and decide whether the helper
+      should click `treeView.pluginRegistry` instead (verified working, but contradicts the comment explaining
+      that URL navigation was chosen to dodge a firefox operation-handler race).
 
 ## Backlog (post-land)
 
