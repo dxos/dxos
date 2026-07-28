@@ -86,11 +86,15 @@ non-AI project concept:
 `@dxos/assistant-toolkit` depends on `@dxos/compute`, so `Project` cannot hold
 typed refs to `Chat` or `Agent`.
 
-- **Chats**: linked via the existing `CompanionTo` relation
+- **Chats**: two distinct linkages, resolved in milestone 3 (see
+  [Project chats](#milestone-3-project-chats)). A project's _companion_ chat
+  stays on the existing `CompanionTo` relation
   (`org.dxos.relation.assistant.companionTo`, source `Chat` → target
-  `Obj.Unknown`), consistent with `Agent`'s chat wiring. plugin-projects queries
-  chats by relation target. **Review flagged** (tracked): revisit vs a dedicated
-  relation once the design is exercised.
+  `Obj.Unknown`), consistent with `Agent`'s chat wiring. A project's _own_ chat
+  sessions are instead **parented** to the Project in the ECHO hierarchy
+  (`Obj.setParent`) and enumerated with `Query…children()` — the relation is
+  single-current by construction (`state.currentChat[objectUri]`) and carries no
+  ownership edge, so it cannot express "N sessions belonging to this project".
 - **Agents**: explicit linkage deferred. MVP: agents participate via project
   chats and routines (an instructions-routine already runs in the agent
   harness). A project-scoped agent roster (relation or parenting) comes later,
@@ -184,10 +188,108 @@ linked via `routines`).
 - **Dev loop**: Projects/Routine/Outliner plugins are part of the composer-app
   minimal set (`serve-min`).
 
+## Milestone 3: project chats
+
+Goal: start a chat session from a project, with the project already in scope, and
+see that session in the navtree under its project.
+
+### Ownership: the ECHO parent edge
+
+A project chat is parented to its Project (`Obj.setParent(chat, project)`) and
+enumerated with `Query.select(Filter.id(project.id)).children()` narrowed to
+`Chat.Chat`. No `Project` schema change, so no version bump and no migration of
+existing project objects.
+
+Rejected alternatives: a `chats: Ref<Collection>` field mirroring `artifacts`
+(buys sibling ordering and drag-rearrange, costs a 0.2.0 → 0.3.0 bump); and
+reusing `CompanionTo` (conflates the single-current companion chat with N owned
+sessions, and yields no ownership edge).
+
+The one risk this takes on: a hierarchy-traversal query driving a graph connector
+is less exercised than a ref-array read. If `children()` does not re-emit when a
+chat is newly parented, fall back to the Collection field — the rest of the
+design is unchanged, only the enumeration source moves.
+
+### Creation: `ProjectOperation.CreateChat`
+
+`ProjectOperation.CreateChat({ project })`, handled in plugin-projects:
+
+1. Invoke `AssistantOperation.CreateChat({ db, bindings })` — chat + feed, with
+   the assistant's default skills already bound.
+2. `Obj.setParent(chat, project)`.
+3. Open it with `LayoutOperation.Open` (a plank in the deck, matching the Chats
+   section's own create action).
+
+`SpaceOperation.AddObject` is deliberately **not** called: it would file the chat
+in the space's root collection, surfacing it under Collections as well. DB
+membership alone (`addToSpace: true`) is what a parented chat needs.
+
+### Context binding: an optional `bindings` input on `CreateChat`
+
+`AssistantOperation.CreateChat` gains an optional
+`bindings: { skills?, objects? }`, passed straight to the `AiContext.Binder` it
+already constructs for the default skills. plugin-projects supplies
+`Project.contextBindings(project)` plus a ref to the project itself, and needs no
+`AiContext` plumbing of its own.
+
+Bindings persist in the conversation feed, and `Instructions` are bound **by
+ref** — so later edits to instruction text or commands reach the model at
+prompt-format time without re-binding. Known gap, accepted: a skill added to the
+instructions _after_ the chat exists does not reach that chat. `ChatCompanion`
+avoids this by re-binding reactively; unifying the two paths (extract its binding
+logic into a shared hook keyed on `Obj.getParent(chat)`) is a follow-up, not this
+milestone.
+
+### Navtree: chats as children of the project node
+
+Projects are leaf nodes today — `TypeSection.createTypeSectionExtension` emits
+`AppNode.makeObject` with no children. A new `projectChats` extension in
+plugin-projects contributes them:
+
+- `match`: nodes whose `data` is a `Project.Project`.
+- `connector`: the `children()` query above → `AppNode.makeObject` per chat.
+- `url`: reuses the `chat` key with a data-dependent `path` that resolves the
+  chat's parent project. Sharing one key across extensions is supported and
+  intended — plugin-space's `object` key spans both collection connectors for
+  exactly this reason (`@dxos/app-graph` `path-resolution.ts`), so a chat is
+  addressed the same way wherever it sits.
+
+**Consequence in plugin-assistant**: the Chats type-section query already
+excludes `CompanionTo` sources; it must also exclude project-parented chats, or
+every project chat appears twice — once under its project, once at the top level.
+
+### Toolbar: `ProjectArticle`
+
+`ProjectArticle` has no toolbar today. Add `Panel.Toolbar asChild` +
+`Toolbar.Root` with a single `IconButton` invoking
+`ProjectOperation.CreateChat`. The same action is contributed to the project's
+navtree node (`disposition: 'list-item-primary'`) so `+` works from the tree.
+
+Scope held to chat creation: in-article routine and artifact creation are already
+their own TASKS.md items.
+
+### Dependencies
+
+plugin-projects gains `@dxos/assistant-toolkit` (the `Chat` type) and
+`@dxos/plugin-assistant` (`AssistantOperation`, via its `./types` export). No
+cycle — plugin-assistant does not depend on plugin-projects.
+
+### Testing
+
+- Unit: the `children()`-based chat enumeration, and `CreateChat` parenting +
+  binding pass-through (in-memory db).
+- Story + play test: `ProjectArticle` toolbar creates a chat and it appears in
+  the project's chat list.
+- Live: create a project chat in Composer, confirm the project's instructions
+  reach the system prompt in a _standalone plank_ (not just the companion) and
+  that the chat shows under the project in the navtree, including after a cold
+  deep-link load.
+
 ## Deferred / follow-ups (tracked in TASKS.md)
 
 - Possibly move Project type from `@dxos/compute` into the plugin at end.
-- Review CompanionTo reuse for project chats (vs dedicated relation).
+- Unify project-context binding across companion and standalone chats (shared
+  hook keyed on the chat's parent), closing the late-added-skills gap.
 - Remove plugin-sidekick (this pass: AUDIT.md note only).
 - Consider merging plugin-routine into plugin-projects.
 - In-article routine creation; project agent roster; artifact provenance;

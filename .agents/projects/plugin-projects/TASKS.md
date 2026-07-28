@@ -49,10 +49,40 @@ Initial priority (user, 2026-07-24):
 - [ ] **"/" completion of commands (and "@", "$")** — unify chat-prompt completion triggers.
 - [ ] **inbox naming sweep** — action id 'create-topic' + Attention.linkedSegment('topic') → 'project' (verify companion segment resolution after rename).
 
+## Phase 3 / milestone 3: project chats
+
+Start a chat session from a project with the project already in scope, and see that
+session in the navtree under its project. Design: the "Milestone 3: project chats"
+section of the design spec. Decisions (user, 2026-07-27): ECHO parent edge (no schema
+change), new chat opens as a deck plank, toolbar scoped to chat creation only, bindings
+applied once at creation.
+
+### Tasks
+
+- [ ] **`bindings` input on `AssistantOperation.CreateChat`** — optional
+      `{ skills?, objects? }` passed to the binder it already constructs.
+- [ ] **`ProjectOperation.CreateChat`** — invoke `AssistantOperation.CreateChat` with
+      `Project.contextBindings(project)` + the project ref, `Obj.setParent(chat, project)`,
+      `LayoutOperation.Open`. No `SpaceOperation.AddObject` (would file it in the root
+      collection).
+- [ ] **`projectChats` graph extension** — `children()` query → `AppNode.makeObject` per
+      chat; `url` reuses the `chat` key with a parent-resolving dynamic path.
+- [ ] **Exclude project chats from the top-level Chats section** — plugin-assistant's
+      section query, alongside the existing `CompanionTo` exclusion.
+- [ ] **`ProjectArticle` toolbar** — `Panel.Toolbar` + `IconButton`; same action on the
+      project's navtree node (`list-item-primary`).
+- [ ] **Tests** — unit (enumeration, parenting + binding pass-through), story play test
+      (toolbar creates a chat, appears in the list), live verify (instructions reach the
+      system prompt in a standalone plank; navtree children survive a cold deep link).
+- [ ] **Watch item** — if `children()` does not re-emit in the graph connector when a chat
+      is newly parented, fall back to a `chats: Ref<Collection>` field on Project
+      (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.
+
 ## Follow-ups / deferred (design reviews)
 
 - [ ] **Possibly move Project type from @dxos/compute to plugin-projects at end** — revisit once the plugin's shape settles.
-- [ ] **Review CompanionTo reuse for project chats** — vs a dedicated relation; decide agent-roster linkage alongside.
+- [x] **Review CompanionTo reuse for project chats** — resolved in milestone 3: companion chat keeps `CompanionTo`; owned sessions use the ECHO parent edge. Agent-roster linkage still open.
+- [ ] **Unify project-context binding** across companion and standalone chats (shared hook keyed on the chat's parent) — closes the late-added-skills gap.
 - [ ] **Remove plugin-sidekick** — obviated (AUDIT.md notes it); deletion is a separate change.
 - [ ] **Consider merging plugin-routine into plugin-projects** — boundary is thin post-Routine-move.
 - [ ] **Editor.View accent focus defaults** — removed on this branch; NotebookCell opted back in; audit remaining call sites if focus affordances look off elsewhere.
