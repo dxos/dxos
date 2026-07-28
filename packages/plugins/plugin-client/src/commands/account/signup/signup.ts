@@ -25,35 +25,38 @@ import {
 import { type Client, ClientService } from '@dxos/client';
 import { type Identity } from '@dxos/client/halo';
 import { Context as DxContext } from '@dxos/context';
+import { Ref } from '@dxos/echo';
 import { type HubHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Atmosphere, Connection } from '@dxos/link';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
 
 import { ClientOperation } from '#operations';
 
-import { hubClient, normalizeAccessCode, validAccessCode } from '../util';
+import {
+  ATMOSPHERE_INPUT_PROMPT,
+  ATMOSPHERE_METHOD,
+  ATMOSPHERE_METHOD_TITLE,
+  METHOD_ALIASES,
+  hubClient,
+  methodOption,
+  normalizeAccessCode,
+  validAccessCode,
+} from '../util';
 
-type SignupMethod = 'email' | 'atproto';
+type SignupMethod = 'email' | typeof ATMOSPHERE_METHOD;
 
-const SIGNUP_METHODS: SignupMethod[] = ['email', 'atproto'];
+const SIGNUP_METHODS: SignupMethod[] = ['email', ATMOSPHERE_METHOD];
 
 const METHOD_CHOICES = [
   { title: 'Email', value: 'email' as const },
-  { title: 'Atmosphere account (AT Protocol)', value: 'atproto' as const },
+  { title: ATMOSPHERE_METHOD_TITLE, value: ATMOSPHERE_METHOD },
 ];
 
 const INPUT_PROMPT: Record<SignupMethod, string> = {
   email: 'Email address',
-  atproto: 'atproto handle or DID (e.g. alice.bsky.social)',
+  [ATMOSPHERE_METHOD]: ATMOSPHERE_INPUT_PROMPT,
 };
-
-/**
- * `AccessToken.source` of the default atproto / login integration ("Atmosphere"). Mirrors
- * `ATMOSPHERE_SOURCE` in plugin-connector; inlined to avoid a plugin-client -> plugin-connector
- * dependency (plugin-connector depends on this package).
- */
-const ATMOSPHERE_SOURCE = 'atproto.local';
 
 /** Result of a successful sign-up, from whichever method minted the Account. */
 type SignupResult = {
@@ -70,11 +73,11 @@ export const signup = Command.make(
       Args.withDescription('Access code (8-character invitation code) to redeem. Validated before signing up.'),
     ),
     input: Args.text({ name: 'input' }).pipe(
-      Args.withDescription('Method input: email address / atproto handle. Prompted if omitted.'),
+      Args.withDescription('Method input: email address / Atmosphere handle. Prompted if omitted.'),
       Args.optional,
     ),
-    method: Options.choice('method', SIGNUP_METHODS).pipe(
-      Options.withDescription('Sign-up method (email | atproto). Prompted if omitted.'),
+    method: methodOption(SIGNUP_METHODS, METHOD_ALIASES).pipe(
+      Options.withDescription('Sign-up method (email | atmosphere). Prompted if omitted.'),
       Options.optional,
     ),
   },
@@ -113,7 +116,9 @@ export const signup = Command.make(
 
     const result = yield* Match.value(resolvedMethod).pipe(
       Match.when('email', () => signUpWithEmail({ client, hub, invoke, code: accessCode, email: resolvedInput })),
-      Match.when('atproto', () => signUpWithAtproto({ client, hub, invoke, code: accessCode, handle: resolvedInput })),
+      Match.when(ATMOSPHERE_METHOD, () =>
+        signUpWithAtmosphere({ client, hub, invoke, code: accessCode, handle: resolvedInput }),
+      ),
       Match.exhaustive,
     );
 
@@ -133,8 +138,8 @@ export const signup = Command.make(
   }),
 ).pipe(
   Command.withDescription('Sign up for a new DXOS account with an access code (same methods as Composer).'),
-  // The atproto method materializes the Atmosphere `AccessToken` in the personal space.
-  Command.provideEffectDiscard(() => withTypes(AccessToken.AccessToken)),
+  // The Atmosphere method writes the connected account's credential to the personal space.
+  Command.provideEffectDiscard(() => withTypes(AccessToken.AccessToken, Connection.Connection)),
 );
 
 const printAccount = (account: SignupResult & { identityDid: string }) =>
@@ -164,12 +169,12 @@ const signUpWithEmail = Effect.fn(function* ({ client, hub, invoke, code, email 
 });
 
 /**
- * atproto / Bluesky OAuth sign-up, mirroring the gate's OAuth-first ordering
+ * Atmosphere (atproto / Bluesky) OAuth sign-up, mirroring the gate's OAuth-first ordering
  * (`WelcomeScreen.handleCreateAccountWithOAuth` plus the redirect finalizer): authenticate with the
  * provider before creating anything locally, register the provider as a recovery method, then redeem
  * the access code with the provider-verified email.
  */
-const signUpWithAtproto = Effect.fn(function* ({
+const signUpWithAtmosphere = Effect.fn(function* ({
   client,
   hub,
   invoke,
@@ -212,15 +217,22 @@ const signUpWithAtproto = Effect.fn(function* ({
 
   // Materialize the AccessToken keyed by the returned id so rotated tokens land on it; without it the
   // refresh token Edge stored is treated as orphaned and dropped.
-  // TODO(wittjosiah): Also wrap it in a `Connection` (as the gate does) once that type is reachable
-  //   from this package — plugin-connector depends on plugin-client, so it cannot be imported here.
-  space.db.add(
+  const accessToken = space.db.add(
     AccessToken.make({
       id: registration.accessTokenId,
-      source: ATMOSPHERE_SOURCE,
+      source: Atmosphere.SOURCE,
       account: registration.identifier,
       token: registration.accessToken,
       scopes: registration.scopes,
+    }),
+  );
+  // Wrap it in a Connection so the connected account surfaces as a first-class object, as the gate
+  // does. Registration completes exactly once, so no de-dup query is needed.
+  space.db.add(
+    Connection.make({
+      name: registration.email,
+      connectorId: Atmosphere.PROVIDER_ID,
+      accessToken: Ref.make(accessToken),
     }),
   );
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { normalizeAccessCode, validAccessCode } from './util';
+import { ATMOSPHERE_METHOD, METHOD_ALIASES, normalizeAccessCode, validAccessCode } from './util';
 
 describe('access codes', () => {
   test('accepts hyphenated, bare, and lower-case forms', () => {
@@ -26,5 +26,11 @@ describe('access codes', () => {
   test('normalizes to the canonical form hub-service matches', () => {
     expect(normalizeAccessCode(' abcd-2345 ')).toBe('ABCD2345');
     expect(normalizeAccessCode('ABCD2345')).toBe('ABCD2345');
+  });
+});
+
+describe('method aliases', () => {
+  test('atproto resolves to the canonical Atmosphere method', () => {
+    expect(METHOD_ALIASES.atproto).toBe(ATMOSPHERE_METHOD);
   });
 });

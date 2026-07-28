@@ -22,22 +22,29 @@ import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
 import { ClientOperation } from '#operations';
 
 import { printIdentity, waitForState } from '../../halo/util';
-import { hubClient } from '../util';
+import {
+  ATMOSPHERE_INPUT_PROMPT,
+  ATMOSPHERE_METHOD,
+  ATMOSPHERE_METHOD_TITLE,
+  METHOD_ALIASES,
+  hubClient,
+  methodOption,
+} from '../util';
 
-type LoginMethod = 'email' | 'atproto' | 'device-invitation' | 'recovery-code';
+type LoginMethod = 'email' | typeof ATMOSPHERE_METHOD | 'device-invitation' | 'recovery-code';
 
-const LOGIN_METHODS: LoginMethod[] = ['email', 'atproto', 'device-invitation', 'recovery-code'];
+const LOGIN_METHODS: LoginMethod[] = ['email', ATMOSPHERE_METHOD, 'device-invitation', 'recovery-code'];
 
 const METHOD_CHOICES = [
   { title: 'Email', value: 'email' as const },
-  { title: 'AT Protocol', value: 'atproto' as const },
+  { title: ATMOSPHERE_METHOD_TITLE, value: ATMOSPHERE_METHOD },
   { title: 'Device invitation', value: 'device-invitation' as const },
   { title: 'Recovery code', value: 'recovery-code' as const },
 ];
 
 const INPUT_PROMPT: Record<LoginMethod, string> = {
   'email': 'Email address',
-  'atproto': 'atproto handle or DID (e.g. alice.bsky.social)',
+  [ATMOSPHERE_METHOD]: ATMOSPHERE_INPUT_PROMPT,
   'device-invitation': 'Invitation code or URL',
   'recovery-code': 'Recovery code (seed phrase)',
 };
@@ -45,14 +52,14 @@ const INPUT_PROMPT: Record<LoginMethod, string> = {
 export const login = Command.make(
   'login',
   {
-    method: Options.choice('method', LOGIN_METHODS).pipe(
+    method: methodOption(LOGIN_METHODS, METHOD_ALIASES).pipe(
       Options.withDescription(
-        'Login method (email | atproto | device-invitation | recovery-code). Prompted if omitted.',
+        'Login method (email | atmosphere | device-invitation | recovery-code). Prompted if omitted.',
       ),
       Options.optional,
     ),
     input: Args.text({ name: 'input' }).pipe(
-      Args.withDescription('Method input: email address / atproto handle / invitation code / recovery code.'),
+      Args.withDescription('Method input: email address / Atmosphere handle / invitation code / recovery code.'),
       Args.optional,
     ),
   },
@@ -73,7 +80,7 @@ export const login = Command.make(
       : yield* Prompt.text({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
 
     const identity = yield* Match.value(resolvedMethod).pipe(
-      Match.when('atproto', () => loginWithAtproto(client, resolvedInput)),
+      Match.when(ATMOSPHERE_METHOD, () => loginWithAtmosphere(client, resolvedInput)),
       Match.when('email', () => loginWithEmail(client, resolvedInput, invoke)),
       Match.when('recovery-code', () => loginWithRecoveryCode(client, resolvedInput)),
       Match.when('device-invitation', () => loginWithDeviceInvitation(client, resolvedInput)),
@@ -92,10 +99,11 @@ export const login = Command.make(
 ).pipe(Command.withDescription('Log in to an existing DXOS identity (same methods as Composer).'));
 
 /**
- * atproto / Bluesky OAuth login: runs the gate recovery flow (local server + browser) and redeems
- * the resulting one-time `recoveryProof` to admit this device into the existing identity's HALO.
+ * Atmosphere (atproto / Bluesky) OAuth login: runs the gate recovery flow (local server + browser)
+ * and redeems the resulting one-time `recoveryProof` to admit this device into the existing
+ * identity's HALO.
  */
-const loginWithAtproto = (client: Client, handle: string) =>
+const loginWithAtmosphere = (client: Client, handle: string) =>
   Effect.gen(function* () {
     const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
     invariant(edgeBaseUrl, 'Edge services not configured (runtime.services.edge.url).');
