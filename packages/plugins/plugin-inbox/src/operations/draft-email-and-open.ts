@@ -17,16 +17,18 @@ import { createDraftMessage } from '../util';
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, mode = 'compose', message, subject, body, mailbox, contextId }) {
+      // A draft is identified by the `properties.mailbox` its mailbox supplies (see `DraftMessage`), so
+      // without one there is nothing to scope, tag, or render it — bail before persisting an orphan.
+      if (!Mailbox.instanceOf(mailbox)) {
+        return;
+      }
+
       const props = createDraftMessage({ mode, message, subject, body, mailbox });
       const draft = DraftMessage.make(props);
       yield* Operation.invoke(SpaceOperation.AddObject, {
         object: draft,
         target: db,
       });
-
-      if (!Mailbox.instanceOf(mailbox)) {
-        return;
-      }
 
       // Tag as 'draft' so the Drafts view (a systemTag filter, like Inbox/Sent) picks it up;
       // `useSendEmail` removes the tag at send time.
