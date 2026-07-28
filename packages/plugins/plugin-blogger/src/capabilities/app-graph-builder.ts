@@ -40,8 +40,8 @@ const CONTENT_DOC_NODE_TYPE = `${meta.profile.key}.post-content`;
 
 /**
  * Contributes the Publications navtree hub, mirroring plugin-studio's Studio section: a "Publications"
- * section under each space's `content` group (always present, so it is the create hub), with a branch
- * node per Publication whose children are that Publication's Posts.
+ * section under each space's `content` group, with a branch node per Publication whose children are
+ * that Publication's Posts.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -50,8 +50,15 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'publicationsSection',
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
-        connector: (space) =>
-          Effect.succeed([
+        connector: (space, get) => {
+          // The section is elided while the space has no Publications (as plugin-inbox does for
+          // Mailboxes), so the first one is created from the space's generic create-object menu.
+          const publications = get(space.db.query(Filter.type(Blog.Publication)).atom);
+          if (publications.length === 0) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
             AppNode.makeSection({
               id: PUBLICATIONS_SEGMENT,
               type: PUBLICATIONS_SECTION_TYPE,
@@ -61,7 +68,8 @@ export default Capability.makeModule(
               space,
               position: 400,
             }),
-          ]),
+          ]);
+        },
       }),
 
       // A branch node per Publication under the section, each with its Posts as children, plus the
