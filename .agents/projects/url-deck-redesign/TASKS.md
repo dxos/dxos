@@ -299,11 +299,12 @@ encoded the pre-pair-chain URL shape.
 
 ### Tasks
 
-- [ ] **`waitForSpaceReady` read the wrong path segment** — it took the workspace id from
-      `pathname.split('/')[0]`, which the `/w/<workspace>/…` grammar now makes the `w` anchor, so the
+- [x] **`waitForSpaceReady` read the wrong path segment** — it took the workspace id from
+      `pathname.split('/').filter(Boolean)[0]`, which the `/w/<workspace>/…` grammar now makes the `w`
+      anchor (the `filter(Boolean)` drops the empty leading segment), so the
       `data-object-id === root/<workspace>` poll could never settle and every `createSpace()` timed out.
       Now destructures `[anchor, workspaceId]` and checks the anchor before reading the workspace.
-- [ ] **Plugin-registry URLs used the bare-workspace form** — `/!dxos:plugin-registry` and
+- [x] **Plugin-registry URLs used the bare-workspace form** — `/!dxos:plugin-registry` and
       `/!dxos:plugin-registry/plugin-registry%3E<category>` are unparseable under the new grammar (a
       leading non-anchor key returns `Option.none()`). Now `/w/!dxos:plugin-registry` and
       `/w/!dxos:plugin-registry/category/<name>`. Both the anchor key and the registry workspace id are
