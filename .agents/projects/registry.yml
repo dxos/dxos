@@ -49,7 +49,7 @@ projects:
     tasks: packages/plugins/plugin-tldraw/TASKS.md
     design: agents/superpowers/specs/2026-07-23-sketch-scene-dsl-design.md
     prs: [12324]
-    resume: 'PR #12324 Check GREEN (preview pr-12324-composer-main.dxos.workers.dev). Next: respond to review comments (only bot stubs at checkpoint) and land via the land skill; then Phase 2 backlog (excalidraw backend, mermaid/d2/sequence dialects, rename-object).'
+    resume: 'Phase 3 (illustrator base) on PR #12380: plugin-illustrator host + VariantProvider capability; plugin-sketch renamed plugin-tldraw; excalidraw builder added; both variants pass the same round-trip test. Next: land #12380, then the technical-drawing dialect (mermaid/UML variant + placement metadata; live-model vs one-shot question OPEN).'
 
   - name: mailbox-research
     status: active
