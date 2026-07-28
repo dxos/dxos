@@ -20,13 +20,36 @@ import { FeedOperation, Magazine, Subscription } from '../types';
 import { applyKeep, resolveSelected } from './curate-magazine';
 import { MagazineOperationHandlerSet } from './index';
 
-// Whether the model picks the right articles is a judgement question, graded out-of-band; scripting
-// its selection keeps this on the operation's own behaviour — that the chosen ids are resolved,
-// recorded on the magazine, and counted.
-//
-// The turns are filled in by the test once the posts exist (their ids are the payload). The scripted
-// model indexes this array lazily, per call, so populating it before the operation runs is enough.
-const turns: ScriptedLanguageModel.ScriptedTurn[] = [];
+/**
+ * Whether the model picks the right articles is a judgement question, graded out-of-band; scripting
+ * its selection keeps this on the operation's own behaviour — that the chosen ids are resolved,
+ * recorded on the magazine, and counted.
+ *
+ * The script is per-test state, but the layer captures the turns array once at module load and the
+ * model indexes it lazily per call. Holding it in a closure gives the layer a stable reference while
+ * `reset` clears the script between tests, so no turn leaks from one test into the next.
+ */
+const createScriptedSelection = () => {
+  const turns: ScriptedLanguageModel.ScriptedTurn[] = [];
+  return {
+    aiService: ScriptedLanguageModel.scriptedAiService(turns),
+
+    /** Scripts the agent to select `ids` and then finish. Call once the posts exist. */
+    select: (ids: readonly string[]) => {
+      turns.push(
+        { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { posts: ids.map((id) => ({ id })) } })] },
+        // The loop asks again once the tool result is fed back; a text-only turn stops it.
+        { parts: [ScriptedLanguageModel.text('Done.')] },
+      );
+    },
+
+    reset: () => {
+      turns.length = 0;
+    },
+  };
+};
+
+const scripted = createScriptedSelection();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: [MagazineOperationHandlerSet, AgentHandlers],
@@ -41,7 +64,7 @@ const TestLayer = AssistantTestLayer({
     TagIndex.TagIndex,
   ],
   skills: [MagazineSkill.make()],
-  aiService: ScriptedLanguageModel.scriptedAiService(turns),
+  aiService: scripted.aiService,
 });
 
 describe('applyKeep', () => {
@@ -124,6 +147,9 @@ describe('resolveSelected', () => {
 });
 
 describe('CurateMagazine', () => {
+  beforeEach(() => scripted.reset());
+  afterEach(() => scripted.reset());
+
   it.effect(
     'records the selected posts on the magazine and counts them',
     Effect.fnUntraced(
@@ -155,7 +181,7 @@ describe('CurateMagazine', () => {
         );
         yield* Database.flush();
 
-        selectPosts([posts[0].id, posts[1].id]);
+        scripted.select([posts[0].id, posts[1].id]);
         const result = yield* Operation.invoke(FeedOperation.CurateMagazine, { magazine: Ref.make(magazine) });
 
         const curated = yield* Effect.forEach(magazine.posts, Database.load);
@@ -167,12 +193,3 @@ describe('CurateMagazine', () => {
     ),
   );
 });
-
-const selectPosts = (ids: readonly string[]) => {
-  turns.length = 0;
-  turns.push(
-    { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { posts: ids.map((id) => ({ id })) } })] },
-    // The loop asks again once the tool result is fed back; a text-only turn stops it.
-    { parts: [ScriptedLanguageModel.text('Done.')] },
-  );
-};
