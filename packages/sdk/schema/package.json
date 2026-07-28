@@ -41,6 +41,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
+    "date-fns": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

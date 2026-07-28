@@ -13,7 +13,8 @@ import { Surface, useAtomCapability, usePluginManager } from '@dxos/app-framewor
 import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
-import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 

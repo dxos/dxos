@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { type Label } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
-import { formatForEditing, parseValue } from '@dxos/react-ui-form';
+import { parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
   type DxGridPlane,
@@ -21,6 +21,7 @@ import {
   type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
+import { formatForEditing } from '@dxos/schema';
 import { type ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
 
 import { type Table } from '../types';

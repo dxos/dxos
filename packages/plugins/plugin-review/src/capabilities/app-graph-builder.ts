@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 import { Channel } from '@dxos/types';
 import { createComment } from '@dxos/ui-editor';
 import { Position } from '@dxos/util';

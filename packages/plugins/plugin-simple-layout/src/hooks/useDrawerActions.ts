@@ -8,7 +8,8 @@ import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Node, useActionRunner } from '@dxos/plugin-graph';
+import { Node } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, createGapSeparator } from '@dxos/react-ui-menu';
 
