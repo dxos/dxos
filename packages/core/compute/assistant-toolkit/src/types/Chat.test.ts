@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -29,10 +29,10 @@ const makeChat = Effect.gen(function* () {
 });
 
 describe('Chat', () => {
-  it.scoped(
+  it.effect(
     'is a standalone type carrying no agent reference',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const chat = yield* makeChat;
 
         expect(Type.getTypename(Chat.Chat)).toBe('org.dxos.type.assistant.chat');
@@ -49,10 +49,10 @@ describe('Chat', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'ensurePlan attaches a plan lazily and returns the same one thereafter',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const chat = yield* makeChat;
         expect(chat.plan).toBeUndefined();
 
@@ -69,10 +69,10 @@ describe('Chat', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'CompanionTo links a chat to an arbitrary companion object',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const chat = yield* makeChat;
         const companion = yield* Database.add(Instructions.make({ text: 'Steer.' }));
         const relation = yield* Database.add(

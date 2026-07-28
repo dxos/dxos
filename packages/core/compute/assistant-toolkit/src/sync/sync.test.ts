@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -29,10 +29,10 @@ const makeIncoming = (id: string, content: string) => {
 };
 
 describe('syncObjects', () => {
-  it.scoped(
+  it.effect(
     'adds an object with no foreign-key match',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const [synced] = yield* syncObjects([makeIncoming('a', 'first')], { foreignKeyId: SOURCE });
         yield* Database.flush();
 
@@ -46,10 +46,10 @@ describe('syncObjects', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'updates the matching object in place rather than adding a second',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const [first] = yield* syncObjects([makeIncoming('a', 'first')], { foreignKeyId: SOURCE });
         yield* Database.flush();
 
@@ -57,10 +57,11 @@ describe('syncObjects', () => {
         yield* Database.flush();
 
         expect(second.id).toBe(first.id);
-        expect((second as Text.Text).content).toBe('updated');
 
+        // Queried rather than read off the returned `Obj.Unknown`, which would need a cast.
         const all = yield* Database.query(Query.select(Filter.type(Text.Text))).run;
         expect(all).toHaveLength(1);
+        expect(all[0].content).toBe('updated');
 
         // The foreign key survives the copy: it is read off a detached object, so it reaches the
         // persisted object only because assignment copies nested records by value.
@@ -71,10 +72,10 @@ describe('syncObjects', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'replaces keys from the same source, leaving other sources intact',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const [existing] = yield* syncObjects([makeIncoming('a', 'first')], { foreignKeyId: SOURCE });
         Obj.update(existing, (existing) => {
           Obj.getMeta(existing).keys.push({ source: 'other', id: 'keep-me' });

@@ -795,7 +795,7 @@ describe('Reactive Object with ECHO database', () => {
 
         expect(() =>
           Obj.update(target, (target) => {
-            (target as any).nested = root;
+            target.nested = root;
           }),
         ).to.throw(/Object references must be wrapped with `Ref\.make`/);
       });
