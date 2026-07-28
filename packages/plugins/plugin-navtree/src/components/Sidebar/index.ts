@@ -4,4 +4,5 @@
 
 export * from './L0Menu';
 export * from './L1Panel';
+export * from './L1PanelUnavailable';
 export * from './L1Tabs';

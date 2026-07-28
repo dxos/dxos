@@ -17,6 +17,9 @@ export const translations = [
         'node-actions-menu-invoker.label': 'More options',
         'tree-item-actions.label': 'More actions',
         'button-back.button': 'Back to Space',
+        'workspace-unavailable.heading': 'Workspace unavailable',
+        'workspace-unavailable.description':
+          'You don’t have this workspace, or it no longer exists. Select one of your workspaces to continue.',
       },
     },
   },

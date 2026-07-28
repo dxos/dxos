@@ -8,6 +8,7 @@ import { type Node } from '@dxos/app-graph';
 
 import { l0ItemType } from '../../util';
 import { L1Panel, type L1PanelProps } from './L1Panel';
+import { L1PanelUnavailable } from './L1PanelUnavailable';
 
 export type L1TabsProps = Pick<L1PanelProps, 'open' | 'onBack'> & {
   currentItemId: string;
@@ -19,6 +20,10 @@ export type L1TabsProps = Pick<L1PanelProps, 'open' | 'onBack'> & {
  * Each workspace is an L1 tab.
  */
 export const L1Tabs = ({ topLevelItems, currentItemId, onBack, open, path }: L1TabsProps) => {
+  // The current tab can name a workspace that is not in the graph (a URL or persisted deck pointing at
+  // a workspace this identity does not have); without a panel for it the sidebar would render nothing.
+  const hasCurrentPanel = topLevelItems.some((item) => item.id === currentItemId && l0ItemType(item) === 'tab');
+
   return (
     <>
       {topLevelItems.map((item) => {
@@ -37,6 +42,7 @@ export const L1Tabs = ({ topLevelItems, currentItemId, onBack, open, path }: L1T
         }
         return null;
       })}
+      {!hasCurrentPanel && <L1PanelUnavailable workspace={currentItemId} open={open} />}
     </>
   );
 };
