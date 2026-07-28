@@ -1,10 +1,11 @@
 # plugin-projects — Tasks
 
-_Resume: PR #12335 MERGED (2026-07-25, squash f7d7735615) — it carried milestone 1 **plus** the three MS2 commits (cold-load fix, instructions→system-prompt, stub labels), so nothing is left unpushed. Fresh worktree at main tip, clean. Next: commands-authoring UI in InstructionsEditor, then outliner skill design._
+_Resume: milestone 3 (project chats) is DESIGNED AND APPROVED, not yet implemented — start at the first Phase 3 task (`bindings` input on `AssistantOperation.CreateChat`). PR #12335 MERGED (2026-07-25, squash f7d7735615) carried milestones 1–2; nothing unpushed from those. This worktree branches from main tip; local commits are docs only. Uncommitted: none._
+
+Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
 ## Phase 1: Core plugin + Project type (milestone 1) — DONE
 
-Design: agents/superpowers/specs/2026-07-24-plugin-projects-design.md
 Plan: agents/superpowers/plans/2026-07-24-plugin-projects.md (all 10 tasks complete, per-task + final reviews clean)
 
 ### Tasks
@@ -42,8 +43,8 @@ Initial priority (user, 2026-07-24):
 - [x] **PR strategy decision** — moot: the three MS2 commits shipped inside #12335's squash; verified present on main (ProjectArticle `getReactiveOrUndefined`, format.ts `## Instructions` + `<label>`, Projects.stories.tsx, minimal plugin set).
 - [ ] **PLUGIN.mdl for plugin-projects** — as-built record now that implementation settled.
 - [ ] **Commands-authoring UI** — InstructionsEditor edits text/skills/objects only; `commands` currently data-only despite autocomplete shipping.
-- [ ] **In-article routine creation**; project-scoped chat list UI.
-- [ ] **App-graph Project node children** — artifacts collection + routines child nodes (spec sketch; current TypeSection port is flat).
+- [ ] **In-article routine creation** — (the project-scoped chat list moved to Phase 3).
+- [ ] **App-graph Project node children: artifacts + routines** — Phase 3 adds the chat children and the branch-node plumbing; these two reuse it.
 - [ ] **ProjectOperation.Create + operation-handler/events** — extension point 2 (other plugins create/target projects).
 - [ ] **Project templates capability** — plugins contribute instructions+skills+routines presets (mirrors automation-templates).
 - [ ] **"/" completion of commands (and "@", "$")** — unify chat-prompt completion triggers.
@@ -53,7 +54,7 @@ Initial priority (user, 2026-07-24):
 
 Start a chat session from a project with the project already in scope, and see that
 session in the navtree under its project. Design: the "Milestone 3: project chats"
-section of the design spec. Decisions (user, 2026-07-27): ECHO parent edge (no schema
+section of [`./DESIGN.md`](./DESIGN.md). Decisions (user, 2026-07-27): ECHO parent edge (no schema
 change), new chat opens as a deck plank, toolbar scoped to chat creation only, bindings
 applied once at creation.
 

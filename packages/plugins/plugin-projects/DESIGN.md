@@ -1,8 +1,8 @@
 # plugin-projects — Design
 
-Date: 2026-07-24
+Date: 2026-07-24 (milestone 3 design added 2026-07-27)
 Status: approved (brainstorm 1×1 with burdon)
-Tracker: `.agents/projects/plugin-projects/TASKS.md`
+Tracker: `./TASKS.md`
 
 ## Concept
 
