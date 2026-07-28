@@ -338,11 +338,17 @@ which is also the correction: naming lived on the wrong object.
 **Remove `cron` (and `subscriptions`).** Both are trigger _sources_ that
 `sync-triggers` compiles imperatively into `Trigger` objects. A `Routine`
 (instructions + trigger) is exactly this, declaratively: cron becomes a Routine
-with a timer trigger; each subscription becomes a Routine with a feed trigger
-(the qualifier folds into the routine's instructions or stays as its runnable's
-first stage). `enabled` stays as the agent-level master switch only if routines
-gain an owner reference to gate on — otherwise it moves to the Routine.
-`sync-triggers` shrinks to a migration shim, then deletes.
+with a timer trigger; each subscription becomes a Routine with a feed trigger.
+The conversion is substrate-preserving — `AgentWorker` already runs an ephemeral
+`AiSession`, the same substrate as `RunInstructions`, never the durable
+`AgentProcess`. Two caveats from tracing the fired path: the `filterEvents`
+pipeline stages qualified events through `agent.feed` (the "deprecated" field is
+load-bearing), and the qualifier is a deliberately cheap pre-filter whose
+replacement needs a real decision (see PLAN.md phase C) — folding it into the
+routine's instructions would put filtering on the expensive model. `enabled`
+stays as the agent-level master switch only if routines gain an owner reference
+to gate on — otherwise it moves to the Routine. `sync-triggers` shrinks to a
+migration shim, then deletes.
 
 **`instructions: Ref<Text>` → `Ref<Instructions>`.** The typed object carries
 `skills`, `objects`, and `commands` — which is precisely the "skill set" the
