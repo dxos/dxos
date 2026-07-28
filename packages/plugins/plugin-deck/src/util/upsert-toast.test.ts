@@ -8,8 +8,6 @@ import { type LayoutOperation } from '@dxos/app-toolkit';
 
 import { upsertToast } from './upsert-toast';
 
-const makeToast = (id: string, title?: string): LayoutOperation.Toast => ({ id, title });
-
 describe('upsertToast', () => {
   test('appends a toast with an unseen id', ({ expect }) => {
     const toasts = upsertToast([makeToast('a')], makeToast('b'));
@@ -33,3 +31,5 @@ describe('upsertToast', () => {
     expect(original[0].title).to.equal(undefined);
   });
 });
+
+const makeToast = (id: string, title?: string): LayoutOperation.Toast => ({ id, title });

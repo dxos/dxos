@@ -76,9 +76,16 @@ export const PwaPlugin = Plugin.define(meta).pipe(
       // for days, so without polling a deployed update is never noticed and the refresh toast only
       // ever appears on reload. `Effect.repeat` runs the first check straight away, before
       // `onRegisteredSW` has fired — the optional call makes that opening tick a no-op.
-      const fiber = yield* Effect.promise(async () => {
+      //
+      // `update()` rejects in its own right — `InvalidStateError` while a worker is already
+      // installing, a `TypeError` when the script fetch fails offline — so the rejection is recovered
+      // rather than left to `Effect.promise`, whose defect would kill the daemon fiber and silently
+      // end polling for the rest of the session.
+      const checkForUpdate = Effect.tryPromise(async () => {
         await registration?.update();
-      }).pipe(Effect.repeat(Schedule.fixed(UPDATE_CHECK_INTERVAL)), Effect.forkDaemon);
+      }).pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('service worker update check failed', { error }))));
+
+      const fiber = yield* checkForUpdate.pipe(Effect.repeat(Schedule.fixed(UPDATE_CHECK_INTERVAL)), Effect.forkDaemon);
 
       // Return the interruption effect directly; Fiber.interrupt is async and would throw
       // AsyncFiberException if wrapped in Effect.runSync.
