@@ -1,33 +1,32 @@
 # AI Testing Strategy — Tasks
 
 _Resume: **PR #12307 MERGED** (2026-07-23). Work continues on
-`claude/ai-testing-strategy-next-3pkl86` (PR #12357, draft, cut from `main` `bf055c8b`).
+`claude/ai-testing-strategy-next-3pkl86` (PR #12357, ready for review, merged with `main`).
 **Phase 1 item 1 is COMPLETE — G2 is closed:** all 10 G2 files converted off memoized replay, every
 `.conversations.json` in the group deleted, zero `runMemoizedTests` references left outside G3 and
 `memoization.test.ts` (which tests the machinery itself). Operation tests live one file per handler
 beside the handler, on a per-package shared `OperationTestLayer`; handlers that reach a model
 internally run on `ScriptedLanguageModel`. Remaining live backlog: Phase 1 item 2 (E context-assembly
-
-- F schema round-trip), Phase 2 item 4 (loosen `employerRoleCorrect` / `onlyWebSearchUsed`, then drop
-  explicit skill naming — **needs a live `DX_ANTHROPIC_API_KEY`**), Phase 3 (G3 → D across the 4
-  agent-runtime files, then shrink the memoization layer), the standalone `.agent/` deletion, the
-  `Ref.Ref(Relation.Unknown)` typing defect blocking `RelationDelete`, and the batch-run flake noted
-  under Phase 1.
-  Historical detail for #12307: CI green
-  (build/check/test/storybook/workerd all pass). All 6 G1 scenarios are ported to scored evals with
-  real quality signal beyond existence checks (DB-effect assertions + an LLM judge on
-  `crm-mailbox`). `@dxos/assistant-e2e` is un-merged back out of `@dxos/assistant-evals` — kept as
-  its own deprecated package (holding `harness.ts` + the 3 scenarios not yet portable to an eval:
-  `inbox-enable`, `local-ai`, `sandbox`). Repo-wide references updated to match:
-  `.changeset/config.json`, `tsconfig.all.json`, `RELEASE-SPEC.md` (back-edge row no longer mentions
-  evals — those are out-of-band), the `agent-eval-tests` and `regenerate-memoized-llm` skills.
-  `TESTING.md` rewritten to describe only the current state (no merge/un-merge narrative — that
-  lives here instead). Per-eval timeouts replaced the flat 360s `vitest.config.ts` `testTimeout`
-  (`createEvalRunner`'s new `timeout` option, default 60s / 150s for crm-mailbox+planning; confirmed
-  via evalite's source + its v1 beta + [issue #68](https://github.com/mattpocock/evalite/issues/68)
-  that evalite has no per-eval timeout of its own — the global `testTimeout`, now 180s, is only the
-  outer safety net). Pushed to `claude/ai-testing-strategy-9ctzjt` through commit `c62073d0cf`.
-  (Historical: that PR's own next step was review, long since done.)_
+and F schema round-trip), Phase 2 item 4 (loosen `employerRoleCorrect` / `onlyWebSearchUsed`, then
+drop explicit skill naming — **needs a live `DX_ANTHROPIC_API_KEY`**), Phase 3 (G3 → D across the 4
+agent-runtime files, then shrink the memoization layer), the standalone `.agent/` deletion, the
+`Ref.Ref(Relation.Unknown)` typing defect blocking `RelationDelete`, and the batch-run flake noted
+under Phase 1.
+Historical detail for #12307: CI green
+(build/check/test/storybook/workerd all pass). All 6 G1 scenarios are ported to scored evals with
+real quality signal beyond existence checks (DB-effect assertions + an LLM judge on
+`crm-mailbox`). `@dxos/assistant-e2e` is un-merged back out of `@dxos/assistant-evals` — kept as
+its own deprecated package (holding `harness.ts` + the 3 scenarios not yet portable to an eval:
+`inbox-enable`, `local-ai`, `sandbox`). Repo-wide references updated to match:
+`.changeset/config.json`, `tsconfig.all.json`, `RELEASE-SPEC.md` (back-edge row no longer mentions
+evals — those are out-of-band), the `agent-eval-tests` and `regenerate-memoized-llm` skills.
+`TESTING.md` rewritten to describe only the current state (no merge/un-merge narrative — that
+lives here instead). Per-eval timeouts replaced the flat 360s `vitest.config.ts` `testTimeout`
+(`createEvalRunner`'s new `timeout` option, default 60s / 150s for crm-mailbox+planning; confirmed
+via evalite's source + its v1 beta + [issue #68](https://github.com/mattpocock/evalite/issues/68)
+that evalite has no per-eval timeout of its own — the global `testTimeout`, now 180s, is only the
+outer safety net). Pushed to `claude/ai-testing-strategy-9ctzjt` through commit `c62073d0cf`.
+(Historical: that PR's own next step was review, long since done.)_
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
@@ -195,10 +194,15 @@ as primary coverage.
   - [x] **plugin-markdown — DONE.** 4 memoized tests + 2 fixtures deleted (duplicated
         `markdown.eval.ts`); the 5 direct `MarkdownOperation.Create`/`Update` tests remain. Package
         now reports 27 passed / **0 skipped**.
-  - [x] **agent skill — DONE.** 4 memoized tests + fixture deleted; added `add-artifact` (appends a
-        resolvable artifact) and `get-context` (reports name/instructions/artifacts) alongside the
-        two existing sync-triggers tests. Both bind the agent to its own chat feed via
-        `AiContext.Binder` so the `Harness.HarnessService`-scoped handlers resolve it.
+  - [x] **agent skill — DONE.** 4 memoized tests + fixture deleted; added `get-context` (reports the
+        bound agent's name, instructions and formatted plan), which binds the agent to its own chat
+        feed via `AiContext.Binder` so the `Harness.HarnessService`-scoped handler resolves it.
+        **Reworked by the `main` merge:** upstream removed `AddArtifact` and `Agent.artifacts` (the
+        operation moved to a new `project` skill), so the `add-artifact` test written here was
+        dropped rather than kept against a deleted API; `SyncTriggers` became
+        `SyncAutomation({ agent, cron })` and `AgentWorker` became `Relay`, so `sync-triggers.test.ts`
+        is now `agent-wizard/operations/sync-automation.test.ts`, rewritten against the new API and
+        carrying `main`'s added assertion that the trigger is wrapped in a `Routine` aggregate.
   - [x] **Shared layer — DONE (direct guidance).** The per-handler files each restated the same
         `AssistantTestLayer` block; extracted to each package's existing testing entrypoint —
         `OperationTestLayer` from `@dxos/assistant-toolkit/testing` (merges every handler set in the
@@ -412,5 +416,6 @@ Obj.Unknown>`. For a relation schema that intersects the relation and object kin
 
 ## Deferred / open questions
 
-- Whether plugin-markdown create/update (largest G2 fixtures) convert cleanly to mocked unit tests
-  or need the scripted-model primitive too.
+- ~~Whether plugin-markdown create/update convert cleanly to mocked unit tests or need the
+  scripted-model primitive~~ — **answered:** both invoke the handler directly with no model on the
+  path, so neither mocks nor the scripted model were needed.
