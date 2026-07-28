@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: milestone 3 (project chats) is DESIGNED AND APPROVED, not yet implemented — start at the first Phase 3 task (`bindings` input on `AssistantOperation.CreateChat`). PR #12335 MERGED (2026-07-25, squash f7d7735615) carried milestones 1–2; nothing unpushed from those. This worktree branches from main tip; local commits are docs only. Uncommitted: none._
+_Resume: Phase 3 instructions-channel arc COMPLETE, shipped as PR #12365 (Check monitoring in progress); system eval passed live at 100%. Next: remaining Phase 3 UI (ProjectOperation.CreateChat, projectChats graph extension, Chats-section exclusion, ProjectArticle toolbar, ChatCompanion sets chat.instructions + lazy backfill). Uncommitted: none._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 

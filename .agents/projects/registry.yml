@@ -25,8 +25,8 @@ projects:
     summary: New core plugin for interactive long-running processes (Routines, Agents, artifacts); Project type succeeds Topic; obviates plugin-sidekick.
     tasks: packages/plugins/plugin-projects/TASKS.md
     design: packages/plugins/plugin-projects/DESIGN.md
-    prs: [12335]
-    resume: 'Phase 3 instructions-channel arc COMPLETE + system eval GREEN: Chat.instructions typed ref -> explicit formatSystemPrompt param (typename partition deleted; bound Instructions are now plain context stubs), agent-process boundary via Process.InstructionsAnnotation, ProjectSkill (artifact add/list, 4/4 unit tests), projects.eval.ts PASSED LIVE 100% (created/filed/bound, opus-4-8). PR being opened from this worktree (submit-pr in flight). REMAINING Phase 3 UI: ProjectOperation.CreateChat, projectChats graph extension (children() re-emit watch item), Chats-section exclusion, ProjectArticle toolbar, ChatCompanion sets chat.instructions + lazy backfill. Then: commands-authoring UI, outliner skill, Agent/Project convergence review.'
+    prs: [12335, 12365]
+    resume: 'Phase 3 instructions-channel arc COMPLETE + system eval GREEN: Chat.instructions typed ref -> explicit formatSystemPrompt param (typename partition deleted; bound Instructions are now plain context stubs), agent-process boundary via Process.InstructionsAnnotation, ProjectSkill (artifact add/list, 4/4 unit tests), projects.eval.ts PASSED LIVE 100% (created/filed/bound, opus-4-8). PR #12365 OPEN, Check in progress. REMAINING Phase 3 UI: ProjectOperation.CreateChat, projectChats graph extension (children() re-emit watch item), Chats-section exclusion, ProjectArticle toolbar, ChatCompanion sets chat.instructions + lazy backfill. Then: commands-authoring UI, outliner skill, Agent/Project convergence review.'
 
   - name: sketch-scene-dsl
     status: active
