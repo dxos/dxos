@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: Phase 3 instructions-channel arc COMPLETE, shipped as PR #12365 (Check monitoring in progress); system eval passed live at 100%. Next: remaining Phase 3 UI (ProjectOperation.CreateChat, projectChats graph extension, Chats-section exclusion, ProjectArticle toolbar, ChatCompanion sets chat.instructions + lazy backfill). Uncommitted: none._
+_Resume: Phase 3 instructions-channel arc COMPLETE, shipped as PR #12365 (Check monitoring in progress); system eval passed live at 100%. Next: remaining Phase 3 UI (ProjectOperation.CreateChat, projectChats graph extension, Chats-section exclusion, ProjectArticle toolbar). Uncommitted: none._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 

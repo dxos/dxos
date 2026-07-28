@@ -25,8 +25,11 @@ const handler: Operation.WithHandler<typeof ArtifactList> = ArtifactList.pipe(
             typename: Obj.getTypename(object),
             label: Obj.getLabel(object),
           })),
-          // A broken ref yields a placeholder row rather than failing the whole listing.
-          Effect.orElseSucceed(() => ({ dxn: ref.uri, typename: undefined, label: undefined })),
+          // A broken ref yields a placeholder row rather than failing the whole listing; other
+          // load failures (transport, decoding) still propagate.
+          Effect.catchTag('EntityNotFoundError', () =>
+            Effect.succeed({ dxn: ref.uri, typename: undefined, label: undefined }),
+          ),
         ),
       );
 

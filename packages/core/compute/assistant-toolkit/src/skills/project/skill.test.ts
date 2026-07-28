@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Instructions, Project } from '@dxos/compute';
-import { Collection, Database, Ref } from '@dxos/echo';
+import { Collection, Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
@@ -60,7 +60,9 @@ describe('project skill operations', () => {
 
       const { artifacts } = yield* artifactList.handler({ project: Ref.make(project) });
       expect(artifacts).toHaveLength(1);
+      expect(artifacts[0].dxn).toBe(Obj.getURI(doc));
       expect(artifacts[0].typename).toBe('org.dxos.type.text');
+      expect(artifacts[0].label).toBe(Obj.getLabel(doc));
     }).pipe(Effect.provide(testLayer())),
   );
 

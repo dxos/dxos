@@ -49,7 +49,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     /**
      * Instructions for the agent.
      */
-    // TODO(burdon): Instructions.Instructions
+    // TODO(burdon): Migrate to Ref<Instructions.Instructions> — plugin-projects PLAN.md phase A.
     instructions: Ref.Ref(Text.Text).pipe(
       Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
       Schema.annotations({ title: 'Instructions' }),

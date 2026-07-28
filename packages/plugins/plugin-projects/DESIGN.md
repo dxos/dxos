@@ -184,12 +184,14 @@ plus a persisted spawn annotation beside `Process.TargetAnnotation`. Executable
 options do not survive re-hydration (`hydrateAgents` rebuilds with a bare
 `makeExecutable()`), which is why the feed itself travels as the process target.
 
-**Known staleness**: spawn annotations are the immutable identity plane, so
-editing the instructions _text_ reaches a running process (the ref resolves fresh
-each turn) but _repointing_ `chat.instructions` at a different object does not,
-until the process is terminated — the same behavior a model change already has.
-The fix, if it ever bites: compare the ref against the `sessionCache` entry and
-terminate/respawn, exactly as the model/provider comparison does.
+**Repointing**: spawn annotations are immutable, so editing the instructions
+_text_ reaches a running process (the ref resolves fresh each turn), while
+_repointing_ `chat.instructions` at a different object requires a process
+restart. `AgentService.getSession` handles this the way it already handles a
+model change: the instructions URI is part of the session-reuse identity (both
+in the `sessionCache` comparison and against a rediscovered process's spawn
+annotation on the remount path), and a mismatch terminates and respawns — the
+feed replays, so history is preserved.
 
 ## Artifacts and the project skill
 
