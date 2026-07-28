@@ -6,11 +6,9 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ## 2026-07-28 — plugin-studio + plugin-blogger (navtree section hygiene)
 
-- Both section rules are now in `SKILL.md` → **App graph**; the specifics that are not obvious from it:
-- `SpaceOperation.AddObject`'s navigation subject comes from `getSubjectPathForNewObject` (`plugin-space/src/operations/add-object.ts`): `targetNodeId` → `${targetNodeId}/${objectId}`, else collection-item → collections path, else view-holder → view target's type path, else `GraphPath.getObjectPath` (the database subtree). So forwarding a bare `options.targetNodeId` in a `CreateObjectEntry` silently means "navigate into the Database section".
-- `AppNode.makeObject` keys child nodes by the LOCAL object id, so a section-owned object's path is `<sectionPath>/<object.id>` — which is exactly what `targetNodeId: <sectionPath>` produces. Virtual intermediate nodes count as segments (studio: `content/studio/artifacts/<id>`, since Artifacts hang off the virtual Artifacts node, not the section).
-- A section's `+` action lives on the section node, so gating the section on non-empty also removes the action — the `SpaceCapabilities.CreateObjectEntry` is the ONLY first-create path. Verify the type has one before gating.
-- `GraphPath.createTypeSectionPaths` only fits sections whose segment IS the typename; a section with a custom segment (`publications`, `studio`) needs a hand-written `src/paths.ts` built on `GraphPath.getSpacePath(spaceId, GroupSegments.content, <segment>)`.
+- `SpaceOperation.AddObject`'s navigation subject comes from `getSubjectPathForNewObject` (`plugin-space/src/operations/add-object.ts`): `targetNodeId` → `${targetNodeId}/${objectId}`, else collection-item → collections path, else view-holder → view target's type path, else `GraphPath.getObjectPath` (database subtree).
+- `AppNode.makeObject` keys nodes by the LOCAL object id, so `targetNodeId: <sectionPath>` yields exactly the section-owned object's path. Virtual intermediate nodes count as segments (studio: `content/studio/artifacts/<id>` — Artifacts hang off the virtual Artifacts node, not the section).
+- `GraphPath.createTypeSectionPaths` only fits sections whose segment IS the typename; a custom segment (`publications`, `studio`) needs a hand-written `src/paths.ts`.
 
 ## 2026-07-17 — plugin-inbox (MessageThread merge + shared grid)
 

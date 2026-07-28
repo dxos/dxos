@@ -127,10 +127,7 @@ Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, skills, settings, etc.).
 Register the plugin with `composer-app`.
 
-As soon as the plugin contributes a navtree section, apply both section rules from
-[App graph](#app-graph-srccapabilitiesapp-graph-builderts) — gate the section on a non-empty query, and
-default the create-object `targetNodeId` to the section's own path. These are the two gaps new plugins
-most often ship with.
+Once the plugin contributes a navtree section, apply both rules under **App graph** below — gate the section on a non-empty query, and default the create-object `targetNodeId` to the section's own path.
 
 ## Directory Structure
 
@@ -389,57 +386,21 @@ See: `plugin-chess/src/operations/`, `plugin-trip/src/operations/add-segment.ts`
 
 ### App graph (`src/capabilities/app-graph-builder.ts`)
 
-Extensions contribute the navtree: sections under a group node, child nodes under a section, actions on
-any node. Assemble with `const extensions = yield* Effect.all([...])` then
-`Capability.contributes(AppCapabilities.AppGraphBuilder, extensions)` (contributing the raw array fails
-the `BuilderExtensions` typecheck); wire with `AppPlugin.addAppGraphModule`.
+Extensions contribute navtree sections, their child nodes, and actions on any node. Assemble with `const extensions = yield* Effect.all([...])` then `Capability.contributes(AppCapabilities.AppGraphBuilder, extensions)` — the raw array fails the `BuilderExtensions` typecheck. Wire with `AppPlugin.addAppGraphModule`.
 
-Section-hub pattern (exemplar `plugin-inbox`'s `mailboxesSection`): one extension matching
-`AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.<group>)` → `AppNode.makeSection({...})`, a second
-matching `node.type === SECTION_TYPE && isSpace(node.properties.space)` → the child nodes. A section
-keyed by typename should use `TypeSection.createTypeSectionExtension` instead of hand-rolling both.
+Section hub: one extension matching `AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.<group>)` → `AppNode.makeSection({...})`, a second matching `node.type === SECTION_TYPE && isSpace(node.properties.space)` → the child nodes. Use `TypeSection.createTypeSectionExtension` when the section is keyed by typename.
 
-Two rules every section-owning plugin follows. A section that breaks either one is **not well behaved** —
-it clutters the navtree of spaces that don't use the plugin, or strands the user in the wrong subtree.
+**Gate the section on content** — the connector queries the objects it lists and returns `Effect.succeed([])` while there are none, so the section is absent from spaces that don't use the plugin. Its `+` action goes with it, so the type also needs a `SpaceCapabilities.CreateObjectEntry` (`src/capabilities/create-object.ts`) for the first create.
 
-**1. Never contribute an empty section.** The section connector queries for the objects it lists and
-returns `[]` while there are none, so a space with no `Mailbox` / `Publication` / `Artifact` shows no
-section at all:
-
-```ts
-connector: (space, get) => {
-  const publications = get(space.db.query(Filter.type(Blog.Publication)).atom);
-  if (publications.length === 0) {
-    return Effect.succeed([]);
-  }
-  return Effect.succeed([AppNode.makeSection({ ... })]);
-},
-```
-
-Corollary: the section's `+` action disappears along with it, so the **first** object must be creatable
-without it — always contribute a `SpaceCapabilities.CreateObjectEntry` for the type in
-`src/capabilities/create-object.ts`, which is what the space's generic create menu offers.
-
-**2. Creation must land in your section, not the database.** `SpaceOperation.AddObject` derives the
-navigation subject from `targetNodeId` and falls back to the canonical database path
-(`.../system/database/<typeSlug>/<id>`) when it is absent — so an entry that forwards a bare
-`options.targetNodeId` drops the user into the Database section rather than the section that owns the
-object. Default it to your own path, letting a caller-supplied target (e.g. creating into a collection)
-win:
+**Create into the section, not the database** — `SpaceOperation.AddObject` navigates to `targetNodeId`, falling back to the database subtree when absent, so forwarding a bare `options.targetNodeId` strands the user under Database:
 
 ```ts
 targetNodeId: options.targetNodeId ?? getPublicationsPath(options.db.spaceId),
 ```
 
-Declare those paths once in `src/paths.ts` (mirror `plugin-inbox/src/paths.ts`) and import them from both
-the graph builder and the create-object entries — never re-spell a segment at a second call site. Build
-them from `GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.<group>, <segment>)`, or from
-`GraphPath.createTypeSectionPaths(Type, { groupId })` for a type section. An operation that creates and
-navigates on its own (rather than going through `AddObject`) returns the same path as its `subject` — see
-`plugin-inbox/src/operations/add-mailbox.ts`.
+Declare paths once in `src/paths.ts` — `GraphPath.getSpacePath(spaceId, GroupSegments.<group>, <segment>)`, or `GraphPath.createTypeSectionPaths(Type, { groupId })` — and import them from both the graph builder and the create-object entries.
 
-See: `plugin-inbox/src/capabilities/app-graph-builder.ts` + `src/paths.ts`; `plugin-blogger` and
-`plugin-studio` for content-group hubs with virtual child nodes.
+See: `plugin-inbox/src/capabilities/app-graph-builder.ts`, `plugin-inbox/src/paths.ts`
 
 ## Plugin Definition
 
