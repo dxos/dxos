@@ -4,13 +4,8 @@ PR **#12235** (branch `t3code/edb619e9`). See DESIGN.md for architecture.
 
 ## Status
 
-Implementation complete. **PR is out of draft (ready for review)** as of
-`5f720c70`. Merged `main` up to `5585ec89`; CI fully green on `fb5cd015`
-(check, test, build, workerd, storybook, changeset-reminder). Dmytro's review
-rounds addressed and replied to.
-
-Blocking merge: no approving review yet. Both CodeRabbit durability claims now
-have verdicts (see below) and its review threads are marked addressed.
+**PR #12235 MERGED** to `main` as `7b270f2e`. Remaining work is the phased
+roadmap below (see DESIGN.md "Roadmap (post-#12235)"), each phase its own PR.
 
 ## Done
 
@@ -53,7 +48,7 @@ have verdicts (see below) and its review threads are marked addressed.
 - [x] Addressed the CodeRabbit review (`b5e19d5e`); its threads are marked
       "Addressed in commits 113db73 to b5e19d5".
 - [x] Verdicts on both durability claims (below).
-- [ ] Land: approving review, then merge queue; surface the Composer preview URL.
+- [x] Land: merged to `main` as `7b270f2e`.
 
 ## Durability claims — verdicts (`b5e19d5e`)
 
@@ -112,16 +107,29 @@ previously mutated in memory silently.
       all of them go through `Obj.update` or `useObject`'s updater. So the
       opt-out-free change reaches no existing mutation path.
 
-## Deferred (not blocking; own follow-ups)
+## Roadmap phases (post-merge; see DESIGN.md "Roadmap (post-#12235)")
 
-- Wire `insertionId` through the codec + index path so the version axis is always
-  present. Today it is `KEY_QUEUE_POSITION`, which is null unless
-  `assignQueuePositions` is on — Dmytro asked for `insertionId`, and CodeRabbit
-  independently flagged that live objects lean on a default-off ordering
-  guarantee. Correctness-shaped, not an optimisation.
-- Partial-object update blocks + field-level LWW merge at the index; compaction/
-  retention of superseded feed blocks (`Feed.RetentionOptions`).
-- Bounded subscription-dedup state for the edge dispatcher (TTL / high-water
-  cursor) instead of the unbounded `processedVersions` map.
-- Optional `SubscriptionSpec.options.mutationTypes` filter (fire only on
-  selected mutation types) — currently gated in the runnable.
+The former deferred follow-ups, ordered as a dependency chain (1 → 2 → 3 → 4,
+one PR each; 5 exploratory).
+
+- [ ] **Phase 1 — version/order axis.** Wire `insertionId` through the codec +
+      index path so the version axis is always present (today
+      `KEY_QUEUE_POSITION`, null unless `assignQueuePositions` is on — Dmytro
+      asked for `insertionId`; CodeRabbit flagged the default-off ordering
+      guarantee). Correctness-shaped, not an optimisation. Document
+      reorder-on-position-arrival semantics.
+- [ ] **Phase 2 — consumer cursors + subscriptions.** Implement stubbed
+      `Feed.cursor`/`Feed.next`; durable high-water cursor per subscription
+      replaces the unbounded `processedVersions` map (and eventually
+      content-signature diffing); add `SubscriptionSpec.options.mutationTypes`
+      filter.
+- [ ] **Phase 3 — delta blocks.** Partial-object update blocks + field-level
+      LWW merge at the index; per-object fold rollback/replay on position
+      reorder.
+- [ ] **Phase 4 — retention + compaction.** Implement `Feed.setRetention`
+      (`Feed.RetentionOptions`); compact superseded blocks by rewriting a
+      prefix into a snapshot block.
+- [ ] **Phase 5 — app-defined projections (exploratory).** Deterministic folds
+      over feeds with rematerialization; demand-gated.
+- [ ] **Cross-cutting.** Explicit policy for schema-invalid feed items
+      (replacing silent drop); surface `getSyncState` in devtools.
