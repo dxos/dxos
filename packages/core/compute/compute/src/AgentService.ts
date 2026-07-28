@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 import type { ContentBlock } from '@dxos/types';
 
 import type * as Trace from './Trace';
-import type * as Instructions from './types/Instructions';
+import { Instructions } from './types';
 
 /**
  * Service interface for the agent session manager.
