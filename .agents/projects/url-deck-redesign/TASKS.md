@@ -353,11 +353,22 @@ last green `main` e2e before #12273 merged.
       first, finds the stale entry, removes only that bookkeeping, and returns — the persisted thread
       survives. First click logs `bail: removed draft`, a later click logs `proceeding to remove` and
       works. Chromium usually clears the draft before the click lands; firefox does not.
-      **Do not "fix" this by gating the draft branch on `Obj.getDatabase(thread)` — tried, it regresses
-      `delete thread`**, because `AddRelation` mints a _new_ relation, so the draft anchor and the
-      persisted one are different objects and the removal path then deletes the wrong anchor. The fix
-      belongs in the draft lifecycle: persist the draft anchor itself, or clear the draft atomically
-      with persistence — preserving the render-flash ordering that `add-message`'s comment documents.
+      Interleaving proven by logging both operations (firefox): `[ADD] entry` → `[DEL] entry` (draft
+      still listed) → `[ADD] after-remove`. The delete lands _inside_ `add-message`'s flight, between
+      the persist that makes the thread queryable (so the spec's `toHaveCount(1)` assertions pass) and
+      the `registry.set` that clears the draft.
+      **Two fixes were tried and reverted — do not repeat them:** (1) gating the draft branch on
+      `Obj.getDatabase(thread)` regresses `delete thread`, because `AddRelation` mints a _new_ relation,
+      so the draft anchor is not in the database and `db.remove` throws inside `batchEvents`, aborting
+      before `db.remove(thread)`; (2) additionally skipping the anchor removal when it is unpersisted
+      still fails, because a delete landing _before_ `AddObject` finds no persisted thread either, so it
+      correctly drops the draft and returns — and `add-message` then persists the thread anyway.
+      Anything confined to `delete.ts` chases the symptom. The fix belongs in `add-message`: persistence
+      and draft-clearing must not be separated by an await. The tempting version — swapping the two
+      `SpaceOperation` invokes for direct `db.add` calls inside `batchEvents` — is NOT safe: `AddObject`
+      also runs `CollectionModel.add`, observability, and type registration. A correct fix either makes
+      that sequence atomic, or has `add-message` re-check that its draft still exists before each
+      persist step and abort when the comment was deleted mid-flight.
 - [ ] **e2e cannot finish its affected set in 45 minutes** — the dispatched run hit the action timeout
       partway through firefox, so webkit never ran. Independent of the bugs above.
 
