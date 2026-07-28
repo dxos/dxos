@@ -322,6 +322,11 @@ export type StorybookOptions = {
    * "WebAssembly instance ran out of memory during import" exhaustion in the single headless-chromium context.
    */
   isolate?: boolean;
+  /**
+   * Per-story timeout override (ms). Vitest's browser-mode default is 15s, which heavy stories
+   * (e.g. procedural 3D generation) exceed under CI load.
+   */
+  timeout?: number;
 };
 
 export type NodeOptions = {
@@ -381,6 +386,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
       // Defaults to per-file isolation; opt out (see `StorybookOptions.isolate`) to share the WASM-backed
       // module graph across story files and avoid cumulative WebAssembly memory exhaustion.
       ...(options?.isolate !== undefined ? { isolate: options.isolate } : {}),
+      ...(options?.timeout !== undefined ? { testTimeout: options.timeout } : {}),
       browser: {
         enabled: true,
         headless: true,

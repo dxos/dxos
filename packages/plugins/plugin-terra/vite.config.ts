@@ -17,5 +17,7 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' }, storybook: true },
+  // The Objects story generates a full planet + object sim (~30s under CI load, observed at
+  // 29.6s locally with a retry), exceeding vitest's 15s browser-mode default.
+  test: { node: { environment: 'happy-dom' }, storybook: { timeout: 60_000 } },
 });

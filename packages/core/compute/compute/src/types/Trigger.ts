@@ -193,9 +193,9 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
       Schema.optional,
     ),
 
-    spec: Schema.optional(Spec),
+    spec: Spec.pipe(Schema.optional),
 
-    enabled: Schema.optional(Schema.Boolean),
+    enabled: Schema.Boolean.pipe(Schema.optional),
 
     /**
      * Runs this trigger on the edge rather than locally.

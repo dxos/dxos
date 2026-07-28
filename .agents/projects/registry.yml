@@ -37,8 +37,8 @@ projects:
     summary: New core plugin for interactive long-running processes (Routines, Agents, artifacts); Project type succeeds Topic; obviates plugin-sidekick.
     tasks: packages/plugins/plugin-projects/TASKS.md
     design: packages/plugins/plugin-projects/DESIGN.md
-    prs: [12335, 12365]
-    resume: 'PR #12365 CI GREEN, review round addressed — USER LANDS IT HIMSELF (do not merge). Decisions 2026-07-28: reconciliation phases A+B are NEXT (before Phase 3 UI); phase C shape decided = relay pattern (Routine feed-trigger -> RelayFunction: cheap-model qualify -> submitInput onto the durable process input queue; multiplexing + filtering; AgentWorker/Qualifier retire; agent.feed dissolves; backpressure = accepted gap, intermediary-feed hatch). Plan: packages/plugins/plugin-projects/PLAN.md. NEXT SESSION: fresh worktree after #12365 merges -> phase A (Agent.instructions -> Ref<Instructions>) then phase B (Chat.agent inversion), each its own PR. Then Phase 3 UI (CreateChat op, navtree children, Chats exclusion, toolbar).'
+    prs: [12335, 12365, 12370]
+    resume: 'PR #12370 OPEN (reconciliation A-D: Agent 0.2.0 identity/preset, Chat.agent inversion, relay onto durable session, no data migration). CI: import cycle FIXED (Agent co-located with Chat, 8c89461e49); storybook red = react-ui dist-chunk resolve error, untouched package, suspected stale CI cache — fresh run polling. En-route fixes: plugin-markdown doc-ref ops use Database.resolve (tryLoad crash on LLM refs); relay fail-open qualify; planning memoized test gated to planning.eval.ts. projects.eval 100% live post-D. NEXT: green + land #12370, then Phase 3 UI (CreateChat op, navtree chat children, Chats exclusion, toolbar), then commands-authoring UI / outliner skill.'
 
   - name: sketch-scene-dsl
     status: active
