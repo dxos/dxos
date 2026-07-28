@@ -26,6 +26,7 @@ import {
   getAllMailId,
   getCalendarsPath,
   getDraftsId,
+  getMailboxDraftsPath,
   getMailboxesPath,
   getMailboxesSectionId,
   getSentId,
@@ -209,7 +210,13 @@ export default Capability.makeModule(
           return Effect.succeed([
             Node.makeAction({
               id: 'createDraft',
-              data: () => Operation.invoke(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
+              data: () =>
+                Operation.invoke(InboxOperation.DraftEmailAndOpen, {
+                  db,
+                  mailbox,
+                  // This action hangs off the Drafts view, so the draft opens as a plank beside it.
+                  contextId: getMailboxDraftsPath(db.spaceId, mailbox.id),
+                }),
               properties: {
                 label: ['create-draft.label', { ns: meta.profile.key }],
                 icon: 'ph--plus--regular',
