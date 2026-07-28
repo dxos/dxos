@@ -22,7 +22,7 @@ import {
 import { type QueryService } from '@dxos/protocols/rpc';
 import { isNonNullable } from '@dxos/util';
 
-import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
+import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph';
 import { type QuerySource, type SourceEntry, getTargetSpacesForQuery } from '../query';
 
 export type LoadObjectProps = {
@@ -389,14 +389,12 @@ export class IndexQuerySource implements QuerySource {
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<SourceEntry | null> {
-    if (!OBJECT_DIAGNOSTICS.has(result.id)) {
-      OBJECT_DIAGNOSTICS.set(result.id, {
-        objectId: result.id,
-        spaceId: result.spaceId,
-        loadReason: 'query',
-        query: JSON.stringify(this._query ?? null),
-      });
-    }
+    recordObjectDiagnostic(result.id, () => ({
+      objectId: result.id,
+      spaceId: result.spaceId,
+      loadReason: 'query',
+      query: JSON.stringify(this._query ?? null),
+    }));
 
     invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
     invariant(EntityId.isValid(result.id), 'Invalid id');
