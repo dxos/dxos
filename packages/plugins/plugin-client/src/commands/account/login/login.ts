@@ -134,22 +134,26 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
       yield* invoke(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] });
       const identity = client.halo.identity.get();
       invariant(identity, 'identity should exist after create');
-      const retry = yield* Effect.tryPromise(() =>
-        hub.login(DxContext.default(), {
-          email,
-          identityDid: identity.did,
-          identityKey: identity.identityKey.toHex(),
-        }),
-      );
-      if (!retry.admitted) {
-        // The local identity survives this failure, so the `Already logged in` guard above will
-        // reject a plain retry — name the recovery step instead of leaving the user to deduce it.
-        return yield* Effect.fail(
-          new Error(
-            `Hub did not admit ${email}. A local identity was created and remains bound to this profile; ` +
-              'run `dx account logout` to clear it before retrying.',
-          ),
+      // The local identity outlives any failure from here on, and the `Already logged in` guard
+      // above rejects a plain retry, so a rejected request and a non-admitting response both need
+      // the same recovery guidance.
+      const notAdmitted = (detail: string) =>
+        new Error(
+          `Hub did not admit ${email} (${detail}). A local identity was created and remains bound to ` +
+            'this profile; run `dx account logout` to clear it before retrying.',
         );
+
+      const retry = yield* Effect.tryPromise({
+        try: () =>
+          hub.login(DxContext.default(), {
+            email,
+            identityDid: identity.did,
+            identityKey: identity.identityKey.toHex(),
+          }),
+        catch: (cause) => notAdmitted(cause instanceof Error ? cause.message : String(cause)),
+      });
+      if (!retry.admitted) {
+        return yield* Effect.fail(notAdmitted('no admission granted'));
       }
       yield* invoke(ClientOperation.CreateAgent);
       return identity;
