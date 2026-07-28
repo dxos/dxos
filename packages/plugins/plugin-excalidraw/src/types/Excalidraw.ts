@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/Annotation';
+import { CollectionItemAnnotation } from '@dxos/schema';
 
 /** Schema identifier embedded in the persisted canvas payload. */
 export const EXCALIDRAW_SCHEMA = 'excalidraw.com/2';
@@ -34,7 +35,12 @@ export class Excalidraw extends Type.makeObject<Excalidraw>(DXN.make('org.dxos.t
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
     canvas: Ref.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--compass-tool--regular', hue: 'indigo' })),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--compass-tool--regular', hue: 'indigo' }),
+    // Collection eligibility: `AppNode.isCollectionItem` reads this, and without it new objects are
+    // filed under the database section's `types/` subtree instead of the target collection.
+    CollectionItemAnnotation.set(true),
+  ),
 ) {}
 
 export type MakeOptions = Omit<Obj.MakeProps<typeof Excalidraw>, 'canvas'> & {
