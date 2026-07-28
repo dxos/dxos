@@ -9,7 +9,6 @@ import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
 import { DeckEvents } from '@dxos/plugin-deck';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
@@ -29,7 +28,6 @@ import {
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
-  Migrations,
   OperationHandler,
   ReactSurface,
   Settings,
@@ -140,10 +138,6 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         StateReady,
       ),
       activate: CompanionChatProvisioner,
-    }),
-    Plugin.addModule({
-      activatesOn: ClientEvents.SetupMigration,
-      activate: Migrations,
     }),
     Plugin.addModule({
       activatesOn: AppActivationEvents.SetupConnectors,

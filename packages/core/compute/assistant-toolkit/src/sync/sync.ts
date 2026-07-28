@@ -84,6 +84,7 @@ const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {
       ) {
         continue;
       }
+
       (existing as any)[key] = (newObj as any)[key];
     }
 
@@ -92,6 +93,7 @@ const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {
       if (typeof key !== 'string' || key === 'id') {
         continue;
       }
+
       if (!(key in newObj)) {
         delete (existing as any)[key];
       }
