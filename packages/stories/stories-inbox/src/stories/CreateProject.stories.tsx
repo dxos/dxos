@@ -128,9 +128,7 @@ export const Default: StoryType = {};
 export const Test: StoryType = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Client init (identity + space + indexed flush) gates the first render; waitFor's
-    // default 1s timeout is routinely exceeded on cold/loaded runners.
-    const button = await waitFor(() => canvas.getByRole('button', { name: /create project/i }), { timeout: 10_000 });
+    const button = await waitFor(() => canvas.getByRole('button', { name: /create project/i }));
     // No projects initially.
     void expect(canvas.getByTestId('project-count').getAttribute('data-count')).toBe('0');
 
