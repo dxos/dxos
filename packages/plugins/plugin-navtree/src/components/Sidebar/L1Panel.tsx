@@ -22,6 +22,17 @@ import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
 
+/**
+ * Geometry shared by every L1 tab panel: pinned to the sidebar's inline end, sized to the L1 column
+ * (less the L0 rail below `lg`), with a rail-height row above the panel body. Callers add `grid`
+ * themselves, since only the current panel is displayed.
+ */
+export const l1PanelClassNames = [
+  'absolute inset-y-0 end-0',
+  'w-[calc(100%-var(--dx-l0-size))] lg:w-(--dx-l1-size) grid-cols-1 grid-rows-[var(--dx-rail-size)_1fr]',
+  'py-[env(safe-area-inset-top)]',
+];
+
 export type L1PanelProps = {
   open?: boolean;
   path: string[];
@@ -43,12 +54,7 @@ const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
     <Tabs.Panel
       key={item.id}
       value={item.id}
-      classNames={[
-        'absolute inset-y-0 end-0',
-        'w-[calc(100%-var(--dx-l0-size))] lg:w-(--dx-l1-size) grid-cols-1 grid-rows-[var(--dx-rail-size)_1fr]',
-        'py-[env(safe-area-inset-top)]',
-        isCurrent && 'grid',
-      ]}
+      classNames={[...l1PanelClassNames, isCurrent && 'grid']}
       tabIndex={-1}
       aria-label={title}
       {...(isCurrent && { 'data-testid': 'navtree.workspace.visible' })}

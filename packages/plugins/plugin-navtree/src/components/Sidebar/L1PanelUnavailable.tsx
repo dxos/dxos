@@ -10,6 +10,8 @@ import { Tabs } from '@dxos/react-ui-tabs';
 
 import { meta } from '#meta';
 
+import { l1PanelClassNames } from './L1Panel';
+
 /**
  * Delay before the message appears: a workspace whose space is still loading has no graph node yet,
  * and materializes into a real panel on its own, so the fallback must not flash during that window.
@@ -34,11 +36,8 @@ export const L1PanelUnavailable = ({ workspace, open }: L1PanelUnavailableProps)
   return (
     <Tabs.Panel
       value={workspace}
-      classNames={[
-        'absolute inset-y-0 end-0 grid',
-        'w-[calc(100%-var(--dx-l0-size))] lg:w-(--dx-l1-size) grid-cols-1 grid-rows-[var(--dx-rail-size)_1fr]',
-        'py-[env(safe-area-inset-top)]',
-      ]}
+      // Always `grid`: this panel only renders when it is the current tab.
+      classNames={[...l1PanelClassNames, 'grid']}
       tabIndex={-1}
       aria-label={t('workspace-unavailable.heading')}
       // An unavailable workspace has no tab in the rail, so the generated `aria-labelledby` would
