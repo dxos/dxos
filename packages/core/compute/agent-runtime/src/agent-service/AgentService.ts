@@ -189,6 +189,9 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
                 // lookup (set once at spawn, immutable — the identity plane).
                 annotations: Annotation.buildDictionary((dictionary) => {
                   Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
+                  if (options?.instructions) {
+                    Annotation.setDictionary(dictionary, Process.InstructionsAnnotation, options.instructions.uri);
+                  }
                 }),
                 environment: {
                   ...(spaceId !== undefined ? { space: spaceId } : {}),

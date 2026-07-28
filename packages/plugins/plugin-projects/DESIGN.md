@@ -15,6 +15,13 @@ to be one of the core aspects of Composer.
 
 ## Background: Project, Agent, Chat, AiSession
 
+**Agent**: a durable named actor (`org.dxos.type.agent@0.1.0`,
+`@dxos/assistant-toolkit`) — its own identity DID for attributing content it
+authors, markdown instructions, a primary `chat`, artifacts, subscriptions, and
+an `enabled` master switch over its triggers. Where a project is scope, an agent
+is a participant: it is the thing that acts on a schedule or a trigger rather
+than in response to a user turn.
+
 **Project**: the user's unit of long-running work and the _scope_ a session runs
 in. It owns the instructions that steer its chats (text, sentinel commands, and
 the skills those chats get), the routines that automate it, a collection of
@@ -22,13 +29,6 @@ artifacts, and the chat sessions parented to it. It is inert on its own — a
 project does nothing until a chat or routine runs in its context — so its whole
 job is to supply that context, and every design question below is about how its
 instructions, skills, and objects reach a running session.
-
-**Agent**: a durable named actor (`org.dxos.type.agent@0.1.0`,
-`@dxos/assistant-toolkit`) — its own identity DID for attributing content it
-authors, markdown instructions, a primary `chat`, artifacts, subscriptions, and
-an `enabled` master switch over its triggers. Where a project is scope, an agent
-is a participant: it is the thing that acts on a schedule or a trigger rather
-than in response to a user turn.
 
 **Chat**: a conversation (`org.dxos.type.assistant.chat@0.1.0`), deliberately
 thin — essentially a `name`, a ref to a **`Feed`**, and (per this design) a ref to

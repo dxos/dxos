@@ -310,6 +310,7 @@ export class AiChatProcessor {
         const session = yield* AgentService.getSession(this._feed, {
           model: this._options.model,
           provider: this._options.provider,
+          instructions: this._options.chat?.target?.instructions,
         });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(

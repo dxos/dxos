@@ -25,7 +25,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { Credential, McpServer, Operation, Trace } from '@dxos/compute';
+import { Credential, Instructions, McpServer, Operation, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
@@ -103,8 +103,20 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
         const feed = yield* Database.resolve(feedDxn, Feed.Feed).pipe(Effect.orDie);
+        // Steering instructions travel as a spawn annotation (the session is feed-centric and cannot
+        // reach its Chat); a broken ref degrades to an unsteered session rather than failing the process.
+        const instructionsDxn = Annotation.getDictionary(ctx.params.annotations, Process.InstructionsAnnotation).pipe(
+          Option.getOrUndefined,
+        );
+        const instructions = instructionsDxn
+          ? yield* Database.resolve(instructionsDxn, Instructions.Instructions).pipe(
+              Effect.orElseSucceed(() => undefined),
+            )
+          : undefined;
         const runtime = yield* Effect.runtime<Database.Service>();
-        const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
+        const session = yield* EffectEx.acquireReleaseResource(
+          () => new AiSession.Session({ feed, runtime, instructions: instructions ? [instructions] : [] }),
+        );
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
