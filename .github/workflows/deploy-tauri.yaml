@@ -106,8 +106,8 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    # A production build (no remote cache) already runs ~30 min before the upload starts; the headroom is for
-    # the retries in cn-release, which must not be cut off mid-flight.
+    # A production build (no remote cache) already ran 27 min in the v0.10.2 release, close enough to the
+    # previous 45 that a slower runner would have been cut off mid-notarization.
     timeout-minutes: 60
 
     steps:

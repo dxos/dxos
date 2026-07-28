@@ -8,8 +8,8 @@
 
 **Tech Stack:** TypeScript, Effect Schema, ECHO (`@dxos/echo`), moon tasks, React + `@dxos/react-ui*`, CodeMirror (`@codemirror/autocomplete`), Storybook.
 
-**Spec:** `agents/superpowers/specs/2026-07-24-plugin-projects-design.md`
-**Tracker:** `.agents/projects/plugin-projects/TASKS.md`
+**Spec:** `packages/plugins/plugin-projects/DESIGN.md`
+**Tracker:** `packages/plugins/plugin-projects/TASKS.md`
 
 ## Global Constraints
 
@@ -826,13 +826,13 @@ pnpm format && git add -A && git commit -m "assistant: sentinel-command autocomp
 
 - Modify: `packages/plugins/AUDIT.md`
 - Create: `.changeset/plugin-projects.md`
-- Modify: `.agents/projects/plugin-projects/TASKS.md`, `.agents/projects/registry.yml`
+- Modify: `packages/plugins/plugin-projects/TASKS.md`, `.agents/projects/registry.yml`
 
 **Interfaces:** none (documentation + verification).
 
 - [ ] **Step 1: AUDIT note**
 
-Add/update the plugin-sidekick row/section in `packages/plugins/AUDIT.md` (read its format first): note "obviated by plugin-projects (see agents/superpowers/specs/2026-07-24-plugin-projects-design.md); removal tracked separately." Add a plugin-projects entry if the file lists all plugins.
+Add/update the plugin-sidekick row/section in `packages/plugins/AUDIT.md` (read its format first): note "obviated by plugin-projects (see packages/plugins/plugin-projects/DESIGN.md); removal tracked separately." Add a plugin-projects entry if the file lists all plugins.
 
 - [ ] **Step 2: Changeset**
 
@@ -850,7 +850,7 @@ Expected: all green; no unformatted files. Audit the diff for stray casts and na
 
 - [ ] **Step 4: Update tracker + commit**
 
-Update `.agents/projects/plugin-projects/TASKS.md` (check off milestone-1 tasks, note deferred items) and the registry `resume` line.
+Update `packages/plugins/plugin-projects/TASKS.md` (check off milestone-1 tasks, note deferred items) and the registry `resume` line.
 
 ```bash
 git status && git add -A && git commit -m "plugin-projects: finalize milestone 1 (audit note, changeset)"

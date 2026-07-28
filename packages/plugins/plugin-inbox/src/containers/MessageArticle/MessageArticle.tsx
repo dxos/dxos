@@ -152,8 +152,9 @@ export const MessageArticle = ({
     [invoker],
   );
 
-  // Generate a grounded reply body (thread + facts), then open the reply draft prefilled; on LLM failure
-  // fall back to an empty reply draft so the action never leaves the user without one.
+  // Generate a grounded reply body (thread + facts), then create the reply draft prefilled — it joins
+  // this thread and renders inline. On LLM failure fall back to an empty reply draft so the action never
+  // leaves the user without one.
   const handleAiReply = useCallback(
     async (message: MessageType.Message) => {
       if (!db || !mailbox) {
