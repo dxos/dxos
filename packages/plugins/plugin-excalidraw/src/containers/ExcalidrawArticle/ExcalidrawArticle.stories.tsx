@@ -20,7 +20,6 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-excalidraw/containers/ExcalidrawArticle',
-  component: ExcalidrawArticle as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

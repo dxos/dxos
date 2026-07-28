@@ -57,7 +57,7 @@ export class ExcalidrawStoreAdapter extends AbstractStoreAdapter<ExcalidrawEleme
 
     const updated = Array.from(this._modified)
       .map((id) => this._elements.get(id))
-      .filter(Boolean) as ExcalidrawElement[];
+      .filter(isNonNullable);
     const deleted = Array.from(this._deleted);
     log('save', { updated: updated.length, deleted: deleted.length });
     if (updated.length || deleted.length) {

@@ -34,7 +34,7 @@ export const ExcalidrawArticle = ({ role, subject: sketch, attendableId }: Excal
   // Buffer the most recent elements from the adapter so that however the adapter
   // and the <Excalidraw/> imperative API settle in (either order), we always hand
   // the current scene to the component once both are ready.
-  const latestElementsRef = useRef<readonly unknown[]>([]);
+  const latestElementsRef = useRef<readonly ExcalidrawElement[]>([]);
   const adapter = useStoreAdapter(sketch, {
     onUpdate: ({ elements }) => {
       latestElementsRef.current = elements;
@@ -112,7 +112,7 @@ export const ExcalidrawArticle = ({ role, subject: sketch, attendableId }: Excal
           // The adapter may have finished loading before the API bound — replay the
           // latest snapshot so the scene is never blank just because the two hooks
           // resolved in a different order.
-          const buffered = latestElementsRef.current as ExcalidrawElement[];
+          const buffered = latestElementsRef.current;
           if (buffered.length > 0) {
             api.updateScene({ elements: buffered });
           }
