@@ -34,10 +34,17 @@ export type FormFieldLabelProps = ThemedClassName<
      */
     path?: string;
     /**
-     * Trailing button rendered at the end of the label row (third grid column).
+     * Trailing button rendered at the end of the label row (last grid column).
      * Used by nested-object field sets to surface a collapse toggle.
      */
     button?: ReactNode;
+    /**
+     * Read-only content rendered right after the label text (e.g. a live numeric readout for a
+     * slider field) — a sibling of `Input.Label`, never a child, so the label's `textContent`
+     * stays exactly `label` (see the comment on `labelClassNames` below) and doesn't masquerade
+     * as an interactive control the way `button` does.
+     */
+    labelEnd?: ReactNode;
     onClick?: () => void;
   } & Pick<FormFieldRendererProps, 'label' | 'readonly' | 'required'>
 >;
@@ -52,6 +59,7 @@ export const FormFieldLabel = ({
   required,
   standalone,
   button,
+  labelEnd,
   onClick,
 }: FormFieldLabelProps) => {
   const styles = formTheme.styles({ variant });
@@ -77,6 +85,7 @@ export const FormFieldLabel = ({
   return (
     <div className={styles.fieldLabel({ class: mx(onClick && 'cursor-pointer', classNames) })} onClick={onClick}>
       {labelNode}
+      {labelEnd}
       {error ? (
         <Tooltip.Trigger asChild content={error} side='bottom'>
           <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
@@ -136,6 +145,13 @@ export type FormRowProps<T = any> = ThemedClassName<
        */
       standalone?: boolean;
       /**
+       * Read-only content rendered right after the label text, right-aligned by the label row's
+       * grid (e.g. a live numeric readout for a slider field). Forwarded to `FormFieldLabel`'s
+       * `labelEnd` slot — a sibling of the label, never a child, so the label's `textContent` and
+       * accessible name stay exactly `label`.
+       */
+      labelEnd?: ReactNode;
+      /**
        * Override the read-only/`static` rendering of the value. Fields whose value is not plain text
        * (refs, selects, markdown) supply this; the default formats scalars/dates via `formatStaticValue`.
        * Return `null` to render nothing (e.g. an empty/unresolved value).
@@ -175,6 +191,7 @@ export const FormRow = <T,>({
   format,
   required,
   standalone,
+  labelEnd,
   renderStatic,
   validation,
   getStatus,
@@ -210,6 +227,7 @@ export const FormRow = <T,>({
               readonly={readonly}
               required={required}
               standalone={standalone}
+              labelEnd={labelEnd}
               label={label}
               path={jsonPath}
             />
@@ -241,6 +259,7 @@ export const FormRow = <T,>({
           readonly={readonly}
           required={required}
           standalone
+          labelEnd={labelEnd}
           label={label}
           path={jsonPath}
         />
