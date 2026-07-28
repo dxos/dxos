@@ -546,7 +546,7 @@ const useMailboxActions = (
     const db = Obj.getDatabase(mailbox);
     invariant(db);
     // `nodeId` is this view's node, so the draft opens as a plank beside it rather than beside Drafts.
-    void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox, contextId: nodeId });
+    void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox, pivotId: nodeId });
   }, [invoker, mailbox, nodeId]);
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only mailbox

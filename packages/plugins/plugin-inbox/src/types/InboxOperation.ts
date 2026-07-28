@@ -105,10 +105,11 @@ export const DraftEmailAndOpen = Operation.make({
     // TODO(wittjosiah): Should be Mailbox.Mailbox.
     mailbox: Schema.optional(Schema.Any),
     /**
-     * Graph node id of the mailbox view the draft is composed from; a compose draft opens as a plank
-     * beside it. Defaults to the mailbox's own node when the caller has no view context.
+     * Node the compose draft's plank opens beside, and whose selection it becomes — the mailbox *view*
+     * it was composed from (Inbox/Sent/Drafts/a saved filter each have their own node and selection),
+     * not the mailbox. Defaults to the mailbox's own node when the caller has no view to pivot on.
      */
-    contextId: Schema.optional(Schema.String),
+    pivotId: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });
