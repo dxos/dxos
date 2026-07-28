@@ -14,7 +14,8 @@ import { Annotation, DXN, JsonSchema, Obj, QueryAST, Ref, Type, View } from '@dx
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
 import { SchemaEx } from '@dxos/effect';
-import { ViewAnnotation } from '@dxos/schema';
+
+import { ViewAnnotation } from '../annotations';
 
 // TODO(wittjosiah): Try to clean up this type inference.
 export class Table extends Type.makeObject<Table>(DXN.make('org.dxos.type.table', '0.1.0'))(

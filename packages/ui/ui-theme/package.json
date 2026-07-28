@@ -20,6 +20,11 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/browser/index.mjs"
     },
+    "./headless": {
+      "source": "./src/headless.ts",
+      "types": "./dist/types/src/headless.d.ts",
+      "default": "./dist/lib/browser/headless.mjs"
+    },
     "./plugin": {
       "source": "./src/plugins/ThemePlugin.ts",
       "types": "./dist/types/src/plugins/ThemePlugin.d.ts",

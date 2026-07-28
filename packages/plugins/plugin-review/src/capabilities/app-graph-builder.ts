@@ -14,7 +14,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { Selection } from '@dxos/react-ui-attention/types';
 import { Channel } from '@dxos/types';
-import { createComment } from '@dxos/ui-editor';
+import { createComment } from '@dxos/ui-editor/headless';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';

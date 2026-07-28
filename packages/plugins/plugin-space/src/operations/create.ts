@@ -11,7 +11,7 @@ import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { hues } from '@dxos/ui-theme';
+import { hues } from '@dxos/ui-theme/headless';
 import { iconValues } from '@dxos/ui-types';
 
 import { SpaceNotReadyError } from '../errors';
