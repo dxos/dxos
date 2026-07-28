@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { type Operation } from '@dxos/compute';
 import { Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
@@ -21,6 +22,7 @@ import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
+import { resolveAccessTokenValue } from '../../util/access-token-value';
 import { createSingleCursor } from './create-single-cursor';
 import { decodeOAuthMessageData, initiateOAuthFlow, openOAuthPopupWindow, openOAuthRedirectWindow } from './oauth';
 import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
@@ -80,16 +82,19 @@ const openConnectorFormDialog = (
 
 const runOnTokenCreated = (
   connector: ConnectorEntry,
+  client: Client,
   input: {
     accessToken: AccessToken.AccessToken;
     connection: Connection.Connection;
     existingTarget?: Ref.Ref<Obj.Any>;
   },
 ): Effect.Effect<void, never> => {
-  if (!connector.onTokenCreated) {
+  const onTokenCreated = connector.onTokenCreated;
+  if (!onTokenCreated) {
     return Effect.void;
   }
-  return connector.onTokenCreated(input).pipe(
+  return resolveAccessTokenValue(client, input.accessToken).pipe(
+    Effect.flatMap((accessTokenValue) => onTokenCreated({ ...input, accessTokenValue })),
     Effect.provide(FetchHttpClient.layer),
     Effect.catchAll((error) =>
       Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
@@ -135,14 +140,18 @@ const openSyncTargetsDialogAfterConnectionCreated = (
     Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
-const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pending): Effect.Effect<void, never> =>
+const finalizePendingEntry = (
+  invoker: Operation.OperationService,
+  client: Client,
+  entry: Pending,
+): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     const { token, connection, db, connector, existingTarget } = entry;
     const persistedToken = db.add(token);
     const persistedConnection = db.add(connection);
     Obj.setParent(persistedToken, persistedConnection);
 
-    yield* runOnTokenCreated(connector, {
+    yield* runOnTokenCreated(connector, client, {
       accessToken: persistedToken,
       connection: persistedConnection,
       existingTarget,
@@ -235,7 +244,7 @@ export default Capability.makeModule(
         if (entry.mode === 'reauth') {
           return;
         }
-        yield* finalizePendingEntry(invoker, entry);
+        yield* finalizePendingEntry(invoker, client, entry);
       });
 
     const handleMessage = (event: MessageEvent): void => {
@@ -394,7 +403,7 @@ export default Capability.makeModule(
           if (inMemory.mode === 'reauth') {
             return;
           }
-          yield* finalizePendingEntry(invoker, inMemory);
+          yield* finalizePendingEntry(invoker, client, inMemory);
           return;
         }
 
@@ -455,7 +464,7 @@ export default Capability.makeModule(
           ? space.db.makeRef<Obj.Any>(DXN.tryMake(snapshot.existingTargetDxn)!)
           : undefined;
 
-        yield* finalizePendingEntry(invoker, {
+        yield* finalizePendingEntry(invoker, client, {
           mode: 'create',
           token,
           connection,
@@ -487,7 +496,7 @@ export default Capability.makeModule(
           accessToken: Ref.make(accessToken),
         });
 
-        yield* finalizePendingEntry(invoker, {
+        yield* finalizePendingEntry(invoker, client, {
           mode: 'create',
           token: accessToken,
           connection,
@@ -514,7 +523,7 @@ export default Capability.makeModule(
         const result = yield* connector.credentialForm.onSubmit({ values, connector, db });
 
         if (result.kind === 'complete') {
-          yield* finalizePendingEntry(invoker, {
+          yield* finalizePendingEntry(invoker, client, {
             mode: 'create',
             token: result.accessToken,
             connection: result.connection,

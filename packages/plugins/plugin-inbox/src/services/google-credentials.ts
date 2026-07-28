@@ -7,10 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Credential } from '@dxos/compute';
-import { Database, type Ref } from '@dxos/echo';
+import { Database, Obj, type Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { type SpaceId } from '@dxos/keys';
 import { type AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector';
+import { isManagedAccessToken } from '@dxos/protocols';
 
 /**
  * Creates the service interface from a cached token.
@@ -22,6 +25,39 @@ const makeService = (cachedToken: string | undefined): Context.Tag.Service<Googl
       ? Effect.succeed(cachedToken)
       : Effect.map(Credential.CredentialsService.getCredential({ service: 'google.com' }), (c) => c.apiKey!),
 });
+
+/**
+ * Serves a server-custodied token, fetched per use rather than read off the object. The resolver is
+ * captured when the layer is built but called on every `get()`, so a long-running sync picks up a
+ * rotated token instead of holding the one that was live when it started.
+ */
+const makeManagedService = (
+  resolver: Context.Tag.Service<Credential.AccessTokenResolver>,
+  spaceId: SpaceId,
+  accessTokenId: string,
+): Context.Tag.Service<GoogleCredentials> => ({
+  get: () => Effect.promise(() => resolver.resolve({ spaceId, accessTokenId })),
+});
+
+/** Builds the service for a loaded token: managed ones resolve via EDGE, others use the stored value. */
+const makeServiceForToken = (
+  resolver: Context.Tag.Service<Credential.AccessTokenResolver>,
+  accessToken: AccessToken.AccessToken | undefined,
+): Context.Tag.Service<GoogleCredentials> => {
+  if (!accessToken?.token) {
+    return makeService(undefined);
+  }
+  if (isManagedAccessToken(accessToken.token)) {
+    // The owning space is read off the object rather than `Database.Service`, which the layer does
+    // not otherwise require and whose callers therefore do not declare.
+    const spaceId = Obj.getDatabase(accessToken)?.spaceId;
+    invariant(spaceId, 'Managed access token is not bound to a space.');
+    log('using managed access token', { source: accessToken.source, account: accessToken.account });
+    return makeManagedService(resolver, spaceId, accessToken.id);
+  }
+  log('using access token', { source: accessToken.source, account: accessToken.account });
+  return makeService(accessToken.token);
+};
 
 /**
  * Service for accessing Google API credentials.
@@ -43,12 +79,9 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
     Layer.effect(
       GoogleCredentials,
       Effect.gen(function* () {
+        const resolver = yield* Credential.AccessTokenResolver;
         const accessToken = yield* Database.load(accessTokenRef);
-        if (accessToken?.token) {
-          log('using access token', { source: accessToken.source, account: accessToken.account });
-          return makeService(accessToken.token);
-        }
-        return makeService(undefined);
+        return makeServiceForToken(resolver, accessToken);
       }),
     );
 
@@ -57,13 +90,10 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
     Layer.effect(
       GoogleCredentials,
       Effect.gen(function* () {
+        const resolver = yield* Credential.AccessTokenResolver;
         const connection = yield* Database.load(connectionRef);
         const accessToken = yield* Database.load(connection.accessToken);
-        if (accessToken?.token) {
-          log('using connection access token', { source: accessToken.source, account: accessToken.account });
-          return makeService(accessToken.token);
-        }
-        return makeService(undefined);
+        return makeServiceForToken(resolver, accessToken);
       }),
     );
 

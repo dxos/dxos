@@ -11,7 +11,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import {
-  type Credential,
+  Credential,
   FunctionError,
   Header,
   InvalidOperationInputError,
@@ -205,8 +205,15 @@ class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
+    // Resolving a server-custodied token needs a presentation-authenticated EDGE call, and a function
+    // context holds only an `EchoClient` — no identity to sign one with. Connectors whose sync runs
+    // here (none today: sync routines use local timer triggers) would need the resolution brokered
+    // through `context.services` instead.
     const credentials = dbLayer
-      ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
+      ? credentialsLayerFromDatabase({ caching: true }).pipe(
+          Layer.provide(dbLayer),
+          Layer.provide(Credential.AccessTokenResolver.notAvailable),
+        )
       : configuredCredentialsLayer([]);
 
     const aiLayer = this.context.services.functionsAiService

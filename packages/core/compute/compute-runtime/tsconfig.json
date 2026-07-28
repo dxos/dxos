@@ -38,6 +38,9 @@
       "path": "../../echo/echo-client"
     },
     {
+      "path": "../../mesh/edge-client"
+    },
+    {
       "path": "../../protocols"
     },
     {

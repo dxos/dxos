@@ -134,7 +134,13 @@ export const inboxSyncLiveServices = (db: Database.Database, connectionRef: Ref.
   return Layer.mergeAll(
     GoogleMailApi.Live.pipe(
       Layer.provide(FetchHttpClient.layer),
-      Layer.provide(GoogleCredentials.fromConnection(connectionRef).pipe(Layer.provide(Database.layer(db)))),
+      Layer.provide(
+        GoogleCredentials.fromConnection(connectionRef).pipe(
+          Layer.provide(Database.layer(db)),
+          // The fixture connection carries a real token, so nothing resolves through EDGE.
+          Layer.provide(Credential.AccessTokenResolver.notAvailable),
+        ),
+      ),
       Layer.provide(unusedCredentials),
     ),
     ambientSyncServices(db),

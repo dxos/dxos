@@ -74,6 +74,11 @@ export type SyncOutput = any;
 /** Hook fired after OAuth creates an AccessToken for this connection. */
 export type OnTokenCreated = (input: {
   accessToken: AccessToken.AccessToken;
+  /**
+   * The token's usable value. Resolved by the caller because a server-custodied credential stores
+   * only a placeholder on the object — connectors must use this rather than `accessToken.token`.
+   */
+  accessTokenValue: string;
   connection: Connection.Connection;
   /**
    * Pre-existing local object the caller wants to bind as the connection's
@@ -114,6 +119,8 @@ export type OnCursorCreated = (input: {
  */
 export type TestConnection = (input: {
   accessToken: AccessToken.AccessToken;
+  /** The token's usable value; see {@link OnTokenCreated.accessTokenValue}. */
+  accessTokenValue: string;
   connection: Connection.Connection;
   client: Client;
 }) => Effect.Effect<void, ConnectionTestError, HttpClient.HttpClient>;

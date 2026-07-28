@@ -14,7 +14,9 @@ import { useClient } from '@dxos/react-client';
 
 import { useConnector } from '#hooks';
 
+import { ConnectionTestError } from '../errors';
 import { type Connection } from '../types';
+import { resolveAccessTokenValue } from '../util/access-token-value';
 
 export type TestConnectionStatus =
   /** No test has run yet (connection or its token not resolved). */
@@ -76,7 +78,12 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
     setError(undefined);
 
     void Effect.runPromiseExit(
-      testConnection({ accessToken, connection, client }).pipe(Effect.provide(FetchHttpClient.layer)),
+      resolveAccessTokenValue(client, accessToken)
+        .pipe(
+          Effect.mapError((error) => new ConnectionTestError({ message: error.message })),
+          Effect.flatMap((accessTokenValue) => testConnection({ accessToken, accessTokenValue, connection, client })),
+        )
+        .pipe(Effect.provide(FetchHttpClient.layer)),
     ).then((exit) => {
       if (cancelled) {
         return;

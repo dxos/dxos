@@ -144,7 +144,7 @@ export const GmailSend = Operation.make({
     threadId: Schema.String,
     sentTag: SentTagOutput,
   }),
-  services: [Credential.CredentialsService],
+  services: [Credential.CredentialsService, Credential.AccessTokenResolver],
 }).pipe(Operation.visible);
 
 export const GoogleMailSync = Operation.make({
@@ -169,7 +169,13 @@ export const GoogleMailSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
+  services: [
+    Capability.Service,
+    Database.Service,
+    Credential.CredentialsService,
+    Credential.AccessTokenResolver,
+    Trace.TraceService,
+  ],
 }).pipe(Operation.visible, Operation.idempotent);
 
 /**
@@ -265,7 +271,7 @@ export const GoogleCalendarSync = Operation.make({
   output: Schema.Struct({
     newEvents: Schema.Number,
   }),
-  services: [Database.Service, Credential.CredentialsService],
+  services: [Database.Service, Credential.CredentialsService, Credential.AccessTokenResolver],
 }).pipe(Operation.visible);
 
 /**
@@ -305,7 +311,7 @@ export const CreateGoogleCalendarEvent = Operation.make({
   output: Schema.Struct({
     id: Schema.String.annotations({ description: 'Remote Google event id.' }),
   }),
-  services: [Credential.CredentialsService],
+  services: [Credential.CredentialsService, Credential.AccessTokenResolver],
 }).pipe(Operation.visible);
 
 export const RenameFilter = Operation.make({
@@ -349,7 +355,7 @@ export const GoogleContactsSync = Operation.make({
   output: Schema.Struct({
     upserted: Schema.Number,
   }),
-  services: [Database.Service, Credential.CredentialsService],
+  services: [Database.Service, Credential.CredentialsService, Credential.AccessTokenResolver],
 }).pipe(Operation.visible);
 
 export const ReadEmail = Operation.make({

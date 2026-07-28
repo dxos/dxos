@@ -6,7 +6,10 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
+
+import { type SpaceId } from '@dxos/keys';
 
 export type CredentialQuery = {
   service?: string;
@@ -23,6 +26,40 @@ export type ServiceCredential = {
   /** Non-secret secondary identifier carried alongside the credential (e.g. an account id or report id). */
   account?: string;
 };
+
+/**
+ * Resolves a server-custodied credential (one stored as `MANAGED_ACCESS_TOKEN`) to a live token.
+ *
+ * Managed tokens are held by EDGE rather than replicated into the space, so every consumer that
+ * would otherwise read the value off the object goes through this instead. Implementations cache;
+ * pass `refresh` to bypass that cache after an authorization failure.
+ */
+export class AccessTokenResolver extends Context.Tag('@dxos/functions/AccessTokenResolver')<
+  AccessTokenResolver,
+  {
+    resolve: (request: { spaceId: SpaceId; accessTokenId: string; refresh?: boolean }) => Promise<string>;
+  }
+>() {
+  static resolve = (request: {
+    spaceId: SpaceId;
+    accessTokenId: string;
+    refresh?: boolean;
+  }): Effect.Effect<string, never, AccessTokenResolver> =>
+    Effect.gen(function* () {
+      const resolver = yield* AccessTokenResolver;
+      return yield* Effect.promise(() => resolver.resolve(request));
+    });
+
+  /**
+   * Fails on every managed token. The default where EDGE is unreachable (tests, offline CLI runs):
+   * a managed credential genuinely cannot be resolved there, and failing says so.
+   */
+  static notAvailable = Layer.succeed(AccessTokenResolver, {
+    resolve: async ({ accessTokenId }) => {
+      throw new Error(`No access token resolver configured; cannot resolve managed token: ${accessTokenId}`);
+    },
+  });
+}
 
 export class CredentialsService extends Context.Tag('@dxos/functions/CredentialsService')<
   CredentialsService,
