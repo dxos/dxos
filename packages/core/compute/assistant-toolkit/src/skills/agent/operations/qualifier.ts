@@ -19,17 +19,19 @@ import { Qualifier } from './definitions';
 const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
-      function* ({ agent: agentRef, event }) {
+      function* ({ agent: agentRef, chat: chatRef, event }) {
         const agent = yield* Database.load(agentRef);
         invariant(Obj.instanceOf(Agent.Agent, agent));
-        invariant(agent.chat, 'Agent has no chat.');
 
         const { id, name, feed: queue } = agent;
         if (!queue) {
           throw new Error('Agent has no queue.');
         }
 
-        const chat = yield* Database.load(agent.chat);
+        // Phase-B inversion: the chat comes with the invocation; legacy triggers fall back to `agent.chat`.
+        const resolvedChatRef = chatRef ?? agent.chat;
+        invariant(resolvedChatRef, 'Agent has no chat.');
+        const chat = yield* Database.load(resolvedChatRef);
         const planText = chat.plan
           ? yield* Database.load(chat.plan).pipe(
               Effect.map(Plan.formatPlan),

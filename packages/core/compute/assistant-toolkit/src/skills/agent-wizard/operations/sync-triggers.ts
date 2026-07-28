@@ -106,6 +106,8 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           runnable: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
           input: {
             agent: Ref.make(agent),
+            // Phase-B inversion: carry the chat explicitly so workers stop reading `agent.chat`.
+            ...(agent.chat ? { chat: agent.chat } : {}),
             event: '{{event}}',
           },
           concurrency: filterEvents ? 5 : undefined,
@@ -136,6 +138,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
             spec: Trigger.specFeed(agentFeedOption.value),
             input: {
               agent: Ref.make(agent),
+              ...(agent.chat ? { chat: agent.chat } : {}),
               event: '{{event}}',
             },
           }),
@@ -159,6 +162,8 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           runnable: Ref.make(Operation.serialize(AgentWorker)),
           input: {
             agent: Ref.make(agent),
+            // Phase-B inversion: carry the chat explicitly so workers stop reading `agent.chat`.
+            ...(agent.chat ? { chat: agent.chat } : {}),
             event: '{{event}}',
           },
         }),

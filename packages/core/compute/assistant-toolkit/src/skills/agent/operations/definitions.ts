@@ -10,7 +10,7 @@ import { Operation, Trace, TriggerEvent } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { Agent } from '../../../types';
+import { Agent, Chat } from '../../../types';
 
 export const AgentWorker = Operation.make({
   meta: {
@@ -21,6 +21,8 @@ export const AgentWorker = Operation.make({
   },
   input: Schema.Struct({
     agent: Schema.suspend(() => Ref.Ref(Agent.Agent)),
+    /** The chat to run in (phase-B inversion); falls back to the legacy `agent.chat` when absent. */
+    chat: Schema.optional(Schema.suspend(() => Ref.Ref(Chat.Chat))),
     prompt: Schema.optional(Schema.String),
     event: Schema.optional(TriggerEvent.TriggerEvent),
   }),
@@ -44,6 +46,8 @@ export const Qualifier = Operation.make({
   },
   input: Schema.Struct({
     agent: Schema.suspend(() => Ref.Ref(Agent.Agent)),
+    /** The chat whose plan contextualizes qualification (phase-B inversion); falls back to `agent.chat`. */
+    chat: Schema.optional(Schema.suspend(() => Ref.Ref(Chat.Chat))),
     event: TriggerEvent.TriggerEvent,
   }),
   output: Schema.Void,

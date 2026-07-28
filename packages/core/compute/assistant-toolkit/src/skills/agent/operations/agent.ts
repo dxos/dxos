@@ -18,21 +18,30 @@ import { AgentWorker } from './definitions';
 
 export default AgentWorker.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ agent: agentRef, prompt, event }) {
+    Effect.fnUntraced(function* ({ agent: agentRef, chat: chatRef, prompt, event }) {
       const agent = yield* Database.load(agentRef).pipe(
         Effect.catchTag('EntityNotFoundError', () => Effect.die(new Error('Unable to load agent object.'))),
       );
       invariant(Obj.instanceOf(Agent.Agent, agent));
-      invariant(agent.chat, 'Agent has no chat.');
 
-      const chatFeed = yield* agent.chat.pipe(
-        Database.load,
-        Effect.flatMap((chat) => Database.load(chat.feed)),
+      // Phase-B inversion: the chat comes with the invocation; legacy triggers fall back to `agent.chat`.
+      const resolvedChatRef = chatRef ?? agent.chat;
+      invariant(resolvedChatRef, 'Agent has no chat.');
+      const chat = yield* Database.load(resolvedChatRef).pipe(
+        Effect.catchTag('EntityNotFoundError', () => Effect.die(new Error('Unable to load agent chat object.'))),
+      );
+      const chatFeed = yield* Database.load(chat.feed).pipe(
         Effect.catchTag('EntityNotFoundError', () => Effect.die(new Error('Unable to load agent chat feed object.'))),
       );
       invariant(chatFeed, 'Agent chat feed not found.');
+      // Steer the ephemeral session with the chat's instructions; a broken ref degrades to unsteered.
+      const instructions = chat.instructions
+        ? yield* Database.load(chat.instructions).pipe(Effect.orElseSucceed(() => undefined))
+        : undefined;
       const runtime = yield* Effect.runtime<Database.Service>();
-      const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
+      const session = yield* EffectEx.acquireReleaseResource(
+        () => new AiSession.Session({ feed: chatFeed, runtime, instructions: instructions ? [instructions] : [] }),
+      );
 
       const agentsInContext = session.context.getObjects().filter(Obj.instanceOf(Agent.Agent));
       if (agentsInContext.length !== 1) {

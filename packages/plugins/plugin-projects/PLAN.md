@@ -52,24 +52,30 @@ payload; after this phase "apply agent to chat" is one assignment.
 Whoever invokes a run already holds the Chat (see the call-site table in
 DESIGN.md); the agent should not own conversation state.
 
-- [ ] `Chat` gains `agent?: Ref<Agent>` — same file, no layering change (both
-      types live in assistant-toolkit).
-- [ ] `AgentWorker` (`skills/agent/operations/agent.ts`): input becomes
-      `{ chat }` (or `{ agent, chat }` during transition); resolve feed from
-      the chat, identity from `chat.agent`.
-- [ ] `qualifier.ts`: receives the chat in its trigger input rather than
-      `agent.chat`.
-- [ ] `resetChatHistory` → `Chat.resetHistory(chat)` (feed rebuild is
-      chat-shaped); agent variant delegates until D.
-- [ ] "The agent's chats" = query on `Chat.agent` (or the existing
+- [x] `Chat` gains `agent?: Ref<Agent>` — both directions of the Agent ↔ Chat
+      cycle are `Schema.suspend`ed (module-eval TDZ otherwise).
+- [x] `AgentWorker`: transitional `{ agent, chat? }` input — prefers the
+      invocation's chat, falls back to legacy `agent.chat`; the ephemeral
+      session now also receives `chat.instructions` as steering.
+- [x] `qualifier.ts`: same transitional `chat?` input with `agent.chat`
+      fallback; `sync-triggers` stamps `chat` into all three trigger inputs.
+- [~] `resetChatHistory`: rebuilt chat now carries `agent` + `instructions`
+  refs (phase-B shape); the full extraction to `Chat.resetHistory` is
+  deferred to D with the rest of the field's removal — the helper still
+  rewrites `agent.chat` (deliberately: that is B's dual-write).
+- [x] "The agent's chats" = query on `Chat.agent` (or the existing
       `CompanionTo`); removes the single-chat limitation
       (`TODO(dmaretskyi): Multiple chats`).
-- [ ] `makeInitialized`: still creates a first chat (UX unchanged), sets
+- [x] `makeInitialized`: still creates a first chat (UX unchanged), sets
       `chat.agent` **and dual-writes `agent.chat`** until D — legacy readers
       (hydrated processes, un-migrated call sites, a reverted B) keep working;
       D's migration drops the field and ends the window.
-- [ ] Verify: planning / delegation / agent skill tests (they anchor on
-      `agent.chat` today — port to `chat.agent` or `CompanionTo`).
+- [ ] Verify: unit suites GREEN post-B (assistant-toolkit 30, agent-runtime 22,
+      plugin-assistant 136); test anchors on `agent.chat` still work via the
+      dual-write (porting them lands with D). Memoized agent-skill
+      conversations pending regeneration (shared with A; blocked on 1Password).
+      NOTE: A + B shipped together in one PR per user sequencing — a recorded
+      deviation from one-PR-per-phase.
 
 ## Phase C — `cron` + `subscriptions` → Routines
 

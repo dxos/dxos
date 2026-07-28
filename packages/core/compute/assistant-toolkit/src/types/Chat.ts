@@ -14,6 +14,7 @@ import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 
 import { HarnessContextError } from '../errors';
+import * as Agent from './Agent';
 import * as Plan from './Plan';
 
 /**
@@ -31,6 +32,16 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * Held by reference (never copied), so a project's chats follow edits to its instructions.
      */
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false))),
+
+    /**
+     * The agent identity this conversation runs as (attribution + preset), if any. The inverse of
+     * the legacy `Agent.chat` ref: chats reference their agent, agents own no conversation state.
+     * "The agent's chats" is a query on this field (or the `CompanionTo` relation). Suspended
+     * because Agent ↔ Chat reference each other across modules.
+     */
+    agent: Schema.optional(
+      Schema.suspend((): Ref.RefSchema<Agent.Agent> => Ref.Ref(Agent.Agent)).pipe(FormInputAnnotation.set(false)),
+    ),
 
     /**
      * Session plan for tracking task progress within this conversation.

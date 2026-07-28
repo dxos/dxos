@@ -56,7 +56,11 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     /**
      * Primary chat for the agent.
      */
-    chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
+    // Suspended: Agent ↔ Chat reference each other across modules, so the schema must not touch
+    // `Chat.Chat` while this module evaluates during Chat's import.
+    chat: Schema.optional(
+      Schema.suspend((): Ref.RefSchema<Chat.Chat> => Ref.Ref(Chat.Chat)).pipe(FormInputAnnotation.set(false)),
+    ),
 
     // TODO(burdon): Currently Memory.Memory objects are global to the space; make them artifacts?
     artifacts: Schema.Array(
@@ -198,6 +202,9 @@ export const makeInitialized = (
         feed: Ref.make(feed),
         // Steer the agent's chat through the milestone-3 channel (rendered into the system prompt).
         instructions: Ref.make(instructions),
+        // Phase-B inversion: the chat references its agent; `agent.chat` below is the dual-write
+        // kept for legacy readers until the phase-D migration.
+        agent: Ref.make(agent),
       }),
     );
     Obj.setParent(feed, chat);
@@ -259,6 +266,9 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
       Chat.make({
         [Obj.Parent]: agent,
         feed: Ref.make(feed),
+        // The rebuilt chat keeps the agent's steering and identity (phase-B shape).
+        instructions: agent.instructions,
+        agent: Ref.make(agent),
       }),
     );
     Obj.setParent(feed, chat);
@@ -268,6 +278,7 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
         objects: [...objects, Ref.make(chat)],
       }),
     );
+    // Dual-write kept for legacy readers until the phase-D migration.
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
     });
