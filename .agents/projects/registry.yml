@@ -25,8 +25,8 @@ projects:
     summary: New core plugin for interactive long-running processes (Routines, Agents, artifacts); Project type succeeds Topic; obviates plugin-sidekick.
     tasks: packages/plugins/plugin-projects/TASKS.md
     design: packages/plugins/plugin-projects/DESIGN.md
-    prs: [12335, 12365]
-    resume: 'PR #12365 MERGED (squash b5ecf54ed1) — instructions channel + ProjectSkill + live eval (100%) + 3 review rounds. Worktree synced with main; CONTINUING HERE per user: reconciliation phase A (Agent.instructions -> Ref<Instructions>, dual-read until D) then phase B (Chat.agent inversion, dual-write agent.chat until D), each its own PR per packages/plugins/plugin-projects/PLAN.md; then Phase 3 UI. Phase C decided: relay pattern onto the durable process.'
+    prs: [12335, 12365, 12370]
+    resume: 'PR #12370 OPEN (reconciliation A-D: Agent 0.2.0 identity/preset, Chat.agent inversion, relay pattern onto durable session, no data migration per user). #12365 MERGED earlier (instructions channel + ProjectSkill + live eval 100%). projects.eval re-verified 100% post-D; agent-skill conversations regenerated, planning gated to its eval. NEXT: watch #12370 CI/review to land, then Phase 3 UI (ProjectOperation.CreateChat, navtree chat children, Chats exclusion, toolbar), then commands-authoring UI / outliner skill.'
 
   - name: sketch-scene-dsl
     status: active
