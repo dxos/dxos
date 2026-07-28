@@ -98,5 +98,8 @@
         "root": "src/network-manager.ts"
       }
     ]
+  },
+  "dx": {
+    "importSource": false
   }
 }

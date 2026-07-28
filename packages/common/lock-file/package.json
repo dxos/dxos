@@ -32,5 +32,8 @@
   "devDependencies": {},
   "publishConfig": {
     "access": "public"
+  },
+  "dx": {
+    "importSource": false
   }
 }

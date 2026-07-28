@@ -278,6 +278,37 @@ for (const { name, path: pkgPath } of packages) {
     }
   }
 
+  // `dx.importSource: false` (vite-plugin-import-source opt-out: vite dev servers consume
+  // this package's dist) must pair with the `dist-runtime` moon tag (what fans the
+  // package's build out to source-mode dev tasks like composer-app:serve-min).
+  {
+    const hasDistRuntimeTag = moonYml?.tags?.includes('dist-runtime') ?? false;
+    const importSourceOptOut = pkgJson.dx?.importSource === false;
+    const conditionalExports = Object.values(exports).filter((value) => typeof value === 'object' && value !== null);
+    const hasSourceCondition = conditionalExports.some((value) => 'source' in value);
+    if (importSourceOptOut && !hasDistRuntimeTag) {
+      addDiagnostic(
+        'error',
+        'dist-runtime-tag',
+        '"dx.importSource: false" requires the "dist-runtime" moon tag so source-mode dev servers build this package\'s dist',
+      );
+    } else if (hasDistRuntimeTag && !importSourceOptOut && hasSourceCondition) {
+      addDiagnostic(
+        'error',
+        'dist-runtime-tag',
+        '"dist-runtime" tag requires "dx": { "importSource": false } — with a "source" condition vite resolves this package from source and the tagged build is unused',
+      );
+    } else if (importSourceOptOut && !hasSourceCondition) {
+      addDiagnostic(
+        'info',
+        'dist-runtime-tag',
+        '"dx.importSource: false" is redundant: no export has a "source" condition',
+      );
+    } else if (hasDistRuntimeTag) {
+      addDiagnostic('conventional', 'dist-runtime-tag', 'dist-runtime tag consistent with package exports');
+    }
+  }
+
   // Check moon.yml compile task.
   if (moonYml?.tasks?.compile) {
     const compileArgs = moonYml.tasks.compile.args ?? [];

@@ -121,6 +121,9 @@
       }
     ]
   },
+  "dx": {
+    "importSource": false
+  },
   "typedoc": {
     "entryPoint": "src/index.ts"
   }

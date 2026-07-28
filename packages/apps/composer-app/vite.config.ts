@@ -60,19 +60,11 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // forcing is skipped, where build speed wins over correctness for unchanged source.
   // Package-internal `#*` subpath imports must still resolve to source, or they fall
   // through to `dist/lib/neutral/*` and fail when a package has not been compiled.
+  // Packages whose source is not vite-safe opt out per-package via
+  // `dx.importSource: false` in their package.json (no app-local exclude list);
+  // the `dist-runtime` moon tag keeps their dist built for `serve-min`.
   importSource({
     include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
-    exclude: [
-      '@dxos/random-access-storage',
-      '@dxos/lock-file',
-      '@dxos/network-manager',
-      '@dxos/teleport',
-      '@dxos/config',
-      '@dxos/client-services',
-      '@dxos/observability',
-      // TODO(dmaretskyi): Decorators break in lit.
-      '@dxos/lit-*',
-    ],
   }),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
