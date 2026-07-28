@@ -314,18 +314,19 @@ encoded the pre-pair-chain URL shape.
       spec dies. Verified by bisecting the two imports against `playwright test --list`.
 - [ ] **Consider gating a smoke subset of e2e on PRs** — the whole suite is too slow for every PR, but a
       single spec covering create-space/create-object would have caught this before merge.
-- [ ] **Cold load of the registry workspace never boots the app** — NOT introduced here; `/w/!dxos:plugin-registry`
-      is exactly what the app generates when the pinned registry node is clicked (verified by driving the UI,
-      where it renders fine), but navigating to it cold leaves the page on the boot splash: no
-      `treeView.userAccount` after 60s, against ~20s for a cold `/` in the same run. So `openPluginRegistry()`
-      now holds the right URL but cannot work until this is fixed. Nothing covers it — both call sites
-      (`basic.spec.ts:81,88`) sit in `test.skip`ped tests, skipped for an unrelated reason, which is why the
-      break went unnoticed. The fix belongs in startup resolution, NOT in the test: clicking the pinned node
-      does work, but `main` deliberately navigates by URL because the click path races
-      layout/settings operation-handler registration and is silently swallowed in firefox (see the comment on
-      `openPluginRegistry`), and the e2e job runs `PLAYWRIGHT_BROWSER=all`. Whether cold navigation to the
-      pre-grammar `/!dxos:plugin-registry` ever worked is unknown — both call sites have been skipped
-      throughout, so the URL rework may have masked an already-broken path.
+- [x] **`openPluginRegistry()` URL verified** — `/w/!dxos:plugin-registry` is right: it is exactly what the app
+      generates when the pinned registry node is clicked, it renders on click, and it cold-loads successfully
+      (21.6s). An earlier probe where it did not boot was an environment artifact, not a product bug — see the
+      startup-budget note below.
+
+> **Sandbox caveat for anyone re-running these locally.** Cold boot in the agent sandbox is ~20s against the
+> app's hard 30s startup budget, so any run that asks the deck url-handler to do real work can tip over it and
+> fail as `org.dxos.plugin.deck.module.UrlHandler` activation timeout → plugin-deck activation failure →
+> `Startup timed out after 30000ms` → fatal dialog, with no app shell. A bare `/` never shows this because
+> `handleNavigation` returns early on the root path and does no work at all. This produced two false
+> "product bug" readings in one session (registry cold-load; the `undo delete thread` no-op delete), so treat a
+> local timeout here as unattributable until CI reproduces it. Comparing a space-workspace URL against the
+> suspect URL in the same run is a cheap discriminator — both take the same `handleNavigation` path.
 
 ## Backlog (post-land)
 
