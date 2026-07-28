@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Operation, Trigger } from '@dxos/compute';
+import { Operation, Routine, Trigger } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FeedAnnotation } from '@dxos/schema';
 
@@ -42,24 +42,76 @@ const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
 };
 
 /**
- * Syncs triggers in the database with the agent subscriptions.
+ * Compiles the agent's `subscriptions`/`cron` fields into Routines whose triggers run the Relay
+ * (plugin-projects PLAN.md phase C): the relay qualifies each event with a cheap model and forwards
+ * relevant ones onto the chat's durable session — the two-stage qualifier pipeline through
+ * `agent.feed` is gone. Re-running deletes and recreates everything (including any pre-relay
+ * triggers, which migrates legacy agents on their next sync).
  */
 const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
     const triggers = yield* Database.query(
       Filter.foreignKeys(Trigger.Trigger, [{ source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id }]),
     ).run;
+    const routines = yield* Database.query(
+      Filter.foreignKeys(Routine.Routine, [{ source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id }]),
+    ).run;
 
-    // Remove all existing triggers — they will be recreated with the current config.
+    // Remove all existing triggers/routines — they will be recreated with the current config.
     // This ensures operation, concurrency, and enabled stay in sync when agent fields change.
     for (const trigger of triggers) {
       yield* Database.remove(trigger);
     }
+    for (const routine of routines) {
+      yield* Database.remove(routine);
+    }
 
     const triggersEnabled = agent.enabled ?? true;
+    const chatRef = agent.chat;
+    if (!chatRef) {
+      // Without a chat there is no session to relay into; nothing to compile.
+      yield* Database.flush();
+      return;
+    }
 
     // Lazy import to avoid circular dependency issues.
-    const { Qualifier, AgentWorker } = yield* Effect.promise(() => import('../../agent/operations/definitions'));
+    const { Relay } = yield* Effect.promise(() => import('../../agent/operations/definitions'));
+
+    const makeRoutine = (options: {
+      name: string;
+      targetKey: string;
+      spec: Trigger.Trigger['spec'];
+      input: Record<string, unknown>;
+      concurrency?: number;
+    }): Effect.Effect<void, never, Database.Service> =>
+      Effect.gen(function* () {
+        const keys = [
+          { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+          { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: options.targetKey },
+        ];
+        const runnable = yield* Database.add(Operation.serialize(Relay));
+        const trigger = yield* Database.add(
+          Trigger.make({
+            [Obj.Parent]: agent,
+            [Obj.Meta]: { keys },
+            enabled: triggersEnabled,
+            spec: options.spec,
+            runnable: Ref.make(runnable),
+            input: options.input,
+            ...(options.concurrency !== undefined ? { concurrency: options.concurrency } : {}),
+          }),
+        );
+        // The Routine is the user-facing aggregate (action + trigger), shared with projects.
+        yield* Database.add(
+          Obj.make(Routine.Routine, {
+            [Obj.Parent]: agent,
+            [Obj.Meta]: { keys },
+            name: options.name,
+            spec: { kind: 'runnable', runnable: Ref.make(runnable) },
+            triggers: [Ref.make(trigger)],
+          }),
+        );
+      });
 
     for (const subscription of agent.subscriptions) {
       const targetOption = yield* Database.load(subscription).pipe(
@@ -90,84 +142,32 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         continue;
       }
 
-      const filterEvents = agent.filterEvents ?? true;
-
-      yield* Database.add(
-        Trigger.make({
-          [Obj.Parent]: agent,
-          [Obj.Meta]: {
-            keys: [
-              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.uri },
-            ],
-          },
-          enabled: triggersEnabled,
-          spec: Trigger.specFeed(feedObj),
-          runnable: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
-          input: {
-            agent: Ref.make(agent),
-            // Phase-B inversion: carry the chat explicitly so workers stop reading `agent.chat`.
-            ...(agent.chat ? { chat: agent.chat } : {}),
-            event: '{{event}}',
-          },
-          concurrency: filterEvents ? 5 : undefined,
-        }),
-      );
+      // `filterEvents` maps to the relay's qualify switch (false = deliver unfiltered).
+      const qualify = agent.filterEvents ?? true;
+      yield* makeRoutine({
+        name: `${agent.name ?? 'Agent'} — ${Obj.getLabel(target) ?? 'subscription'}`,
+        targetKey: subscription.uri,
+        spec: Trigger.specFeed(feedObj),
+        input: {
+          chat: chatRef,
+          event: '{{event}}',
+          ...(qualify ? {} : { qualify: false }),
+        },
+        concurrency: qualify ? 5 : undefined,
+      });
     }
 
-    if ((agent.filterEvents ?? true) && agent.feed) {
-      const agentFeedOption = yield* Database.load(agent.feed).pipe(
-        Effect.map(Option.some),
-        Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
-      );
-      if (Option.isSome(agentFeedOption) && Feed.getFeedUri(agentFeedOption.value)) {
-        yield* Database.add(
-          Trigger.make({
-            [Obj.Parent]: agent,
-            [Obj.Meta]: {
-              keys: [
-                { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-                {
-                  source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
-                  id: Obj.getURI(agent) ?? '',
-                },
-              ],
-            },
-            runnable: Ref.make(Operation.serialize(AgentWorker)),
-            enabled: triggersEnabled,
-            spec: Trigger.specFeed(agentFeedOption.value),
-            input: {
-              agent: Ref.make(agent),
-              ...(agent.chat ? { chat: agent.chat } : {}),
-              event: '{{event}}',
-            },
-          }),
-        );
-      }
-    }
-
-    // Timer trigger bypasses the qualifier and invokes the agent worker directly on a schedule.
+    // Timer wake: a synthetic prompt through the same relay path (no event, so no qualification).
     if (agent.cron) {
-      yield* Database.add(
-        Trigger.make({
-          [Obj.Parent]: agent,
-          [Obj.Meta]: {
-            keys: [
-              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: `timer:${agent.cron}` },
-            ],
-          },
-          enabled: triggersEnabled,
-          spec: Trigger.specTimer(agent.cron),
-          runnable: Ref.make(Operation.serialize(AgentWorker)),
-          input: {
-            agent: Ref.make(agent),
-            // Phase-B inversion: carry the chat explicitly so workers stop reading `agent.chat`.
-            ...(agent.chat ? { chat: agent.chat } : {}),
-            event: '{{event}}',
-          },
-        }),
-      );
+      yield* makeRoutine({
+        name: `${agent.name ?? 'Agent'} — schedule`,
+        targetKey: `timer:${agent.cron}`,
+        spec: Trigger.specTimer(agent.cron),
+        input: {
+          chat: chatRef,
+          prompt: 'Scheduled wake: continue your instructions and review outstanding work.',
+        },
+      });
     }
 
     yield* Database.flush();

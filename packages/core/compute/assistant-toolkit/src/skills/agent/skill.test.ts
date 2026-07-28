@@ -11,7 +11,7 @@ import { AssistantTestLayerWithTriggers, runMemoizedTests } from '@dxos/agent-ru
 import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Operation, OperationHandlerSet, Skill, Trigger } from '@dxos/compute';
+import { Instructions, Operation, OperationHandlerSet, Routine, Skill, Trigger } from '@dxos/compute';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
 import { Collection, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -30,7 +30,7 @@ import { Agent, Chat, Plan } from '../../types';
 import { AgentWizardHandlers, AgentWizardOperations } from '../agent-wizard';
 import { PlanningHandlers, PlanningSkill } from '../planning';
 import { AgentSkillHandlers } from './operations';
-import { AgentWorker } from './operations/definitions';
+import { AgentWorker, Relay } from './operations/definitions';
 import AgentSkillDef from './skill';
 
 EntityId.dangerouslyDisableRandomness();
@@ -51,6 +51,8 @@ const TestLayer = AssistantTestLayerWithTriggers({
     SpaceProperties,
     Skill.Skill,
     Trigger.Trigger,
+    Routine.Routine,
+    Instructions.Instructions,
     Text.Text,
     Markdown.Document,
     Collection.Collection,
@@ -217,7 +219,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
   );
 
   it.scoped(
-    'cron field creates a timer trigger that invokes the agent worker',
+    'cron field creates a timer routine that relays into the agent session',
     Effect.fnUntraced(
       function* ({ expect }) {
         const cron = '*/5 * * * *';
@@ -247,11 +249,18 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
         expect(timerTrigger.spec.cron).toBe(cron);
         expect(timerTrigger.enabled).toBe(true);
 
-        // Timer trigger bypasses the qualifier and points to the agent worker.
+        // The timer routine relays a synthetic wake prompt into the agent's durable session.
         invariant(timerTrigger.runnable);
         const operation = yield* Database.load(timerTrigger.runnable);
         invariant(Obj.instanceOf(Operation.PersistentOperation, operation));
-        expect(Obj.getMeta(operation).key).toBe(AgentWorker.meta.key);
+        expect(Obj.getMeta(operation).key).toBe(Relay.meta.key);
+
+        // The trigger is wrapped in a user-facing Routine aggregate.
+        const routines = yield* Database.query(
+          Query.select(Filter.type(Routine.Routine)).debugLabel('assistant-toolkit.skill.test.timer-routine'),
+        ).run;
+        expect(routines).toHaveLength(1);
+        expect(routines[0].triggers.map((ref) => ref.uri)).toContain(Ref.make(timerTrigger).uri);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

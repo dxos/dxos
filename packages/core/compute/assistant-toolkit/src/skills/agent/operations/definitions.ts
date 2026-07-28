@@ -7,11 +7,13 @@ import * as Schema from 'effect/Schema';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
 import { Operation, Trace, TriggerEvent } from '@dxos/compute';
+import { AgentService } from '@dxos/compute/AgentService';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { Agent, Chat } from '../../../types';
 
+/** @deprecated Replaced by {@link Relay} + the durable session (PLAN.md phase C); deleted with phase D. */
 export const AgentWorker = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.agent.worker'),
@@ -36,6 +38,27 @@ export const AgentWorker = Operation.make({
   ],
 });
 
+export const Relay = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.agent.relay'),
+    name: 'Agent Relay',
+    description: 'Qualifies a subscription event with a cheap model and forwards it onto the durable agent session.',
+    icon: 'ph--funnel--regular',
+  },
+  input: Schema.Struct({
+    /** The chat whose durable session receives the event (carries feed, instructions, and agent). */
+    chat: Schema.suspend(() => Ref.Ref(Chat.Chat)),
+    event: Schema.optional(TriggerEvent.TriggerEvent),
+    /** Synthetic wake prompt (e.g. a cron tick) delivered instead of an event payload. */
+    prompt: Schema.optional(Schema.String),
+    /** Skip the cheap-model relevance check (default: qualify when an event is present). */
+    qualify: Schema.optional(Schema.Boolean),
+  }),
+  output: Schema.Void,
+  services: [AiService.AiService, Database.Service, AgentService],
+});
+
+/** @deprecated Replaced by {@link Relay} (plugin-projects PLAN.md phase C); deleted with phase D. */
 export const Qualifier = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.agent.qualifier'),

@@ -111,7 +111,7 @@ but relays push as fast as triggers fire, so a hot feed grows the input queue
 unboundedly. Escape hatch if it bites: reintroduce an intermediary feed the
 process drains at its own pace (at the cost of the visible extra feed).
 
-- [ ] `RelayFunction` (assistant-toolkit): input `{ chat: Ref<Chat>, event }`
+- [x] `Relay` op (assistant-toolkit, skills/agent/operations/relay.ts): input `{ chat: Ref<Chat>, event }`
       — the concrete contract, mirroring `RunInstructions.chat`: the chat is
       what carries history (feed), bound context, and the typed
       `instructions: Ref<Instructions>` (set from the agent's per B). Qualify
@@ -119,19 +119,23 @@ process drains at its own pace (at the cost of the visible extra feed).
       session for `chat.feed` (passing `chat.instructions`) and submit the
       event as a prompt. Instructions reach the durable process via the
       existing spawn-annotation path — no separate ephemeral-path work needed.
-- [ ] Agent wizard: a subscription creates a Routine (feed trigger →
-      `RelayFunction` with the agent's chat ref); `cron` creates a Routine
-      (timer trigger) that submits a wake prompt through the same relay path
-      (same `chat` input, synthetic event).
-- [ ] `enabled`: routines gain an owner gate or the flag moves onto each
-      Routine; `sync-triggers` reduces to a migration shim (existing
-      cron/subscription fields → Routines on first open), then deletes.
-- [ ] Retire `AgentWorker` + `Qualifier` ops (the relay subsumes both);
-      `get-context`'s chat/plan reads move per B.
-- [ ] Verify: agent-wizard tests become routine-creation tests;
-      trigger-dispatch memoized tests; a subscription fixture proves filtering
-      (irrelevant event never reaches the process queue) and multiplexing (two
-      feeds, one process).
+- [x] Agent wizard (`sync-triggers`): a subscription compiles to a Routine
+      (feed trigger → `Relay` with the agent's chat ref; `filterEvents` maps to
+      the relay's `qualify` switch); `cron` compiles to a timer Routine with a
+      synthetic wake prompt. The two-stage `agent.feed` pipeline is gone; each
+      sync deletes and recreates Routines+Triggers, which migrates legacy
+      agents on their next sync.
+- [x] `enabled`: propagated onto each compiled Trigger, as before;
+      `sync-triggers` is now the compile-to-Routines shim (its deletion — and
+      moving cron/subscription authoring onto Routines directly — lands with D).
+- [~] `AgentWorker` + `Qualifier` deprecated and no longer compiled into
+  triggers; handlers stay registered so pre-relay triggers persisted in
+  user DBs keep firing until their next sync — both delete with D.
+- [x] Verify: cron/enabled tests ported to the Routine+Relay shape; new
+      control-plane relay test proves delivery onto the durable process
+      (AgentService registered in the test resolver via a late-bound capture,
+      like HarnessService). Remaining: a memoized filtering/multiplexing
+      fixture (queued with the pending conversation regeneration).
 
 ## Phase D — remove `artifacts`; schema bump + migration
 
