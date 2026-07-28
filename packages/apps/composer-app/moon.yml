@@ -41,7 +41,7 @@ tasks:
       - package.json
       - moon.yml
     outputs:
-      - public/assets/plugin-sketch
+      - public/assets/plugin-tldraw
   serve:
     deps:
       - prebuild

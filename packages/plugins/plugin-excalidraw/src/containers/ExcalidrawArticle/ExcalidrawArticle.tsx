@@ -11,22 +11,21 @@ import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { type SketchVariantSurfaceProps } from '@dxos/plugin-illustrator/types';
 import { Flex, Panel, composable, composableProps, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';
-import { type Excalidraw as ExcalidrawTypes, type Settings } from '#types';
+import { Excalidraw as ExcalidrawTypes } from '#types';
 
-export type ExcalidrawArticleProps = AppSurface.ObjectArticleProps<
-  ExcalidrawTypes.Excalidraw,
-  {
-    settings: Settings.Settings;
-  }
->;
+export type ExcalidrawArticleProps = SketchVariantSurfaceProps;
 
 /**
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
-export const ExcalidrawArticle = ({ role, subject: sketch, attendableId }: ExcalidrawArticleProps) => {
+export const ExcalidrawArticle = ({ role, canvas, attendableId }: ExcalidrawArticleProps) => {
+  invariant(Obj.instanceOf(ExcalidrawTypes.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
@@ -35,7 +34,7 @@ export const ExcalidrawArticle = ({ role, subject: sketch, attendableId }: Excal
   // and the <Excalidraw/> imperative API settle in (either order), we always hand
   // the current scene to the component once both are ready.
   const latestElementsRef = useRef<readonly ExcalidrawElement[]>([]);
-  const adapter = useStoreAdapter(sketch, {
+  const adapter = useStoreAdapter(canvas, {
     onUpdate: ({ elements }) => {
       latestElementsRef.current = elements;
       excalidrawAPIRef.current?.updateScene({ elements });

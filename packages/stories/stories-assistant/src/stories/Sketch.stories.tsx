@@ -8,7 +8,7 @@ import { userEvent, within } from 'storybook/test';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Ref } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
-import { SketchSkill } from '@dxos/plugin-sketch';
+import { SketchSkill } from '@dxos/plugin-illustrator';
 import { type Space } from '@dxos/react-client/echo';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
@@ -30,24 +30,29 @@ let storySpace: Space | undefined;
 
 const decorators = createDecorators({
   lazyPlugins: async () => {
-    const [{ Sketch }, { SketchPlugin }] = await Promise.all([
-      import('@dxos/plugin-sketch'),
-      import('@dxos/plugin-sketch/plugin'),
+    const [{ Sketch }, { IllustratorPlugin }, { Tldraw }, { TldrawPlugin }] = await Promise.all([
+      import('@dxos/plugin-illustrator'),
+      import('@dxos/plugin-illustrator/plugin'),
+      import('@dxos/plugin-tldraw'),
+      import('@dxos/plugin-tldraw/plugin'),
     ]);
     return {
-      plugins: [SketchPlugin()],
-      types: [Sketch.Sketch, Sketch.Canvas],
+      plugins: [IllustratorPlugin(), TldrawPlugin()],
+      types: [Sketch.Sketch, Tldraw.Canvas],
     };
   },
   onInit: async ({ space }) => {
     storySpace = space;
-    const { Sketch } = await import('@dxos/plugin-sketch');
-    const sketch = space.db.add(Sketch.make({ name: 'Sketch' }));
+    const [{ Sketch }, { Tldraw }] = await Promise.all([
+      import('@dxos/plugin-illustrator'),
+      import('@dxos/plugin-tldraw'),
+    ]);
+    const sketch = space.db.add(Sketch.make({ name: 'Sketch', canvas: Tldraw.makeCanvas() }));
     addToRootCollection(space, [sketch]);
     return [[StoryRole.Chat], [Cell.article(sketch)], [AppSurface.deckCompanion('trace')]];
   },
   onChatCreated: async ({ space, binder }) => {
-    const { Sketch } = await import('@dxos/plugin-sketch');
+    const { Sketch } = await import('@dxos/plugin-illustrator');
     const objects = await space.db.query(Filter.type(Sketch.Sketch)).run();
     await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
   },
@@ -97,8 +102,8 @@ const countObjectRecords = async (objectId?: string): Promise<number> => {
   if (!storySpace) {
     return 0;
   }
-  const { Sketch } = await import('@dxos/plugin-sketch');
-  const canvases = await storySpace.db.query(Filter.type(Sketch.Canvas)).run();
+  const { Tldraw } = await import('@dxos/plugin-tldraw');
+  const canvases = await storySpace.db.query(Filter.type(Tldraw.Canvas)).run();
   return canvases.reduce((count, canvas) => {
     const records = Object.values(canvas.content ?? {}) as any[];
     return (

@@ -289,6 +289,9 @@
       "path": "../../plugins/plugin-duffel"
     },
     {
+      "path": "../../plugins/plugin-excalidraw"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
@@ -314,6 +317,9 @@
     },
     {
       "path": "../../plugins/plugin-ideogram"
+    },
+    {
+      "path": "../../plugins/plugin-illustrator"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -424,9 +430,6 @@
       "path": "../../plugins/plugin-simple-layout"
     },
     {
-      "path": "../../plugins/plugin-sketch"
-    },
-    {
       "path": "../../plugins/plugin-slack"
     },
     {
@@ -461,6 +464,9 @@
     },
     {
       "path": "../../plugins/plugin-tictactoe"
+    },
+    {
+      "path": "../../plugins/plugin-tldraw"
     },
     {
       "path": "../../plugins/plugin-transcription"

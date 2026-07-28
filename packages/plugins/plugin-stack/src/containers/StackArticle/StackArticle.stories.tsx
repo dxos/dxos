@@ -13,12 +13,14 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { Sketch } from '@dxos/plugin-illustrator';
+import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
 import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { Sketch, SketchModel } from '@dxos/plugin-sketch';
-import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { Tldraw, TldrawModel } from '@dxos/plugin-tldraw';
+import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -29,7 +31,7 @@ import { translations } from '#translations';
 import { StackArticle, type StackArticleProps } from './StackArticle';
 
 // A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test image.
-const SKETCH_CONTENT = new SketchModel.SketchBuilder()
+const SKETCH_CONTENT = new TldrawModel.TldrawBuilder()
   .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
   .ellipse({ id: 'echo', x: 320, y: 0, text: 'ECHO', color: 'green' })
   .arrow({ from: 'rect', to: 'echo' })
@@ -59,7 +61,7 @@ const meta: Meta<typeof StackArticle> = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Collection.Collection, Markdown.Document, Sketch.Sketch, Sketch.Canvas],
+          types: [Collection.Collection, Markdown.Document, Sketch.Sketch, Tldraw.Canvas],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace: space } = yield* initializeIdentity(client);
@@ -86,9 +88,7 @@ const meta: Meta<typeof StackArticle> = {
                   space.db.add(
                     Sketch.make({
                       name: random.lorem.sentence(2),
-                      canvas: {
-                        content: SKETCH_CONTENT,
-                      },
+                      canvas: Tldraw.makeCanvas({ content: SKETCH_CONTENT }),
                     }),
                   ),
                 ),
@@ -104,7 +104,8 @@ const meta: Meta<typeof StackArticle> = {
             }),
         }),
         MarkdownPlugin(),
-        SketchPlugin(),
+        IllustratorPlugin(),
+        TldrawPlugin(),
         SpacePlugin({}),
         StorybookPlugin({}),
       ],

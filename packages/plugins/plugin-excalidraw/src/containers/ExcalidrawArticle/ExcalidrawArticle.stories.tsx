@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-client';
+import { Sketch } from '@dxos/plugin-illustrator/types';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Excalidraw } from '#types';
@@ -13,9 +14,12 @@ import { Excalidraw } from '#types';
 import { ExcalidrawArticle } from './ExcalidrawArticle';
 
 const DefaultStory = () => {
-  const [sketch] = useState(createObject(Excalidraw.make({ canvas: { schema: Excalidraw.EXCALIDRAW_SCHEMA } })));
+  const [{ sketch, canvas }] = useState(() => {
+    const canvas = createObject(Excalidraw.makeCanvas());
+    return { sketch: createObject(Sketch.make({ canvas })), canvas };
+  });
 
-  return <ExcalidrawArticle role='article' subject={sketch} attendableId='story' settings={{}} />;
+  return <ExcalidrawArticle role='article' sketch={sketch} canvas={canvas} attendableId='story' />;
 };
 
 const meta = {

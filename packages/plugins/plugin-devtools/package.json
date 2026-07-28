@@ -102,7 +102,6 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
-    "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/protocols": "workspace:*",

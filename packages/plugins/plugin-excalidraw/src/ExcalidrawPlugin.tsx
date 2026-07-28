@@ -3,17 +3,20 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { CreateObject, ExcalidrawSettings, OperationHandler, ReactSurface } from '#capabilities';
+import { ExcalidrawSettings, ReactSurface, SketchVariant } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Excalidraw } from '#types';
 
 export const ExcalidrawPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Excalidraw.Canvas, Excalidraw.Excalidraw] }),
+  Plugin.addModule({
+    id: 'sketch-variant',
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: SketchVariant,
+  }),
+  AppPlugin.addSchemaModule({ schema: [Excalidraw.Canvas] }),
   AppPlugin.addSettingsModule({ activate: ExcalidrawSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
