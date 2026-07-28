@@ -10,30 +10,32 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { L1PanelUnavailable } from './L1PanelUnavailable';
+import { L1Tabs } from './L1Tabs';
 
 const WORKSPACE = 'root/B4NRQGGJ7XSDT4WMGXCTZNBLTDYIWGXNQIB6JW3AVLW3G';
 
-// The panel is absolutely positioned within the sidebar's tabs root, which the sidebar sizes; the
+// With no workspace matching the current tab, `L1Tabs` renders only its unavailable-workspace fallback.
+// The panels are absolutely positioned within the sidebar's tabs root, which the sidebar sizes; the
 // story supplies both so the message renders at its real width.
-const DefaultStory = () => (
+const UnavailableStory = () => (
   <Tabs.Root value={WORKSPACE} orientation='vertical' classNames='relative h-full'>
-    <L1PanelUnavailable workspace={WORKSPACE} open />
+    <L1Tabs topLevelItems={[]} currentItemId={WORKSPACE} path={['root']} open />
   </Tabs.Root>
 );
 
 const meta = {
-  title: 'plugins/plugin-navtree/components/L1PanelUnavailable',
-  component: L1PanelUnavailable,
-  render: DefaultStory,
+  title: 'plugins/plugin-navtree/components/L1Tabs',
+  component: L1Tabs,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     translations,
   },
-} satisfies Meta<typeof L1PanelUnavailable>;
+} satisfies Meta<typeof L1Tabs>;
 
 export default meta;
 
-type Story = StoryObj<typeof L1PanelUnavailable>;
+type Story = StoryObj<typeof L1Tabs>;
 
-export const Default: Story = {};
+export const UnavailableWorkspace: Story = {
+  render: UnavailableStory,
+};
