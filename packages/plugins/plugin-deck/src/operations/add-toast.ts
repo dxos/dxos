@@ -9,13 +9,14 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { DeckCapabilities } from '../types';
+import { upsertToast } from '../util';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.AddToast> = LayoutOperation.AddToast.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
         ...state,
-        toasts: [...state.toasts, input as LayoutOperation.Toast],
+        toasts: upsertToast(state.toasts, input as LayoutOperation.Toast),
       }));
     }),
   ),
