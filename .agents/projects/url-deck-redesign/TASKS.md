@@ -328,6 +328,43 @@ encoded the pre-pair-chain URL shape.
 > local timeout here as unattributable until CI reproduces it. Comparing a space-workspace URL against the
 > suspect URL in the same run is a cheap discriminator — both take the same `handleNavigation` path.
 
+## Post-land: e2e regressions surfaced by the first CI e2e run
+
+Dispatched `check.yml` with `e2e: true` on the branch (needs `actions: write`, granted 2026-07-28). That
+run is the first trustworthy e2e signal — the agent sandbox cannot distinguish "slow" from "broken" for
+anything touching startup or UI timing. Baseline for attribution is run 30310421147 on `198660ba`, the
+last green `main` e2e before #12273 merged.
+
+### Tasks
+
+- [x] **Inbox: `testId: 'inbox.mailbox.sync'` dropped in #12273** — REGRESSION, fixed. The rewrite of
+      `plugin-inbox/src/capabilities/app-graph-builder.ts` lost the sync action's `testId`. A toolbar
+      action emits `data-testid` only when it sets one, so `Inbox.connectJmap`'s
+      `getByTestId('inbox.mailbox.sync').waitFor()` could never resolve and all three inbox specs hit
+      the 60s timeout. Restored; 3/3 pass on chromium. Swept every file the PR touched for the same
+      class of loss — the only other dropped testid is `plankHeading.companion-vertical` (intentional,
+      vertical companions were removed).
+- [ ] **Comments: deleting a just-created thread silently does nothing** — ROOT-CAUSED, NOT FIXED, and
+      NOT ours: `comments.spec.ts:135` was already flaky on `main` before #12273 (`✘ 67` then `✓ 68` on
+      retry in the baseline run), with the identical `cm-comment` expected-0-received-1 assertion.
+      Mechanism, proven by instrumenting the operation under firefox: `add-message` persists the thread
+      via `SpaceOperation.AddObject`/`AddRelation` and only _then_ clears its draft entry, so the anchor
+      briefly exists in both the draft store and the database. `CommentOperation.Delete` checks drafts
+      first, finds the stale entry, removes only that bookkeeping, and returns — the persisted thread
+      survives. First click logs `bail: removed draft`, a later click logs `proceeding to remove` and
+      works. Chromium usually clears the draft before the click lands; firefox does not.
+      **Do not "fix" this by gating the draft branch on `Obj.getDatabase(thread)` — tried, it regresses
+      `delete thread`**, because `AddRelation` mints a _new_ relation, so the draft anchor and the
+      persisted one are different objects and the removal path then deletes the wrong anchor. The fix
+      belongs in the draft lifecycle: persist the draft anchor itself, or clear the draft atomically
+      with persistence — preserving the render-flash ordering that `add-message`'s comment documents.
+- [ ] **e2e cannot finish its affected set in 45 minutes** — the dispatched run hit the action timeout
+      partway through firefox, so webkit never ran. Independent of the bugs above.
+
+> Reproducing browser-specific e2e locally needs firefox, which the sandbox image lacks:
+> `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0 PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers pnpm exec playwright install firefox`.
+> Without it the firefox-only failures are invisible and chromium noise is misleading.
+
 ## Backlog (post-land)
 
 Recorded 2026-07-27 from review of the landed deck.
