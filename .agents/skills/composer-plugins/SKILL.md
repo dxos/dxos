@@ -127,6 +127,8 @@ Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, skills, settings, etc.).
 Register the plugin with `composer-app`.
 
+Once the plugin contributes a navtree section, apply both rules under **App graph** below — gate the section on a non-empty query, and default the create-object `targetNodeId` to the node that lists the objects.
+
 ## Directory Structure
 
 ```
@@ -139,6 +141,7 @@ plugin-foo/
     plugin.ts               # Plugin.lazy() wrapper; consumed via @dxos/plugin-foo/plugin.
     meta.ts                 # Plugin.Meta (id, name, description, icon, iconHue).
     translations.ts         # i18n resources keyed by typename and meta.id.
+    paths.ts                # Canonical qualified graph paths (only if the plugin owns navtree nodes).
     FooPlugin.tsx           # Plugin definition via Plugin.define(meta).pipe().
     skills/             # AI skill definitions.
       index.ts
@@ -147,6 +150,8 @@ plugin-foo/
       react-surface.tsx
       operation-handler.ts
       skill-definition.ts
+      app-graph-builder.ts  # Navtree sections, child nodes, actions.
+      create-object.ts      # SpaceCapabilities.CreateObjectEntry per type.
     components/             # Primitive UI components (no app-framework deps).
       index.ts
       MyComponent/
@@ -378,6 +383,24 @@ Handler file shape (mirror `plugin-trip/src/operations/add-segment.ts`):
 - Dedup/query transforms: prefer `Feed.query(...).run.pipe(Effect.map(...))` chains with Effect `Array`/`Predicate` over imperative loops.
 
 See: `plugin-chess/src/operations/`, `plugin-trip/src/operations/add-segment.ts`, `plugin-chess-com/src/operations/sync-games.ts`
+
+### App graph (`src/capabilities/app-graph-builder.ts`)
+
+Extensions contribute navtree sections, their child nodes, and actions on any node. Assemble with `const extensions = yield* Effect.all([...])` then `Capability.contributes(AppCapabilities.AppGraphBuilder, extensions)` — the raw array fails the `BuilderExtensions` typecheck. Wire with `AppPlugin.addAppGraphModule`.
+
+Section hub: one extension matching `AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.<group>)` → `AppNode.makeSection({...})`, a second matching `node.type === SECTION_TYPE && isSpace(node.properties.space)` → the child nodes. Use `TypeSection.createTypeSectionExtension` when the section is keyed by typename.
+
+**Gate the section on content** — the connector queries the objects it lists and returns `Effect.succeed([])` while there are none, so the section is absent from spaces that don't use the plugin. Its `+` action goes with it, so the type also needs a `SpaceCapabilities.CreateObjectEntry` (`src/capabilities/create-object.ts`) for the first create.
+
+**Create where the objects are listed, not in the database** — `SpaceOperation.AddObject` navigates to `targetNodeId`, falling back to the database subtree when absent, so forwarding a bare `options.targetNodeId` strands the user under Database. Point it at the node whose children are the objects: the section, or its object-listing child when the hub nests one (plugin-studio's Artifacts hang off a virtual `Artifacts` node, not the Studio section):
+
+```ts
+targetNodeId: options.targetNodeId ?? getPublicationsPath(options.db.spaceId),
+```
+
+Declare paths once in `src/paths.ts` — `GraphPath.getSpacePath(spaceId, GroupSegments.<group>, <segment>)`, or `GraphPath.createTypeSectionPaths(Type, { groupId })` — and import them from both the graph builder and the create-object entries.
+
+See: `plugin-inbox/src/capabilities/app-graph-builder.ts`, `plugin-inbox/src/paths.ts`
 
 ## Plugin Definition
 
