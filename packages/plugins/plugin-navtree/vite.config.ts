@@ -8,7 +8,6 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'NavTreePlugin': 'src/NavTreePlugin.tsx',
-    'NavTreePlugin.node': 'src/NavTreePlugin.node.ts',
     'NavTreePlugin.workerd': 'src/NavTreePlugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',

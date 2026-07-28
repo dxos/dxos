@@ -11,12 +11,12 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
-import { Table } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
 import { useTestTableModel } from '../../testing';
+import { Table } from '../../types';
 import { TableCellEditor } from './TableCellEditor';
 
 type StoryArgs = {

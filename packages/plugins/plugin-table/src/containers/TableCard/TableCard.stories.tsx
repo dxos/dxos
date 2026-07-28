@@ -14,8 +14,8 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
+import { Table } from '@dxos/react-ui-table/types';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Table } from '@dxos/schema';
 import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
 import { translations } from '#translations';

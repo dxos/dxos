@@ -66,7 +66,7 @@ import { Markdown } from '@dxos/plugin-markdown';
 import { Sheet } from '@dxos/plugin-sheet';
 import { Sketch } from '@dxos/plugin-sketch';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
-import { Table } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
 import { Tagging, TagIndex, ViewModel } from '@dxos/schema';
 import { Actor, ContentBlock, Event, ExternalProject, Message, Organization, Person, Task } from '@dxos/types';
 

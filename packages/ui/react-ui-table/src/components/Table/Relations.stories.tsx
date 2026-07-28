@@ -16,7 +16,6 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
-import { Table } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
@@ -26,6 +25,7 @@ import { translations } from '#translations';
 
 import { useProjectionModel, useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
+import { Table } from '../../types';
 import { Table as TableComponent } from './Table';
 
 random.seed(1);

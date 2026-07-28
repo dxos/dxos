@@ -16,7 +16,8 @@ import { Filter, Obj, Query, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
-import { Table, TableView } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
+import { TableView } from '@dxos/schema';
 import { ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 

@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Operation } from '@dxos/compute';
 import { Database, DXN, Format, Type, View } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
-import { Table } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
 
 import { meta } from '#meta';
 

@@ -8,7 +8,8 @@ import { useState } from 'react';
 import { Type } from '@dxos/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
-import { type Table } from '@dxos/schema';
+
+import { type Table } from '../types';
 
 export const useProjectionModel = <S extends Type.AnyEntity>(
   schema: S | undefined,

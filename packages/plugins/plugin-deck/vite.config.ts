@@ -8,7 +8,6 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'DeckPlugin': 'src/DeckPlugin.ts',
-    'DeckPlugin.node': 'src/DeckPlugin.node.ts',
     'DeckPlugin.workerd': 'src/DeckPlugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',

@@ -14,7 +14,8 @@ import {
   getSchemaFromJsonSchema,
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
-import { Table } from '@dxos/schema';
+
+import { Table } from '../types';
 
 // TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {

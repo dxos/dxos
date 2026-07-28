@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
-import { Table } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 
 import { TableOperation } from '#types';

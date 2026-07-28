@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
-import { Table } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
 
 import { CommentConfig, CreateObject, OperationHandler, ReactSurface, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';

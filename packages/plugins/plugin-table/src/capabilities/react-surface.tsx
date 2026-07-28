@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Table } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
 
 import { TableArticle, TableCard } from '#containers';
 

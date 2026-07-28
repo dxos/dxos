@@ -10,8 +10,8 @@ import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { LocalBackend, MemoryBackend, ViewState } from '@dxos/react-ui-attention';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
-import { Table } from '@dxos/schema';
 
+import { Table } from '../types';
 import {
   TableModel,
   type TableModelProps,

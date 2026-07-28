@@ -23,8 +23,8 @@ import {
 } from '@dxos/react-ui-grid';
 import { formatForEditing } from '@dxos/schema';
 import { type ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
-import { type Table } from '@dxos/schema';
 
+import { type Table } from '../types';
 import { extractOrder } from '../util';
 import { compareValues } from '../util/sort';
 import { extractTagIds } from '../util/tag';

@@ -9,10 +9,10 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { type JsonSchema, type Type } from '@dxos/echo';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
-import { type Table as TableType } from '@dxos/schema';
 
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
+import { type Table as TableType } from '../../types';
 import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util';
 import { Table, type TableController } from './Table';
 

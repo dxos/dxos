@@ -46,12 +46,10 @@
     "#plugin": {
       "source": {
         "workerd": "./src/DeckPlugin.workerd.ts",
-        "node": "./src/DeckPlugin.node.ts",
         "default": "./src/DeckPlugin.ts"
       },
       "types": "./dist/types/src/DeckPlugin.d.ts",
       "workerd": "./dist/lib/DeckPlugin.workerd.mjs",
-      "node": "./dist/lib/DeckPlugin.node.mjs",
       "default": "./dist/lib/DeckPlugin.mjs"
     },
     "#translations": {

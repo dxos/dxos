@@ -46,12 +46,10 @@
     "#plugin": {
       "source": {
         "workerd": "./src/NavTreePlugin.workerd.ts",
-        "node": "./src/NavTreePlugin.node.ts",
         "default": "./src/NavTreePlugin.tsx"
       },
       "types": "./dist/types/src/NavTreePlugin.d.ts",
       "workerd": "./dist/lib/NavTreePlugin.workerd.mjs",
-      "node": "./dist/lib/NavTreePlugin.node.mjs",
       "default": "./dist/lib/NavTreePlugin.mjs"
     },
     "#testing": {

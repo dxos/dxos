@@ -12,7 +12,7 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Card } from '@dxos/react-ui';
-import { Table } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
 import { getTypeURIFromQuery } from '@dxos/schema';
 import { type Organization, Person } from '@dxos/types';
 
