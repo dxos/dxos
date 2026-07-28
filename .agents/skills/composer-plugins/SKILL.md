@@ -127,7 +127,7 @@ Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, skills, settings, etc.).
 Register the plugin with `composer-app`.
 
-Once the plugin contributes a navtree section, apply both rules under **App graph** below — gate the section on a non-empty query, and default the create-object `targetNodeId` to the section's own path.
+Once the plugin contributes a navtree section, apply both rules under **App graph** below — gate the section on a non-empty query, and default the create-object `targetNodeId` to the node that lists the objects.
 
 ## Directory Structure
 
@@ -392,7 +392,7 @@ Section hub: one extension matching `AppNodeMatcher.whenNavTreeGroup(GraphPath.G
 
 **Gate the section on content** — the connector queries the objects it lists and returns `Effect.succeed([])` while there are none, so the section is absent from spaces that don't use the plugin. Its `+` action goes with it, so the type also needs a `SpaceCapabilities.CreateObjectEntry` (`src/capabilities/create-object.ts`) for the first create.
 
-**Create into the section, not the database** — `SpaceOperation.AddObject` navigates to `targetNodeId`, falling back to the database subtree when absent, so forwarding a bare `options.targetNodeId` strands the user under Database:
+**Create where the objects are listed, not in the database** — `SpaceOperation.AddObject` navigates to `targetNodeId`, falling back to the database subtree when absent, so forwarding a bare `options.targetNodeId` strands the user under Database. Point it at the node whose children are the objects: the section, or its object-listing child when the hub nests one (plugin-studio's Artifacts hang off a virtual `Artifacts` node, not the Studio section):
 
 ```ts
 targetNodeId: options.targetNodeId ?? getPublicationsPath(options.db.spaceId),
