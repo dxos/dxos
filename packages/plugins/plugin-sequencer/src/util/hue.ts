@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { getHashHue, hues } from '@dxos/ui-theme';
+import { getHashHue } from '@dxos/ui-theme';
+import { hues } from '@dxos/ui-types';
 
 // Tailwind v3 -500 shades for each ChromaticPalette value. The grid canvas
 // renders via `ctx.fillStyle` and so needs a hex; the design-system class

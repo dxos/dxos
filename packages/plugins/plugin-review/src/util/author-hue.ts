@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Hue, toHue } from '@dxos/ui-theme/headless';
+import { type Hue, toHue } from '@dxos/ui-theme';
 import { hexToHue, stringToHue } from '@dxos/util';
 import { type Branch } from '@dxos/versioning';
 

@@ -20,7 +20,8 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
 
-import { getAnchor } from '../util';
+// Not the `../util` barrel: it re-exports `author-hue`, whose palette lookup is UI-only.
+import { getAnchor } from '../util/message';
 
 /** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
 const whenCommentableObject = NodeMatcher.whenAll(

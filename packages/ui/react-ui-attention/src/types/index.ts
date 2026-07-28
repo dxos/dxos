@@ -3,8 +3,8 @@
 //
 
 // A UI-free entrypoint: the attention/selection/view state definitions with no React attached, so
-// operation handlers and app-graph builders running under node or bun can use them.
-// TODO(wittjosiah): Factor these out into a package that does not carry a UI dependency at all.
+// operation handlers and app-graph builders running under node or bun can use them without pulling
+// the components.
 
 export * as Attention from './Attention';
 export * as Selection from './Selection';
