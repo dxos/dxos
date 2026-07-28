@@ -27,6 +27,9 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ chat: chatRef, event, prompt, qualify }) {
+        if (!event && !prompt) {
+          return yield* Effect.die(new Error('Relay requires an event or a prompt.'));
+        }
         const chat = yield* Database.load(chatRef).pipe(
           Effect.catchTag('EntityNotFoundError', () => Effect.die(new Error('Unable to load relay chat.'))),
         );
@@ -120,8 +123,7 @@ const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
       }),
     );
 
-    const { isRelevant } = value as { isRelevant: boolean };
-    return isRelevant;
+    return value.isRelevant;
   });
 
 export default handler;

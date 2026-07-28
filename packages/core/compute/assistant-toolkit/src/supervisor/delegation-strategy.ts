@@ -12,7 +12,7 @@ import { Instructions } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { EID, type EntityId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -66,12 +66,16 @@ const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefine
  * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
  * fully-qualified ref in the current space. Not resolved here — it resolves lazily when read.
  */
-const resolveArtifactRef = (id: string): Effect.Effect<Ref.Ref<Obj.Unknown>, never, Database.Service> =>
+const resolveArtifactRef = (id: string): Effect.Effect<Ref.Ref<Obj.Unknown>, Error, Database.Service> =>
   Effect.gen(function* () {
     const parsed = EID.tryParse(id);
-    const entityId = ((parsed ? EID.getEntityId(parsed) : undefined) ?? id) as EntityId;
+    const candidate = (parsed ? EID.getEntityId(parsed) : undefined) ?? id;
+    if (!EntityId.isValid(candidate)) {
+      // Malformed LLM-reported id: fail so the caller's `orElseSucceed` drops it.
+      return yield* Effect.fail(new Error(`Invalid artifact id: ${id}`));
+    }
     const { db } = yield* Database.Service;
-    return db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId }));
+    return db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId: candidate }));
   });
 
 /**

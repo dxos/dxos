@@ -31,6 +31,16 @@ const AGENT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.AgentTrigger';
  */
 const AGENT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.AgentTriggerTarget';
 
+/** Reads a feed-annotated object's `feed` ref without assuming its schema shape. */
+const getFeedRef = (obj: Obj.Unknown): Ref.Ref<Obj.Unknown> | undefined => {
+  if (!('feed' in obj)) {
+    return undefined;
+  }
+  const candidate = obj.feed;
+  // The target is type-checked after loading (`Obj.instanceOf(Feed.Feed, …)`), so the ref stays untyped here.
+  return Ref.isRef(candidate) ? candidate : undefined;
+};
+
 /** Checks if an object's schema has the FeedAnnotation. */
 const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
   const type = Obj.getType(obj);
@@ -66,6 +76,14 @@ export const syncAgentAutomation = (
   config: AutomationConfig,
 ): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
+    // Resolve the chat before the destructive phase: a transient resolution gap must not wipe
+    // existing automation without recreating it.
+    const chat = yield* Agent.loadChat(agent);
+    if (!chat) {
+      return;
+    }
+    const chatRef = Ref.make(chat);
+
     const triggers = yield* Database.query(
       Filter.foreignKeys(Trigger.Trigger, [{ source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id }]),
     ).run;
@@ -88,13 +106,6 @@ export const syncAgentAutomation = (
     }
 
     const triggersEnabled = agent.enabled ?? true;
-    const chat = yield* Agent.loadChat(agent);
-    if (!chat) {
-      // Without a chat there is no session to relay into; nothing to compile.
-      yield* Database.flush();
-      return;
-    }
-    const chatRef = Ref.make(chat);
 
     // Lazy import to avoid circular dependency issues.
     const { Relay } = yield* Effect.promise(() => import('../../agent/operations/definitions'));
@@ -149,7 +160,7 @@ export const syncAgentAutomation = (
       if (Obj.instanceOf(Feed.Feed, target)) {
         feedObj = target;
       } else if (hasFeedAnnotation(target)) {
-        const feedRef = (target as Obj.Unknown & { feed?: Ref.Ref<Feed.Feed> }).feed;
+        const feedRef = getFeedRef(target);
         feedObj = feedRef
           ? Option.getOrUndefined(
               yield* Database.load(feedRef).pipe(

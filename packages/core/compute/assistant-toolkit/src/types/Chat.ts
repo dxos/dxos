@@ -242,7 +242,7 @@ export const makeInitialized = (
     Obj.setParent(instructions, agent);
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.runtime<Database.Service>();
-    const contextBinder = new AiContext.Binder({ feed, runtime });
+    const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
     // TODO(dmaretskyi): Skill registry.
     const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));
 
@@ -271,7 +271,7 @@ export const makeInitialized = (
     );
 
     return agent;
-  });
+  }).pipe(Effect.scoped);
 
 /**
  * Resets the agent's chat history by rebuilding the chat context.
@@ -303,7 +303,7 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
       .map((object) => Ref.make(object));
 
     const feed = yield* Database.add(Feed.make());
-    const contextBinder = new AiContext.Binder({ feed, runtime });
+    const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
 
     const chat = yield* Database.add(
       make({
@@ -326,7 +326,8 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
       Effect.orDie,
     );
     for (const relation of relations) {
-      if (Relation.getSource(relation) === existingChat) {
+      // Compare by id: the two query paths may resolve distinct proxy instances for the same chat.
+      if (Relation.getSource(relation).id === existingChat.id) {
         yield* Database.remove(relation);
       }
     }

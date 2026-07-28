@@ -13,13 +13,11 @@ Target model:
 - **Chat** = instance + history; `instructions` steers it; `agent?` attributes
   it. An agent is a _preset_, applied at chat creation.
 
-Each phase ships as its own PR and keeps main green. Phases that change
-persisted shapes (A, B) are revertible only within an explicit
-**dual-read/dual-write window**: A dual-reads the old shape and B dual-writes
-the old field until D's migration closes the window — reverting after D means
-restoring from the migration, not flipping a switch. Order matters: A unlocks
-the preset channel, B removes the wrong-direction dependency, C and D delete
-the duplicate machinery.
+Order matters: A unlocks the preset channel, B removes the wrong-direction
+dependency, C and D delete the duplicate machinery. As planned, A/B carried
+dual-read/dual-write windows toward a D migration; the final decision (user,
+2026-07-28) was **no data migration** — 0.1.0 agents are abandoned and
+recreated, and D removed the transitional shims outright.
 
 ## Phase A — `Agent.instructions: Ref<Text>` → `Ref<Instructions>`
 
@@ -27,13 +25,12 @@ The typed object carries `skills`/`objects`/`commands`, which _is_ the preset
 payload; after this phase "apply agent to chat" is one assignment.
 
 - [x] Schema: `instructions: Ref(Instructions.Instructions)`
-      (`types/Agent.ts`); keep `@0.1.0` — old data migrates in D's bump.
-- [x] **Dual-read until D** — `Agent.loadInstructions`: a shared resolve helper accepts both shapes
-      (target is `Text` → treat as instructions text; target is
-      `Instructions` → typed), used by every reader below — existing agents
-      keep working unmigrated, and reverting A cannot strand new-shape
-      records unread (old readers loaded the ref as Text, which a dual-read
-      helper subsumes).
+      (`types/Agent.ts`); kept `@0.1.0` through A-C; 0.1.0 records are NOT
+      migrated (decided in D).
+- [x] **Dual-read (A through C)** — `Agent.loadInstructions` accepted both
+      shapes (bare `Text` and typed `Instructions`) while 0.1.0 records could
+      still load; D's no-migration decision retired the `Text` branch — the
+      helper is typed-only now.
 - [x] `makeInitialized`: `Instructions.make({ text, skills })` (owned via
       `Obj.setParent`); `props.skills` recorded in `instructions.skills` (still
       bound to the feed binder — the delivery mechanism until C); bonus: the
@@ -67,9 +64,9 @@ DESIGN.md); the agent should not own conversation state.
       `CompanionTo`); removes the single-chat limitation
       (`TODO(dmaretskyi): Multiple chats`).
 - [x] `makeInitialized`: still creates a first chat (UX unchanged), sets
-      `chat.agent` **and dual-writes `agent.chat`** until D — legacy readers
-      (hydrated processes, un-migrated call sites, a reverted B) keep working;
-      D's migration drops the field and ends the window.
+      `chat.agent` **and dual-wrote `agent.chat`** through B/C — legacy readers
+      kept working; D dropped the field (no migration — 0.1.0 agents are
+      recreated).
 - [ ] Verify: unit suites GREEN post-B (assistant-toolkit 30, agent-runtime 22,
       plugin-assistant 136); test anchors on `agent.chat` still work via the
       dual-write (porting them lands with D). Memoized agent-skill
@@ -137,7 +134,7 @@ process drains at its own pace (at the cost of the visible extra feed).
       like HarnessService). Remaining: a memoized filtering/multiplexing
       fixture (queued with the pending conversation regeneration).
 
-## Phase D — remove `artifacts`; schema bump + migration
+## Phase D — remove `artifacts`; schema bump (no data migration)
 
 - [x] Deleted `Agent.artifacts`, the `add-artifact`/`AgentWorker`/`Qualifier`
       ops (+ `sync-triggers`), and the artifacts half of `get-context`; the
