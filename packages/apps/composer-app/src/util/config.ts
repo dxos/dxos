@@ -12,7 +12,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 import { getHostPlatform } from '@dxos/util';
 
-import { FEEDBACK_LOG_UPLOAD_MAX_SIZE } from './constants';
+import { LOG_STORE_MAX_BYTES } from './constants';
 
 export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';
@@ -97,7 +97,7 @@ export const initializeObservability = async (
         release: DXOS_VERSION,
         environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
         logStore,
-        feedbackLogMaxSize: FEEDBACK_LOG_UPLOAD_MAX_SIZE,
+        feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
         posthog: observabilityDisabled ? POSTHOG_DISABLED_CONFIG : undefined,
       }),
     ),
