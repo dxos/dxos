@@ -13,9 +13,13 @@ Target model:
 - **Chat** = instance + history; `instructions` steers it; `agent?` attributes
   it. An agent is a _preset_, applied at chat creation.
 
-Each phase ships as its own PR, keeps main green, and is independently
-revertible. Order matters: A unlocks the preset channel, B removes the wrong
-direction dependency, C and D delete the duplicate machinery.
+Each phase ships as its own PR and keeps main green. Phases that change
+persisted shapes (A, B) are revertible only within an explicit
+**dual-read/dual-write window**: A dual-reads the old shape and B dual-writes
+the old field until D's migration closes the window — reverting after D means
+restoring from the migration, not flipping a switch. Order matters: A unlocks
+the preset channel, B removes the wrong-direction dependency, C and D delete
+the duplicate machinery.
 
 ## Phase A — `Agent.instructions: Ref<Text>` → `Ref<Instructions>`
 
@@ -23,9 +27,13 @@ The typed object carries `skills`/`objects`/`commands`, which _is_ the preset
 payload; after this phase "apply agent to chat" is one assignment.
 
 - [ ] Schema: `instructions: Ref(Instructions.Instructions)`
-      (`types/Agent.ts`); keep `@0.1.0` — field shape changes but old data is
-      migrated in D's bump (until then, `makeInitialized`-created agents are
-      the only writers).
+      (`types/Agent.ts`); keep `@0.1.0` — old data migrates in D's bump.
+- [ ] **Dual-read until D**: a shared resolve helper accepts both shapes
+      (target is `Text` → treat as instructions text; target is
+      `Instructions` → typed), used by every reader below — existing agents
+      keep working unmigrated, and reverting A cannot strand new-shape
+      records unread (old readers loaded the ref as Text, which a dual-read
+      helper subsumes).
 - [ ] `makeInitialized`: `Instructions.make({ text: props.instructions })`
       (owned: `Obj.setParent(instructions, agent)`); move `props.skills` into
       `instructions.skills` instead of raw binder args.
@@ -50,9 +58,10 @@ DESIGN.md); the agent should not own conversation state.
 - [ ] "The agent's chats" = query on `Chat.agent` (or the existing
       `CompanionTo`); removes the single-chat limitation
       (`TODO(dmaretskyi): Multiple chats`).
-- [ ] `makeInitialized`: still creates a first chat (UX unchanged) but sets
-      `chat.agent` and stops writing `agent.chat`; keep the field readable
-      until D so hydrated processes don't break mid-migration.
+- [ ] `makeInitialized`: still creates a first chat (UX unchanged), sets
+      `chat.agent` **and dual-writes `agent.chat`** until D — legacy readers
+      (hydrated processes, un-migrated call sites, a reverted B) keep working;
+      D's migration drops the field and ends the window.
 - [ ] Verify: planning / delegation / agent skill tests (they anchor on
       `agent.chat` today — port to `chat.agent` or `CompanionTo`).
 
@@ -90,14 +99,18 @@ but relays push as fast as triggers fire, so a hot feed grows the input queue
 unboundedly. Escape hatch if it bites: reintroduce an intermediary feed the
 process drains at its own pace (at the cost of the visible extra feed).
 
-- [ ] `RelayFunction` (assistant-toolkit): input `{ agent | chat, event }`;
-      qualify (cheap model, reusing the Qualifier prompt) → on relevant,
-      `AgentService.getSession(chatFeed, { instructions }).submitPrompt(event)`.
-      Instructions reach the durable process via the existing spawn-annotation
-      path — no separate ephemeral-path work needed.
+- [ ] `RelayFunction` (assistant-toolkit): input `{ chat: Ref<Chat>, event }`
+      — the concrete contract, mirroring `RunInstructions.chat`: the chat is
+      what carries history (feed), bound context, and the typed
+      `instructions: Ref<Instructions>` (set from the agent's per B). Qualify
+      (cheap model, reusing the Qualifier prompt) → on relevant,
+      `AgentService.getSession(chat.feed, { instructions: chat.instructions })
+      .submitPrompt(event)`. Instructions reach the durable process via the
+      existing spawn-annotation path — no separate ephemeral-path work needed.
 - [ ] Agent wizard: a subscription creates a Routine (feed trigger →
-      `RelayFunction`); `cron` creates a Routine (timer trigger) that submits a
-      wake prompt through the same relay path.
+      `RelayFunction` with the agent's chat ref); `cron` creates a Routine
+      (timer trigger) that submits a wake prompt through the same relay path
+      (same `chat` input, synthetic event).
 - [ ] `enabled`: routines gain an owner gate or the flag moves onto each
       Routine; `sync-triggers` reduces to a migration shim (existing
       cron/subscription fields → Routines on first open), then deletes.
@@ -123,10 +136,14 @@ process drains at its own pace (at the cost of the visible extra feed).
       today.
 - [ ] `makeInitialized` slims to identity + instructions (+ optional first
       chat via the chat factory).
-- [ ] Verify: Agent.test round-trip at 0.2.0, migration test (0.1.0 fixture →
-      0.2.0), full assistant-toolkit + plugin-assistant suites, and a live
-      pass of `projects.eval.ts` (unchanged expectations prove the container
-      path was already agent-free).
+- [ ] Verify: Agent.test round-trip at 0.2.0; a migration test (0.1.0 fixture
+      → 0.2.0) asserting each inline artifact lands in the created project's
+      Collection **and** is returned by `ProjectSkill.artifact-list`, and that
+      the reparented chat still resolves its feed and instructions; full
+      assistant-toolkit + plugin-assistant suites; and a live pass of
+      `projects.eval.ts`, whose scorers already assert the replacement
+      workflow end-to-end (artifact created → filed into the project
+      Collection via `artifact-add` → bound into chat context).
 
 ## Phase E (optional) — rename the session host
 

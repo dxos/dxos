@@ -75,7 +75,7 @@ const SUMMARY_THRESHOLD = 80_000;
 export class Session extends Resource {
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Database.Service>;
-  private readonly _instructions: readonly Instructions.Instructions[];
+  readonly #instructions: readonly Instructions.Instructions[];
 
   /**
    * Skills and objects bound to the session.
@@ -88,7 +88,7 @@ export class Session extends Resource {
     super();
     this._feed = options.feed;
     this._runtime = options.runtime;
-    this._instructions = options.instructions ?? [];
+    this.#instructions = options.instructions ?? [];
     invariant(this._feed);
     invariant(this._runtime);
     this._binder = new AiContext.Binder({
@@ -170,7 +170,7 @@ export class Session extends Resource {
         history,
         skills,
         objects,
-        instructions: this._instructions,
+        instructions: this.#instructions,
         prompt: params.prompt,
         system: params.system,
       });
@@ -199,7 +199,7 @@ export class Session extends Resource {
           system: params.system,
           skills: currentSkills,
           objects: this.context.getObjects(),
-          instructions: this._instructions,
+          instructions: this.#instructions,
         }).pipe(Effect.orDie);
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });

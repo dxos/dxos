@@ -256,7 +256,7 @@ export class AiChatProcessor {
       Effect.gen(this, function* () {
         const skills = this.context.getSkills();
         const objects = this.context.getObjects();
-        const instructions = yield* this._getInstructions();
+        const instructions = yield* this.#getInstructions();
         // Tier A only: system-prompt formatting runs operations that read the conversation context;
         // the live-host Tier B control surface is not reachable from this fiber.
         const runtime = yield* Effect.runtime<Database.Service>();
@@ -274,7 +274,7 @@ export class AiChatProcessor {
    * Resolves the chat's steering instructions, if any. The session is feed-centric and cannot reach
    * its chat, so the ref is resolved here and handed down.
    */
-  private _getInstructions(): Effect.Effect<Instructions.Instructions[], never, Database.Service> {
+  #getInstructions(): Effect.Effect<Instructions.Instructions[], never, Database.Service> {
     return Effect.gen(this, function* () {
       const instructionsRef = this._options.chat?.target?.instructions;
       if (!instructionsRef) {
