@@ -320,9 +320,12 @@ encoded the pre-pair-chain URL shape.
       `treeView.userAccount` after 60s, against ~20s for a cold `/` in the same run. So `openPluginRegistry()`
       now holds the right URL but cannot work until this is fixed. Nothing covers it — both call sites
       (`basic.spec.ts:81,88`) sit in `test.skip`ped tests, skipped for an unrelated reason, which is why the
-      break went unnoticed. Two follow-ups: find why that route wedges startup, and decide whether the helper
-      should click `treeView.pluginRegistry` instead (verified working, but contradicts the comment explaining
-      that URL navigation was chosen to dodge a firefox operation-handler race).
+      break went unnoticed. The fix belongs in startup resolution, NOT in the test: clicking the pinned node
+      does work, but `main` deliberately navigates by URL because the click path races
+      layout/settings operation-handler registration and is silently swallowed in firefox (see the comment on
+      `openPluginRegistry`), and the e2e job runs `PLAYWRIGHT_BROWSER=all`. Whether cold navigation to the
+      pre-grammar `/!dxos:plugin-registry` ever worked is unknown — both call sites have been skipped
+      throughout, so the URL rework may have masked an already-broken path.
 
 ## Backlog (post-land)
 
