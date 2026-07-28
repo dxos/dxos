@@ -191,6 +191,24 @@ until the process is terminated — the same behavior a model change already has
 The fix, if it ever bites: compare the ref against the `sessionCache` entry and
 terminate/respawn, exactly as the model/provider comparison does.
 
+## Artifacts and the project skill
+
+The artifacts Collection is only useful if the model can both **file** into it and
+**find** from it. A `ProjectSkill`, bound into every project chat, owns that:
+
+- **Add** an object ref to the project's artifacts Collection.
+- **List** the collection, so the model can find what the project already holds
+  without falling back to a space-wide search.
+
+Filing is explicit rather than automatic: the skill's instructions tell the model
+to file what it creates, and the tool call is visible in the conversation. The
+alternative — intercepting object creation during a project chat and filing
+everything automatically — needs a creation hook and silently captures scratch
+objects, so it is not the default.
+
+Creating artifacts of other types from a project chat (Outline, Sheet,
+Organization/Contact) builds on the same skill and is tracked separately.
+
 ## Project chats
 
 Goal: start a chat session from a project with the project already in scope, and
@@ -275,10 +293,26 @@ so `+` works from the tree.
 - Storybook: `ProjectArticle` story + play test (including the toolbar creating a
   chat that appears in the project's chat list); chat-binding story in
   stories-assistant.
-- Live: create a project chat in Composer and confirm the project's instructions
-  reach the system prompt in a _standalone plank_, not just the companion — the
-  end-to-end check that the ref survives the agent-process boundary — and that
-  the chat shows under its project in the navtree after a cold deep-link load.
+- Live (manual, in Composer): create a project chat and confirm the project's
+  instructions reach the system prompt in a _standalone plank_, not just the
+  companion — the end-to-end check that the ref survives the agent-process
+  boundary — and that the chat shows under its project in the navtree after a
+  cold deep-link load.
+
+### System test (live against a real model, out of CI)
+
+One scenario exercising the whole loop, graded on database effects rather than on
+model wording:
+
+1. Create a Project with instructions.
+2. Create a Chat under it — own feed, `instructions` pointing at the project's.
+3. Prompt the model to create a markdown document.
+4. Assert the document is bound into the session context **and** present in the
+   project's artifacts Collection.
+
+Step 4 is the real assertion: binding alone proves only that the session saw the
+object, not that the project owns it, so this is the test that would catch the
+project skill failing to file. It runs against a live model and stays out of CI.
 
 ## Open questions
 

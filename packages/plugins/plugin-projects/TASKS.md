@@ -62,12 +62,14 @@ repoint.
 
 ### Tasks
 
-- [ ] **`Chat.instructions?: Ref<Instructions>`** — typed ref on the Chat schema
+- [x] **`Chat.instructions?: Ref<Instructions>`** — typed ref on the Chat schema
       (assistant-toolkit → compute).
-- [ ] **Explicit `instructions` through the request path** — `formatSystemPrompt` takes it
-      as a parameter and its `instructionObjects`/`contextObjects` partition is deleted;
-      threaded via `AiSession.Options` → `RunProps`. Update all four
-      `formatSystemPrompt` call sites (AiRequest ×2, AiSession, plugin-assistant processor).
+- [x] **Explicit `instructions` through the request path** — `formatSystemPrompt` takes it
+      as a parameter, the `instructionObjects`/`contextObjects` partition is deleted, and it
+      is threaded via `AiSession.Options` → `RunProps` → `begin`/`run`;
+      `processor.getSystemPrompt` resolves `chat.instructions`. assistant 43 tests green
+      (format.test.ts 4/4, incl. a new case asserting a bound Instructions object is now an
+      ordinary context stub); assistant-toolkit + plugin-assistant build clean.
 - [ ] **Agent-process boundary** — `GetSessionOptions.instructions` + a persisted spawn
       annotation beside `Process.TargetAnnotation`; `processor.ts` passes
       `chat.instructions`. Executable options don't survive `hydrateAgents`.
@@ -93,6 +95,19 @@ repoint.
       play test (toolbar creates a chat, appears in the list), live verify (instructions
       reach the system prompt in a standalone plank — proves the ref survives the
       agent-process boundary; navtree children survive a cold deep link).
+- [ ] **`ProjectSkill` — artifact management** — tools to add an object ref to the project's
+      artifacts Collection and to list the collection, so the model can file and find
+      artifacts without a space-wide search. Bound into every project chat. Filing is
+      explicit (skill instructions tell the model to file what it creates), not an
+      interception of object creation. Prerequisite for the system test below.
+- [ ] **System test (live model, out of CI)** — Project with instructions → Chat under it
+      (own feed, project's instructions) → prompt the model to create a markdown document →
+      assert the document is both bound into the session context AND in the project's
+      artifacts Collection. Graded on DB effects, not model wording. Placement TBD
+      (`@dxos/assistant-evals` eval vs a `!test`-tagged live-AI story alongside the existing
+      `Projects.stories.tsx`).
+- [ ] **Create other artifact types from a project chat** — Outline, Sheet,
+      Organization/Contact objects; builds on `ProjectSkill`.
 - [ ] **Watch item** — if `children()` does not re-emit in the graph connector when a chat
       is newly parented, fall back to a `chats: Ref<Collection>` field on Project
       (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.
