@@ -37,6 +37,13 @@ const PluginImportSource = ({
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
 
+  // The package-level opt-out applies to bare specifiers only (`@dxos/config`), matching the
+  // specifier-pattern excludes it replaced: subpath imports (`@dxos/config/vite-plugin`,
+  // `@dxos/teleport/testing`) and package-internal `#*` imports must still reach source, or
+  // they fall through to `dist/lib/**` and fail when the package has not been compiled.
+  const isBareSpecifier = (specifier: string) =>
+    !specifier.startsWith('#') && specifier.split('/').length === (specifier.startsWith('@') ? 2 : 1);
+
   // `dx.importSource === false` per package.json path; resolution runs for every
   // import so the flag must not cost a file read each time.
   const optOutCache = new Map<string, boolean>();
@@ -122,7 +129,7 @@ const PluginImportSource = ({
 
           if (resolved.packageJsonPath) {
             this.addWatchFile(resolved.packageJsonPath);
-            if (await isOptedOut(resolved.packageJsonPath)) {
+            if (isBareSpecifier(source) && (await isOptedOut(resolved.packageJsonPath))) {
               verbose && console.log(`[plugin-import-source] ${source} -> opted out (dx.importSource: false)`);
               return null;
             }
