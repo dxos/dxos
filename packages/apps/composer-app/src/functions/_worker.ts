@@ -52,22 +52,65 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
     return new Response('Payload too large', { status: 413 });
   }
 
-  const bodyBuffer = await request.arrayBuffer();
-  if (bodyBuffer.byteLength === 0) {
+  if (!request.body) {
     return new Response('Empty body', { status: 400 });
   }
 
-  if (bodyBuffer.byteLength > FEEDBACK_LOGS_MAX_BODY_SIZE) {
-    return new Response('Payload too large', { status: 413 });
-  }
+  // Stream to R2 rather than buffering with `arrayBuffer()`: a multi-MB dump held whole in the
+  // isolate risks the Worker memory limit, which tears down the connection so the client sees a
+  // rejected `fetch` with no status instead of an error response.
+  let byteCount = 0;
+  let sizeExceeded = false;
+  let isEmpty = false;
+  const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      byteCount += chunk.byteLength;
+      // Enforce the cap even when Content-Length is absent or understates the body.
+      if (byteCount > FEEDBACK_LOGS_MAX_BODY_SIZE) {
+        sizeExceeded = true;
+        controller.error(new Error('Payload too large'));
+      } else {
+        controller.enqueue(chunk);
+      }
+    },
+    flush(controller) {
+      if (byteCount === 0) {
+        isEmpty = true;
+        controller.error(new Error('Empty body'));
+      }
+    },
+  });
+
+  // Never awaited: a rejecting put() can leave the pipe unsettled forever (it stops reading while
+  // the request body is still being written), and awaiting it would hang the request.
+  void request.body.pipeTo(writable).catch(() => {});
 
   const date = new Date().toISOString().slice(0, 10);
   const id = crypto.randomUUID();
   const key = `logs/${date}/${id}.ndjson`;
 
-  await env.FEEDBACK_LOGS.put(key, bodyBuffer, {
-    httpMetadata: { contentType: 'application/x-ndjson' },
-  });
+  let stored = false;
+  try {
+    await env.FEEDBACK_LOGS.put(key, readable, {
+      httpMetadata: { contentType: 'application/x-ndjson' },
+    });
+    stored = true;
+  } catch {
+    // put() rejects both when the transform errors the stream above and when R2 itself fails; the
+    // flags distinguish the two, and a resolved put() means the body was fully read.
+  }
+
+  if (sizeExceeded) {
+    return new Response('Payload too large', { status: 413 });
+  }
+
+  if (isEmpty) {
+    return new Response('Empty body', { status: 400 });
+  }
+
+  if (!stored) {
+    return new Response('Failed to store feedback logs', { status: 502 });
+  }
 
   return new Response(JSON.stringify({ key }), {
     status: 200,
