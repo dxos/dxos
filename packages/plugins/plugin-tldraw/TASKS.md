@@ -43,7 +43,8 @@ Game/Chess-style split: headless host plugin + renderer variant plugins.
 - [x] **plugin-excalidraw onto the base** — dropped its root `Excalidraw` type + create operation; keeps `org.dxos.type.excalidraw.canvas`; new scene-DSL builder (style maps, render/read/apply); contributes VariantProvider (article only).
 - [x] **Consumers updated** — composer-app (Illustrator/Tldraw/Excalidraw plugins registered, assets → `/assets/plugin-tldraw`), plugin-debug, plugin-markdown/plugin-stack stories, plugin-onboarding exemplar, stories-assistant Sketch story, storybook-react static dirs, tsconfig/paths/changeset config.
 - [x] **Tests** — identical create→edit→read round-trip runs against BOTH builders (tldraw + excalidraw) via `AssistantTestLayer` + `extraServices` capability layer; 15 tldraw tests green, 2 excalidraw green.
-- [ ] **Open PR** — this branch.
+- [ ] **Open PR** — #12380 (changeset `illustrator-base-plugin.md`).
+- [ ] **First publish** — maintainer: publish `@dxos/plugin-illustrator` + `@dxos/plugin-tldraw` with trusted publishing, then flip `private: true` off and move plugin-debug's deps back to `dependencies` (CI gates: check-packages-published vs check-public-dependencies).
 - [ ] **Technical-drawing dialect** — mermaid/UML variant with placement metadata; hierarchical zoom, source-linked nodes, collapsible groups, auto-layout + slot routing, scenarios. NOT in this phase.
 - [ ] **Excalidraw native arrow bindings** — replace positional arrows + customData refs with real start/endBinding + boundElements sync.
 - [ ] **Illustrator PLUGIN.mdl deepening** — document capability contract once the dialect work firms it up.
