@@ -9,6 +9,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { ThemedClassName } from '../../util';
 
+/** A stack frame resolved to a local (workspace) source location. */
 type LocalFrame = { href: string; fileName: string };
 
 export type ParsedStackFrame = ReturnType<typeof ErrorStackParser.parse>[number];

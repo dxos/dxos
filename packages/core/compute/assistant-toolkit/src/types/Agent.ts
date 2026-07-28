@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-// Agent is defined alongside Chat (`./Chat`): the two types reference each other and separate
-// modules would form an import cycle. This facade keeps the `Agent.*` namespace stable.
+// Agent is implemented alongside Chat (`./agent-chat`): the two types reference each other and
+// separate modules would form an import cycle. This facade keeps the `Agent.*` namespace stable.
 export {
   Agent,
   type MakeProps,
@@ -14,4 +14,4 @@ export {
   loadInstructions,
   makeInitialized,
   resetChatHistory,
-} from './Chat';
+} from './agent-chat';
