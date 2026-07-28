@@ -68,6 +68,11 @@ export type ChangeCallback<T> = (mutableObj: Mutable<T>) => void;
 export const change = <T>(obj: T, callback: ChangeCallback<T>): void => {
   // Check proxy first (allows handler to intercept), then fall back to target.
   // This order is important for EchoReactiveHandler which handles ChangeId in the proxy trap.
+  //
+  // The direct-callback fallback (no `[ChangeId]`) now only applies to true snapshots and
+  // schemaless feed items (unresolvable type at decode time, see `makeDecodedEntityLive`) — live
+  // feed-backed objects carry a `[ChangeId]` (via `TypedReactiveHandler`) same as any other typed
+  // reactive object, so they take the `changeFn` branch above like automerge-backed objects do.
   const changeFn = (obj as any)[ChangeId];
   if (changeFn) {
     changeFn(callback);

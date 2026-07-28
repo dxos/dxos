@@ -8,6 +8,7 @@ import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 
 import type { Obj } from '@dxos/echo';
+import { ATTR_TYPE } from '@dxos/echo/internal';
 import type { EntityId, SpaceId } from '@dxos/keys';
 
 import type { EntityMeta } from './entity-meta-index';
@@ -232,10 +233,27 @@ export class FtsIndex implements Index {
                 return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
               }
 
-              const snapshot = JSON.stringify(data);
-
               // FTS5 doesn't support UPDATE, need DELETE + INSERT for upsert.
-              const existing = yield* sql<{ rowid: number }>`SELECT rowid FROM ftsIndex WHERE rowid = ${recordId}`;
+              const existing = yield* sql<{
+                rowid: number;
+                snapshot: string;
+              }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid = ${recordId}`;
+
+              // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
+              // tombstone appended by `Feed.remove`. Feed blocks are stored wholesale, so merge the
+              // partial onto the prior snapshot to retain the body and type while layering the new
+              // marker; otherwise the DELETE+INSERT below would replace the full snapshot with the
+              // bare partial and the client could not hydrate the deleted object (`Obj.fromJSON`
+              // needs `@type` to decode). Full blocks (carrying `@type`) still replace wholesale.
+              // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
+              // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
+              const isPartialBlock = (data as Record<string, unknown>)[ATTR_TYPE] === undefined;
+              const merged =
+                isPartialBlock && existing.length > 0
+                  ? { ...(JSON.parse(existing[0].snapshot) as Record<string, unknown>), ...data }
+                  : data;
+              const snapshot = JSON.stringify(merged);
+
               if (existing.length > 0) {
                 yield* sql`DELETE FROM ftsIndex WHERE rowid = ${recordId}`;
               }
