@@ -121,6 +121,17 @@ repoint.
 
 ## Follow-ups / deferred (design reviews)
 
+- [x] **`Chat.agent` removed; linkage is the `CompanionTo` relation** — the field (phase B) was the
+      edge that closed the Agent↔Chat import cycle and forced both types into one module behind
+      namespace facades. `Agent` and `Chat` are now independent leaves; `AgentChat` (new namespace)
+      holds the lifecycle — `makeInitialized`, `resetChatHistory`, `loadChat`, `loadAgent` — and is
+      the only module needing both. No migration (the field shipped one day earlier at `chat@0.1.0`,
+      added without a bump). `check-cycles` green; the #12370 changeset amended in place.
+- [ ] **Regenerate the agent-skill memoized recordings on this branch** — `expense tracking list`
+      (`skills/agent/skill.test.ts`, gated behind `DX_RUN_LLM_TESTS=1`) fails on the pre-existing
+      baseline too: the regenerated conversations live on `origin/claude/plugin-projects-plugin-7a1225`
+      (e720f8c684) and never reached main.
+
 - [x] **plugin-markdown ops resolve LLM-provided refs via the db** — `ref.tryLoad is not a
 function` when a tool-call `doc` ref decodes without a resolver; the five doc-ref ops
       (update/create-branch/create-checkpoint/get-history/merge-branch) now use
