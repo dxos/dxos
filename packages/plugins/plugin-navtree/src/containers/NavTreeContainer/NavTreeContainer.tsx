@@ -102,15 +102,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         if (activeItems.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            if (layout.mode === 'multi') {
-              void invokePromise(LayoutOperation.Set, { subject: [item.id] });
-            } else {
-              void invokePromise(LayoutOperation.Open, { subject: [item.id] });
-            }
+            void invokePromise(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokePromise, graph, layout.mode],
+      [invokePromise, graph],
     );
 
     const blockInstruction = useCallback(
@@ -129,7 +125,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     }, []);
 
     const handleSelect = useCallback(
-      ({ item: node, path, option }: { item: Node.Node; path: string[]; option: boolean }) => {
+      ({ item: node, path, option, shift }: { item: Node.Node; path: string[]; option: boolean; shift: boolean }) => {
         if (!node.data) {
           return;
         }
@@ -144,11 +140,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = getItem(path).current;
         if (!current) {
-          if (layout.mode === 'multi') {
-            void invokePromise(LayoutOperation.Set, { subject: [node.id] });
-          } else {
-            void invokePromise(LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
-          }
+          // Plain click navigates (the deck becomes this item); shift forces a new plank (see the Open
+          // handler, which upgrades any disposition to add when shift is held).
+          void invokePromise(LayoutOperation.Open, {
+            subject: [node.id],
+            key: node.properties.key,
+            disposition: 'solo',
+            modifiers: { shift },
+          });
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {
@@ -164,7 +163,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, getItem, runAction, isLg, layout.mode],
+      [graph, invokePromise, getItem, runAction, isLg],
     );
 
     const handleBack = useCallback(() => void invokePromise(LayoutOperation.RevertWorkspace), [invokePromise]);

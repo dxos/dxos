@@ -7,7 +7,7 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { Capabilities, type Role } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { AppSpace, NotFound, Paths } from '@dxos/app-toolkit';
+import { AppSpace, GraphPath, NotFound } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { StorybookCapabilities } from '@dxos/plugin-testing';
@@ -87,7 +87,7 @@ const isObjectCell = (spec: ModuleSpec): spec is ObjectCellSpec =>
  */
 export const normalizeCell = (spec: ModuleSpec, spaceId: string, position = ''): NormalizedCell => {
   if (isObjectCell(spec)) {
-    const attendableId = spec.id ?? Paths.getCollectionsPath(spaceId, spec.object.id);
+    const attendableId = spec.id ?? GraphPath.getCollectionsPath(spaceId, spec.object.id);
     return {
       kind: 'object',
       object: spec.object,
@@ -196,7 +196,7 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
 
   useEffect(() => {
     if (space && AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace) !== space.id) {
-      atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: Paths.getSpacePath(space.id) });
+      atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: GraphPath.getSpacePath(space.id) });
     }
   }, [space, layoutState, atomRegistry]);
 

@@ -1,6 +1,11 @@
 name: Crab Nebula Channel
 description: Compute the channel for a Crab Nebula release
 
+inputs:
+  environment:
+    description: Target environment (labs | staging | production).
+    required: true
+
 outputs:
   channel:
     description: 'Crab Nebula channel'
@@ -10,6 +15,18 @@ runs:
   using: 'composite'
   steps:
     - id: release-channel
-      # Replace all slashes with dashes.
-      run: echo "channel=$(echo "${{ github.ref_name }}" | sed 's|/|-|g')" >> $GITHUB_OUTPUT
       shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+      run: |
+        if [ -z "$ENVIRONMENT" ]; then
+          echo 'cn-channel: environment input is required' >&2
+          exit 1
+        fi
+        # Production keeps the `main` channel it has always shipped on: every build bakes its channel into the
+        # updater endpoint, so moving it to the primary channel would strand installs still polling `main`.
+        if [ "$ENVIRONMENT" = 'production' ]; then
+          echo 'channel=main' >> "$GITHUB_OUTPUT"
+        else
+          echo "channel=$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+        fi

@@ -294,10 +294,11 @@ const MenuContent = ({
       }
       event.stopPropagation();
       closeMenu();
+      const params = { parent: group, caller, modifiers: { shift: event.shiftKey } };
       if (onAction) {
-        onAction(action, { parent: group, caller });
+        onAction(action, params);
       } else {
-        void executeMenuAction(action, { parent: group, caller });
+        void executeMenuAction(action, params);
       }
     },
     [group, caller, onAction, closeMenu],

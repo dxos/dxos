@@ -4,8 +4,6 @@
 
 import { type Plugin, UrlLoader } from '@dxos/app-framework';
 
-import { registryCategoryId } from './meta';
-
 export type PluginPredicate = (plugin: Plugin.Plugin) => boolean;
 
 export type CategoryFilterContext = {
@@ -26,14 +24,14 @@ export const getCategoryPredicate = (
   { core, enabled, remoteIds }: CategoryFilterContext,
 ): PluginPredicate => {
   switch (category) {
-    case registryCategoryId('bundled'):
+    case 'bundled':
       return ({ meta }) => !core.includes(meta.profile.key) && !remoteIds.has(meta.profile.key);
-    case registryCategoryId('installed'):
+    case 'installed':
       return ({ meta }) => !core.includes(meta.profile.key) && enabled.includes(meta.profile.key);
-    case registryCategoryId('recommended'):
+    case 'recommended':
       return ({ meta }) =>
         !core.includes(meta.profile.key) && !remoteIds.has(meta.profile.key) && !meta.profile.tags?.includes('labs');
-    case registryCategoryId('labs'):
+    case 'labs':
       return ({ meta }) => meta.profile.tags?.includes('labs') ?? false;
     default:
       return () => false;

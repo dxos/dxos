@@ -243,23 +243,6 @@ export function addReactRootModule<T = void>(
   });
 }
 
-export type NavigationResolverModuleOptions = PluginModuleOptions;
-
-/**
- * Creates a module that contributes navigation target resolvers.
- */
-export function addNavigationResolverModule<T = void>(
-  options: NavigationResolverModuleOptions,
-): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
-  return Plugin$.addModule({
-    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-resolver',
-    activatesOn: options.activatesOn ?? ActivationEvents.ProcessManagerReady,
-    firesBeforeActivation: options.firesBeforeActivation,
-    firesAfterActivation: options.firesAfterActivation,
-    activate: options.activate,
-  });
-}
-
 export type NavigationHandlerModuleOptions = PluginModuleOptions;
 
 /**

@@ -9,7 +9,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppAnnotation, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
@@ -62,7 +62,7 @@ const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoke
 
   const onOpen = useCallback(
     (object: Obj.Unknown) => {
-      void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(object)] });
+      void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] });
     },
     [invokePromise],
   );

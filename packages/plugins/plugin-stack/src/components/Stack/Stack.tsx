@@ -15,7 +15,7 @@ import React, {
 } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { Paths } from '@dxos/app-toolkit';
+import { GraphPath } from '@dxos/app-toolkit';
 import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import {
@@ -210,7 +210,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { attendableId: parentAttendableId, collapsed, onAdd, onMoveUp, onMoveDown, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
-  const attendableId = Paths.getCollectionObjectPath(parentAttendableId, object.id);
+  const attendableId = GraphPath.getCollectionObjectPath(parentAttendableId, object.id);
   const attentionAttrs = useAttentionAttributes(attendableId);
   const surfaceData = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);
   const isCollapsed = collapsed.has(id);

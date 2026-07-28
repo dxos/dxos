@@ -5,7 +5,7 @@
 import React, { useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { NotFound, Paths } from '@dxos/app-toolkit';
+import { GraphPath, NotFound } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox';
@@ -26,13 +26,13 @@ const MailboxModuleContainer = ({ space, attendableId }: { space: Space; attenda
   // Scope the article's selection to the mailbox object rather than this cell's positional
   // attendableId, so the sibling MessageModule cell (a separate ModuleContainer attention target)
   // reads the same selection context and can open the selected thread.
-  const selectionId = mailbox ? Paths.getObjectPathFromObject(mailbox) : attendableId;
+  const selectionId = mailbox ? GraphPath.getObjectPathFromObject(mailbox) : attendableId;
   useEffect(() => {
     // This story renders the article outside the NavTree, whose traversal normally materializes the
     // mailbox's graph node as a side effect. Without that, graph.actions(id) — which the connector
     // plugin's "Connect" action depends on — always returns empty.
     if (mailbox) {
-      NotFound.expandPath(graph, Paths.getObjectPathFromObject(mailbox));
+      NotFound.expandPath(graph, GraphPath.getObjectPathFromObject(mailbox));
     }
   }, [graph, mailbox]);
   return <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: selectionId }} limit={1} />;

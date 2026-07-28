@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, Paths, SettingsOperation } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { SETTINGS_ID, getPluginSettingsSectionPath } from '../types';
@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOp
   Operation.withHandler((input) =>
     Effect.gen(function* () {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(SETTINGS_ID) });
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(SETTINGS_ID) });
       if (input.plugin) {
         // Await (don't fork): SwitchWorkspace already selects the workspace's first child, so a
         // forked Open for the requested plugin races/drops before its deck update applies, leaving
