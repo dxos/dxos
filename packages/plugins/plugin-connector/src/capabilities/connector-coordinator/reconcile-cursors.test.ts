@@ -119,6 +119,21 @@ describe('reconcileCursors', () => {
     expect(await loadTarget(db, cursor.spec.target)).toBeDefined();
   });
 
+  test('reports how many cursors were bound before the submission', async ({ expect }) => {
+    const { db, connection } = await setup();
+
+    // Initial setup: nothing bound yet, which is what the caller keys its first sync off.
+    const first = await reconcile(db, connection, makeConnector(), [{ externalId: 'a', name: 'A' }]);
+    expect(first.existing).toBe(0);
+
+    const second = await reconcile(db, connection, makeConnector(), [
+      { externalId: 'a', name: 'A' },
+      { externalId: 'b', name: 'B' },
+    ]);
+    expect(second.existing).toBe(1);
+    expect(second.added).toBe(1);
+  });
+
   test('removes cursors that drop out of the new submission', async ({ expect }) => {
     const { db, connection } = await setup();
     await reconcile(db, connection, makeConnector(), [

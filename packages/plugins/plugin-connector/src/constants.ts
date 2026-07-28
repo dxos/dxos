@@ -14,6 +14,13 @@ export const SYNC_TARGETS_DIALOG = DXN.make(`${meta.profile.key}.syncTargetsDial
 /** Surface id for the per-provider credential-form dialog (custom tokens, OAuth pre-flight inputs). */
 export const PROVIDER_FORM_DIALOG = DXN.make(`${meta.profile.key}.providerFormDialog`);
 
+/**
+ * Run the connector's sync as soon as a new connection's first sync targets are bound, instead of
+ * waiting for the user to press "Sync now". Flagged because the first sync of a freshly authorized
+ * account is unbounded (full history, every bound target at once), so it stays opt-in per release.
+ */
+export const AUTO_SYNC_ON_CONNECTION_SETUP = true;
+
 /** Provider id for manually entered access tokens. */
 export const CUSTOM_PROVIDER_ID = 'custom';
 

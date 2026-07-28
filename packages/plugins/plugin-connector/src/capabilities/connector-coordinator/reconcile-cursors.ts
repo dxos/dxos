@@ -35,7 +35,8 @@ export type ReconcileCursorsInput = {
  * materializing a fresh local root via `connector.materializeTarget`. A connector with no
  * `materializeTarget` (no dedicated local root type, e.g. Google Contacts) binds the connection
  * itself as the target; its synced objects land directly in the space keyed by foreign id. Returns
- * add/remove counts.
+ * add/remove counts plus the number of cursors bound before this reconciliation, which distinguishes
+ * initial setup (none) from a later change of targets.
  *
  * Runs within a {@link Database} context (provide `Database.layer(db)`); the HTTP client
  * `materializeTarget` needs is provided internally.
@@ -124,5 +125,5 @@ export const reconcileCursors = ({
       yield* Database.flush({ indexes: true });
     }
 
-    return { added, removed };
+    return { added, removed, existing: existingCursors.length };
   });
