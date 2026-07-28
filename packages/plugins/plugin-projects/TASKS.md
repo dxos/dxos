@@ -90,16 +90,22 @@ repoint.
       `chat.instructions` from the project when unset; Projects story mirrors it.
 - [x] **Lazy backfill for pre-existing chats** — same effect: any project companion chat
       without the field picks it up on open.
-- [ ] **`ProjectOperation.CreateChat`** — invoke `AssistantOperation.CreateChat` with the
-      project's instructions ref (by reference, never a copy), `Obj.setParent(chat, project)`,
-      bind `instructions.skills`, `LayoutOperation.Open`. No `SpaceOperation.AddObject`
-      (would file it in the root collection).
-- [ ] **`projectChats` graph extension** — `children()` query → `AppNode.makeObject` per
-      chat; `url` reuses the `chat` key with a parent-resolving dynamic path.
+- [x] **`ProjectOperation.CreateChat`** — invokes `AssistantOperation.CreateChat` with the project's
+      instructions ref (by reference, never a copy), `Obj.setParent(chat, project)`, binds
+      `Project.contextBindings`, `LayoutOperation.Open`. No `SpaceOperation.AddObject`.
+      `AssistantOperation.CreateChat` gained an optional `instructions` input so steering is set at
+      construction. NOT yet exercised end-to-end (toolbar click → chat opens); see the test row.
+- [x] **`projectChats` graph extension** — `children()` query → `AppNode.makeObject` per chat.
+      The flagged re-emission risk does NOT materialize: `project-chats.test.ts` drives a real ECHO db
+      through `setupGraphBuilder` and the connector re-runs when a chat is newly parented, so the
+      `chats: Ref<Collection>` fallback (and its 0.3.0 bump) is not needed. STILL OPEN on this item:
+      the `url` binding — the node exists but a project chat has no parent-resolving path yet, so deep
+      links to one will not resolve.
 - [ ] **Exclude project chats from the top-level Chats section** — plugin-assistant's
       section query, alongside the existing `CompanionTo` exclusion.
-- [ ] **`ProjectArticle` toolbar** — `Panel.Toolbar` + `IconButton`; same action on the
-      project's navtree node (`list-item-primary`).
+- [x] **`ProjectArticle` toolbar** — one graph action dispositioned
+      `['toolbar', 'list-item-primary']` serves both the toolbar (which splices graph actions) and the
+      navtree row, so they cannot drift. Covered by `app-graph-builder.test.ts`.
 - [ ] **Tests** — unit (`formatSystemPrompt` renders the explicit param and no longer
       inlines a bound Instructions object; enumeration; parenting + ref pass-through), story
       play test (toolbar creates a chat, appears in the list), live verify (instructions

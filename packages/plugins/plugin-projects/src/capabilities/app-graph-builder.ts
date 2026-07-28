@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
+import { Chat } from '@dxos/assistant-toolkit';
 import { Operation, Project } from '@dxos/compute';
-import { Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 
@@ -42,9 +43,44 @@ export default Capability.makeModule(
     });
 
     const actionExtensions = yield* createProjectActionExtension();
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [...sectionExtensions, ...actionExtensions]);
+    const chatExtensions = yield* createProjectChatsExtension();
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, [
+      ...sectionExtensions,
+      ...actionExtensions,
+      ...chatExtensions,
+    ]);
   }),
 );
+
+/**
+ * A project's chats as its navtree children. Ownership is the ECHO parent edge (no `Project` schema
+ * field), so the enumeration is a hierarchy query rather than a ref-array read; the `TypeSection`
+ * extension that emits Project nodes leaves them childless.
+ *
+ * The `chat` url key is shared with plugin-assistant's Chats section on purpose — one key spanning
+ * several connectors is how plugin-space addresses objects wherever they sit — so the path resolves
+ * through whichever project currently parents the chat.
+ */
+export const createProjectChatsExtension = () =>
+  GraphBuilder.createExtension({
+    id: 'projectChats',
+    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
+    connector: (project, get) => {
+      const db = Obj.getDatabase(project);
+      if (!db) {
+        return Effect.succeed([]);
+      }
+
+      const children = get(db.query(Query.select(Filter.id(project.id)).children()).atom) as Obj.Unknown[];
+      return Effect.succeed(
+        children
+          .filter(Obj.instanceOf(Chat.Chat))
+          .map((chat) => AppNode.makeObject({ get, db, object: chat, navigable: true }))
+          // `makeObject` yields null for an object it cannot resolve a node for.
+          .filter((node): node is NonNullable<typeof node> => node !== null),
+      );
+    },
+  });
 
 /**
  * Start a chat in project scope. Dispositioned for both surfaces so the one action serves the
