@@ -49,8 +49,9 @@ export const L1PanelUnavailable = ({ workspace, open }: L1PanelUnavailableProps)
     >
       <Empty
         label={t('workspace-unavailable.description')}
-        // Second grid row, so the message clears the rail exactly as an L1 panel's tree does.
-        classNames='row-start-2 animate-fade-in'
+        // Second grid row, so the message clears the rail exactly as an L1 panel's tree does, and
+        // hugging its top rather than stretching to the row's full height.
+        classNames='row-start-2 self-start animate-fade-in'
         style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
       />
     </Tabs.Panel>
