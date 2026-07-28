@@ -14,7 +14,7 @@ import React, {
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { type Node } from '@dxos/plugin-graph';
-import { Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -30,6 +30,9 @@ export type PlankProps = ThemedClassName<{
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
   actions?: AttentionSigilAction[][];
   onAction?: (action: AttentionSigilAction) => void;
+  /** Navigation-history trail rendered before the title (flat mode); clicking one goes back to it. */
+  breadcrumbs?: { id: string; label: string }[];
+  onSelectBreadcrumb?: (id: string) => void;
   /** Toolbar controls rendered after the title (e.g. close/solo/fullscreen). */
   controls?: ReactNode;
   /** Toolbar content rendered between the title and the controls (e.g. a NavbarEnd surface). */
@@ -68,6 +71,8 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       attendableId = node.id,
       actions,
       onAction,
+      breadcrumbs,
+      onSelectBreadcrumb,
       controls,
       navbarEnd,
       sigilFooter,
@@ -124,9 +129,42 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                 </Pane.Sigil>
               )}
             </ActionRoot>
-            <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
-              {label}
-            </Pane.Title>
+            {breadcrumbs && breadcrumbs.length > 0 ? (
+              // Flat mode: the navigation history plus the current plank as one Breadcrumb. The trail
+              // scrolls horizontally when it overflows (see the theme); the current plank stays the
+              // attention-aware Pane.Title, sized to its content so it keeps a stable width.
+              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-2'>
+                <Breadcrumb.List classNames='gap-1'>
+                  {breadcrumbs.map((crumb) => (
+                    <Fragment key={crumb.id}>
+                      <Breadcrumb.ListItem asChild>
+                        <button
+                          type='button'
+                          className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
+                          onClick={() => onSelectBreadcrumb?.(crumb.id)}
+                        >
+                          {crumb.label}
+                        </button>
+                      </Breadcrumb.ListItem>
+                      <Breadcrumb.Separator />
+                    </Fragment>
+                  ))}
+                  <Breadcrumb.ListItem>
+                    <Pane.Title
+                      attendableId={attendableId}
+                      related={related}
+                      classNames={[pending && 'text-description', 'w-auto grow-0']}
+                    >
+                      {label}
+                    </Pane.Title>
+                  </Breadcrumb.ListItem>
+                </Breadcrumb.List>
+              </Breadcrumb.Root>
+            ) : (
+              <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
+                {label}
+              </Pane.Title>
+            )}
             {navbarEnd}
             {controls}
           </Pane.Toolbar>

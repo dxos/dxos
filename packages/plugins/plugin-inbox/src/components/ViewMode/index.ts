@@ -3,3 +3,4 @@
 //
 
 export * from './viewMode';
+export * from './viewModeState';

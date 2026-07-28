@@ -15,13 +15,14 @@ import {
   FeedTraceSink,
   ProcessManager,
   RemoteOperationInvoker,
+  RemoteProcessManager,
   RemoteTriggerManager,
   TriggerDispatcher,
   TriggerMonitor,
   TriggerStateStore,
 } from '@dxos/compute-runtime';
 import { Database, Registry } from '@dxos/echo';
-import { EdgeOperationInvoker, EdgeTriggerManager } from '@dxos/edge-compute';
+import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
 import { invariant } from '@dxos/invariant';
 
 //
@@ -150,7 +151,7 @@ const FeedTraceSinkSpec = LayerSpec.make(
  * binding (the edge routes them); otherwise they are scoped to the space. The
  * config is read inside the factory — at slice-materialisation time, once
  * `ClientService` is available — so the owning module does not need the client
- * at activation time and can activate on `SetupProcessManager`.
+ * at activation time.
  */
 const RemoteOperationInvokerSpec = LayerSpec.make(
   {
@@ -192,6 +193,28 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
     ),
 );
 
+/**
+ * Application-scoped remote (EDGE) process manager, providing the progress meter's cancel control.
+ * Uses the EDGE implementation whenever an edge service is configured — cancel is addressed by trigger
+ * id + space, so it is not space-scoped — otherwise a read-only no-op. Resolved by the progress trace
+ * sink to route an edge-run trigger's cancel; the aggregate {@link TriggerMonitor} view is unaffected.
+ */
+const RemoteProcessManagerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService, AtomRegistry.AtomRegistry],
+    provides: [RemoteProcessManager.Service],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        return edgeUrl ? EdgeProcessManager.fromClient(client) : RemoteProcessManager.layerNoop;
+      }),
+    ),
+);
+
 const TriggerDispatcherSpec = LayerSpec.make(
   {
     affinity: 'space',
@@ -227,6 +250,7 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.LayerSpec, RemoteTriggerManagerSpec),
     Capability.contribute(Capabilities.LayerSpec, TriggerMonitorSpec),
     Capability.contribute(Capabilities.LayerSpec, RemoteOperationInvokerSpec),
+    Capability.contribute(Capabilities.LayerSpec, RemoteProcessManagerSpec),
     Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),
 );

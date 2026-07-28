@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, GraphPath } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
@@ -55,11 +55,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     GraphBuilder.createExtension({
       id: 'spaceHome',
       position: Position.first,
+      url: { key: 'home', kind: 'singleton', path: [] },
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           {
-            id: Paths.SPACE_HOME_SEGMENT,
+            id: GraphPath.SPACE_HOME_SEGMENT,
             type: SPACE_HOME_NODE_TYPE,
             data: SPACE_HOME_NODE_TYPE,
             properties: {
@@ -260,8 +261,6 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
       },
-      // TODO(graph-path-ids): Resolver temporarily disabled; redesign needed for path-based IDs.
-      // resolver: (id, get) => { ... },
     }),
 
     // Communications section group — no single plugin owns this category; it lives here so the
@@ -269,13 +268,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     // future plugin-communications) should own this once one exists.
     // TODO(wittjosiah): Move to a dedicated communications plugin when one exists.
     GraphBuilder.createExtension({
-      id: Paths.GroupSegments.communications,
+      id: GraphPath.GroupSegments.communications,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           AppNode.makeGroup({
-            id: Paths.GroupSegments.communications,
-            type: Paths.GroupTypes.communications,
+            id: GraphPath.GroupSegments.communications,
+            type: GraphPath.GroupTypes.communications,
             label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
             space,
             position: 100,

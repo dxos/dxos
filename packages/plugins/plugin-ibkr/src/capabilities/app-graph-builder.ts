@@ -11,7 +11,7 @@ import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention';
 
 import { meta } from '../meta';
 import { Ibkr } from '../types';
@@ -27,7 +27,7 @@ export default Capability.makeModule(
         if (!viewState) {
           return undefined;
         }
-        const selection = get(viewState.atom(selectionAspect, nodeId));
+        const selection = get(viewState.atom(Selection.aspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
     );
@@ -49,7 +49,7 @@ export default Capability.makeModule(
         )[0] as Ibkr.Report | undefined;
         return Effect.succeed([
           AppNode.makeCompanion({
-            id: linkedSegment('report'),
+            variant: 'report',
             label: ['report.companion.label', { ns: meta.profile.key }],
             icon: 'ph--file-text--regular',
             data: report ?? 'report',

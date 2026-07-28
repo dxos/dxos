@@ -8,7 +8,8 @@ import { Instructions, Skill, Trigger } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
+import { makeRoutine } from '@dxos/plugin-routine';
+import { type RoutineCapabilities } from '@dxos/plugin-routine/types';
 import { trim } from '@dxos/util';
 
 /**
@@ -51,7 +52,7 @@ export const crm: RoutineCapabilities.Template = {
 
       // The feed spec requires the live feed object; Database.load is a read-only DB operation.
       const feed = yield* Database.load(mailbox.feed);
-      return Routine.make({
+      return makeRoutine({
         name: name ?? instructionsName,
         instructions: Instructions.make({
           name: instructionsName,

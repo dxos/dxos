@@ -7,14 +7,7 @@ import { AppCapability } from '@dxos/app-toolkit';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import {
-  AppGraphBuilder,
-  ChannelBackendFeed,
-  CreateObject,
-  NavigationResolver,
-  OperationHandler,
-  ReactSurface,
-} from '#capabilities';
+import { AppGraphBuilder, ChannelBackendFeed, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -25,7 +18,6 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(NavigationResolver),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(AppCapability.schema([Channel.Channel, Message.Message, Thread.Thread])),

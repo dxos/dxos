@@ -379,9 +379,6 @@
       "path": "packages/plugins/plugin-code/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-comments/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-commerce/tsconfig.json"
     },
     {
@@ -508,10 +505,16 @@
       "path": "packages/plugins/plugin-progress/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-projects/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-review/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-routine/tsconfig.json"
@@ -682,6 +685,9 @@
       "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-card/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-chat/tsconfig.json"
     },
     {
@@ -689,6 +695,9 @@
     },
     {
       "path": "packages/ui/react-ui-dashboard/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-debug/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-dnd/tsconfig.json"
@@ -775,9 +784,6 @@
       "path": "packages/sdk/shell/tsconfig.json"
     },
     {
-      "path": "packages/core/mesh/signal/tsconfig.json"
-    },
-    {
       "path": "packages/ui/solid-ui/tsconfig.json"
     },
     {
@@ -796,9 +802,6 @@
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
-      "path": "packages/stories/story-modules/tsconfig.json"
-    },
-    {
       "path": "packages/common/storybook-addon-logger/tsconfig.json"
     },
     {
@@ -809,6 +812,9 @@
     },
     {
       "path": "tools/storybook-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/storybook-testing/tsconfig.json"
     },
     {
       "path": "packages/common/storybook-utils/tsconfig.json"

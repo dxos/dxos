@@ -76,7 +76,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
       <Panel.Root
         {...attentionAttrs}
         role='article'
-        classNames='is-[30rem] shrink-0 bs-full bg-base-surface border-e border-separator'
+        classNames='w-[30rem] shrink-0 h-full bg-base-surface border-e border-separator'
       >
         <StoryPlankHeading attendableId={attendableId} />
         <Panel.Content classNames='grid'>

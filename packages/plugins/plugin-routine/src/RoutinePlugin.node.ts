@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Operation, Trace, Trigger } from '@dxos/compute';
+import { Operation, Routine, Trace, Trigger } from '@dxos/compute';
 
 import {
   AppGraphBuilder,
@@ -15,7 +15,6 @@ import {
   TriggerRuntimeController,
 } from '#capabilities';
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 import { trigger } from './commands';
 

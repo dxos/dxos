@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { type EntityId } from '@dxos/keys';
+import { EID, type EntityId } from '@dxos/keys';
 
 /**
  * An inverse tag index: a standalone object holding a `Record<tagId, objectId[]>` mapping a tag id
@@ -147,6 +147,19 @@ export function atom(
 export const taggedIdsAtom = (tagIndex: TagIndex, tagId: string): Atom.Atom<readonly EntityId[]> =>
   taggedIdsFamily(Data.tuple(tagIndex, tagId));
 
+/**
+ * Reduce a tag id to its space-relative form for membership comparison. A tag id is a {@link Tag}
+ * object's URI; older data (and live writes) store it space-absolute (`echo://<space>/<eid>`), which
+ * does not survive a space import because the space id changes. Comparing by the entity id (via the
+ * relative EID) makes membership space-agnostic, so an absolute query matches a relatively-stored key
+ * and vice versa — with no migration of existing absolute keys. Non-EID ids are returned unchanged.
+ */
+const canonicalTagId = (tagId: string): string => {
+  const eid = EID.tryParse(tagId);
+  const entityId = eid ? EID.getEntityId(eid) : undefined;
+  return entityId ? EID.make({ entityId }) : tagId;
+};
+
 /** Binds an {@link Accessor} over a {@link TagIndex} object; all mutations go through `Obj.update`. */
 export const bind = (tagIndex: TagIndex): Accessor => {
   const read = (): TagIndex['index'] => tagIndex.index ?? {};
@@ -171,7 +184,22 @@ export const bind = (tagIndex: TagIndex): Accessor => {
     tagIds: () => Object.keys(read()),
     objects: (tagId) => {
       const index = read();
-      return has(index, tagId) ? index[tagId] : [];
+      // Match by canonical (space-relative) id so absolute and relative keys for the same tag both
+      // resolve; union across any mixed-form keys (defensive — a space rarely holds both).
+      const target = canonicalTagId(tagId);
+      const matches = Object.keys(index).filter((key) => canonicalTagId(key) === target);
+      if (matches.length <= 1) {
+        return matches.length === 0 ? [] : index[matches[0]];
+      }
+      const merged: EntityId[] = [];
+      for (const key of matches) {
+        for (const objectId of index[key]) {
+          if (!merged.includes(objectId)) {
+            merged.push(objectId);
+          }
+        }
+      }
+      return merged;
     },
     tags: (objectId) => {
       const index = read();

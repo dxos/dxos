@@ -8,7 +8,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -114,8 +114,8 @@ export default Capability.makeModule(() =>
               return;
             }
             updateProperties((props) => Annotation.set(props, WelcomeDismissedAnnotation, false));
-            const workspace = Paths.getSpacePath(personal.id);
-            void invokePromise(LayoutOperation.Open, { subject: [Paths.getSpaceHomePath(personal.id)], workspace });
+            const workspace = GraphPath.getSpacePath(personal.id);
+            void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getSpaceHomePath(personal.id)], workspace });
           };
           return (
             <SupportSettings

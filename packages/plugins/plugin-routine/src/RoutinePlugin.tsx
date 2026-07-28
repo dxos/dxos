@@ -4,13 +4,12 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Instructions, Operation, Trace, Trigger } from '@dxos/compute';
+import { Instructions, Operation, Routine, Trace, Trigger } from '@dxos/compute';
 
 import {
   AppGraphBuilder,
   CreateObject,
   LayerSpecs,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
   RegistrySync,
@@ -19,7 +18,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Routine } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -27,7 +25,6 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const RoutinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
-  Plugin.addModule(NavigationResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(
     AppCapability.pluginAsset({

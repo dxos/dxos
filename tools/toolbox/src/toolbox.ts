@@ -255,7 +255,8 @@ export class Toolbox {
 
     const config = {
       $schema: 'https://unpkg.com/@changesets/config@3.1.4/schema.json',
-      changelog: ['@changesets/changelog-github', { repo: 'dxos/dxos' }],
+      // git-based, not GitHub API-based — see .github/RELEASE-SPEC.md for why.
+      changelog: '@changesets/changelog-git',
       commit: false,
       access: 'public',
       baseBranch: 'main',

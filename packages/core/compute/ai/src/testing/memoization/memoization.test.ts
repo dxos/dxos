@@ -18,6 +18,7 @@ import { EntityId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 
 import * as AiService from '../../AiService';
+import { runMemoizedTests } from '../gate';
 import { AiServiceTestingPreset } from '../test-layers';
 import { TestingToolkit, testingLayer } from '../toolkit';
 import * as MemoizedAiService from './MemoizedAiService';
@@ -69,6 +70,11 @@ class TestObjectReadToolkit extends Toolkit.make(
   });
 }
 
+// These call through `MemoizedAiService`/`Chat` against a real model on a cache miss, so they're
+// frozen-conversation replay (A/B) like the rest of the memoized suites — off by default
+// (`DX_RUN_LLM_TESTS=1` / `ALLOW_LLM_GENERATION=1` to run). The `dynamic value matching` describe
+// below tests the matching machinery itself with no model involved, so it stays ungated.
+
 describe('memoization', () => {
   it.effect(
     'context paths',
@@ -78,7 +84,7 @@ describe('memoization', () => {
     }),
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'generate a poem',
     Effect.fnUntraced(
       function* (_) {
@@ -91,7 +97,7 @@ describe('memoization', () => {
     ),
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'tools',
     Effect.fnUntraced(
       function* (_) {
@@ -122,7 +128,7 @@ describe('memoization', () => {
     ),
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'tools with encoding',
     Effect.fnUntraced(
       function* (_) {
@@ -147,7 +153,7 @@ describe('memoization', () => {
     ),
   );
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'provider-defined tool',
     Effect.fnUntraced(
       function* (_) {
@@ -295,7 +301,7 @@ describe('dynamic value matching', () => {
     expect(tokens).toEqual([SPACE_A, OBJECT_ID]);
   });
 
-  it.effect(
+  it.effect.skipIf(!runMemoizedTests())(
     'works with tool calsl',
     Effect.fnUntraced(
       function* (_) {

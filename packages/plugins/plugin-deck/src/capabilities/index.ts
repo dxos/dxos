@@ -4,6 +4,7 @@
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 
 import { DeckCapabilities } from '#types';
 
@@ -51,10 +52,12 @@ export const UrlHandler = Capability.lazyModule(
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.NavigationHandler,
+      AppCapabilities.NavigationTargetLoader,
       Capabilities.AtomRegistry,
       DeckCapabilities.State,
       DeckCapabilities.Settings,
       AppCapabilities.AppGraph,
+      AttentionCapabilities.ViewState,
     ],
     provides: [],
   },

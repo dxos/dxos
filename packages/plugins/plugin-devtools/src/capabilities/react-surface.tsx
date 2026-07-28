@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import {
@@ -317,7 +317,7 @@ export default Capability.makeModule(
               log.info('script created', { result: createResult });
               if (createResult.data?.object) {
                 await invokePromise(LayoutOperation.Open, {
-                  subject: [Paths.getObjectPathFromObject(createResult.data.object)],
+                  subject: [GraphPath.getObjectPathFromObject(createResult.data.object)],
                 });
               }
             },

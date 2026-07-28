@@ -1,0 +1,67 @@
+//
+// Copyright 2026 DXOS.org
+//
+// @vitest-environment happy-dom
+
+import * as Context from 'effect/Context';
+import React, { type PropsWithChildren } from 'react';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+
+import { Space as HaloSpace, Identity } from '@dxos/halo';
+import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
+import { HaloProvider } from '@dxos/halo-react';
+import { invariant } from '@dxos/invariant';
+import { Markdown } from '@dxos/plugin-markdown/types';
+import { Client, ClientProvider, fromHost } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
+import { ViewStateProvider } from '@dxos/react-ui-attention';
+import { Text } from '@dxos/schema';
+
+import { runScenarioHeadless } from './scenario-executor';
+import { reviewScenarios } from './scenarios';
+
+/**
+ * Runs every {@link reviewScenarios} definition through the headless executor. The SAME definitions
+ * run against the full plugin stack in the storybook plays, so the two tiers cannot drift.
+ */
+describe('review scenarios (headless)', () => {
+  let client: Client;
+  let space: Space;
+  let identity: { did: string };
+
+  beforeEach(async () => {
+    client = new Client({ services: fromHost() });
+    await client.initialize();
+    await client.halo.createIdentity();
+    await client.addTypes([Markdown.Document, Text.Text]);
+    space = await client.spaces.create();
+    const did = client.halo.identity.get()?.did;
+    invariant(did, 'identity not initialized');
+    identity = { did };
+  });
+
+  afterEach(async () => {
+    await client.destroy();
+  });
+
+  // Mirrors plugin-client's ReactContext: ClientProvider plus the HALO services adapter, so
+  // `useIdentity` resolves inside the binding hook.
+  const wrapper = ({ children }: PropsWithChildren) => (
+    <ClientProvider client={client}>
+      <HaloProvider
+        services={Context.empty().pipe(
+          Context.add(Identity.Service, makeIdentityService(client)),
+          Context.add(HaloSpace.Service, makeSpaceService(client)),
+        )}
+      >
+        <ViewStateProvider>{children}</ViewStateProvider>
+      </HaloProvider>
+    </ClientProvider>
+  );
+
+  for (const scenario of reviewScenarios) {
+    test(scenario.name, async () => {
+      await runScenarioHeadless(scenario, { client, space, identity, wrapper, expect });
+    });
+  }
+});

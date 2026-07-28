@@ -997,6 +997,32 @@ export class EntityManager implements IDatabaseBinding {
     });
   }
 
+  /**
+   * Fold MAIN's changes into a branch across the subtree via `A.merge` (well-defined because the
+   * branch shares fork ancestry with main), leaving the device on its current selection. The reverse
+   * of {@link mergeBranch}: after syncing, the branch is "main + the branch's own changes", so a diff
+   * of branch vs main contains only the branch's edits — main's progress never reads as deletions.
+   */
+  async syncBranch(rootObjectId: string, name: string): Promise<void> {
+    invariant(name !== 'main', 'cannot sync main into itself');
+    return this.#enqueueBranchOp(async () => {
+      const record = this.getBranchRegistry(rootObjectId)?.[name];
+      invariant(record, `branch not found: ${name}`);
+      // Preflight every member before mutating any, so a failed load aborts cleanly.
+      const merges: Array<{ branchHandle: DocHandleProxy<DatabaseDirectory>; mainDoc: A.Doc<DatabaseDirectory> }> = [];
+      for (const [memberId, urlData] of Object.entries(record.members)) {
+        const branchHandle = this._repoProxy.find<DatabaseDirectory>(urlData.toString() as DocumentId);
+        await branchHandle.whenReady();
+        const mainHandle = await this._mainDocHandle(memberId);
+        merges.push({ branchHandle, mainDoc: mainHandle.doc() });
+      }
+      for (const { branchHandle, mainDoc } of merges) {
+        branchHandle.update((doc) => A.merge(doc, mainDoc));
+      }
+      this._scheduleThrottledDbUpdate(Object.keys(record.members));
+    });
+  }
+
   /** Remove a branch from the registry (its documents lose their sync reference). Cannot delete main. */
   deleteBranch(rootObjectId: string, name: string): void {
     invariant(name !== 'main', 'cannot delete the main branch');

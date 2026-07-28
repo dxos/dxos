@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppCapability, LayoutOperation } from '@dxos/app-toolkit';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from '#types';
@@ -38,6 +39,10 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
 export const State = Capability.lazyModule(
   'State',
-  { requires: [Capabilities.AtomRegistry, AppCapabilities.Layout], provides: [NavTreeCapabilities.State] },
+  {
+    // ViewState is the persistence backend for per-path expansion.
+    requires: [Capabilities.AtomRegistry, AppCapabilities.Layout, AttentionCapabilities.ViewState],
+    provides: [NavTreeCapabilities.State],
+  },
   () => import('./state'),
 );

@@ -423,13 +423,13 @@ regardless, so it doesn't meet the "reduce dependency" goal. Left as-is.
 Session driven by live PR-style review of the branch diff. All committed + pushed to
 `claude/resume-app-framework-activation-nfxu2u`; NO PR opened (standing instruction).
 
-- [x] **Optional single-contribution return** (`e40c5147`): a single-provide module may `return
-      Capability.contribute(...)` directly. Widened `ProvidesReturn` (single | array), `CoveredBy`
+- [x] **Optional single-contribution return** (`e40c5147`): a single-provide module may return
+      `Capability.contribute(...)` directly. Widened `ProvidesReturn` (single | array), `CoveredBy`
       (added non-array arm), `makeModule` `TReturn`, `normalizeActivateResult` param. Runtime already
       normalized single values. Tests added.
-- [x] **Optional plugin options** (`05926eff`): `PluginFactory<T>` param is optional when `{} extends
-      T` (all-optional or void); factory defaults omitted options to `{}`. Same overload-split applied
-      to `Plugin.lazy`. `CommentsPlugin()` no longer needs `{}`.
+- [x] **Optional plugin options** (`05926eff`): the `PluginFactory<T>` param is optional when
+      `{} extends T` (all-optional or void); factory defaults omitted options to `{}`. The same
+      overload-split was applied to `Plugin.lazy`. `CommentsPlugin()` no longer needs `{}`.
 - [x] **`Capability.atom` / `Capability.getAll` standardization** (`fc56defd`, `5c430292`): reverted 5
       `(yield* Tag).atom` + 3 `(yield* Tag).get()` view-threading sites back to the helpers (user pref:
       the helper reads cleaner; both resolve to the same manager atom/snapshot).

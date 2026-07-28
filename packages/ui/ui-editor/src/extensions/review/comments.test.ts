@@ -55,4 +55,18 @@ describe('createComment', () => {
 
     view.destroy();
   });
+
+  test('is prohibited when readonly (e.g. a suggestion branch)', ({ expect }) => {
+    const created: unknown[] = [];
+    const view = new EditorView({
+      doc: 'The quick brown fox.',
+      extensions: [comments({ id: 'test', readonly: true, onCreate: () => created.push(1) })],
+    });
+
+    view.dispatch({ selection: { anchor: 4, head: 9 } });
+    expect(createComment(view)).to.eq(false);
+    expect(created).to.have.length(0);
+
+    view.destroy();
+  });
 });

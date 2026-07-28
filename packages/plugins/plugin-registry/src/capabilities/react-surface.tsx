@@ -18,7 +18,7 @@ import {
   RegistryArticle,
   RegistrySettingsContainer,
 } from '#containers';
-import { DISABLE_DEPENDENTS_DIALOG, meta, registryCategoryId } from '#meta';
+import { DISABLE_DEPENDENTS_DIALOG, meta } from '#meta';
 
 import { type PluginPredicate, getCategoryPredicate } from '../categories';
 import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
@@ -28,40 +28,40 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'bundled',
-        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('bundled')),
+        filter: AppSurface.literal(AppSurface.Article, 'bundled'),
         component: () => {
-          const predicate = useCategoryPredicate(registryCategoryId('bundled'));
-          return <FilteredRegistryArticle id={registryCategoryId('bundled')} filter={predicate} />;
+          const predicate = useCategoryPredicate('bundled');
+          return <FilteredRegistryArticle id={'bundled'} filter={predicate} />;
         },
       }),
       Surface.create({
         id: 'installed',
-        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('installed')),
+        filter: AppSurface.literal(AppSurface.Article, 'installed'),
         component: () => {
-          const predicate = useCategoryPredicate(registryCategoryId('installed'));
-          return <FilteredRegistryArticle id={registryCategoryId('installed')} filter={predicate} />;
+          const predicate = useCategoryPredicate('installed');
+          return <FilteredRegistryArticle id={'installed'} filter={predicate} />;
         },
       }),
       Surface.create({
         id: 'recommended',
-        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('recommended')),
+        filter: AppSurface.literal(AppSurface.Article, 'recommended'),
         component: () => {
-          const predicate = useCategoryPredicate(registryCategoryId('recommended'));
-          return <FilteredRegistryArticle id={registryCategoryId('recommended')} filter={predicate} />;
+          const predicate = useCategoryPredicate('recommended');
+          return <FilteredRegistryArticle id={'recommended'} filter={predicate} />;
         },
       }),
       Surface.create({
         id: 'labs',
-        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('labs')),
+        filter: AppSurface.literal(AppSurface.Article, 'labs'),
         component: () => {
-          const predicate = useCategoryPredicate(registryCategoryId('labs'));
-          return <FilteredRegistryArticle id={registryCategoryId('labs')} filter={predicate} />;
+          const predicate = useCategoryPredicate('labs');
+          return <FilteredRegistryArticle id={'labs'} filter={predicate} />;
         },
       }),
       Surface.create({
         id: 'registry',
-        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('registry')),
-        component: () => <PublicRegistryArticle id={registryCategoryId('registry')} />,
+        filter: AppSurface.literal(AppSurface.Article, 'registry'),
+        component: () => <PublicRegistryArticle id={'registry'} />,
       }),
       Surface.create({
         id: 'pluginDetails',

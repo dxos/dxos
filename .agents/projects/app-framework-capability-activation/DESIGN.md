@@ -115,10 +115,7 @@ export type EnsureProvides<Ret, Provides extends readonly AnyTag[]> = [Provides[
   ? unknown
   : { readonly 'Missing declared capabilities in activate return': Exclude<Provides[number], CoveredBy<Ret>> };
 export type Requirements<Requires extends readonly AnyTag[]> =
-  | Context.Tag.Identifier<Requires[number]>
-  | Service
-  | Plugin.Service
-  | Scope.Scope;
+  Context.Tag.Identifier<Requires[number]> | Service | Plugin.Service | Scope.Scope;
 ```
 
 ```ts

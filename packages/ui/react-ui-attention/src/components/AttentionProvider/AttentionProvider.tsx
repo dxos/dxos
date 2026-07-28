@@ -23,10 +23,15 @@ import { useDefaultValue } from '@dxos/react-hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type Attention, AttentionManager, getAttendables } from '../../attention';
+import {
+  ATTENDABLE_ATTRIBUTE,
+  ATTENDABLE_SELECTOR,
+  type Attention,
+  AttentionManager,
+  getAttendables,
+} from '../../types/Attention';
 
 const ATTENTION_NAME = 'Attention';
-const ATTENDABLE_ATTRIBUTE = 'data-attendable-id';
 const ATTENTION_SOURCE_ATTRIBUTE = 'data-w-attention-source';
 
 type AttentionContextValue = {
@@ -42,7 +47,7 @@ const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: 
 /**
  * Subscribe to the attention state for a qualified graph ID.
  */
-// TODO(burdon): Unify with seleciton and change to contextId?
+// TODO(burdon): Unify with selection state and change to contextId?
 const useAttention = (attendableId?: string): Attention => {
   const { attention } = useAttentionContext(ATTENTION_NAME);
   const [state, setState] = useState<Attention>(UNKNOWN_ATTENDABLE);
@@ -111,7 +116,7 @@ const RootAttentionProvider = ({ children, attention: propsAttention, onChange }
       log('focus', { related: event.relatedTarget, target: event.target });
 
       const selector = [
-        '[data-attendable-id]',
+        ATTENDABLE_SELECTOR,
         ...Array.from(document.querySelectorAll('[aria-controls]')).map(
           (el) => `[id="${el.getAttribute('aria-controls')}"]`,
         ),

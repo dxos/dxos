@@ -10,7 +10,6 @@ import { StateMap, TagIndex } from '@dxos/schema';
 import {
   AppGraphBuilder,
   CreateObject,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
   RoutineTemplates,
@@ -26,7 +25,6 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const MagazinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
-  Plugin.addModule(NavigationResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(
     AppCapability.pluginAsset({

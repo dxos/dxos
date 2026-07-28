@@ -6,9 +6,8 @@ import type * as Effect from 'effect/Effect';
 
 import type { DelegationStrategy } from '@dxos/agent-runtime';
 import { Capability } from '@dxos/app-framework';
+import type { Routine } from '@dxos/compute';
 import type { Database, Obj } from '@dxos/echo';
-
-import * as Routine from './Routine';
 
 /**
  * Optional supervisor strategy for the agent chat service. When contributed (by a plugin that knows
@@ -40,7 +39,7 @@ export type Template = {
   appliesTo?: (subject?: Obj.Unknown) => boolean;
   /**
    * Build the routine as a fully-wired in-memory {@link Routine.Routine} graph — the routine plus its owned
-   * trigger and instructions, assembled by `Routine.make`. The create flow persists it with a single
+   * trigger and instructions, assembled by `makeRoutine`. The create flow persists it with a single
    * `Database.add` (which cascades the owned children); scaffold must NOT call `Database.add` itself.
    * `Database.Service` may still be used for read-only lookups (e.g. loading a feed ref). `subject` is set
    * when scaffolding from an object's companion.

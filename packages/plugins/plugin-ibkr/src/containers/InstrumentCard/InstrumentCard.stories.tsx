@@ -29,7 +29,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <Card.Root border={false} classNames='is-80'>
+    <Card.Root border={false} classNames='w-80'>
       <InstrumentCard subject={subject} />
     </Card.Root>
   );

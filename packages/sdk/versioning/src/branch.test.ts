@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { DXN, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Text as EchoText, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
@@ -83,5 +83,49 @@ describe('suggestion branches', () => {
 
     expect(await Branch.archiveIfEmpty(doc, edited)).toBe(false);
     expect(doc.history?.branches.find(({ id }) => id === edited.id)?.status).toBe('active');
+  });
+
+  test('find-or-create reconciles a stale branch by folding main in, keeping its identity', async ({ expect }) => {
+    const { db, doc, root } = await setup('one two three');
+
+    const branch = await Branch.suggestion(doc, root, 'did:alice');
+    // Main advances after the fork; the branch has no edits of its own.
+    Obj.update(root, (root) => {
+      EchoText.update(root, 'content', 'one two three four');
+    });
+    await db.flush();
+
+    // Re-entry folds main into the SAME branch (callers hold the branch identity), so text typed on
+    // main in between never diffs as the author's deletion.
+    const synced = await Branch.suggestion(doc, root, 'did:alice');
+    expect(synced.id).toBe(branch.id);
+    expect(activeSuggestions(doc, 'did:alice')).toHaveLength(1);
+    const binding = await Branch.bind(doc, synced);
+    try {
+      expect(binding.object.content).toBe('one two three four');
+    } finally {
+      binding.dispose();
+    }
+
+    // An EDITED branch reconciles the same way: pending suggestions AND main's progress both survive.
+    const editedBinding = await Branch.bind(doc, synced);
+    Obj.update(editedBinding.object, (text) => {
+      EchoText.update(text, 'content', 'one two three four five');
+    });
+    await db.flush();
+    editedBinding.dispose();
+    Obj.update(root, (root) => {
+      EchoText.update(root, 'content', 'one two three four six');
+    });
+    await db.flush();
+    const kept = await Branch.suggestion(doc, root, 'did:alice');
+    expect(kept.id).toBe(synced.id);
+    const keptBinding = await Branch.bind(doc, kept);
+    try {
+      expect(keptBinding.object.content).toContain('five');
+      expect(keptBinding.object.content).toContain('six');
+    } finally {
+      keptBinding.dispose();
+    }
   });
 });

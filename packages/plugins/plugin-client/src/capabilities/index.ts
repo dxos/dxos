@@ -42,6 +42,11 @@ export const Migrations = Capability.lazyModule(
 );
 export { NavigationHandler } from './navigation-handler';
 export type { NavigationHandlerOptions } from './navigation-handler';
+export const NavigationTargetLoader = Capability.lazyModule(
+  'NavigationTargetLoader',
+  { requires: [ClientCapabilities.Client], provides: [AppCapabilities.NavigationTargetLoader] },
+  () => import('./navigation-target-loader'),
+);
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
@@ -82,7 +87,12 @@ export const SpaceReplicationProgress = Capability.lazyModule(
 export const TraceProgress = Capability.lazyModule(
   'TraceProgress',
   {
-    requires: [AppCapabilities.ProgressRegistry, Capabilities.ProcessMonitor, Capabilities.ProcessManagerRuntime],
+    requires: [
+      AppCapabilities.ProgressRegistry,
+      Capabilities.ProcessMonitor,
+      Capabilities.ProcessManagerRuntime,
+      Capabilities.ServiceResolver,
+    ],
     provides: [],
     // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and
     // registry are all available by the time spaces are observed.

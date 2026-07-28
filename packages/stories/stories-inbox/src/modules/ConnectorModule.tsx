@@ -5,16 +5,23 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { isCursorForTarget } from '@dxos/plugin-connector';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { useQuery } from '@dxos/react-client/echo';
-import { type ModuleProps } from '@dxos/story-modules';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 
 /** The connection bound to the mailbox (once connected). */
-export const ConnectorModule = ({ space, attendableId }: ModuleProps) => {
+export const ConnectorModule = ({ data }: { data?: { attendableId?: string } }) => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <ConnectorModuleContainer space={space} attendableId={data?.attendableId} />;
+};
+
+const ConnectorModuleContainer = ({ space, attendableId }: { space: Space; attendableId?: string }) => {
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
   const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
   const binding = mailbox

@@ -8,10 +8,10 @@ import { translations as editorTranslations } from '@dxos/react-ui-editor/transl
 import { Text } from '@dxos/schema';
 
 import {
+  AnchorResolver,
   AnchorSort,
   CommentConfig,
   CreateObject,
-  HistoryProvider,
   MarkdownSettings,
   MarkdownState,
   OperationHandler,
@@ -26,8 +26,6 @@ import { Markdown } from '#types';
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CommentConfig),
-  // Opts documents into the generic history companion contributed by plugin-space.
-  Plugin.addModule(HistoryProvider),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(UndoMappings),
@@ -37,6 +35,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(MarkdownSettings),
   Plugin.addModule(MarkdownState),
   Plugin.addModule(AnchorSort),
+  Plugin.addModule(AnchorResolver),
   Plugin.make,
 );
 

@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -92,8 +92,9 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
       const id = Obj.getURI(object);
       void invokePromise(LayoutOperation.Select, { contextId: attendableId, subject: { mode: 'single', id } });
       void invokePromise(LayoutOperation.Open, {
-        subject: [Paths.getObjectPathFromObject(object)],
+        subject: [GraphPath.getObjectPathFromObject(object)],
         pivotId: attendableId,
+        disposition: 'add',
         navigation: 'immediate',
       });
     },
@@ -148,9 +149,9 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
         </Panel.Toolbar>
         <Panel.Content>
           {objects.length === 0 ? (
-            <Empty classNames='bs-full' label={t('type-collection-empty.message')} />
+            <Empty classNames='h-full' label={t('type-collection-empty.message')} />
           ) : results.length === 0 ? (
-            <Empty classNames='bs-full' label={t('search-no-results.message')} />
+            <Empty classNames='h-full' label={t('search-no-results.message')} />
           ) : layout === 'table' ? (
             <DynamicTable
               type={type}

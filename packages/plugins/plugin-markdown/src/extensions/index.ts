@@ -3,4 +3,3 @@
 //
 
 export * from './merge-conflict';
-export * from './version-diff';

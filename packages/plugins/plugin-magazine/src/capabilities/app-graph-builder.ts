@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
@@ -26,7 +26,7 @@ export default Capability.makeModule(
     const viewState = yield* AttentionCapabilities.ViewState;
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const selection = get(viewState.atom(selectionAspect, nodeId));
+        const selection = get(viewState.atom(Selection.aspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
     );
@@ -34,7 +34,9 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Magazine type section in the content group.
       TypeSection.createTypeSectionExtension(Magazine.Magazine, {
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
+        urlKey: 'magazine',
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
+        groupSegment: GraphPath.GroupSegments.content,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,
@@ -86,7 +88,7 @@ export default Capability.makeModule(
           }
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('post'),
+              variant: 'post',
               label: ['post-companion.label', { ns: meta.profile.key }],
               icon: 'ph--article--regular',
               data: post,

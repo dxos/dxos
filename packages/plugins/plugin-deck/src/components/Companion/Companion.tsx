@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Node } from '@dxos/plugin-graph';
 import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -68,7 +68,7 @@ export const Companion = ({
         attendableId,
         subject: node.data,
         companionTo,
-        variant: getLinkedVariant(node.id),
+        variant: Attention.getLinkedVariant(node.id),
         properties: node.properties,
       })),
     [companions, attendableId, companionTo],

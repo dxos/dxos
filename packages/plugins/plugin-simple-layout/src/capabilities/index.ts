@@ -30,7 +30,13 @@ export const State = Capability.lazyModule(
 export const UrlHandler = Capability.lazyModule(
   'UrlHandler',
   {
-    requires: [Capabilities.OperationInvoker, AppCapabilities.NavigationHandler, SimpleLayoutCapabilities.State],
+    requires: [
+      Capabilities.OperationInvoker,
+      AppCapabilities.NavigationHandler,
+      Capabilities.AtomRegistry,
+      SimpleLayoutCapabilities.State,
+      AppCapabilities.AppGraph,
+    ],
     provides: [],
   },
   () => import('./url-handler'),

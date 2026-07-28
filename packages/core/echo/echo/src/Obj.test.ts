@@ -123,10 +123,10 @@ describe('Obj', () => {
       expect(EID.isEID(uri)).toBe(true);
     });
 
-    test("prefer: 'relative' returns local EID echo:/<id>", ({ expect }) => {
+    test("prefer: 'relative' returns local EID echo:///<id>", ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
       const uri = Obj.getURI(obj, { prefer: 'relative' });
-      expect(uri).toMatch(/^echo:\/[^/]/);
+      expect(uri).toMatch(/^echo:\/\/\/[^/]/);
       expect(EID.isLocal(EID.parse(uri))).toBe(true);
     });
 

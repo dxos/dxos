@@ -28,14 +28,9 @@ export const IdentityCreated = Capability.lazyModule(
 );
 export { NavigationHandler } from './navigation-handler';
 export type { NavigationHandlerOptions } from './navigation-handler';
-export const NavigationResolver = Capability.lazyModule(
-  'NavigationResolver',
-  {
-    requires: [ClientCapabilities.Client],
-    provides: [AppCapabilities.NavigationTargetResolver, AppCapabilities.NavigationPathResolver],
-  },
-  () => import('./navigation-resolver'),
-);
+export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
+  requires: [ClientCapabilities.Client],
+});
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
@@ -77,7 +72,7 @@ export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {
     requires: [Capabilities.AtomRegistry, Capabilities.PluginManager],
-    provides: [SpaceCapabilities.State, SpaceCapabilities.VersioningState, SpaceCapabilities.EphemeralState],
+    provides: [SpaceCapabilities.State, SpaceCapabilities.EphemeralState],
   },
   () => import('./state'),
 );

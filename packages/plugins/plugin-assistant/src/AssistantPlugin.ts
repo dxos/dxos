@@ -27,7 +27,6 @@ import {
   LocalModelResolver,
   MarkdownExtension,
   Migrations,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
   Settings,
@@ -44,7 +43,6 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
     Plugin.addModule(AppGraphBuilder),
-    Plugin.addModule(NavigationResolver),
     Plugin.addModule(SkillDefinition),
     Plugin.addModule(CreateObject),
     Plugin.addModule(OperationHandler),

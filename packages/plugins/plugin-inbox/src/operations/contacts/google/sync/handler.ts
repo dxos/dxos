@@ -17,7 +17,7 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { Person } from '@dxos/types';
 
-import { GooglePeople } from '../../../../apis';
+import { GoogleContacts } from '../../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
 import { GoogleCredentials } from '../../../../services';
 import { InboxOperation } from '../../../../types';
@@ -29,7 +29,7 @@ const COMMIT_PAGE_SIZE = 10;
 type MappedPerson = { readonly resourceName: string; readonly props: ReturnType<typeof mapGooglePerson> };
 
 /** The contact's last-modified time (max across sources) as an epoch-ms cursor key; 0 when absent. */
-const updateTimeOf = (person: GooglePeople.Person): number => {
+const updateTimeOf = (person: GoogleContacts.Person): number => {
   const times = (person.metadata?.sources ?? []).map((source) =>
     source.updateTime ? Date.parse(source.updateTime) : 0,
   );
@@ -41,7 +41,7 @@ const updateTimeOf = (person: GooglePeople.Person): number => {
  * Returns resource names like `people/c1234567890`.
  */
 const fetchGroupMembers = Effect.fn(function* (groupResourceName: string) {
-  const group = yield* GooglePeople.getContactGroup(groupResourceName, 1000);
+  const group = yield* GoogleContacts.getContactGroup(groupResourceName, 1000);
   return group.memberResourceNames ?? [];
 });
 
@@ -52,7 +52,7 @@ const connectionsSource = () =>
       if (state.done) {
         return Option.none();
       }
-      const response = yield* GooglePeople.listConnections({ pageToken: Option.getOrUndefined(state.pageToken) });
+      const response = yield* GoogleContacts.listConnections({ pageToken: Option.getOrUndefined(state.pageToken) });
       return Option.some([
         Chunk.fromIterable(response.connections ?? []),
         { pageToken: Option.fromNullable(response.nextPageToken), done: !response.nextPageToken },
@@ -61,9 +61,9 @@ const connectionsSource = () =>
   );
 
 /** Pipeline stage: map a Google contact to an upsert unit — Person props + the `updateTime` cursor key. */
-const mapPersonStage: Stage.Stage<GooglePeople.Person, Cursor.UpsertUnit<MappedPerson>, never, never> = Stage.map(
+const mapPersonStage: Stage.Stage<GoogleContacts.Person, Cursor.UpsertUnit<MappedPerson>, never, never> = Stage.map(
   'map-person',
-  (remote: GooglePeople.Person) =>
+  (remote: GoogleContacts.Person) =>
     Effect.succeed({
       item: { resourceName: remote.resourceName, props: mapGooglePerson(remote) },
       foreignId: remote.resourceName,
@@ -159,7 +159,7 @@ const handler = InboxOperation.GoogleContactsSync.pipe(
         //   membership changes, so newly-added-but-unmodified contacts still sync.
         const stats: Cursor.Stats = { newMessages: 0 };
         yield* connectionsSource().pipe(
-          Stage.filter('group-member', (person: GooglePeople.Person) => memberNames.has(person.resourceName)),
+          Stage.filter('group-member', (person: GoogleContacts.Person) => memberNames.has(person.resourceName)),
           mapPersonStage,
           Stream.grouped(COMMIT_PAGE_SIZE),
           Pipeline.run({ sink: Cursor.upsertCommit(upsertPerson) }),

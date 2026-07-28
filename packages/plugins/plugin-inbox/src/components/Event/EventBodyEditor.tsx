@@ -5,17 +5,12 @@
 import React, { useMemo } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { type Event as EventType } from '@dxos/types';
-import {
-  type Extension,
-  automerge,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-} from '@dxos/ui-editor';
+import { automerge } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
+
+import { Editor } from '../Editor';
 
 export type EventBodyEditorProps = ThemedClassName<{
   event: EventType.Event;
@@ -28,19 +23,14 @@ export type EventBodyEditorProps = ThemedClassName<{
  * written live to the ECHO object via an automerge doc accessor.
  */
 export const EventBodyEditor = ({ event, markdown = true, classNames }: EventBodyEditorProps) => {
-  const { themeMode } = useThemeContext();
   const accessor = useMemo(() => Doc.createAccessor(event, ['description']), [event]);
-  const extensions = useMemo<Extension[]>(
-    () => [
-      createBasicExtensions({ lineWrapping: true }),
-      createThemeExtensions({ themeMode }),
-      ...(markdown ? [createMarkdownExtensions()] : []),
-      automerge(accessor),
-    ],
-    [themeMode, markdown, accessor],
+  const extensions = useMemo(() => [automerge(accessor)], [accessor]);
+  return (
+    <Editor
+      lineWrapping
+      markdown={markdown}
+      extensions={extensions}
+      classNames={mx('flex overflow-hidden p-3', classNames)}
+    />
   );
-
-  const { parentRef } = useTextEditor({ extensions }, [extensions]);
-
-  return <div className={mx('flex overflow-hidden p-3', classNames)} ref={parentRef} />;
 };

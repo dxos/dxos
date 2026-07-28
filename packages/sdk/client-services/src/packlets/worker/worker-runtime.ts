@@ -19,12 +19,7 @@ import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  WebsocketSignalManager,
-  setIdentityTags,
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { makeInProcessClient } from '@dxos/protocols';
 import { DevicesService, IdentityService } from '@dxos/protocols/rpc';
@@ -109,7 +104,6 @@ export const makeWorkerRuntime = ({
   const sessions = new Set<WorkerSession>();
   const signalMetadataTags: any = { runtime: 'worker-runtime' };
 
-  let signalTelemetryEnabled = false;
   let stopped = false;
   let sessionForNetworking: WorkerSession | undefined;
   let config: Config;
@@ -186,20 +180,18 @@ export const makeWorkerRuntime = ({
         log('worker-runtime: storage lock acquired, resolving config');
         config = await configProvider();
         log('worker-runtime: config resolved');
-        signalTelemetryEnabled = config.get('runtime.client.signalTelemetryEnabled') ?? false;
         const observabilityGroup = config.get('runtime.client.observabilityGroup');
         if (observabilityGroup) {
           signalMetadataTags.group = observabilityGroup;
         }
-        const signals = config.get('runtime.services.signaling');
         log('worker-runtime: initializing client services host');
         clientServices.initialize({
           config,
+          // Edge signaling is created in the services host from the edge connection; otherwise fall
+          // back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
           signalManager: config.get('runtime.client.edgeFeatures')?.signaling
             ? undefined
-            : signals
-              ? new WebsocketSignalManager(signals, () => (signalTelemetryEnabled ? signalMetadataTags : {}))
-              : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
           transportFactory,
         });
         log('worker-runtime: client services host initialized, opening');

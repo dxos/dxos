@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Topic } from '@dxos/compute';
+import { Project } from '@dxos/compute';
 import { AccessToken, Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Event, Message } from '@dxos/types';
@@ -15,7 +15,7 @@ import {
   ContactExtractor,
   CreateObject,
   InboxSettings,
-  NavigationResolver,
+  NavigationTargetResolver,
   OperationHandler,
   ReactSurface,
   SkillDefinition,
@@ -29,7 +29,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
-  Plugin.addModule(NavigationResolver),
+  Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(
     AppCapability.schema([
@@ -39,7 +39,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       Message.Message,
       ExtractedFrom.ExtractedFrom,
       TagIndex.TagIndex,
-      Topic.Topic,
+      Project.Project,
       AccessToken.AccessToken,
       Cursor.Cursor,
     ]),

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Annotation, Collection, Database, Obj, Query, Ref } from '@dxos/echo';
+import { Annotation, Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import * as AppNode from '../app-graph/AppNode';
@@ -18,6 +18,13 @@ type AddProps = {
   object: Obj.Unknown;
   target?: Collection.Collection;
 };
+
+/**
+ * Query for the collections that directly contain the object.
+ * Use it to file a new object alongside an existing one (e.g. a sibling created from within a document).
+ */
+export const containing = (object: Obj.Unknown): Query.Query<Collection.Collection> =>
+  Query.select(Filter.id(object.id)).referencedBy(Collection.Collection, 'objects');
 
 export const add = Effect.fn(function* ({ object, target }: AddProps) {
   const objectRef = Ref.make(object);

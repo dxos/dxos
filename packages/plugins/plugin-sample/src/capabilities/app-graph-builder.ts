@@ -143,7 +143,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'related',
+              variant: 'related',
               label: ['related-companion.label', { ns: meta.profile.key }],
               icon: 'ph--users-three--regular',
               data: 'related',

@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +16,7 @@ import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Channel, Event } from '@dxos/types';
 import { Position } from '@dxos/util';
 
@@ -102,7 +102,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: 'meeting',
+                variant: 'meeting',
                 label: [
                   data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label',
                   { ns: meta.profile.key },
@@ -160,7 +160,7 @@ export default Capability.makeModule(
                   if (!transcriptionEnabled) {
                     log.warn('transcription disabled');
                   } else {
-                    const companion = linkedSegment('transcript');
+                    const companion = Attention.linkedSegment('transcript');
                     yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion });
                   }
                 }),
@@ -187,7 +187,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: 'transcript',
+                variant: 'transcript',
                 label: ['transcript-companion.label', { ns: meta.profile.key }],
                 icon: 'ph--subtitles--regular',
                 data: get(Obj.atom(meeting.transcript)),
@@ -216,7 +216,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: 'meeting',
+                variant: 'meeting',
                 label: ['meeting-companion.label', { ns: meta.profile.key }],
                 icon: 'ph--handshake--regular',
                 data: meeting,
@@ -255,7 +255,9 @@ export default Capability.makeModule(
                 {
                   id: 'action.openMeetingForEvent',
                   data: Effect.fnUntraced(function* () {
-                    yield* invoker.invoke(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(meeting)] });
+                    yield* invoker.invoke(LayoutOperation.Open, {
+                      subject: [GraphPath.getObjectPathFromObject(meeting)],
+                    });
                   }),
                   properties: {
                     label: ['open-meeting-for-event.label', { ns: meta.profile.key }],

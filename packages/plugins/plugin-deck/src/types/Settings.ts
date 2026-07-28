@@ -7,19 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 export const Settings = Schema.Struct({
-  enableDeck: Schema.optional(
-    Schema.Boolean.annotations({
-      title: 'Enable Deck',
-      description: 'Display multiple panels side by side instead of one at a time.',
-    }),
-  ),
-  // TODO(burdon): Rename layoutMode? (e.g., bento/encapsulated or floating/compact, etc.)
-  encapsulatedPlanks: Schema.optional(
-    Schema.Boolean.annotations({
-      title: 'Encapsulated planks',
-      description: 'Render each plank inside its own isolated container.',
-    }),
-  ),
   showHints: Schema.optional(
     Schema.Boolean.annotations({
       title: 'Show hints',
@@ -30,6 +17,13 @@ export const Settings = Schema.Struct({
     Schema.Boolean.annotations({
       title: 'Enable native url redirect',
       description: 'Redirect supported URLs to the native desktop application.',
+    }),
+  ),
+  flatten: Schema.optional(
+    Schema.Boolean.annotations({
+      title: 'Flatten deck',
+      description:
+        'Show one plank at a time with your navigation history as breadcrumbs in the heading, instead of a scrolling deck of open planks.',
     }),
   ),
 }).pipe(Schema.mutable);

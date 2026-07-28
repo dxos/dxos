@@ -10,11 +10,6 @@ import { SpaceCapability } from '@dxos/plugin-space';
 import { RoutineCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
-export const NavigationResolver = Capability.lazyModule(
-  'NavigationResolver',
-  { provides: [AppCapabilities.NavigationPathResolver] },
-  () => import('./navigation-resolver'),
-);
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const LayerSpecs = Capability.lazyModule(
   'LayerSpecs',

@@ -4,11 +4,10 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Operation, Trace, Trigger } from '@dxos/compute';
+import { Operation, Routine, Trace, Trigger } from '@dxos/compute';
 
 import { OperationHandler, Templates } from '#capabilities';
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),

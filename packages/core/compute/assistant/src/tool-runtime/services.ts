@@ -173,7 +173,14 @@ const makeToolName = (name: string) => {
 };
 
 // TODO(dmaretskyi): Factor out.
-const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<string, Schema.Schema<any, any>> => {
+/**
+ * Projects an operation input struct into the LLM-facing tool parameter fields, mapping each
+ * property through {@link mapSchemaTypeForLLM} (so refs become the model-friendly `RefFromLLM`).
+ * Exported for testing.
+ */
+export const createStructFieldsFromSchema = (
+  schema: Schema.Schema<any, any>,
+): Record<string, Schema.Schema<any, any>> => {
   switch (schema.ast._tag) {
     case 'TypeLiteral':
       return Object.fromEntries(
@@ -216,6 +223,14 @@ const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
           ),
       ),
       ast.indexSignatures,
+      ast.annotations,
+    );
+  } else if (SchemaAST.isUnion(ast)) {
+    // `Schema.optional(Schema.Array(Ref(...)))` surfaces the value as a `T | undefined` union, so a
+    // ref nested inside an optional/union field must be mapped through each member — otherwise it
+    // keeps the raw `Ref` encoding and an LLM-supplied URI string is never coerced via `RefFromLLM`.
+    return SchemaAST.Union.make(
+      ast.types.map((member) => mapSchemaTypeForLLM(member)),
       ast.annotations,
     );
   }

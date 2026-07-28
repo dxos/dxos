@@ -290,7 +290,7 @@ export const HtmlViewer = ({
     resolveCidImages(content, attachments, db, cidUrlCacheRef.current);
   }, [sanitized, loadRemoteImages, isPersonal, themeMode, attachmentsKey, db]);
 
-  return <div ref={hostRef} className={mx('is-full', classNames)} />;
+  return <div ref={hostRef} className={mx('w-full', classNames)} />;
 };
 
 /** Resolves the app theme's ink/surface tokens (OKLCH) via a probe inside the (attached) container. */

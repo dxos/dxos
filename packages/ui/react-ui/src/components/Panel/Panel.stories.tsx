@@ -24,11 +24,24 @@ const List = composable<HTMLDivElement, ScrollAreaRootProps>((props, forwardedRe
   );
 });
 
+/**
+ * Panel is the standard full-height surface layout: a CSS grid whose `auto 1fr auto`
+ * rows pin a toolbar and statusbar while the content region absorbs the remaining
+ * height, so a scroll container inside it scrolls rather than growing the page. Each
+ * region takes `asChild` to merge its grid slot onto a `Toolbar.Root` / `ScrollArea`
+ * instead of nesting an extra wrapper element.
+ *
+ * @idiom org.dxos.react-ui.panelLayout
+ *   applies: Any full-height pane with a fixed toolbar/statusbar and a scrolling body
+ *   instead-of: Hand-wiring flex columns with min-height:0 and a bespoke scroll container
+ *   uses: {@link Panel.Root}, {@link Panel.Toolbar}, {@link Panel.Content}, {@link Panel.Statusbar}
+ *   related: org.dxos.react-ui-menu.toolbarMenu
+ */
 const DefaultStory = () => {
   return (
     <Panel.Root className='dx-document'>
       <Panel.Toolbar asChild>
-        <Toolbar.Root classNames='gap-2'>
+        <Toolbar.Root>
           <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
           <Input.Root>
             <Input.TextInput placeholder='Search' />

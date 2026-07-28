@@ -76,6 +76,7 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
                 {
                   label: ['draft-toolbar-generate.menu', { ns: meta.profile.key }],
                   icon: 'ph--sparkle--regular',
+                  testId: 'inbox.draft.generate',
                 },
                 handleGenerate,
               )),

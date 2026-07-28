@@ -90,7 +90,7 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-rows-1 min-bs-0'>
+      <Panel.Content classNames='grid grid-rows-1 min-h-0'>
         <ReportSections positions={positions} trades={trades} cash={cash} openLots={openLots} closedLots={closedLots} />
       </Panel.Content>
     </Panel.Root>

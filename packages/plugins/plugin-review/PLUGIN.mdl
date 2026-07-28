@@ -1,0 +1,573 @@
+---
+id: org.dxos.plugin.review
+name: ReviewPlugin
+version: 0.1.0
+---
+
+ReviewPlugin is the **review layer** over ECHO objects (primarily Markdown documents) — the merge of
+the former comments and versioning plugins into one surface. It contributes three anchored,
+attributed review mechanisms and the surfaces that operate them:
+
+- **Comment threads** — anchored discussions, with an optional per-thread AI agent that answers and
+  may propose document edits.
+- **Suggestions** — Google-Docs-style proposed changes authored on per-user `kind:'suggestion'`
+  branches, rendered inline (tracked changes / multi-author overlay) and as reviewable change-block
+  cards (accept/reject), with per-author colours and per-author visibility toggles.
+- **Version history** — named checkpoints, draft branches, time travel, compare/merge, and the
+  git-graph Timeline companion.
+
+The editor integration is inverted: `@dxos/plugin-markdown` owns neutral sockets
+(`EditorBindingHook`, `ExtensionProvider`, `ViewModeExtension`) and this plugin contributes the
+behaviour — the version-aware editor binding, the comment-sync extension, and the "Suggesting" view
+mode. It depends on no other plugin: message/thread UI comes from `@dxos/react-ui-thread`,
+review/diff primitives from `@dxos/ui-editor`, branch machinery from `@dxos/versioning`, and the
+`Thread`/`Message`/`AnchoredTo` schema from `@dxos/types`.
+
+Companion documents: [DESIGN.md](./DESIGN.md) (three-layer spec, invariants I-1..I-9 each naming its
+enforcing test, known risks) and [TEST-PLAN.md](./TEST-PLAN.md) (test tiers, shared scenarios, F1–F6
+walkthrough scripts).
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+
+## External types & capabilities
+
+The review layer composes primitives owned elsewhere; the plugin binds to them rather than
+redefining them:
+
+- `Thread`, `Message`, `AnchoredTo` (`@dxos/types`) — the anchored-annotation schema. `AnchoredTo`
+  carries an optional `branch` tag scoping an annotation to a review branch (undefined = main).
+- `Branch`, `Version`, `History` (`@dxos/versioning`) — branches (core CRDT branches keyed in the
+  database registry; a per-user suggestion branch is `kind:'suggestion'` keyed by author `creator`
+  DID), checkpoints, fork anchors, `contentAt` snapshots. Find-or-create of the suggestion branch is
+  identity-stable and serialized per (doc, creator); a stale branch is reconciled by folding main IN
+  (`db.syncBranch`, CRDT merge), never by re-forking.
+- `SuggestionSource`, `trackChanges`, `suggestions({ sources, base })`, `suggestionsOverlay`,
+  `changeBarGutter`, `diffHunks`/`groupHunks`/`pairMarkupHunks`/`rebaseHunks`, `cherryPickHunk`/
+  `revertHunk`, `automerge` (`@dxos/ui-editor`) — the inline diff/overlay/sync primitives. Word-level
+  hunks are minimized (an insert adjacent to identical text never strikes it), markdown delimiter
+  pairs coalesce into one atomic hunk, and accept/reject merge every hunk a range spans.
+- `MarkdownCapabilities.EditorBindingHook` / `ExtensionProvider` / `ViewModeExtension`
+  (`@dxos/plugin-markdown`) — the sockets this plugin contributes to.
+- `CollaborationOperation.AcceptChange` / `RejectChange` / `AcceptProposal` (`@dxos/app-toolkit`) —
+  the durable cherry-pick/revert ops every review surface routes accept/reject through.
+- `ViewState` (`@dxos/react-ui-attention`) — the per-session, per-object state backend for the
+  `viewAspect` (version selection, review mode, current change, hidden authors) and the comments
+  companion view state.
+
+## Types
+
+```mdl
+type ReviewMode
+  literals: editing | suggesting | viewing
+  desc: Per-user editing posture for a document (Google-Docs-style). Session-local, never replicated.
+```
+
+```mdl
+type VersionSelection
+  desc: |
+    Which version of an object the local user is viewing: the current tip, a branch (editable tip),
+    a branch's fork point (read-only parent snapshot), or a checkpoint. Session-local.
+  literals: current | branch(branchId) | fork(branchId) | checkpoint(versionId)
+```
+
+```mdl
+type VersioningView
+  desc: |
+    Per-object version view state, stored in the ViewState `viewAspect` (in-memory, per session).
+    Missing fields fall back to defaults (selection=current, view=branch, mode=editing).
+  fields:
+    selection?: VersionSelection
+    view?: String                 # base | diff | branch — which side of a selected branch shows
+    mode?: ReviewMode
+    suggestion?: { author: String, from: Number, to: Number }  # the current change, shared by editor + companion
+    hiddenAuthors?: String[]      # authors whose suggestions this user has hidden (view filter only)
+```
+
+```mdl
+type ReviewRenderConfig
+  desc: |
+    What the editor renders for a review mode: `defaultReviewRenderPolicy` gives GDocs parity —
+    editing/suggesting show suggestions+comments and are editable; viewing is read-only, comments only.
+    Override by contributing ReviewRenderPolicy earlier in plugin order.
+  fields:
+    showSuggestions: Boolean
+    showComments: Boolean
+    editable: Boolean
+```
+
+```mdl
+type ViewModeSelection
+  desc: |
+    One dropdown gesture: a built-in editor view mode, or a contributed review mode. The pure
+    `applyViewModeSelection` writes BOTH halves of the (review mode, view mode) pair atomically, so a
+    contradictory pair (e.g. a stale readonly view mode surviving into Suggesting) cannot be stored
+    (invariant I-9).
+  literals: builtin(viewMode) | contributed(reviewMode)
+```
+
+```mdl
+type BindingDescriptor
+  desc: |
+    Output of the pure `deriveBinding(inputs)` lifecycle derivation (invariant I-8): which document
+    backs the editor (main, own suggestion branch, selected branch, or a detached snapshot), keyed
+    how, rendered how. All ambient postures share ONE editor key — entering/leaving Suggesting swaps
+    the automerge source through a live compartment, never remounting the editor (DESIGN §3.3), so
+    caret/focus/scroll survive every mode switch.
+  fields:
+    subject: String               # document | own-branch | branch | snapshot
+    editorKey: String
+    effectiveViewMode?: String    # readonly overrides the caller's view mode
+    loading: Boolean
+    ambient: Boolean
+    ambientSuggesting: Boolean
+```
+
+```mdl
+type ResolvedSuggestionBranch
+  desc: |
+    A resolved `kind:'suggestion'` branch: its author (identity DID), current content read live from
+    the bound branch doc, and the parent text at the branch's fork anchor (`base`) — proposals are
+    diffed against the revision they were written on and rebased into the viewing document's
+    coordinates, never raw against a moving document (invariant I-3).
+  fields:
+    author: String
+    content: String
+    base?: String
+    hue?: String
+```
+
+```mdl
+type SuggestionGroup
+  desc: |
+    One reviewable suggestion card: a grouped DiffHunk from a single author, anchored in the base
+    (main) text, tinted with the author's colour. Changes already present in the document are
+    filtered by content match (invariant I-4); markdown delimiter pairs arrive pre-coalesced.
+  extends: DiffHunk
+  fields:
+    author: String
+    colour: String
+```
+
+```mdl
+type AgentMode
+  literals: auto | mention
+  desc: Per-thread agent firing policy.
+```
+
+```mdl
+type AgentConfig
+  desc: |
+    Per-thread agent configuration. Defined in @dxos/types and stored as an optional field on
+    Thread.Thread (`agent?`). Absent or disabled means no AI involvement.
+  fields:
+    enabled: Boolean
+    mode: AgentMode
+```
+
+```mdl
+type AgentIdentity
+  desc: |
+    Effect/Capability identity of the comment-thread agent, resolved at runtime (not stored on
+    threads). The default reads from plugin Settings; tests/stories provide static values. Sole
+    source of the agent's display name and @mention token. NOTE: distinct from @dxos/compute's
+    `AgentIdentity` service (the suggestion-author DID).
+  fields:
+    name: String
+    identityDid?: String
+    avatar?: String
+```
+
+```mdl
+type CommentsState
+  desc: In-memory comment UI state (atom). Keyed by subject/object URI.
+  fields:
+    toolbar: Map<String, Boolean>     # per-object: does the selection overlap a comment?
+    drafts: Map<String, AnchoredTo[]> # staged (unsent) threads per subject
+    current?: String                  # currently-selected thread URI
+```
+
+## Services
+
+```mdl
+service EditorBindingHook
+  desc: |
+    Implements MarkdownCapabilities.EditorBindingHook (`useMarkdownEditorBinding`): the version-aware
+    editor binding. Derives the bound subject through the pure lifecycle model (deriveBinding /
+    applyViewModeSelection), swaps the automerge source in place for ambient mode switches (same-view
+    invariant), attaches the review extensions (own tracked changes, multi-author overlay, compare
+    overlay, permanent change-bar gutter), filters overlay sources by the user's hiddenAuthors, and
+    exposes `selectViewMode(ViewModeSelection)` as the single mode-change entry point.
+```
+
+```mdl
+service ExtensionProvider
+  desc: |
+    Implements MarkdownCapabilities.ExtensionProvider (commentSync): syncs anchored comment threads
+    with editor ranges, scopes visible comments to the active review branch (AnchoredTo.branch),
+    tracks selection/comment overlap into CommentsState.toolbar, opens the comments companion on
+    marker click, honours the review policy (`showComments`), prohibits inline comment creation on
+    suggestion branches, and resolves anchors against the editor-bound Text.
+```
+
+```mdl
+service ViewModeExtension
+  desc: |
+    Contributes the "Suggesting" entry to the markdown editor's view-mode dropdown
+    (MarkdownCapabilities.ViewModeExtension, reviewMode 'suggesting'). No ReviewPlugin ⇒ no
+    Suggesting entry.
+```
+
+```mdl
+service ReviewRenderPolicy
+  desc: |
+    Maps a ReviewMode to its ReviewRenderConfig. The plugin contributes the GDocs-parity default;
+    hosts override by contributing earlier in plugin order.
+```
+
+```mdl
+service HistoryProvider
+  desc: |
+    Per-type opt-in to the generic History companion (checkpoints/branches timeline): `id` is the
+    gating typename, `getTarget` resolves the versioned Text root. The plugin contributes the
+    Markdown.Document provider; other object types opt in by contributing their own.
+```
+
+```mdl
+service AgentRunner
+  desc: |
+    Capability that executes one agent turn for a thread + subject. Default implementation performs
+    one LanguageModel.generateText call with edit tools registered per turn (editAnchoredRange,
+    updateDocument). Stub implementations are used in storybook + tests.
+  methods:
+    run(input: { thread: Thread, subject: Obj.Any }) -> Effect<void>
+```
+
+## Operations
+
+Comment-thread operations (keys `org.dxos.plugin.review.operation.<name>`):
+
+```mdl
+op Create
+  key: org.dxos.plugin.review.operation.create
+  desc: Create a (staged) comment thread anchored to a subject; seeds CommentsState.drafts.
+  input: { subject: Obj.Any, anchor?: String, name?: String, branch?: String }
+
+op AddMessage
+  key: org.dxos.plugin.review.operation.addMessage
+  desc: |
+    Append a user message to a thread (promoting a staged draft to active). Evaluates the agent
+    trigger gate and schedules RespondToThread when it passes.
+  input: { subject: Obj.Any, anchor: AnchoredTo, sender: Actor, text: String }
+
+op Delete
+  key: org.dxos.plugin.review.operation.delete
+  desc: Delete a thread + its anchor. Undoable via Restore.
+  input: { anchor: AnchoredTo, subject: Obj.Any, thread?: Thread }
+  output: { thread?: Thread, anchor?: AnchoredTo }
+
+op Restore
+  key: org.dxos.plugin.review.operation.restore
+  desc: Inverse of Delete.
+  input: { thread: Thread, anchor: AnchoredTo }
+
+op DeleteMessage
+  key: org.dxos.plugin.review.operation.deleteMessage
+  desc: Delete a single message from a thread. Undoable via RestoreMessage.
+  input: { anchor: AnchoredTo, subject: Obj.Any, messageId: String }
+  output: { message?: Message, messageIndex?: Number }
+
+op RestoreMessage
+  key: org.dxos.plugin.review.operation.restoreMessage
+  desc: Inverse of DeleteMessage.
+  input: { anchor: AnchoredTo, message: Message, messageIndex: Number }
+
+op ToggleResolved
+  key: org.dxos.plugin.review.operation.toggleResolved
+  desc: Toggle thread.status between active and resolved.
+  input: { thread: Thread }
+
+op Select
+  key: org.dxos.plugin.review.operation.select
+  desc: Set the currently-selected thread (CommentsState.current); omit `current` to clear it.
+  input: { current?: String }
+
+op RespondToThread
+  key: org.dxos.plugin.review.operation.respondToThread
+  desc: Run one agent turn against a thread. Scheduled by AddMessage when the gate passes.
+  input: { thread: Ref<Thread>, subject: Ref<Obj.Any> }
+
+op SetAgentConfig
+  key: org.dxos.plugin.review.operation.setAgentConfig
+  desc: Mutate thread.agent. Undefined config means off.
+  input: { thread: Ref<Thread>, config?: AgentConfig }
+
+op CreateProposals
+  key: org.dxos.plugin.review.operation.createProposals
+  desc: |
+    Materialise assistant-proposed document edits as NEW proposal-block comment threads, one per
+    diff, each anchored to the document at the diff's cursor range.
+  input: { doc: Ref<Markdown.Document>, diffs: String[] }
+```
+
+> Accept/reject of suggestions and proposals is NOT a plugin operation: every review surface (inline
+> hover popover, ambient overlay, companion card) routes them through the durable
+> `CollaborationOperation.AcceptChange` / `RejectChange` / `AcceptProposal` ops
+> (`@dxos/app-toolkit`), which cherry-pick/revert the change against the author's branch and main
+> (one hunk, cursor-anchored, undoable — invariant I-5). A branch whose last change is resolved
+> archives itself (invariant I-6).
+
+## Components
+
+```mdl
+component CommentsArticle
+  desc: |
+    Review companion surface (role 'article', linkedSegment 'comments') for a host object. Lists
+    comment threads (AnchoredTo query + in-memory drafts, scoped to the branch under review) AND the
+    suggestion review cards (Suggestions), with per-author visibility toggle chips. Tabs switch
+    unresolved / all. The current change (viewAspect.suggestion) is shared with the editor: clicking
+    a card reveals the change; clicking a change accents its card.
+  props:
+    attendableId?: String
+    subject: Obj.Any
+
+component ObjectHistory
+  desc: |
+    Generic History companion (gated by HistoryProvider): the git-graph Timeline of checkpoints,
+    branches (with per-branch Tip nodes), forks and merges, plus Create revision / New branch /
+    Merge / Discard actions. Selection drives the per-object VersioningView (shared with the editor
+    binding). Nested branch-of-branch is guarded off (flat registry).
+  props:
+    subject: Obj.Any
+
+component Suggestions
+  desc: |
+    Review companion for a document's `kind:'suggestion'` branches: SuggestionSources resolves live
+    per-author content (+ fork-anchor base), buildSuggestionSources orders it, SuggestionAuthors
+    renders the visibility toggle row, and SuggestionThread renders the (hidden-author-filtered)
+    cards. Reactive: a card appears/updates as its author edits and disappears when
+    accepted/rejected empties the branch.
+  props:
+    document?: VersionedObject
+    base: String
+    group?: GroupPolicy
+    authorLabels?: Map<String, String>
+    authorHues?: Map<String, String>
+    selected?: { author: String, from: Number, to: Number }
+    hiddenAuthors?: String[]
+  emits:
+    accept: { group: SuggestionGroup }
+    reject: { group: SuggestionGroup }
+    select: { group: SuggestionGroup }
+    toggleAuthor: { author: String }
+
+component SuggestionAuthors
+  desc: |
+    Per-author visibility toggles: one dx-tag chip per suggesting author in the author's hue, the
+    eye icon inside the tag, hidden authors dimmed. Toggling filters that author out of every review
+    surface (overlay, change bars, cards) for this user only — the branches are untouched.
+  props:
+    authors: { author: String, label: String, hue: Hue, hidden: Boolean }[]
+  emits:
+    toggle: { author: String }
+
+component SuggestionThread
+  desc: |
+    Renders grouped changes as change-block tiles (before/after) with Accept/Reject, tinted with the
+    author's hue. Built on @dxos/react-ui-thread Message.* with a ContentBlock.Change tile; renders
+    nothing when empty. The card matching the current change is accented.
+  props:
+    base: String
+    sources: SuggestionSource[]
+    group?: GroupPolicy
+    authorLabels?: Map<String, String>
+    authorHues?: Map<String, String>
+    selected?: { author: String, from: Number, to: Number }
+
+component SuggestionSources
+  desc: |
+    Headless enumerator (render-prop + onResolved callback). Renders one invisible probe per active
+    `kind:'suggestion'` branch, binds it, and reports the resolved ResolvedSuggestionBranch[] (with
+    fork-anchor base) both synchronously and post-commit — backs the companion and the editor's
+    ambient overlay.
+  props:
+    document: VersionedObject
+    authorHues?: Map<String, String>
+    onResolved?: (resolved: ResolvedSuggestionBranch[]) -> void
+
+component VersionToolbar
+  desc: |
+    Editor banner for non-ambient selections: checkpoint / branch / fork context, the
+    Base | Diff | Branch selector for a selected branch, and return-to-now. Ambient review has no
+    banner — the view-mode dropdown is the only control.
+
+component AgentToggle
+  desc: |
+    Per-thread radio popover hung off the thread header. Three states off / mention / auto; shows
+    the resolved AgentIdentity.name as a read-only label. Routes through SetAgentConfig.
+  props:
+    value?: AgentConfig
+    agentName: String
+  emits:
+    change: { config?: AgentConfig }
+```
+
+## Features
+
+```mdl
+feat F-1: Version-aware editor binding (the same-view invariant)
+
+  req F-1.1: The plugin MUST contribute the editor binding via
+    MarkdownCapabilities.EditorBindingHook; markdown itself carries no review vocabulary.
+
+  req F-1.2: Ambient mode switches (Editing/Suggesting/Viewing) MUST NOT tear down the editor view:
+    all ambient postures share one editor key, and entering/leaving Suggesting swaps the automerge
+    source through a live compartment, preserving DOM, caret, focus and scroll (DESIGN §3.3).
+
+  req F-1.3: Binding decisions MUST flow through the pure lifecycle model: deriveBinding (I-8) and
+    applyViewModeSelection (I-9, one dropdown gesture writes the whole posture/view-mode pair).
+
+  req F-1.4: Entering Suggesting MUST find-or-create the user's ONE suggestion branch
+    (identity-stable, serialized) and reconcile a stale branch by folding main IN (I-2); typing in
+    Suggesting MUST land on the branch and never on main (I-1).
+
+  req F-1.5: After a view-mode dropdown selection the editor MUST regain focus with its caret
+    intact; the editor MUST NOT steal focus on ambient/programmatic mode changes.
+
+feat F-2: Suggestion rendering
+
+  req F-2.1: A suggestion MUST render as the author's proposed text in the author's colour, replaced
+    text struck through, a change bar, and a companion card. A pure block insertion carries its own
+    change bar (the shared gutter never tints the host line's own text); whitespace-only newline
+    runs render unstyled.
+
+  req F-2.2: Each proposal MUST be diffed against the revision its author wrote on (the branch's
+    fork anchor) and rebased into the viewing document's coordinates (I-3); a change already present
+    in the document is not a suggestion (I-4).
+
+  req F-2.3: Hunks MUST be minimal (an insert adjacent to identical text never strikes it) and
+    markdown delimiter pairs (`**`…`**` etc.) MUST review — and apply — as ONE atomic change.
+
+  req F-2.4: Text typed at a trailing suggestion's anchor MUST land after the proposal, never in
+    front of it.
+
+  req F-2.5: Toggling an author's visibility MUST remove that author's decorations, change bars and
+    cards for this user only (source-level filter, session-local hiddenAuthors); the branches
+    themselves are untouched.
+
+feat F-3: Review workflow
+
+  req F-3.1: Accept MUST fold exactly one change into main (cursor-anchored cherry-pick, undoable);
+    Reject MUST revert it on the author's branch; both via CollaborationOperation, never a direct
+    splice from a view (I-5).
+
+  req F-3.2: When the last change on a suggestion branch is resolved the branch MUST archive itself
+    (I-6).
+
+  req F-3.3: The editor and the companion MUST share one current-change selection (viewAspect):
+    click either side to reveal the other.
+
+feat F-4: Version history
+
+  req F-4.1: Checkpoint/fork/base views MUST render historical content read-only from detached
+    snapshots (contentAt), never by binding the live doc to old heads (I-7).
+
+  req F-4.2: The History companion (gated per-type by HistoryProvider) MUST expose checkpoints,
+    branch tips, forks and merges on a git-graph timeline, with create/merge/discard actions;
+    sub-branching is guarded off while the registry is flat.
+
+feat F-5: Comment threads
+
+  req F-5.1: The comment extension MUST create anchored threads from selections, keep AnchoredTo
+    cursors in sync with edits, scope visibility to the active review branch, and honour the render
+    policy's showComments.
+
+  req F-5.2: Inline comment creation MUST be prohibited on suggestion branches (review of a
+    suggestion happens on its card); comments live on main and draft branches.
+
+  req F-5.3: Mutations MUST route through operations (never direct schema writes from views);
+    Delete/DeleteMessage MUST be undoable.
+
+feat F-6: Per-thread agent
+
+  req F-6.1: Thread.agent gates AI involvement (absent/disabled = none); the trigger gate fires only
+    on non-assistant messages of unresolved threads, in auto mode or on @mention of the resolved
+    AgentIdentity.name; responses append as assistant messages; runner errors never lose the user's
+    message.
+
+feat F-7: Independence & testability
+
+  req F-7.1: The plugin MUST NOT import other plugins' source; all cross-plugin wiring is via
+    capabilities.
+
+  req F-7.2: Core editing behaviour MUST be specified as shared scenarios (testing/scenarios.ts) run
+    by BOTH the headless executor (real binding pipeline + real EditorView in a unit test) and the
+    storybook play executor (full plugin stack), so the tiers cannot drift.
+```
+
+## Acceptance
+
+Each DESIGN.md invariant names its enforcing test; the primary suites are:
+
+```mdl
+test T-1: Shared scenarios (both tiers)
+  given: The scenario definitions in src/testing/scenarios.ts
+  when: Run headless (src/testing/scenarios.test.tsx) and as storybook plays (Scenario*Test)
+  then: |
+    Editing goes to main with no review artifacts; suggesting goes to the own branch (tracked
+    change, main untouched); deletion is a phantom; mode round-trips never double content, keep the
+    suggestion a clean insert anchored before text typed at it, and hold editor focus after every
+    dropdown selection; a multi-word bold wrap is ONE atomic suggestion; a suggested table is a
+    clean block insertion; a table-cell edit stays inside the cell.
+
+test T-2: Same-view swap
+  given: The DocumentVersioning / SuggestingSwapTest play
+  when: Suggesting is entered, typed into, and exited through the real dropdown
+  then: One .cm-content DOM node and one EditorView across the whole round-trip; the caret survives;
+    the edit lands on the branch as a tracked change and renders as the user's suggestion on exit.
+
+test T-3: Lifecycle model
+  given: The deriveBinding and applyViewModeSelection tables (review-lifecycle.test.ts)
+  when: Every posture/selection/resolution combination is derived
+  then: Subjects, keys, editability and loading match the tables; a stale readonly view mode cannot
+    survive into Suggesting.
+
+test T-4: Branch reconciliation (I-2)
+  given: An existing suggestion branch with a stale anchor (main advanced), edited or not
+  when: Suggesting is re-entered (find-or-create)
+  then: The SAME branch id is returned; main's progress is folded in (CRDT); the author's edits
+    survive; main's text never renders as the author's deletion.
+
+test T-5: Diff-layer invariants (ui-editor review suite)
+  given: diffHunks / pairMarkupHunks / rebaseHunks / cherryPickHunk unit tests
+  then: Hunks are minimal; word replaces keep word granularity; delimiter pairs coalesce and apply
+    atomically; a doc insertion at a trailing pure-insert anchor stays behind the proposal; applying
+    every hunk reconstructs the proposal.
+
+test T-6: Per-author visibility (F2.7)
+  given: The AuthorVisibilityTest play (two seeded authors)
+  when: One author is toggled off and back on in the companion
+  then: That author's overlay and cards disappear and return; the other author is untouched; the
+    branches survive.
+
+test T-7: Comment/agent behaviour
+  given: The comment operation and trigger-gate unit tests
+  then: Auto mode responds once per user message; mention mode gates on @name; assistant messages
+    and resolved threads never trigger; delete/restore round-trips; runner failures keep the user's
+    message and emit `comments.agent.failed`.
+
+test T-8: Walkthroughs
+  given: TEST-PLAN.md F1–F6 against the DocumentVersioning / CommentsArticle stories
+  then: The agent pre-runs every automatable step headlessly; a human pass confirms feel (latency,
+    flicker, hover) that assertions cannot.
+```

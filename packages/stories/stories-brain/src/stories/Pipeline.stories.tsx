@@ -60,7 +60,7 @@ import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/story-modules';
+import { ModuleContainer } from '@dxos/storybook-testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -74,7 +74,8 @@ import {
   type StatItem,
 } from '../components';
 import { PIPELINE_RUN, PipelineStoryContext } from '../modules';
-import { Module, StoryModulesPlugin } from '../testing/modules';
+import { StoryRole } from '../modules';
+import { StoryModulesPlugin } from '../testing/modules';
 
 const OWNER_EMAIL = 'alice@example.com';
 
@@ -394,7 +395,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         details,
       }}
     >
-      <ModuleContainer layout={[[Module.Input], [Module.Pipeline], [Module.Output]]} />
+      <ModuleContainer layout={[[StoryRole.Input], [StoryRole.Pipeline], [StoryRole.Output]]} />
     </PipelineStoryContext.Provider>
   );
 };

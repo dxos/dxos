@@ -9,7 +9,8 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Operation, RunAgainError, Trace } from '@dxos/compute';
+import { PROGRESS_STATUS_CANCELLED } from '@dxos/app-toolkit';
+import { Cancellation, Operation, RunAgainError, Trace } from '@dxos/compute';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -236,6 +237,49 @@ describe('runGoogleSync against a mock Gmail API', () => {
     );
     expect(statusUpdates.every((update) => update.progress?.key === createSyncProgressKey(mailbox))).toBe(true);
     expect(statusUpdates.some((update) => update.message === mailbox.name)).toBe(true);
+  });
+
+  // `Pipeline.abortWith` interrupts, so nothing after the pipeline runs — the terminal status has to
+  // come from the interrupt finalizer. The progress sink suppresses a cancelled run's key until its
+  // terminal arrives, so a missing one silently hides every later run's meter.
+  test('emits a terminal cancelled status when the run is cancelled mid-sync', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = generateGmailDataset({ count: 20, seed: 17, start, end });
+
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+
+    const controller = new AbortController();
+    const statusUpdates: Trace.PayloadType<typeof Trace.StatusUpdate>[] = [];
+    const traceLayer = Trace.testTraceService().pipe(
+      Layer.provide(
+        Layer.succeed(Trace.TraceSink, {
+          write: (message) => {
+            for (const event of Trace.flatten(message)) {
+              if (Trace.isOfType(Trace.StatusUpdate, event)) {
+                statusUpdates.push(event.data);
+                // Cancel as soon as the run reports progress, i.e. mid-stream.
+                if (event.data.progress?.current !== undefined) {
+                  controller.abort();
+                }
+              }
+            }
+          },
+        }),
+      ),
+    );
+
+    const exit = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding) }).pipe(
+        Effect.provideService(Cancellation.Service, { signal: controller.signal }),
+        Effect.provide(inboxSyncTestServices(db, dataset, { traceLayer })),
+        Effect.exit,
+      ),
+    );
+
+    expect(Exit.isFailure(exit) && Cause.isInterruptedOnly(exit.cause)).toBe(true);
+    expect(statusUpdates.at(-1)?.message).toBe(PROGRESS_STATUS_CANCELLED);
+    expect(statusUpdates.at(-1)?.progress?.key).toBe(createSyncProgressKey(mailbox));
   });
 
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {

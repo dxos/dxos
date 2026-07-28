@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { addEventListener } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
@@ -76,7 +76,7 @@ export default Capability.makeModule(
       // would crash inside Atom's identity check (`'~atom/Serializable' in undefined`). When layout
       // isn't available, fall through to the personal-space default.
       const [layoutAtom] = capabilities.getAll(AppCapabilities.Layout);
-      const spaceId = layoutAtom && Paths.getSpaceIdFromPath(registry.get(layoutAtom).workspace);
+      const spaceId = layoutAtom && GraphPath.getSpaceIdFromPath(registry.get(layoutAtom).workspace);
       const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getPersonalSpace(client);
       if (!space) {
         return;

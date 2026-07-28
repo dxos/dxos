@@ -22,6 +22,7 @@ import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { ContentBlock } from '@dxos/types';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
 import { type DelegationStrategy } from './delegation-strategy';
@@ -30,11 +31,12 @@ import { type DelegationStrategy } from './delegation-strategy';
 type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
 
 /** Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface. */
-type AgentHandle = ProcessManager.Handle<string, void, AgentRpcs>;
+type AgentHandle = ProcessManager.Handle<string | ContentBlock.Any[], void, AgentRpcs>;
 
 const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
 
+// TODO(burdon): Agent identity?
 export interface CreateSessionOptions {
   readonly skills?: Skill.Skill[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
@@ -68,6 +70,7 @@ export const createSession: (
 
 export interface AgentServiceOptions {
   systemPrompt?: string;
+
   /**
    * Default model used by sessions that don't specify one explicitly.
    */
@@ -77,11 +80,6 @@ export interface AgentServiceOptions {
    * Default provider used to resolve the model for sessions that don't specify one explicitly.
    */
   provider?: DXN.DXN;
-
-  /**
-   * Provider for space-level MCP server configs.
-   */
-  getMcpServers?: () => McpServer.McpServer[];
 
   /**
    * If true, long-running tool calls are moved to the background and the agent is notified
@@ -96,6 +94,11 @@ export interface AgentServiceOptions {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * Provider for space-level MCP server configs.
+   */
+  getMcpServers?: () => McpServer.McpServer[];
 }
 
 export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
@@ -230,7 +233,7 @@ const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () =
         }),
       );
     }).pipe(Effect.scoped),
-  submitPrompt: (prompt: string) => process.submitInput(prompt),
+  submitPrompt: (prompt: string | ContentBlock.Any[]) => process.submitInput(prompt),
   // Settle when the turn's reply is complete; do NOT block on background sub-agents
   // (a supervisor delegates work that runs after the turn and reports back out of band).
   waitForCompletion: () => process.runUntilSettled(),

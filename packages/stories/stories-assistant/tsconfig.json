@@ -92,9 +92,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../devtools/devtools"
-    },
-    {
       "path": "../../plugins/plugin-assistant"
     },
     {
@@ -108,9 +105,6 @@
     },
     {
       "path": "../../plugins/plugin-client"
-    },
-    {
-      "path": "../../plugins/plugin-comments"
     },
     {
       "path": "../../plugins/plugin-connector"
@@ -144,6 +138,12 @@
     },
     {
       "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
+      "path": "../../plugins/plugin-review"
     },
     {
       "path": "../../plugins/plugin-routine"
@@ -221,6 +221,9 @@
       "path": "../../ui/react-ui-components"
     },
     {
+      "path": "../../ui/react-ui-debug"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
@@ -260,7 +263,7 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../story-modules"
+      "path": "../storybook-testing"
     }
   ]
 }

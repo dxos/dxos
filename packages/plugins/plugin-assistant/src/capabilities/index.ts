@@ -40,11 +40,6 @@ export const Connector = Capability.lazyModule(
   () => import('./connector'),
 );
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
-export const NavigationResolver = Capability.lazyModule(
-  'NavigationResolver',
-  { requires: [ClientCapabilities.Client], provides: [AppCapabilities.NavigationPathResolver] },
-  () => import('./navigation-resolver'),
-);
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template] },

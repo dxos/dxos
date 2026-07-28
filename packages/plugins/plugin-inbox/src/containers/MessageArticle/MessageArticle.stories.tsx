@@ -29,9 +29,9 @@ type StoryArgs = {
 };
 
 /**
- * Renders the seeded mailbox's one thread. Mirrors the `mailboxMessage` graph connector's query (one
- * combined space+feed scope, oldest-first) so a reply added at the db root (see `MessageArticle`'s
- * `openDraft`) is picked up reactively, exactly as it would be via the real companion node.
+ * Renders the seeded mailbox's one thread from its most recent message, the way the `mailboxMessage`
+ * graph connector opens one: the article looks the conversation up itself, so a reply added at the db
+ * root (see `MessageArticle`'s `openDraft`) is picked up reactively.
  */
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -50,7 +50,9 @@ const DefaultStory = () => {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox, messages: messages.length }} />;
   }
 
-  return <MessageArticle role='article' subject={messages} mailbox={mailbox} attendableId='story' />;
+  return (
+    <MessageArticle role='article' subject={messages[messages.length - 1]} mailbox={mailbox} attendableId='story' />
+  );
 };
 
 const meta = {
@@ -100,12 +102,13 @@ export const Spec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Wait for identity/client/mailbox seeding (all async) to finish and the thread to render. Only the
-    // most recent message is expanded by default, so exactly one Reply All shows; the two older messages
-    // render as collapsed summaries.
+    // Wait for identity/client/mailbox seeding (all async) to finish and the thread to render. The
+    // article looks the conversation up by threadId, so the two older messages appear as collapsed
+    // summaries only once that query resolves; the opened (most recent) message is the one expanded, so
+    // exactly one Reply All shows.
     const replyButtons = await canvas.findAllByRole('button', { name: 'Reply All' }, { timeout: 12_000 });
     await expect(replyButtons).toHaveLength(1);
-    await expect(canvas.getAllByTestId('message.expand')).toHaveLength(2);
+    await waitFor(() => expect(canvas.getAllByTestId('message.expand')).toHaveLength(2), { timeout: 5_000 });
 
     // Reply All on the newest message appends a draft composer inline at the bottom — no navigation.
     await userEvent.click(replyButtons[0]);

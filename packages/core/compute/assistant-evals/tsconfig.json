@@ -24,7 +24,13 @@
       "path": "../../../plugins/plugin-client"
     },
     {
+      "path": "../../../plugins/plugin-crm"
+    },
+    {
       "path": "../../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../../plugins/plugin-markdown"
     },
     {
       "path": "../../../plugins/plugin-routine"
@@ -48,10 +54,16 @@
       "path": "../ai"
     },
     {
+      "path": "../assistant"
+    },
+    {
       "path": "../assistant-toolkit"
     },
     {
       "path": "../compute"
+    },
+    {
+      "path": "../compute-runtime"
     }
   ]
 }

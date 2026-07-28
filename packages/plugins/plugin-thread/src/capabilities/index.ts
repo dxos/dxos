@@ -3,9 +3,8 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceCapability } from '@dxos/plugin-space';
 
 import { ThreadCapabilities } from '#types';
@@ -13,11 +12,6 @@ import { ThreadCapabilities } from '#types';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [CallsCapabilities.Manager],
 });
-export const NavigationResolver = Capability.lazyModule(
-  'NavigationResolver',
-  { requires: [ClientCapabilities.Client], provides: [AppCapabilities.NavigationPathResolver] },
-  () => import('./navigation-resolver'),
-);
 export const ChannelBackendFeed = Capability.lazyModule(
   'ChannelBackendFeed',
   { provides: [ThreadCapabilities.ChannelBackend] },

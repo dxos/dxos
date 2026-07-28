@@ -212,6 +212,8 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
                   })}
                 </Board.Content>
               </Board.Viewport>
+              {/* Overview map (outlines the visible region), pinned to the corner over the board. */}
+              <Board.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
             </Board.Container>
           </Panel.Content>
         </Panel.Root>

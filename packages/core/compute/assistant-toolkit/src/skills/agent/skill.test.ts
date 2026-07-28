@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 
-import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
+import { AssistantTestLayerWithTriggers, runMemoizedTests } from '@dxos/agent-runtime/testing';
 import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
@@ -69,7 +69,7 @@ const SYSTEM = trim`
   DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
 
-describe('Agent', () => {
+describe.skipIf(!runMemoizedTests())('Agent', () => {
   const skill = AgentSkillDef.make();
 
   it.scoped(

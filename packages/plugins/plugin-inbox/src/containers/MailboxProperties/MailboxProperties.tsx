@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Connector } from '@dxos/plugin-connector';
@@ -32,8 +32,8 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
     }
 
     void invokePromise(LayoutOperation.Open, {
-      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
-      workspace: Paths.getSpacePath(db.spaceId),
+      subject: [GraphPath.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
+      workspace: GraphPath.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 

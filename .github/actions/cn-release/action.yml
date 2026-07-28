@@ -11,6 +11,9 @@ inputs:
   application:
     description: 'Cloud Release application name'
     required: true
+  environment:
+    description: Target environment (labs | staging | production) — selects the channel.
+    required: true
   framework:
     description: 'Cloud Release framework'
     default: 'tauri'
@@ -22,11 +25,65 @@ runs:
   using: 'composite'
   steps:
     - uses: ./.github/actions/cn-channel
-      if: github.ref_name != 'production'
       id: release-channel
-
-    - uses: FabianLars-crabnebula/cloud-release@e0bb6ccebcb78f71883ebde2320f76aae6b9eb92
       with:
-        command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }}${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
+        environment: ${{ inputs.environment }}
+
+    # Resolved once so the three attempts below can't drift apart, and built in the shell from env rather
+    # than interpolated into the script.
+    - name: Resolve release command
+      id: command
+      shell: bash
+      env:
+        CN_COMMAND: ${{ inputs.command }}
+        CN_APPLICATION: ${{ inputs.application }}
+        CN_FRAMEWORK: ${{ inputs.framework }}
+        CN_CHANNEL: ${{ steps.release-channel.outputs.channel }}
+      run: |
+        command="release $CN_COMMAND $CN_APPLICATION --framework $CN_FRAMEWORK"
+        if [ -n "$CN_CHANNEL" ]; then
+          command="$command --channel $CN_CHANNEL"
+        fi
+        echo "value=$command" >> "$GITHUB_OUTPUT"
+
+    # The Cloud API intermittently 408s on `distribution.upload.finish` after every part has already
+    # transferred, and a single failure discards the macOS sign + notarize that precedes it (~30 min, with no
+    # remote cache on production), so each attempt is retried twice with backoff. The CLI exposes no retry or
+    # timeout flag, hence the retry lives here. `continue-on-error` is deliberately a literal — an
+    # `inputs`-based expression evaluates incorrectly inside a composite action (actions/runner#2418).
+    - name: Release (attempt 1 of 3)
+      id: attempt-1
+      continue-on-error: true
+      uses: FabianLars-crabnebula/cloud-release@e0bb6ccebcb78f71883ebde2320f76aae6b9eb92
+      with:
+        command: ${{ steps.command.outputs.value }}
+        api-key: ${{ inputs.api-key }}
+        working-directory: ${{ inputs.working-directory }}
+
+    - name: Back off before attempt 2
+      if: steps.attempt-1.outcome == 'failure'
+      shell: bash
+      run: sleep 30
+
+    - name: Release (attempt 2 of 3)
+      id: attempt-2
+      if: steps.attempt-1.outcome == 'failure'
+      continue-on-error: true
+      uses: FabianLars-crabnebula/cloud-release@e0bb6ccebcb78f71883ebde2320f76aae6b9eb92
+      with:
+        command: ${{ steps.command.outputs.value }}
+        api-key: ${{ inputs.api-key }}
+        working-directory: ${{ inputs.working-directory }}
+
+    - name: Back off before attempt 3
+      if: steps.attempt-1.outcome == 'failure' && steps.attempt-2.outcome == 'failure'
+      shell: bash
+      run: sleep 60
+
+    - name: Release (attempt 3 of 3)
+      if: steps.attempt-1.outcome == 'failure' && steps.attempt-2.outcome == 'failure'
+      uses: FabianLars-crabnebula/cloud-release@e0bb6ccebcb78f71883ebde2320f76aae6b9eb92
+      with:
+        command: ${{ steps.command.outputs.value }}
         api-key: ${{ inputs.api-key }}
         working-directory: ${{ inputs.working-directory }}

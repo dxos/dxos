@@ -9,7 +9,7 @@ import { mx } from '@dxos/ui-theme';
 
 // Rest/peak tick widths (px) and the wave radius (in rows) over which the hover extension falls off.
 const REST_WIDTH = 8;
-const PEAK_WIDTH = 48;
+const PEAK_WIDTH = 32;
 const WAVE_SPREAD = 2;
 
 const intersects = (range: { from: number; to: number }, visible: { from: number; to: number }): boolean =>
