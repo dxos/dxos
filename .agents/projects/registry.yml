@@ -38,7 +38,7 @@ projects:
     tasks: packages/plugins/plugin-projects/TASKS.md
     design: packages/plugins/plugin-projects/DESIGN.md
     prs: [12335, 12365, 12370]
-    resume: 'PRs #12335, #12365 and #12370 all MERGED (#12370 landed 2026-07-28 as f9ba47af93: Agent 0.2.0 identity/preset, Chat.agent inversion, relay onto durable session, no data migration). Nothing open. NEXT: Phase 3 UI in order — ProjectOperation.CreateChat, projectChats graph extension (navtree chat children), exclude project chats from the top-level Chats section, ProjectArticle toolbar, Phase 3 tests; then commands-authoring UI / outliner skill.'
+    resume: 'PRs #12335, #12365, #12370 MERGED. PR #12383 OPEN: Chat.agent removed (the field #12370 added) and the chat-agent linkage restored to the CompanionTo relation, which broke the Agent<->Chat import cycle — agent-chat.ts and both namespace facades deleted, lifecycle folded back into Agent, Agent.loadForChat added as the inverse of loadChat; also deleted the dead LegacyCompanionTo migration (same DXN as CompanionTo since 266d56cbc5) and added Chat.test.ts. NEXT: land #12383, then Phase 3 UI in order — ProjectOperation.CreateChat, projectChats graph extension (navtree chat children), exclude project chats from the top-level Chats section, ProjectArticle toolbar, Phase 3 tests; then commands-authoring UI / outliner skill.'
 
   - name: sketch-scene-dsl
     status: active

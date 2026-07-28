@@ -29,9 +29,10 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
 
     /**
      * Stable identity DID for the agent, used to attribute content it authors (e.g. suggestion
-     * branches) as its own author — distinct from any human or other agent. Seeded at creation
-     * (currently synthetic, via {@link IdentityDid.random}); the slot a real HALO identity DID
-     * takes once agents get first-class identities. Optional so pre-existing agents still load.
+     * branches) as its own author — distinct from any human or other agent. Provisioned
+     * externally, never minted by {@link makeInitialized} (see the note there); the slot a real
+     * HALO identity DID takes once agents get first-class identities. Optional because nothing
+     * populates it yet.
      */
     did: Schema.optional(IdentityDid).annotations({
       title: 'DID',

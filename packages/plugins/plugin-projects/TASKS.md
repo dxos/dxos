@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: PR #12370 MERGED 2026-07-28 (f9ba47af93) — reconciliation A-D (Agent 0.2.0 identity/preset, Chat.agent inversion, relay onto durable session, no data migration) is on main, as are #12335 and #12365. NEXT: Phase 3 UI, in order — `ProjectOperation.CreateChat`, `projectChats` graph extension (navtree chat children), exclude project chats from the top-level Chats section, `ProjectArticle` toolbar, then the Phase 3 test row. After that: commands-authoring UI / outliner skill. Uncommitted: none._
+_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN — `Chat.agent` (the field #12370 added) removed and the chat↔agent linkage restored to the `CompanionTo` relation; that field was the edge closing the Agent↔Chat import cycle, so `agent-chat.ts` and both namespace facades are deleted, the lifecycle folded back into `Agent`, and `Agent.loadForChat` added as the inverse of `loadChat`. Also: deleted the dead `LegacyCompanionTo` migration, added `Chat.test.ts`, documented the delegation strategy in DESIGN.md. NEXT: land #12383, then Phase 3 UI, in order — `ProjectOperation.CreateChat`, `projectChats` graph extension (navtree chat children), exclude project chats from the top-level Chats section, `ProjectArticle` toolbar, then the Phase 3 test row. After that: commands-authoring UI / outliner skill. Uncommitted: none._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 

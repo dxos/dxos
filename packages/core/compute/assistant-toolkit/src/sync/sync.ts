@@ -99,10 +99,13 @@ const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {
       }
     }
 
-    // Update foreign keys.
+    // Update foreign keys. Spread rather than pushing `foreignKey` itself: `newObj` is never added
+    // to the database on this branch, so its meta entries are proxies from a detached object graph,
+    // which the persisted write path rejects as unwrapped object references. A plain record encodes
+    // normally. (Keys read off a database-backed object are deep-copied on assign and would push
+    // directly — the asymmetry is an ECHO defect, not something this call site should rely on.)
     for (const foreignKey of Obj.getMeta(newObj).keys) {
       Obj.deleteKeys(existing, foreignKey.source);
-      // TODO(dmaretskyi): Doesn't work: `Obj.getMeta(existing).keys.push(foreignKey);`
       Obj.getMeta(existing).keys.push({ ...foreignKey });
     }
   });
