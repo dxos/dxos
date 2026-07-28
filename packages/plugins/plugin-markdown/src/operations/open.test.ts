@@ -1,12 +1,12 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, EID } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -17,22 +17,18 @@ import { MarkdownOperation } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
 
-describe('Create', () => {
+describe('Open', () => {
   it.effect(
-    'call a function to create a markdown document',
+    'returns the document content',
     Effect.fnUntraced(
       function* (_) {
-        const name = 'BlueYard';
-        const content = 'Founders and portfolio of BlueYard.';
-        const result = yield* Operation.invoke(MarkdownOperation.Create, {
-          name,
-          content,
-        });
+        const doc = Markdown.make({ name: 'Shopping list', content: '# Shopping list\n- milk' });
+        yield* Database.add(doc);
+        yield* Database.flush();
 
-        const doc = yield* Database.resolve(EID.parse(result.id), Markdown.Document);
-        expect(doc.name).toBe(name);
-        const text = yield* Database.load(doc.content);
-        expect(text.content).toBe(content);
+        const { content } = yield* Operation.invoke(MarkdownOperation.Open, { doc: Ref.make(doc) });
+
+        expect(content).toBe('# Shopping list\n- milk');
       },
       WithProperties,
       Effect.provide(OperationTestLayer),
