@@ -27,7 +27,8 @@ export const formatSystemPrompt = ({
   system,
   skills = [],
   objects = [],
-}: Pick<AiRequest.RunProps, 'system' | 'skills' | 'objects'>): Effect.Effect<
+  instructions = [],
+}: Pick<AiRequest.RunProps, 'system' | 'skills' | 'objects' | 'instructions'>): Effect.Effect<
   string,
   FunctionNotFoundError | EntityNotFoundError,
   Database.Service | Registry.Service | Operation.Service
@@ -50,15 +51,10 @@ export const formatSystemPrompt = ({
       Effect.map((skills) => (skills.length > 0 ? ['## Skills Definitions', ...skills].join('\n\n') : undefined)),
     );
 
-    // Bound Instructions steer the session: their text (and sentinel commands) belongs in the system
+    // Instructions steer the session, so their text (and sentinel commands) belongs in the system
     // prompt itself — a context-object stub would force the model to tool-load them and follow nothing.
-    const instructionObjects = objects.filter((object): object is Instructions.Instructions =>
-      Obj.instanceOf(Instructions.Instructions, object),
-    );
-    const contextObjects = objects.filter((object) => !Obj.instanceOf(Instructions.Instructions, object));
-
     const instructionDefs = yield* Function.pipe(
-      instructionObjects,
+      instructions,
       Effect.forEach((instructions) =>
         Effect.gen(function* () {
           // A broken text ref degrades to commands-only rather than failing the whole prompt.
@@ -85,7 +81,7 @@ export const formatSystemPrompt = ({
     );
 
     const objectDefs = yield* Function.pipe(
-      contextObjects,
+      objects,
       Effect.forEach((object) => {
         // Carry the label so the model only tool-loads an object when it needs the contents,
         // not just to learn what the reference is.
