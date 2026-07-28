@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import { Message, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import { meta } from '#meta';
@@ -46,14 +46,15 @@ export const L1PanelUnavailable = ({ workspace, open }: L1PanelUnavailableProps)
       data-testid='navtree.workspace.unavailable'
       {...(!open && { inert: true })}
     >
-      <div data-tauri-drag-region className='dx-app-drag' />
-      <div
-        className='flex flex-col gap-2 px-3 animate-fade-in'
+      <Message.Root
+        valence='info'
+        // Second grid row, so the message clears the rail exactly as an L1 panel's tree does.
+        classNames='row-start-2 self-start mx-1 animate-fade-in'
         style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
       >
-        <h2 className='text-lg font-medium'>{t('workspace-unavailable.heading')}</h2>
-        <p className='text-sm text-description'>{t('workspace-unavailable.description')}</p>
-      </div>
+        <Message.Title>{t('workspace-unavailable.heading')}</Message.Title>
+        <Message.Content>{t('workspace-unavailable.description')}</Message.Content>
+      </Message.Root>
     </Tabs.Panel>
   );
 };
