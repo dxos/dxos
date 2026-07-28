@@ -17,7 +17,10 @@ export type SketchCardProps = AppSurface.ObjectCardProps<Sketch.Sketch>;
 export const SketchCard = ({ role, subject: sketch, editable }: SketchCardProps) => {
   const variants = useCapabilities(IllustratorCapabilities.VariantProvider);
   const ref = sketch.canvas as Ref.Ref<Obj.Unknown>;
-  const [canvas] = useObject(ref);
+  // Subscribe via the snapshot for load/re-render, but hand variants the LIVE object —
+  // their store adapters need `Doc.createAccessor`, which rejects snapshots.
+  const [snapshot] = useObject(ref);
+  const canvas = snapshot ? ref.target : undefined;
 
   if (!canvas) {
     return null;

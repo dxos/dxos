@@ -48,3 +48,7 @@ Game/Chess-style split: headless host plugin + renderer variant plugins.
 - [ ] **Technical-drawing dialect** — mermaid/UML variant with placement metadata; hierarchical zoom, source-linked nodes, collapsible groups, auto-layout + slot routing, scenarios. NOT in this phase.
 - [ ] **Excalidraw native arrow bindings** — replace positional arrows + customData refs with real start/endBinding + boundElements sync.
 - [ ] **Illustrator PLUGIN.mdl deepening** — document capability contract once the dialect work firms it up.
+
+### Tracked follow-ups
+
+- [ ] **react-ui-debug LogPanel misses errors** (plugin-debug) — LogPanel doesn't catch errors like the Doc.createAccessor LiveObject throw; needs a context that keeps collecting logs even while the panel isn't visible. (tracked 2026-07-28)

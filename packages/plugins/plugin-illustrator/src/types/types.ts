@@ -40,8 +40,8 @@ export type SketchVariant = {
 export type SketchVariantSurfaceProps = {
   /** The base Sketch object (may be a snapshot from useObject/Surface). */
   sketch: Obj.Snapshot<Sketch.Sketch> | Sketch.Sketch;
-  /** The resolved canvas object (may be a snapshot from useObject). */
-  canvas: Obj.Snapshot<Obj.Unknown> | Obj.Unknown;
+  /** The resolved LIVE canvas object — variant store adapters need `Doc.createAccessor`. */
+  canvas: Obj.Unknown;
   /** Surface role passed through from the host. */
   role?: string;
   /** Attendable id passed through from the host. */

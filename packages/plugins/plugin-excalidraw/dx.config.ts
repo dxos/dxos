@@ -19,6 +19,7 @@ export default Config2.make({
       reconnect, using ECHO's CRDT semantics.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-excalidraw',
+    dependsOn: ['org.dxos.plugin.illustrator'],
     icon: { key: 'ph--compass-tool--regular', hue: 'indigo' },
     tags: ['labs'],
     screenshots: [{ dark: 'https://dxos.network/plugin-details-excalidraw-dark.png' }],

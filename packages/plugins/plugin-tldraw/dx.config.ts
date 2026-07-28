@@ -27,6 +27,7 @@ export default Config2.make({
       automatically when connectivity is restored using ECHO's CRDT semantics.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-tldraw',
+    dependsOn: ['org.dxos.plugin.illustrator'],
     icon: { key: 'ph--compass-tool--regular', hue: 'indigo' },
     spec: 'PLUGIN.mdl',
     screenshots: [{ dark: 'https://dxos.network/plugin-details-sketch-dark.png' }],
