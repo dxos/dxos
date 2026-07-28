@@ -72,7 +72,7 @@ const createMessageMapperCached = (
               const mapper = createMessageMapperCached(field.resolvedType, substitutions, cache);
               c`res.${field.name} = ${ref(mapper)}.map({}, extraArgs);`;
             } else if (field.resolvedType instanceof pb.Enum) {
-              `res.${field.name} = 0;`;
+              c`res.${field.name} = 0;`;
             } else {
               c`res.${field.name} = ${getDefaultValue(field.type)};`;
             }
