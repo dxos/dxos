@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -21,7 +21,7 @@ describe('SchemaList', () => {
   it.effect(
     'schema-list: lists registered types and omits the excluded ones',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const schemas = yield* Operation.invoke(SchemaList, {});
 
         const rows = yield* Schema.decodeUnknown(

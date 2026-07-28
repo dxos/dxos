@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -17,22 +17,11 @@ import { QueryMemories } from './definitions';
 
 EntityId.dangerouslyDisableRandomness();
 
-const titles = (results: readonly unknown[]) =>
-  Schema.decodeUnknown(Schema.Array(Schema.Struct({ title: Schema.String })))(results).pipe(
-    Effect.map((rows) => rows.map((row) => row.title)),
-  );
-
-const seed = Effect.fnUntraced(function* () {
-  yield* Database.add(Obj.make(Memory, { title: 'Favourite colour', content: 'The colour blue.' }));
-  yield* Database.add(Obj.make(Memory, { title: 'Favourite language', content: 'TypeScript.' }));
-  yield* Database.flush();
-});
-
 describe('QueryMemories', () => {
   it.effect(
     'lists every memory when no text is given',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         yield* seed();
 
         const results = yield* Operation.invoke(QueryMemories, {});
@@ -47,7 +36,7 @@ describe('QueryMemories', () => {
   it.effect(
     'narrows to the memories matching the search text',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         yield* seed();
 
         const results = yield* Operation.invoke(QueryMemories, { text: 'colour' });
@@ -62,7 +51,7 @@ describe('QueryMemories', () => {
   it.effect(
     'caps the result count at the given limit',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         yield* seed();
 
         const results = yield* Operation.invoke(QueryMemories, { limit: 1 });
@@ -73,4 +62,15 @@ describe('QueryMemories', () => {
       TestHelpers.provideTestContext,
     ),
   );
+});
+
+const titles = (results: readonly unknown[]) =>
+  Schema.decodeUnknown(Schema.Array(Schema.Struct({ title: Schema.String })))(results).pipe(
+    Effect.map((rows) => rows.map((row) => row.title)),
+  );
+
+const seed = Effect.fnUntraced(function* () {
+  yield* Database.add(Obj.make(Memory, { title: 'Favourite colour', content: 'The colour blue.' }));
+  yield* Database.add(Obj.make(Memory, { title: 'Favourite language', content: 'TypeScript.' }));
+  yield* Database.flush();
 });

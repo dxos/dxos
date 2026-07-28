@@ -28,15 +28,6 @@ import { MagazineOperationHandlerSet } from './index';
 // model indexes this array lazily, per call, so populating it before the operation runs is enough.
 const turns: ScriptedLanguageModel.ScriptedTurn[] = [];
 
-const selectPosts = (ids: readonly string[]) => {
-  turns.length = 0;
-  turns.push(
-    { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { posts: ids.map((id) => ({ id })) } })] },
-    // The loop asks again once the tool result is fed back; a text-only turn stops it.
-    { parts: [ScriptedLanguageModel.text('Done.')] },
-  );
-};
-
 const TestLayer = AssistantTestLayer({
   operationHandlers: [MagazineOperationHandlerSet, AgentHandlers],
   types: [
@@ -136,7 +127,7 @@ describe('CurateMagazine', () => {
   it.effect(
     'records the selected posts on the magazine and counts them',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const subscription = yield* Database.add(
           Subscription.makeSubscription({ name: 'Tech & Science Daily', type: 'rss' }),
         );
@@ -176,3 +167,12 @@ describe('CurateMagazine', () => {
     ),
   );
 });
+
+const selectPosts = (ids: readonly string[]) => {
+  turns.length = 0;
+  turns.push(
+    { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { posts: ids.map((id) => ({ id })) } })] },
+    // The loop asks again once the tool result is fed back; a text-only turn stops it.
+    { parts: [ScriptedLanguageModel.text('Done.')] },
+  );
+};

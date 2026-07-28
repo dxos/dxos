@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Operation, Routine, Trigger } from '@dxos/compute';
@@ -25,7 +25,7 @@ describe('SyncAutomation', () => {
   it.scoped(
     'cron creates a timer routine that relays into the agent session',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const cron = '*/5 * * * *';
         const agent = yield* Agent.makeInitialized(
           { name: 'Scheduled agent', instructions: 'A scheduled agent that runs on a timer.' },
@@ -67,7 +67,7 @@ describe('SyncAutomation', () => {
   it.scoped(
     'copies enabled from the agent onto every trigger',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const cron = '0 9 * * *';
         const agent = yield* Agent.makeInitialized(
           { name: 'Toggle agent', instructions: 'Test enabled propagation.', enabled: false },

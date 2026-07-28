@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
@@ -20,7 +20,7 @@ describe('DeleteMemory', () => {
   it.effect(
     'removes the memory from the database',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const memory = yield* Database.add(Obj.make(Memory, { title: 'Outdated fact', content: 'Stale.' }));
         const kept = yield* Database.add(Obj.make(Memory, { title: 'Current fact', content: 'Fresh.' }));
         yield* Database.flush();

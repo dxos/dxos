@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -21,7 +21,7 @@ describe('SaveMemory', () => {
   it.effect(
     'persists a memory with the given title and content',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const saved = yield* Operation.invoke(SaveMemory, {
           title: 'Favourite language',
           content: 'TypeScript',

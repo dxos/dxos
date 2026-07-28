@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
@@ -23,18 +23,11 @@ const TestLanguageModel = ScriptedLanguageModel.scriptedLanguageModelLayer([
   { parts: [ScriptedLanguageModel.text(SUMMARY)] },
 ]);
 
-const message = (role: 'user' | 'assistant', text: string) =>
-  Obj.make(Message.Message, {
-    created: new Date(0).toISOString(),
-    sender: { role },
-    blocks: [{ _tag: 'text', text }],
-  });
-
 describe('AiSummarizer', () => {
   it.effect(
     'wraps the model response in an assistant summary message',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const summary = yield* AiSummarizer.summarize([
           message('user', 'Where is my order for the laptop stand?'),
           message('assistant', 'It shipped on the 3rd.'),
@@ -49,3 +42,10 @@ describe('AiSummarizer', () => {
     ),
   );
 });
+
+const message = (role: 'user' | 'assistant', text: string) =>
+  Obj.make(Message.Message, {
+    created: new Date(0).toISOString(),
+    sender: { role },
+    blocks: [{ _tag: 'text', text }],
+  });

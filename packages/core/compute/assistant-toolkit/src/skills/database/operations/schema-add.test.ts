@@ -32,7 +32,7 @@ const PROJECT_JSON_SCHEMA = {
 describe('SchemaAdd', () => {
   it.effect(
     'schema-add: requires jsonSchema to be an object',
-    Effect.fnUntraced(function* ({ expect }) {
+    Effect.fnUntraced(function* (_) {
       // The tool parameter is typed as an object so the model emits the JSON Schema as an object.
       // An unconstrained parameter let some models emit a JSON-encoded string, which then corrupted
       // the created type; a non-object is now rejected at the tool-call boundary.
@@ -50,7 +50,7 @@ describe('SchemaAdd', () => {
   it.effect(
     'schema-add: creates a schema with the declared fields',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         // Run the handler and assert the created type carries the declared fields, not merely that a
         // type with the typename exists.
         yield* Operation.invoke(SchemaAdd, {

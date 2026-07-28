@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
@@ -21,7 +21,7 @@ describe('Open', () => {
   it.effect(
     'returns the document content',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const doc = Markdown.make({ name: 'Shopping list', content: '# Shopping list\n- milk' });
         yield* Database.add(doc);
         yield* Database.flush();

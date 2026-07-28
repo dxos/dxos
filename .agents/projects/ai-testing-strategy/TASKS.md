@@ -27,7 +27,7 @@ internally run on `ScriptedLanguageModel`. Remaining live backlog: Phase 1 item 
   via evalite's source + its v1 beta + [issue #68](https://github.com/mattpocock/evalite/issues/68)
   that evalite has no per-eval timeout of its own — the global `testTimeout`, now 180s, is only the
   outer safety net). Pushed to `claude/ai-testing-strategy-9ctzjt` through commit `c62073d0cf`.
-  NEXT: await review on PR #12307._
+  (Historical: that PR's own next step was review, long since done.)_
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
@@ -187,7 +187,7 @@ as primary coverage.
       stores `echo:/<id>` while `Obj.getURI` returns `echo://<space>/<id>`, and handlers differ in
       which they return (`get-context` returns the qualified form, tags/bindings the local one).
   - [x] **database skill — DONE.** `skill.test.ts` + `skill.conversations.json` deleted; 16 tests in
-        `operations/database-operations.test.ts`: objects (create, create-with-encoded-reference,
+        `operations/*.test.ts`, one file per handler: objects (create, create-with-encoded-reference,
         update, delete, load), query (by typename, `in`-param feed scoping, `includeQueues`), context
         (add/remove, asserted on the `Binding` written to the feed), schema (add input decoding, add
         field creation, list with exclusions), relation create, tag add/remove. Non-vacuous: verified
@@ -206,7 +206,7 @@ as primary coverage.
         and the markdown equivalent from `#testing`. To keep the shared layer free of a
         plugin-markdown dependency the agent tests no longer use `Markdown.Document` as their sample
         artifact (the type is incidental to what they assert).
-  - [x] **Remaining 5 G2 files — DONE.** Split by what each needed:
+  - [x] **Remaining G2 files — DONE.** Split by what each needed:
     - **memory** — handlers are pure DB, so direct operation tests: `save`, `query` (list / text /
       limit), `delete`.
     - **run-instructions, curate-magazine, plan-reminder, AssistantPlugin, AiSummarizer** — these
@@ -379,7 +379,7 @@ Obj.Unknown>`. For a relation schema that intersects the relation and object kin
       guard was never applied to this one. Consequence: any operation declaring
       `Ref.Ref(Relation.Unknown)` cannot be invoked from typed code without a cast. Exactly one does
       today — `DatabaseOperations.RelationDelete` — so its test is deferred with a TODO rather than
-      cast around (see `database-operations.test.ts`). Fix is to split the overload on
+      cast around, so `relation-delete` has no test file yet. Fix is to split the overload on
       `Entity.Kind.Relation` and intersect with `Relation.Unknown`, mirroring the typed-schema
       overload above it. Core `@dxos/echo` typing change — own PR, needs a repo-wide typecheck.
 - [x] **Blocking evals — FIXED:** root-caused the evalite-specific `plugin-routine` registry-sync

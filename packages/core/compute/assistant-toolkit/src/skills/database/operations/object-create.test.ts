@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
@@ -21,7 +21,7 @@ describe('ObjectCreate', () => {
   it.effect(
     'object-create: creates an object with the declared properties',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         yield* Operation.invoke(ObjectCreate, {
           typename: Type.getTypename(Organization.Organization),
           properties: { name: 'Cyberdyne Systems' },
@@ -39,7 +39,7 @@ describe('ObjectCreate', () => {
   it.effect(
     'object-create: resolves an encoded reference into a live ref',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const organization = yield* Database.add(Obj.make(Organization.Organization, { name: 'Cyberdyne Systems' }));
         yield* Database.flush();
 

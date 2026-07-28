@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
@@ -21,7 +21,7 @@ describe('ContextAdd', () => {
   it.effect(
     'context-add: binds the object to the conversation',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const feed = yield* Database.add(Feed.make());
         const organization = yield* Database.add(Obj.make(Organization.Organization, { name: 'Context Corp' }));
         yield* Database.flush();

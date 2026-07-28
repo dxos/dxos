@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
@@ -20,7 +20,7 @@ describe('TagAdd', () => {
   it.effect(
     'tag-add: attaches the tag to the object',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const organization = yield* Database.add(Obj.make(Organization.Organization, { name: 'Tagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'important' }));
         yield* Database.flush();

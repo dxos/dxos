@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -21,7 +21,7 @@ describe('Load', () => {
   it.effect(
     'load: returns one entry per requested ref',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const organization = yield* Database.add(Obj.make(Organization.Organization, { name: 'Cyberdyne Systems' }));
         const person = yield* Database.add(Obj.make(Person.Person, { fullName: 'John Connor' }));
         yield* Database.flush();

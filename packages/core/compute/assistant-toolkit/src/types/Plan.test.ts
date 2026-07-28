@@ -6,9 +6,6 @@ import { describe, test } from '@effect/vitest';
 
 import { Plan } from './index';
 
-const makePlan = (statuses: readonly Plan.TaskStatus[]): Plan.Plan =>
-  Plan.makePlan({ tasks: statuses.map((status, index) => ({ title: `Task ${index}`, status })) });
-
 // The planning hook fires the plan-reminder operation only while the plan has open tasks; cover the
 // predicate directly so the branch is verified without an agent turn.
 describe('hasIncompleteTasks', () => {
@@ -22,3 +19,6 @@ describe('hasIncompleteTasks', () => {
     expect(Plan.hasIncompleteTasks(makePlan([]))).toBe(false);
   });
 });
+
+const makePlan = (statuses: readonly Plan.TaskStatus[]): Plan.Plan =>
+  Plan.makePlan({ tasks: statuses.map((status, index) => ({ title: `Task ${index}`, status })) });

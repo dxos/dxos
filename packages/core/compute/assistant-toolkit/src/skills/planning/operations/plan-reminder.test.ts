@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
@@ -21,36 +21,11 @@ import { PlanningHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();
 
-const types = [
-  Agent.Agent,
-  Plan.Plan,
-  Chat.Chat,
-  Chat.CompanionTo,
-  Skill.Skill,
-  Feed.Feed,
-  Message.Message,
-  AiContext.Binding,
-];
-
-// The hook asks the model whether to keep working; scripting that reply covers both branches, which
-// a single frozen conversation could not.
-//
-// No host process is spawned, so the Tier B enqueue on the continue branch fails with
-// NotSupportedError. That failure is the assertion: it fires exactly when the hook decided to
-// enqueue, and its absence proves it decided not to — observable without reaching into the host's
-// queue, which is where the reminder would otherwise land.
-const layerDeciding = (decision: string) =>
-  AssistantTestLayerWithTriggers({
-    operationHandlers: OperationHandlerSet.merge(PlanningHandlers),
-    types,
-    aiService: ScriptedLanguageModel.scriptedAiService([{ parts: [ScriptedLanguageModel.text(decision)] }]),
-  });
-
 describe('PlanReminder', () => {
   it.effect(
     'attempts a continuation reminder when the model says continue',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const conversation = yield* setupChatWithPlan(['todo']);
 
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
@@ -65,7 +40,7 @@ describe('PlanReminder', () => {
   it.effect(
     'enqueues nothing when the model says stop',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const conversation = yield* setupChatWithPlan(['todo']);
 
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
@@ -80,7 +55,7 @@ describe('PlanReminder', () => {
   it.effect(
     'is a no-op when every task is done, without consulting the model',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const conversation = yield* setupChatWithPlan(['done']);
 
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
@@ -118,3 +93,28 @@ const setupChatWithPlan = Effect.fnUntraced(function* (statuses: readonly Plan.T
 
   return Operation.withInvocationOptions({ conversation: Obj.getURI(feed) });
 });
+
+const types = [
+  Agent.Agent,
+  Plan.Plan,
+  Chat.Chat,
+  Chat.CompanionTo,
+  Skill.Skill,
+  Feed.Feed,
+  Message.Message,
+  AiContext.Binding,
+];
+
+// The hook asks the model whether to keep working; scripting that reply covers both branches, which
+// a single frozen conversation could not.
+//
+// No host process is spawned, so the Tier B enqueue on the continue branch fails with
+// NotSupportedError. That failure is the assertion: it fires exactly when the hook decided to
+// enqueue, and its absence proves it decided not to — observable without reaching into the host's
+// queue, which is where the reminder would otherwise land.
+const layerDeciding = (decision: string) =>
+  AssistantTestLayerWithTriggers({
+    operationHandlers: OperationHandlerSet.merge(PlanningHandlers),
+    types,
+    aiService: ScriptedLanguageModel.scriptedAiService([{ parts: [ScriptedLanguageModel.text(decision)] }]),
+  });

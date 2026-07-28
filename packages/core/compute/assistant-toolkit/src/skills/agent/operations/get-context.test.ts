@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
@@ -23,7 +23,7 @@ describe('GetContext', () => {
   it.scoped(
     'reports the bound agent name and instructions',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const { agent, conversation } = yield* setupBoundAgent();
 
         const context = yield* Operation.invoke(AgentSkillOperations.GetContext, {}).pipe(Effect.provide(conversation));
@@ -41,7 +41,7 @@ describe('GetContext', () => {
   it.scoped(
     'formats the chat plan once one exists',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* (_) {
         const { agent, conversation } = yield* setupBoundAgent();
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
