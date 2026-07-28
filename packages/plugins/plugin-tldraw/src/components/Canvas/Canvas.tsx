@@ -91,7 +91,9 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
       // https://tldraw.dev/examples/editor-api/canvas-events
       const handleEvent = ({ type, name }: TLEventInfo) => {
         if (type === 'pointer' && name === 'pointer_up') {
-          adapter.save();
+          // Defer: the 'event' stream fires before the active tool commits its shape to the
+          // store, so an immediate save flushes one gesture behind (losing the final stroke).
+          setTimeout(() => adapter.save());
         }
       };
 
@@ -243,7 +245,9 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
         ref={containerRef}
       >
         <TldrawEditor
-          key={Obj.getURI(canvas)}
+          // Rebind when the adapter recreates its store (e.g. an effect-churn reopen) — a stale
+          // binding draws into an orphaned store whose change listeners are gone, so saves no-op.
+          key={`${Obj.getURI(canvas)}:${adapter.store.id}`}
           store={adapter.store}
           hideUi={hideUi}
           inferDarkMode

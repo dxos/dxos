@@ -43,6 +43,8 @@ export const useStoreAdapter = (canvas?: Tldraw.Canvas) => {
       forceUpdate({});
 
       return () => {
+        // Flush any gesture still pending from the deferred pointer_up save.
+        adapter.save();
         void adapter.close();
       };
     },

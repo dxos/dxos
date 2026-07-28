@@ -49,6 +49,12 @@ Game/Chess-style split: headless host plugin + renderer variant plugins.
 - [ ] **Excalidraw native arrow bindings** — replace positional arrows + customData refs with real start/endBinding + boundElements sync.
 - [ ] **Illustrator PLUGIN.mdl deepening** — document capability contract once the dialect work firms it up.
 
+### Post-review fixes (2026-07-28, user testing)
+
+- [x] **dependsOn auto-enable** — plugin-tldraw/plugin-excalidraw declare `dependsOn: ['org.dxos.plugin.illustrator']`; the plugin manager enables the closure.
+- [x] **LiveObject crash on create** — `useObject` returns snapshots; dispatch containers now pass `ref.target` (live) since store adapters need `Doc.createAccessor`.
+- [x] **Lost strokes (pre-existing)** — tldraw's `'event'` stream fires before the tool commits its shape, so pointer_up-driven saves flushed one gesture behind; plus the attention-triggered adapter reopen recreated the store under a still-mounted editor. Fixed: debounced auto-save in the store listener, editor keyed by store instance, flush-on-unmount. Verified live: cold load → draw → reload → stroke persists.
+
 ### Tracked follow-ups
 
 - [ ] **react-ui-debug LogPanel misses errors** (plugin-debug) — LogPanel doesn't catch errors like the Doc.createAccessor LiveObject throw; needs a context that keeps collecting logs even while the panel isn't visible. (tracked 2026-07-28)
