@@ -26,7 +26,7 @@ projects:
     tasks: packages/plugins/plugin-projects/TASKS.md
     design: packages/plugins/plugin-projects/DESIGN.md
     prs: [12335, 12365, 12370]
-    resume: 'PR #12370 OPEN (reconciliation A-D: Agent 0.2.0 identity/preset, Chat.agent inversion, relay pattern onto durable session, no data migration per user). #12365 MERGED earlier (instructions channel + ProjectSkill + live eval 100%). projects.eval re-verified 100% post-D; agent-skill conversations regenerated, planning gated to its eval. NEXT: watch #12370 CI/review to land, then Phase 3 UI (ProjectOperation.CreateChat, navtree chat children, Chats exclusion, toolbar), then commands-authoring UI / outliner skill.'
+    resume: 'PR #12370 OPEN (reconciliation A-D: Agent 0.2.0 identity/preset, Chat.agent inversion, relay onto durable session, no data migration). CI: import cycle FIXED (Agent co-located with Chat, 8c89461e49); storybook red = react-ui dist-chunk resolve error, untouched package, suspected stale CI cache — fresh run polling. En-route fixes: plugin-markdown doc-ref ops use Database.resolve (tryLoad crash on LLM refs); relay fail-open qualify; planning memoized test gated to planning.eval.ts. projects.eval 100% live post-D. NEXT: green + land #12370, then Phase 3 UI (CreateChat op, navtree chat children, Chats exclusion, toolbar), then commands-authoring UI / outliner skill.'
 
   - name: sketch-scene-dsl
     status: active

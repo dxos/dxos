@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: reconciliation A-D COMPLETE + verified (projects.eval 100% live post-D; memoized agent suite regenerated + replay-deterministic with `planning` gated to its eval; LegacyAgent/migration REMOVED per user — no data migration, recover from 11802071c1 if needed; plugin-markdown doc-ref ops hardened). Next: submit the reconciliation PR from this branch. Uncommitted: final working tree._
+_Resume: reconciliation A-D DONE, shipped as PR #12370 (OPEN). CI: import-cycle failure FIXED (Agent co-located with Chat in one module, Agent.\* namespace via re-export facade, commit 8c89461e49); storybook job failed on a react-ui dist-chunk resolve error (package untouched by this branch — suspected stale CI cache; fresh run in progress on the fixed tip, poll armed). Verified: projects.eval 100% live post-D; memoized agent suite regenerated + replay-deterministic (planning gated to planning.eval.ts); 298 unit tests green. NEXT: get #12370 green (storybook verdict), handle CodeRabbit, land; then Phase 3 UI (ProjectOperation.CreateChat, navtree chat children, Chats exclusion, toolbar). Uncommitted: user's project.drawio.svg edit (committed with next change)._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
@@ -122,7 +122,7 @@ repoint.
 ## Follow-ups / deferred (design reviews)
 
 - [x] **plugin-markdown ops resolve LLM-provided refs via the db** — `ref.tryLoad is not a
-  function` when a tool-call `doc` ref decodes without a resolver; the five doc-ref ops
+function` when a tool-call `doc` ref decodes without a resolver; the five doc-ref ops
       (update/create-branch/create-checkpoint/get-history/merge-branch) now use
       `Database.resolve(doc, Markdown.Document)` (typed check included). Residual follow-up:
       `Database.load`'s bare `.tryLoad()` assumption still bites any other op taking refs
