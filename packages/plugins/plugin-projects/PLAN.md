@@ -103,9 +103,9 @@ process drains at its own pace (at the cost of the visible extra feed).
       — the concrete contract, mirroring `RunInstructions.chat`: the chat is
       what carries history (feed), bound context, and the typed
       `instructions: Ref<Instructions>` (set from the agent's per B). Qualify
-      (cheap model, reusing the Qualifier prompt) → on relevant,
-      `AgentService.getSession(chat.feed, { instructions: chat.instructions })
-      .submitPrompt(event)`. Instructions reach the durable process via the
+      (cheap model, reusing the Qualifier prompt); on relevant, get the durable
+      session for `chat.feed` (passing `chat.instructions`) and submit the
+      event as a prompt. Instructions reach the durable process via the
       existing spawn-annotation path — no separate ephemeral-path work needed.
 - [ ] Agent wizard: a subscription creates a Routine (feed trigger →
       `RelayFunction` with the agent's chat ref); `cron` creates a Routine

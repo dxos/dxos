@@ -511,7 +511,6 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
       TestHelpers.provideTestContext,
     ),
   );
-
 });
 
 // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
