@@ -32,19 +32,9 @@ import {
   getSentId,
   getSubscriptionsId,
 } from '../paths';
-import { syncTarget } from '../util';
+import { getMessageLabel, syncTarget } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
-
-/**
- * Node label for a message. A compose draft's subject starts as an empty string rather than absent, so
- * a `??` fallback would leave the plank title (and breadcrumb tail) blank until the user types one.
- */
-const getMessageLabel = (message: Message.Message) =>
-  message.properties?.subject ||
-  (DraftMessage.instanceOf(message)
-    ? (['draft.label', { ns: meta.profile.key }] as const)
-    : (['message.label', { ns: meta.profile.key }] as const));
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
