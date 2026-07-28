@@ -22,7 +22,7 @@ EntityId.dangerouslyDisableRandomness();
 describe('SyncAutomation', () => {
   const skill = AgentSkillDef.make();
 
-  it.scoped(
+  it.effect(
     'cron creates a timer routine that relays into the agent session',
     Effect.fnUntraced(
       function* (_) {
@@ -64,7 +64,7 @@ describe('SyncAutomation', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'copies enabled from the agent onto every trigger',
     Effect.fnUntraced(
       function* (_) {
@@ -80,6 +80,8 @@ describe('SyncAutomation', () => {
         const triggers = yield* Database.query(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.sync-automation.toggle'),
         ).run;
+        // `every` is vacuously true on an empty array; assert the triggers exist first.
+        expect(triggers.length).toBeGreaterThan(0);
         expect(triggers.every((trigger) => trigger.enabled === false)).toBe(true);
 
         Obj.update(agent, (agent) => {

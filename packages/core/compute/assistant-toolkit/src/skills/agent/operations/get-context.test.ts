@@ -20,7 +20,7 @@ import * as AgentSkillOperations from './definitions';
 EntityId.dangerouslyDisableRandomness();
 
 describe('GetContext', () => {
-  it.scoped(
+  it.effect(
     'reports the bound agent name and instructions',
     Effect.fnUntraced(
       function* (_) {
@@ -38,7 +38,7 @@ describe('GetContext', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'formats the chat plan once one exists',
     Effect.fnUntraced(
       function* (_) {
