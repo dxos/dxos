@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Terra } from '../types';
 import { toUnit } from './geo';
 import { buildNavGrid, isPassable } from './nav-grid';
+import { domainCandidates } from './reachable';
 import { planRoute } from './route';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'route-1' } }));
@@ -61,6 +62,20 @@ describe('planRoute', () => {
     const first = planRoute({ grid, domain: 'sea', from, to });
     const second = planRoute({ grid, domain: 'sea', from, to });
     expect(first).toEqual(second);
+  });
+
+  test('a land route stays on passable ground for its whole length', () => {
+    // Endpoints come from `domainCandidates` rather than `landCells`: two arbitrary passable land
+    // cells can sit on different continents, where no route exists at all and the assertion below
+    // would vacuously pass. `domainCandidates` returns one connected component, so a route must exist.
+    const candidates = domainCandidates(grid, 'land');
+    const from = candidates[0].unit;
+    const to = candidates[candidates.length - 1].unit;
+    const waypoints = planRoute({ grid, domain: 'land', from, to });
+    expect(waypoints.length).toBeGreaterThan(0);
+    for (const waypoint of waypoints) {
+      expect(isPassable(grid, grid.findNearest(waypoint), 'land')).toBe(true);
+    }
   });
 
   test('air routes ignore terrain below the cruise elevation', () => {

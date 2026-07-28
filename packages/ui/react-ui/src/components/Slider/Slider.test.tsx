@@ -4,22 +4,18 @@
 
 import { cleanup, render, screen } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, test } from 'vitest';
 
 import { ThemeProvider } from '../../primitives';
 import { defaultTx } from '../../theme';
 import { Slider } from './Slider';
-
-// `ThemeProvider`'s default `tx` is a no-op (`() => undefined`) — pass `defaultTx` explicitly so
-// `tx('slider.thumb', ...)` actually resolves classes, matching `useThemeContext.test.tsx`'s pattern.
-const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider tx={defaultTx}>{children}</ThemeProvider>;
 
 describe('Slider', () => {
   afterEach(() => {
     cleanup();
   });
 
-  test('renders one thumb per value with real (non-logical) size utility classes', () => {
+  test('renders one thumb per value with real (non-logical) size utility classes', ({ expect }) => {
     render(<Slider defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum', 'Maximum']} />, {
       wrapper: Wrapper,
     });
@@ -42,7 +38,7 @@ describe('Slider', () => {
     }
   });
 
-  test('keeps the thumb rendered (never removed) when disabled', () => {
+  test('keeps the thumb rendered (never removed) when disabled', ({ expect }) => {
     render(<Slider defaultValue={[50]} max={100} step={1} disabled aria-label='Value' />, { wrapper: Wrapper });
 
     // Disabled state is expressed via the root's `opacity-50` (visually muted), not by unmounting
@@ -52,7 +48,7 @@ describe('Slider', () => {
     expect(thumb.className).toMatch(/\bw-\d+\b/);
   });
 
-  test('gives each thumb an accessible name via thumbLabels', () => {
+  test('gives each thumb an accessible name via thumbLabels', ({ expect }) => {
     render(<Slider defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum', 'Maximum']} />, {
       wrapper: Wrapper,
     });
@@ -63,14 +59,14 @@ describe('Slider', () => {
     expect(screen.getByRole('slider', { name: 'Maximum' })).toBeTruthy();
   });
 
-  test('gives a single thumb an accessible name via a plain aria-label', () => {
+  test('gives a single thumb an accessible name via a plain aria-label', ({ expect }) => {
     render(<Slider defaultValue={[50]} max={100} step={1} aria-label='Volume' />, { wrapper: Wrapper });
 
     // Ergonomic shorthand for the common one-thumb case: no need to wrap the label in `thumbLabels`.
     expect(screen.getByRole('slider', { name: 'Volume' })).toBeTruthy();
   });
 
-  test('every rendered thumb, across default and multi-thumb usage, exposes an accessible name', () => {
+  test('every rendered thumb, across default and multi-thumb usage, exposes an accessible name', ({ expect }) => {
     const { unmount } = render(<Slider defaultValue={[50]} max={100} step={1} aria-label='Value' />, {
       wrapper: Wrapper,
     });
@@ -87,11 +83,23 @@ describe('Slider', () => {
     }
   });
 
-  test('throws when thumbLabels does not cover every rendered thumb', () => {
-    // Guards against silently rendering an unnamed thumb when a two-thumb slider is passed a
-    // single label (or no label at all) — the mismatch must fail loudly, not slip through.
+  test('throws when thumbLabels covers only some of the rendered thumbs', ({ expect }) => {
+    // Matching the invariant's own message, not just "it threw": a bare `toThrow()` would also be
+    // satisfied by an unrelated render crash, which is exactly what this guard must not accept.
     expect(() =>
       render(<Slider defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum']} />, { wrapper: Wrapper }),
-    ).toThrow();
+    ).toThrow('Slider: thumbLabels has 1 entries but 2 thumb(s) are rendered.');
+  });
+
+  test('throws when a multi-thumb slider is given no labels at all', ({ expect }) => {
+    // The other half of the guard: `aria-label` names only a single thumb, so omitting `thumbLabels`
+    // on a two-thumb slider would silently leave one thumb unnamed.
+    expect(() =>
+      render(<Slider defaultValue={[25, 75]} max={100} step={1} aria-label='Range' />, { wrapper: Wrapper }),
+    ).toThrow('Slider: pass thumbLabels (2 entries) or, for a single thumb, aria-label.');
   });
 });
+
+// `ThemeProvider`'s default `tx` is a no-op (`() => undefined`) — pass `defaultTx` explicitly so
+// `tx('slider.thumb', ...)` actually resolves classes, matching `useThemeContext.test.tsx`'s pattern.
+const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider tx={defaultTx}>{children}</ThemeProvider>;

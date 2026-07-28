@@ -64,6 +64,11 @@ export class TrailLayer {
     return material;
   }
 
+  /**
+   * Redraws every trail-leaving object's live puffs for the sim instant `nowMs`. Holds no state
+   * between calls — the puff set is derived from `(objects, config, nowMs)` alone — so a caller may
+   * skip, repeat, or jump `nowMs` freely.
+   */
   update(objects: readonly SimObject[], config: TerraConfigValues, nowMs: number): void {
     const rendered: RenderPuff[] = [];
 
@@ -121,6 +126,7 @@ export class TrailLayer {
     this.#base.isVisible = puffs.length > 0;
   }
 
+  /** Releases the layer-owned base mesh and its material; the scene passed to the constructor is not owned. */
   dispose(): void {
     // Mesh.dispose() defaults to leaving materials alive; the base owns its own matte material.
     this.#base.dispose(false, true);

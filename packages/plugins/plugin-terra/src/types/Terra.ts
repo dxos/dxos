@@ -110,6 +110,10 @@ type Orbit = Schema.Schema.Type<typeof TerraObject.Orbit>;
 /** `count` cells spread evenly across `cells` (sorted by grid index), for endpoints that land well apart. */
 const spread = (cells: readonly NavCell[], count: number): NavCell[] => {
   const sorted = [...cells].sort((left, right) => left.index - right.index);
+  // `count - 1` is the stride denominator, so a single cell would divide by zero.
+  if (count <= 1) {
+    return sorted.slice(0, count);
+  }
   return Array.from({ length: count }, (_, index) => sorted[Math.floor((index * (sorted.length - 1)) / (count - 1))]);
 };
 

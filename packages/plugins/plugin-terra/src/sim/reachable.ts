@@ -21,9 +21,12 @@ const largestComponent = (grid: NavGrid, domain: Domain): NavCell[] => {
     }
     const members: number[] = [];
     const frontier = [cell.index];
+    // A read cursor rather than `shift()`: the queue is drained in place, so no element is ever
+    // `undefined` (which would need a cast to narrow) and no reindexing happens per BFS step.
+    let read = 0;
     componentOf.set(cell.index, components.length);
-    while (frontier.length > 0) {
-      const current = frontier.shift() as number;
+    while (read < frontier.length) {
+      const current = frontier[read++];
       members.push(current);
       for (const neighbor of grid.cells[current].neighbors) {
         if (!componentOf.has(neighbor) && isPassable(grid, neighbor, domain)) {
