@@ -55,4 +55,4 @@ export const make = ({ canvas: canvasProps, ...props }: MakeOptions = {}) => {
  * plugin-sketch's `Sketch` — which shares the structural shape (`name` + `canvas` ref) —
  * does not false-positively match here.
  */
-export const isExcalidraw = (object: any, _schema?: string): object is Excalidraw => Obj.instanceOf(Excalidraw, object);
+export const isExcalidraw = (object: unknown): object is Excalidraw => Obj.instanceOf(Excalidraw, object);

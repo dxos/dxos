@@ -34,7 +34,15 @@ export const useStoreAdapter = (object?: Excalidraw.Excalidraw, options: Excalid
         return;
       }
 
-      const canvas = await object.canvas.load();
+      // `useAsyncEffect` does not catch, so a rejected load would escape as an unhandled rejection.
+      let canvas;
+      try {
+        canvas = await object.canvas.load();
+      } catch (err) {
+        log.warn('failed to load canvas', { err });
+        return;
+      }
+
       if (controller.signal.aborted) {
         return;
       }
