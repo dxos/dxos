@@ -10,7 +10,7 @@ import { expect, userEvent, within } from 'storybook/test';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -119,6 +119,18 @@ const DefaultStory = () => {
   );
 };
 
+/** A workspace absent from the graph (a dead link, or persisted deck state after a profile switch). */
+const MISSING_WORKSPACE = 'root/B4NRQGGJ7XSDT4WMGXCTZNBLTDYIWGXNQIB6JW3AVLW3G';
+
+const UnavailableWorkspaceStory = () => {
+  const { invokePromise } = useOperationInvoker();
+  useEffect(() => {
+    void invokePromise(LayoutOperation.SwitchWorkspace, { subject: MISSING_WORKSPACE });
+  }, [invokePromise]);
+
+  return <DefaultStory />;
+};
+
 const meta = {
   title: 'plugins/plugin-navtree/components/NavTree',
   component: NavTreeContainer,
@@ -209,5 +221,14 @@ export const Default: Story = {
 
     // Confirm that focus is now on an element with data-main-landmark="1"
     await expect(document.activeElement).toHaveAttribute('data-main-landmark', '1');
+  },
+};
+
+export const UnavailableWorkspace: Story = {
+  render: UnavailableWorkspaceStory,
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    // Plugin startup plus the message's own render delay; allow for a slow CI runner.
+    await canvas.findByTestId('navtree.workspace.unavailable', {}, { timeout: 15000 });
   },
 };
