@@ -22,8 +22,10 @@ import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adap
  * @returns The ExcalidrawStoreAdapter instance managing the scene elements.
  */
 export const useStoreAdapter = (object?: Excalidraw.Excalidraw, options: ExcalidrawStoreAdapterProps = {}) => {
-  const [adapter] = useState(new ExcalidrawStoreAdapter(options));
-  const [_, forceUpdate] = useState({});
+  // Lazy initializer: the article re-renders on every pointer down/up, and the eager form would
+  // construct (and discard) an adapter each time.
+  const [adapter] = useState(() => new ExcalidrawStoreAdapter(options));
+  const [, forceUpdate] = useState({});
   // Subscribe to the Ref so the effect below re-runs when the canvas resolves; the accessor
   // still needs the echo-attached object, so the effect goes through `ref.load()`.
   const [canvasSnapshot] = useObject(object?.canvas);
