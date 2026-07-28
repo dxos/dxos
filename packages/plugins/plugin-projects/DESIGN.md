@@ -273,6 +273,131 @@ chat appears twice, once under its project and once at the space level.
 contributed to the project's navtree node (`disposition: 'list-item-primary'`)
 so `+` works from the tree.
 
+## Agent ↔ Project convergence (analysis, decision pending)
+
+`Agent` (`org.dxos.type.agent@0.1.0`, assistant-toolkit) accreted most of what
+`Project` now owns. This section documents how each overlapping property is
+actually used, proposes the target split, and analyzes the impact of refactoring
+`Agent` down to it.
+
+### Agent's current surface, and where each field is used
+
+| Field           | Shape                           | Used by                                                                                                                                            |
+| --------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`          | `string`                        | labels                                                                                                                                             |
+| `did`           | `IdentityDid`                   | attribution of agent-authored content (e.g. suggestion branches); minted at runtime-identity provision, not creation                               |
+| `enabled`       | `boolean`                       | `sync-triggers` propagates it to every trigger it manages                                                                                          |
+| `instructions`  | `Ref<Text>` (raw markdown)      | `get-context` (returned to the model), `qualifier` (event filtering)                                                                               |
+| `chat`          | `Ref<Chat>` (primary chat)      | `AgentWorker` (resolves the feed to run in), `qualifier`, `resetChatHistory`, planning/delegation tests; `makeInitialized` also adds `CompanionTo` |
+| `artifacts`     | inline `{name, data: Ref}[]`    | `add-artifact` op (model files from chat context), `get-context` (lists them back to the model)                                                    |
+| `subscriptions` | `Ref[]` (objects with a feed)   | `sync-triggers` → one qualifier trigger per subscription feed                                                                                      |
+| `cron`          | `string`                        | `sync-triggers` → a timer trigger invoking `AgentWorker` directly                                                                                  |
+| `feed`          | `Ref<Feed>` <em>deprecated</em> | input feed for subscriptions                                                                                                                       |
+| `filterEvents`  | `boolean` <em>deprecated</em>   | qualifier opt-out                                                                                                                                  |
+
+Overlap with `Project`: **instructions** (Project: `Ref<Instructions>`, typed,
+with skills/objects/commands; Agent: raw `Ref<Text>`), **artifacts** (Project:
+owned `Collection`, addressed by `ProjectSkill`; Agent: a private inline array
+with its own `add-artifact` op), **chats** (Project: parented children + a
+`CompanionTo` companion; Agent: a single owned `chat` ref _plus_ `CompanionTo`),
+and **automation** (Project: `routines`; Agent: `cron` + `subscriptions` wired
+imperatively by `sync-triggers`). Four parallel mechanisms for the same four
+concepts.
+
+### Target split
+
+- **Agent** — an _identity_: `did`, a skill set, later permissions. A
+  personality, not a container: it carries **no history** beyond the Chats it
+  has participated in, and owns nothing.
+- **Project** — the _container and chat factory_: artifacts, routines, and
+  chats. A project spawns chats with different skill sets — or different Agent
+  identities.
+- **Chat** — the _conversational instance_: history (feed), bindings
+  (artifacts, skills), steering `instructions`; **optionally references an
+  Agent** as an alternative to hand-picking skills — the agent is a preset.
+
+Use cases this must serve:
+
+1. Ad-hoc: user starts a bare Chat, uses skills, skills create artifacts.
+2. Scoped: user creates a Project; many related Chats share its artifacts.
+3. Preset: user creates an Agent and applies it to a Chat (or as a project's
+   default) — one pick configures identity + skills + instructions.
+
+### Refactoring impact, field by field
+
+**Remove `artifacts`.** Filing moves to `ProjectSkill.artifact-add` against a
+Project's Collection; the agent skill's `add-artifact` op and the artifacts
+half of `get-context` retire. An agent that needs durable work products gets a
+Project (use case 3 composes with 2). Existing agents' inline `{name, data}`
+arrays migrate into a Collection on a Project created per agent. The inline
+`name` field is the one loss — Collection rows use the object's own label —
+which is also the correction: naming lived on the wrong object.
+
+**Remove `cron` (and `subscriptions`).** Both are trigger _sources_ that
+`sync-triggers` compiles imperatively into `Trigger` objects. A `Routine`
+(instructions + trigger) is exactly this, declaratively: cron becomes a Routine
+with a timer trigger; each subscription becomes a Routine with a feed trigger
+(the qualifier folds into the routine's instructions or stays as its runnable's
+first stage). `enabled` stays as the agent-level master switch only if routines
+gain an owner reference to gate on — otherwise it moves to the Routine.
+`sync-triggers` shrinks to a migration shim, then deletes.
+
+**`instructions: Ref<Text>` → `Ref<Instructions>`.** The typed object carries
+`skills`, `objects`, and `commands` — which is precisely the "skill set" the
+target Agent needs, so this one change gives Agent its whole preset payload.
+`makeInitialized` wraps its markdown into `Instructions.make({ text })`;
+`get-context` and `qualifier` load `instructions.text` instead of the Text ref.
+And it aligns with `Chat.instructions`: applying an agent to a chat is then
+`chat.instructions = agent.instructions` — the same channel projects use, no
+new plumbing.
+
+**Invert `chat` → `Chat.agent?: Ref<Agent>`.** Today the trigger input carries
+the agent and `AgentWorker` resolves `agent.chat` to find its feed. Inverted,
+whatever invokes a run holds the Chat (this is already true everywhere else —
+see the call-site table above) and reads `chat.agent` for identity/attribution.
+"The agent's chats" becomes a query
+(`Query.select(Filter.type(Chat)).where(chat.agent === …)` or the existing
+`CompanionTo` relation), which also fixes the current single-chat limitation —
+the `TODO(dmaretskyi): Multiple chats` on the field. `resetChatHistory` becomes
+a Chat helper (rebuild the feed), not an Agent one.
+
+### Where current Agent functionality lands
+
+| Today (Agent)                                                            | After                                                                                                                                            |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `makeInitialized` (agent + chat + binder + CompanionTo)                  | create Agent (identity + instructions); chat creation is the chat factory's job (`ProjectOperation.CreateChat` or ad-hoc), with `chat.agent` set |
+| model files an artifact (`add-artifact`)                                 | `ProjectSkill.artifact-add` into the owning project's Collection                                                                                 |
+| model reads its context (`get-context`)                                  | instructions via the system prompt (`chat.instructions`); artifacts via `ProjectSkill.artifact-list`; plan via the chat, unchanged               |
+| scheduled run (`cron` → `sync-triggers` → timer trigger → `AgentWorker`) | Routine (timer trigger) whose run targets a chat carrying `chat.agent`                                                                           |
+| subscription run (qualifier trigger per feed)                            | Routine (feed trigger); qualifier folds into the routine                                                                                         |
+| `resetChatHistory`                                                       | Chat helper; the agent is untouched                                                                                                              |
+| chat attribution (`did`)                                                 | unchanged — the one thing that was always identity-shaped                                                                                        |
+
+Sequences for the three use cases, post-refactor:
+
+1. **Ad-hoc chat**: `AssistantOperation.CreateChat` → skills bound → model
+   creates artifacts; nothing owns them unless the user files them.
+2. **Project chat**: `ProjectOperation.CreateChat` → `chat.instructions` =
+   project's, `ProjectSkill` bound → artifacts filed into the shared Collection.
+3. **Agent as preset**: pick an Agent at chat creation → `chat.agent` = ref,
+   `chat.instructions` = `agent.instructions` (skills come along inside it) →
+   authored content attributed to `agent.did`. In a project, the project
+   remains the container; the agent only flavors the session.
+
+### Recommendation
+
+Factor by **removal, not extraction**: don't introduce a shared
+"artifact-holder" abstraction — make Project the only container and shrink
+Agent to `name`, `did`, `instructions: Ref<Instructions>` (+ future
+permissions). Sequence: (1) `instructions` typing (small, unlocks the preset
+path), (2) `Chat.agent` inversion (mechanical; `AgentWorker` takes a chat),
+(3) cron/subscriptions → Routines (deletes `sync-triggers`), (4) artifacts →
+Project + migration. Each step ships independently; a schema bump
+(0.1.0 → 0.2.0) with migration lands with step 4, when the deprecated
+`feed`/`filterEvents` fields also drop.
+
+Phased implementation plan (files, verification, risks): [`./PLAN.md`](./PLAN.md).
+
 ## UI conventions
 
 - **Owned refs resolve reactively in articles**: a sync `.target` read never

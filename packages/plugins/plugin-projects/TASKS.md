@@ -109,18 +109,12 @@ repoint.
       opus-4-8, 32s, 2026-07-27).
 - [ ] **Create other artifact types from a project chat** — Outline, Sheet,
       Organization/Contact objects; builds on `ProjectSkill`.
-- [ ] **Agent artifacts: factor out commonality with Project** — `Agent.artifacts` is an
-      inline `{name, data}` array while `Project.artifacts` is an owned Collection; converge
-      on one artifact-holder shape so `ProjectSkill`'s add/list tools (and provenance later)
-      work for both.
-- [ ] **Agent cron: generalize to Routine** — Agent's cron/trigger scheduling should be
-      expressed as a Routine (instructions + trigger) rather than agent-specific wiring, so
-      projects and agents share one automation model.
-- [ ] **Agent ↔ Project convergence review** — the two share Chat, Artifacts, Instructions,
-      and Routines (Agent: subscriptions/cron); factor the commonality (one artifact-holder
-      shape, one automation model, one instructions channel) and sharpen the remaining
-      distinction (Agent = actor with identity/DID; Project = scope/container). Subsumes the
-      two items above; design pass before more per-type features accrete.
+- [x] **Agent ↔ Project convergence review** — analysis + proposal written: DESIGN.md
+      "Agent ↔ Project convergence" (field-by-field usage, target split, migration table)
+      and [`./PLAN.md`](./PLAN.md) (4 phases: instructions typing → Chat.agent inversion →
+      cron/subscriptions→Routines → artifacts→Project + 0.2.0 migration). Recommendation:
+      removal, not extraction. Subsumed the separate "Agent artifacts" and "Agent cron"
+      items. Execution pending user go-ahead, phase by phase.
 - [ ] **Watch item** — if `children()` does not re-emit in the graph connector when a chat
       is newly parented, fall back to a `chats: Ref<Collection>` field on Project
       (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.
