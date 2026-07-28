@@ -1,52 +1,59 @@
 # plugin-projects — Design
 
-Date: 2026-07-24 (milestone 3 design added 2026-07-27)
-Status: approved (brainstorm 1×1 with burdon)
 Tracker: `./TASKS.md`
 
 ## Concept
 
 `Project` is a user-facing container for interactive, long-running work, loosely
 modeled on Claude Desktop projects: instructions (with skills and sentinel
-commands), routines, artifacts, and AI chat sessions that run in project
-context. It is the successor to `Topic` (`@dxos/compute`) and obviates the
-stalled plugin-sidekick.
+commands), routines, artifacts, and AI chat sessions that run in project context.
 
-plugin-projects is a **seminal core plugin**: it unifies existing concepts
-(topics, sidekick ambitions, automation scoping) and other plugins are expected
-to extend it (via artifacts, templates) or use projects directly. It will be one
-of the core aspects of Composer.
+plugin-projects is a **seminal core plugin**: it unifies subject-matter grouping,
+automation scoping, and project-scoped assistance, and other plugins are expected
+to extend it (via artifacts, templates) or use projects directly. It is intended
+to be one of the core aspects of Composer.
 
-## Background: Agent, Chat, and the AiSession lifecycle
+## Background: Project, Agent, Chat, AiSession
 
-An **`Agent`** (`org.dxos.type.agent@0.1.0`, `@dxos/assistant-toolkit`) is a
-durable named actor — its own identity DID for attributing content it authors,
-markdown instructions, a primary `chat`, artifacts, subscriptions, and an
-`enabled` master switch over its triggers — whereas a **`Chat`**
-(`org.dxos.type.assistant.chat@0.1.0`) is deliberately thin: essentially a `name`
-plus a ref to a **`Feed`**, the durable append-only log that _is_ the
-conversation (messages, plus `Binding` records of the skills and objects bound to
-it), with the feed parented to its chat and a `CompanionTo` relation attaching the
-chat to whatever object it accompanies. That split is why the runtime is
-**feed-centric rather than chat-centric**: `AiSession.Session` is constructed from
-`{ feed, runtime }` and knows nothing of `Chat`; it owns an `AiContext.Binder`
-that projects the feed's `Binding` records into live skill/object sets, and
-`createRequest` replays history from the feed, formats the system prompt, then
-loops turns — recomputing the toolkit and system prompt each turn so dynamically
-enabled skills take effect — appending every message back to the feed. In the app
-that request does not run in-process: `AgentService.getSession(feed)` spawns (or
-re-hydrates) a durable `AgentProcess` whose process _target_ is the feed's DXN,
-so a restart recovers the whole conversation by replaying the feed — and so
-anything the session needs beyond the feed has to be handed to it explicitly,
-which is the constraint milestone 3's instructions ref is designed around.
+**Project**: the user's unit of long-running work and the _scope_ a session runs
+in. It owns the instructions that steer its chats (text, sentinel commands, and
+the skills those chats get), the routines that automate it, a collection of
+artifacts, and the chat sessions parented to it. It is inert on its own — a
+project does nothing until a chat or routine runs in its context — so its whole
+job is to supply that context, and every design question below is about how its
+instructions, skills, and objects reach a running session.
+
+**Agent**: a durable named actor (`org.dxos.type.agent@0.1.0`,
+`@dxos/assistant-toolkit`) — its own identity DID for attributing content it
+authors, markdown instructions, a primary `chat`, artifacts, subscriptions, and
+an `enabled` master switch over its triggers. Where a project is scope, an agent
+is a participant: it is the thing that acts on a schedule or a trigger rather
+than in response to a user turn.
+
+**Chat**: a conversation (`org.dxos.type.assistant.chat@0.1.0`), deliberately
+thin — essentially a `name`, a ref to a **`Feed`**, and (per this design) a ref to
+the `Instructions` that steer it. The feed is the durable append-only log that
+_is_ the conversation: messages, plus `Binding` records of the skills and objects
+bound to it. The feed is parented to its chat, and a `CompanionTo` relation
+attaches a chat to whatever object it accompanies.
+
+**AiSession**: the runtime, and it is **feed-centric rather than chat-centric**.
+`AiSession.Session` is constructed from `{ feed, runtime }` and knows nothing of
+`Chat`; it owns an `AiContext.Binder` that projects the feed's `Binding` records
+into live skill/object sets, and `createRequest` replays history from the feed,
+formats the system prompt, then loops turns — recomputing the toolkit and system
+prompt each turn so dynamically enabled skills take effect — appending every
+message back to the feed. In the app that request does not run in-process:
+`AgentService.getSession(feed)` spawns (or re-hydrates) a durable `AgentProcess`
+whose process _target_ is the feed's DXN, so a restart recovers the whole
+conversation by replaying the feed. The consequence that shapes this design:
+anything a session needs beyond its feed has to be handed to it explicitly.
 
 ## Types
 
 ### `Project` (`@dxos/compute`)
 
-Evolved in place from `Topic.ts` (Topic is deleted; no shims). Typename
-`org.dxos.type.project@0.2.0` — 0.2.0 disambiguates from stored instances of the
-name-squatting `@dxos/types` Project at 0.1.0.
+`org.dxos.type.project@0.2.0`:
 
 ```text
 name?: string
@@ -56,185 +63,155 @@ routines: Ref(Routine)[]             // routines created in project scope
 artifacts?: Ref(Collection)          // owned child Collection (documents, outliners, tables, …)
 ```
 
-- Placement decision: core type in `@dxos/compute` (next to Instructions, Skill,
-  Trigger) so brain/inbox/EDGE-side code can reference it without a plugin
-  dependency. Follow-up (tracked): possibly move the type into the plugin once
-  its shape settles.
-- Artifacts use a `Collection` (core, `@dxos/echo`) to reuse existing collection
-  UI/drag-drop. Artifact provenance (which routine/agent produced what) is
-  deferred.
+The type lives in `@dxos/compute` (next to Instructions, Skill, Trigger) so
+brain/inbox/EDGE-side code can reference it without a plugin dependency.
+Artifacts use a `Collection` (core, `@dxos/echo`) to reuse existing collection
+UI and drag-drop.
 
-### `Routine` schema moves to `@dxos/compute`
+Chats are **not** a field: they are parented to the Project in the ECHO
+hierarchy — see [Project chats](#project-chats).
 
-`Routine` (`org.dxos.type.routine@0.2.0`) moves from
-`plugin-routine/src/types/Routine.ts` to `@dxos/compute` types, with its pure
-helpers (`instanceOf`, `instructionsRef`, `runnableRef`). This lets `Project`
-hold `Ref(Routine)`.
+### `Routine` (`@dxos/compute`)
 
-`wireTriggers` and the wiring `make` (instructions/trigger parenting +
-`runInstructionsRef`) **stay in plugin-routine**: they depend on
-`RunInstructions` from `@dxos/assistant-toolkit`, which itself depends on
-`@dxos/compute` — moving them would create a cycle.
+`Routine` (`org.dxos.type.routine@0.2.0`) lives in `@dxos/compute` with its pure
+helpers (`instanceOf`, `instructionsRef`, `runnableRef`), so `Project` can hold
+`Ref(Routine)`. Its wiring — `wireTriggers` and the wiring `make`
+(instructions/trigger parenting + `runInstructionsRef`) — stays in plugin-routine
+because it depends on `RunInstructions` from `@dxos/assistant-toolkit`, which
+itself depends on `@dxos/compute`.
 
 ### `Instructions.commands` (structured sentinel commands)
 
-`Instructions` (`@dxos/compute`) gains an optional structured field:
+`Instructions` (`@dxos/compute`) carries an optional structured field:
 
 ```text
 commands?: Array<{ sentinel: string; description?: string; prompt: string }>
 ```
 
 Project instructions define sentinel commands (e.g. `$track …`) that chat
-sessions in project context can reference; they surface as autocomplete in the
-chat prompt from day one (no free-text-only MVP). Living on `Instructions`
-(not `Project`) means routines and agents get commands too.
+sessions in project context can invoke, surfaced as autocomplete in the chat
+prompt. Living on `Instructions` rather than `Project` means routines and agents
+get commands too.
 
-### `ExternalProject` rename (`@dxos/types`)
+### `Chat.instructions` (`@dxos/assistant-toolkit`)
 
-The existing `@dxos/types` `Project` ({name, description, image}) is a separate
-GH/Linear-style concept name-squatting the typename. It is renamed (possibly
-temporarily) for later use syncing remote services with a lightweight,
-non-AI project concept:
+`Chat` carries `instructions?: Ref.Ref<Instructions>` — the instructions that
+steer that conversation. A project chat's ref points at the **project's own**
+`Instructions` object, never a copy, so editing the project's instructions
+steers every chat under it.
 
-- Type + file: `Project` → `ExternalProject`; all call sites updated
-  (plugin-github/plugin-linear sync + materialize-target, plugin-space,
-  onboarding exemplar script, stories/tests); no compatibility shims.
-- DXN: → `org.dxos.type.externalProject@0.1.0` (frees the typename in the data
-  layer; acceptable because the type is not actively exercised).
-- plugin-space create menu: **entry removed** (sync plugins materialize it;
-  hand-creation would collide with the new Project entry).
+## Layering constraints
 
-### Chats and Agents (layering)
+These are load-bearing and easy to trip over:
 
-`@dxos/assistant-toolkit` depends on `@dxos/compute`, so `Project` cannot hold
-typed refs to `Chat` or `Agent`.
-
-- **Chats**: two distinct linkages, resolved in milestone 3 (see
-  [Project chats](#milestone-3-project-chats)). A project's _companion_ chat
-  stays on the existing `CompanionTo` relation
-  (`org.dxos.relation.assistant.companionTo`, source `Chat` → target
-  `Obj.Unknown`), consistent with `Agent`'s chat wiring. A project's _own_ chat
-  sessions are instead **parented** to the Project in the ECHO hierarchy
-  (`Obj.setParent`) and enumerated with `Query…children()` — the relation is
-  single-current by construction (`state.currentChat[objectUri]`) and carries no
-  ownership edge, so it cannot express "N sessions belonging to this project".
-- **Agents**: explicit linkage deferred. MVP: agents participate via project
-  chats and routines (an instructions-routine already runs in the agent
-  harness). A project-scoped agent roster (relation or parenting) comes later,
-  decided alongside the CompanionTo review.
+- `@dxos/assistant-toolkit` depends on `@dxos/compute`, so `Project` cannot hold
+  typed refs to `Chat` or `Agent` — but `Chat` can hold a typed ref to
+  `Instructions`.
+- `@dxos/assistant-toolkit` depends on `@dxos/agent-runtime`, so neither
+  `@dxos/assistant` nor `@dxos/agent-runtime` may import `Chat`. Both may import
+  `@dxos/compute`, so an `Instructions` ref can travel through them.
+- plugin-projects depends on `@dxos/assistant-toolkit` (the `Chat` type) and
+  `@dxos/plugin-assistant` (`AssistantOperation`, via its `./types` export).
+  plugin-assistant does not depend on plugin-projects.
 
 ## Plugin
 
-New `packages/plugins/plugin-projects` (`"private": true`), standard core-plugin
+`packages/plugins/plugin-projects` (`"private": true`), standard core-plugin
 shape:
 
 - `meta`, `types/` (`ProjectOperation`, capabilities, events), `translations`.
-- `capabilities/`: `create-object` (navtree "+ Project": creates Project with
-  owned Instructions + empty artifacts Collection), `app-graph-builder`
-  (Project node with children: artifacts collection, routines),
+- `capabilities/`: `create-object` (navtree "+ Project": creates a Project with
+  owned Instructions + empty artifacts Collection), `app-graph-builder`,
   `navigation-resolver`, `react-surface`, `operation-handler`.
-- `containers/ProjectArticle/`: reworked from plugin-brain's `TopicArticle`
-  (which moves here and is deleted from plugin-brain): header
-  (name/description), instructions editor (Form + markdown text), routines
-  list, artifacts collection section. Storybook story + play test.
+- `containers/ProjectArticle/`: header (name/description), instructions editor
+  (Form + markdown text), routines list, artifacts collection section, and a
+  toolbar. Storybook story + play test.
 
 ### Extension points (seminal-plugin posture)
 
-1. **Artifacts**: any plugin's objects can be project artifacts — the
-   Collection accepts `Obj.Unknown`; no coupling required.
-2. **Direct use**: types/operations exported so other plugins can create/target
-   projects (`ProjectOperation.Create`, …).
-3. **Templates (phase 2)**: a capability for plugins to contribute project
-   templates (instructions + skills + starter routines), mirroring the
-   existing `automation-templates` pattern.
-
-### plugin-routine merge (deferred)
-
-Considered merging plugin-routine into plugin-projects. Decision: not in this
-pass — the Routine schema move to `@dxos/compute` already thins the boundary;
-revisit once plugin-projects settles (tracked).
+1. **Artifacts**: any plugin's objects can be project artifacts — the Collection
+   accepts `Obj.Unknown`; no coupling required.
+2. **Direct use**: types and operations are exported so other plugins can create
+   or target projects (`ProjectOperation.Create`, …).
+3. **Templates**: a capability for plugins to contribute project templates
+   (instructions + skills + starter routines), mirroring `automation-templates`.
 
 ## Chat integration
 
-- Companion chat surface on `Project` (as plugin-assistant provides for other
-  types).
-- On session start the project binds via `AiContext`: skills and context objects.
-  Instructions text and commands reach the system prompt through the
-  `Chat.instructions` ref (milestone 3), not through a binding.
-- Commands autocomplete: plugin-assistant `ChatPrompt` extension reads
-  `commands` from the bound project's Instructions and offers sentinel
-  completion.
+A project's chats reach the model through two distinct channels, and the split
+matters: **a ref on the Chat can put text in the prompt but cannot put skills in
+the toolkit.**
 
-## Call-site migrations
+- **Instructions text and commands** travel via `Chat.instructions`. Whoever
+  builds the session resolves the ref and passes it down —
+  `AiSession.Options.instructions` → `RunProps` → an explicit `instructions`
+  parameter on `formatSystemPrompt`, which renders a `## Instructions` section
+  (resolved markdown plus sentinel-command directives).
+- **Skills and context objects** travel via `AiContext` bindings.
+  `Project.contextBindings` supplies `instructions.skills` and
+  `instructions.objects`; bindings persist as `Binding` records in the feed.
+- **Commands autocomplete**: a plugin-assistant `ChatPrompt` extension reads
+  `commands` from the chat's instructions and offers sentinel completion.
+- Context-object stubs in the system prompt carry a `<label>`, so the model
+  tool-loads a bound object only for its contents, never to identify it.
 
-- **plugin-brain**: drops Topic surfaces (create-object, navigation-resolver,
-  app-graph-builder, react-surface entries, translations); `TopicArticle`
-  moves to plugin-projects.
-- **plugin-inbox**: `create-topic-from-message` produces a `Project`; operation
-  renamed `CreateProjectFromMessage`; labels updated.
-- **stories-brain / stories-inbox / assistant fixtures**: updated to `Project`.
-- **plugin-github / plugin-linear / plugin-space / onboarding script**:
-  `ExternalProject` rename.
+### Why instructions are a typed ref, not a binding
 
-## Milestone 1 scope (approved)
+Instructions could ride in the context-object bindings, with
+`formatSystemPrompt` recovering them by filtering `objects` for
+`Obj.instanceOf(Instructions.Instructions, …)`. That dispatches on typename
+rather than intent: _any_ bound `Instructions` object would steer the session, so
+an Instructions object could never be bound as subject matter (e.g. "help me edit
+these"). Two other options were considered and rejected: an `instructions` slot
+on the `Binding` feed message (a schema bump on a type written into every
+conversation feed, and the ref stays unqueryable), and walking
+`Obj.getParent(feed)` to reach the chat (needs a compute-level accessor, since
+the session layers may not import `Chat`).
 
-Full loop: `Project` type + create-object; `ProjectArticle`; companion chat
-bound via `AiContext` (instructions + skills + commands); commands autocomplete
-in the chat prompt; all call-site migrations above. Routine creation _within_
-the article is deferred to milestone 2 (create via existing routine flows;
-linked via `routines`).
+The ref is available at every session-construction site, so nothing has to
+resolve it structurally:
 
-## Testing
+| Site                    | Feed from        | Chat in hand                                                                                     |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------ |
+| `useChatProcessor`      | `chat.feed`      | yes                                                                                              |
+| `run-instructions`      | `chat.feed`      | yes (routines pass their own `system` text, so this path is unaffected)                          |
+| agent skill `agent.ts`  | `chatFeed`       | yes                                                                                              |
+| cli `chat/processor.ts` | chat             | yes                                                                                              |
+| `agent-process`         | spawn target DXN | no — but its spawner, `AgentService.getSession`, is called by `processor.ts`, which holds `chat` |
 
-- Type tests: Project/Routine schema round-trip, commands field, ExternalProject
-  rename fallout.
-- Migration-touched suites: plugin-routine, plugin-inbox, plugin-brain,
-  plugin-linear, plugin-github sync.
-- `ProjectArticle` story + play test; chat-binding story in stories-assistant.
-- Verify: `moon` build/test/lint + storybook from the worktree on an alt port.
+For the durable agent process the ref travels as `GetSessionOptions.instructions`
+plus a persisted spawn annotation beside `Process.TargetAnnotation`. Executable
+options do not survive re-hydration (`hydrateAgents` rebuilds with a bare
+`makeExecutable()`), which is why the feed itself travels as the process target.
 
-## Milestone 2 decisions (as-built addenda)
+**Known staleness**: spawn annotations are the immutable identity plane, so
+editing the instructions _text_ reaches a running process (the ref resolves fresh
+each turn) but _repointing_ `chat.instructions` at a different object does not,
+until the process is terminated — the same behavior a model change already has.
+The fix, if it ever bites: compare the ref against the `sessionCache` entry and
+terminate/respawn, exactly as the model/provider comparison does.
 
-- **Instructions reach the model via the prompt formatter, not stubs** —
-  _superseded in milestone 3 by the `Chat.instructions` ref; the inline rendering
-  stays, the typename-based recovery from `objects` goes._ Bound
-  `Instructions` objects are rendered inline by `formatSystemPrompt`
-  (`@dxos/assistant` request/format.ts) as a `## Instructions` section — resolved
-  markdown text plus sentinel-command directives — and are excluded from the
-  `## Context Objects` stub list. This is the load-bearing half of "use project
-  instructions in chat"; binding alone only produced a tool-loadable stub.
-- **Context stubs carry labels** (`<label>`), so the model tool-loads bound
-  objects only for contents, not identification.
-- **Owned refs resolve reactively in articles**: `.target` sync reads never
-  resolve on cold/deep-link loads; use `useObject(ref)` +
-  `Obj.getReactiveOrUndefined` (ProjectArticle instructions).
-- **Instructions typename labels**: plugin-assistant's legacy "Routine" labels
-  for `org.dxos.type.instructions` corrected to "Instructions"; project
-  creation names the owned Instructions object.
-- **Dev loop**: Projects/Routine/Outliner plugins are part of the composer-app
-  minimal set (`serve-min`).
+## Project chats
 
-## Milestone 3: project chats
-
-Goal: start a chat session from a project, with the project already in scope, and
+Goal: start a chat session from a project with the project already in scope, and
 see that session in the navtree under its project.
 
 ### Ownership: the ECHO parent edge
 
 A project chat is parented to its Project (`Obj.setParent(chat, project)`) and
 enumerated with `Query.select(Filter.id(project.id)).children()` narrowed to
-`Chat.Chat`. No `Project` schema change, so no version bump and no migration of
-existing project objects.
+`Chat.Chat`. This needs no `Project` schema field, and the parent edge is the
+ownership statement.
 
 Rejected alternatives: a `chats: Ref<Collection>` field mirroring `artifacts`
-(buys sibling ordering and drag-rearrange, costs a 0.2.0 → 0.3.0 bump); and
-reusing `CompanionTo` (conflates the single-current companion chat with N owned
-sessions, and yields no ownership edge).
+(buys sibling ordering and drag-rearrange, costs a schema version bump); and
+reusing `CompanionTo` for owned sessions (that relation is single-current by
+construction, via `state.currentChat[objectUri]`, and carries no ownership edge).
+`CompanionTo` still links the project's _companion_ chat.
 
-The one risk this takes on: a hierarchy-traversal query driving a graph connector
-is less exercised than a ref-array read. If `children()` does not re-emit when a
-chat is newly parented, fall back to the Collection field — the rest of the
-design is unchanged, only the enumeration source moves.
+**Risk**: a hierarchy-traversal query driving a graph connector is less exercised
+than a ref-array read. If `children()` does not re-emit when a chat is newly
+parented, fall back to the Collection field — only the enumeration source moves.
 
 ### Creation: `ProjectOperation.CreateChat`
 
@@ -243,133 +220,74 @@ design is unchanged, only the enumeration source moves.
 1. Invoke `AssistantOperation.CreateChat({ db, instructions })` — chat + feed,
    with the assistant's default skills already bound.
 2. `Obj.setParent(chat, project)`.
-3. Bind `instructions.skills` (see below — skills still travel by binding).
-4. Open it with `LayoutOperation.Open` (a plank in the deck, matching the Chats
-   section's own create action).
-
-The project passes its instructions **by reference** — `chat.instructions` points
-at the project's own `Instructions` object, never a copy, so editing the project's
-instructions steers every chat under it.
+3. Bind `instructions.skills`.
+4. Open it with `LayoutOperation.Open` (a plank in the deck).
 
 `SpaceOperation.AddObject` is deliberately **not** called: it would file the chat
 in the space's root collection, surfacing it under Collections as well. DB
 membership alone (`addToSpace: true`) is what a parented chat needs.
 
-### Instructions: a typed ref on `Chat`, read when the request is built
-
-`Chat` gains `instructions?: Ref.Ref<Instructions>` (assistant-toolkit → compute,
-so the typed ref is legal). Whoever builds the session resolves it and passes it
-down; `formatSystemPrompt` takes an explicit `instructions` parameter.
-
-This **replaces** the milestone-2 mechanism, where the instructions ref rode in
-the context-object bindings and `formatSystemPrompt` recovered it by filtering
-`objects` for `Obj.instanceOf(Instructions.Instructions, …)`. That worked, but
-dispatch was by typename rather than intent: _any_ bound `Instructions` object
-steered the session, so an Instructions object could never be bound as subject
-matter (e.g. "help me edit these"). Rejected alternatives: an `instructions` slot
-on the `Binding` feed message (schema bump on a type written into every
-conversation feed, and it leaves the ref unqueryable); and walking
-`Obj.getParent(feed)` to reach the chat (needs a compute-level accessor, since
-neither `@dxos/assistant` nor `@dxos/agent-runtime` may import `Chat` —
-`assistant-toolkit` already depends on `agent-runtime`).
-
-The ref is available at every session-construction site, so nothing needs to
-resolve it structurally:
-
-| Site                    | Feed from        | Chat in hand                                                                                     |
-| ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------ |
-| `useChatProcessor`      | `chat.feed`      | yes                                                                                              |
-| `run-instructions`      | `chat.feed`      | yes (routines pass their own `system` text; path unaffected)                                     |
-| agent skill `agent.ts`  | `chatFeed`       | yes                                                                                              |
-| cli `chat/processor.ts` | chat             | yes                                                                                              |
-| `agent-process`         | spawn target DXN | no — but its spawner, `AgentService.getSession`, is called by `processor.ts`, which holds `chat` |
-
-So: `AiSession.Options.instructions` → `RunProps` → `formatSystemPrompt`. For the
-durable agent process, `GetSessionOptions.instructions` plus a persisted spawn
-annotation next to `Process.TargetAnnotation` — executable options do not survive
-re-hydration (`hydrateAgents` rebuilds with a bare `makeExecutable()`), which is
-why the feed itself travels as the process target. `@dxos/agent-runtime` already
-depends on `@dxos/compute`, so it carries an `Instructions` ref without naming
-`Chat`.
-
-**Accepted staleness** (decided 2026-07-27): spawn annotations are the immutable
-identity plane, so editing the instructions _text_ reaches a running process (the
-ref resolves fresh each turn) but _repointing_ `chat.instructions` at a different
-object does not, until the process is terminated. This is the same behavior a
-model change already has. If it ever bites, compare the ref against the
-`sessionCache` entry and terminate/respawn, exactly as the model/provider
-comparison does.
-
-Consequences:
-
-- `Project.contextBindings` drops the instructions ref from `objects`, keeping
-  `skills` and `instructions.objects`. **Skills still travel by binding** — a ref
-  on the Chat can put text in the prompt but cannot put skills in the toolkit.
-- `formatSystemPrompt`'s `instructionObjects` / `contextObjects` partition is
-  deleted. A bound `Instructions` object then renders as an ordinary context
-  stub, which is the point.
-- `ChatCompanion` stops binding project instructions; companion-chat creation
-  sets `chat.instructions` instead, so companion and standalone chats share one
-  path and that hook gets smaller.
-- Chats predating the field have no instructions and would silently lose their
-  steering. Lazy backfill: when a chat opens whose parent (or `CompanionTo`
-  target) is a Project and `chat.instructions` is unset, set it.
-- `format.test.ts`'s three instruction tests move to the explicit parameter.
+Companion chats take the same instructions path: companion-chat creation sets
+`chat.instructions` from the project rather than binding it, so companion and
+standalone chats behave identically.
 
 ### Navtree: chats as children of the project node
 
-Projects are leaf nodes today — `TypeSection.createTypeSectionExtension` emits
-`AppNode.makeObject` with no children. A new `projectChats` extension in
-plugin-projects contributes them:
+A `projectChats` extension in plugin-projects contributes the children (the
+`TypeSection` extension that emits Project nodes makes them leaves):
 
 - `match`: nodes whose `data` is a `Project.Project`.
 - `connector`: the `children()` query above → `AppNode.makeObject` per chat.
 - `url`: reuses the `chat` key with a data-dependent `path` that resolves the
   chat's parent project. Sharing one key across extensions is supported and
   intended — plugin-space's `object` key spans both collection connectors for
-  exactly this reason (`@dxos/app-graph` `path-resolution.ts`), so a chat is
+  exactly this reason (`@dxos/app-graph` `path-resolution.ts`) — so a chat is
   addressed the same way wherever it sits.
 
-**Consequence in plugin-assistant**: the Chats type-section query already
-excludes `CompanionTo` sources; it must also exclude project-parented chats, or
-every project chat appears twice — once under its project, once at the top level.
+The Chats type-section query in plugin-assistant excludes both `CompanionTo`
+sources and project-parented chats; without the second exclusion every project
+chat appears twice, once under its project and once at the space level.
 
-### Toolbar: `ProjectArticle`
+### Toolbar
 
-`ProjectArticle` has no toolbar today. Add `Panel.Toolbar asChild` +
-`Toolbar.Root` with a single `IconButton` invoking
-`ProjectOperation.CreateChat`. The same action is contributed to the project's
-navtree node (`disposition: 'list-item-primary'`) so `+` works from the tree.
+`ProjectArticle` has a `Panel.Toolbar` (`asChild` + `Toolbar.Root`) whose
+`IconButton` invokes `ProjectOperation.CreateChat`. The same action is
+contributed to the project's navtree node (`disposition: 'list-item-primary'`)
+so `+` works from the tree.
 
-Scope held to chat creation: in-article routine and artifact creation are already
-their own TASKS.md items.
+## UI conventions
 
-### Dependencies
+- **Owned refs resolve reactively in articles**: a sync `.target` read never
+  resolves on a cold or deep-link load, leaving the section permanently missing.
+  Use `useObject(ref)` + `Obj.getReactiveOrUndefined` (see `ProjectArticle`'s
+  instructions).
+- **Dev loop**: Projects, Routine, and Outliner are part of the composer-app
+  minimal plugin set (`serve-min`); keep the plugin list in sync with the
+  `optimizeDeps` brace glob in `vite.config.ts`.
 
-plugin-projects gains `@dxos/assistant-toolkit` (the `Chat` type) and
-`@dxos/plugin-assistant` (`AssistantOperation`, via its `./types` export). No
-cycle — plugin-assistant does not depend on plugin-projects.
+## Testing
 
-### Testing
-
-- Unit: `formatSystemPrompt` renders the explicit `instructions` parameter and no
-  longer inlines a bound `Instructions` object; the `children()`-based chat
-  enumeration; `CreateChat` parenting + instructions-ref pass-through (in-memory
-  db).
-- Story + play test: `ProjectArticle` toolbar creates a chat and it appears in
-  the project's chat list.
-- Live: create a project chat in Composer, confirm the project's instructions
-  reach the system prompt in a _standalone plank_ (not just the companion) — the
+- Type tests: `Project`/`Routine` schema round-trip, the `commands` field,
+  `Project.contextBindings`.
+- Unit: `formatSystemPrompt` renders the explicit `instructions` parameter and
+  does not inline a bound `Instructions` object; the `children()`-based chat
+  enumeration; `CreateChat` parenting and instructions-ref pass-through.
+- Storybook: `ProjectArticle` story + play test (including the toolbar creating a
+  chat that appears in the project's chat list); chat-binding story in
+  stories-assistant.
+- Live: create a project chat in Composer and confirm the project's instructions
+  reach the system prompt in a _standalone plank_, not just the companion — the
   end-to-end check that the ref survives the agent-process boundary — and that
-  the chat shows under the project in the navtree, including after a cold
-  deep-link load.
+  the chat shows under its project in the navtree after a cold deep-link load.
 
-## Deferred / follow-ups (tracked in TASKS.md)
+## Open questions
 
-- Possibly move Project type from `@dxos/compute` into the plugin at end.
-- Unify project-context binding across companion and standalone chats (shared
-  hook keyed on the chat's parent), closing the late-added-skills gap.
-- Remove plugin-sidekick (this pass: AUDIT.md note only).
-- Consider merging plugin-routine into plugin-projects.
-- In-article routine creation; project agent roster; artifact provenance;
-  project templates capability.
+- Move the `Project` type from `@dxos/compute` into this plugin, once its shape
+  settles.
+- Merge plugin-routine into plugin-projects — the boundary is thin now that
+  `Routine` lives in `@dxos/compute`.
+- Project-scoped agent roster (relation or parenting), and artifact provenance
+  (which routine or agent produced what).
+- Remove plugin-sidekick, which this plugin obviates.
+
+Task-level follow-ups live in `./TASKS.md`.

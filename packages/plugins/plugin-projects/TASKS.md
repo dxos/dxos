@@ -53,8 +53,8 @@ Initial priority (user, 2026-07-24):
 ## Phase 3 / milestone 3: project chats
 
 Start a chat session from a project with the project already in scope, and see that
-session in the navtree under its project. Design: the "Milestone 3: project chats"
-section of [`./DESIGN.md`](./DESIGN.md). Decisions (user, 2026-07-27): ECHO parent edge (no
+session in the navtree under its project. Design: the "Project chats" and "Chat
+integration" sections of [`./DESIGN.md`](./DESIGN.md). Decisions (user, 2026-07-27): ECHO parent edge (no
 Project schema change), new chat opens as a deck plank, toolbar scoped to chat creation
 only; instructions reach the session through a typed `Chat.instructions` ref passed at
 session construction (NOT via context bindings), accepting spawn-time staleness on
