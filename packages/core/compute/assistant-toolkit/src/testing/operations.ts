@@ -20,6 +20,7 @@ import { MemoryHandlers } from '../skills/memory/operations';
 import { PlanningHandlers } from '../skills/planning/operations';
 import { SkillManagerHandlers } from '../skills/skill-manager/operations';
 import { Agent, Chat, Plan } from '../types';
+import { Memory } from '../types/Memory';
 
 /**
  * Shared layer for operation tests: every handler in the package plus the types those handlers
@@ -46,6 +47,7 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
     Collection.Collection,
     Employer.Employer,
     Feed.Feed,
+    Memory,
     Organization.Organization,
     Person.Person,
     Plan.Plan,
