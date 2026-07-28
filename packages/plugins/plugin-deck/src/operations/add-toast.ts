@@ -9,23 +9,15 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { DeckCapabilities } from '../types';
+import { upsertToast } from '../util';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.AddToast> = LayoutOperation.AddToast.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => {
-        const toast = input as LayoutOperation.Toast;
-        // `id` is the key the toaster renders by, so a repeat dispatch has to replace the live toast:
-        // appending duplicates it on screen and collides the React key.
-        const index = state.toasts.findIndex(({ id }) => id === toast.id);
-        return {
-          ...state,
-          toasts:
-            index === -1
-              ? [...state.toasts, toast]
-              : state.toasts.map((existing, current) => (current === index ? toast : existing)),
-        };
-      });
+      yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
+        ...state,
+        toasts: upsertToast(state.toasts, input as LayoutOperation.Toast),
+      }));
     }),
   ),
 );
