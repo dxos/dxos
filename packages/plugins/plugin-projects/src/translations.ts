@@ -28,6 +28,7 @@ export const translations = [
         'instructions.label': 'Instructions',
         'routines.label': 'Routines',
         'artifacts.label': 'Artifacts',
+        'create-chat.label': 'New chat',
       },
     },
   },

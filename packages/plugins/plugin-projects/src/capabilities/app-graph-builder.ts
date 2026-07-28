@@ -3,12 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
 import { Operation, Project } from '@dxos/compute';
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
+
+import { meta } from '#meta';
+import { ProjectOperation } from '#types';
 
 /**
  * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —
@@ -20,7 +25,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const extensions = yield* TypeSection.createTypeSectionExtension(Project.Project, {
+    const sectionExtensions = yield* TypeSection.createTypeSectionExtension(Project.Project, {
       urlKey: 'topic',
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
@@ -35,6 +40,39 @@ export default Capability.makeModule(
           ),
         }),
     });
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+
+    const actionExtensions = yield* createProjectActionExtension();
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, [...sectionExtensions, ...actionExtensions]);
   }),
 );
+
+/**
+ * Start a chat in project scope. Dispositioned for both surfaces so the one action serves the
+ * project's navtree row and the `ProjectArticle` toolbar, which splices in graph actions.
+ */
+export const createProjectActionExtension = () =>
+  GraphBuilder.createExtension({
+    id: 'projectActions',
+    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
+    actions: (project) =>
+      Effect.succeed([
+        Node.makeAction({
+          id: ProjectOperation.CreateChat.meta.key,
+          data: () =>
+            Effect.gen(function* () {
+              const db = Obj.getDatabase(project);
+              if (!db) {
+                return;
+              }
+
+              yield* Operation.invoke(ProjectOperation.CreateChat, { project }, { spaceId: db.spaceId });
+            }),
+          properties: {
+            label: ['create-chat.label', { ns: meta.profile.key }],
+            icon: 'ph--chat-text--regular',
+            disposition: ['toolbar', 'list-item-primary'],
+            testId: 'projectsPlugin.createChat',
+          },
+        }),
+      ]),
+  });

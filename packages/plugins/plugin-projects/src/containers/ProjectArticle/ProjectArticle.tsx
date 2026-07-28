@@ -5,14 +5,24 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { type Node, useActionRunner } from '@dxos/plugin-graph';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import {
+  type ActionExecutor,
+  type ActionGraphProps,
+  Menu,
+  MenuBuilder,
+  graphActions,
+  isToolbarAction,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -27,8 +37,9 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  * sub-form, and sections listing linked routines and artifacts). `Form.Viewport` owns the scroll and
  * gutter so fields stay inset from the panel edges. Creating routines/artifacts here is milestone 2.
  */
-export const ProjectArticle = ({ role, subject }: ProjectArticleProps) => {
+export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { actions, onAction } = useToolbarActions(attendableId);
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
   // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory, and a
@@ -60,6 +71,11 @@ export const ProjectArticle = ({ role, subject }: ProjectArticleProps) => {
 
   return (
     <Panel.Root role={role}>
+      <Panel.Toolbar>
+        <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
+          <Menu.Toolbar />
+        </Menu.Root>
+      </Panel.Toolbar>
       <Panel.Content>
         <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
           <Form.Viewport scroll>
@@ -84,6 +100,35 @@ export const ProjectArticle = ({ role, subject }: ProjectArticleProps) => {
 };
 
 ProjectArticle.displayName = 'ProjectArticle';
+
+/**
+ * Splices the graph actions opted into the toolbar (`disposition: 'toolbar'`) for the attended node —
+ * currently just create-chat, which the graph builder also dispositions onto the project's navtree row,
+ * so the two surfaces stay one action.
+ */
+const useToolbarActions = (
+  attendableId: string,
+): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
+  const { graph } = useAppGraph();
+  const runAction = useActionRunner();
+
+  const actions = useMenuBuilder(
+    (get): ActionGraphProps =>
+      MenuBuilder.make()
+        .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
+        .build(),
+    [graph, attendableId],
+  );
+
+  const onAction: ActionExecutor = useCallback(
+    (action) => {
+      void runAction(action as Node.Action, { caller: meta.profile.key });
+    },
+    [runAction],
+  );
+
+  return { actions, onAction };
+};
 
 type ObjectListProps = {
   label: string;

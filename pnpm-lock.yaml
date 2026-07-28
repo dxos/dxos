@@ -14352,12 +14352,18 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../plugin-routine
@@ -14370,6 +14376,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -14377,6 +14386,9 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client

@@ -127,6 +127,20 @@ repoint.
       is newly parented, fall back to a `chats: Ref<Collection>` field on Project
       (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.
 
+## Milestone 4 (scoping): what comes after this PR
+
+- [ ] **Write the post-PR milestone doc** — the through-line across `Chat`, `Plan`, the delegation
+      strategy, `Agent`, and the process manager, now that each has moved: `Chat` is thin and linked
+      to its agent by relation; `Plan` is the conversation's task ledger driving `reconcile`/`onComplete`
+      per feed; `Agent` is an identity/preset owning no conversation state; durable sessions live as
+      processes. Name what each still owes the others (e.g. no plan-level completion signal, no
+      arbitration between concurrent supervisors, agent identity DID unpopulated).
+- [ ] **Pick a demo we can build with what exists today**, using the planning project as the subject —
+      i.e. a project whose chats plan, delegate to sub-agents, and file artifacts back into the
+      collection. Establish what is genuinely working end-to-end versus what needs the Phase 3 UI.
+- [ ] **Reconcile with Magazine and CRM** — where those two overlap Projects (scope, artifacts,
+      instructions) and where they should stay distinct; whether either becomes a project template.
+
 ## Follow-ups / deferred (design reviews)
 
 - [x] **`Chat.agent` removed; linkage is the `CompanionTo` relation** — the field (phase B) was the

@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -43,6 +46,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -61,10 +67,16 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../plugin-assistant"
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-routine"
