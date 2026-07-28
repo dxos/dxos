@@ -8,12 +8,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useManager } from '@dxos/react-ui-attention';
-import { DraftMessage, type Message as MessageType } from '@dxos/types';
+import { Message as MessageType } from '@dxos/types';
 
 import {
   ConversationStack,
@@ -26,20 +27,20 @@ import {
 import { InboxCapabilities, InboxOperation, Mailbox, type Settings } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
-import { orderThreadItems } from '../../util';
+import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
 
 /** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */
 const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false });
 
 /**
- * `subject` is either a single message or its whole conversation (thread). The companion graph node
+ * `subject` is the opened message; its whole conversation (thread) is looked up here. The companion graph node
  * assigns the thread directly (see the `mailboxMessage` connector) so the article renders it without
  * re-querying; section/other callers may pass a single message. The thread already includes any
  * inline reply/forward drafts (the connector merges synced feed messages and local drafts in one
  * combined-scope query), interleaved chronologically.
  */
 export type MessageArticleProps = AppSurface.ArticleProps<
-  MessageType.Message | MessageType.Message[],
+  MessageType.Message,
   {
     mailbox?: Mailbox.Mailbox;
     testId?: string;
@@ -65,8 +66,27 @@ export const MessageArticle = ({
     attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
 
-  // Normalize the singular-or-plural subject to a conversation (chronological, drafts interleaved).
-  const messages: MessageType.Message[] = Array.isArray(subject) ? subject : [subject];
+  // The subject is one message; its conversation is correlated by threadId across space + feed in one
+  // combined query.
+  const mailboxDb = mailbox ? Obj.getDatabase(mailbox) : undefined;
+  const feed = useResolveRef(mailbox?.feed);
+  const feedUri = feed ? Obj.getURI(feed, { prefer: 'absolute' }) : undefined;
+  const conversation = useQuery(
+    mailboxDb,
+    feedUri
+      ? Query.select(Filter.type(MessageType.Message, { threadId: subject.threadId }))
+          .from([Scope.space(), Scope.feed(feedUri)])
+          .orderBy(Order.property('created', 'asc'))
+      : Query.select(Filter.nothing()),
+  ) as MessageType.Message[];
+
+  // The conversation (chronological, drafts interleaved), falling back to the subject alone until the
+  // lookup resolves. Synced messages always pass; drafts pass only when scoped to this mailbox and not
+  // yet superseded.
+  const messages: MessageType.Message[] = useMemo(
+    () => (mailbox && conversation.length > 0 ? dedupeSupersededDrafts(conversation, Obj.getURI(mailbox)) : [subject]),
+    [subject, mailbox, conversation],
+  );
 
   // Contact extraction targets the conversation's space; any message resolves the same db.
   const db = Obj.getDatabase(messages[0]);
@@ -77,7 +97,10 @@ export const MessageArticle = ({
   const messageIds = useMemo(() => orderedMessages.map(keyOf), [orderedMessages]);
 
   // Expanded state.
-  const { expanded, onExpandedChange, onCollapseAll, onExpandAll } = useMessageExpansion({ messages, messageIds });
+  const { expanded, onExpandedChange, onCollapseAll, onExpandAll } = useMessageExpansion({
+    messageIds,
+    subject,
+  });
 
   // Settings + view state.
   const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
@@ -129,8 +152,9 @@ export const MessageArticle = ({
     [invoker],
   );
 
-  // Generate a grounded reply body (thread + facts), then open the reply draft prefilled; on LLM failure
-  // fall back to an empty reply draft so the action never leaves the user without one.
+  // Generate a grounded reply body (thread + facts), then create the reply draft prefilled — it joins
+  // this thread and renders inline. On LLM failure fall back to an empty reply draft so the action never
+  // leaves the user without one.
   const handleAiReply = useCallback(
     async (message: MessageType.Message) => {
       if (!db || !mailbox) {
@@ -202,18 +226,17 @@ export const MessageArticle = ({
 MessageArticle.displayName = 'MessageArticle';
 
 type UseMessageExpansionProps = {
-  messages: MessageType.Message[];
   messageIds: readonly string[];
+  /** The opened plank subject, which is expanded by default. */
+  subject: MessageType.Message;
 };
 
 // Expanded state lives here so the thread toolbar's collapse-all/expand-all can fold or unfold every message.
-const useMessageExpansion = ({ messages, messageIds }: UseMessageExpansionProps) => {
-  const mostRecentId = useMemo(() => {
-    const recent = [...messages].reverse().find((message) => !DraftMessage.instanceOf(message));
-    return recent ? keyOf(recent) : undefined;
-  }, [messages]);
+const useMessageExpansion = ({ messageIds, subject }: UseMessageExpansionProps) => {
+  // The opened message is worth reading first; expand it by default and leave the rest collapsed.
+  const openId = keyOf(subject);
 
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(mostRecentId ? [mostRecentId] : []));
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set([openId]));
   const onExpandedChange = useCallback((id: string, isExpanded: boolean) => {
     setExpanded((prev) => {
       const next = new Set(prev);

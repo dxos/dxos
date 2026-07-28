@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
@@ -26,7 +26,9 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Channel.Channel, {
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
+        urlKey: 'channel',
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.communications),
+        groupSegment: GraphPath.GroupSegments.communications,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,
@@ -51,7 +53,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: 'chat',
+              variant: 'chat',
               label: ['channel-companion.label', { ns: meta.profile.key }],
               icon: 'ph--hash--regular',
               data: 'chat',

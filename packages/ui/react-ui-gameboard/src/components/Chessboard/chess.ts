@@ -9,7 +9,7 @@ import { type FC, type SVGProps } from 'react';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import * as Alpha from '../../gen/pieces/chess/alpha';
+import * as Alpha from '../../gen/pieces/chess/alpha/index';
 import {
   type GameboardModel,
   type Location,

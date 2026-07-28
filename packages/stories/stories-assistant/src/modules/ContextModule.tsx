@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Agent } from '@dxos/assistant-toolkit';
+import { Project } from '@dxos/compute';
 import { Filter, Obj, type Ref } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
@@ -32,18 +32,12 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
   const binder = useContextBinder(space, feedTarget);
   const objects = useBoundObjects(binder);
 
-  // The agent's artifacts (added via the add-artifact tool) are tracked on the agent, not in the
-  // bound context objects above, so surface them separately. Subscribe via `useObject` so a
-  // newly-pushed artifact re-renders (useQuery alone only tracks the result set), but read the
-  // artifacts from the LIVE `agent` — useObject returns a detached snapshot whose refs don't resolve.
-  const [agent] = useQuery(space.db, Filter.type(Agent.Agent));
-  // `useObject(agent)` returns a reactive snapshot that changes identity on any (incl. nested)
-  // mutation — e.g. an artifact pushed by the agent process. We read artifact refs from the LIVE
-  // `agent` (snapshot refs don't resolve), but key the memo on the snapshot so a newly-pushed
-  // artifact re-renders. `agent.artifacts` is mutated in place, so depending on it directly would
-  // NOT recompute (same array reference) — that was why a new doc only appeared after a force-update.
-  const [agentSnapshot] = useObject(agent);
-  const artifacts = agent?.artifacts ?? [];
+  // Durable artifacts live on a Project's collection (the agent stores none): surface the first
+  // project's collection alongside the bound context objects, resolving refs reactively.
+  const [project] = useQuery(space.db, Filter.type(Project.Project));
+  const [collectionSnapshot] = useObject(project?.artifacts);
+  const collection = Obj.getReactiveOrUndefined(collectionSnapshot);
+  const artifacts = collection?.objects ?? [];
 
   const items = useMemo<ContextItem[]>(
     () => [
@@ -52,15 +46,15 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
         id: `object:${object.id}`,
         object,
       })),
-      ...artifacts.map((artifact, index) => ({
+      ...artifacts.map((ref, index) => ({
         kind: 'artifact' as const,
         // Stable id that does not change when the ref resolves (avoids Masonry remount churn).
         id: `artifact:${index}`,
-        name: artifact.name,
-        data: artifact.data,
+        name: undefined,
+        data: ref,
       })),
     ],
-    [objects, artifacts, agentSnapshot],
+    [objects, artifacts, collectionSnapshot],
   );
 
   return (
@@ -103,7 +97,7 @@ const useBoundObjects = (binder: ReturnType<typeof useContextBinder>): Obj.Unkno
 
 type ContextItem =
   | { kind: 'object'; id: string; object: Obj.Unknown }
-  | { kind: 'artifact'; id: string; name: string; data: Ref.Ref<Obj.Unknown> };
+  | { kind: 'artifact'; id: string; name: string | undefined; data: Ref.Ref<Obj.Unknown> };
 
 const Tile = ({ data }: { data: ContextItem }) => {
   // Masonry may render a tile with no data transiently (e.g. during HMR remount); guard against it.

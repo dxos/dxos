@@ -154,7 +154,9 @@ const setupNativeFilesystemGraphBuilder = ({
   const stateCapabilitiesAtom = Atom.make([stateAtom]);
   const filesystemManagerCapabilitiesAtom = Atom.make([new MockFilesystemManager(initialState)]);
   const entryExtensions = Effect.runSync(
-    createFilesystemEntryExtensions(stateCapabilitiesAtom, filesystemManagerCapabilitiesAtom),
+    createFilesystemEntryExtensions(stateCapabilitiesAtom, filesystemManagerCapabilitiesAtom, () =>
+      registry.get(stateAtom),
+    ),
   );
 
   return setupGraphBuilder({

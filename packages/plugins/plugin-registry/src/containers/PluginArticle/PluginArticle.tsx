@@ -76,9 +76,11 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     (targetId: string) => {
       void invokePromise(LayoutOperation.Open, {
         subject: [getPluginPath(targetId)],
+        pivotId: getPluginPath(pluginId),
+        disposition: 'add',
       });
     },
-    [invokePromise],
+    [invokePromise, pluginId],
   );
 
   const actions = usePluginActions({

@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { type WithPluginManagerOptions } from '@dxos/app-framework/testing';
 import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppCapabilities, AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import {
   Agent,
@@ -448,7 +448,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       // Ensure workspace is set. NOTE: the active workspace that surfaces read via
       // `useActiveSpace()` is set from the React tree in `ModuleContainer` (the plugin-module
       // activation context resolves a different AtomRegistry than the UI).
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(space.id) });
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
 
       // Create agent.
       if (createAgent) {
@@ -470,7 +470,8 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
 
         if (onChatCreated) {
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
-          const chat = yield* Effect.promise(() => agent.chat!.load());
+          const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
+          invariant(chat, 'Agent chat not found.');
           const feed = yield* Effect.promise(() => chat.feed.load());
           const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });

@@ -6,13 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Attention } from '@dxos/react-ui-attention';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -50,7 +49,7 @@ export default Capability.makeModule(
       // "Publications" section under each space's content group.
       GraphBuilder.createExtension({
         id: 'publicationsSection',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
         connector: (space) =>
           Effect.succeed([
             AppNode.makeSection({
@@ -69,6 +68,7 @@ export default Capability.makeModule(
       // "+ Publication" action on the section.
       GraphBuilder.createExtension({
         id: 'publicationNodes',
+        url: { key: 'publication', kind: 'item', path: [GraphPath.GroupSegments.content, PUBLICATIONS_SEGMENT] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === PUBLICATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -175,7 +175,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: Attention.linkedSegment('comments'),
+              variant: 'comments',
               label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
               data: contentDoc,

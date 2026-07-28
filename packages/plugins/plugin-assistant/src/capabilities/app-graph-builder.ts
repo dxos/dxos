@@ -12,8 +12,8 @@ import {
   AppNode,
   AppNodeMatcher,
   AppSpace,
+  GraphPath,
   LayoutOperation,
-  Paths,
   TypeSection,
 } from '@dxos/app-toolkit';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
@@ -49,13 +49,13 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // AI section group — created here so it shows only when the assistant plugin is active.
       GraphBuilder.createExtension({
-        id: Paths.GroupSegments.ai,
+        id: GraphPath.GroupSegments.ai,
         match: AppNodeMatcher.whenSpace,
         connector: (space) =>
           Effect.succeed([
             AppNode.makeGroup({
-              id: Paths.GroupSegments.ai,
-              type: Paths.GroupTypes.ai,
+              id: GraphPath.GroupSegments.ai,
+              type: GraphPath.GroupTypes.ai,
               label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
               space,
               position: 300,
@@ -155,7 +155,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: Attention.linkedSegment(ASSISTANT_COMPANION_VARIANT),
+                variant: ASSISTANT_COMPANION_VARIANT,
                 label: ['assistant-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
@@ -174,7 +174,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'invocations',
+              variant: 'invocations',
               label: ['invocations.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'invocations',
@@ -205,7 +205,9 @@ export default Capability.makeModule(
           Query.select(Filter.type(Chat.Chat)),
           Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
         ),
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
+        groupSegment: GraphPath.GroupSegments.ai,
+        urlKey: 'chat',
       }),
 
       // Create-chat action on the Chats section header.

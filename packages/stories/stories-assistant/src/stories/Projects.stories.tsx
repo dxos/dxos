@@ -73,10 +73,17 @@ const decorators = createDecorators({
     space.db.add(project);
     await space.db.flush({ indexes: true });
   },
-  // Mirror ChatCompanion's project binding: the project itself plus its instructions/skills/objects.
-  onChatCreated: async ({ space, binder }) => {
+  // Mirror ChatCompanion's project wiring: instructions steer via the chat's ref; skills and
+  // context objects (plus the project itself) travel via bindings.
+  onChatCreated: async ({ space, chat, binder }) => {
     const { Project } = await import('@dxos/compute');
     const [project] = await space.db.query(Filter.type(Project.Project)).run();
+    if (!chat.instructions && project.instructions) {
+      const instructionsRef = project.instructions;
+      Obj.update(chat, (chat) => {
+        chat.instructions = instructionsRef;
+      });
+    }
     const bindings = Project.contextBindings(project);
     if (bindings.skills.length > 0) {
       await binder.bind({ skills: [...bindings.skills] });

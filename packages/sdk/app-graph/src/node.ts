@@ -115,6 +115,9 @@ export type InvokeProps = {
   path?: string[];
 
   caller?: string;
+
+  /** Input modifiers held during the gesture that triggered the action (e.g. shift-clicking a menu item). */
+  modifiers?: { shift?: boolean };
 };
 
 /**
@@ -158,7 +161,7 @@ export const isActionLike = (data: unknown): data is Action | ActionGroup => isA
 /**
  * Tests whether a node's `disposition` property (a single string or an array, letting one node opt
  * into multiple surfaces at once) includes any of `key`. Every surface that routes nodes/actions by
- * disposition (toolbar, nav-tree list-item, deck sigil menu, …) should filter through this rather than
+ * disposition (toolbar, nav-tree list-item, sigil menu, …) should filter through this rather than
  * comparing `properties.disposition` directly, so a node can multi-target surfaces.
  */
 export const hasDisposition = (node: Pick<Node, 'properties'>, key: string | string[]): boolean => {

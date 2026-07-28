@@ -16,12 +16,13 @@ import { expect } from 'vitest';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
-import { Operation, OperationHandlerSet, Process, ServiceResolver, Skill, Trace } from '@dxos/compute';
+import { Instructions, Operation, OperationHandlerSet, Process, ServiceResolver, Skill, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
-import { Annotation, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
+import { Text } from '@dxos/schema';
 import { Message, Organization } from '@dxos/types';
 
 import { AssistantTestLayer, runMemoizedTests } from '../testing';
@@ -85,7 +86,7 @@ const ResearchSkill = Skill.make({
 });
 
 const assistantTestLayerOptions = {
-  types: [Organization.Organization, Feed.Feed, Skill.Skill],
+  types: [Organization.Organization, Feed.Feed, Skill.Skill, Instructions.Instructions, Text.Text],
   tracing: 'pretty' as const,
   aiServicePreset: 'edge-remote' as const,
   operationHandlers: [handlers],
@@ -505,6 +506,68 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
         expect(handle.status.state).not.toBe(Process.State.TERMINATED);
 
         yield* handle.terminate();
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+// Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
+describe('Agent Service (control plane)', () => {
+  // Exercises the instruction-aware reuse identity on both paths — the session cache and the
+  // remount (rediscovered process) path.
+  it.scoped(
+    'session reuse tracks the steering-instructions ref',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+
+        const instructionsA = yield* Database.add(Instructions.make({ text: 'Steering A.' }));
+        const instructionsB = yield* Database.add(Instructions.make({ text: 'Steering B.' }));
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const target = Obj.getURI(feed);
+
+        const isActive = (state: Process.State) =>
+          state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
+        const activePids = Effect.gen(function* () {
+          const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+          return processes.filter((process) => isActive(process.status.state));
+        });
+
+        // Spawn with A: the ref URI is stamped as a spawn annotation.
+        const sessionA = yield* getSession(feed, { instructions: Ref.make(instructionsA) });
+        const [handleA] = yield* activePids;
+        const pidA = String(handleA.pid);
+        expect(
+          Option.getOrNull(Annotation.getDictionary(handleA.params.annotations, Process.InstructionsAnnotation)),
+        ).toBe(Ref.make(instructionsA).uri);
+
+        // Unchanged ref: the cached session (and process) is reused.
+        const sessionAgain = yield* getSession(feed, { instructions: Ref.make(instructionsA) });
+        expect(sessionAgain).toBe(sessionA);
+        expect((yield* activePids).map((handle) => String(handle.pid))).toEqual([pidA]);
+
+        // Repointed ref: the process is torn down and respawned with the new annotation.
+        yield* getSession(feed, { instructions: Ref.make(instructionsB) });
+        const [handleB] = yield* activePids;
+        expect(String(handleB.pid)).not.toBe(pidA);
+        expect(
+          Option.getOrNull(Annotation.getDictionary(handleB.params.annotations, Process.InstructionsAnnotation)),
+        ).toBe(Ref.make(instructionsB).uri);
+
+        // Remount path (cache cleared by hydrate): present-to-absent also respawns, since the
+        // rediscovered process's spawn annotation no longer matches the request.
+        yield* hydrate();
+        yield* getSession(feed);
+        const [handleNone] = yield* activePids;
+        expect(String(handleNone.pid)).not.toBe(String(handleB.pid));
+        expect(
+          Option.getOrNull(Annotation.getDictionary(handleNone.params.annotations, Process.InstructionsAnnotation)),
+        ).toBeNull();
+
+        yield* handleNone.terminate();
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,

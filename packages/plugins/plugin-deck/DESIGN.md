@@ -1,12 +1,14 @@
 # Deck: deprecating the `Plank` container
 
-Status: design / in‑progress. Tracks the migration of `@dxos/plugin-deck` off the legacy
-`containers/Plank/*` composite (which depends on `@dxos/react-ui-stack`) onto the new
-presentational components in `src/components/*` (`Pane` / `Plank` / `Companion` / `Splitter`).
+Status: complete. Documents the migration of `@dxos/plugin-deck` off the legacy
+`containers/Plank/*` composite (which depended on `@dxos/react-ui-stack`) onto the
+presentational components in `src/components/*` (`Pane` / `Plank` / `Companion` / `Splitter`), and is
+kept as a reference for the resulting `Deck`/`Plank` component architecture — including the
+single-mode presentation and URL-sync flow (both in section 3) that landed afterwards.
 
-The goal is to delete `containers/Plank/*` and `@dxos/react-ui-stack` from the deck and rewrite
-`containers/Deck/DeckViewport.tsx` so that all plank chrome, sizing and companion layout come from the
-new components, while the deck container retains the capability/operation wiring.
+`containers/Plank/*` and the `@dxos/react-ui-stack` dependency have been deleted;
+`containers/Deck/DeckViewport.tsx` builds all plank chrome, sizing and companion layout from the
+components in `src/components/*`, while the deck container retains the capability/operation wiring.
 
 ---
 
@@ -75,13 +77,12 @@ Capability‑driven `ButtonGroup`: solo/fullscreen, increment‑start/end, close
 
 ## 2. `DeckViewport` consumption (`src/containers/Deck/DeckViewport.tsx`)
 
-- **`DeckViewport`** — sets CSS vars (`--main-spacing`, sidebar widths, dead `--main-content-first/last-width`); `Main.Content`.
+- **`DeckViewport`** — sets CSS vars (`--main-spacing`, sidebar widths); `Main.Content`.
 - **`DeckContentEmpty`** — first‑run surface.
-- **`DeckSoloMode`** — reads `deck.solo/companionOpen/companionVariant/fullscreen`; Escape toggles fullscreen (`LayoutOperation.SetLayoutMode`); renders one `PlankContainer part='solo'`.
-- **`DeckMultiMode`** — reads `deck.active[]`, `companionVariant`, `plankSizing`; `Stack orientation='horizontal'` of `PlankSeparator` + `PlankContainer part='multi'`; **companion only on the last plank** (order/itemsCount accounting: last plank with companion = 3 stack items, else 2); saves/restores `scrollLeft`.
-- **`PlankSeparator`** — `w-0` (encapsulated) or `w-4` gap.
-- **`PlankContainer`** — the bridge. Resolves graph/node/companions (`useAppGraph`, `useNode`, `useCompanions`, `useSelectedCompanion`), reads deck state, gets `useOperationInvoker`, and builds the `Plank.Root > Plank.Content > Plank.Component (+ companion Plank.Component)` tree. Maps callbacks to operations:
-  - `onAdjust`: close → `LayoutOperation.Close`/`UpdateComplementary`; solo/fullscreen → `SetLayoutMode`; increment‑start/end → `DeckOperation.Adjust`; companion → `LayoutOperation.UpdateCompanion`.
+- **`DeckPlanks`** — single-mode replacement for the old `DeckSoloMode`/`DeckMultiMode` split. Renders `deck.active` through one `Mosaic.Container > ScrollArea > Mosaic.Stack` pipeline; each `DeckPlankTile` is styled by the presentation derived from plank count and breakpoint (`useDeckPresentation`) — fullbleed for a singleton deck, a flush tiling split for exactly two, resizable sliding tiles for three or more, always sliding with full-width scroll-snap planks below `md`. Planks stay mounted across 1↔2 transitions. Fullscreen is a transient overlay keyed off `EphemeralDeckState.fullscreen` (a plank id): when set, it renders only that plank headless in place of the whole stack; Escape and the exit button both toggle it via `DeckOperation.Adjust({ type: 'fullscreen' })`. Saves/restores `scrollLeft` across fullbleed↔sliding transitions.
+- **`DeckPlankTile`** — the `Mosaic.Stack` tile wrapping `DeckPlank`; for sliding tiles wires `size`/`onSizeChange` to `plankSizing`/`DeckOperation.UpdatePlankSize`.
+- **`DeckPlank`** (`useDeckPlank` hook) — the bridge, replacing the legacy `PlankContainer`/`PlankComponent`/`PlankHeading` tree. Resolves graph/node/companions (`useAppGraph`, `useNode`, `useCompanions`, `useSelectedCompanion`), reads deck state, gets `useOperationInvoker`, and builds a `Splitter.Root > Plank (+ companion Companion)` tree. Maps callbacks to operations:
+  - `onAdjust`: close → `LayoutOperation.Close`/`UpdateComplementary`; fullscreen → `DeckOperation.Adjust({ type: 'fullscreen' })`; increment‑start/end → `DeckOperation.Adjust`; companion → `LayoutOperation.UpdateCompanion`.
   - `onResize` → `DeckOperation.UpdatePlankSize`.
   - `onScrollIntoView` → `LayoutOperation.ScrollIntoView`.
   - `onUpdateCompanion` → `LayoutOperation.UpdateCompanion`.
@@ -90,28 +91,52 @@ Capability‑driven `ButtonGroup`: solo/fullscreen, increment‑start/end, close
 
 ## 3. Deck state & operations (`src/capabilities`, `schema.ts`)
 
+There is a single deck mode: presentation is derived from plank count and breakpoint rather than
+stored (fullbleed for 1, tiling for 2, sliding for 3+; always sliding below `md`).
+
 ```ts
 type DeckState = {
-  initialized: boolean;
-  active: string[];
+  active: string[]; // presentation derives from length + breakpoint
   inactive: string[];
-  solo?: string;
-  fullscreen: boolean;
-  plankSizing: Record<string, number>; // rem widths keyed by plank id
+  plankSizing: Record<string, number>; // rem widths keyed by plank id; sliding presentation only
+  tilingSizing?: number; // tiling: start pane width in rem; the end pane fills the remainder
   companionOpen: boolean;
-  companionVariant?: string;
-  companionFrameSizing: Record<string, number>;
 };
-const getMode = (deck) => (deck.solo ? (deck.fullscreen ? 'solo--fullscreen' : 'solo') : 'multi');
+
+type EphemeralDeckState = {
+  fullscreen?: string; // plank id shown headless as a transient overlay; never persisted, never in the URL
+  // ...dialog/popover/toast fields
+};
 ```
+
+The selected companion variant lives in `react-ui-attention` view state (global, localStorage), not on
+`DeckState` — see `util/companion-view-state.ts`.
 
 Operations relevant to layout:
 
-- `DeckOperation.Adjust({ id, type: 'close'|'companion'|'solo'|'solo--fullscreen'|'increment-start'|'increment-end' })`.
+- `DeckOperation.Adjust({ id, type: 'close'|'companion'|'fullscreen'|'increment-start'|'increment-end' })` —
+  `'fullscreen'` toggles `EphemeralDeckState.fullscreen` rather than mutating `active`.
 - `DeckOperation.UpdatePlankSize({ id, size })` → `plankSizing[id] = size`.
 - `LayoutOperation.ScrollIntoView({ subject? })` → `ephemeral.scrollIntoView`.
-- `LayoutOperation.UpdateCompanion({ subject })` → toggles `companionOpen` + `companionVariant = getLinkedVariant(subject)`.
+- `LayoutOperation.UpdateCompanion({ subject })` → toggles `companionOpen`; the selected variant is read
+  from view state, not stored on `DeckState`.
+- `LayoutOperation.Open({ subject, disposition? })` — `disposition` (`'solo' | 'add' | 'auto'`):
+  `'solo'` (the default) navigates — the deck becomes just the subjects, unless already open; `'add'`
+  inserts new planks after `pivotId` or at the end (`addSubjectsToActiveDeck` in `layout.ts`); `'auto'`
+  follows the deck — adds beside the origin (`pivotId` ?? attended plank) when sliding, else navigates
+  solo. Nav-tree plain click passes `'solo'` (shift → `'add'`); in-plank links/cards pass `'auto'`
+  (shift → `'add'`). See `PLUGIN.mdl` F-7 for the navigation model.
 - Companion nodes resolved via graph children of type `PLANK_COMPANION_TYPE`.
+
+### URL sync
+
+`capabilities/url-handler.ts` parses the pathname's pair chain (`/w/<workspace>/<key>/<id>/...`) via
+`UrlPath.parse` and `PathResolution.resolveUrl`, dispatches `LayoutOperation.Set` with the resolved plank
+ids, and reverse-serializes `deck.active` (plus the open companion, which attaches to the deck's trailing
+plank) back into the same grammar via `serializeDeckToUrl` (`util/serialize-deck-url.ts`) on every
+deck-state or companion-variant change. Attention is never serialized, and never triggers a sync — on
+load it defaults to the last plank in the chain. See `.agents/projects/url-deck-redesign/DESIGN.md` for
+the full URL grammar.
 
 ---
 
@@ -195,11 +220,12 @@ Sequencing keeps the build green: 1–2 (additive), 3–4 (solo first, verify), 
 
 ---
 
-## 7. Open questions
+## 7. Open questions (resolved)
 
-1. Multi‑mode resize substrate: `Mosaic.Tile` per plank (recommended) vs keeping CSS‑var widths. The
-   Mosaic resize feature (PR #11932) was built for exactly this.
-2. Whether `PlankControls` lives in `containers/` (capability‑aware, recommended) or becomes a thin
-   presentational `Pane`‑level control set fed by the container.
-3. Solo companion: fixed ratio is dropped in favour of a resizable `Splitter` — confirm the persisted
-   size key (reuse `plankSizing` or a new companion key).
+1. **Sliding-presentation resize substrate**: resolved as `Mosaic.Tile` per plank (`DeckPlankTile` in
+   `DeckViewport.tsx`), each wired to `plankSizing`/`DeckOperation.UpdatePlankSize`.
+2. **`PlankControls` location**: resolved — it lives in `containers/Deck/PlankControls.tsx`,
+   capability-aware, composed by `DeckPlank`.
+3. **Solo companion ratio**: resolved — the companion is a plank, so a solo plank plus its companion
+   is the tiling presentation: a resizable `Splitter.Root` whose start-pane width persists per deck as
+   `tilingSizing`.

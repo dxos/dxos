@@ -8,6 +8,7 @@ import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
+import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
 import { ReviewPlugin } from '@dxos/plugin-review/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
@@ -19,9 +20,9 @@ export type { PluginConfig, State } from './plugin-defs.core';
 
 /**
  * Minimal plugin registry for fast dev startup (`serve-min`, DX_PLUGIN_SET=minimal):
- * core infrastructure + Assistant, Debug, Inbox, Markdown, Outliner, Projects, Review,
- * Routine, and Thread. Keep the plugin list in sync with the `optimizeDeps.entries` brace
- * glob in vite.config.ts.
+ * core infrastructure + Assistant, Debug, Inbox, Markdown, Outliner, Preview, Projects,
+ * Review, Routine, and Thread. Keep the plugin list in sync with the `optimizeDeps.entries`
+ * brace glob in vite.config.ts.
  * See `agents/superpowers/specs/2026-07-24-composer-serve-min-design.md`.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
@@ -31,6 +32,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   InboxPlugin(),
   MarkdownPlugin(),
   OutlinerPlugin(),
+  PreviewPlugin(),
   ProjectsPlugin(),
   RoutinePlugin(),
   ThreadPlugin(),

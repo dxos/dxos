@@ -7,10 +7,13 @@ import { describe, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
+import { meta } from '#meta';
+
 import {
   createDraftMessage,
   dedupeSupersededDrafts,
   getMessageBodyText,
+  getMessageLabel,
   getMessageProps,
   messageMatchesQuery,
   orderThreadItems,
@@ -335,6 +338,32 @@ describe('messageMatchesQuery', () => {
   test('an empty query always matches', ({ expect }) => {
     expect(messageMatchesQuery(message, '')).toBe(true);
     expect(messageMatchesQuery(message, '   ')).toBe(true);
+  });
+});
+
+describe('getMessageLabel', () => {
+  test('uses the subject when there is one', ({ expect }) => {
+    expect(getMessageLabel(makeRead('2025-01-01T00:00:00.000Z'))).toBe('Topic');
+  });
+
+  test('a compose draft (empty subject) falls back to the draft label, not a blank heading', ({ expect }) => {
+    const draft = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Me' },
+      blocks: [{ _tag: 'text' as const, text: '' }],
+      properties: { subject: '', mailbox: DRAFT_MAILBOX },
+    });
+    expect(getMessageLabel(draft)).toEqual(['draft.label', { ns: meta.profile.key }]);
+  });
+
+  test('a non-draft without a subject falls back to the message label', ({ expect }) => {
+    const message = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Sender' },
+      blocks: [{ _tag: 'text' as const, text: '' }],
+      properties: { subject: '' },
+    });
+    expect(getMessageLabel(message)).toEqual(['message.label', { ns: meta.profile.key }]);
   });
 });
 

@@ -91,7 +91,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'help',
+              variant: 'help',
               label: HELP_COMPANION_LABEL,
               icon: 'ph--info--regular',
               data: 'help',

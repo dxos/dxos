@@ -2,7 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { SpaceOperation } from './definitions';
@@ -11,8 +11,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.OpenSettings> = Space
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [Paths.getSpacePath(input.space.id, 'settings', 'general')],
-        workspace: Paths.getSpacePath(input.space.id),
+        // The general settings panel node segment is `settings` (id-less `settings` url key), nested
+        // under the space settings section (also `settings`).
+        subject: [GraphPath.getSpacePath(input.space.id, 'settings', 'settings')],
+        workspace: GraphPath.getSpacePath(input.space.id),
       });
     }),
   ),

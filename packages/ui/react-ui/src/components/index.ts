@@ -29,6 +29,7 @@ export * from './ScrollContainer';
 export * from './Select';
 export * from './Separator';
 export * from './Skeleton';
+export * from './Slider';
 export * from './Splitter';
 export * from './Status';
 export * from './Tag';

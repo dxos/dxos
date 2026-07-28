@@ -117,7 +117,6 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
   ),
 
   // No-ops.
-  LayoutOperation.SetLayoutMode.pipe(Operation.withHandler(() => Effect.void)),
   LayoutOperation.UpdateSidebar.pipe(Operation.withHandler(() => Effect.void)),
   LayoutOperation.UpdateComplementary.pipe(Operation.withHandler(() => Effect.void)),
   LayoutOperation.UpdatePopover.pipe(Operation.withHandler(() => Effect.void)),

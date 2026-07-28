@@ -174,6 +174,15 @@ export const NotifyAnnotation = Annotation.make({
 });
 
 /**
+ * URI of the Instructions object steering the process's conversation. Persisted at spawn (like
+ * {@link TargetAnnotation}) so a re-hydrated process recovers its steering without reaching the Chat.
+ */
+export const InstructionsAnnotation = Annotation.make({
+  id: 'org.dxos.process.instructions',
+  schema: URI.Schema,
+});
+
+/**
  * Marks a process as the harness host for its conversation (discovery substrate).
  */
 export const HarnessHostAnnotation = Annotation.make({
