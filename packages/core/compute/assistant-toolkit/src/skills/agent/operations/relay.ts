@@ -11,6 +11,7 @@ import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { getSession } from '@dxos/compute/AgentService';
 import { Database, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import { Chat, Plan } from '../../../types';
@@ -31,7 +32,17 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
         );
 
         if (event && (qualify ?? true)) {
-          const relevant = yield* qualifyEvent(chat, event);
+          // Fail open (matching the prompt's "if unsure, return true"): a malformed model reply
+          // forwards the event rather than silently dropping it.
+          const relevant = yield* qualifyEvent(chat, event).pipe(
+            Effect.retry({ times: 1 }),
+            Effect.catchAll((error) =>
+              Effect.sync(() => {
+                log.warn('relay qualification failed; forwarding event', { error });
+                return true;
+              }),
+            ),
+          );
           if (!relevant) {
             return;
           }

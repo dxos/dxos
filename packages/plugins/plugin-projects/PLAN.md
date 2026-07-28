@@ -147,14 +147,12 @@ process drains at its own pace (at the cost of the visible extra feed).
       per-category reconcile, so a subscriptions-only update cannot drop the
       schedule routine.
 - [x] `org.dxos.type.agent` → `0.2.0` (`name`/`did`/`enabled`/`instructions`
-      only); `LegacyAgent` pinned at 0.1.0 as the migration source.
-      `agentMigration` (assistant-toolkit `migrations/agent.ts`, registered in
-      plugin-assistant): wraps bare-Text instructions into typed Instructions,
-      moves inline artifacts into a Project's Collection, sets
-      `chat.agent`/`chat.instructions`, replays `subscriptions`/`cron` through
-      the routine compiler, drops `feed`/`filterEvents`/`chat`. Gotcha
-      captured: migration snapshots deliver refs in ENCODED form (`{'/':dxn}`),
-      never live Refs — decode before resolving.
+      only). **No data migration** (decided by user 2026-07-28): 0.1.0 agents
+      are abandoned and recreated — the `LegacyAgent` schema and the registered
+      `agentMigration` were built, validated by test (including the gotcha that
+      migration snapshots deliver refs in ENCODED form `{'/':dxn}`, never live
+      Refs), then removed; recover from commit 11802071c1 if a migration is
+      ever needed.
 - [x] `makeInitialized` slims to identity + instructions + first chat
       (with `agent`/`instructions` refs); `resetChatHistory` rebuilds via the
       `CompanionTo` relation (new `Agent.loadChat` helper). UI ports:

@@ -59,9 +59,7 @@ const targetKeyOf = (entity: Obj.Unknown): string | undefined =>
 /**
  * Compiles the agent's automation config into Routines whose triggers run the Relay: the relay
  * qualifies each event with a cheap model and forwards relevant ones onto the chat's durable
- * session. Re-running deletes and recreates everything (including any pre-relay triggers, which
- * migrates legacy agents). Exported for the 0.1.0 → 0.2.0 Agent migration, which replays the
- * legacy `subscriptions`/`cron` fields through it.
+ * session. Re-running deletes and recreates the categories present in the config.
  */
 export const syncAgentAutomation = (
   agent: Agent.Agent,

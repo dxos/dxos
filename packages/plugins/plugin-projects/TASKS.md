@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: reconciliation phases A-D ALL CODE-COMPLETE in this worktree (see ./PLAN.md checkboxes): typed Agent.instructions + dual-read, Chat.agent inversion + dual-write, relay pattern (Routines onto the durable session, AgentWorker/Qualifier/sync-triggers deleted), Agent 0.2.0 + registered migration + UI ports. All unit suites green. BLOCKED on 1Password re-auth: memoized agent-skill regen + live projects.eval pass; then format/lint sweep, commit, push. Uncommitted: phase D working tree._
+_Resume: reconciliation A-D COMPLETE + verified (projects.eval 100% live post-D; memoized agent suite regenerated + replay-deterministic with `planning` gated to its eval; LegacyAgent/migration REMOVED per user — no data migration, recover from 11802071c1 if needed; plugin-markdown doc-ref ops hardened). Next: submit the reconciliation PR from this branch. Uncommitted: final working tree._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
@@ -120,6 +120,16 @@ repoint.
       (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.
 
 ## Follow-ups / deferred (design reviews)
+
+- [x] **plugin-markdown ops resolve LLM-provided refs via the db** — `ref.tryLoad is not a
+    function` when a tool-call `doc` ref decodes without a resolver; the five doc-ref ops
+      (update/create-branch/create-checkpoint/get-history/merge-branch) now use
+      `Database.resolve(doc, Markdown.Document)` (typed check included). Residual follow-up:
+      `Database.load`'s bare `.tryLoad()` assumption still bites any other op taking refs
+      from LLM args.
+- [ ] **Agent-skill `planning` memoized test gated** (`it.scoped.skip`) — recordings embed
+      nondeterministic tool-error recovery and cannot replay-converge; covered live by
+      `planning.eval.ts`. Un-gate only if recording strategy changes.
 
 - [ ] **Possibly move Project type from @dxos/compute to plugin-projects at end** — revisit once the plugin's shape settles.
 - [x] **Review CompanionTo reuse for project chats** — resolved in milestone 3: companion chat keeps `CompanionTo`; owned sessions use the ECHO parent edge. Agent-roster linkage still open.

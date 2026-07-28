@@ -18,34 +18,6 @@ import { HarnessContextError } from '../errors';
 import * as Chat from './Chat';
 
 /**
- * The pre-reconciliation Agent shape, kept only as the migration source (plugin-projects PLAN.md
- * phase D): `artifacts` moved to a per-agent Project's Collection, `subscriptions`/`cron` compile
- * to Routines, `feed`/`filterEvents` dissolved into the relay, and `chat` inverted to `Chat.agent`.
- *
- * @deprecated Superseded by {@link Agent} (`0.2.0`); readable only by the registered migration.
- */
-export class LegacyAgent extends Type.makeObject<LegacyAgent>(DXN.make('org.dxos.type.agent', '0.1.0'))(
-  Schema.Struct({
-    name: Schema.optional(Schema.String),
-    did: Schema.optional(IdentityDid),
-    enabled: Schema.optional(Schema.Boolean),
-    /** May target a bare `Text` (pre-phase-A) or a typed `Instructions` (post-phase-A). */
-    instructions: Ref.Ref(Obj.Unknown),
-    chat: Schema.optional(Schema.suspend((): Ref.RefSchema<Chat.Chat> => Ref.Ref(Chat.Chat))),
-    artifacts: Schema.Array(
-      Schema.Struct({
-        name: Schema.String,
-        data: Ref.Ref(Obj.Unknown),
-      }),
-    ),
-    subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)),
-    cron: Schema.optional(Schema.String),
-    feed: Schema.optional(Ref.Ref(Feed.Feed)),
-    filterEvents: Schema.optional(Schema.Boolean),
-  }),
-) {}
-
-/**
  * An agent identity: a personality (attribution DID) plus its preset payload (instructions with
  * text, skills, objects, and commands). Owns no conversation state — chats reference their agent
  * via `Chat.agent`, and durable work products live on a Project (plugin-projects DESIGN.md,

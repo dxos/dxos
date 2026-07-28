@@ -145,6 +145,9 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
               chat: Ref.make(agentChat),
               event: '{{event}}',
             },
+            // Serialized: parallel invocations race on the memoized-conversations file during
+            // ALLOW_LLM_GENERATION recording (a truncated concurrent read fails the invocation).
+            concurrency: 1,
           }),
         );
 
@@ -214,7 +217,11 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
     ),
   );
 
-  it.scoped(
+  // Replay-unstable: the recorded conversation includes nondeterministic tool-error recovery
+  // (the model mis-targets markdown update refs and retries differently each generation), so the
+  // memoized transcript cannot converge. The scenario is covered live by the scored
+  // `planning.eval.ts` in @dxos/assistant-evals.
+  it.scoped.skip(
     'planning',
     Effect.fnUntraced(
       function* (_) {
