@@ -18,7 +18,7 @@ export const LOG_STORE_DB_NAME = 'composer-logs';
  * limit would discard logs the circular buffer deliberately retained. Passed explicitly to every
  * `IdbLogStore` rather than relying on the package default, so the two cannot drift.
  */
-export const LOG_STORE_MAX_BYTES = 50 * 1024 * 1024; // 50 MB
+export const LOG_STORE_MAX_BYTES = 50 * 1024 * 1024;
 
 /** Recovery mode entry point (minimal client, export, debug port). */
 export const RECOVERY_PATH = '/recovery.html';
