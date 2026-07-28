@@ -18,7 +18,10 @@ export type SceneFpsWidgetOptions = {
   engine: Engine;
 };
 
-/** In-scene Babylon GUI overlay showing an FPS readout docked top-left; config now lives in `TerraForm`. */
+/**
+ * In-scene Babylon GUI overlay showing an FPS readout docked top-left;
+ * config now lives in `TerraForm`.
+ */
 export class SceneFpsWidget {
   readonly #scene: Scene;
   readonly #engine: Engine;
@@ -46,6 +49,7 @@ export class SceneFpsWidget {
     if (this.#fpsObserver) {
       this.#scene.onAfterRenderObservable.remove(this.#fpsObserver);
     }
+
     this.#adt.dispose();
   }
 
