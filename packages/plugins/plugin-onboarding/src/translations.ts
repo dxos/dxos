@@ -20,6 +20,7 @@ export const translations = [
         'request-access-email.description':
           "A confirmation link has been sent to your inbox. If it doesn't arrive in the next three minutes please check your spam folder.",
         'email-error.message': 'Failed to send verification email.',
+        'oauth-error.message': 'Could not connect to that account. Please try again.',
 
         'email-input.label': 'Email',
         'email-input.placeholder': 'Your email',

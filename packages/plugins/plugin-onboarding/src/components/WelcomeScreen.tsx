@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation, type PasskeyFailure, classifyPasskeyFailure } from '@dxos/plugin-client';
+import { ClientOperation, classifyPasskeyFailure } from '@dxos/plugin-client';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
@@ -19,7 +19,7 @@ import { useForceDarkTheme } from '../hooks';
 import { meta } from '../meta';
 import { OnboardingOperation } from '../operations';
 import { translations } from '../translations';
-import { Welcome, WelcomeState } from './Welcome';
+import { Welcome, type WelcomeError, WelcomeState, passkeyError } from './Welcome';
 
 export const WELCOME_SCREEN = `${meta.profile.key}.component.welcome-screen`;
 
@@ -28,8 +28,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const identity = useIdentity();
   const { invokePromise } = useOperationInvoker();
   const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
-  const [error, setError] = useState(false);
-  const [passkeyError, setPasskeyError] = useState<PasskeyFailure | null>(null);
+  const [error, setError] = useState<WelcomeError | null>(null);
   const pendingRef = useRef(false);
 
   // The welcome screen always renders dark, regardless of the system theme.
@@ -42,7 +41,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       }
 
       if (error) {
-        setError(false);
+        setError(null);
       }
 
       try {
@@ -88,7 +87,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         setState(WelcomeState.LOGIN_SENT);
       } catch (err) {
         log.catch(err);
-        setError(true);
+        setError('email');
       } finally {
         pendingRef.current = false;
       }
@@ -99,12 +98,12 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   // `invokePromise` resolves with `{ error }` rather than rejecting, so a failed redemption is
   // invisible unless the result is inspected.
   const handlePasskey = useCallback(async () => {
-    setPasskeyError(null);
+    setError(null);
     // On success the onboarding manager dismisses this dialog off the back of the new identity.
     const { error: redeemError } = await invokePromise(ClientOperation.RedeemPasskey);
     if (redeemError) {
       log.catch(redeemError);
-      setPasskeyError(classifyPasskeyFailure(redeemError));
+      setError(passkeyError(classifyPasskeyFailure(redeemError)));
     }
   }, [invokePromise]);
 
@@ -122,7 +121,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         return;
       }
       if (error) {
-        setError(false);
+        setError(null);
       }
       pendingRef.current = true;
       try {
@@ -136,7 +135,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         }
       } catch (err) {
         log.catch(err);
-        setError(true);
+        setError('oauth');
       } finally {
         pendingRef.current = false;
       }
@@ -162,7 +161,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         return;
       }
       if (error) {
-        setError(false);
+        setError(null);
       }
       pendingRef.current = true;
       try {
@@ -193,7 +192,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       } catch (err) {
         log.catch(err);
-        setError(true);
+        setError('email');
       } finally {
         pendingRef.current = false;
       }
@@ -207,7 +206,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         return;
       }
       if (error) {
-        setError(false);
+        setError(null);
       }
       pendingRef.current = true;
       try {
@@ -228,7 +227,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         }
       } catch (err) {
         log.catch(err);
-        setError(true);
+        setError('oauth');
       } finally {
         pendingRef.current = false;
       }
@@ -265,7 +264,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       <Welcome
         state={state}
         error={error}
-        passkeyError={passkeyError}
         identity={identity}
         onEmailLogin={handleLogin}
         onPasskey={!identity ? handlePasskey : undefined}

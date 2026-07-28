@@ -56,7 +56,7 @@ export const Default: Story = {
 export const PasskeyRejected: Story = {
   decorators: [withClientProvider()],
   args: {
-    passkeyError: 'rejected',
+    error: 'passkey-rejected',
     onPasskey: () => console.log('passkey'),
     onJoinIdentity: () => console.log('join identity'),
     onRecoverIdentity: () => console.log('recover identity'),

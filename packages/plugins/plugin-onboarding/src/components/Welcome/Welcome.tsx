@@ -24,7 +24,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { hero } from './hero-image';
-import { type PasskeyFailure, type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
+import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
 
 const supportsPasskeys =
   (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();
@@ -32,10 +32,12 @@ const supportsPasskeys =
 /** OAuth provider backing the "Atmosphere account" option (atproto / Bluesky). */
 const ATMOSPHERE_PROVIDER = 'atproto';
 
-const passkeyErrorKeys: Record<PasskeyFailure, string> = {
-  dismissed: 'passkey-dismissed-error.message',
-  rejected: 'passkey-rejected-error.message',
-  failed: 'passkey-failed-error.message',
+const errorMessageKeys: Record<WelcomeError, string> = {
+  'email': 'email-error.message',
+  'oauth': 'oauth-error.message',
+  'passkey-dismissed': 'passkey-dismissed-error.message',
+  'passkey-rejected': 'passkey-rejected-error.message',
+  'passkey-failed': 'passkey-failed-error.message',
 };
 
 export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
@@ -61,7 +63,6 @@ type SignupStep = 'collect' | 'auth';
 export const Welcome = ({
   state,
   error,
-  passkeyError,
   identity,
   onEmailLogin,
   onPasskey,
@@ -321,8 +322,7 @@ export const Welcome = ({
                   emailValue={email}
                   setEmailValue={setEmail}
                   emailRef={emailRef}
-                  emailError={error}
-                  passkeyError={passkeyError}
+                  error={error}
                   pending={pending}
                   onPasskey={onPasskey ? handlePasskey : undefined}
                   onSendSignInLink={handleSendSignInLink}
@@ -397,7 +397,7 @@ export const Welcome = ({
                       submitLabel={t('continue-button.label')}
                       submitDisabled={!validEmail(email) || pending}
                       onSubmit={handleCreateAccount}
-                      validation={error ? t('email-error.message') : null}
+                      validation={error === 'email' ? t(errorMessageKeys.email) : null}
                     />
                     {onCreateAccountWithOAuth && (
                       <>
@@ -428,6 +428,7 @@ export const Welcome = ({
                                 loginHint: atmosphereHandle,
                               })
                             }
+                            validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
                           />
                         </div>
                       </>
@@ -501,8 +502,7 @@ type LoginTabProps = {
   emailValue: string;
   setEmailValue: (value: string) => void;
   emailRef: React.Ref<HTMLInputElement>;
-  emailError?: boolean;
-  passkeyError?: PasskeyFailure | null;
+  error?: WelcomeError | null;
   pending: boolean;
   onPasskey?: () => unknown;
   onSendSignInLink: () => void;
@@ -527,8 +527,7 @@ const LoginTab = ({
   emailValue,
   setEmailValue,
   emailRef,
-  emailError,
-  passkeyError,
+  error,
   pending,
   onPasskey,
   onSendSignInLink,
@@ -654,10 +653,10 @@ const LoginTab = ({
             <Icon icon='ph--key--regular' size={5} />
             <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
           </Button>
-          {passkeyError && (
-            <p role='alert' className='px-2 text-sm text-error-text'>
-              {t(passkeyErrorKeys[passkeyError])}
-            </p>
+          {error?.startsWith('passkey-') && (
+            <Input.Root>
+              <ValidationMessage>{t(errorMessageKeys[error])}</ValidationMessage>
+            </Input.Root>
           )}
         </div>
       )}
@@ -675,7 +674,7 @@ const LoginTab = ({
             submitLabel={t('send-link-button.label')}
             submitDisabled={!validEmail(emailValue) || pending}
             onSubmit={onSendSignInLink}
-            validation={emailError ? t('email-error.message') : null}
+            validation={error === 'email' ? t(errorMessageKeys.email) : null}
           />
         </div>
       )}
@@ -697,6 +696,7 @@ const LoginTab = ({
             submitLabel={t('continue-button.label')}
             submitDisabled={!atmosphereHandle || pending}
             onSubmit={() => onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle)}
+            validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
           />
         </div>
       )}
@@ -782,14 +782,21 @@ const InlineForm = ({
           {submitLabel}
         </Button>
       </div>
-      {validation && (
-        <Input.DescriptionAndValidation>
-          <Input.Validation classNames='flex px-2 pt-2 text-error-text'>{validation}</Input.Validation>
-        </Input.DescriptionAndValidation>
-      )}
+      {validation && <ValidationMessage>{validation}</ValidationMessage>}
     </Input.Root>
   );
 };
+
+/**
+ * Error text under a login control. Shared with {@link InlineForm} so a failure reads the same
+ * whether it came from a field (email, invitation code) or a button (passkey). Callers outside
+ * `InlineForm` must supply their own `Input.Root` — it is context only and renders no markup.
+ */
+const ValidationMessage = ({ children }: PropsWithChildren) => (
+  <Input.DescriptionAndValidation>
+    <Input.Validation classNames='flex px-2 pt-2 text-error-text'>{children}</Input.Validation>
+  </Input.DescriptionAndValidation>
+);
 
 /** Horizontal "or" separator between alternative auth methods. */
 const OrDivider = ({ children }: PropsWithChildren) => (
