@@ -27,11 +27,15 @@ export class StackTrace {
 
   /**
    * Formats on first use, then releases the captured frames — and with them the capture site.
+   *
+   * The `Error` is dropped before formatting, not after: releasing the capture site is the whole
+   * point, so it must not be contingent on `stack` being present or `split` succeeding.
    */
   private _format(): string[] {
     if (!this._frames) {
-      this._frames = this._error!.stack!.split('\n');
+      const error = this._error;
       this._error = undefined;
+      this._frames = error?.stack?.split('\n') ?? [];
     }
     return this._frames;
   }

@@ -29,9 +29,8 @@ describe('StackTrace', () => {
   // excludes. `echo-client`'s query-result test covers the end-to-end collectability (DX-1140).
   test('releases the captured Error once formatted', ({ expect }) => {
     const trace = new StackTrace();
-    const internals = trace as unknown as { _error?: Error };
-    expect(internals._error).toBeInstanceOf(Error);
+    expect(Reflect.get(trace, '_error')).toBeInstanceOf(Error);
     void trace.getStack();
-    expect(internals._error).toBeUndefined();
+    expect(Reflect.get(trace, '_error')).toBeUndefined();
   });
 });

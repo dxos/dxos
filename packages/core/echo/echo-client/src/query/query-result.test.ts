@@ -12,23 +12,15 @@ import { Filter, Query } from '@dxos/echo';
 import { type QueryContext } from './query-context';
 import { QueryResultImpl } from './query-result';
 
-const makeQueryContext = (): QueryContext =>
-  ({
-    getResults: () => [],
-    isSynchronous: () => true,
-    changed: new Event<void>(),
-    run: async () => [],
-    update: () => {},
-    start: () => {},
-    stop: () => {},
-  }) as unknown as QueryContext;
-
 describe('QueryResultImpl', () => {
   // Every result registers a diagnostic carrying a `StackTrace`, and an unformatted stack retains
   // the receiver of each frame it captured — the result under construction included. Holding those
   // diagnostics strongly therefore pinned the result, its query context, and the whole client graph
   // behind it, one graph per query, for the lifetime of the process. That OOMed long-lived hosts
   // (DX-1140). `QueryResultCache` is deliberately weak; this asserts the diagnostic doesn't defeat it.
+  //
+  // `expect` is imported rather than taken from the test context because `expect.poll` drives the
+  // GC wait, matching `query-result-cache.test.ts`'s equivalent collectability test.
   test('is collectable once dropped, despite the client-queries diagnostic', async () => {
     setFlagsFromString('--expose_gc');
     const gc: () => void = runInNewContext('gc');
@@ -56,4 +48,14 @@ describe('QueryResultImpl', () => {
       )
       .toBe(0);
   });
+});
+
+const makeQueryContext = (): QueryContext => ({
+  getResults: () => [],
+  isSynchronous: () => true,
+  changed: new Event<void>(),
+  run: async () => [],
+  update: () => {},
+  start: () => {},
+  stop: () => {},
 });
