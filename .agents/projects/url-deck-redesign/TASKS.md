@@ -290,6 +290,30 @@ Land after A3.
 - [x] **Merge `origin/main`** and confirm Check is green — merged as `5585ec89`.
 - [x] **Decide where the app-graph latch fix lands** — shipped inside PR #12273.
 
+## Post-land: composer browser-e2e repair
+
+The `e2e` job runs only on pushes to `main`/release branches (`check.yml`), never on a PR, so #12273
+went green through review and then turned `main` red on merge — every chromium spec failed and the job
+hit its 45-minute ceiling. Two page-object assumptions in `composer-app/src/playwright/app-manager.ts`
+encoded the pre-pair-chain URL shape.
+
+### Tasks
+
+- [ ] **`waitForSpaceReady` read the wrong path segment** — it took the workspace id from
+      `pathname.split('/')[0]`, which the `/w/<workspace>/…` grammar now makes the `w` anchor, so the
+      `data-object-id === root/<workspace>` poll could never settle and every `createSpace()` timed out.
+      Now destructures `[anchor, workspaceId]` and checks the anchor before reading the workspace.
+- [ ] **Plugin-registry URLs used the bare-workspace form** — `/!dxos:plugin-registry` and
+      `/!dxos:plugin-registry/plugin-registry%3E<category>` are unparseable under the new grammar (a
+      leading non-anchor key returns `Option.none()`). Now `/w/!dxos:plugin-registry` and
+      `/w/!dxos:plugin-registry/category/<name>`. Both the anchor key and the registry workspace id are
+      restated as local constants rather than imported: importing `@dxos/app-toolkit` or
+      `@dxos/plugin-registry` into a page-object drags `@dxos/ai` into playwright's loader, where
+      `parsimmon` fails ESM interop (`parsimmon.regexp is not a function`) and collection of **every**
+      spec dies. Verified by bisecting the two imports against `playwright test --list`.
+- [ ] **Consider gating a smoke subset of e2e on PRs** — the whole suite is too slow for every PR, but a
+      single spec covering create-space/create-object would have caught this before merge.
+
 ## Backlog (post-land)
 
 Recorded 2026-07-27 from review of the landed deck.

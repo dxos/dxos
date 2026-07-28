@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import * as Node from './node';
 import { nodeArgsUnchanged, shallowEqual } from './util';
 
-const node = (overrides: Partial<Node.NodeArg<any>> = {}): Node.NodeArg<any> => ({
+const node = (overrides: Partial<Node.NodeArg<unknown>> = {}): Node.NodeArg<unknown> => ({
   id: 'node',
   type: 'example',
   data: null,
@@ -67,10 +67,8 @@ describe('nodeArgsUnchanged', () => {
       .be.false;
   });
 
-  // An action's `data` is its invoke closure. Connectors build those closures inline, so every connector
-  // re-run produces a fresh identity and this guard reports a change even when nothing observable did —
-  // which is why re-emission of action-bearing connector output is never suppressed upstream. Pinned so
-  // the cost is visible if the comparison is ever revisited.
+  // An action's `data` is its invoke closure, rebuilt inline on every connector run, so action-bearing
+  // output can never compare unchanged.
   test('a re-created action closure reads as changed', ({ expect }) => {
     const makeArgs = () => [
       node({ actions: [Node.makeAction({ id: 'delete', data: () => Effect.void, properties: { label: 'Delete' } })] }),
