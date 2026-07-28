@@ -6,8 +6,8 @@ import { useMemo } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Cursor } from '@dxos/link';
-import { Connection, type ConnectorEntry, isCursorForTarget } from '@dxos/plugin-connector';
+import { Connection, Cursor } from '@dxos/link';
+import { type ConnectorEntry, isCursorForTarget } from '@dxos/plugin-connector';
 
 /**
  * Find the {@link Connection} bound to the given `target` object via an external-sync

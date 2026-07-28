@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import { type Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { Connection, type ConnectorEntry } from '#types';
+import { type ConnectorEntry } from '#types';
 
 /**
  * Create exactly one binding for a single-target connector (no `getSyncTargets`):

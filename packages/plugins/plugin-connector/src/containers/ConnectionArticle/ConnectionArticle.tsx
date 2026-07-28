@@ -8,13 +8,12 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Cursor } from '@dxos/link';
+import { type Connection, Cursor } from '@dxos/link';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargetsChecklist, useTestConnection } from '#hooks';
 
-import { type Connection } from '../../types';
 import { isCursorForConnection } from '../../util';
 
 export type ConnectionArticleProps = AppSurface.ObjectArticleProps<Connection.Connection>;

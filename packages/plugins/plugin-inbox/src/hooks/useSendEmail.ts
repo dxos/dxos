@@ -10,8 +10,8 @@ import { Operation, ServiceResolver } from '@dxos/compute';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
 import { Tagging } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 

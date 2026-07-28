@@ -7,10 +7,11 @@ import { useCallback, useState } from 'react';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Connection } from '@dxos/link';
 
 import { useConnector } from '#hooks';
 
-import { Connection, ConnectorCoordinator } from '../types';
+import { ConnectorCoordinator } from '../types';
 
 export type UseReauthenticateResult = {
   /** True when the connection's connector exposes an OAuth flow (drives button visibility). */

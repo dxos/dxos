@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
-import { Cursor } from '@dxos/link';
+import { type Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Button, Dialog, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
@@ -18,7 +18,6 @@ import { osTranslations } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { ConnectorCoordinator, type RemoteTarget } from '#types';
 
-import { type Connection } from '../../types';
 import { isCursorForConnection } from '../../util';
 
 export type SyncTargetsDialogProps = {

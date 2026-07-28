@@ -10,11 +10,10 @@ import * as Option from 'effect/Option';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
+import { type Connection } from '@dxos/link';
 import { useClient } from '@dxos/react-client';
 
 import { useConnector } from '#hooks';
-
-import { type Connection } from '../types';
 
 export type TestConnectionStatus =
   /** No test has run yet (connection or its token not resolved). */

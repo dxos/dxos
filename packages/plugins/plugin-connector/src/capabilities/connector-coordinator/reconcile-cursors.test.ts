@@ -12,11 +12,11 @@ import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
-import { Connection, type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '#types';
+import { type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '#types';
 
 import { isCursorForConnection } from '../../util';
 import { type SyncTargetSelection, reconcileCursors } from './reconcile-cursors';

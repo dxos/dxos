@@ -3,12 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-import { Connection } from './types';
 
 export const translations = [
   {

@@ -7,8 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector/types';
+import { AccessToken, Connection } from '@dxos/link';
 
 import { Blog, Publisher } from '../types';
 import { runSyncPosts } from './sync-posts';

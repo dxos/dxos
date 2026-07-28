@@ -46,6 +46,9 @@
       "path": "../../core/compute/compute-runtime"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

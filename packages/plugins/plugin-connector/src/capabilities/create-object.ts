@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Database, Obj, Type } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { Connection, ConnectorCoordinator, CreateConnectionForm } from '#types';
+import { ConnectorCoordinator, CreateConnectionForm } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

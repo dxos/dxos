@@ -6,10 +6,9 @@ import type * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import type { Database, Key, Obj, Ref } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 
 import { meta } from '#meta';
-
-import type * as Connection from './Connection';
 
 /** Result of {@link ConnectorCoordinator.createConnection}: OAuth draft (`oauth-started`), custom dialog or login-hint dialog (`dialog-opened`), or unused sync persist (`connection-created`). */
 export type CreateConnectionResult =
