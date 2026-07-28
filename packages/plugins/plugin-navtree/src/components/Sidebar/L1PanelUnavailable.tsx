@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Message, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Empty } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import { meta } from '#meta';
@@ -46,15 +47,12 @@ export const L1PanelUnavailable = ({ workspace, open }: L1PanelUnavailableProps)
       data-testid='navtree.workspace.unavailable'
       {...(!open && { inert: true })}
     >
-      <Message.Root
-        valence='info'
+      <Empty
+        label={t('workspace-unavailable.description')}
         // Second grid row, so the message clears the rail exactly as an L1 panel's tree does.
-        classNames='row-start-2 self-start mx-1 animate-fade-in'
+        classNames='row-start-2 animate-fade-in'
         style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
-      >
-        <Message.Title>{t('workspace-unavailable.heading')}</Message.Title>
-        <Message.Content>{t('workspace-unavailable.description')}</Message.Content>
-      </Message.Root>
+      />
     </Tabs.Panel>
   );
 };
