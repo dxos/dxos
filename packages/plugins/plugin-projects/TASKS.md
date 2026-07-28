@@ -70,9 +70,11 @@ repoint.
       `processor.getSystemPrompt` resolves `chat.instructions`. assistant 43 tests green
       (format.test.ts 4/4, incl. a new case asserting a bound Instructions object is now an
       ordinary context stub); assistant-toolkit + plugin-assistant build clean.
-- [ ] **Agent-process boundary** — `GetSessionOptions.instructions` + a persisted spawn
-      annotation beside `Process.TargetAnnotation`; `processor.ts` passes
-      `chat.instructions`. Executable options don't survive `hydrateAgents`.
+- [x] **Agent-process boundary** — `Process.InstructionsAnnotation` (URI, persisted at spawn
+      beside `TargetAnnotation`); `AgentService.getSession` stamps it from
+      `GetSessionOptions.instructions`; `agent-process` resolves it into
+      `AiSession.Options.instructions` (broken ref degrades to unsteered);
+      `processor.request` passes `chat.instructions`. compute 46 tests green, builds clean.
 - [ ] **`Project.contextBindings` drops the instructions ref** — keeps `skills` +
       `instructions.objects`. Skills must stay on the binding path (toolkit, not prompt).
 - [ ] **`ChatCompanion` stops binding project instructions** — companion-chat creation
@@ -95,19 +97,30 @@ repoint.
       play test (toolbar creates a chat, appears in the list), live verify (instructions
       reach the system prompt in a standalone plank — proves the ref survives the
       agent-process boundary; navtree children survive a cold deep link).
-- [ ] **`ProjectSkill` — artifact management** — tools to add an object ref to the project's
-      artifacts Collection and to list the collection, so the model can file and find
-      artifacts without a space-wide search. Bound into every project chat. Filing is
-      explicit (skill instructions tell the model to file what it creates), not an
-      interception of object creation. Prerequisite for the system test below.
-- [ ] **System test (live model, out of CI)** — Project with instructions → Chat under it
-      (own feed, project's instructions) → prompt the model to create a markdown document →
-      assert the document is both bound into the session context AND in the project's
-      artifacts Collection. Graded on DB effects, not model wording. Placement TBD
-      (`@dxos/assistant-evals` eval vs a `!test`-tagged live-AI story alongside the existing
-      `Projects.stories.tsx`).
+- [x] **`ProjectSkill` — artifact management** — `assistant-toolkit/src/skills/project/`:
+      `artifact-add` (dedupes by entity id; materializes a missing collection) and
+      `artifact-list` (dxn/typename/label rows; broken ref → placeholder). Registered in
+      plugin-assistant `skill-definition`. 4/4 handler tests green (TestDatabaseLayer).
+- [x] **System test (live model, out of CI)** — `assistant-evals/src/evals/projects.eval.ts`
+      (placement decided: evals, not a story): seeded Project + Chat (project's instructions
+      by ref, chat parented), model creates "Trip Notes" markdown doc; scorers document-created
+      / document-filed (artifacts collection) / document-bound (Binding record in the chat
+      feed). Runner gained `seed` + `types` options. PASSED LIVE at 100% (all three scorers,
+      opus-4-8, 32s, 2026-07-27).
 - [ ] **Create other artifact types from a project chat** — Outline, Sheet,
       Organization/Contact objects; builds on `ProjectSkill`.
+- [ ] **Agent artifacts: factor out commonality with Project** — `Agent.artifacts` is an
+      inline `{name, data}` array while `Project.artifacts` is an owned Collection; converge
+      on one artifact-holder shape so `ProjectSkill`'s add/list tools (and provenance later)
+      work for both.
+- [ ] **Agent cron: generalize to Routine** — Agent's cron/trigger scheduling should be
+      expressed as a Routine (instructions + trigger) rather than agent-specific wiring, so
+      projects and agents share one automation model.
+- [ ] **Agent ↔ Project convergence review** — the two share Chat, Artifacts, Instructions,
+      and Routines (Agent: subscriptions/cron); factor the commonality (one artifact-holder
+      shape, one automation model, one instructions channel) and sharpen the remaining
+      distinction (Agent = actor with identity/DID; Project = scope/container). Subsumes the
+      two items above; design pass before more per-type features accrete.
 - [ ] **Watch item** — if `children()` does not re-emit in the graph connector when a chat
       is newly parented, fall back to a `chats: Ref<Collection>` field on Project
       (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.

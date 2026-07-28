@@ -301,18 +301,22 @@ so `+` works from the tree.
 
 ### System test (live against a real model, out of CI)
 
-One scenario exercising the whole loop, graded on database effects rather than on
-model wording:
+`@dxos/assistant-evals` `src/evals/projects.eval.ts` — one scenario exercising
+the whole loop, graded on database effects rather than on model wording:
 
-1. Create a Project with instructions.
-2. Create a Chat under it — own feed, `instructions` pointing at the project's.
+1. Seed a Project with instructions and an artifacts Collection.
+2. Seed a Chat under it — own feed, `instructions` pointing at the project's
+   own object, parented to the project (mirrors `ProjectOperation.CreateChat`).
 3. Prompt the model to create a markdown document.
-4. Assert the document is bound into the session context **and** present in the
-   project's artifacts Collection.
+4. Assert the document is bound into the session context (a `Binding` record in
+   the chat feed) **and** present in the project's artifacts Collection.
 
 Step 4 is the real assertion: binding alone proves only that the session saw the
 object, not that the project owns it, so this is the test that would catch the
-project skill failing to file. It runs against a live model and stays out of CI.
+project skill failing to file. It runs against a live model
+(`DX_ANTHROPIC_API_KEY`) and stays out of CI. The eval runner gained `seed`
+(space setup returning context objects + the session chat) and `types` (extra
+ECHO types for the harness client) to host it.
 
 ## Open questions
 
