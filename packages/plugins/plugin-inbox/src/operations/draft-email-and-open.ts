@@ -16,7 +16,7 @@ import { createDraftMessage } from '../util';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, mode = 'compose', message, subject, body, mailbox, pivotId }) {
+    Effect.fnUntraced(function* ({ db, mode = 'compose', message, subject, body, mailbox, contextId }) {
       const props = createDraftMessage({ mode, message, subject, body, mailbox });
       const draft = DraftMessage.make(props);
       yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -38,17 +38,17 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
         return;
       }
 
-      // A fresh draft joins no thread, so open it as its own plank beside the view it was composed from —
-      // the add-navigation a message click uses (see `MailboxArticle`). Drafts hang off every mailbox view
-      // node (see the `mailboxMessages` connector), so the path resolves whichever view is the pivot.
-      const pivot = pivotId ?? getMailboxPath(db.spaceId, mailbox.id);
+      // A fresh draft joins no thread, so open it as its own plank beside the mailbox view it was
+      // composed from — the add-navigation a message click uses (see `MailboxArticle`). Drafts hang off
+      // every mailbox view node (see the `mailboxMessages` connector), so the path resolves for any view.
+      const pivotId = contextId ?? getMailboxPath(db.spaceId, mailbox.id);
       yield* Operation.invoke(LayoutOperation.Select, {
-        contextId: pivot,
+        contextId: pivotId,
         subject: { mode: 'single', id: draft.id },
       });
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [getFeedObjectPath(pivot, draft.id)],
-        pivotId: pivot,
+        subject: [getFeedObjectPath(pivotId, draft.id)],
+        pivotId,
         disposition: 'add',
         navigation: 'immediate',
       });

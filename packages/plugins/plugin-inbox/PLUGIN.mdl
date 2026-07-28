@@ -321,7 +321,7 @@ op draftEmail
 op draftEmailAndOpen
   desc: |
     draftEmail then, for a compose draft, opens it in EditMessage as a plank beside the mailbox view
-    named by pivotId (UI convenience wrapper). Reply/forward drafts are not navigated to — they
+    named by contextId (UI convenience wrapper). Reply/forward drafts are not navigated to — they
     render inline in the conversation they join.
   input:
     db: Database
@@ -330,7 +330,7 @@ op draftEmailAndOpen
     subject?: string
     body?: string
     mailbox?: Ref<Mailbox>
-    pivotId?: string
+    contextId?: string
   effects: [echo:write]
 ```
 

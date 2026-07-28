@@ -215,7 +215,7 @@ export default Capability.makeModule(
                   db,
                   mailbox,
                   // This action hangs off the Drafts view, so the draft opens as a plank beside it.
-                  pivotId: getMailboxDraftsPath(db.spaceId, mailbox.id),
+                  contextId: getMailboxDraftsPath(db.spaceId, mailbox.id),
                 }),
               properties: {
                 label: ['create-draft.label', { ns: meta.profile.key }],
