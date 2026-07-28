@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Table } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/schema';
 import { ViewModel } from '@dxos/schema';
 
 import { TableOperation } from '../types';

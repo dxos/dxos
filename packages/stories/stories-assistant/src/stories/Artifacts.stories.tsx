@@ -85,7 +85,7 @@ export const WithMap: Story = {
         import('@dxos/plugin-map'),
         import('@dxos/plugin-map/plugin'),
         import('@dxos/plugin-table/plugin'),
-        import('@dxos/react-ui-table/types'),
+        import('@dxos/schema'),
         import('@dxos/plugin-map/testing'),
       ]);
       return {
@@ -96,7 +96,7 @@ export const WithMap: Story = {
     onInit: async ({ space }) => {
       const [{ Map }, { Table }, { createLocationSchema }] = await Promise.all([
         import('@dxos/plugin-map'),
-        import('@dxos/react-ui-table/types'),
+        import('@dxos/schema'),
         import('@dxos/plugin-map/testing'),
       ]);
       const type = await space.db.addType(createLocationSchema());

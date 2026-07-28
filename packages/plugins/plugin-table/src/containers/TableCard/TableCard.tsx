@@ -18,7 +18,7 @@ import {
   useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { type Table } from '@dxos/react-ui-table/types';
+import { type Table } from '@dxos/schema';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 export type TableCardProps = AppSurface.ObjectCardProps<Table.Table>;

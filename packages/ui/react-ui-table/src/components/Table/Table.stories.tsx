@@ -20,13 +20,13 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
+import { Table } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
 import { useTestTableModel } from '../../testing';
-import { Table } from '../../types';
 import { Table as TableComponent } from './Table';
 
 const Example = Schema.Struct({

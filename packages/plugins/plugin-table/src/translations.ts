@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Table } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/schema';
 
 import { meta } from '#meta';
 

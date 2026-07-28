@@ -9,8 +9,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
+import { Table } from '@dxos/schema';
 
-import { Table } from '../types';
 import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
 

@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Table } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/schema';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';

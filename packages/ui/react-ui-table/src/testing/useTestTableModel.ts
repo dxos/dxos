@@ -11,11 +11,11 @@ import { random } from '@dxos/random';
 import { useClientStory } from '@dxos/react-client/testing';
 import { useGlobalFilteredObjects } from '@dxos/react-ui-search';
 import { type ProjectionModel, getTypeURIFromQuery } from '@dxos/schema';
+import { Table } from '@dxos/schema';
 
 import { type TableController } from '../components';
 import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
 import { type TableModel, TablePresentation } from '../model';
-import { Table } from '../types';
 
 random.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 

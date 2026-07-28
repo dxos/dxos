@@ -8,6 +8,7 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 import { type Database, Obj } from '@dxos/echo';
 import { useManagerOptional, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { type ProjectionModel } from '@dxos/schema';
+import { type Table } from '@dxos/schema';
 
 import {
   TableModel,
@@ -16,7 +17,6 @@ import {
   type TableRowAction,
   createEchoChangeCallback,
 } from '../model';
-import { type Table } from '../types';
 
 export type UseTableModelProps<T extends TableRow = TableRow> = {
   object?: Table.Table;

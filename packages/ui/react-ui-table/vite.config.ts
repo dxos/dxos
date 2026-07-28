@@ -9,7 +9,6 @@ export default defineConfig({
     index: 'src/index.ts',
     testing: 'src/testing/index.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'jsdom' }, storybook: true },
