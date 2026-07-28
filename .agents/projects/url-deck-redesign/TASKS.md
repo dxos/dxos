@@ -344,33 +344,23 @@ last green `main` e2e before #12273 merged.
       the 60s timeout. Restored; 3/3 pass on chromium. Swept every file the PR touched for the same
       class of loss — the only other dropped testid is `plankHeading.companion-vertical` (intentional,
       vertical companions were removed).
-- [ ] **Comments: deleting a just-created thread silently does nothing** — ROOT-CAUSED, NOT FIXED, and
-      NOT ours: `comments.spec.ts:135` was already flaky on `main` before #12273 (`✘ 67` then `✓ 68` on
-      retry in the baseline run), with the identical `cm-comment` expected-0-received-1 assertion.
-      Mechanism, proven by instrumenting the operation under firefox: `add-message` persists the thread
-      via `SpaceOperation.AddObject`/`AddRelation` and only _then_ clears its draft entry, so the anchor
-      briefly exists in both the draft store and the database. `CommentOperation.Delete` checks drafts
-      first, finds the stale entry, removes only that bookkeeping, and returns — the persisted thread
-      survives. First click logs `bail: removed draft`, a later click logs `proceeding to remove` and
-      works. Chromium usually clears the draft before the click lands; firefox does not.
-      Interleaving proven by logging both operations (firefox): `[ADD] entry` → `[DEL] entry` (draft
-      still listed) → `[ADD] after-remove`. The delete lands _inside_ `add-message`'s flight, between
-      the persist that makes the thread queryable (so the spec's `toHaveCount(1)` assertions pass) and
-      the `registry.set` that clears the draft.
-      **Two fixes were tried and reverted — do not repeat them:** (1) gating the draft branch on
-      `Obj.getDatabase(thread)` regresses `delete thread`, because `AddRelation` mints a _new_ relation,
-      so the draft anchor is not in the database and `db.remove` throws inside `batchEvents`, aborting
-      before `db.remove(thread)`; (2) additionally skipping the anchor removal when it is unpersisted
-      still fails, because a delete landing _before_ `AddObject` finds no persisted thread either, so it
-      correctly drops the draft and returns — and `add-message` then persists the thread anyway.
-      Anything confined to `delete.ts` chases the symptom. The fix belongs in `add-message`: persistence
-      and draft-clearing must not be separated by an await. The tempting version — swapping the two
-      `SpaceOperation` invokes for direct `db.add` calls inside `batchEvents` — is NOT safe: `AddObject`
-      also runs `CollectionModel.add`, observability, and type registration. A correct fix either makes
-      that sequence atomic, or has `add-message` re-check that its draft still exists before each
-      persist step and abort when the comment was deleted mid-flight.
-      **Both specs are `test.skip`ped** (`comments.spec.ts` `delete thread` / `undo delete thread`) with a
-      TODO pointing here, so the suite is honest about the gap rather than red on a known bug.
+- [x] **Comments: deleting a just-created thread silently did nothing** — FIXED. Pre-existing (already
+      flaky on `main` before #12273), root-caused by logging both operations under firefox:
+      `[ADD] entry` → `[DEL] entry` (draft still listed) → `[ADD] after-remove`. The delete lands
+      _inside_ `add-message`'s flight, between the persist that makes the thread queryable and the
+      `registry.set` that clears the draft, so `Delete` treats a submitted comment as an unpersisted
+      draft, drops only that bookkeeping, and `add-message` goes on to persist.
+      Fix: the draft entry is a claim on the comment. `Delete` consumes it and — when the comment was
+      submitted (`status === 'active'`, set by `add-message` before it persists) — still reports
+      `{thread, anchor}` so the undo mapping produces a toast. `add-message` re-reads the claim after
+      persisting and, finding it consumed, rolls the persist back instead of clearing an entry that is
+      no longer its own. Verified: chromium 5 passed / 1 flaky / 0 failed, firefox 0 failed, where
+      `delete thread` and `delete message` previously failed all 3 CI attempts.
+      Two earlier attempts confined to `delete.ts` are recorded because they do NOT work: gating the
+      draft branch on `Obj.getDatabase(thread)` regresses `delete thread` (`AddRelation` mints a _new_
+      relation, so `db.remove` throws on the unpersisted draft anchor and aborts the batch); also
+      skipping the anchor removal still fails, because a delete landing before `AddObject` finds no
+      persisted thread either. The window has to be closed from the `add-message` side.
 - [ ] **e2e cannot finish its affected set in 45 minutes** — the dispatched run hit the action timeout
       partway through firefox, so webkit never ran. Independent of the bugs above.
 
