@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-terra
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-07-26
+    summary: Deterministic stylized 3D planet (Babylon.js) from a seed-driven Terra ECHO object; Phase 2 adds movable objects (boats/planes/satellites/tanks/rockets) with a deterministic sim engine.
+    tasks: packages/plugins/plugin-terra/TASKS.md
+    design: packages/plugins/plugin-terra/DESIGN.md
+    prs: [12353]
+    resume: 'Phases 1 and 2 COMPLETE in PR #12353 (deterministic Babylon planet + Terra/TerraObject ECHO types + TerraForm panel + react-ui Slider; pure sim core, object meshes, smoke trails, toolbar, telemetry panel, gizmos), plus a round of user-driven visual fixes (flush triangular bow, cabin-centred boat, denser shorter wakes, ascent-only rocket exhaust). 103 node tests + 3 storybook tests green. Just fixed the red CI `storybook` job: `makeSampler` was rebuilt inside `evaluate` for every smoke puff (28.2ms/frame at 20 objects), timing the `Objects` story out at 15s; memoized in `engine/noise.ts` and the story is now 0.32s. Next: (1) confirm PR #12353 Check goes green, then land it; (2) visually confirm the bow/wake changes in storybook — the browser pane reports visibilityState hidden with a 0x0 viewport, so agent screenshots come back black; (3) backlog: planes still route through mountains (isPassable defaults cruiseElevation to Infinity), collision avoidance, propulsion simulation, then Phase 3 in DESIGN.md.'
+
   - name: plugin-projects
     status: active
     user: burdon
