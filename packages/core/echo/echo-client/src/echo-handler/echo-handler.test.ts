@@ -8,7 +8,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
@@ -737,6 +737,83 @@ describe('Reactive Object with ECHO database', () => {
         Obj.getMeta(obj).keys.push(key);
       });
       expect(Obj.getMeta(obj).keys).to.deep.eq([key]);
+    });
+
+    // A nested record read off another object is a reactive proxy; assigning one copies by value.
+    // Detached sources used to throw "wrap with Ref.make" because the copy-on-assign path only
+    // recognized database-backed proxies, forcing callers to spread by hand.
+    describe('a foreign key read off another object', () => {
+      const key = { source: 'example.com', id: '123' };
+
+      const makeDetachedSource = () => {
+        const source = Obj.make(TestSchema.Expando, { string: 'detached' });
+        Obj.update(source, (source) => Obj.getMeta(source).keys.push({ ...key }));
+        return source;
+      };
+
+      test('pushes from a detached source', async () => {
+        const { db } = await builder.createDatabase();
+        const source = makeDetachedSource();
+        const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
+
+        Obj.update(target, (target) => {
+          Obj.getMeta(target).keys.push(Obj.getMeta(source).keys[0]);
+        });
+        expect(Obj.getMeta(target).keys).to.deep.eq([key]);
+      });
+
+      test('pushes from a database-backed source', async () => {
+        const { db } = await builder.createDatabase();
+        const source = db.add(Obj.make(TestSchema.Expando, { string: 'source' }));
+        Obj.update(source, (source) => Obj.getMeta(source).keys.push({ ...key }));
+        const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
+
+        Obj.update(target, (target) => {
+          Obj.getMeta(target).keys.push(Obj.getMeta(source).keys[0]);
+        });
+        expect(Obj.getMeta(target).keys).to.deep.eq([key]);
+      });
+
+      test('is copied by value, not shared', async () => {
+        const { db } = await builder.createDatabase();
+        const source = makeDetachedSource();
+        const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
+
+        Obj.update(target, (target) => {
+          Obj.getMeta(target).keys.push(Obj.getMeta(source).keys[0]);
+        });
+        Obj.update(source, (source) => {
+          Obj.getMeta(source).keys[0].id = 'mutated';
+        });
+        expect(Obj.getMeta(target).keys).to.deep.eq([key]);
+      });
+
+      test('still rejects a root object, which needs Ref.make', async () => {
+        const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+        const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
+        const root = Obj.make(TestSchema.Example, { string: 'root' });
+
+        expect(() =>
+          Obj.update(target, (target) => {
+            (target as any).nested = root;
+          }),
+        ).to.throw(/Object references must be wrapped with `Ref\.make`/);
+      });
+    });
+
+    // Tags never had the asymmetry above: they hold refs, which the assignment path handles on an
+    // earlier branch than the proxy check. Asserted so a change to that ordering is caught.
+    test('a tag ref read off a detached object pushes', async () => {
+      const { db } = await builder.createDatabase({ types: [Tag.Tag] });
+      const tag = db.add(Tag.make({ label: 'tag' }));
+      const source = Obj.make(TestSchema.Expando, { string: 'detached' });
+      Obj.update(source, (source) => Obj.getMeta(source).tags.push(Ref.make(tag)));
+      const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
+
+      Obj.update(target, (target) => {
+        Obj.getMeta(target).tags.push(Obj.getMeta(source).tags[0]);
+      });
+      expect(Obj.getMeta(target).tags.map((ref) => ref.uri)).to.deep.eq([Ref.make(tag).uri]);
     });
 
     test('object with meta pushed to array', async () => {
