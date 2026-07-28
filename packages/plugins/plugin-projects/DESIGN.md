@@ -17,6 +17,29 @@ plugin-projects is a **seminal core plugin**: it unifies existing concepts
 to extend it (via artifacts, templates) or use projects directly. It will be one
 of the core aspects of Composer.
 
+## Background: Agent, Chat, and the AiSession lifecycle
+
+An **`Agent`** (`org.dxos.type.agent@0.1.0`, `@dxos/assistant-toolkit`) is a
+durable named actor — its own identity DID for attributing content it authors,
+markdown instructions, a primary `chat`, artifacts, subscriptions, and an
+`enabled` master switch over its triggers — whereas a **`Chat`**
+(`org.dxos.type.assistant.chat@0.1.0`) is deliberately thin: essentially a `name`
+plus a ref to a **`Feed`**, the durable append-only log that _is_ the
+conversation (messages, plus `Binding` records of the skills and objects bound to
+it), with the feed parented to its chat and a `CompanionTo` relation attaching the
+chat to whatever object it accompanies. That split is why the runtime is
+**feed-centric rather than chat-centric**: `AiSession.Session` is constructed from
+`{ feed, runtime }` and knows nothing of `Chat`; it owns an `AiContext.Binder`
+that projects the feed's `Binding` records into live skill/object sets, and
+`createRequest` replays history from the feed, formats the system prompt, then
+loops turns — recomputing the toolkit and system prompt each turn so dynamically
+enabled skills take effect — appending every message back to the feed. In the app
+that request does not run in-process: `AgentService.getSession(feed)` spawns (or
+re-hydrates) a durable `AgentProcess` whose process _target_ is the feed's DXN,
+so a restart recovers the whole conversation by replaying the feed — and so
+anything the session needs beyond the feed has to be handed to it explicitly,
+which is the constraint milestone 3's instructions ref is designed around.
+
 ## Types
 
 ### `Project` (`@dxos/compute`)
@@ -135,8 +158,9 @@ revisit once plugin-projects settles (tracked).
 
 - Companion chat surface on `Project` (as plugin-assistant provides for other
   types).
-- On session start the project binds via `AiContext`: instructions text,
-  skills, context objects, and commands flow into the system prompt.
+- On session start the project binds via `AiContext`: skills and context objects.
+  Instructions text and commands reach the system prompt through the
+  `Chat.instructions` ref (milestone 3), not through a binding.
 - Commands autocomplete: plugin-assistant `ChatPrompt` extension reads
   `commands` from the bound project's Instructions and offers sentinel
   completion.
@@ -171,7 +195,9 @@ linked via `routines`).
 
 ## Milestone 2 decisions (as-built addenda)
 
-- **Instructions reach the model via the prompt formatter, not stubs**: bound
+- **Instructions reach the model via the prompt formatter, not stubs** —
+  _superseded in milestone 3 by the `Chat.instructions` ref; the inline rendering
+  stays, the typename-based recovery from `objects` goes._ Bound
   `Instructions` objects are rendered inline by `formatSystemPrompt`
   (`@dxos/assistant` request/format.ts) as a `## Instructions` section — resolved
   markdown text plus sentinel-command directives — and are excluded from the
@@ -214,31 +240,81 @@ design is unchanged, only the enumeration source moves.
 
 `ProjectOperation.CreateChat({ project })`, handled in plugin-projects:
 
-1. Invoke `AssistantOperation.CreateChat({ db, bindings })` — chat + feed, with
-   the assistant's default skills already bound.
+1. Invoke `AssistantOperation.CreateChat({ db, instructions })` — chat + feed,
+   with the assistant's default skills already bound.
 2. `Obj.setParent(chat, project)`.
-3. Open it with `LayoutOperation.Open` (a plank in the deck, matching the Chats
+3. Bind `instructions.skills` (see below — skills still travel by binding).
+4. Open it with `LayoutOperation.Open` (a plank in the deck, matching the Chats
    section's own create action).
+
+The project passes its instructions **by reference** — `chat.instructions` points
+at the project's own `Instructions` object, never a copy, so editing the project's
+instructions steers every chat under it.
 
 `SpaceOperation.AddObject` is deliberately **not** called: it would file the chat
 in the space's root collection, surfacing it under Collections as well. DB
 membership alone (`addToSpace: true`) is what a parented chat needs.
 
-### Context binding: an optional `bindings` input on `CreateChat`
+### Instructions: a typed ref on `Chat`, read when the request is built
 
-`AssistantOperation.CreateChat` gains an optional
-`bindings: { skills?, objects? }`, passed straight to the `AiContext.Binder` it
-already constructs for the default skills. plugin-projects supplies
-`Project.contextBindings(project)` plus a ref to the project itself, and needs no
-`AiContext` plumbing of its own.
+`Chat` gains `instructions?: Ref.Ref<Instructions>` (assistant-toolkit → compute,
+so the typed ref is legal). Whoever builds the session resolves it and passes it
+down; `formatSystemPrompt` takes an explicit `instructions` parameter.
 
-Bindings persist in the conversation feed, and `Instructions` are bound **by
-ref** — so later edits to instruction text or commands reach the model at
-prompt-format time without re-binding. Known gap, accepted: a skill added to the
-instructions _after_ the chat exists does not reach that chat. `ChatCompanion`
-avoids this by re-binding reactively; unifying the two paths (extract its binding
-logic into a shared hook keyed on `Obj.getParent(chat)`) is a follow-up, not this
-milestone.
+This **replaces** the milestone-2 mechanism, where the instructions ref rode in
+the context-object bindings and `formatSystemPrompt` recovered it by filtering
+`objects` for `Obj.instanceOf(Instructions.Instructions, …)`. That worked, but
+dispatch was by typename rather than intent: _any_ bound `Instructions` object
+steered the session, so an Instructions object could never be bound as subject
+matter (e.g. "help me edit these"). Rejected alternatives: an `instructions` slot
+on the `Binding` feed message (schema bump on a type written into every
+conversation feed, and it leaves the ref unqueryable); and walking
+`Obj.getParent(feed)` to reach the chat (needs a compute-level accessor, since
+neither `@dxos/assistant` nor `@dxos/agent-runtime` may import `Chat` —
+`assistant-toolkit` already depends on `agent-runtime`).
+
+The ref is available at every session-construction site, so nothing needs to
+resolve it structurally:
+
+| Site                    | Feed from        | Chat in hand                                                                                     |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------ |
+| `useChatProcessor`      | `chat.feed`      | yes                                                                                              |
+| `run-instructions`      | `chat.feed`      | yes (routines pass their own `system` text; path unaffected)                                     |
+| agent skill `agent.ts`  | `chatFeed`       | yes                                                                                              |
+| cli `chat/processor.ts` | chat             | yes                                                                                              |
+| `agent-process`         | spawn target DXN | no — but its spawner, `AgentService.getSession`, is called by `processor.ts`, which holds `chat` |
+
+So: `AiSession.Options.instructions` → `RunProps` → `formatSystemPrompt`. For the
+durable agent process, `GetSessionOptions.instructions` plus a persisted spawn
+annotation next to `Process.TargetAnnotation` — executable options do not survive
+re-hydration (`hydrateAgents` rebuilds with a bare `makeExecutable()`), which is
+why the feed itself travels as the process target. `@dxos/agent-runtime` already
+depends on `@dxos/compute`, so it carries an `Instructions` ref without naming
+`Chat`.
+
+**Accepted staleness** (decided 2026-07-27): spawn annotations are the immutable
+identity plane, so editing the instructions _text_ reaches a running process (the
+ref resolves fresh each turn) but _repointing_ `chat.instructions` at a different
+object does not, until the process is terminated. This is the same behavior a
+model change already has. If it ever bites, compare the ref against the
+`sessionCache` entry and terminate/respawn, exactly as the model/provider
+comparison does.
+
+Consequences:
+
+- `Project.contextBindings` drops the instructions ref from `objects`, keeping
+  `skills` and `instructions.objects`. **Skills still travel by binding** — a ref
+  on the Chat can put text in the prompt but cannot put skills in the toolkit.
+- `formatSystemPrompt`'s `instructionObjects` / `contextObjects` partition is
+  deleted. A bound `Instructions` object then renders as an ordinary context
+  stub, which is the point.
+- `ChatCompanion` stops binding project instructions; companion-chat creation
+  sets `chat.instructions` instead, so companion and standalone chats share one
+  path and that hook gets smaller.
+- Chats predating the field have no instructions and would silently lose their
+  steering. Lazy backfill: when a chat opens whose parent (or `CompanionTo`
+  target) is a Project and `chat.instructions` is unset, set it.
+- `format.test.ts`'s three instruction tests move to the explicit parameter.
 
 ### Navtree: chats as children of the project node
 
@@ -276,13 +352,16 @@ cycle — plugin-assistant does not depend on plugin-projects.
 
 ### Testing
 
-- Unit: the `children()`-based chat enumeration, and `CreateChat` parenting +
-  binding pass-through (in-memory db).
+- Unit: `formatSystemPrompt` renders the explicit `instructions` parameter and no
+  longer inlines a bound `Instructions` object; the `children()`-based chat
+  enumeration; `CreateChat` parenting + instructions-ref pass-through (in-memory
+  db).
 - Story + play test: `ProjectArticle` toolbar creates a chat and it appears in
   the project's chat list.
 - Live: create a project chat in Composer, confirm the project's instructions
-  reach the system prompt in a _standalone plank_ (not just the companion) and
-  that the chat shows under the project in the navtree, including after a cold
+  reach the system prompt in a _standalone plank_ (not just the companion) — the
+  end-to-end check that the ref survives the agent-process boundary — and that
+  the chat shows under the project in the navtree, including after a cold
   deep-link load.
 
 ## Deferred / follow-ups (tracked in TASKS.md)

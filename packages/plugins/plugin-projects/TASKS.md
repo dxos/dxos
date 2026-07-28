@@ -54,27 +54,45 @@ Initial priority (user, 2026-07-24):
 
 Start a chat session from a project with the project already in scope, and see that
 session in the navtree under its project. Design: the "Milestone 3: project chats"
-section of [`./DESIGN.md`](./DESIGN.md). Decisions (user, 2026-07-27): ECHO parent edge (no schema
-change), new chat opens as a deck plank, toolbar scoped to chat creation only, bindings
-applied once at creation.
+section of [`./DESIGN.md`](./DESIGN.md). Decisions (user, 2026-07-27): ECHO parent edge (no
+Project schema change), new chat opens as a deck plank, toolbar scoped to chat creation
+only; instructions reach the session through a typed `Chat.instructions` ref passed at
+session construction (NOT via context bindings), accepting spawn-time staleness on
+repoint.
 
 ### Tasks
 
-- [ ] **`bindings` input on `AssistantOperation.CreateChat`** — optional
-      `{ skills?, objects? }` passed to the binder it already constructs.
-- [ ] **`ProjectOperation.CreateChat`** — invoke `AssistantOperation.CreateChat` with
-      `Project.contextBindings(project)` + the project ref, `Obj.setParent(chat, project)`,
-      `LayoutOperation.Open`. No `SpaceOperation.AddObject` (would file it in the root
-      collection).
+- [ ] **`Chat.instructions?: Ref<Instructions>`** — typed ref on the Chat schema
+      (assistant-toolkit → compute).
+- [ ] **Explicit `instructions` through the request path** — `formatSystemPrompt` takes it
+      as a parameter and its `instructionObjects`/`contextObjects` partition is deleted;
+      threaded via `AiSession.Options` → `RunProps`. Update all four
+      `formatSystemPrompt` call sites (AiRequest ×2, AiSession, plugin-assistant processor).
+- [ ] **Agent-process boundary** — `GetSessionOptions.instructions` + a persisted spawn
+      annotation beside `Process.TargetAnnotation`; `processor.ts` passes
+      `chat.instructions`. Executable options don't survive `hydrateAgents`.
+- [ ] **`Project.contextBindings` drops the instructions ref** — keeps `skills` +
+      `instructions.objects`. Skills must stay on the binding path (toolkit, not prompt).
+- [ ] **`ChatCompanion` stops binding project instructions** — companion-chat creation
+      sets `chat.instructions` instead, unifying companion and standalone.
+- [ ] **Lazy backfill for pre-existing chats** — chat opens, parent (or `CompanionTo`
+      target) is a Project, `chat.instructions` unset → set it. Without this, chats created
+      before this milestone silently lose their steering.
+- [ ] **`ProjectOperation.CreateChat`** — invoke `AssistantOperation.CreateChat` with the
+      project's instructions ref (by reference, never a copy), `Obj.setParent(chat, project)`,
+      bind `instructions.skills`, `LayoutOperation.Open`. No `SpaceOperation.AddObject`
+      (would file it in the root collection).
 - [ ] **`projectChats` graph extension** — `children()` query → `AppNode.makeObject` per
       chat; `url` reuses the `chat` key with a parent-resolving dynamic path.
 - [ ] **Exclude project chats from the top-level Chats section** — plugin-assistant's
       section query, alongside the existing `CompanionTo` exclusion.
 - [ ] **`ProjectArticle` toolbar** — `Panel.Toolbar` + `IconButton`; same action on the
       project's navtree node (`list-item-primary`).
-- [ ] **Tests** — unit (enumeration, parenting + binding pass-through), story play test
-      (toolbar creates a chat, appears in the list), live verify (instructions reach the
-      system prompt in a standalone plank; navtree children survive a cold deep link).
+- [ ] **Tests** — unit (`formatSystemPrompt` renders the explicit param and no longer
+      inlines a bound Instructions object; enumeration; parenting + ref pass-through), story
+      play test (toolbar creates a chat, appears in the list), live verify (instructions
+      reach the system prompt in a standalone plank — proves the ref survives the
+      agent-process boundary; navtree children survive a cold deep link).
 - [ ] **Watch item** — if `children()` does not re-emit in the graph connector when a chat
       is newly parented, fall back to a `chats: Ref<Collection>` field on Project
       (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.

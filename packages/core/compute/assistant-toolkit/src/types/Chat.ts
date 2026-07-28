@@ -18,6 +18,7 @@ import * as Plan from './Plan';
 /**
  * AI chat.
  */
+// TODO(burdon): This is badly named.
 export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistant.chat', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),

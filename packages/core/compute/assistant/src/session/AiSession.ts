@@ -68,12 +68,14 @@ const SUMMARY_THRESHOLD = 80_000;
  * Executes tools based on AI responses and supports cancellation of in-progress requests.
  */
 export class Session extends Resource {
+  private readonly _feed: Feed.Feed;
+  private readonly _runtime: Runtime.Runtime<Database.Service>;
+
   /**
    * Skills and objects bound to the session.
    */
   private readonly _binder: AiContext.Binder;
-  private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Database.Service>;
+
   private readonly _sessionLoader = new SessionLoader();
 
   public constructor(options: Options) {
