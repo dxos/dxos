@@ -24,6 +24,19 @@ same project name. Tracking: [DX-1076](https://linear.app/dxos/issue/DX-1076) (p
 
 ## Next
 
+- [ ] **Fix `clear()`-after-throwing-emit in the proxy event batching** (highest value of the
+      follow-ups; found by the diagnostics audit, same bug class as DX-1140). Two sites, identical:
+      `echo/src/internal/common/proxy/event-batch.ts` (`batchEvents` → `pendingEventTargets`) and
+      `.../change-context.ts` (`executeChange` → `pendingOwnerNotifications`). Both emit in a loop and
+      _then_ `clear()`, so one throwing listener escapes and the clear never runs — the module-level
+      set keeps live ECHO proxy targets for the process lifetime. Worse than the leak: `eventBatchDepth`
+      is already decremented, so the next batch re-emits those stale targets, indefinitely. Fix: clear
+      before emitting (or give the loop its own `try/finally`) and aggregate listener errors instead of
+      letting the first escape. Needs a test that throws from a listener and asserts the set is empty
+      and the next batch is unaffected.
+- [ ] **Bound `SPACE_IDS_CACHE`** (`echo-protocol/src/space-id.ts:9`) — `ComplexMap<PublicKey, SpaceId>`
+      with no eviction. Effectively constant for a client, but monotonic for a multi-tenant edge worker
+      that keeps seeing new spaces.
 - [ ] **Cap `BufferingTracingBackend.#pending`.** The only remaining unbounded container in
       `@dxos/tracing`: emptied solely by `drain()` (needs a real backend) or `clear()`, and edge
       installs no backend, so every dxos span there is allocated, retained forever and never

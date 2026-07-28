@@ -109,3 +109,78 @@ Risks to check first:
 Do the `#pending` cap; treat a full kill switch as optional follow-up justified by CPU/allocation
 hygiene rather than by DX-1140. Neither is on the critical path — the harness already passes 450/450
 with #12366 alone.
+
+## Audit: are there sibling leaks in the client's diagnostics surfaces?
+
+Asked directly — if the query diagnostic leaked, what else does? Swept every `trace.diagnostic`
+registration site (7 repo-wide), the `client-services` diagnostics packlet, `plugin-doctor`'s
+diagnostic-provider capability, the app-framework Surface debug/profiler, and every module-level
+mutable container in `echo`, `echo-client`, `echo-host`, `echo-protocol`, `client`, `client-services`
+and `app-framework`.
+
+**Answer: the diagnostics surfaces themselves are clean apart from the two already fixed — but the
+same _class_ of bug exists elsewhere, in event batching.**
+
+### The structural distinction that matters
+
+`QUERIES` and `OBJECT_DIAGNOSTICS` were **write-on-event accumulators**: normal operation appended to
+a module-level container, and reading was incidental. Every other diagnostic in the stack is a
+**read-only view over existing working state** — `echo-stats`, `database-roots`,
+`database-root-metrics`, `active-queries`, `query-invalidation`, `spaces`, `process-info` all just
+project over containers that exist for functional reasons and are pruned by functional code (e.g.
+`query-service._queries` has paired `add`/`delete`). A read-only projection cannot leak; it retains
+nothing the system was not already holding. That is the property to look for, and it is why the sweep
+came back nearly empty.
+
+Also verified clean: `createDiagnostics` builds a fresh snapshot per call and holds no state;
+`plugin-doctor` contributes its providers once at activation; `EchoDataMonitor` is a model of how to
+do this — `CircularBuffer<StoredMessage>(100)` for recent messages, time series trimmed to
+`timeSeriesLength`, per-peer counters deleted on disconnect; `SurfaceProfilerStore` caps at
+`MAX_ENTRIES = 500` with a `slice(-MAX_ENTRIES)` trim; `SurfaceDebug.flagListeners` pairs `add` with a
+`delete` in the returned unsubscribe.
+
+### Real finding: `clear()` after a throwing emit loop (two sites, identical shape)
+
+Not diagnostics — event batching — but the same shape as DX-1140: a module-level `Set` holding **live
+ECHO proxy targets**, cleared by code that an exception can skip.
+
+`echo/src/internal/common/proxy/event-batch.ts` — `batchEvents`:
+
+```ts
+} finally {
+  eventBatchDepth--;
+  if (eventBatchDepth === 0) {
+    for (const target of pendingEventTargets) {
+      (target as any)[EventId]?.emit();   // <-- a throwing listener escapes here
+    }
+    pendingEventTargets.clear();          // <-- never runs
+  }
+}
+```
+
+`echo/src/internal/common/proxy/change-context.ts` — `executeChange` has the identical pattern over
+`pendingOwnerNotifications`.
+
+Two consequences, and the second is arguably worse than the leak: the targets stay reachable from a
+module-level set for the process lifetime, **and** because `eventBatchDepth` was already decremented,
+the next `batchEvents` call re-emits those stale targets — so one throwing listener corrupts
+subsequent batches indefinitely. Fix is small: clear before emitting (or wrap the loop in its own
+`try/finally`) and aggregate listener errors rather than letting the first escape.
+
+### Minor, bounded, but permanent
+
+- `index-query-source-provider.ts:498` `emittedSchemaValidationWarnings` — module-level `Set<string>`
+  of type DXNs, never cleared. Bounded by distinct schemas; strings only.
+- `echo-protocol/src/space-id.ts:9` `SPACE_IDS_CACHE` — `ComplexMap<PublicKey, SpaceId>`, never
+  evicted. Bounded by distinct space keys, so effectively constant for a client but **monotonic for a
+  multi-tenant edge worker** that keeps seeing new spaces. Small per entry.
+- Instance-scoped `trace.diagnostic` registrations are never unregistered — `echo-host` (3),
+  `query-service` (2), `data-space-manager` (1). Ids are fixed literals so `set` overwrites; this pins
+  only the most recent instance of each. Constant `+1`, not a leak, but it makes real leaks harder to
+  see in a heap snapshot.
+
+### Behavioural note worth knowing
+
+`data-space-manager`'s `spaces` diagnostic calls `this._echoHost.loadDoc(...)` inside `fetch` — a
+diagnostic that **loads documents as a side effect**. Bounded by how often it is fetched, but merely
+opening devtools pulls root documents into the host. Diagnostics should observe, not mutate.
