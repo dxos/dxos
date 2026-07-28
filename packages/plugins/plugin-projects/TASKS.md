@@ -1,6 +1,14 @@
 # plugin-projects — Tasks
 
-_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN — `Chat.agent` (the field #12370 added) removed and the chat↔agent linkage restored to the `CompanionTo` relation; that field was the edge closing the Agent↔Chat import cycle, so `agent-chat.ts` and both namespace facades are deleted, the lifecycle folded back into `Agent`, and `Agent.loadForChat` added as the inverse of `loadChat`. Also: deleted the dead `LegacyCompanionTo` migration, added `Chat.test.ts`, documented the delegation strategy in DESIGN.md. NEXT: land #12383, then Phase 3 UI, in order — `ProjectOperation.CreateChat`, `projectChats` graph extension (navtree chat children), exclude project chats from the top-level Chats section, `ProjectArticle` toolbar, then the Phase 3 test row. After that: commands-authoring UI / outliner skill. Uncommitted: none._
+_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN, CI running on tip `e193704c9f`, review round addressed and replied. NEXT: land #12383, then Phase 3 UI, in order — `ProjectOperation.CreateChat`, `projectChats` graph extension (navtree chat children), exclude project chats from the top-level Chats section, `ProjectArticle` toolbar, then the Phase 3 test row. After that: commands-authoring UI / outliner skill. Uncommitted: none._
+
+#12383 carries four things: (1) `Chat.agent` removed and the chat↔agent linkage
+restored to the `CompanionTo` relation — that field was the edge closing the
+Agent↔Chat import cycle, so `agent-chat.ts` and both namespace facades are gone,
+the lifecycle folded back into `Agent`, `Agent.loadForChat` added as the inverse
+of `loadChat`; (2) the dead `LegacyCompanionTo` migration deleted; (3) an
+echo-client fix for nested records read off detached objects; (4) `Chat.test.ts`,
+`sync.test.ts`, and the delegation-strategy section in DESIGN.md.
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
@@ -127,10 +135,24 @@ repoint.
       holds the lifecycle — `makeInitialized`, `resetChatHistory`, `loadChat`, `loadAgent` — and is
       the only module needing both. No migration (the field shipped one day earlier at `chat@0.1.0`,
       added without a bump). `check-cycles` green; the #12370 changeset amended in place.
-- [ ] **Regenerate the agent-skill memoized recordings on this branch** — `expense tracking list`
-      (`skills/agent/skill.test.ts`, gated behind `DX_RUN_LLM_TESTS=1`) fails on the pre-existing
-      baseline too: the regenerated conversations live on `origin/claude/plugin-projects-plugin-7a1225`
-      (e720f8c684) and never reached main.
+- [x] **Regenerate the agent-skill memoized recordings** — moot: #12357 (G2 → C) deleted
+      `skills/{agent,planning}/skill.test.ts` outright, taking the failing `expense tracking list`
+      with them. Merged in on this branch; the replacement deterministic tests were updated for the
+      lifecycle move.
+- [x] **`LegacyCompanionTo` migration deleted** — it held the kebab-case `companion-to` typename so
+      #10895 could migrate it to `companionTo`, but 266d56cbc5 swept that typename to camelCase too,
+      so both classes shared a DXN for ~10 weeks and the migration mapped a type onto itself.
+      Restoring it would mean an escape hatch past the camelCase validator in `@dxos/keys` (both the
+      compile-time `Name<T>` and the runtime regex reject a hyphenated final segment) for a migration
+      whose nine siblings from #10895 were all already deleted. Removed it and plugin-assistant's
+      migration capability.
+- [x] **echo-client: nested records from detached objects** — assigning one into a database-backed
+      object threw `Object references must be wrapped with Ref.make`, because the copy-on-assign path
+      (`isEchoObjectField`) only recognized `EchoReactiveHandler` proxies; a detached object's record
+      is an in-memory proxy and fell through to the root guard. Added `isDetachedObjectField` using
+      `Entity.isEntity` as the handler-agnostic root test. Retires the hand-spread workaround in
+      `assistant-toolkit`'s `syncObjects`, which had no tests and now has three. Tags were never
+      affected (refs take an earlier branch) — asserted so a reordering is caught.
 
 - [x] **plugin-markdown ops resolve LLM-provided refs via the db** — `ref.tryLoad is not a
 function` when a tool-call `doc` ref decodes without a resolver; the five doc-ref ops
