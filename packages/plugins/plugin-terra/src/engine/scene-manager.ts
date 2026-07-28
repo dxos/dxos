@@ -5,6 +5,7 @@
 import '@babylonjs/core/Meshes/thinInstanceMesh';
 
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
+import { type Camera } from '@babylonjs/core/Cameras/camera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
@@ -51,7 +52,9 @@ export class SceneManager {
   readonly #canvas: HTMLCanvasElement;
 
   readonly #handlePointerDown = (event: PointerEvent): void => {
-    if (!event.shiftKey) {
+    // Panning targets the orbit camera specifically; while another camera is rendering, a
+    // shift-drag would silently reposition a view nobody can see.
+    if (!event.shiftKey || this.#scene.activeCamera !== this.#camera) {
       return;
     }
     this.#panning = true;
@@ -142,6 +145,22 @@ export class SceneManager {
 
   get engine(): Engine {
     return this.#engine;
+  }
+
+  /**
+   * Makes `camera` the rendering camera, or restores the orbit camera when passed `null`. The orbit
+   * camera's pointer control is detached while another camera is active so a drag cannot silently
+   * move an orbit view nobody is looking through, and the shift-drag pan handlers no-op for the
+   * same reason.
+   */
+  setActiveCamera(camera: Camera | null): void {
+    if (camera) {
+      this.#camera.detachControl();
+      this.#scene.activeCamera = camera;
+    } else {
+      this.#scene.activeCamera = this.#camera;
+      this.#camera.attachControl(this.#canvas, true);
+    }
   }
 
   setWaterSheen(enabled: boolean): void {

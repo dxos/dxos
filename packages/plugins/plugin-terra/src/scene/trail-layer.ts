@@ -43,6 +43,10 @@ export class TrailLayer {
     this.#base = CreateSphere('trailPuff', { diameter: 1, segments: PUFF_SEGMENTS }, options.scene);
     this.#base.material = this.#createMaterial(options.scene);
     this.#base.isVisible = false;
+    // See `object-layer.ts`: `#rebuild` only reallocates (and so only refreshes the bounding box)
+    // when the puff count changes, leaving a stale box that a close-up camera would cull the whole
+    // trail against.
+    this.#base.alwaysSelectAsActiveMesh = true;
     // Stays in the planet's default rendering group (0) rather than a later one: Babylon auto-clears
     // the depth buffer between rendering groups, so a later group has no depth information from the
     // planet and nothing in it can be occluded by opaque terrain. Sharing the group keeps puffs

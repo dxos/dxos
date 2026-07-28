@@ -8,68 +8,28 @@ import { Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
 import { type Mesh } from '@babylonjs/core/Meshes/mesh';
 import { type Scene } from '@babylonjs/core/scene';
 
-import { type Vec3, scale } from '../engine';
-import { type SimObject, tangentFrame } from '../sim';
+import { scale } from '../engine';
+import { type SimObject } from '../sim';
 import { type TerraObject } from '../types';
 import { easeHeading } from './heading';
 import { createObjectForm } from './object-forms';
+import { SCALE_FACTOR, objectFrame } from './orientation';
 
 /** Every kind `createObjectForm` builds a base mesh for, in a fixed iteration order. */
 const KINDS: readonly TerraObject.Kind[] = ['boat', 'plane', 'satellite', 'tank', 'rocket'];
 
-/** Instance scale relative to each object's own surface/orbit radius, so scale stays planet-relative at any zoom. */
-const SCALE_FACTOR = 0.04;
-
-const DEG = Math.PI / 180;
-
-/** World-space forward tangent at `unit`, derived from `bearing` (degrees) via the local north/east frame. */
-const forwardAt = (unit: Vec3, bearing: number): Vector3 => {
-  const { north, east } = tangentFrame(unit);
-  const radians = bearing * DEG;
-  const cos = Math.cos(radians);
-  const sin = Math.sin(radians);
-  return new Vector3(north[0] * cos + east[0] * sin, north[1] * cos + east[1] * sin, north[2] * cos + east[2] * sin);
-};
-
 /**
- * A rocket's nose pitch, in radians, at `flightFraction` through its ballistic arc: `+90°` (nose
- * along the surface normal) at launch, `0°` (nose along the horizontal tangent) at apex, `-90°`
- * (nose along the inverse normal) at touchdown. `90 * cos(pi * fraction)` alone gives exactly that
- * curve — a rocket that noses over smoothly rather than snapping through the horizontal at apex.
- */
-const rocketPitch = (flightFraction: number): number => 90 * DEG * Math.cos(Math.PI * flightFraction);
-
-/**
- * `tangentForward` rotated toward `up` by `pitch` radians. `tangentForward` and `up` are already
- * orthonormal (the tangent frame is perpendicular to the surface normal by construction), so this
- * stays unit length for any `pitch` without renormalizing.
- */
-const pitchForward = (tangentForward: Vector3, up: Vector3, pitch: number): Vector3 =>
-  tangentForward.scale(Math.cos(pitch)).add(up.scale(Math.sin(pitch)));
-
-/**
- * The thin-instance matrix for one object: positioned at `scale(state.unit, state.radius)`,
- * oriented with forward along `heading` (the frame-eased render heading, not necessarily
- * `state.bearing` itself — see `heading.ts`) and up along the surface normal (`state.unit`). A
- * rocket's forward is further pitched toward/away from the normal by `state.flightFraction` (see
- * `rocketPitch`) so it flies nose-up at launch and nose-down at touchdown rather than nose-level
- * like every other kind.
+ * The thin-instance matrix for one object: positioned at `scale(state.unit, state.radius)` and
+ * oriented by its own frame at the eased render `heading` (see `orientation.ts`).
  */
 const matrixFor = ({ state, definition }: SimObject, heading: number): Matrix => {
   const position = scale(state.unit, state.radius);
-  const tangentForward = forwardAt(state.unit, heading);
-  const up = new Vector3(state.unit[0], state.unit[1], state.unit[2]);
-  // The rotation axis for a rocket's pitch: computed from the *unpitched* tangent/up pair so it
-  // stays well-defined (unit length) at every pitch angle, including ±90°.
-  const right = Vector3.Cross(up, tangentForward).normalize();
-  const forward =
-    definition.kind === 'rocket' ? pitchForward(tangentForward, up, rocketPitch(state.flightFraction)) : tangentForward;
+  const { right, up, forward } = objectFrame(state, definition.kind, heading);
   // Build the rotation from an explicit left-handed basis rather than `FromLookDirectionLH`, which
   // returns a view-style rotation that lands the mesh's local +Z on -forward — i.e. every object
   // flies tail-first. Mapping local X/Y/Z onto right/up/forward is unambiguous.
-  const trueUp = Vector3.Cross(forward, right).normalize();
   const basis = new Matrix();
-  Matrix.FromXYZAxesToRef(right, trueUp, forward, basis);
+  Matrix.FromXYZAxesToRef(right, up, forward, basis);
   const rotation = Quaternion.FromRotationMatrix(basis);
   const scaling = state.radius * SCALE_FACTOR;
   return Matrix.Compose(
@@ -92,8 +52,25 @@ export class ObjectLayer {
 
   constructor(options: { scene: Scene }) {
     for (const kind of KINDS) {
-      this.#bases.set(kind, createObjectForm(kind, options.scene));
+      const base = createObjectForm(kind, options.scene);
+      // Babylon only recomputes a thin-instance mesh's bounding box inside `thinInstanceSetBuffer`,
+      // which `update` calls only when the instance count changes — so the box otherwise stays
+      // frozen wherever the objects were on that frame. Once they have moved on, a camera that no
+      // longer sees the stale box culls the whole kind, which is why a followed object could vanish
+      // from a close-up camera. Refreshing every frame would walk every instance for a cull that
+      // buys nothing anyway: these objects are spread across the entire globe, so the box spans it.
+      base.alwaysSelectAsActiveMesh = true;
+      this.#bases.set(kind, base);
     }
+  }
+
+  /**
+   * The heading `definition` was last drawn at, or `undefined` before its first frame. Lets another
+   * consumer — the chase camera — orient off exactly the heading the mesh is rendered at, rather
+   * than `state.bearing`, which the easing lags behind through every turn.
+   */
+  renderHeading(definition: TerraObject.TerraObject): number | undefined {
+    return this.#headings.get(definition);
   }
 
   /** This frame's eased heading for `object`, remembered for the next call; never fed back into `state`. */

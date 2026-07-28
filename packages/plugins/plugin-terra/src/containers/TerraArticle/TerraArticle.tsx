@@ -17,11 +17,14 @@ import { meta } from '#meta';
 import { Terra, TerraObject } from '#types';
 
 import { SceneFpsWidget, SceneManager, type TerraConfigValues, generatePlanet, seaRadius } from '../../engine';
-import { GizmoLayer, ObjectLayer, TrailLayer } from '../../scene';
+import { ChaseCamera, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene';
 import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim';
 
 /** Tracks pause state for the render-loop clock: while paused, `pausedAtMs` freezes the sim time; on resume, the elapsed pause duration is folded into `pausedTotalMs` so the clock continues from where it froze rather than jumping ahead. */
 type SimClock = { pausedTotalMs: number; pausedAtMs: number | null };
+
+/** `'orbit'` is the free-flying camera around the planet; `'object'` rides one simulated object. */
+type CameraMode = 'orbit' | 'object';
 
 export type TerraArticleProps = AppSurface.ObjectArticleProps<Terra.Terra>;
 
@@ -71,6 +74,10 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   // render-loop observer — mirrors `simEngineRef`'s ref-for-freshness pattern, since the layer's own
   // lifetime (created/disposed on toggle) is independent of the observer's (mount-once).
   const gizmoLayerRef = useRef<GizmoLayer | null>(null);
+  const chaseCameraRef = useRef<ChaseCamera | null>(null);
+  // The definition the chase camera follows while `cameraMode` is `'object'`; picked once on
+  // entering that mode and read fresh each frame by the mount-once render-loop observer.
+  const chaseTargetRef = useRef<TerraObject.TerraObject | null>(null);
   const simEngineRef = useRef<SimEngine | null>(null);
   // The config `simEngineRef`'s current engine was built with — kept in lockstep with it (set
   // wherever `simEngineRef.current` is) so trail sampling always re-evaluates motion under the same
@@ -86,6 +93,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   const [objectRefs] = useObject(terra, 'objects');
   const [isPlaying, setIsPlaying] = useState(true);
   const [gizmosVisible, setGizmosVisible] = useState(false);
+  const [cameraMode, setCameraMode] = useState<CameraMode>('orbit');
   const [telemetry, setTelemetry] = useState<TelemetryRow[]>([]);
 
   const values = useMemo(() => Terra.toConfigValues(terra), [config, terra]);
@@ -130,6 +138,15 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       trails.update(engine.objects, engineConfig, nowMs);
       // Read fresh each frame: the layer itself is created/disposed by the toggle effect, not here.
       gizmoLayerRef.current?.update(engine.objects, deltaMs);
+
+      // After `layer.update`, so the camera reads the heading the mesh was drawn at this frame.
+      const chaseTarget = chaseTargetRef.current;
+      if (chaseCameraRef.current && chaseTarget) {
+        const followed = engine.objects.find((object) => object.definition === chaseTarget);
+        if (followed) {
+          chaseCameraRef.current.update(followed, layer.renderHeading(chaseTarget) ?? followed.state.bearing);
+        }
+      }
 
       // Throttled: see `TELEMETRY_SAMPLE_INTERVAL_MS`'s doc for why this isn't every frame.
       const wallClockNow = performance.now();
@@ -193,6 +210,33 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     };
   }, [gizmosVisible]);
 
+  useEffect(() => {
+    const manager = managerRef.current;
+    if (!manager || cameraMode !== 'object') {
+      return;
+    }
+
+    // Picked here rather than in the toolbar handler so re-entering object mode always lands on a
+    // fresh object, and so the pick sees `definitions` as of this render. Purely a local view
+    // choice — `Math.random()` here cannot affect simulated state, so it does not breach the
+    // determinism contract the way it would inside `sim/`.
+    const target = definitions.length > 0 ? definitions[Math.floor(Math.random() * definitions.length)] : null;
+    if (!target) {
+      return;
+    }
+
+    const chase = new ChaseCamera({ scene: manager.scene });
+    chaseCameraRef.current = chase;
+    chaseTargetRef.current = target;
+    manager.setActiveCamera(chase.camera);
+    return () => {
+      manager.setActiveCamera(null);
+      chaseTargetRef.current = null;
+      chaseCameraRef.current = null;
+      chase.dispose();
+    };
+  }, [cameraMode, definitions]);
+
   const handleChange = useCallback(
     (patch: Partial<Terra.TerraConfig>) => updateConfig((draft) => Object.assign(draft, patch)),
     [updateConfig],
@@ -221,6 +265,11 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   }, [terra]);
 
   const handleToggleGizmos = useCallback(() => setGizmosVisible((current) => !current), []);
+
+  const handleToggleCamera = useCallback(
+    () => setCameraMode((current) => (current === 'orbit' ? 'object' : 'orbit')),
+    [],
+  );
 
   const menuActions = useMenuBuilder(
     () =>
@@ -258,8 +307,29 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
           },
           () => handleToggleGizmos(),
         )
+        .action(
+          'toggle-camera',
+          {
+            label:
+              cameraMode === 'orbit'
+                ? ['object-camera.label', { ns: meta.profile.key }]
+                : ['orbit-camera.label', { ns: meta.profile.key }],
+            icon: cameraMode === 'orbit' ? 'ph--video-camera--regular' : 'ph--globe-hemisphere-west--regular',
+            disposition: 'toolbar',
+            testId: 'terra.toolbar.toggle-camera',
+          },
+          () => handleToggleCamera(),
+        )
         .build(),
-    [isPlaying, handleTogglePlaying, handleAddRandomObject, gizmosVisible, handleToggleGizmos],
+    [
+      isPlaying,
+      handleTogglePlaying,
+      handleAddRandomObject,
+      gizmosVisible,
+      handleToggleGizmos,
+      cameraMode,
+      handleToggleCamera,
+    ],
   );
 
   return (

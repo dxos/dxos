@@ -29,6 +29,8 @@ export const translations = [
         'add-random-object.label': 'Add random object',
         'show-gizmos.label': 'Show rotation gizmos',
         'hide-gizmos.label': 'Hide rotation gizmos',
+        'object-camera.label': 'Ride a random object',
+        'orbit-camera.label': 'Return to orbit view',
       },
     },
   },

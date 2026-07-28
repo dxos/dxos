@@ -10,10 +10,11 @@ import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder'
 import { type Mesh } from '@babylonjs/core/Meshes/mesh';
 import { type Scene } from '@babylonjs/core/scene';
 
-import { type Vec3, scale } from '../engine';
-import { type SimObject, tangentFrame } from '../sim';
+import { scale } from '../engine';
+import { type SimObject } from '../sim';
 import { type TerraObject } from '../types';
 import { easeHeading } from './heading';
+import { SCALE_FACTOR, objectFrame } from './orientation';
 
 /** The three local axes drawn per object: right, up (surface normal), and forward (heading). */
 export type Axis = 'right' | 'up' | 'forward';
@@ -27,25 +28,11 @@ const AXIS_COLORS: Record<Axis, Color3> = {
   forward: new Color3(0.25, 0.45, 0.98),
 };
 
-/** Instance scale relative to each object's own surface/orbit radius — mirrors `object-layer.ts`'s `SCALE_FACTOR` so the gizmo tracks the same visual scale as the object it belongs to. */
-const SCALE_FACTOR = 0.04;
-
 /** Axis rod length as a multiple of the object's own instance scale, so a rod visibly clears its mesh. */
 const LENGTH_FACTOR = 3;
 
 /** Axis rod thickness as a multiple of the object's own instance scale. */
 const THICKNESS_FACTOR = 0.35;
-
-const DEG = Math.PI / 180;
-
-/** World-space forward tangent at `unit`, derived from `bearing` (degrees) — identical to `object-layer.ts`'s convention, so the gizmo lines up with the rendered mesh exactly. */
-const forwardAt = (unit: Vec3, bearing: number): Vector3 => {
-  const { north, east } = tangentFrame(unit);
-  const radians = bearing * DEG;
-  const cos = Math.cos(radians);
-  const sin = Math.sin(radians);
-  return new Vector3(north[0] * cos + east[0] * sin, north[1] * cos + east[1] * sin, north[2] * cos + east[2] * sin);
-};
 
 /** An object's (or standalone placement's) orientation as an explicit right-handed basis. */
 export type GizmoBasis = { right: Vector3; up: Vector3; forward: Vector3 };
@@ -117,18 +104,18 @@ const axisTransform = (
   return { rotation, scaling: new Vector3(thickness, length, thickness), position: position.add(offset) };
 };
 
-/** The thin-instance matrix for one object's `axis` rod at its current sim state and eased `heading`. */
-const matrixFor = ({ state }: SimObject, axis: Axis, heading: number): Matrix => {
+/**
+ * The thin-instance matrix for one object's `axis` rod at its current sim state and eased
+ * `heading`. Uses the same `objectFrame` the mesh itself is oriented by, so the rods track the
+ * rendered form exactly — including a rocket's pitch, which the gizmo would otherwise ignore and
+ * draw level while the rocket climbed.
+ */
+const matrixFor = ({ state, definition }: SimObject, axis: Axis, heading: number): Matrix => {
   const position = scale(state.unit, state.radius);
-  const forward = forwardAt(state.unit, heading);
-  const up = new Vector3(state.unit[0], state.unit[1], state.unit[2]);
-  const right = Vector3.Cross(up, forward).normalize();
-  const trueUp = Vector3.Cross(forward, right).normalize();
-
   const objectScale = state.radius * SCALE_FACTOR;
   const transform = axisTransform(
     new Vector3(position[0], position[1], position[2]),
-    { right, up: trueUp, forward },
+    objectFrame(state, definition.kind, heading),
     objectScale,
     axis,
   );
@@ -167,7 +154,11 @@ export class GizmoLayer {
 
   constructor(options: { scene: Scene }) {
     for (const axis of AXES) {
-      this.#bases.set(axis, createAxisForm(axis, options.scene));
+      const base = createAxisForm(axis, options.scene);
+      // See `object-layer.ts`: the thin-instance bounding box only refreshes when the instance count
+      // changes, so a stale box would cull a whole axis away from a close-up camera.
+      base.alwaysSelectAsActiveMesh = true;
+      this.#bases.set(axis, base);
     }
   }
 
