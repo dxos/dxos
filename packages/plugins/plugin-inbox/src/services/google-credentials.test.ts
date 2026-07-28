@@ -18,6 +18,12 @@ import { GoogleCredentials } from './google-credentials';
 
 const TYPES = [AccessToken.AccessToken, Connection.Connection];
 
+/** `get()` keeps a CredentialsService requirement for its no-token fallback, never reached here. */
+const unusedCredentials = Layer.succeed(Credential.CredentialsService, {
+  queryCredentials: () => Promise.reject(new Error('unused: the token is on the object')),
+  getCredential: () => Promise.reject(new Error('unused: the token is on the object')),
+});
+
 /** Records what the resolver was asked for, so tests can assert it was (or wasn't) consulted. */
 const trackingResolver = (liveToken: string) => {
   const calls: { spaceId: string; accessTokenId: string }[] = [];
@@ -49,6 +55,7 @@ describe('GoogleCredentials', () => {
           Effect.provide(GoogleCredentials.fromAccessToken(Ref.make(accessToken))),
           Effect.provide(Database.layer(db)),
           Effect.provide(resolver.layer),
+          Effect.provide(unusedCredentials),
         ),
       );
 
@@ -68,6 +75,7 @@ describe('GoogleCredentials', () => {
           Effect.provide(GoogleCredentials.fromAccessToken(Ref.make(accessToken))),
           Effect.provide(Database.layer(db)),
           Effect.provide(resolver.layer),
+          Effect.provide(unusedCredentials),
         ),
       );
 
@@ -91,6 +99,7 @@ describe('GoogleCredentials', () => {
           Effect.provide(GoogleCredentials.fromConnection(Ref.make(connection))),
           Effect.provide(Database.layer(db)),
           Effect.provide(resolver.layer),
+          Effect.provide(unusedCredentials),
         ),
       );
 
