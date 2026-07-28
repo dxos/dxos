@@ -44,12 +44,8 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/NavTreePlugin.workerd.ts",
-        "default": "./src/NavTreePlugin.tsx"
-      },
+      "source": "./src/NavTreePlugin.tsx",
       "types": "./dist/types/src/NavTreePlugin.d.ts",
-      "workerd": "./dist/lib/NavTreePlugin.workerd.mjs",
       "default": "./dist/lib/NavTreePlugin.mjs"
     },
     "#testing": {

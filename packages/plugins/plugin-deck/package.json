@@ -44,12 +44,8 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/DeckPlugin.workerd.ts",
-        "default": "./src/DeckPlugin.ts"
-      },
+      "source": "./src/DeckPlugin.ts",
       "types": "./dist/types/src/DeckPlugin.d.ts",
-      "workerd": "./dist/lib/DeckPlugin.workerd.mjs",
       "default": "./dist/lib/DeckPlugin.mjs"
     },
     "#translations": {
