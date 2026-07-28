@@ -4,6 +4,27 @@ tags:
   - typecheck
   - ts-test
 tasks:
+  # Fail when the CLI entrypoint pulls in React. The binary runs under bun with no DOM, and
+  # React arrived here four separate ways before — a plugin's React surface, `@dxos/react-client`
+  # re-exports, `@effect-atom/atom-react` in headless packages, and a string helper that happened
+  # to live in a react-ui package. None of them were visible without tracing the graph.
+  check-module-structure:
+    command: >-
+      pnpm exec dx-trace-imports
+      --from src/bin.ts
+      --to "{react,react-dom}"
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - ^:build
+    inputs:
+      - src/**/*
+      - tsconfig.json
+      - package.json
+      - /pnpm-lock.yaml
+    options:
+      timeout: 120
   # Bundles the CLI into per-platform executables. This is the CLI's real build
   # artifact, but it is intentionally NOT named `build` and the project is not
   # tagged `ts-build`/`ts-vite-build` — that keeps `cli` out of the `^:build` /
