@@ -12,6 +12,7 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     types: 'src/types/index.ts',
     meta: 'src/meta.ts',
+    operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
   },
