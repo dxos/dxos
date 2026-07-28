@@ -94,7 +94,7 @@ the next: 1 → 2 → 3 → 4 land independently as their own PRs; 5 is explorat
    rollback/replay of the fold — cheap, since folds are per-object.
 4. **Retention + compaction.** Implement `Feed.setRetention` and compaction of
    superseded blocks. Feeds can compact by rewriting a prefix into a snapshot
-   block (self-contained state — unlike a pure eventlog). Addresses the ~10k
+   block (self-contained state — unlike a pure event log). Addresses the ~10k
    blocks/feed ceiling, which phase 3's patch blocks make more pressing.
 5. **App-defined projections (exploratory, demand-gated).** User-defined
    deterministic folds over a feed (typed event objects in, derived ECHO state
