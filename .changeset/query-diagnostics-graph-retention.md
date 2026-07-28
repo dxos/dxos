@@ -1,0 +1,7 @@
+---
+'@dxos/echo': patch
+---
+
+Stop the client-side diagnostics from retaining the whole ECHO client graph. Every `QueryResultImpl` added a record to a module-level `QUERIES` set that nothing ever pruned, and while the record held no direct reference to the query, it held a `StackTrace` — which keeps an unformatted `Error`, and V8 retains a captured stack structurally, with a strong reference to each frame's receiver, until `.stack` is read. The frame for `new QueryResultImpl(...)` therefore pinned the query, its query context, the hypergraph, the client, the database and every document loaded through them: one entire client graph per query, for the lifetime of the process. On hosts that never read the diagnostics this was unbounded — a Cloudflare Worker running ECHO operations on a cron trigger OOMed after ~390 invocations. `QueryResultCache` is a `WeakDictionary` precisely so results can be collected; this defeated it.
+
+`QUERIES` now holds weak refs pruned by a `FinalizationRegistry`, so a query, its diagnostic and its graph collect together. `OBJECT_DIAGNOSTICS` had the same defect on a longer fuse and now stores the formatted string; being keyed by object id and never evicted, it is also capped at 1,000 entries with oldest-first eviction. `StackTrace` formats once and releases the `Error`, making the release deterministic rather than incidental, and documents the retention hazard.

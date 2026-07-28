@@ -6,6 +6,18 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: email-sync-stability
+    status: active
+    user: mykola
+    host: mac
+    created: 2026-07-28
+    summary: dxos half of the edge mail-sync stability work — echo-client's QUERIES diagnostics set pinned a whole client graph per query (via an unformatted StackTrace Error), OOMing Workers at ~390 invocations.
+    tasks: .agents/projects/email-sync-stability/TASKS.md
+    design: .agents/projects/email-sync-stability/DESIGN.md
+    issues: [DX-1076, DX-1140]
+    prs: [12366]
+    resume: 'Fix in #12366, CI green, unmerged — verified 450/450 flat vs #428 death on the edge harness. Next: land it, then edge bumps its @dxos/* pin. Backlog: cap BufferingTracingBackend #pending (only unbounded container left; edge installs no backend so every dxos span is retained and never exported); a diagnostics kill switch is evaluated in DESIGN.md and would NOT have prevented DX-1140.'
+
   - name: plugin-terra
     status: active
     user: burdon
