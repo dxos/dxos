@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: PR #12365 green + review-addressed — user lands it himself. Next (decided 2026-07-28): reconciliation phase A (Agent.instructions typed ref) then B (Chat.agent inversion) per ./PLAN.md, each its own PR from a fresh worktree; Phase 3 UI follows. Phase C shape decided: relay pattern onto the durable process (see PLAN.md). Uncommitted: none._
+_Resume: PR #12365 MERGED (b5ecf54ed1). Now IN PROGRESS in this worktree: reconciliation phase A per ./PLAN.md (Agent.instructions -> Ref<Instructions> + dual-read helper), then B. Uncommitted: none._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 

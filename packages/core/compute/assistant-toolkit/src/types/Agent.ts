@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiContext, Harness } from '@dxos/assistant';
-import { type Skill } from '@dxos/compute';
+import { Instructions, type Skill } from '@dxos/compute';
 import { Annotation, Database, DXN, Feed, Filter, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
@@ -47,13 +47,11 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     }),
 
     /**
-     * Instructions for the agent.
+     * Instructions for the agent — the preset payload (text, skills, objects, commands) a chat
+     * receives when the agent is applied to it. Pre-phase-A records point at a bare `Text`; read
+     * through {@link loadInstructions}, which accepts both shapes until the phase-D migration.
      */
-    // TODO(burdon): Migrate to Ref<Instructions.Instructions> — plugin-projects PLAN.md phase A.
-    instructions: Ref.Ref(Text.Text).pipe(
-      Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-      Schema.annotations({ title: 'Instructions' }),
-    ),
+    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotations({ title: 'Instructions' })),
 
     /**
      * Primary chat for the agent.
@@ -110,6 +108,32 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
   ),
 ) {}
 
+/**
+ * Resolves the agent's instructions, dual-reading both persisted shapes: the typed `Instructions`
+ * (phase A onward) and the bare `Text` that pre-migration records point at (rewritten by the
+ * phase-D migration — see plugin-projects PLAN.md). `instructions` is absent for the legacy shape.
+ */
+export const loadInstructions = (
+  agent: Agent,
+): Effect.Effect<{ text: string; instructions?: Instructions.Instructions }, EntityNotFoundError, Database.Service> =>
+  Effect.gen(function* () {
+    // Resolve untyped: the schema says `Instructions`, but legacy records resolve to a `Text`, so
+    // the target type must be discovered rather than assumed (an untyped ref carries no resolver,
+    // so `Database.resolve` — which goes through the DB — is required here, not `Database.load`).
+    const target = yield* Database.resolve(agent.instructions.uri);
+    if (Obj.instanceOf(Instructions.Instructions, target)) {
+      const text = yield* Database.load(target.text).pipe(
+        Effect.map((doc) => doc.content),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed('')),
+      );
+      return { text, instructions: target };
+    }
+    if (Obj.instanceOf(Text.Text, target)) {
+      return { text: target.content };
+    }
+    return { text: '' };
+  });
+
 export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions' | 'artifacts' | 'subscriptions' | 'chat'> &
   Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
     instructions: string;
@@ -131,25 +155,6 @@ export const makeInitialized = (
 ): Effect.Effect<Agent, never, Database.Service> =>
   Effect.gen(function* () {
     const { skills: propsSkills, contextObjects, ...agentProps } = props;
-    const agent = yield* Database.add(
-      Obj.make(Agent, {
-        // `did` (if provided) flows through via agentProps. Not auto-minted here: `IdentityDid.random()`
-        // uses uncontrolled `randomBytes`, which would make agent creation non-deterministic and break
-        // memoized-LLM tests. Minting is deferred to the runtime-identity provision (see agent-identity
-        // spec), where it can be deterministic or a real HALO DID.
-        ...agentProps,
-        instructions: Ref.make(Text.make({ content: props.instructions })),
-        artifacts: props.artifacts ?? [],
-        subscriptions: props.subscriptions ?? [],
-        filterEvents: props.filterEvents ?? true,
-        enabled: props.enabled ?? true,
-      }),
-    );
-    const feed = yield* Database.add(Feed.make());
-    const runtime = yield* Effect.runtime<Database.Service>();
-    const contextBinder = new AiContext.Binder({ feed, runtime });
-    // TODO(dmaretskyi): Skill registry.
-    const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));
 
     // Persist any inline (transient) skills so their refs are resolvable from feed bindings later.
     // Refs created with Ref.make(obj) carry an inline target, but when stored in ECHO and read back
@@ -162,10 +167,37 @@ export const makeInitialized = (
       ),
     );
 
+    // The typed Instructions is the agent's preset payload: text plus skill set (PLAN.md phase A).
+    const instructions = yield* Database.add(
+      Instructions.make({ text: props.instructions, skills: persistedPropsSkills }),
+    );
+    const agent = yield* Database.add(
+      Obj.make(Agent, {
+        // `did` (if provided) flows through via agentProps. Not auto-minted here: `IdentityDid.random()`
+        // uses uncontrolled `randomBytes`, which would make agent creation non-deterministic and break
+        // memoized-LLM tests. Minting is deferred to the runtime-identity provision (see agent-identity
+        // spec), where it can be deterministic or a real HALO DID.
+        ...agentProps,
+        instructions: Ref.make(instructions),
+        artifacts: props.artifacts ?? [],
+        subscriptions: props.subscriptions ?? [],
+        filterEvents: props.filterEvents ?? true,
+        enabled: props.enabled ?? true,
+      }),
+    );
+    Obj.setParent(instructions, agent);
+    const feed = yield* Database.add(Feed.make());
+    const runtime = yield* Effect.runtime<Database.Service>();
+    const contextBinder = new AiContext.Binder({ feed, runtime });
+    // TODO(dmaretskyi): Skill registry.
+    const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));
+
     const chat = yield* Database.add(
       Chat.make({
         [Obj.Parent]: agent,
         feed: Ref.make(feed),
+        // Steer the agent's chat through the milestone-3 channel (rendered into the system prompt).
+        instructions: Ref.make(instructions),
       }),
     );
     Obj.setParent(feed, chat);

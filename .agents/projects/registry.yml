@@ -26,7 +26,7 @@ projects:
     tasks: packages/plugins/plugin-projects/TASKS.md
     design: packages/plugins/plugin-projects/DESIGN.md
     prs: [12335, 12365]
-    resume: 'PR #12365 CI GREEN, review round addressed — USER LANDS IT HIMSELF (do not merge). Decisions 2026-07-28: reconciliation phases A+B are NEXT (before Phase 3 UI); phase C shape decided = relay pattern (Routine feed-trigger -> RelayFunction: cheap-model qualify -> submitInput onto the durable process input queue; multiplexing + filtering; AgentWorker/Qualifier retire; agent.feed dissolves; backpressure = accepted gap, intermediary-feed hatch). Plan: packages/plugins/plugin-projects/PLAN.md. NEXT SESSION: fresh worktree after #12365 merges -> phase A (Agent.instructions -> Ref<Instructions>) then phase B (Chat.agent inversion), each its own PR. Then Phase 3 UI (CreateChat op, navtree children, Chats exclusion, toolbar).'
+    resume: 'PR #12365 MERGED (squash b5ecf54ed1) — instructions channel + ProjectSkill + live eval (100%) + 3 review rounds. Worktree synced with main; CONTINUING HERE per user: reconciliation phase A (Agent.instructions -> Ref<Instructions>, dual-read until D) then phase B (Chat.agent inversion, dual-write agent.chat until D), each its own PR per packages/plugins/plugin-projects/PLAN.md; then Phase 3 UI. Phase C decided: relay pattern onto the durable process.'
 
   - name: sketch-scene-dsl
     status: active

@@ -363,7 +363,7 @@ const dumpAgent = async (agent: Agent.Agent) => {
   let text = '';
   text += `============== Agent: ${agent.name} ==============\n\n`;
   text += `============== Instructions ==============\n\n`;
-  text += `${await agent.instructions.load().then((_) => _.content)}\n`;
+  text += `${await agent.instructions.load().then((instructions) => instructions.text.load().then((doc) => doc.content))}\n`;
   text += `============== Plan ==============\n\n`;
   if (agent.chat) {
     const chat = await agent.chat.load();

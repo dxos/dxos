@@ -8,6 +8,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Agent, Plan } from '@dxos/assistant-toolkit';
+import { Instructions } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -68,6 +69,7 @@ const meta = {
             Message.Message,
             Plan.Plan,
             Text.Text,
+            Instructions.Instructions,
             Organization.Organization,
             Person.Person,
           ],
@@ -95,7 +97,7 @@ const meta = {
 
               space.db.add(
                 Obj.make(Agent.Agent, {
-                  instructions: Ref.make(Text.make()),
+                  instructions: Ref.make(Instructions.make({ text: '' })),
                   artifacts: artifacts.map((obj) => ({
                     name: Obj.getLabel(obj) ?? 'Artifact',
                     data: Ref.make(obj),

@@ -63,8 +63,8 @@ export default GetContext.pipe(
       return {
         id: agent.id,
         name: agent.name,
-        instructions: yield* agent.instructions.pipe(Database.load).pipe(
-          Effect.map((_) => _.content),
+        instructions: yield* Agent.loadInstructions(agent).pipe(
+          Effect.map((_) => _.text),
           Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No instructions found.')),
         ),
         plan: yield* chat ? formatPlan(chat) : Effect.succeed('No plan found.'),

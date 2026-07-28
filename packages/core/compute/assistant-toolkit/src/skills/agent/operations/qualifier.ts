@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
               Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No plan found.')),
             )
           : 'No plan found.';
-        const instructions = yield* Database.load(agent.instructions);
+        const { text: instructionsText } = yield* Agent.loadInstructions(agent);
 
         const { value } = yield* Effect.scoped(
           LanguageModel.generateObject({
@@ -52,7 +52,7 @@ const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
                   The qualified events will be forwarded to the larger agent that will process them.
                   <agent id="${id}" name="${name}">
                     <instructions>
-                    ${instructions.content}
+                    ${instructionsText}
                     </instructions>
                     <plan>
                       ${planText}

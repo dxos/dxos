@@ -26,20 +26,26 @@ the duplicate machinery.
 The typed object carries `skills`/`objects`/`commands`, which _is_ the preset
 payload; after this phase "apply agent to chat" is one assignment.
 
-- [ ] Schema: `instructions: Ref(Instructions.Instructions)`
+- [x] Schema: `instructions: Ref(Instructions.Instructions)`
       (`types/Agent.ts`); keep `@0.1.0` — old data migrates in D's bump.
-- [ ] **Dual-read until D**: a shared resolve helper accepts both shapes
+- [x] **Dual-read until D** — `Agent.loadInstructions`: a shared resolve helper accepts both shapes
       (target is `Text` → treat as instructions text; target is
       `Instructions` → typed), used by every reader below — existing agents
       keep working unmigrated, and reverting A cannot strand new-shape
       records unread (old readers loaded the ref as Text, which a dual-read
       helper subsumes).
-- [ ] `makeInitialized`: `Instructions.make({ text: props.instructions })`
-      (owned: `Obj.setParent(instructions, agent)`); move `props.skills` into
-      `instructions.skills` instead of raw binder args.
-- [ ] Call sites that load the ref as Text: `get-context.ts` (returns
-      `instructions.text` content), `qualifier.ts`, `skill.test.ts` helper.
-- [ ] Verify: assistant-toolkit unit + agent skill memoized tests.
+- [x] `makeInitialized`: `Instructions.make({ text, skills })` (owned via
+      `Obj.setParent`); `props.skills` recorded in `instructions.skills` (still
+      bound to the feed binder — the delivery mechanism until C); bonus: the
+      agent chat now sets `chat.instructions`, steering it through the
+      milestone-3 channel.
+- [x] Call sites ported to `loadInstructions` (get-context, qualifier) or the
+      typed shape (skill.test helper, AgentProperties/AgentArticle stories).
+- [ ] Verify: assistant-toolkit/compute/agent-runtime/plugin-assistant unit
+      suites GREEN (234 tests); agent-skill memoized conversations need
+      regeneration (`makeInitialized` shifts the deterministic id stream, so
+      recorded tool-call refs dangle) — 4 conversations pending
+      `ALLOW_LLM_GENERATION=1`, blocked on 1Password re-auth.
 
 ## Phase B — invert `Agent.chat` → `Chat.agent?: Ref<Agent>`
 
