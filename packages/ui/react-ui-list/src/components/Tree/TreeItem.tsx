@@ -89,7 +89,7 @@ export type TreeItemProps<T extends { id: string } = any> = {
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
-  onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
+  onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
 };
 
@@ -267,7 +267,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   );
 
   const handleSelect = useCallback(
-    (option = false) => {
+    ({ option, shift }: { option: boolean; shift: boolean } = { option: false, shift: false }) => {
       // If the item is a branch, toggle it if:
       //   - also holding down the option key
       //   - or the item is currently selected
@@ -276,7 +276,7 @@ const RawTreeItem = <T extends { id: string } = any>({
       } else if (canSelectItem) {
         canSelect?.({ item, path });
         rowRef.current?.focus();
-        onSelect?.({ item, path, current: !current, option });
+        onSelect?.({ item, path, current: !current, option, shift });
       }
     },
     [item, path, current, isBranch, canSelectItem, handleOpenToggle, onSelect],

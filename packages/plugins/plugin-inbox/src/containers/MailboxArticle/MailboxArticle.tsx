@@ -233,10 +233,17 @@ export const MailboxArticle = ({
       if (!message || !db) {
         return;
       }
-      // Open the message companion; `MessageArticle` renders the selected message's whole conversation.
-      void showItem({ contextId: id, selectionId: message.id, companion: Attention.linkedSegment('message') });
+      // Open the message's conversation as its own plank beside the mailbox (add), never a companion.
+      // The conversation node lives under this mailbox view; `MessageArticle` renders the whole thread.
+      void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: message.id } });
+      void invokePromise(LayoutOperation.Open, {
+        subject: [`${id}/${message.id}`],
+        pivotId: id,
+        disposition: 'add',
+        navigation: 'immediate',
+      });
     },
-    [db, id, messages, showItem],
+    [db, id, messages, invokePromise],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: messages, currentId, onSelect: handleNavigate });
@@ -245,14 +252,14 @@ export const MailboxArticle = ({
     (action) => {
       switch (action.type) {
         // A message click ('current') and a conversation click ('current-conversation') both open the
-        // one unified conversation (thread) view — a single message is just a one-message conversation.
-        // Selecting the message opens the message companion, which renders the whole conversation.
+        // one unified conversation (thread) view — a single message is just a one-message conversation —
+        // as a standalone plank beside the mailbox.
         case 'current':
         case 'current-conversation': {
           const message = messages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
-          void showItem({ contextId: id, selectionId: message.id, companion: Attention.linkedSegment('message') });
+          handleNavigate(message.id);
           break;
         }
 
@@ -326,7 +333,7 @@ export const MailboxArticle = ({
         }
       }
     },
-    [db, id, mailbox, messages, invokePromise, showItem],
+    [db, id, mailbox, messages, invokePromise, showItem, handleNavigate],
   );
 
   const handleSaveFilter = useCallback(() => {

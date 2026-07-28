@@ -16,5 +16,5 @@ Cross-plugin capability contracts: where one plugin defines a capability interfa
 ## Notes
 
 - `plugin-sidekick` is obviated by `plugin-projects` (see
-  `agents/superpowers/specs/2026-07-24-plugin-projects-design.md`); removal is
+  `packages/plugins/plugin-projects/DESIGN.md`); removal is
   tracked separately.

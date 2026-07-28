@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Harness } from '@dxos/assistant';
+import { Instructions } from '@dxos/compute';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
@@ -18,6 +19,7 @@ import * as Plan from './Plan';
 /**
  * AI chat.
  */
+// TODO(burdon): This is badly named.
 export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistant.chat', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
@@ -25,9 +27,16 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     viewType: Schema.String.pipe(Schema.optional),
 
     /**
+     * Instructions steering this conversation, rendered into the system prompt at request time.
+     * Held by reference (never copied), so a project's chats follow edits to its instructions.
+     */
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false))),
+
+    /**
      * Session plan for tracking task progress within this conversation.
      * Created lazily when the first task is recorded.
      */
+    // TODO(burdon): Generalize to artifact associated with a skill?
     plan: Schema.optional(Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false))),
   }).pipe(
     LabelAnnotation.set(['name']),

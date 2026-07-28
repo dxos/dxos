@@ -13,7 +13,7 @@ import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Attention } from '@dxos/react-ui-attention';
+import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
 
 import { meta } from '#meta';
 import { Connector } from '#types';
@@ -116,6 +116,7 @@ export default Capability.makeModule(
       // Separate listing extension so the graph reacts when connections are added or removed.
       GraphBuilder.createExtension({
         id: 'connectionsSection',
+        url: { key: 'connections', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
         match: AppNodeMatcher.whenSpaceSettings,
         connector: (space) =>
           Effect.succeed([
@@ -143,7 +144,7 @@ export default Capability.makeModule(
         connector: (cursor) =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: Attention.linkedSegment('connector'),
+              variant: 'connector',
               label: ['connection-companion.label', { ns: meta.profile.key }],
               icon: 'ph--plugs-connected--regular',
               data: cursor,
@@ -210,6 +211,7 @@ export default Capability.makeModule(
       // Connection objects listed under the connections section node.
       GraphBuilder.createExtension({
         id: 'connectionListing',
+        url: { key: 'connection', kind: 'item', path: [SETTINGS_SECTION_ID, CONNECTIONS_SECTION_ID] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CONNECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();

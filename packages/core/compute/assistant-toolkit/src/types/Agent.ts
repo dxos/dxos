@@ -49,6 +49,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     /**
      * Instructions for the agent.
      */
+    // TODO(burdon): Migrate to Ref<Instructions.Instructions> — plugin-projects PLAN.md phase A.
     instructions: Ref.Ref(Text.Text).pipe(
       Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
       Schema.annotations({ title: 'Instructions' }),
@@ -57,7 +58,6 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     /**
      * Primary chat for the agent.
      */
-    // TODO(dmaretskyi): Multiple chats; RB: branching hierarchy.
     chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
 
     // TODO(burdon): Currently Memory.Memory objects are global to the space; make them artifacts?

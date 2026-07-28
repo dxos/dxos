@@ -10,7 +10,6 @@ import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, View } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { MapOperation } from '#types';
@@ -60,7 +59,7 @@ export default Capability.makeModule(
           }
           return [
             AppNode.makeCompanion({
-              id: Attention.linkedSegment('map'),
+              variant: 'map',
               label: ['map.companion.label', { ns: meta.profile.key }],
               icon: 'ph--map-trifold--regular',
               data: 'map',

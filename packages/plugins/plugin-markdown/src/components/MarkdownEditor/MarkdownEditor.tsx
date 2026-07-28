@@ -71,7 +71,7 @@ export type MarkdownEditorProviderProps = Merge<
     'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
   >,
   Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'>,
-  Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'identity' | 'onSelectObject'>
+  Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'identity' | 'onSelectLink'>
 >;
 
 export const MarkdownEditorProvider = ({
@@ -88,7 +88,7 @@ export const MarkdownEditorProvider = ({
   slashCommandGroups,
   identity,
   onLinkQuery,
-  onSelectObject,
+  onSelectLink,
   onAction,
   onFileUpload,
   onViewModeChange,
@@ -110,7 +110,7 @@ export const MarkdownEditorProvider = ({
     setWidgets,
     settings,
     identity,
-    onSelectObject,
+    onSelectLink,
   });
 
   const extensions = useMemo(

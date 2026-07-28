@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -25,7 +24,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: Attention.linkedSegment('neighborhood'),
+              variant: 'neighborhood',
               label: ['neighborhood-companion.label', { ns: meta.profile.key }],
               icon: 'ph--share-network--regular',
               data: 'neighborhood',

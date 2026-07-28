@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -89,7 +89,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
     const personalSpaceId = AppSpace.getPersonalSpace(client)?.id;
     if (personalSpaceId) {
       await invokePromise(LayoutOperation.SwitchWorkspace, {
-        subject: Paths.getSpacePath(personalSpaceId),
+        subject: GraphPath.getSpacePath(personalSpaceId),
       });
     }
   }, [workspace.id, invokePromise, client]);
