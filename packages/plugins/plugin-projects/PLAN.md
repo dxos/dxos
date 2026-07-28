@@ -68,34 +68,45 @@ appended to `agent.feed` (the nominally-deprecated field is this pipeline's
 staging queue) → second trigger on `agent.feed` → `AgentWorker`. Without
 `filterEvents`, the subscription trigger invokes `AgentWorker` directly; `cron`
 always does. `AgentWorker` builds an **ephemeral `AiSession` on the chat feed**
-(hardcoded model, retry ×2) — it never touches the durable `AgentProcess`, so
-triggered runs already share `RunInstructions`' substrate and the conversion is
-substrate-preserving, not a downgrade. `AgentWorker`'s identity mechanism
-(assert exactly one Agent bound in the chat context) is replaced by B's
-`chat.agent`.
+(hardcoded model, retry ×2) — it never touches the durable `AgentProcess`.
+`AgentWorker`'s identity mechanism (assert exactly one Agent bound in the chat
+context) is replaced by B's `chat.agent`.
 
-- [ ] Agent wizard: creating a schedule/subscription creates a `Routine`
-      (timer / feed trigger) whose runnable is `RunInstructions` over the
-      agent's instructions, input carrying the target chat (per B).
-- [ ] **Qualifier stage — decide, don't fold blindly.** Folding relevance
-      filtering into the routine's instructions makes the expensive model do
-      the cheap model's job. Options: (a) a qualifier/filter option on the
-      `Trigger` spec or Routine (a pre-stage runnable + model), preserving the
-      cost profile; (b) a two-routine chain, which still needs an intermediate
-      feed (keeps `agent.feed`'s role, just relocated); (c) drop qualification
-      for v1 and deliver events unfiltered. Leaning (a); decide with usage
-      data from the wizard's existing subscriptions.
+**Decided shape (burdon × Dima, re-confirmed 2026-07-28): the relay pattern.**
+Each subscription becomes a Routine (feed trigger) whose runnable is a
+**`RelayFunction`** — it qualifies the event with a cheap model and, when
+relevant, forwards it to the agent's **durable process** via
+`AgentService`/ProcessManager (`Handle.submitInput`, or the `enqueueMessage`
+Tier B RPC — both persist onto the process's durable input queue). This gives
+multiplexing (N feed routines → one process) and filtering in one construct,
+and resolves the substrate fork: **triggered runs move onto the durable
+process**; `AgentWorker`'s ephemeral path retires and `agent.feed` dissolves
+into the process input queue (fulfilling its own deprecation note,
+"subscriptions will write directly to the agent"). `RelayFunction` does not
+exist yet — the delivery surfaces do.
+
+Known gap, accepted: **no backpressure** — events are durable once delivered,
+but relays push as fast as triggers fire, so a hot feed grows the input queue
+unboundedly. Escape hatch if it bites: reintroduce an intermediary feed the
+process drains at its own pace (at the cost of the visible extra feed).
+
+- [ ] `RelayFunction` (assistant-toolkit): input `{ agent | chat, event }`;
+      qualify (cheap model, reusing the Qualifier prompt) → on relevant,
+      `AgentService.getSession(chatFeed, { instructions }).submitPrompt(event)`.
+      Instructions reach the durable process via the existing spawn-annotation
+      path — no separate ephemeral-path work needed.
+- [ ] Agent wizard: a subscription creates a Routine (feed trigger →
+      `RelayFunction`); `cron` creates a Routine (timer trigger) that submits a
+      wake prompt through the same relay path.
 - [ ] `enabled`: routines gain an owner gate or the flag moves onto each
       Routine; `sync-triggers` reduces to a migration shim (existing
       cron/subscription fields → Routines on first open), then deletes.
-- [ ] Triggered runs gain instructions: `RunInstructions` (or the interim
-      `AgentWorker`) passes the agent's instructions via `RunProps` — the
-      spawn-annotation path covers only the durable interactive process, not
-      this ephemeral path.
-- [ ] Verify: agent-wizard `sync-triggers` tests become routine-creation
-      tests; trigger-dispatch memoized tests; a two-stage subscription fixture
-      keeps its filtering behavior (or its removal is explicit per the
-      qualifier decision).
+- [ ] Retire `AgentWorker` + `Qualifier` ops (the relay subsumes both);
+      `get-context`'s chat/plan reads move per B.
+- [ ] Verify: agent-wizard tests become routine-creation tests;
+      trigger-dispatch memoized tests; a subscription fixture proves filtering
+      (irrelevant event never reaches the process queue) and multiplexing (two
+      feeds, one process).
 
 ## Phase D — remove `artifacts`; schema bump + migration
 
@@ -105,10 +116,11 @@ substrate-preserving, not a downgrade. `AgentWorker`'s identity mechanism
       entries → a Collection on a Project created per agent (named after it);
       `agent.chat` (kept readable through B/C) reparented under that Project;
       drop `feed` / `filterEvents` and the transitional `chat`. NOTE:
-      `feed`/`filterEvents` are deprecated in name only — they are the
+      `feed`/`filterEvents` are deprecated in name only — they are the current
       qualifier pipeline's staging queue and its switch — so dropping them is
-      **gated on C's qualifier decision**, not an independent cleanup
-      (`AgentArticle.tsx` also backfills `agent.feed` today).
+      **gated on C landing** (the relay dissolves the staging queue into the
+      process input queue); `AgentArticle.tsx` also backfills `agent.feed`
+      today.
 - [ ] `makeInitialized` slims to identity + instructions (+ optional first
       chat via the chat factory).
 - [ ] Verify: Agent.test round-trip at 0.2.0, migration test (0.1.0 fixture →
@@ -145,13 +157,13 @@ means the identity/preset type, the name `AgentProcess` actively misleads.
 
 - **Durable processes** hydrate from spawn annotations; B/C change what
   trigger inputs carry, so shims must accept both shapes for one release.
-- **Two execution substrates.** Interactive chats run on the durable
-  `AgentProcess` (input queue, alarms, delegation); triggered runs on
-  ephemeral `AiSession`s. This plan preserves that split — C converts within
-  the ephemeral substrate — but any future "agent alarms survive restarts for
-  triggered runs" requirement pulls C onto the durable substrate instead;
-  decide before C, not after. (The durable process itself is Agent-type-free —
-  see phase E — so either choice leaves it untouched.)
+- **Substrate unification (resolved 2026-07-28).** C moves triggered runs onto
+  the durable process via the relay pattern, ending the ephemeral/durable
+  split for agents; the relay is the only new moving part. The durable process
+  itself is Agent-type-free (see phase E) and unchanged.
+- **Queue growth without backpressure** (see phase C): a hot subscribed feed
+  can grow the process input queue faster than turns drain it; the
+  intermediary-feed escape hatch is the mitigation.
 - **Memoized-LLM tests** encode current tool surfaces (`add-artifact`,
   `get-context` artifacts); D re-records them.
 - `enabled` semantics during C: don't strand existing disabled agents —

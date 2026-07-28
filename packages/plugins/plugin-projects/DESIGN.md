@@ -336,19 +336,19 @@ arrays migrate into a Collection on a Project created per agent. The inline
 which is also the correction: naming lived on the wrong object.
 
 **Remove `cron` (and `subscriptions`).** Both are trigger _sources_ that
-`sync-triggers` compiles imperatively into `Trigger` objects. A `Routine`
-(instructions + trigger) is exactly this, declaratively: cron becomes a Routine
-with a timer trigger; each subscription becomes a Routine with a feed trigger.
-The conversion is substrate-preserving — `AgentWorker` already runs an ephemeral
-`AiSession`, the same substrate as `RunInstructions`, never the durable
-`AgentProcess`. Two caveats from tracing the fired path: the `filterEvents`
-pipeline stages qualified events through `agent.feed` (the "deprecated" field is
-load-bearing), and the qualifier is a deliberately cheap pre-filter whose
-replacement needs a real decision (see PLAN.md phase C) — folding it into the
-routine's instructions would put filtering on the expensive model. `enabled`
-stays as the agent-level master switch only if routines gain an owner reference
-to gate on — otherwise it moves to the Routine. `sync-triggers` shrinks to a
-migration shim, then deletes.
+`sync-triggers` compiles imperatively into `Trigger` objects. Each becomes a
+Routine — timer trigger for cron, feed trigger per subscription — whose runnable
+is a **relay**: qualify the event with a cheap model, and when relevant forward
+it to the agent's durable process via `AgentService`/ProcessManager (decided
+burdon × Dima; see PLAN.md phase C). The relay gives multiplexing (many feeds →
+one process) and filtering in one construct, retires `AgentWorker`'s ephemeral
+path, and dissolves `agent.feed` — today's "deprecated" but load-bearing staging
+queue between qualifier and worker — into the process's durable input queue.
+Accepted gap: no backpressure (relays push as triggers fire); the escape hatch
+is an intermediary feed the process drains at its own pace. `enabled` stays as
+the agent-level master switch only if routines gain an owner reference to gate
+on — otherwise it moves to the Routine. `sync-triggers` shrinks to a migration
+shim, then deletes.
 
 **`instructions: Ref<Text>` → `Ref<Instructions>`.** The typed object carries
 `skills`, `objects`, and `commands` — which is precisely the "skill set" the

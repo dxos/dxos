@@ -39,8 +39,10 @@ import { trim } from '@dxos/util';
 import { type DelegationStrategy } from './delegation-strategy';
 
 interface AgentProcessOptions {
+  // TODO(burdon): Instructions?
   systemPrompt?: string;
 
+  /** Model identifier. */
   model?: DXN.DXN;
 
   /**
