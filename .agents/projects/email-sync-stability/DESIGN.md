@@ -3,7 +3,7 @@
 The dxos half of a cross-repo work-stream; the edge half lives in `dxos/edge` under the same project
 name. Tracking issue: [DX-1140](https://linear.app/dxos/issue/DX-1140), sub-issue of DX-1076.
 
-## Shipped: the retention fix (PR #12366)
+## The retention fix (PR #12366 — implemented and verified, awaiting merge)
 
 A Cloudflare Worker running ECHO operations on a cron trigger OOMed after ~390 invocations, with V8
 reporting `Ineffective mark-compacts near heap limit` — GC ran and could not reclaim, so the memory
@@ -128,9 +128,11 @@ a module-level container, and reading was incidental. Every other diagnostic in 
 **read-only view over existing working state** — `echo-stats`, `database-roots`,
 `database-root-metrics`, `active-queries`, `query-invalidation`, `spaces`, `process-info` all just
 project over containers that exist for functional reasons and are pruned by functional code (e.g.
-`query-service._queries` has paired `add`/`delete`). A read-only projection cannot leak; it retains
-nothing the system was not already holding. That is the property to look for, and it is why the sweep
-came back nearly empty.
+`query-service._queries` has paired `add`/`delete`). A read-only projection introduces no unbounded
+accumulator: it adds no growth term of its own, because it retains nothing the system was not already
+holding. That is the property to look for, and it is why the sweep came back nearly empty. It is not
+a guarantee of zero retention — the registered `fetch` closure still captures its instance, which is
+why the table above lists a constant `+1` per diagnostic id — but a constant is not a leak.
 
 Also verified clean: `createDiagnostics` builds a fresh snapshot per call and holds no state;
 `plugin-doctor` contributes its providers once at activation; `EchoDataMonitor` is a model of how to
@@ -167,13 +169,17 @@ the next `batchEvents` call re-emits those stale targets — so one throwing lis
 subsequent batches indefinitely. Fix is small: clear before emitting (or wrap the loop in its own
 `try/finally`) and aggregate listener errors rather than letting the first escape.
 
-### Minor, bounded, but permanent
+### Minor, workload-bounded, but permanent
+
+Neither of the first two is bounded by construction — both are bounded only by how many distinct keys
+a given workload produces, so both grow monotonically on a long-lived multi-tenant worker. Same risk
+class, differing only in entry size.
 
 - `index-query-source-provider.ts:498` `emittedSchemaValidationWarnings` — module-level `Set<string>`
-  of type DXNs, never cleared. Bounded by distinct schemas; strings only.
+  of type DXNs, never cleared. One entry per distinct schema the process ever sees; strings only.
 - `echo-protocol/src/space-id.ts:9` `SPACE_IDS_CACHE` — `ComplexMap<PublicKey, SpaceId>`, never
-  evicted. Bounded by distinct space keys, so effectively constant for a client but **monotonic for a
-  multi-tenant edge worker** that keeps seeing new spaces. Small per entry.
+  evicted. One entry per distinct space key, so effectively constant for a client but **monotonic for
+  a multi-tenant edge worker** that keeps seeing new spaces. Small per entry.
 - Instance-scoped `trace.diagnostic` registrations are never unregistered — `echo-host` (3),
   `query-service` (2), `data-space-manager` (1). Ids are fixed literals so `set` overwrites; this pins
   only the most recent instance of each. Constant `+1`, not a leak, but it makes real leaks harder to
