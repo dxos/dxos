@@ -26,7 +26,7 @@ projects:
     tasks: packages/plugins/plugin-projects/TASKS.md
     design: packages/plugins/plugin-projects/DESIGN.md
     prs: [12335]
-    resume: 'Docs now live in the package (DESIGN.md + TASKS.md at packages/plugins/plugin-projects/). PR #12335 MERGED (squash f7d7735615) carried milestones 1-2; nothing unpushed. Milestone 3 (project chats: article toolbar -> chat scoped to project, chats parented to the Project and shown as navtree children) is DESIGNED AND APPROVED, not implemented. NEXT: first Phase 3 task — optional bindings input on AssistantOperation.CreateChat — then ProjectOperation.CreateChat, projectChats graph extension, Chats-section exclusion, toolbar. Watch: if Query.children() does not re-emit in the graph connector, fall back to a chats Collection field.'
+    resume: 'Phase 3 instructions-channel arc COMPLETE + system eval GREEN: Chat.instructions typed ref -> explicit formatSystemPrompt param (typename partition deleted; bound Instructions are now plain context stubs), agent-process boundary via Process.InstructionsAnnotation, ProjectSkill (artifact add/list, 4/4 unit tests), projects.eval.ts PASSED LIVE 100% (created/filed/bound, opus-4-8). PR being opened from this worktree (submit-pr in flight). REMAINING Phase 3 UI: ProjectOperation.CreateChat, projectChats graph extension (children() re-emit watch item), Chats-section exclusion, ProjectArticle toolbar, ChatCompanion sets chat.instructions + lazy backfill. Then: commands-authoring UI, outliner skill, Agent/Project convergence review.'
 
   - name: sketch-scene-dsl
     status: active

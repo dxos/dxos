@@ -49,6 +49,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     /**
      * Instructions for the agent.
      */
+    // TODO(burdon): Instructions.Instructions
     instructions: Ref.Ref(Text.Text).pipe(
       Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
       Schema.annotations({ title: 'Instructions' }),
@@ -57,14 +58,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     /**
      * Primary chat for the agent.
      */
-    // TODO(dmaretskyi): Multiple chats; RB: branching hierarchy.
     chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
-
-    /**
-     * Input feed for subscriptions.
-     * @deprecated Subscriptions will write directly to the agent.
-     */
-    feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 
     // TODO(burdon): Currently Memory.Memory objects are global to the space; make them artifacts?
     artifacts: Schema.Array(
@@ -93,6 +87,12 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
       title: 'Cron',
       description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
     }),
+
+    /**
+     * Input feed for subscriptions.
+     * @deprecated Subscriptions will write directly to the agent.
+     */
+    feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 
     /**
      * Allow the agent to filter events.

@@ -36,6 +36,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * Session plan for tracking task progress within this conversation.
      * Created lazily when the first task is recorded.
      */
+    // TODO(burdon): Generalize to artifact associated with a skill?
     plan: Schema.optional(Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false))),
   }).pipe(
     LabelAnnotation.set(['name']),

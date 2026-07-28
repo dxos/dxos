@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation, Project } from '@dxos/compute';
-import { Database, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
