@@ -11,6 +11,10 @@ declare const self: ServiceWorkerGlobalScope;
 
 const precacheManifest = self.__WB_MANIFEST;
 
+// Workbox keys its precache by URL, so duplicate manifest entries collapse and fewer entries settle
+// than the manifest lists. Counting unique URLs keeps the meter's denominator honest.
+const precacheTotal = new Set(precacheManifest.map((entry) => (typeof entry === 'string' ? entry : entry.url))).size;
+
 /**
  * Progress envelope consumed by `@dxos/plugin-pwa`'s update-progress module, which projects it into
  * the app's progress registry. Declared here rather than imported so the worker bundle stays free of
@@ -21,6 +25,11 @@ const PRECACHE_PROGRESS = 'dxos:precache-progress';
 /** Batches the per-entry ticks: a full manifest is thousands of entries, one message each is noise. */
 const PROGRESS_POST_INTERVAL = 25;
 
+// Sampled once at worker startup rather than per message: a worker evaluated alongside an active peer
+// is an update, a first install has none. Read later it races activation — the first install has
+// already become `active` by the time the completion handler runs, mislabelling itself an update.
+const isUpdate = Boolean(self.registration.active);
+
 // An installing worker controls no clients, so uncontrolled windows must be included or the page
 // showing the meter never hears about the download it is waiting on.
 const postPrecacheProgress = async (current: number, done: boolean): Promise<void> => {
@@ -29,9 +38,8 @@ const postPrecacheProgress = async (current: number, done: boolean): Promise<voi
     client.postMessage({
       type: PRECACHE_PROGRESS,
       current,
-      total: precacheManifest.length,
-      // A worker installing alongside an active one is an update; a first install has no active peer.
-      isUpdate: Boolean(self.registration.active),
+      total: precacheTotal,
+      isUpdate,
       done,
     });
   }
@@ -40,11 +48,20 @@ const postPrecacheProgress = async (current: number, done: boolean): Promise<voi
 let precached = 0;
 const tickPrecache = (): void => {
   precached += 1;
-  const done = precached >= precacheManifest.length;
-  if (done || precached % PROGRESS_POST_INTERVAL === 0) {
-    void postPrecacheProgress(precached, done);
+  if (precached % PROGRESS_POST_INTERVAL === 0) {
+    void postPrecacheProgress(precached, false);
   }
 };
+
+// Completion is taken from the worker's own lifecycle rather than the tick count reaching the total:
+// an entry whose fetch fails settles through neither counting hook, which would strand the meter just
+// short of full and leave the monitor in the registry forever. Reaching `installed` means precaching
+// is over however many entries actually settled.
+self.serviceWorker?.addEventListener('statechange', () => {
+  if (self.serviceWorker.state === 'installed') {
+    void postPrecacheProgress(precacheTotal, true);
+  }
+});
 
 // Workbox precaches entries strictly one at a time and settles each through exactly one of these
 // hooks — `cachedResponseWillBeUsed` with a hit when the entry is already cached, `cacheDidUpdate`

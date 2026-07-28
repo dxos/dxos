@@ -100,6 +100,11 @@ export const PwaPlugin = Plugin.define(meta).pipe(
         }
 
         const { current, total, isUpdate, done } = event.data;
+        if (done && !monitor) {
+          // Completion for a download this window never saw start — nothing to report.
+          return;
+        }
+
         monitor ??= registry.register(`${meta.profile.key}.precache`, {
           label: isUpdate ? 'Downloading app update' : 'Preparing offline use',
           total,
