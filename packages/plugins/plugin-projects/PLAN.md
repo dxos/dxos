@@ -139,27 +139,36 @@ process drains at its own pace (at the cost of the visible extra feed).
 
 ## Phase D — remove `artifacts`; schema bump + migration
 
-- [ ] Delete `Agent.artifacts`, `add-artifact` op, and the artifacts half of
-      `get-context`; the model files via `ProjectSkill.artifact-add`.
-- [ ] Bump `org.dxos.type.agent` → `0.2.0`; migration: inline `{name, data}`
-      entries → a Collection on a Project created per agent (named after it);
-      `agent.chat` (kept readable through B/C) reparented under that Project;
-      drop `feed` / `filterEvents` and the transitional `chat`. NOTE:
-      `feed`/`filterEvents` are deprecated in name only — they are the current
-      qualifier pipeline's staging queue and its switch — so dropping them is
-      **gated on C landing** (the relay dissolves the staging queue into the
-      process input queue); `AgentArticle.tsx` also backfills `agent.feed`
-      today.
-- [ ] `makeInitialized` slims to identity + instructions (+ optional first
-      chat via the chat factory).
-- [ ] Verify: Agent.test round-trip at 0.2.0; a migration test (0.1.0 fixture
-      → 0.2.0) asserting each inline artifact lands in the created project's
-      Collection **and** is returned by `ProjectSkill.artifact-list`, and that
-      the reparented chat still resolves its feed and instructions; full
-      assistant-toolkit + plugin-assistant suites; and a live pass of
-      `projects.eval.ts`, whose scorers already assert the replacement
-      workflow end-to-end (artifact created → filed into the project
-      Collection via `artifact-add` → bound into chat context).
+- [x] Deleted `Agent.artifacts`, the `add-artifact`/`AgentWorker`/`Qualifier`
+      ops (+ `sync-triggers`), and the artifacts half of `get-context`; the
+      model files via `ProjectSkill.artifact-add`. The agent skill's template
+      now points at project filing. `SyncTriggers` became `SyncAutomation`
+      (config on the invocation — the agent stores no automation fields) with
+      per-category reconcile, so a subscriptions-only update cannot drop the
+      schedule routine.
+- [x] `org.dxos.type.agent` → `0.2.0` (`name`/`did`/`enabled`/`instructions`
+      only); `LegacyAgent` pinned at 0.1.0 as the migration source.
+      `agentMigration` (assistant-toolkit `migrations/agent.ts`, registered in
+      plugin-assistant): wraps bare-Text instructions into typed Instructions,
+      moves inline artifacts into a Project's Collection, sets
+      `chat.agent`/`chat.instructions`, replays `subscriptions`/`cron` through
+      the routine compiler, drops `feed`/`filterEvents`/`chat`. Gotcha
+      captured: migration snapshots deliver refs in ENCODED form (`{'/':dxn}`),
+      never live Refs — decode before resolving.
+- [x] `makeInitialized` slims to identity + instructions + first chat
+      (with `agent`/`instructions` refs); `resetChatHistory` rebuilds via the
+      `CompanionTo` relation (new `Agent.loadChat` helper). UI ports:
+      `AgentArticle` = instructions editor + reset (artifacts/inputs tabs died
+      with their fields); `AgentProperties` derives subscription state from
+      compiled trigger foreign keys and toggles via `SyncAutomation`;
+      stories-assistant `ContextModule` reads the project collection.
+- [x] Verify: Agent.test 0.2.0 shape + migration test (0.1.0 fixture → typed
+      instructions, artifacts→Project Collection asserted via
+      `ProjectSkill.artifact-list`, chat inversion, cron→routine) GREEN; full
+      suites GREEN post-D (compute 46 / agent-runtime 22 / assistant 43 /
+      assistant-toolkit 30 / plugin-assistant 136). Outstanding: memoized
+      agent-skill conversations regeneration (queued on 1Password) and a live
+      `projects.eval.ts` pass — both blocked on `op` re-auth.
 
 ## Phase E (optional) — rename the session host
 

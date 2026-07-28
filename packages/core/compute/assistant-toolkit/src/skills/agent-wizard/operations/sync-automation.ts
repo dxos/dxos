@@ -10,13 +10,13 @@ import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FeedAnnotation } from '@dxos/schema';
 
 import { Agent } from '../../../types';
-import { SyncTriggers } from './definitions';
+import { SyncAutomation } from './definitions';
 
-export default SyncTriggers.pipe(
+export default SyncAutomation.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ agent: agentRef }) {
+    Effect.fn(function* ({ agent: agentRef, subscriptions, cron, qualify }) {
       const agent = yield* Database.load(agentRef);
-      yield* syncAgentTriggers(agent);
+      yield* syncAgentAutomation(agent, { subscriptions, cron, qualify: qualify ?? true });
     }),
   ),
 );
@@ -41,14 +41,32 @@ const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
   return Option.isSome(annotation) && annotation.value === true;
 };
 
+export type AutomationConfig = {
+  /** Omitted (vs empty) leaves existing subscription routines untouched. */
+  subscriptions?: readonly Ref.Ref<Obj.Unknown>[];
+  /** Omitted leaves an existing schedule routine untouched; empty string removes it. */
+  cron?: string;
+  /** Run the cheap-model relevance check before forwarding subscription events. */
+  qualify: boolean;
+};
+
+/** A schedule routine's target key is `timer:<cron>`; subscription keys are the target's URI. */
+const isTimerKey = (id: string | undefined): boolean => id?.startsWith('timer:') ?? false;
+
+const targetKeyOf = (entity: Obj.Unknown): string | undefined =>
+  Obj.getMeta(entity).keys.find((key) => key.source === AGENT_TRIGGER_TARGET_EXTENSION_KEY)?.id;
+
 /**
- * Compiles the agent's `subscriptions`/`cron` fields into Routines whose triggers run the Relay
- * (plugin-projects PLAN.md phase C): the relay qualifies each event with a cheap model and forwards
- * relevant ones onto the chat's durable session — the two-stage qualifier pipeline through
- * `agent.feed` is gone. Re-running deletes and recreates everything (including any pre-relay
- * triggers, which migrates legacy agents on their next sync).
+ * Compiles the agent's automation config into Routines whose triggers run the Relay: the relay
+ * qualifies each event with a cheap model and forwards relevant ones onto the chat's durable
+ * session. Re-running deletes and recreates everything (including any pre-relay triggers, which
+ * migrates legacy agents). Exported for the 0.1.0 → 0.2.0 Agent migration, which replays the
+ * legacy `subscriptions`/`cron` fields through it.
  */
-const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Database.Service> =>
+export const syncAgentAutomation = (
+  agent: Agent.Agent,
+  config: AutomationConfig,
+): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
     const triggers = yield* Database.query(
       Filter.foreignKeys(Trigger.Trigger, [{ source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id }]),
@@ -57,22 +75,28 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
       Filter.foreignKeys(Routine.Routine, [{ source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id }]),
     ).run;
 
-    // Remove all existing triggers/routines — they will be recreated with the current config.
-    // This ensures operation, concurrency, and enabled stay in sync when agent fields change.
-    for (const trigger of triggers) {
+    // Reconcile per category: only the categories present in the config are recreated, so a
+    // subscriptions-only update (e.g. a UI toggle) cannot silently drop the schedule routine.
+    // Recreation keeps operation, concurrency, and enabled in sync when the config changes.
+    const shouldRemove = (entity: Obj.Unknown): boolean => {
+      const timer = isTimerKey(targetKeyOf(entity));
+      return timer ? config.cron !== undefined : config.subscriptions !== undefined;
+    };
+    for (const trigger of triggers.filter(shouldRemove)) {
       yield* Database.remove(trigger);
     }
-    for (const routine of routines) {
+    for (const routine of routines.filter(shouldRemove)) {
       yield* Database.remove(routine);
     }
 
     const triggersEnabled = agent.enabled ?? true;
-    const chatRef = agent.chat;
-    if (!chatRef) {
+    const chat = yield* Agent.loadChat(agent);
+    if (!chat) {
       // Without a chat there is no session to relay into; nothing to compile.
       yield* Database.flush();
       return;
     }
+    const chatRef = Ref.make(chat);
 
     // Lazy import to avoid circular dependency issues.
     const { Relay } = yield* Effect.promise(() => import('../../agent/operations/definitions'));
@@ -113,7 +137,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         );
       });
 
-    for (const subscription of agent.subscriptions) {
+    for (const subscription of config.subscriptions ?? []) {
       const targetOption = yield* Database.load(subscription).pipe(
         Effect.map(Option.some),
         Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
@@ -142,8 +166,6 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         continue;
       }
 
-      // `filterEvents` maps to the relay's qualify switch (false = deliver unfiltered).
-      const qualify = agent.filterEvents ?? true;
       yield* makeRoutine({
         name: `${agent.name ?? 'Agent'} — ${Obj.getLabel(target) ?? 'subscription'}`,
         targetKey: subscription.uri,
@@ -151,18 +173,18 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         input: {
           chat: chatRef,
           event: '{{event}}',
-          ...(qualify ? {} : { qualify: false }),
+          ...(config.qualify ? {} : { qualify: false }),
         },
-        concurrency: qualify ? 5 : undefined,
+        concurrency: config.qualify ? 5 : undefined,
       });
     }
 
     // Timer wake: a synthetic prompt through the same relay path (no event, so no qualification).
-    if (agent.cron) {
+    if (config.cron) {
       yield* makeRoutine({
         name: `${agent.name ?? 'Agent'} — schedule`,
-        targetKey: `timer:${agent.cron}`,
-        spec: Trigger.specTimer(agent.cron),
+        targetKey: `timer:${config.cron}`,
+        spec: Trigger.specTimer(config.cron),
         input: {
           chat: chatRef,
           prompt: 'Scheduled wake: continue your instructions and review outstanding work.',

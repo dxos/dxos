@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
-import { AgentService, getSession } from '@dxos/compute/AgentService';
+import { getSession } from '@dxos/compute/AgentService';
 import { Database, Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 

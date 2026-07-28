@@ -54,8 +54,6 @@ const meta = {
         space.db.add(
           Obj.make(Agent.Agent, {
             instructions: Ref.make(Instructions.make({ text: '' })),
-            artifacts: [{ name: 'Organization', data: Ref.make(organization) }],
-            subscriptions: [],
           }),
         );
       },

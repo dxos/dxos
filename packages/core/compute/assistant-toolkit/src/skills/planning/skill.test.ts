@@ -103,14 +103,16 @@ const makePlan = (statuses: readonly Plan.TaskStatus[]): Plan.Plan =>
 const setupAgentWithLiveHost = (tasks: readonly Plan.Task[]) =>
   Effect.gen(function* () {
     const agent = yield* Agent.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningSkill.make());
-    const chat = yield* Database.load(agent.chat!);
+    const chat = yield* Agent.loadChat(agent);
+    invariant(chat, 'Agent chat not found.');
     const plan = yield* Chat.ensurePlan(chat);
     Obj.update(plan, (plan) => {
       plan.tasks.push(...tasks);
     });
     yield* Database.flush();
 
-    const chatFeed = agent.chat?.target?.feed?.target;
+    const agentChat2 = yield* Agent.loadChat(agent);
+    const chatFeed = agentChat2?.feed?.target;
     invariant(chatFeed, 'Agent chat feed not found.');
 
     // Spawns (and stamps) the host process that owns the conversation's harness.

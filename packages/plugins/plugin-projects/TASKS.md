@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: PR #12365 MERGED (b5ecf54ed1). Now IN PROGRESS in this worktree: reconciliation phase A per ./PLAN.md (Agent.instructions -> Ref<Instructions> + dual-read helper), then B. Uncommitted: none._
+_Resume: reconciliation phases A-D ALL CODE-COMPLETE in this worktree (see ./PLAN.md checkboxes): typed Agent.instructions + dual-read, Chat.agent inversion + dual-write, relay pattern (Routines onto the durable session, AgentWorker/Qualifier/sync-triggers deleted), Agent 0.2.0 + registered migration + UI ports. All unit suites green. BLOCKED on 1Password re-auth: memoized agent-skill regen + live projects.eval pass; then format/lint sweep, commit, push. Uncommitted: phase D working tree._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 

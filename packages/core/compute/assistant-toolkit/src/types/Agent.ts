@@ -9,21 +9,49 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext, Harness } from '@dxos/assistant';
 import { Instructions, type Skill } from '@dxos/compute';
-import { Annotation, Database, DXN, Feed, Filter, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { EffectEx } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
-import { EID, type EntityId, IdentityDid } from '@dxos/keys';
-import { Text } from '@dxos/schema';
+import { IdentityDid } from '@dxos/keys';
 
 import { HarnessContextError } from '../errors';
 import * as Chat from './Chat';
 
 /**
- * Agent schema definition.
+ * The pre-reconciliation Agent shape, kept only as the migration source (plugin-projects PLAN.md
+ * phase D): `artifacts` moved to a per-agent Project's Collection, `subscriptions`/`cron` compile
+ * to Routines, `feed`/`filterEvents` dissolved into the relay, and `chat` inverted to `Chat.agent`.
+ *
+ * @deprecated Superseded by {@link Agent} (`0.2.0`); readable only by the registered migration.
  */
-export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent', '0.1.0'))(
+export class LegacyAgent extends Type.makeObject<LegacyAgent>(DXN.make('org.dxos.type.agent', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    did: Schema.optional(IdentityDid),
+    enabled: Schema.optional(Schema.Boolean),
+    /** May target a bare `Text` (pre-phase-A) or a typed `Instructions` (post-phase-A). */
+    instructions: Ref.Ref(Obj.Unknown),
+    chat: Schema.optional(Schema.suspend((): Ref.RefSchema<Chat.Chat> => Ref.Ref(Chat.Chat))),
+    artifacts: Schema.Array(
+      Schema.Struct({
+        name: Schema.String,
+        data: Ref.Ref(Obj.Unknown),
+      }),
+    ),
+    subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)),
+    cron: Schema.optional(Schema.String),
+    feed: Schema.optional(Ref.Ref(Feed.Feed)),
+    filterEvents: Schema.optional(Schema.Boolean),
+  }),
+) {}
+
+/**
+ * An agent identity: a personality (attribution DID) plus its preset payload (instructions with
+ * text, skills, objects, and commands). Owns no conversation state — chats reference their agent
+ * via `Chat.agent`, and durable work products live on a Project (plugin-projects DESIGN.md,
+ * "Agent ↔ Project convergence").
+ */
+export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent', '0.2.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
 
@@ -39,7 +67,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     }),
 
     /**
-     * When false, agent triggers are disabled after sync-triggers runs.
+     * Master switch for the agent's automation (propagated onto its compiled routine triggers).
      */
     enabled: Schema.optional(Schema.Boolean).annotations({
       title: 'Enabled',
@@ -48,64 +76,9 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
 
     /**
      * Instructions for the agent — the preset payload (text, skills, objects, commands) a chat
-     * receives when the agent is applied to it. Pre-phase-A records point at a bare `Text`; read
-     * through {@link loadInstructions}, which accepts both shapes until the phase-D migration.
+     * receives when the agent is applied to it.
      */
     instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotations({ title: 'Instructions' })),
-
-    /**
-     * Primary chat for the agent.
-     */
-    // Suspended: Agent ↔ Chat reference each other across modules, so the schema must not touch
-    // `Chat.Chat` while this module evaluates during Chat's import.
-    chat: Schema.optional(
-      Schema.suspend((): Ref.RefSchema<Chat.Chat> => Ref.Ref(Chat.Chat)).pipe(FormInputAnnotation.set(false)),
-    ),
-
-    // TODO(burdon): Currently Memory.Memory objects are global to the space; make them artifacts?
-    artifacts: Schema.Array(
-      Schema.Struct({
-        // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
-        name: Schema.String,
-        // TODO(burdon): Rename object.
-        data: Ref.Ref(Obj.Unknown),
-      }),
-    ).pipe(FormInputAnnotation.set(false)),
-
-    /**
-     * References to objects with a canonical queue property.
-     * Schema must have the QueueAnnotation.
-     */
-    // Change to trigger.
-    // TODO(dmaretskyi): Turn into an array of objects when form-data
-    subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
-
-    /**
-     * Cron expression for a timer trigger that invokes the agent worker on a schedule.
-     * The timer trigger bypasses the qualifier and goes straight to the agent worker.
-     */
-    // Change to trigger.
-    cron: Schema.optional(Schema.String).annotations({
-      title: 'Cron',
-      description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
-    }),
-
-    /**
-     * Input feed for subscriptions.
-     * @deprecated Subscriptions will write directly to the agent.
-     */
-    feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
-
-    /**
-     * Allow the agent to filter events.
-     * Related events will be added to the input queue of the agent.
-     * It is recommended to enable this.
-     * @deprecated
-     */
-    filterEvents: Schema.optional(Schema.Boolean).annotations({
-      title: 'Filter events',
-      description: 'Allow the agent to filter events.',
-    }),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'sky' }),
@@ -113,40 +86,38 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
 ) {}
 
 /**
- * Resolves the agent's instructions, dual-reading both persisted shapes: the typed `Instructions`
- * (phase A onward) and the bare `Text` that pre-migration records point at (rewritten by the
- * phase-D migration — see plugin-projects PLAN.md). `instructions` is absent for the legacy shape.
+ * Resolves the agent's instructions and their markdown text.
  */
 export const loadInstructions = (
   agent: Agent,
-): Effect.Effect<{ text: string; instructions?: Instructions.Instructions }, EntityNotFoundError, Database.Service> =>
+): Effect.Effect<{ text: string; instructions: Instructions.Instructions }, EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
-    // Resolve untyped: the schema says `Instructions`, but legacy records resolve to a `Text`, so
-    // the target type must be discovered rather than assumed (an untyped ref carries no resolver,
-    // so `Database.resolve` — which goes through the DB — is required here, not `Database.load`).
-    const target = yield* Database.resolve(agent.instructions.uri);
-    if (Obj.instanceOf(Instructions.Instructions, target)) {
-      const text = yield* Database.load(target.text).pipe(
-        Effect.map((doc) => doc.content),
-        Effect.catchTag('EntityNotFoundError', () => Effect.succeed('')),
-      );
-      return { text, instructions: target };
-    }
-    if (Obj.instanceOf(Text.Text, target)) {
-      return { text: target.content };
-    }
-    return { text: '' };
+    const instructions = yield* Database.load(agent.instructions);
+    const text = yield* Database.load(instructions.text).pipe(
+      Effect.map((doc) => doc.content),
+      Effect.catchTag('EntityNotFoundError', () => Effect.succeed('')),
+    );
+    return { text, instructions };
   });
 
-export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions' | 'artifacts' | 'subscriptions' | 'chat'> &
-  Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
-    instructions: string;
-    skills?: Ref.Ref<Skill.Skill>[];
-    contextObjects?: Ref.Ref<Obj.Any>[];
-  };
+/**
+ * Resolves the agent's primary chat via the `CompanionTo` relation (the agent owns no chat ref).
+ */
+export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const chats = yield* Database.query(Query.select(Filter.id(agent.id)).targetOf(Chat.CompanionTo).source()).run;
+    const [chat] = chats.filter(Obj.instanceOf(Chat.Chat));
+    return chat;
+  }).pipe(Effect.orDie);
+
+export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions'> & {
+  instructions: string;
+  skills?: Ref.Ref<Skill.Skill>[];
+  contextObjects?: Ref.Ref<Obj.Any>[];
+};
 
 /**
- * Creates a fully initialized Agent with chat, queue, and context bindings.
+ * Creates a fully initialized Agent with its first chat and context bindings.
  *
  * @param props - Agent properties including spec, skills, and context objects.
  * @param skill - The skill to use for the agent context.
@@ -171,7 +142,7 @@ export const makeInitialized = (
       ),
     );
 
-    // The typed Instructions is the agent's preset payload: text plus skill set (PLAN.md phase A).
+    // The typed Instructions is the agent's preset payload: text plus skill set.
     const instructions = yield* Database.add(
       Instructions.make({ text: props.instructions, skills: persistedPropsSkills }),
     );
@@ -183,9 +154,6 @@ export const makeInitialized = (
         // spec), where it can be deterministic or a real HALO DID.
         ...agentProps,
         instructions: Ref.make(instructions),
-        artifacts: props.artifacts ?? [],
-        subscriptions: props.subscriptions ?? [],
-        filterEvents: props.filterEvents ?? true,
         enabled: props.enabled ?? true,
       }),
     );
@@ -200,10 +168,9 @@ export const makeInitialized = (
       Chat.make({
         [Obj.Parent]: agent,
         feed: Ref.make(feed),
-        // Steer the agent's chat through the milestone-3 channel (rendered into the system prompt).
+        // Steered through the chat's own channels: instructions render into the system prompt,
+        // the agent ref carries identity/attribution.
         instructions: Ref.make(instructions),
-        // Phase-B inversion: the chat references its agent; `agent.chat` below is the dual-write
-        // kept for legacy readers until the phase-D migration.
         agent: Ref.make(agent),
       }),
     );
@@ -221,17 +188,11 @@ export const makeInitialized = (
       }),
     );
 
-    const inputFeed = yield* Database.add(Feed.make());
-    Obj.update(agent, (agent) => {
-      agent.chat = Ref.make(chat);
-      agent.feed = Ref.make(inputFeed);
-    });
-
     return agent;
   });
 
 /**
- * Resets the agent chat history by rebuilding the chat context.
+ * Resets the agent's chat history by rebuilding the chat context.
  * Preserves the existing skills and objects from the current chat context.
  *
  * @param agent - The agent whose chat history should be reset. Must have an existing chat.
@@ -239,12 +200,12 @@ export const makeInitialized = (
  */
 export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
-    invariant(agent.chat, 'Agent must have an existing chat to reset.');
+    const existingChat = yield* loadChat(agent);
+    if (!existingChat) {
+      return yield* Effect.dieMessage('Agent must have an existing chat to reset.');
+    }
 
-    const existingFeed = yield* agent.chat.pipe(Database.load).pipe(
-      Effect.map((_) => _.feed),
-      Effect.flatMap(Database.load),
-    );
+    const existingFeed = yield* Database.load(existingChat.feed);
     const runtime = yield* Effect.runtime<Database.Service>();
     const existingContextBinder = yield* EffectEx.acquireReleaseResource(
       () =>
@@ -266,7 +227,6 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
       Chat.make({
         [Obj.Parent]: agent,
         feed: Ref.make(feed),
-        // The rebuilt chat keeps the agent's steering and identity (phase-B shape).
         instructions: agent.instructions,
         agent: Ref.make(agent),
       }),
@@ -278,11 +238,16 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
         objects: [...objects, Ref.make(chat)],
       }),
     );
-    // Dual-write kept for legacy readers until the phase-D migration.
-    Obj.update(agent, (agent) => {
-      agent.chat = Ref.make(chat);
-    });
 
+    // Retire the old companion link; the new chat becomes the primary.
+    const relations = yield* Database.query(Query.select(Filter.id(agent.id)).targetOf(Chat.CompanionTo)).run.pipe(
+      Effect.orDie,
+    );
+    for (const relation of relations) {
+      if (Relation.getSource(relation) === existingChat) {
+        yield* Database.remove(relation);
+      }
+    }
     yield* Database.add(
       Relation.make(Chat.CompanionTo, {
         [Relation.Source]: chat,
@@ -304,37 +269,3 @@ export const getFromChatContext: Effect.Effect<
   const agent = agents[0];
   return agent;
 });
-
-/**
- * Adds an object to the agent's artifacts (context), resolving it by id within the agent's space.
- *
- * Accepts whatever reference a tool returned — a bare entity id (e.g. `01J…`) or a full ECHO URI
- * (`echo:/…`, `echo://…`). LLMs frequently strip a returned URI down to the bare id, which is not
- * a resolvable URI on its own; resolving by entity id within the space tolerates both forms.
- *
- * Returns the fully-qualified {@link Ref.Ref} that was stored (also usable for an inline message
- * reference block).
- */
-export const addArtifact = (
-  agent: Agent,
-  { name, id }: { name: string; id: string },
-): Effect.Effect<Ref.Ref<Obj.Unknown>, Error, Database.Service> =>
-  Effect.gen(function* () {
-    // Untyped, LLM-provided reference: normalize to the entity id, falling back to the raw value
-    // (a bare id is already an entity id) — a genuine external-data boundary.
-    const parsed = EID.tryParse(id);
-    const entityId = ((parsed ? EID.getEntityId(parsed) : undefined) ?? id) as EntityId;
-
-    // Store a FULLY-QUALIFIED ref (`echo://<space>/<id>`), not a local `echo:/<id>` one: the artifact
-    // is created by a separate tool/process invocation, and a space-less local ref does not resolve
-    // when the agent is later read from a different db view (e.g. the UI). It is not resolved here —
-    // it resolves lazily when read, by which point the artifact is persisted.
-    const { db } = yield* Database.Service;
-    const ref = db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId }));
-
-    Obj.update(agent, (agent) => {
-      agent.artifacts.push({ name, data: ref });
-    });
-    yield* Database.flush();
-    return ref;
-  });

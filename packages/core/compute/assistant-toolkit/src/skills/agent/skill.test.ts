@@ -5,7 +5,6 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Option from 'effect/Option';
 
 import { AssistantTestLayerWithTriggers, runMemoizedTests } from '@dxos/agent-runtime/testing';
 import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
@@ -30,7 +29,7 @@ import { Agent, Chat, Plan } from '../../types';
 import { AgentWizardHandlers, AgentWizardOperations } from '../agent-wizard';
 import { PlanningHandlers, PlanningSkill } from '../planning';
 import { AgentSkillHandlers } from './operations';
-import { AgentWorker, Relay } from './operations/definitions';
+import { Relay } from './operations/definitions';
 import AgentSkillDef from './skill';
 
 EntityId.dangerouslyDisableRandomness();
@@ -75,60 +74,6 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
   const skill = AgentSkillDef.make();
 
   it.scoped(
-    'agent adds artifact to agent',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* Agent.makeInitialized(
-          {
-            name: 'Test Agent',
-            instructions: 'A test agent for adding artifacts.',
-            skills: [Ref.make(MarkdownSkill.make())],
-          },
-          skill,
-        );
-        yield* Database.flush();
-
-        const document = yield* Database.add(
-          Obj.make(Markdown.Document, {
-            name: 'Test Document',
-            content: Ref.make(Text.make({ content: 'This is a test document with some content.' })),
-          }),
-        );
-        yield* Database.flush();
-
-        expect(agent.artifacts).toHaveLength(0);
-
-        const chatFeed = agent.chat?.target?.feed?.target;
-        invariant(chatFeed, 'Agent chat feed not found.');
-        const runtime = yield* Effect.runtime<Database.Service>();
-        const session = yield* EffectEx.acquireReleaseResource(
-          () => new AiSession.Session({ feed: chatFeed, runtime }),
-        );
-        yield* Effect.promise(() => session.context.open());
-
-        const documentUri = Obj.getURI(document);
-        yield* session
-          .createRequest({
-            system: SYSTEM,
-            prompt: `Please add the document ${documentUri} as an artifact named "My Test Document" to this agent.`,
-          })
-          .pipe(Effect.provide(session.makeToolExecutionServices()));
-
-        // The model may retry with a corrected id, leaving an extra dangling entry — assert the
-        // requested artifact resolves rather than an exact count.
-        const named = agent.artifacts.filter((artifact) => artifact.name === 'My Test Document');
-        expect(named.length).toBeGreaterThanOrEqual(1);
-        const resolved = yield* Effect.forEach(named, (artifact) => artifact.data.pipe(Database.load, Effect.option));
-        const documents = resolved.filter(Option.isSome).map((option) => option.value);
-        expect(documents.some((data) => Obj.instanceOf(Markdown.Document, data))).toBe(true);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
-  );
-
-  it.scoped(
     'shopping list',
     Effect.fnUntraced(
       function* (_) {
@@ -140,9 +85,10 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
           },
           skill,
         );
-        const chatFeed = agent.chat?.target?.feed?.target;
-        invariant(chatFeed, 'Agent chat feed not found.');
         yield* Database.flush();
+        const chat = yield* Agent.loadChat(agent);
+        const chatFeed = chat?.feed?.target;
+        invariant(chatFeed, 'Agent chat feed not found.');
         const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(
           () => new AiSession.Session({ feed: chatFeed, runtime }),
@@ -156,7 +102,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
           })
           .pipe(Effect.provide(session.makeToolExecutionServices()));
 
-        console.log(yield* Effect.promise(() => dumpAgent(agent)));
+        console.log(yield* Effect.promise(() => dumpAgent(agent, chat)));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -187,14 +133,16 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
         );
         yield* Database.flush();
 
+        const agentChat = yield* Agent.loadChat(agent);
+        invariant(agentChat, 'Agent chat not found.');
         const inboxFeed = yield* Database.add(Feed.make());
         yield* Database.add(
           Trigger.make({
             enabled: true,
             spec: Trigger.specFeed(inboxFeed),
-            runnable: Ref.make(Operation.serialize(AgentWorker)),
+            runnable: Ref.make(Operation.serialize(Relay)),
             input: {
-              agent: Ref.make(agent),
+              chat: Ref.make(agentChat),
               event: '{{event}}',
             },
           }),
@@ -209,7 +157,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
         const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true });
         expect(invocations.every((invocation) => Exit.isSuccess(invocation.result))).toBe(true);
 
-        console.log(yield* Effect.promise(() => dumpAgent(agent)));
+        console.log(yield* Effect.promise(() => dumpAgent(agent, agentChat)));
       },
       WithProperties,
       Effect.provide(TestLayer),
@@ -228,13 +176,12 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
             name: 'Scheduled agent',
             instructions: 'A scheduled agent that runs on a timer.',
             skills: [Ref.make(MarkdownSkill.make())],
-            cron,
           },
           skill,
         );
         yield* Database.flush();
 
-        yield* Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) });
+        yield* Operation.invoke(AgentWizardOperations.SyncAutomation, { agent: Ref.make(agent), cron });
 
         const triggers = yield* Database.query(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.skill.test.timer'),
@@ -302,9 +249,10 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
         );
         yield* Database.flush();
 
-        const chatFeed = agent.chat?.target?.feed?.target;
-        invariant(chatFeed, 'Agent chat feed not found.');
         yield* Database.flush();
+        const chat = yield* Agent.loadChat(agent);
+        const chatFeed = chat?.feed?.target;
+        invariant(chatFeed, 'Agent chat feed not found.');
         const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(
           () => new AiSession.Session({ feed: chatFeed, runtime }),
@@ -318,7 +266,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
           })
           .pipe(Effect.provide(session.makeToolExecutionServices()));
 
-        console.log(yield* Effect.promise(() => dumpAgent(agent)));
+        console.log(yield* Effect.promise(() => dumpAgent(agent, chat)));
       },
       WithProperties,
       Effect.provide(TestLayer),
@@ -337,13 +285,12 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
             instructions: 'Test enabled propagation.',
             skills: [Ref.make(MarkdownSkill.make())],
             enabled: false,
-            cron: '0 9 * * *',
           },
           skill,
         );
         yield* Database.flush();
 
-        yield* Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) });
+        yield* Operation.invoke(AgentWizardOperations.SyncAutomation, { agent: Ref.make(agent), cron: '0 9 * * *' });
 
         const triggers = yield* Database.query(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.skill.test.toggle-enabled'),
@@ -354,7 +301,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
           agent.enabled = true;
         });
         yield* Database.flush();
-        yield* Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) });
+        yield* Operation.invoke(AgentWizardOperations.SyncAutomation, { agent: Ref.make(agent), cron: '0 9 * * *' });
 
         const triggersAfter = yield* Database.query(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.skill.test.after'),
@@ -368,33 +315,16 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
   );
 });
 
-const dumpAgent = async (agent: Agent.Agent) => {
+const dumpAgent = async (agent: Agent.Agent, chat: Chat.Chat | undefined) => {
   let text = '';
   text += `============== Agent: ${agent.name} ==============\n\n`;
   text += `============== Instructions ==============\n\n`;
   text += `${await agent.instructions.load().then((instructions) => instructions.text.load().then((doc) => doc.content))}\n`;
   text += `============== Plan ==============\n\n`;
-  if (agent.chat) {
-    const chat = await agent.chat.load();
-    text += chat.plan ? `${await chat.plan.load().then((plan) => Plan.formatPlan(plan))}\n` : 'No plan found.\n';
+  if (chat?.plan) {
+    text += `${await chat.plan.load().then((plan) => Plan.formatPlan(plan))}\n`;
   } else {
     text += 'No plan found.\n';
-  }
-  text += `============== Artifacts ==============\n\n`;
-  for (const artifact of agent.artifacts) {
-    // The artifact ref is LLM-provided and may dangle — report rather than crash the dump.
-    const data = await artifact.data.load().catch(() => undefined);
-    if (!data) {
-      text += `============== ${artifact.name} (unresolved: ${artifact.data.uri}) ==============\n\n`;
-      continue;
-    }
-    text += `============== ${artifact.name} (${Obj.getTypename(data)}) ==============\n`;
-    if (Obj.instanceOf(Markdown.Document, data)) {
-      text += `# ${Obj.getLabel(data)}\n\n${await data.content.load().then((_) => _.content)}\n`;
-    } else {
-      text += `    ${JSON.stringify(data, null, 2)}\n`;
-    }
-    text += '\n';
   }
   return text;
 };

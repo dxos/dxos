@@ -97,13 +97,9 @@ const meta = {
 
               space.db.add(
                 Obj.make(Agent.Agent, {
-                  instructions: Ref.make(Instructions.make({ text: '' })),
-                  artifacts: artifacts.map((obj) => ({
-                    name: Obj.getLabel(obj) ?? 'Artifact',
-                    data: Ref.make(obj),
-                  })),
-                  feed: Ref.make(inputFeed),
-                  subscriptions: [],
+                  instructions: Ref.make(
+                    Instructions.make({ text: 'You are a helpful agent working on the sample data set.' }),
+                  ),
                 }),
               );
             }),

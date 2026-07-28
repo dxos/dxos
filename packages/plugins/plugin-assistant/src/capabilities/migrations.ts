@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Chat } from '@dxos/assistant-toolkit';
+import { Chat, agentMigration } from '@dxos/assistant-toolkit';
 import { Migration } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
@@ -19,6 +19,8 @@ const migrations = [
     transform: identityTransform,
     onMigration: noopCallback,
   }),
+  // Agent 0.1.0 -> 0.2.0: identity/preset shape (plugin-projects PLAN.md phase D).
+  agentMigration,
 ];
 
 export default Capability.makeModule(
