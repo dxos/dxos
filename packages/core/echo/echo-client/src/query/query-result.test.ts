@@ -4,7 +4,7 @@
 
 import { setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Filter, Query } from '@dxos/echo';
@@ -18,10 +18,7 @@ describe('QueryResultImpl', () => {
   // diagnostics strongly therefore pinned the result, its query context, and the whole client graph
   // behind it, one graph per query, for the lifetime of the process. That OOMed long-lived hosts
   // (DX-1140). `QueryResultCache` is deliberately weak; this asserts the diagnostic doesn't defeat it.
-  //
-  // `expect` is imported rather than taken from the test context because `expect.poll` drives the
-  // GC wait, matching `query-result-cache.test.ts`'s equivalent collectability test.
-  test('is collectable once dropped, despite the client-queries diagnostic', async () => {
+  test('is collectable once dropped, despite the client-queries diagnostic', async ({ expect }) => {
     setFlagsFromString('--expose_gc');
     const gc: () => void = runInNewContext('gc');
 
