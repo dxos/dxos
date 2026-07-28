@@ -142,7 +142,14 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
         }),
       );
       if (!retry.admitted) {
-        return yield* Effect.fail(new Error(`Hub did not admit ${email} after creating a local identity.`));
+        // The local identity survives this failure, so the `Already logged in` guard above will
+        // reject a plain retry — name the recovery step instead of leaving the user to deduce it.
+        return yield* Effect.fail(
+          new Error(
+            `Hub did not admit ${email}. A local identity was created and remains bound to this profile; ` +
+              'run `dx account logout` to clear it before retrying.',
+          ),
+        );
       }
       yield* invoke(ClientOperation.CreateAgent);
       return identity;
