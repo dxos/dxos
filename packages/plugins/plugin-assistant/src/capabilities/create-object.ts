@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Agent, AgentSkill, Chat } from '@dxos/assistant-toolkit';
+import { Agent, AgentChat, AgentSkill, Chat } from '@dxos/assistant-toolkit';
 import { Operation, ServiceResolver, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Database, Obj, Type } from '@dxos/echo';
@@ -63,7 +63,7 @@ export default Capability.makeModule(
         id: Type.getTypename(Agent.Agent),
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentSkill.make());
+            const object = yield* AgentChat.makeInitialized({ name: '', instructions: '' }, AgentSkill.make());
 
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,

@@ -13,7 +13,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import { Agent, Chat, Plan } from '../../../types';
+import { Agent, AgentChat, Chat, Plan } from '../../../types';
 import PlanningSkill from '../skill';
 import { UpdateTasks } from './definitions';
 import { PlanningHandlers } from './index';
@@ -32,10 +32,13 @@ describe('UpdateTasks', () => {
     'adds tasks to the plan',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningSkill.make());
+        const agent = yield* AgentChat.makeInitialized(
+          { name: 'Planner', instructions: 'Test.' },
+          PlanningSkill.make(),
+        );
         yield* Database.flush();
 
-        const agentChat = yield* Agent.loadChat(agent);
+        const agentChat = yield* AgentChat.loadChat(agent);
         const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
@@ -43,7 +46,7 @@ describe('UpdateTasks', () => {
           tasks: [{ id: Plan.TaskId.make('task-1'), title: 'Hello', status: 'todo' }],
         }).pipe(Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(chatFeed) })));
 
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* AgentChat.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
         expect(chat.plan).toBeDefined();
         const plan = yield* Database.load(chat.plan!);

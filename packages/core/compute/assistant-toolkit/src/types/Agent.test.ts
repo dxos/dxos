@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Instructions, Skill } from '@dxos/compute';
-import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
-import { Agent, Chat, Plan } from '../types';
+import { Agent, AgentChat, Chat, Plan } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -35,7 +35,7 @@ describe('Agent (0.2.0)', () => {
     'makeInitialized creates the identity/preset shape',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentChat.makeInitialized(
           { name: 'Test', instructions: 'Do the thing.' },
           Skill.make({ key: 'org.dxos.test.skill', name: 'Test' }),
         );
@@ -46,11 +46,14 @@ describe('Agent (0.2.0)', () => {
         expect(text).toBe('Do the thing.');
         expect(Obj.getParent(instructions)).toBe(agent);
 
-        // The chat carries the inverted linkage; the agent owns no conversation state.
-        const chat = yield* Agent.loadChat(agent);
+        // The relation carries the linkage in both directions; the agent owns no conversation state.
+        const chat = yield* AgentChat.loadChat(agent);
         expect(chat).toBeDefined();
-        expect(chat?.agent?.uri).toBe(Ref.make(agent).uri);
         expect(chat?.instructions?.uri).toBe(agent.instructions.uri);
+
+        // Compare by id: the two query paths may resolve distinct proxy instances.
+        const linkedAgent = chat ? yield* AgentChat.loadAgent(chat) : undefined;
+        expect(linkedAgent?.id).toBe(agent.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

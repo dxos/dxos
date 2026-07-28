@@ -14,7 +14,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import { Agent, Chat, Plan } from '../../types';
+import { Agent, AgentChat, Chat, Plan } from '../../types';
 import { PlanningHandlers, PlanningOperations } from './operations';
 import PlanningSkill from './skill';
 
@@ -102,8 +102,8 @@ const makePlan = (statuses: readonly Plan.TaskStatus[]): Plan.Plan =>
  */
 const setupAgentWithLiveHost = (tasks: readonly Plan.Task[]) =>
   Effect.gen(function* () {
-    const agent = yield* Agent.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningSkill.make());
-    const chat = yield* Agent.loadChat(agent);
+    const agent = yield* AgentChat.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningSkill.make());
+    const chat = yield* AgentChat.loadChat(agent);
     invariant(chat, 'Agent chat not found.');
     const plan = yield* Chat.ensurePlan(chat);
     Obj.update(plan, (plan) => {
@@ -111,7 +111,7 @@ const setupAgentWithLiveHost = (tasks: readonly Plan.Task[]) =>
     });
     yield* Database.flush();
 
-    const agentChat2 = yield* Agent.loadChat(agent);
+    const agentChat2 = yield* AgentChat.loadChat(agent);
     const chatFeed = agentChat2?.feed?.target;
     invariant(chatFeed, 'Agent chat feed not found.');
 

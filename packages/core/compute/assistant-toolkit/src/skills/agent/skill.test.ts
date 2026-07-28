@@ -25,7 +25,7 @@ import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Agent, Chat, Plan } from '../../types';
+import { Agent, AgentChat, Chat, Plan } from '../../types';
 import { AgentWizardHandlers, AgentWizardOperations } from '../agent-wizard';
 import { PlanningHandlers, PlanningSkill } from '../planning';
 import { AgentSkillHandlers } from './operations';
@@ -77,7 +77,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
     'shopping list',
     Effect.fnUntraced(
       function* (_) {
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentChat.makeInitialized(
           {
             name: 'Shopping list',
             instructions: 'Keep a shopping list of items to buy.',
@@ -86,7 +86,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
           skill,
         );
         yield* Database.flush();
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* AgentChat.loadChat(agent);
         const chatFeed = chat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
         const runtime = yield* Effect.runtime<Database.Service>();
@@ -114,7 +114,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
     'expense tracking list',
     Effect.fnUntraced(
       function* (_) {
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentChat.makeInitialized(
           {
             name: 'Expense tracking',
             instructions: trim`
@@ -133,7 +133,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
         );
         yield* Database.flush();
 
-        const agentChat = yield* Agent.loadChat(agent);
+        const agentChat = yield* AgentChat.loadChat(agent);
         invariant(agentChat, 'Agent chat not found.');
         const inboxFeed = yield* Database.add(Feed.make());
         yield* Database.add(
@@ -174,7 +174,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const cron = '*/5 * * * *';
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentChat.makeInitialized(
           {
             name: 'Scheduled agent',
             instructions: 'A scheduled agent that runs on a timer.',
@@ -225,7 +225,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
     'planning',
     Effect.fnUntraced(
       function* (_) {
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentChat.makeInitialized(
           {
             name: 'Egg making',
             instructions: trim`
@@ -257,7 +257,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
         yield* Database.flush();
 
         yield* Database.flush();
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* AgentChat.loadChat(agent);
         const chatFeed = chat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
         const runtime = yield* Effect.runtime<Database.Service>();
@@ -286,7 +286,7 @@ describe.skipIf(!runMemoizedTests())('Agent', () => {
     'sync-triggers sets trigger enabled from agent.enabled',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentChat.makeInitialized(
           {
             name: 'Toggle agent',
             instructions: 'Test enabled propagation.',

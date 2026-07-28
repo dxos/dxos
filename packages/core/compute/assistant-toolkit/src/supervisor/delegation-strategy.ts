@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 
 import { RunInstructions } from '../operations';
 import { DelegationSkill } from '../skills';
-import { Agent, Chat } from '../types';
+import { Agent, AgentChat, Chat } from '../types';
 
 /**
  * Resolves the chat backed by the given conversation feed, if any.
@@ -40,26 +40,13 @@ const findChatForFeed = (feed: Feed.Feed): Effect.Effect<Chat.Chat | undefined, 
   });
 
 /**
- * Resolves the agent whose chat is backed by the given conversation feed, if any (via the chat's
- * `agent` ref). Plain (agentless) chats yield `undefined`.
+ * Resolves the agent whose chat is backed by the given conversation feed, if any.
+ * Plain (agentless) chats yield `undefined`.
  */
 const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefined, never, Database.Service> =>
   Effect.gen(function* () {
-    const chats = yield* Database.query(Filter.type(Chat.Chat)).run;
-    for (const chat of chats) {
-      if (!chat.agent) {
-        continue;
-      }
-      const matches = yield* Effect.gen(function* () {
-        const chatFeed = yield* Database.load(chat.feed);
-        return chatFeed.id === feed.id;
-      }).pipe(Effect.orElseSucceed(() => false));
-      if (matches) {
-        const agentRef = chat.agent;
-        return yield* Database.load(agentRef).pipe(Effect.orElseSucceed(() => undefined));
-      }
-    }
-    return undefined;
+    const chat = yield* findChatForFeed(feed);
+    return chat ? yield* AgentChat.loadAgent(chat) : undefined;
   });
 
 /**
