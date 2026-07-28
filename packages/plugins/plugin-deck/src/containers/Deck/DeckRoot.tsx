@@ -3,13 +3,15 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { type PluginManager } from '@dxos/app-framework';
+import { useMediaQuery } from '@dxos/react-ui';
 
 import { type Settings } from '#types';
 
 import { type DeckStateHook } from '../../hooks/useDeckState';
+import { resolveSidebarState } from '../../util';
 
 const DECK_NAME = 'Deck';
 const DECK_ROOT_NAME = 'DeckRoot';
@@ -36,8 +38,21 @@ export type DeckRootProps = PropsWithChildren<DeckContextValue>;
 /**
  * Headless root that provides Deck context.
  */
-export const DeckRoot = ({ children, ...context }: DeckRootProps) => {
-  return <DeckProvider {...context}>{children}</DeckProvider>;
+export const DeckRoot = ({ children, state, ...context }: DeckRootProps) => {
+  const [isLg] = useMediaQuery('lg');
+
+  // Resolved here rather than at each consumer so the sidebar width, `Main.Root` and the navtree all
+  // read one value; the persisted `closed` is left intact because it still applies below `lg`.
+  const resolvedState = useMemo(
+    () => ({ ...state, sidebarState: resolveSidebarState(state.sidebarState, isLg) }),
+    [state, isLg],
+  );
+
+  return (
+    <DeckProvider {...context} state={resolvedState}>
+      {children}
+    </DeckProvider>
+  );
 };
 
 DeckRoot.displayName = DECK_ROOT_NAME;
