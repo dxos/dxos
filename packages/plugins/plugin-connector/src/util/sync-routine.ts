@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { type SyncInput, type SyncOutput } from '@dxos/plugin-connector';
 import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
+
+import { type SyncInput, type SyncOutput } from '../types';
 
 /** How often an auto-created sync routine's timer trigger fires. */
 const SYNC_ROUTINE_CRON = '*/10 * * * *';
@@ -16,8 +17,8 @@ const SYNC_ROUTINE_CRON = '*/10 * * * *';
 /**
  * Finds an existing local record for `definition`, or persists a fresh one via
  * {@link Operation.serialize}. Entirely local — `definition` is the connector's already-registered
- * in-code operation (e.g. `InboxOperation.GoogleMailSync`), the same one `ConnectorOperation.SyncConnection`
- * invokes directly; nothing is fetched from or deployed to Edge.
+ * in-code operation (e.g. `InboxOperation.GoogleMailSync`); nothing is fetched from or deployed to
+ * Edge.
  */
 const ensureOperationRecord = (
   definition: Operation.Definition<SyncInput, SyncOutput>,
@@ -32,9 +33,9 @@ const ensureOperationRecord = (
 /**
  * Ensures a recurring sync Routine exists for `target` (a Mailbox or Calendar) and returns its
  * timer trigger — the existing one if a routine is already connected, otherwise a freshly-created one:
- * a local (`remote` unset) timer trigger, every 10 minutes, wired to `sync` — the connector's own sync
- * operation, the same one `ConnectorOperation.SyncConnection` invokes directly — with `binding` bound
- * to `cursor` (the target's external-sync {@link Cursor}). `input` carries only `binding`, matching the
+ * a local (`remote` unset) timer trigger, every 10 minutes, wired to `sync` (the connector's own sync
+ * operation) with `binding` bound to `cursor` (the target's external-sync {@link Cursor}). The trigger
+ * is also what a manual sync force-runs, so scheduled and on-demand syncs share one path. `input` carries only `binding`, matching the
  * sync operation's input schema. The routine is related to `target` by query ({@link connectedRoutinesQuery},
  * surfaced in the routines companion), which reaches it through `binding` → the cursor → the cursor's
  * `spec.target` — so no target ref is smuggled into the operation input.

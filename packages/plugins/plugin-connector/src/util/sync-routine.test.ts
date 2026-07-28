@@ -15,8 +15,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
-
-import { Calendar, Mailbox } from '#types';
+import { Expando } from '@dxos/schema';
 
 import { createSyncRoutine } from './sync-routine';
 
@@ -32,10 +31,9 @@ const types = [
   Routine.Routine,
   Trigger.Trigger,
   Operation.PersistentOperation,
-  Mailbox.Mailbox,
-  Calendar.Calendar,
   AccessToken.AccessToken,
   Cursor.Cursor,
+  Expando.Expando,
 ];
 
 const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
@@ -63,20 +61,20 @@ const findSyncRoutine = (db: Database.Database, target: Obj.Unknown) =>
     );
 
 describe('createSyncRoutine', () => {
-  test('creates a routine with a timer trigger referencing a mailbox target', async ({ expect }) => {
+  test('creates a routine with a timer trigger bound to the target’s cursor', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);
 
-    const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
-    const cursor = makeCursor(db, mailbox);
-    const created = await createSyncRoutine({ target: mailbox, cursor, sync: TestSync }).pipe(
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
+    const cursor = makeCursor(db, target);
+    const created = await createSyncRoutine({ target, cursor, sync: TestSync }).pipe(
       Effect.provide(Database.layer(db)),
       EffectEx.runPromise,
     );
     await db.flush();
 
-    await expect.poll(() => findSyncRoutine(db, mailbox), { timeout: 5_000 }).toHaveLength(1);
-    const [routine] = await findSyncRoutine(db, mailbox);
+    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
+    const [routine] = await findSyncRoutine(db, target);
     const [triggerRef] = routine.triggers;
     const trigger = triggerRef.target;
     expect(trigger?.spec).toEqual({ kind: 'timer', cron: '*/10 * * * *' });
@@ -88,44 +86,25 @@ describe('createSyncRoutine', () => {
     expect(created?.id).toBe(trigger?.id);
   });
 
-  test('creates a routine for a calendar target, discovered via the binding cursor', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
-    const db = await initSpace(harness);
-
-    const calendar = db.add(Calendar.make({ name: 'Personal' }));
-    const cursor = makeCursor(db, calendar);
-    await createSyncRoutine({ target: calendar, cursor, sync: TestSync }).pipe(
-      Effect.provide(Database.layer(db)),
-      EffectEx.runPromise,
-    );
-    await db.flush();
-
-    await expect.poll(() => findSyncRoutine(db, calendar), { timeout: 5_000 }).toHaveLength(1);
-    const [routine] = await findSyncRoutine(db, calendar);
-    const trigger = routine.triggers[0].target;
-    expect(Object.keys(trigger?.input ?? {})).toEqual(['binding']);
-    expect(trigger?.input?.binding?.uri).toBe(Ref.make(cursor).uri);
-  });
-
   test('is idempotent: a second call is a no-op once a sync routine is connected', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);
 
-    const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
-    const cursor = makeCursor(db, mailbox);
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
+    const cursor = makeCursor(db, target);
     const run = () =>
-      createSyncRoutine({ target: mailbox, cursor, sync: TestSync }).pipe(
+      createSyncRoutine({ target, cursor, sync: TestSync }).pipe(
         Effect.provide(Database.layer(db)),
         EffectEx.runPromise,
       );
     const first = await run();
     await db.flush();
-    await expect.poll(() => findSyncRoutine(db, mailbox), { timeout: 5_000 }).toHaveLength(1);
+    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
 
     const second = await run();
     await db.flush();
 
-    expect(await findSyncRoutine(db, mailbox)).toHaveLength(1);
+    expect(await findSyncRoutine(db, target)).toHaveLength(1);
     // The second call returns the same, pre-existing trigger rather than creating another.
     expect(second?.id).toBe(first?.id);
   });

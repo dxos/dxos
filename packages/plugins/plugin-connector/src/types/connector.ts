@@ -89,7 +89,7 @@ export type OnTokenCreated = (input: {
  * Hook fired after an external-sync {@link Cursor.Cursor} is created for a target — a single-target
  * bind (Gmail, JMAP) or one newly-selected multi-target row (Calendar). Connectors use this to set up
  * recurring background sync (a Routine wrapping a timer Trigger, invoking the same {@link sync}
- * operation `ConnectorOperation.SyncConnection` invokes directly) for the target; unlike
+ * operation — the trigger `ConnectorOperation.SyncConnection` force-runs) for the target; unlike
  * {@link OnTokenCreated}, this runs once per bound target rather than once per connection.
  */
 export type OnCursorCreated = (input: {

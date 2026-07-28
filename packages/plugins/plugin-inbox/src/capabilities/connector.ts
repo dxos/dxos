@@ -22,6 +22,7 @@ import {
   type SyncInput,
   type SyncOutput,
   type TestConnection,
+  createSyncRoutine,
 } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -34,7 +35,6 @@ import {
   JMAP_MAIL_CONNECTOR_ID,
 } from '../constants';
 import { CalendarSyncOptions, InboxOperation, SyncOptions } from '../types';
-import { createSyncRoutine } from '../util';
 import { jmapCredentialForm } from './jmap-credential-form';
 
 const GoogleUserInfo = Schema.Struct({
@@ -122,9 +122,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
 
 /**
  * Sets up recurring background sync for a newly-bound target: a Routine wrapping an every-10-minute
- * local timer Trigger wired to `sync` — the same operation `ConnectorOperation.SyncConnection` invokes
- * directly — with `binding` bound to the newly-created cursor (see `createSyncRoutine`). No-op if a
- * sync routine is already connected to the target.
+ * local timer Trigger wired to `sync`, with `binding` bound to the newly-created cursor (see
+ * `createSyncRoutine`). `ConnectorOperation.SyncConnection` force-runs that same trigger, so an
+ * on-demand sync goes through this routine too. No-op if a sync routine is already connected.
  */
 const onCursorCreated =
   (sync: Operation.Definition<SyncInput, SyncOutput>): OnCursorCreated =>

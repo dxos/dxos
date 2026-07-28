@@ -10,17 +10,16 @@ import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import { type ConnectorEntry } from '@dxos/plugin-connector';
+import { type ConnectorEntry, createSyncRoutine, findBindingForTarget } from '@dxos/plugin-connector';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
 // (which exports this file), so going through the barrel would create a module cycle.
 import { useConnectorEntry, useTargetConnection } from '../components/Initialize/useTargetConnection';
-import { createSyncRoutine, findBindingForTarget } from '../util';
 
 /**
  * Hook to find, create, and toggle a timer-based sync Routine for a mailbox or calendar. Creation
- * wires the trigger to the bound connector's own `sync` operation (the same one
- * `ConnectorOperation.SyncConnection` invokes directly) via {@link createSyncRoutine}.
+ * wires the trigger to the bound connector's own `sync` operation via {@link createSyncRoutine} — the
+ * trigger a manual sync force-runs.
  *
  * `connectors` (the registered `Connector` capability list) is resolved by the calling container and
  * threaded down to `useConnectorEntry` — components and the hooks they use must not resolve
