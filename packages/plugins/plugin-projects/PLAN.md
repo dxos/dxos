@@ -116,6 +116,24 @@ substrate-preserving, not a downgrade. `AgentWorker`'s identity mechanism
       pass of `projects.eval.ts` (unchanged expectations prove the container
       path was already agent-free).
 
+## Phase E (optional) — rename the session host
+
+`agent-process.ts` (the durable process behind interactive chats) never
+references the `Agent` type — its identity is a feed, and its machinery (input
+queue, alarms, tool-call manager, delegation supervisor, end-request hooks,
+HarnessControl) is per-conversation, configured by layer options. Once "Agent"
+means the identity/preset type, the name `AgentProcess` actively misleads.
+
+- [ ] Rename `AgentProcess`/`AgentEvent`/`AgentService` toward
+      "session host" vocabulary (e.g. `SessionProcess`, `SessionHost`) — naming
+      only, no behavior.
+- [ ] `AGENT_PROCESS_KEY` is `org.dxos.testing.process.agent` — a `testing`
+      namespace in a production identifier, and the **hydration key** for
+      persisted process records; changing it needs a compat alias (hydrate by
+      old key, spawn by new) or a record migration, not a find-and-replace.
+- [ ] Can land any time — zero coupling to phases A–D (verified: the file has
+      no `Agent`-type reference).
+
 ## Non-goals
 
 - Permissions on Agent (tracked, later).
@@ -132,7 +150,8 @@ substrate-preserving, not a downgrade. `AgentWorker`'s identity mechanism
   ephemeral `AiSession`s. This plan preserves that split — C converts within
   the ephemeral substrate — but any future "agent alarms survive restarts for
   triggered runs" requirement pulls C onto the durable substrate instead;
-  decide before C, not after.
+  decide before C, not after. (The durable process itself is Agent-type-free —
+  see phase E — so either choice leaves it untouched.)
 - **Memoized-LLM tests** encode current tool surfaces (`add-artifact`,
   `get-context` artifacts); D re-records them.
 - `enabled` semantics during C: don't strand existing disabled agents —

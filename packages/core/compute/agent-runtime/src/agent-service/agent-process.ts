@@ -40,22 +40,20 @@ import { type DelegationStrategy } from './delegation-strategy';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
+
   model?: DXN.DXN;
-  // The catalog's shared model ids are served by several providers, so resolution needs the provider
-  // alongside the id; without it a local model id cannot be claimed by any resolver.
-  provider?: DXN.DXN;
 
   /**
-   * Provider for space-level MCP server configs, called on each turn.
+   * The catalog's shared model ids are served by several providers, so resolution needs the provider
+   * alongside the id; without it a local model id cannot be claimed by any resolver.
    */
-  getMcpServers?: () => McpServer.McpServer[];
+  provider?: DXN.DXN;
 
   /**
    * If true, long-running tool calls are moved to the background after `backgroundThreshold`
    * and the agent is notified asynchronously when they complete.
    *
    * Currently unstable — disabled by default.
-   *
    * @default false
    */
   enableToolBackgrounding?: boolean;
@@ -66,6 +64,11 @@ interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * Provider for space-level MCP server configs, called on each turn.
+   */
+  getMcpServers?: () => McpServer.McpServer[];
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
