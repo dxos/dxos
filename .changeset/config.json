@@ -243,6 +243,7 @@
       "@dxos/plugin-discord",
       "@dxos/plugin-doctor",
       "@dxos/plugin-duffel",
+      "@dxos/plugin-excalidraw",
       "@dxos/plugin-explorer",
       "@dxos/plugin-file",
       "@dxos/plugin-freeq",
