@@ -79,6 +79,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -100,7 +101,6 @@
     "@tauri-apps/plugin-deep-link": "catalog:"
   },
   "devDependencies": {
-    "@dxos/app-graph": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
