@@ -122,7 +122,7 @@ repoint.
 ## Follow-ups / deferred (design reviews)
 
 - [x] **plugin-markdown ops resolve LLM-provided refs via the db** — `ref.tryLoad is not a
-    function` when a tool-call `doc` ref decodes without a resolver; the five doc-ref ops
+  function` when a tool-call `doc` ref decodes without a resolver; the five doc-ref ops
       (update/create-branch/create-checkpoint/get-history/merge-branch) now use
       `Database.resolve(doc, Markdown.Document)` (typed check included). Residual follow-up:
       `Database.load`'s bare `.tryLoad()` assumption still bites any other op taking refs
