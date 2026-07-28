@@ -214,9 +214,6 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { rendered } = useRenderedPlanks();
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
-  // Solo/multi is the underlying mode, keyed off the real active planks — an open companion renders a
-  // second tile but does not make a single-plank deck `multi`.
-  const soloLook = deck.active.length === 1;
   // Stacking (experiment): each plank is `position: sticky` on both edges (see the style below) so the
   // browser pins scrolled-past planks into the left pile and not-yet-reached planks into the right pile
   // natively — no per-frame JS repin, so the spines stay stable and opaque. The folded spine's sigil
@@ -249,13 +246,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   if (presentation === 'fullbleed') {
     return (
       <Mosaic.Tile {...props} classNames='relative h-full w-full'>
-        <DeckPlank
-          id={id}
-          part='main'
-          active={deck.active}
-          soloLook={soloLook}
-          classNames={mx('absolute inset-0', mainIntrinsicSize)}
-        />
+        <DeckPlank id={id} part='main' active={deck.active} classNames={mx('absolute inset-0', mainIntrinsicSize)} />
       </Mosaic.Tile>
     );
   }
@@ -264,7 +255,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   if (isMobile) {
     return (
       <Mosaic.Tile {...props} classNames='relative h-full w-full snap-start'>
-        <DeckPlank id={id} part='main' active={deck.active} soloLook={soloLook} classNames='size-full' />
+        <DeckPlank id={id} part='main' active={deck.active} classNames='size-full' />
       </Mosaic.Tile>
     );
   }
@@ -296,11 +287,11 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
         id={id}
         part='main'
         active={deck.active}
-        soloLook={soloLook}
         classNames='dx-fold-content size-full transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-none group-data-[folded]/tile:opacity-0'
       />
       {/* Returning the plank to view is the same one-shot as a navigation scroll, so it goes through the
-          operation rather than a second scroll path. */}
+          operation rather than a second scroll path — which also attends it, since the plank focuses
+          itself off that flag. */}
       <FoldSpine
         icon={spineIcon}
         label={spineLabel}
@@ -354,7 +345,6 @@ const TilingDeck = ({ rendered, active, size }: { rendered: string[]; active: st
   );
 
   const [startId, endId] = rendered;
-  const soloLook = active.length === 1;
 
   // Tiling is a flush split view — no `--main-spacing` gap or padding (that spacing is the sliding
   // deck's encapsulated look); the planks sit edge-to-edge, separated only by the handle's hairline.
@@ -369,11 +359,11 @@ const TilingDeck = ({ rendered, active, size }: { rendered: string[]; active: st
       classNames={mx('absolute inset-0', mainPaddingTransitions)}
     >
       <Splitter.Panel position='start'>
-        <DeckPlank id={startId} part='main' active={active} soloLook={soloLook} classNames='size-full' />
+        <DeckPlank id={startId} part='main' active={active} classNames='size-full' />
       </Splitter.Panel>
       <Splitter.Handle />
       <Splitter.Panel position='end'>
-        <DeckPlank id={endId} part='main' active={active} soloLook={soloLook} classNames='size-full' />
+        <DeckPlank id={endId} part='main' active={active} classNames='size-full' />
       </Splitter.Panel>
     </Splitter.Root>
   );
@@ -493,12 +483,14 @@ const useFoldedPlanks = ({
   isSliding,
   plankCount,
   maxPlankWidthPx,
+  scrollIntentRef,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
   isSliding: boolean;
   plankCount: number;
   maxPlankWidthPx: number;
+  scrollIntentRef: RefObject<string | undefined>;
 }) => {
   const { attention } = useAttentionContext(DECK_VIEWPORT_NAME);
 
@@ -525,12 +517,27 @@ const useFoldedPlanks = ({
         return isFolded;
       });
 
+      const offscreen = (rect: DOMRect) => rect.right <= vpRect.left || rect.left >= vpRect.right;
+
+      // A plank the user asked to see (a spine click, or a navigation) is focused as soon as the scroll
+      // starts, while it is still folded in the pile. Hold that focus until the plank has actually
+      // arrived — otherwise the hysteresis below reads it as "attended but folded" on the first scroll
+      // frame and hands attention straight back to whichever plank is already on screen.
+      const intent = scrollIntentRef.current;
+      if (intent) {
+        const intentIndex = tiles.findIndex((tile) => tile.getAttribute('data-object-id') === intent);
+        const arrived = intentIndex === -1 || (!folded[intentIndex] && !offscreen(rects[intentIndex]));
+        if (!arrived) {
+          return;
+        }
+        scrollIntentRef.current = undefined;
+      }
+
       // Attention hysteresis: attention must always point at a plank the user can see. It moves only
       // when the attended plank has folded to a spine (or left the viewport entirely — the mobile snap
       // case, where tiles are not sticky), and then to the unfolded plank nearest the viewport center,
       // so focus never twitches while the attended plank remains visible.
       const [attendedId] = attention?.getCurrent() ?? [];
-      const offscreen = (rect: DOMRect) => rect.right <= vpRect.left || rect.left >= vpRect.right;
       const attendedIndex = attendedId
         ? tiles.findIndex((tile) => {
             const id = tile.getAttribute('data-object-id');
@@ -567,7 +574,7 @@ const useFoldedPlanks = ({
     };
     // `maxPlankWidthPx` is a dep so the fold state recomputes when the width cap shrinks planks (else a
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
-  }, [isSliding, plankCount, maxPlankWidthPx, getPlankTiles, attention, viewportRef]);
+  }, [isSliding, plankCount, maxPlankWidthPx, getPlankTiles, attention, viewportRef, scrollIntentRef]);
 };
 
 /**
@@ -584,11 +591,13 @@ const useScrollIntoView = ({
   stackRef,
   getPlankTiles,
   scrollIntoViewId,
+  scrollIntentRef,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
   scrollIntoViewId: string | undefined;
+  scrollIntentRef: RefObject<string | undefined>;
 }) => {
   const { invokePromise } = useOperationInvoker();
 
@@ -602,6 +611,9 @@ const useScrollIntoView = ({
     const tiles = getPlankTiles();
     const index = tiles.findIndex((tile) => tile.getAttribute('data-object-id') === scrollIntoViewId);
     if (index !== -1) {
+      // The plank focuses itself off the same one-shot flag; record it so the fold hysteresis holds that
+      // focus until the scroll below has actually brought the plank out of the pile.
+      scrollIntentRef.current = scrollIntoViewId;
       const styles = getComputedStyle(stack);
       const gap = parseFloat(styles.columnGap) || 0;
       let naturalLeft = parseFloat(styles.paddingLeft) || 0;
@@ -611,7 +623,7 @@ const useScrollIntoView = ({
       viewport.scrollTo({ left: Math.max(0, naturalLeft - index * SPINE_PX), behavior: 'smooth' });
     }
     void invokePromise(LayoutOperation.ScrollIntoView, { subject: undefined });
-  }, [scrollIntoViewId, invokePromise, viewportRef, stackRef, getPlankTiles]);
+  }, [scrollIntoViewId, invokePromise, viewportRef, stackRef, getPlankTiles, scrollIntentRef]);
 };
 
 /** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
@@ -668,11 +680,23 @@ export const DeckPlanks = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
 
+  // The plank a scroll-into-view is currently travelling to, shared between the scroller and the fold
+  // hysteresis so the two do not fight over focus mid-scroll. A ref, not state: it changes per scroll
+  // frame and no render depends on it.
+  const scrollIntentRef = useRef<string | undefined>(undefined);
+
   const getPlankTiles = usePlankTiles(stackRef);
   const maxPlankWidthPx = useMaxPlankWidth({ viewportRef, stackRef, isSliding, plankCount: rendered.length });
   usePreservedScroll({ viewportRef, isSliding });
-  useFoldedPlanks({ viewportRef, getPlankTiles, isSliding, plankCount: rendered.length, maxPlankWidthPx });
-  useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView });
+  useFoldedPlanks({
+    viewportRef,
+    getPlankTiles,
+    isSliding,
+    plankCount: rendered.length,
+    maxPlankWidthPx,
+    scrollIntentRef,
+  });
+  useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView, scrollIntentRef });
   const toggleFullscreen = useFullscreen(fullscreenId);
 
   const plankContext = useMemo<PlankContextValue>(() => ({ maxPlankWidthPx }), [maxPlankWidthPx]);
@@ -701,7 +725,6 @@ export const DeckPlanks = () => {
             // Pass the real deck.active (not the collapsed `rendered`) so flat mode can derive the
             // breadcrumb trail from the planks preceding the current one.
             active={deck.active}
-            soloLook
             classNames={mx('absolute inset-0', mainIntrinsicSize)}
           />
         ) : presentation === 'tiling' ? (

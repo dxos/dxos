@@ -880,13 +880,17 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       const typeChanged = existing.type !== type;
       const dataChanged = !shallowEqual(existing.data, data);
       const propertiesChanged = Object.keys(properties).some((key) => existing.properties[key] !== properties[key]);
+      // `changed` is on the visit log because counting `existing node` lines alone measures how often a
+      // node was re-offered, not how often it actually changed — two very different costs.
+      const changed = typeChanged || dataChanged || propertiesChanged;
       log('existing node', {
         id,
+        changed,
         typeChanged,
         dataChanged,
         propertiesChanged,
       });
-      if (typeChanged || dataChanged || propertiesChanged) {
+      if (changed) {
         log('updating node', { id, type, data, properties });
         const newNode = Option.some({
           ...existing,
