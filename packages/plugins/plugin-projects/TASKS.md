@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: PR #12365 green + review-addressed — user lands it himself. Next (decided 2026-07-28): reconciliation phase A (Agent.instructions typed ref) then B (Chat.agent inversion) per ./PLAN.md, each its own PR from a fresh worktree; Phase 3 UI follows. Phase C shape decided: relay pattern onto the durable process (see PLAN.md). Uncommitted: none._
+_Resume: reconciliation A-D DONE, shipped as PR #12370 (OPEN). CI: import-cycle failure FIXED (Agent co-located with Chat in one module, Agent.\* namespace via re-export facade, commit 8c89461e49); storybook job failed on a react-ui dist-chunk resolve error (package untouched by this branch — suspected stale CI cache; fresh run in progress on the fixed tip, poll armed). Verified: projects.eval 100% live post-D; memoized agent suite regenerated + replay-deterministic (planning gated to planning.eval.ts); 298 unit tests green. NEXT: get #12370 green (storybook verdict), handle CodeRabbit, land; then Phase 3 UI (ProjectOperation.CreateChat, navtree chat children, Chats exclusion, toolbar). Uncommitted: user's project.drawio.svg edit (committed with next change)._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
@@ -120,6 +120,16 @@ repoint.
       (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.
 
 ## Follow-ups / deferred (design reviews)
+
+- [x] **plugin-markdown ops resolve LLM-provided refs via the db** — `ref.tryLoad is not a
+function` when a tool-call `doc` ref decodes without a resolver; the five doc-ref ops
+      (update/create-branch/create-checkpoint/get-history/merge-branch) now use
+      `Database.resolve(doc, Markdown.Document)` (typed check included). Residual follow-up:
+      `Database.load`'s bare `.tryLoad()` assumption still bites any other op taking refs
+      from LLM args.
+- [ ] **Agent-skill `planning` memoized test gated** (`it.scoped.skip`) — recordings embed
+      nondeterministic tool-error recovery and cannot replay-converge; covered live by
+      `planning.eval.ts`. Un-gate only if recording strategy changes.
 
 - [ ] **Possibly move Project type from @dxos/compute to plugin-projects at end** — revisit once the plugin's shape settles.
 - [x] **Review CompanionTo reuse for project chats** — resolved in milestone 3: companion chat keeps `CompanionTo`; owned sessions use the ECHO parent edge. Agent-roster linkage still open.

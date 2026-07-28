@@ -28,6 +28,7 @@ export const Sidebar = () => {
 
   return (
     <Main.NavigationSidebar
+      data-testid='deck.sidebar'
       label={label}
       classNames={['grid', topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >

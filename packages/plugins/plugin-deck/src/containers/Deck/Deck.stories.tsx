@@ -6,6 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo, useRef } from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -194,9 +195,11 @@ type DefaultStoryProps = {
   count?: number;
   /** Fold-transition variant to apply (see {@link FOLD_ANIMATIONS}). */
   foldAnimation?: FoldAnimation;
+  /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
+  sidebarState?: StoredDeckState['sidebarState'];
 };
 
-const DefaultStory = ({ count = 0, foldAnimation = 'slide' }: DefaultStoryProps) => {
+const DefaultStory = ({ count = 0, foldAnimation = 'slide', sidebarState = 'closed' }: DefaultStoryProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
   const pluginManager = usePluginManager();
   const { graph } = useAppGraph();
@@ -221,12 +224,13 @@ const DefaultStory = ({ count = 0, foldAnimation = 'slide' }: DefaultStoryProps)
     const active = items.slice(0, count).map((item) => item.id);
     updateState((current) => ({
       ...current,
+      sidebarState,
       decks: {
         ...current.decks,
         [current.activeDeck]: { ...current.decks[current.activeDeck], active },
       },
     }));
-  }, [items, count, updateState]);
+  }, [items, count, sidebarState, updateState]);
 
   // `display: contents` so the wrapper carries `data-fold-anim` for the scoped CSS without affecting the
   // fullscreen layout of the deck beneath it.
@@ -276,3 +280,24 @@ export const TwoPlanks: Story = { args: { count: 2 } };
 // Six planks exceed the tiling threshold and render as a sliding, horizontally-scrolling deck.
 // Use the `foldAnimation` control to compare fold transitions.
 export const ManyPlanks: Story = { args: { count: 6, foldAnimation: 'slide' } };
+
+// A `closed` sidebar persisted from below `lg` (dismissing the drawer) must present as the L0 rail at
+// `lg`+, where `closed` would otherwise render L0 off-screen and inert with every control that could
+// reopen it either `lg:hidden` or inside L0 itself.
+export const SidebarClosedAtDesktop: Story = {
+  tags: ['test'],
+  args: { count: 1, sidebarState: 'closed' },
+  play: async ({ canvasElement }) => {
+    // The regression only exists at `lg`+, so a narrower canvas would make every assertion below pass
+    // vacuously.
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+
+    // The plugin manager activates asynchronously, so the deck mounts well after the story's first paint.
+    const sidebar = await within(canvasElement).findByTestId('deck.sidebar', {}, { timeout: 30_000 });
+    await waitFor(() => expect(sidebar).toHaveAttribute('data-state', 'collapsed'));
+    await expect(sidebar).not.toHaveAttribute('inert');
+
+    // `closed` parks the sidebar at `-start-[100vw]`; the rail has to be on screen to be usable.
+    await expect(sidebar.getBoundingClientRect().left).toBeGreaterThanOrEqual(0);
+  },
+};

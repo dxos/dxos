@@ -9,7 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 
 import { Agent } from '../../../types';
 import { AgentSkill } from '../../agent';
-import { CreateAgent, SyncTriggers } from './definitions';
+import { CreateAgent, SyncAutomation } from './definitions';
 
 export default CreateAgent.pipe(
   Operation.withHandler(
@@ -19,11 +19,11 @@ export default CreateAgent.pipe(
           name,
           instructions,
           skills: yield* Effect.forEach(skills, (key) => Skill.upsert(key).pipe(Effect.map(Ref.make), Effect.orDie)),
-          subscriptions,
         },
         Obj.clone(AgentSkill.make()),
       );
-      yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
+      // Subscriptions compile straight to Routines (the agent stores no automation fields).
+      yield* Operation.invoke(SyncAutomation, { agent: Ref.make(agent), subscriptions });
       return agent;
     }),
   ),

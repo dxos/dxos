@@ -319,7 +319,10 @@ op draftEmail
 
 ```mdl
 op draftEmailAndOpen
-  desc: draftEmail then opens the draft in EditMessage (UI convenience wrapper).
+  desc: |
+    draftEmail then, for a compose draft, opens it in EditMessage as a plank beside the mailbox view
+    named by contextId (UI convenience wrapper). Reply/forward drafts are not navigated to — they
+    render inline in the conversation they join.
   input:
     db: Database
     mode?: compose | reply | reply-all | forward
@@ -327,6 +330,7 @@ op draftEmailAndOpen
     subject?: string
     body?: string
     mailbox?: Ref<Mailbox>
+    contextId?: string
   effects: [echo:write]
 ```
 

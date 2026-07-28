@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Agent, Plan } from '@dxos/assistant-toolkit';
+import { Instructions } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -41,7 +42,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Agent.Agent, Plan.Plan, Text.Text, Organization.Organization],
+      types: [Agent.Agent, Plan.Plan, Text.Text, Instructions.Instructions, Organization.Organization],
       onCreateSpace: async ({ space }) => {
         const organization = space.db.add(
           Obj.make(Organization.Organization, {
@@ -52,9 +53,7 @@ const meta = {
 
         space.db.add(
           Obj.make(Agent.Agent, {
-            instructions: Ref.make(Text.make()),
-            artifacts: [{ name: 'Organization', data: Ref.make(organization) }],
-            subscriptions: [],
+            instructions: Ref.make(Instructions.make({ text: '' })),
           }),
         );
       },
