@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: PR #12370 MERGED — reconciliation A-D done. Worktree synced with main. PENDING: memoized conversation regen (op-blocked background chain; verify replay + push when it fires). NEXT: Phase 3 UI per the Phase 3 task list below (CreateChat op first). Uncommitted: none._
+_Resume: PRs #12365 + #12370 MERGED; memoized agent-skill conversations regenerated post-merge and replay-verified (4/4 + planning gated) — rides the next PR. NEXT: Phase 3 UI per the Phase 3 task list (CreateChat op first). Uncommitted: none._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
