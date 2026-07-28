@@ -12,7 +12,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import { Agent, AgentChat, Chat, Plan } from '../../../types';
+import { Agent, Chat, Plan } from '../../../types';
 import DelegationSkill from '../skill';
 import { DelegateTask } from './delegate-task';
 import { DelegationHandlers } from './index';
@@ -36,19 +36,19 @@ describe('DelegateTask', () => {
     'adds an in-progress task to the agent plan for delegated work',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* AgentChat.makeInitialized(
+        const agent = yield* Agent.makeInitialized(
           { name: 'Supervisor', instructions: 'Test.' },
           DelegationSkill.make(),
         );
         yield* Database.flush();
 
-        const agentChat = yield* AgentChat.loadChat(agent);
+        const agentChat = yield* Agent.loadChat(agent);
         const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
-        const chat = yield* AgentChat.loadChat(agent);
+        const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
         const plan = yield* Database.load(chat.plan!);
         expect(plan.tasks).toHaveLength(1);
@@ -67,11 +67,11 @@ describe('DelegateTask', () => {
     'delegates an existing plan task by id without duplicating',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* AgentChat.makeInitialized(
+        const agent = yield* Agent.makeInitialized(
           { name: 'Supervisor', instructions: 'Test.' },
           DelegationSkill.make(),
         );
-        const chat = yield* AgentChat.loadChat(agent);
+        const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
         const plan = yield* Chat.ensurePlan(chat);
         const taskId = Plan.TaskId.make('1-ab');
@@ -80,13 +80,13 @@ describe('DelegateTask', () => {
         });
         yield* Database.flush();
 
-        const agentChat = yield* AgentChat.loadChat(agent);
+        const agentChat = yield* Agent.loadChat(agent);
         const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
         yield* invokeDelegateTask({ id: taskId }, chatFeed);
 
-        const updatedChat = yield* AgentChat.loadChat(agent);
+        const updatedChat = yield* Agent.loadChat(agent);
         invariant(updatedChat, 'Agent chat not found.');
         const updated = yield* Database.load(updatedChat.plan!);
         expect(updated.tasks).toHaveLength(1);
@@ -106,13 +106,13 @@ describe('DelegateTask', () => {
     'fails when both id and title are provided',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* AgentChat.makeInitialized(
+        const agent = yield* Agent.makeInitialized(
           { name: 'Supervisor', instructions: 'Test.' },
           DelegationSkill.make(),
         );
         yield* Database.flush();
 
-        const agentChat = yield* AgentChat.loadChat(agent);
+        const agentChat = yield* Agent.loadChat(agent);
         const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 

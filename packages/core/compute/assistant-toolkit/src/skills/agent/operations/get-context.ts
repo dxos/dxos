@@ -10,7 +10,7 @@ import { Database, Filter } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { HarnessContextError } from '../../../errors';
-import { Agent, AgentChat, Chat, Plan } from '../../../types';
+import { Agent, Chat, Plan } from '../../../types';
 import { GetContext } from './definitions';
 
 const formatPlan = (chat: Chat.Chat) =>
@@ -39,7 +39,7 @@ export default GetContext.pipe(
 
       // Prefer the directly bound chat; fall back to the agent's companion chat when no chat is bound.
       const directChat = chats.length === 1 ? chats[0] : undefined;
-      const chat = directChat ?? (agents.length > 0 ? yield* AgentChat.loadChat(agents[0]) : undefined);
+      const chat = directChat ?? (agents.length > 0 ? yield* Agent.loadChat(agents[0]) : undefined);
 
       if (agents.length === 0) {
         invariant(chat, 'Expected a bound chat when no agent is in context.');

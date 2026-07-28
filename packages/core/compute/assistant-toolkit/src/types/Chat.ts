@@ -96,7 +96,7 @@ export class LegacyCompanionTo extends Type.makeRelation<LegacyCompanionTo>(
 
 /**
  * Relation between a Chat and companion objects (e.g., artifacts, or the agent identity the
- * conversation runs as — see `./AgentChat`).
+ * conversation runs as — see `Agent.loadForChat`).
  */
 export class CompanionTo extends Type.makeRelation<CompanionTo>(
   DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),

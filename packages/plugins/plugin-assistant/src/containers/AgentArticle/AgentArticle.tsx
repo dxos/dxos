@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Agent, AgentChat } from '@dxos/assistant-toolkit';
+import { Agent } from '@dxos/assistant-toolkit';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
@@ -34,7 +34,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
     spaceId,
     [Database.Service],
     Effect.fnUntraced(function* () {
-      yield* AgentChat.resetChatHistory(agent);
+      yield* Agent.resetChatHistory(agent);
     }),
     [agent],
   );

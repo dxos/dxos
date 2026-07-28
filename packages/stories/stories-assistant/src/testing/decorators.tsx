@@ -21,7 +21,7 @@ import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import {
-  AgentChat,
+  Agent,
   AgentHandlers,
   AgentSkill,
   DelegationHandlers,
@@ -453,7 +453,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       // Create agent.
       if (createAgent) {
         const agentOptions = typeof createAgent === 'object' ? createAgent : {};
-        const agent = yield* AgentChat.makeInitialized(
+        const agent = yield* Agent.makeInitialized(
           {
             name: agentOptions.name ?? 'Default',
             instructions: agentOptions.instructions ?? '',
@@ -470,7 +470,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
 
         if (onChatCreated) {
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
-          const chat = yield* AgentChat.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
+          const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
           invariant(chat, 'Agent chat not found.');
           const feed = yield* Effect.promise(() => chat.feed.load());
           const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));

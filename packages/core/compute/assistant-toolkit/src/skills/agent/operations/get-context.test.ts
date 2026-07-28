@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
 import { OperationTestLayer } from '../../../testing';
-import { AgentChat, Chat, Plan } from '../../../types';
+import { Agent, Chat, Plan } from '../../../types';
 import AgentSkillDef from '../skill';
 import * as AgentSkillOperations from './definitions';
 
@@ -43,7 +43,7 @@ describe('GetContext', () => {
     Effect.fnUntraced(
       function* (_) {
         const { agent, conversation } = yield* setupBoundAgent();
-        const chat = yield* AgentChat.loadChat(agent);
+        const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
         const plan = yield* Chat.ensurePlan(chat);
         Obj.update(plan, (plan) => {
@@ -63,13 +63,13 @@ describe('GetContext', () => {
 
 // Creates an agent and binds it to its own chat feed so the harness-scoped operation resolves it.
 const setupBoundAgent = Effect.fnUntraced(function* () {
-  const agent = yield* AgentChat.makeInitialized(
+  const agent = yield* Agent.makeInitialized(
     { name: 'Test Agent', instructions: 'A test agent for context.' },
     AgentSkillDef.make(),
   );
   yield* Database.flush();
 
-  const chat = yield* AgentChat.loadChat(agent);
+  const chat = yield* Agent.loadChat(agent);
   const chatFeed = chat?.feed?.target;
   invariant(chatFeed, 'Agent chat feed not found.');
   const runtime = yield* Effect.runtime<Database.Service>();

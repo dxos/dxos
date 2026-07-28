@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 
 import { RunInstructions } from '../operations';
 import { DelegationSkill } from '../skills';
-import { Agent, AgentChat, Chat } from '../types';
+import { Agent, Chat } from '../types';
 
 /**
  * Resolves the chat backed by the given conversation feed, if any.
@@ -46,7 +46,7 @@ const findChatForFeed = (feed: Feed.Feed): Effect.Effect<Chat.Chat | undefined, 
 const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefined, never, Database.Service> =>
   Effect.gen(function* () {
     const chat = yield* findChatForFeed(feed);
-    return chat ? yield* AgentChat.loadAgent(chat) : undefined;
+    return chat ? yield* Agent.loadForChat(chat) : undefined;
   });
 
 /**

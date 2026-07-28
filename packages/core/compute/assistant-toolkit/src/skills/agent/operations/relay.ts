@@ -14,7 +14,7 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { AgentChat, Chat, Plan } from '../../../types';
+import { Agent, Chat, Plan } from '../../../types';
 import { Relay } from './definitions';
 
 /**
@@ -69,7 +69,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
 /** Cheap-model relevance check, ported from the retired Qualifier's prompt (chat-centric per phase B). */
 const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
   Effect.gen(function* () {
-    const agent = yield* AgentChat.loadAgent(chat);
+    const agent = yield* Agent.loadForChat(chat);
     const instructions = chat.instructions
       ? yield* Database.load(chat.instructions).pipe(Effect.orElseSucceed(() => undefined))
       : undefined;

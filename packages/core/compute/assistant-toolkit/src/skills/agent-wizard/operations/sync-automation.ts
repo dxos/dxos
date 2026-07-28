@@ -9,7 +9,7 @@ import { Operation, Routine, Trigger } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FeedAnnotation } from '@dxos/schema';
 
-import { Agent, AgentChat } from '../../../types';
+import { Agent } from '../../../types';
 import { SyncAutomation } from './definitions';
 
 export default SyncAutomation.pipe(
@@ -78,7 +78,7 @@ export const syncAgentAutomation = (
   Effect.gen(function* () {
     // Resolve the chat before the destructive phase: a transient resolution gap must not wipe
     // existing automation without recreating it.
-    const chat = yield* AgentChat.loadChat(agent);
+    const chat = yield* Agent.loadChat(agent);
     if (!chat) {
       return;
     }

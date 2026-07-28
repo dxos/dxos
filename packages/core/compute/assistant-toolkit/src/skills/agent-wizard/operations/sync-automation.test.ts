@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
 import { OperationTestLayer } from '../../../testing';
-import { AgentChat } from '../../../types';
+import { Agent } from '../../../types';
 import { Relay } from '../../agent/operations/definitions';
 import AgentSkillDef from '../../agent/skill';
 import { AgentWizardOperations } from '../index';
@@ -27,7 +27,7 @@ describe('SyncAutomation', () => {
     Effect.fnUntraced(
       function* (_) {
         const cron = '*/5 * * * *';
-        const agent = yield* AgentChat.makeInitialized(
+        const agent = yield* Agent.makeInitialized(
           { name: 'Scheduled agent', instructions: 'A scheduled agent that runs on a timer.' },
           skill,
         );
@@ -69,7 +69,7 @@ describe('SyncAutomation', () => {
     Effect.fnUntraced(
       function* (_) {
         const cron = '0 9 * * *';
-        const agent = yield* AgentChat.makeInitialized(
+        const agent = yield* Agent.makeInitialized(
           { name: 'Toggle agent', instructions: 'Test enabled propagation.', enabled: false },
           skill,
         );
