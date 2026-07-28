@@ -18,8 +18,7 @@ import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
 import { Blog } from '#types';
 
-/** Stable navtree segment of the "Publications" section. */
-const PUBLICATIONS_SEGMENT = 'publications';
+import { getPublicationsSectionId } from '../paths';
 
 /** Node type of the "Publications" section under a space's content group. */
 const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;
@@ -60,7 +59,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeSection({
-              id: PUBLICATIONS_SEGMENT,
+              id: getPublicationsSectionId(),
               type: PUBLICATIONS_SECTION_TYPE,
               label: ['publications.label', { ns: meta.profile.key }],
               icon: 'ph--books--regular',
@@ -76,7 +75,7 @@ export default Capability.makeModule(
       // "+ Publication" action on the section.
       GraphBuilder.createExtension({
         id: 'publicationNodes',
-        url: { key: 'publication', kind: 'item', path: [GraphPath.GroupSegments.content, PUBLICATIONS_SEGMENT] },
+        url: { key: 'publication', kind: 'item', path: [GraphPath.GroupSegments.content, getPublicationsSectionId()] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === PUBLICATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();

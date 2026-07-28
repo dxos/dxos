@@ -271,6 +271,7 @@ feat F-1: Publications Section
   req F-1.1: A "Publications" section is contributed under each space's content group (mirroring plugin-studio's Studio section) while that space contains at least one Publication, listing its Publication objects as branch nodes.
   req F-1.2: "+ Publication" on the Publications section invokes op:AddPublication targeting that space's database.
   req F-1.3: Each Publication node expands to its Post children, with a "+ Post" action invoking op:AddPost.
+  req F-1.4: Creating a Publication from the space's generic create menu navigates to it under the Publications section, not the database subtree; a caller-supplied target (e.g. a collection) still wins.
 ```
 
 ```mdl
@@ -390,7 +391,9 @@ test T-7: SyncPosts falls back to getDraft when listDrafts omits body text
   plugin-studio's Studio section — so each space shows its own Publications, and
   the section appears only while the space contains at least one Publication
   (as plugin-inbox's Mailboxes section does), leaving the first-create to the
-  space's generic create-object menu. A custom Publication node
+  space's generic create-object menu — which defaults its `targetNodeId` to the
+  section path so the new Publication is navigated to there rather than under
+  the space's Database section. A custom Publication node
   type scopes the "+ Post" action so it never attaches to Publication objects
   listed under the space's Database section.
 - **Publisher connection.** A publisher connection is associated with a
