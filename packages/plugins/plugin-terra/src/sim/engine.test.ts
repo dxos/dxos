@@ -189,28 +189,44 @@ const planeLegBoundaries = (definition: TerraObject.TerraObject, legs: number): 
   return boundaries;
 };
 
+/**
+ * An instant `fraction` of the way through leg `leg`. Every assertion below picks its sample times
+ * this way rather than as a fixed offset from a boundary, because leg durations are NOT fixed across
+ * runs: `TerraObject.make` mints a random id, and the re-targeting seed is
+ * `(config.seed, definition.id, leg)`, so each process draws a different destination sequence and
+ * therefore different route lengths. A constant offset (`boundaries[2] + 500`) sits inside leg 3 only
+ * when that run happened to draw a leg longer than 500ms — otherwise the engine is already on leg 4.
+ */
+const withinLeg = (boundaries: readonly number[], leg: number, fraction: number): number => {
+  const start = leg === 0 ? 0 : boundaries[leg - 1];
+  return start + (boundaries[leg] - start) * fraction;
+};
+
 const positionsDiffer = (a: Vec3, b: Vec3): boolean => a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2];
 
 describe('SimEngine — arrival-driven legs (no stall at arrival)', () => {
   test("a routed object's leg advances exactly when its own route finishes, not on a fixed clock", () => {
-    const [arrivalMs] = planeLegBoundaries(fastPlane, 1);
+    const boundaries = planeLegBoundaries(fastPlane, 2);
     const engine = new SimEngine({ config, definitions: [fastPlane], grid });
 
-    engine.evaluateAt(Math.max(0, arrivalMs - 50));
+    engine.evaluateAt(withinLeg(boundaries, 0, 0.9));
     expect(engine.objects[0].state.leg).toBe(0);
 
-    engine.evaluateAt(arrivalMs + 50);
+    engine.evaluateAt(withinLeg(boundaries, 1, 0.5));
     expect(engine.objects[0].state.leg).toBe(1);
   });
 
   test('re-targeting never stalls — position keeps changing at every closely-sampled instant across an arrival', () => {
-    const [arrivalMs] = planeLegBoundaries(fastPlane, 1);
+    const boundaries = planeLegBoundaries(fastPlane, 2);
+    const arrivalMs = boundaries[0];
 
-    // Densely sampled straddling the first arrival, spanning well under a second in total: under the
-    // fixed-window bug this recurrence replaces, the object would have sat frozen at the destination
-    // for up to a whole 20s window after `arrivalMs` — any frozen stretch found here can only be that
-    // bug, not legitimate travel time.
-    const offsetsMs = [-40, -10, 10, 40, 90, 160, 260];
+    // Densely sampled straddling the first arrival: under the fixed-window bug this recurrence
+    // replaces, the object would have sat frozen at the destination for up to a whole 20s window
+    // after `arrivalMs` — any frozen stretch found here can only be that bug, not legitimate travel
+    // time. The step is capped to a fraction of leg 1's own (run-dependent, see `withinLeg`)
+    // duration so every post-arrival sample stays inside that leg however short it was drawn.
+    const step = Math.min(50, (boundaries[1] - boundaries[0]) / 8);
+    const offsetsMs = [-2 * step, -step / 2, step / 2, 2 * step, 3 * step, 4 * step, 5 * step];
     const positions = offsetsMs.map((offset) => {
       const engine = new SimEngine({ config, definitions: [fastPlane], grid });
       engine.evaluateAt(Math.max(0, arrivalMs + offset));
@@ -223,19 +239,21 @@ describe('SimEngine — arrival-driven legs (no stall at arrival)', () => {
   });
 
   test('the same definitions + same final time produce the same destination sequence whether stepped or jumped to directly', () => {
-    const boundaries = planeLegBoundaries(fastPlane, 3);
-    const finalMs = boundaries[2] + 500;
+    const boundaries = planeLegBoundaries(fastPlane, 4);
+    // Halfway through leg 3, so it is inside that leg by construction — see `withinLeg` for why a
+    // fixed offset past `boundaries[2]` was a per-process coin flip between leg 3 and leg 4.
+    const finalMs = withinLeg(boundaries, 3, 0.5);
 
     const direct = new SimEngine({ config, definitions: [fastPlane], grid });
     direct.evaluateAt(finalMs);
 
     const stepped = new SimEngine({ config, definitions: [fastPlane], grid });
     for (const at of [
-      boundaries[0] / 2,
-      boundaries[0] + 50,
-      boundaries[1] / 2,
-      boundaries[1] + 50,
-      boundaries[2] / 2,
+      withinLeg(boundaries, 0, 0.5),
+      withinLeg(boundaries, 1, 0.25),
+      withinLeg(boundaries, 1, 0.75),
+      withinLeg(boundaries, 2, 0.25),
+      withinLeg(boundaries, 2, 0.75),
     ]) {
       stepped.evaluateAt(at);
     }
