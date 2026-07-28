@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: Phase 3 instructions-channel arc COMPLETE, shipped as PR #12365 (Check monitoring in progress); system eval passed live at 100%. Next: remaining Phase 3 UI (ProjectOperation.CreateChat, projectChats graph extension, Chats-section exclusion, ProjectArticle toolbar). Uncommitted: none._
+_Resume: PR #12365 green + review-addressed — user lands it himself. Next (decided 2026-07-28): reconciliation phase A (Agent.instructions typed ref) then B (Chat.agent inversion) per ./PLAN.md, each its own PR from a fresh worktree; Phase 3 UI follows. Phase C shape decided: relay pattern onto the durable process (see PLAN.md). Uncommitted: none._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 

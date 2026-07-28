@@ -26,7 +26,7 @@ projects:
     tasks: packages/plugins/plugin-projects/TASKS.md
     design: packages/plugins/plugin-projects/DESIGN.md
     prs: [12335, 12365]
-    resume: 'Phase 3 instructions-channel arc COMPLETE + system eval GREEN: Chat.instructions typed ref -> explicit formatSystemPrompt param (typename partition deleted; bound Instructions are now plain context stubs), agent-process boundary via Process.InstructionsAnnotation, ProjectSkill (artifact add/list, 4/4 unit tests), projects.eval.ts PASSED LIVE 100% (created/filed/bound, opus-4-8). PR #12365 OPEN, Check in progress. REMAINING Phase 3 UI: ProjectOperation.CreateChat, projectChats graph extension (children() re-emit watch item), Chats-section exclusion, ProjectArticle toolbar. Then: commands-authoring UI, outliner skill, Agent/Project convergence review.'
+    resume: 'PR #12365 CI GREEN, review round addressed — USER LANDS IT HIMSELF (do not merge). Decisions 2026-07-28: reconciliation phases A+B are NEXT (before Phase 3 UI); phase C shape decided = relay pattern (Routine feed-trigger -> RelayFunction: cheap-model qualify -> submitInput onto the durable process input queue; multiplexing + filtering; AgentWorker/Qualifier retire; agent.feed dissolves; backpressure = accepted gap, intermediary-feed hatch). Plan: packages/plugins/plugin-projects/PLAN.md. NEXT SESSION: fresh worktree after #12365 merges -> phase A (Agent.instructions -> Ref<Instructions>) then phase B (Chat.agent inversion), each its own PR. Then Phase 3 UI (CreateChat op, navtree children, Chats exclusion, toolbar).'
 
   - name: sketch-scene-dsl
     status: active
