@@ -25,8 +25,13 @@ const smoothstep = (edge0: number, edge1: number, x: number): number => {
   return t * t * (3 - 2 * t);
 };
 
-/** Deterministic seeded fBm sampler over the unit sphere (seamless: sampled in 3D). */
-export const makeSampler = (config: NoiseConfig) => {
+/** Elevation and moisture over the unit sphere, both pure functions of the config the sampler was built from. */
+export type Sampler = {
+  elevation: (unit: Vec3) => number;
+  moisture: (unit: Vec3) => number;
+};
+
+const buildSampler = (config: NoiseConfig): Sampler => {
   const rng = seedrandom(config.seed);
   const elevationNoise = createNoise3D(rng);
   const moistureNoise = createNoise3D(rng);
@@ -79,4 +84,51 @@ export const makeSampler = (config: NoiseConfig) => {
   const moisture = (unit: Vec3): number => (fbm(moistureNoise, unit, config.frequency * 0.7) + 1) / 2;
 
   return { elevation, moisture };
+};
+
+/** Every field the noise closes over, so two configs sharing a key produce bit-identical samples. */
+const cacheKey = (config: NoiseConfig): string =>
+  [
+    config.seed,
+    config.frequency,
+    config.octaves,
+    config.persistence,
+    config.lacunarity,
+    config.continentPower,
+    config.waterLevel,
+    config.mountainScale,
+    config.maskFrequency,
+    config.maskThreshold,
+  ].join('|');
+
+/** Small enough that a slider drag cannot leak samplers, large enough that terrain and sim configs coexist. */
+const SAMPLER_CACHE_LIMIT = 4;
+
+const samplerCache = new Map<string, Sampler>();
+
+/**
+ * Deterministic seeded fBm sampler over the unit sphere (seamless: sampled in 3D), memoized on the
+ * config's noise fields. Building one seeds four simplex permutation tables — negligible once, but
+ * `sim/motion.ts` builds a sampler inside `evaluate`, which the smoke trails call ~25 times per
+ * object per frame; uncached, that construction alone cost ~26ms/frame at 20 objects and timed the
+ * `Objects` story out in CI. Memoizing is semantically invisible: a sampler is a pure function of
+ * its config.
+ */
+export const makeSampler = (config: NoiseConfig): Sampler => {
+  const key = cacheKey(config);
+  const cached = samplerCache.get(key);
+  if (cached) {
+    return cached;
+  }
+
+  const sampler = buildSampler(config);
+  if (samplerCache.size >= SAMPLER_CACHE_LIMIT) {
+    // Map iterates in insertion order, so the first key is the oldest.
+    const oldest = samplerCache.keys().next();
+    if (!oldest.done) {
+      samplerCache.delete(oldest.value);
+    }
+  }
+  samplerCache.set(key, sampler);
+  return sampler;
 };

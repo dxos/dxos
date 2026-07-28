@@ -116,6 +116,16 @@ src/types/TerraObject.ts  ECHO definition (kind, speed, source/target, orbit, sp
 
 - boat → cells below `waterLevel`; tank → land cells below the rock line; plane → anything below cruise elevation.
 
+### Performance
+
+`evaluate` is called far more often than once per object per frame: `sim/trail.ts`
+re-evaluates every live smoke puff's birth instant on every frame, so the real
+rate is objects × puffs (~500/frame at 20 objects). Anything `evaluate` touches is
+therefore on the hot path — `makeSampler` in particular, which seeds four simplex
+permutation tables and is now memoized in `engine/noise.ts`. Keep per-call
+allocation out of `evaluate` and its callees; measure with a frame-loop probe
+rather than by reasoning about it, since the trail multiplier is easy to forget.
+
 ---
 
 ## Backlog (Phase 3+)
