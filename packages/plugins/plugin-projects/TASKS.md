@@ -75,13 +75,13 @@ repoint.
       `GetSessionOptions.instructions`; `agent-process` resolves it into
       `AiSession.Options.instructions` (broken ref degrades to unsteered);
       `processor.request` passes `chat.instructions`. compute 46 tests green, builds clean.
-- [ ] **`Project.contextBindings` drops the instructions ref** — keeps `skills` +
-      `instructions.objects`. Skills must stay on the binding path (toolkit, not prompt).
-- [ ] **`ChatCompanion` stops binding project instructions** — companion-chat creation
-      sets `chat.instructions` instead, unifying companion and standalone.
-- [ ] **Lazy backfill for pre-existing chats** — chat opens, parent (or `CompanionTo`
-      target) is a Project, `chat.instructions` unset → set it. Without this, chats created
-      before this milestone silently lose their steering.
+- [x] **`Project.contextBindings` drops the instructions ref** — keeps `skills` +
+      `instructions.objects` (test updated to assert the exclusion). Skills stay on the
+      binding path (toolkit, not prompt).
+- [x] **`ChatCompanion` stops binding project instructions** — a `useEffect` sets
+      `chat.instructions` from the project when unset; Projects story mirrors it.
+- [x] **Lazy backfill for pre-existing chats** — same effect: any project companion chat
+      without the field picks it up on open.
 - [ ] **`ProjectOperation.CreateChat`** — invoke `AssistantOperation.CreateChat` with the
       project's instructions ref (by reference, never a copy), `Obj.setParent(chat, project)`,
       bind `instructions.skills`, `LayoutOperation.Open`. No `SpaceOperation.AddObject`
