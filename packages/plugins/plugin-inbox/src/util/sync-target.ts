@@ -8,8 +8,8 @@ import * as Layer from 'effect/Layer';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ServiceResolver, Trigger, type TriggerEvent } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import { Connection, Connector } from '@dxos/plugin-connector';
+import { Connection, Cursor } from '@dxos/link';
+import { Connector } from '@dxos/plugin-connector';
 import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 
 import { findBindingForTarget } from './find-binding';

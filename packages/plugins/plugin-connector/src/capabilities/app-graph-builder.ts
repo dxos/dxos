@@ -10,7 +10,7 @@ import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
@@ -19,7 +19,7 @@ import { meta } from '#meta';
 import { Connector } from '#types';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import { Connection, ConnectorAuthAnnotation, ConnectorOperation } from '../types';
+import { ConnectorAuthAnnotation, ConnectorOperation } from '../types';
 import { connectorAuthActions, isCursorForConnection, isCursorForTarget } from '../util';
 
 /**

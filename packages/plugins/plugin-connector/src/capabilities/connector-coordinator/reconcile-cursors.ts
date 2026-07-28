@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { type Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 
-import { Connection, type ConnectorEntry } from '#types';
+import { type ConnectorEntry } from '#types';
 
 import { isCursorForConnection } from '../../util';
 

@@ -10,10 +10,9 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { FactStore } from '@dxos/pipeline-rdf';
 import {
-  Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,

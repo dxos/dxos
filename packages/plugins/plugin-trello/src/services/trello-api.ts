@@ -16,8 +16,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
+import { type AccessToken, Connection } from '@dxos/link';
 
 import { TRELLO_API_BASE } from '../constants';
 import { InvalidTrelloAccessTokenError } from '../errors';

@@ -3,9 +3,7 @@
 //
 
 import { type Obj, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-
-import { Connection } from '../types';
+import { Connection, Cursor } from '@dxos/link';
 
 /**
  * True when `cursor` is an external-sync cursor authenticated by `connection`'s access token.

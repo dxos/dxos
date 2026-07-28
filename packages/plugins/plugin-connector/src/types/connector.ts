@@ -10,11 +10,10 @@ import { Capability } from '@dxos/app-framework';
 import type { Client } from '@dxos/client';
 import type { Operation } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';
 
 import { type ConnectionTestError } from '../errors';
-import * as Connection from './Connection';
 
 /** Descriptor for one remote target returned by discovery operations. */
 export const RemoteTarget = Schema.Struct({

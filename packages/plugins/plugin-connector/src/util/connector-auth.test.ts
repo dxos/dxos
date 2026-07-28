@@ -9,11 +9,11 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Node } from '@dxos/plugin-graph';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { Connection, type ConnectorEntry } from '../types';
+import { type ConnectorEntry } from '../types';
 import { connectorAuthActions } from './connector-auth';
 
 // A connector is "offered" (gets a Connect entry) when it has an auth flow; oauth is the simplest.

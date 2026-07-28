@@ -11,14 +11,13 @@ import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
-import { Connection } from '#types';
 
 import { connectionDeckSubject } from '../../constants';
 

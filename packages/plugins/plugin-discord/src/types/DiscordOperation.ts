@@ -10,9 +10,8 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import {
-  Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,

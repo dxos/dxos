@@ -8,12 +8,11 @@ import { Capability } from '@dxos/app-framework';
 import { AppNode } from '@dxos/app-toolkit';
 import { Database, type Key, Obj, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { type Node } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { ConnectorCoordinator, type ConnectorEntry } from '../types';
-import * as Connection from '../types/Connection';
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';

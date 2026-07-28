@@ -8,12 +8,12 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Atmosphere, Connection } from '@dxos/link';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { Connection, Connector, type ConnectorEntry, type CredentialForm } from '#types';
+import { Connector, type ConnectorEntry, type CredentialForm } from '#types';
 
-import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES, CUSTOM_PROVIDER_ID } from '../constants';
+import { ATPROTO_OAUTH_SCOPES, CUSTOM_PROVIDER_ID } from '../constants';
 
 /** Default form for manually entered access tokens (custom connector). */
 const CustomTokenForm = Schema.Struct({
@@ -83,8 +83,8 @@ export default Capability.makeModule<ConnectorEntry[]>(
         // Atmosphere: the same atproto OAuth flow as the Bluesky connector but credential-only — no
         // sync targets. Connects an atproto account without syncing feeds, and is the connector the
         // OAuth account-recovery flow routes its Connection to.
-        id: ATMOSPHERE_PROVIDER_ID,
-        source: ATMOSPHERE_SOURCE,
+        id: Atmosphere.PROVIDER_ID,
+        source: Atmosphere.SOURCE,
         label: 'Atmosphere',
         oauth: {
           provider: OAuthProvider.ATPROTO,

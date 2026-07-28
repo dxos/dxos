@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -20,7 +20,6 @@ import { Expando } from '@dxos/schema';
 
 import { type TestConnectionStatus } from '#hooks';
 import { translations } from '#translations';
-import { Connection } from '#types';
 
 import { isCursorForConnection } from '../../util';
 import { ConnectionView } from './ConnectionView';

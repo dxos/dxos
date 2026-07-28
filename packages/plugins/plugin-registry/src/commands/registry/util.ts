@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 import { AppSpace } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Atmosphere } from '@dxos/link';
 import { ALL_NSIDS, NSID } from '@dxos/protocols';
 
 export { ALL_NSIDS, NSID };
@@ -30,11 +30,6 @@ export { ALL_NSIDS, NSID };
  * - **App password (fallback):** explicit `--handle` / `--app-password` (or `$ATPROTO_HANDLE` /
  *   `$ATPROTO_APP_PASSWORD`) authenticate directly against the PDS with a session token.
  */
-
-// `AccessToken.source` of the default atproto / login integration ("Atmosphere"). Mirrors
-// `ATMOSPHERE_SOURCE` in plugin-connector; inlined to avoid a plugin-registry -> plugin-connector
-// dependency.
-const ATMOSPHERE_SOURCE = 'atproto.local';
 
 // Public read-only XRPC base used for identity resolution. Works for any
 // AT Protocol identity regardless of which PDS hosts it.
@@ -268,7 +263,7 @@ const resolvePersonalSpaceSession = (client: Client) =>
     const tokens = (yield* Effect.promise(() =>
       space.db.query(Filter.type(AccessToken.AccessToken)).run(),
     )) as AccessToken.AccessToken[];
-    const token = tokens.find((object) => object.source === ATMOSPHERE_SOURCE && !!object.account && !!object.token);
+    const token = tokens.find((object) => object.source === Atmosphere.SOURCE && !!object.account && !!object.token);
     if (!token?.account) {
       return undefined;
     }

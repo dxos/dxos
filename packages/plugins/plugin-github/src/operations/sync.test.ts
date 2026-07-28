@@ -8,8 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { AccessToken, Cursor } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ExternalProject, Organization, Person, Task } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants';

@@ -7,10 +7,12 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
 import {
   // eslint-disable-next-line unused-imports/no-unused-imports
   type Connection,
+  Cursor,
+} from '@dxos/link';
+import {
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,

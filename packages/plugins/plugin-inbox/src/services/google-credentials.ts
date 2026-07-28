@@ -8,9 +8,8 @@ import * as Layer from 'effect/Layer';
 
 import { Credential } from '@dxos/compute';
 import { Database, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
+import { type AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
 
 /**
  * Creates the service interface from a cached token.

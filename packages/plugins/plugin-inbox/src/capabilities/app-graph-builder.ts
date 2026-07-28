@@ -10,8 +10,8 @@ import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
+import { Connection, Cursor } from '@dxos/link';
+import { isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { DraftMessage, Event, Message } from '@dxos/types';
