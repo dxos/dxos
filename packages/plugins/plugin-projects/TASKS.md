@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: reconciliation A-D DONE, shipped as PR #12370 (OPEN). CI: import-cycle failure FIXED (Agent co-located with Chat in one module, Agent.\* namespace via re-export facade, commit 8c89461e49); storybook job failed on a react-ui dist-chunk resolve error (package untouched by this branch — suspected stale CI cache; fresh run in progress on the fixed tip, poll armed). Verified: projects.eval 100% live post-D; memoized agent suite regenerated + replay-deterministic (planning gated to planning.eval.ts); 298 unit tests green. NEXT: get #12370 green (storybook verdict), handle CodeRabbit, land; then Phase 3 UI (ProjectOperation.CreateChat, navtree chat children, Chats exclusion, toolbar). Uncommitted: user's project.drawio.svg edit (committed with next change)._
+_Resume: PR #12370 MERGED — reconciliation A-D done. Worktree synced with main. PENDING: memoized conversation regen (op-blocked background chain; verify replay + push when it fires). NEXT: Phase 3 UI per the Phase 3 task list below (CreateChat op first). Uncommitted: none._
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
@@ -127,6 +127,9 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
       `Database.resolve(doc, Markdown.Document)` (typed check included). Residual follow-up:
       `Database.load`'s bare `.tryLoad()` assumption still bites any other op taking refs
       from LLM args.
+- [ ] **CompanionTo/LegacyCompanionTo share one DXN** — two runtime classes for one wire type,
+      load-bearing for the registered LegacyCompanionTo→CompanionTo migration; untangle when that
+      migration retires. Also: fix the `Agent.did` field doc (overstates creation-time seeding).
 - [ ] **Agent-skill `planning` memoized test gated** (`it.scoped.skip`) — recordings embed
       nondeterministic tool-error recovery and cannot replay-converge; covered live by
       `planning.eval.ts`. Un-gate only if recording strategy changes.
