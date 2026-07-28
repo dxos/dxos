@@ -57,6 +57,7 @@
   },
   "devDependencies": {
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",

@@ -23,7 +23,7 @@ const testLayer = () =>
   );
 
 describe('formatSystemPrompt', () => {
-  it.effect('renders bound Instructions inline (text + commands), not as object stubs', () =>
+  it.effect('renders Instructions inline (text + commands), not as object stubs', () =>
     Effect.gen(function* () {
       const instructions = yield* Database.add(
         Instructions.make({
@@ -35,7 +35,7 @@ describe('formatSystemPrompt', () => {
         }),
       );
 
-      const prompt = yield* formatSystemPrompt({ system: 'Base prompt.', objects: [instructions] });
+      const prompt = yield* formatSystemPrompt({ system: 'Base prompt.', instructions: [instructions] });
       expect(prompt).toContain('Base prompt.');
       expect(prompt).toContain('## Instructions');
       expect(prompt).toContain('Answer like a pirate.');
@@ -59,10 +59,23 @@ describe('formatSystemPrompt', () => {
         instructions.text = Ref.fromURI(URI.make('dxn:echo:@:missing-text'));
       });
 
-      const prompt = yield* formatSystemPrompt({ objects: [instructions] });
+      const prompt = yield* formatSystemPrompt({ instructions: [instructions] });
       expect(prompt).toContain('## Instructions');
       expect(prompt).toContain('`$go`: Go.');
       expect(prompt).not.toContain('unreachable');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('treats a bound Instructions object as an ordinary context stub', () =>
+    Effect.gen(function* () {
+      // Steering is declared by the `instructions` parameter, so a bound Instructions object is
+      // subject matter (e.g. "help me edit these") rather than something the session must obey.
+      const instructions = yield* Database.add(Instructions.make({ name: 'Draft', text: 'Answer like a pirate.' }));
+      const prompt = yield* formatSystemPrompt({ objects: [instructions] });
+      expect(prompt).toContain('## Context Objects');
+      expect(prompt).toContain('<label>Draft</label>');
+      expect(prompt).not.toContain('## Instructions');
+      expect(prompt).not.toContain('Answer like a pirate.');
     }).pipe(Effect.provide(testLayer())),
   );
 

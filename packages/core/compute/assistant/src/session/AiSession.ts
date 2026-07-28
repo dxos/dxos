@@ -14,7 +14,7 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { McpServer, Operation, type Skill, Trace } from '@dxos/compute';
+import { type Instructions, McpServer, Operation, type Skill, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -55,6 +55,11 @@ export type Options = {
   runtime: Runtime.Runtime<Database.Service>;
   /** @effect-atom/atom-react Registry for reactive state. */
   registry?: AtomRegistry.Registry;
+  /**
+   * Instructions steering the conversation (typically the owning `Chat`'s), rendered into the system
+   * prompt on every turn. The session is feed-centric and cannot reach its chat, so these are passed in.
+   */
+  instructions?: readonly Instructions.Instructions[];
 };
 
 /**
@@ -68,18 +73,22 @@ const SUMMARY_THRESHOLD = 80_000;
  * Executes tools based on AI responses and supports cancellation of in-progress requests.
  */
 export class Session extends Resource {
+  private readonly _feed: Feed.Feed;
+  private readonly _runtime: Runtime.Runtime<Database.Service>;
+  readonly #instructions: readonly Instructions.Instructions[];
+
   /**
    * Skills and objects bound to the session.
    */
   private readonly _binder: AiContext.Binder;
-  private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Database.Service>;
+
   private readonly _sessionLoader = new SessionLoader();
 
   public constructor(options: Options) {
     super();
     this._feed = options.feed;
     this._runtime = options.runtime;
+    this.#instructions = options.instructions ?? [];
     invariant(this._feed);
     invariant(this._runtime);
     this._binder = new AiContext.Binder({
@@ -161,6 +170,7 @@ export class Session extends Resource {
         history,
         skills,
         objects,
+        instructions: this.#instructions,
         prompt: params.prompt,
         system: params.system,
       });
@@ -189,6 +199,7 @@ export class Session extends Resource {
           system: params.system,
           skills: currentSkills,
           objects: this.context.getObjects(),
+          instructions: this.#instructions,
         }).pipe(Effect.orDie);
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
