@@ -240,6 +240,26 @@ Points to settle with Josiah:
       is newly parented, fall back to a `chats: Ref<Collection>` field on Project
       (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.
 
+## Milestone 4: demo, test, harden — use cases
+
+Scoped in [`./USE-CASES.md`](./USE-CASES.md): Claude Desktop comparison, specification (§2 —
+resolves the context/artifact OPEN decision as "keep artifacts; routines inherit project scope"),
+ten use cases, three prioritized builds (sender ledger / CRM sender research / fact-grounded
+summaries), and the `stories-projects` storybook strategy.
+
+### Tasks (per USE-CASES.md §4/§5, sequencing §6)
+
+- [ ] **Groundwork PR** — routine project-scope binding (`RunInstructions` + `CreateRoutine`);
+      `ProjectOperation.Create` (+ `AddArtifact` alias); `ProjectsCapabilities.Template` + create-flow
+      picker; `ARTIFACT_SKILL_KEYS` += table, sheet; ProjectArticle context section
+      (`instructions.objects` rendered as labeled Context gallery with add/remove).
+- [ ] **UC-A sender ledger** — plugin-inbox "Inbox research" project template + mailbox entry point;
+      `stories-projects` package + `SenderLedger.stories.tsx`; idempotent-upsert test.
+- [ ] **UC-B sender research** — CRM routine template ported to a project template; artifact filing
+      dedupe verified; `SenderResearch.stories.tsx`.
+- [ ] **UC-C fact summaries** — analyze-mailbox operation-action routine template; brain skill in
+      project instructions; `FactSummaries.stories.tsx`; `sender-ledger`/`fact-summary` evals.
+
 ## Milestone 4 (scoping): what comes after this PR
 
 - [ ] **Write the post-PR milestone doc** — the through-line across `Chat`, `Plan`, the delegation
