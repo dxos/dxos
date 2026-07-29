@@ -99,6 +99,26 @@ describe('sketch → drawing migration', () => {
     ]);
   });
 
+  test('runs against a space reopened without the legacy schema registered', async ({ expect }) => {
+    // The plugin registers only `Drawing`, never `LegacySketch.Sketch` — so the migration has to
+    // work on a client whose registry has no entry for the type it is reading.
+    const { db, peer, key } = await builder.createDatabase();
+    db.graph.registry.add([LegacySketch.Sketch, Drawing.Drawing, Drawing.Canvas]);
+    const sketchId = addLegacySketch(db, { name: 'Diagram' }).id;
+    await db.flush();
+
+    const client = await peer.createClient();
+    await client.graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const reopened = await peer.openDatabase(key, undefined, { client });
+
+    await reopened.runMigrations([sketchToDrawing]);
+
+    const drawings = await reopened.query(Filter.type(Drawing.Drawing)).run();
+    expect(drawings).toHaveLength(1);
+    expect(drawings[0].id).toBe(sketchId);
+    expect(drawings[0].name).toBe('Diagram');
+  });
+
   test('is idempotent and picks up sketches that arrive later', async ({ expect }) => {
     const db = await setup();
     addLegacySketch(db, { name: 'One' });
