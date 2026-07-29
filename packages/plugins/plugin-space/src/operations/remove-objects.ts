@@ -7,7 +7,7 @@ import { Capabilities } from '@dxos/app-framework';
 import { AppAnnotation, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Entity, Obj } from '@dxos/echo';
+import { Annotation, Collection, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -37,8 +37,12 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
           : -1,
       );
 
-      const wasActive = entities
-        .map((entity) => layout.active.find((graphId) => graphId.endsWith(entity.id)))
+      // `db.remove` cascades to objects owned via the ECHO parent edge, so those can have planks open
+      // too — a project's chats are the live case. Collected before the removal, while the parent
+      // edges still resolve; a plank left pointing at a removed object cannot be closed by the user.
+      const descendantIds = yield* collectOwnedDescendantIds(entities);
+      const wasActive = [...entities.map((entity) => entity.id), ...descendantIds]
+        .map((id) => layout.active.find((graphId) => graphId.endsWith(id)))
         .filter(isNonNullable);
 
       for (const entity of entities) {
@@ -69,3 +73,35 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
   ),
 );
 export default handler;
+
+/** Depth cap for the ownership walk; owned graphs are shallow, this only guards bad data. */
+const OWNED_WALK_MAX_DEPTH = 8;
+
+/**
+ * Ids of every object owned (transitively, by the ECHO parent edge) by one of `entities` — i.e. what
+ * `db.remove` will cascade to. Must run before the removal, while the parent edges still resolve.
+ */
+const collectOwnedDescendantIds = Effect.fnUntraced(function* (entities: readonly unknown[]) {
+  const seen = new Set<string>();
+  let frontier: Obj.Unknown[] = entities.filter(Obj.isObject);
+  for (let depth = 0; depth < OWNED_WALK_MAX_DEPTH && frontier.length > 0; depth++) {
+    const next: Obj.Unknown[] = [];
+    for (const object of frontier) {
+      const db = Obj.getDatabase(object);
+      if (!db) {
+        continue;
+      }
+
+      const children = yield* Effect.promise(() => db.query(Query.select(Filter.id(object.id)).children()).run());
+      for (const child of children) {
+        if (Obj.isObject(child) && !seen.has(child.id)) {
+          seen.add(child.id);
+          next.push(child);
+        }
+      }
+    }
+    frontier = next;
+  }
+
+  return [...seen];
+});
