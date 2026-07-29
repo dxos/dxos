@@ -155,6 +155,8 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
         Obj.update(book, (book) => {
           book.content = Ref.make(added);
         });
+      } catch {
+        setError(true);
       } finally {
         setBusy(false);
       }

@@ -56,7 +56,6 @@ export const bookLens: Panproto.Lens = {
     },
     { kind: 'dateOnly', wire: 'startedAt', echo: ['startedAt'] },
     { kind: 'dateOnly', wire: 'finishedAt', echo: ['finishedAt'] },
-    { kind: 'scalar', wire: 'owned', echo: ['owned'] },
     {
       kind: 'struct',
       wire: 'bookProgress',

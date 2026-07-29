@@ -154,7 +154,9 @@ export const createTypeSectionExtension = (
   /** Matches this type's section node (the parent the objects and the create action hang off). */
   const whenSection = (node: Node.Node): Option.Option<Space> => {
     const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-    return node.type === typename && space ? Option.some(space) : Option.none();
+    // `testId` is the exclusive sentinel: object nodes share `type === typename` but carry
+    // `testId: 'spacePlugin.object'`, so this guard distinguishes section from object nodes.
+    return node.type === typename && node.properties.testId === testId && space ? Option.some(space) : Option.none();
   };
 
   // The section node itself. Addressable in its own right only when sectionUrlKey is declared —

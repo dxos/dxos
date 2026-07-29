@@ -96,22 +96,28 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const record = await encodeRecord(subject);
-      const publishStatus = await computeStatus(subject, publication);
-      const inspection = await inspectPublish(subject);
-      const nextValues: Record<string, string> = {};
-      for (const field of fields) {
-        if (!field.group && field.visibility !== 'private') {
-          nextValues[field.path] = await resolveDisplayValue(Obj.getValue(subject, field.path.split('.')));
+      try {
+        const record = await encodeRecord(subject);
+        const publishStatus = await computeStatus(subject, publication);
+        const inspection = await inspectPublish(subject);
+        const nextValues: Record<string, string> = {};
+        for (const field of fields) {
+          if (!field.group && field.visibility !== 'private') {
+            nextValues[field.path] = await resolveDisplayValue(Obj.getValue(subject, field.path.split('.')));
+          }
         }
-      }
-      if (!cancelled) {
-        setCanPublish(Boolean(record) && inspection.eligibility.ok);
-        setIneligibleReason(inspection.eligibility.ok ? undefined : inspection.eligibility.reason);
-        setMirrorResolved(inspection.mirrorResolved);
-        setFieldNotes(inspection.fieldNotes ?? {});
-        setValues(nextValues);
-        setStatus(deriveDisplayStatus(publishStatus, inspection.eligibility));
+        if (!cancelled) {
+          setCanPublish(Boolean(record) && inspection.eligibility.ok);
+          setIneligibleReason(inspection.eligibility.ok ? undefined : inspection.eligibility.reason);
+          setMirrorResolved(inspection.mirrorResolved);
+          setFieldNotes(inspection.fieldNotes ?? {});
+          setValues(nextValues);
+          setStatus(deriveDisplayStatus(publishStatus, inspection.eligibility));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
       }
     })();
     return () => {

@@ -73,11 +73,17 @@ const encodeAdapter = async (adapter: Adapter, object: Obj.Unknown): Promise<unk
     }
     case 'ref': {
       const refType = refTypes.get(adapter.ref.refType);
-      const content = await refType?.read(Obj.getValue(object, adapter.echo));
+      if (!refType) {
+        throw new Error(`Panproto: unregistered refType "${adapter.ref.refType}"`);
+      }
+      const content = await refType.read(Obj.getValue(object, adapter.echo));
       if (content == null || content.trim().length === 0) {
         return undefined;
       }
       const format = adapter.ref.format ? textFormats.get(adapter.ref.format) : undefined;
+      if (adapter.ref.format && !format) {
+        throw new Error(`Panproto: unregistered text format "${adapter.ref.format}"`);
+      }
       return format ? format.encode(content) : content;
     }
     case 'meta':
@@ -128,12 +134,18 @@ const decodeAdapter = (adapter: Adapter, record: Record<string, unknown>, out: R
       return;
     case 'ref': {
       const refType = refTypes.get(adapter.ref.refType);
+      if (!refType) {
+        throw new Error(`Panproto: unregistered refType "${adapter.ref.refType}"`);
+      }
       const format = adapter.ref.format ? textFormats.get(adapter.ref.format) : undefined;
+      if (adapter.ref.format && !format) {
+        throw new Error(`Panproto: unregistered text format "${adapter.ref.format}"`);
+      }
       const decoded = typeof raw === 'string' ? (format ? format.decode(raw) : raw) : undefined;
       if (decoded != null) {
-        setPath(out, adapter.echo, refType?.make(decoded));
+        setPath(out, adapter.echo, refType.make(decoded));
       } else if (adapter.ref.alwaysCreate) {
-        setPath(out, adapter.echo, refType?.make(''));
+        setPath(out, adapter.echo, refType.make(''));
       }
       return;
     }

@@ -19,6 +19,7 @@ import bookLexicon from './lexicons/buzz.bookhive.book.json';
 const FORBIDDEN_FIELDS = [
   'catalog',
   'notes',
+  'owned',
   'purchasePrice',
   'purchaseDate',
   'shelfLocation',
@@ -80,7 +81,6 @@ describe('bookLens', () => {
     expect(record.stars).toBe(8);
     // review resolves from its Text ref and maps ECHO markdown to the wire's HTML.
     expect(record.review).toBe('A <b>classic</b>.');
-    expect(record.owned).toBe(true);
     // date-only ECHO values widen to the wire's ISO datetime (midnight UTC).
     expect(record.startedAt).toBe('2020-01-01T00:00:00.000Z');
     expect(record.finishedAt).toBe('2020-02-01T00:00:00.000Z');
@@ -120,7 +120,6 @@ describe('bookLens', () => {
     });
     expect(decoded.status).toBe('finished');
     expect(decoded.stars).toBe(8);
-    expect(decoded.owned).toBe(true);
     // wire datetime narrows back to a date-only ECHO value.
     expect(decoded.startedAt).toBe('2020-01-01');
     expect(decoded.finishedAt).toBe('2020-02-01');
