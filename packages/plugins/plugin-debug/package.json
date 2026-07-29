@@ -101,11 +101,13 @@
     "@dxos/log-store-idb": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/plugin-tldraw": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -124,9 +126,7 @@
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
-    "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/plugin-tldraw": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

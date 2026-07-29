@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-illustrator",
   "version": "0.10.0",
-  "private": true,
   "description": "Headless diagramming plugin for DXOS Composer (unifies canvas renderers like tldraw and excalidraw).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
