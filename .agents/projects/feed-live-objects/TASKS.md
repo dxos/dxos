@@ -107,10 +107,11 @@ previously mutated in memory silently.
       all of them go through `Obj.update` or `useObject`'s updater. So the
       opt-out-free change reaches no existing mutation path.
 
-## Roadmap phases (post-merge; see DESIGN.md "Roadmap (post-#12235)")
+## Roadmap phases (see DESIGN.md "Roadmap"; revised 2026-07-29)
 
-The former deferred follow-ups, ordered as a dependency chain (1 → 2 → 3 → 4,
-one PR each; 5 exploratory).
+Sequenced by product pull: email drives scale-out (phases 3–4), first-party
+chat channels inherit it. Dependency chain 1 → 2 → 3 → 4, one PR each; 5 and 6
+demand-gated.
 
 - [ ] **Phase 1 — version/order axis.** Wire `insertionId` through the codec +
       index path so the version axis is always present (today
@@ -118,18 +119,24 @@ one PR each; 5 exploratory).
       asked for `insertionId`; CodeRabbit flagged the default-off ordering
       guarantee). Correctness-shaped, not an optimisation. Document
       reorder-on-position-arrival semantics.
-- [ ] **Phase 2 — consumer cursors + subscriptions.** Implement stubbed
-      `Feed.cursor`/`Feed.next`; durable high-water cursor per subscription
-      replaces the unbounded `processedVersions` map (and eventually
-      content-signature diffing); add `SubscriptionSpec.options.mutationTypes`
-      filter.
-- [ ] **Phase 3 — delta blocks.** Partial-object update blocks + field-level
-      LWW merge at the index; per-object fold rollback/replay on position
-      reorder.
-- [ ] **Phase 4 — retention + compaction.** Implement `Feed.setRetention`
-      (`Feed.RetentionOptions`); compact superseded blocks by rewriting a
-      prefix into a snapshot block.
-- [ ] **Phase 5 — app-defined projections (exploratory).** Deterministic folds
+- [ ] **Phase 2 — consumer cursors, read state, push.** Implement stubbed
+      `Feed.cursor`/`Feed.next`; durable high-water cursor per consumer
+      (dispatcher dedup replacing `processedVersions` + chat read
+      receipts/unread counts); `SubscriptionSpec.options.mutationTypes` filter;
+      EDGE push subscriptions replacing `FeedHandle`'s 1s polling.
+- [ ] **Phase 3 — retention + epoch chaining.** `Feed.setRetention`
+      (`Feed.RetentionOptions`); compaction via snapshot-prefix rewrite;
+      epoch-chained feed convention for unbounded streams (mailbox, channel).
+- [ ] **Phase 4 — sparse feeds (email-scale).** Range-set local store
+      (replicated tail + evictable cached ranges); remote range queries against
+      non-replicated history; watermarked domain-order paging with live-tail
+      patching of rendered pages.
+- [ ] **Phase 5 — delta blocks (demand-gated).** Partial-object updates +
+      field-level LWW + per-object fold replay; self-containedness rule so
+      patches never strand a sparse replica without a base snapshot.
+- [ ] **Phase 6 — app-defined projections (exploratory).** Deterministic folds
       over feeds with rematerialization; demand-gated.
 - [ ] **Cross-cutting.** Explicit policy for schema-invalid feed items
-      (replacing silent drop); surface `getSyncState` in devtools.
+      (replacing silent drop); surface `getSyncState` in devtools; product code
+      consumes only the Feed API and sync keeps its injected-transport seam
+      (keeps a future Matrix/connector backend a swap, not a rewrite).
