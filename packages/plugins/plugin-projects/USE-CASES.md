@@ -11,25 +11,25 @@ Claude Desktop (claude.ai / Cowork) is the closest shipping analogue and the loo
 `Project` concept started from. A field-by-field comparison sharpens what we are building and what
 we are deliberately building differently.
 
-| Concern             | Claude Desktop                                                                          | Composer Projects                                                                                                                                                       |
-| ------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Container           | Project: instructions + knowledge + chats                                                | `Project`: instructions + routines + artifacts + chats (ECHO object, local-first, sync/shareable)                                                                        |
-| Instructions        | Free-text "custom instructions" per project                                              | `Instructions`: markdown text + **skills** (toolkits) + **commands** (sentinels) + context objects — structured, reusable, referenced by ref (edits flow to live chats)   |
-| Knowledge / context | Uploaded files & connected docs, retrieved into every chat                               | `instructions.objects`: refs to **live typed objects** (a Mailbox, a Table, a Person) — no upload/copy; the object *is* the source and stays current                      |
-| Chats               | Chats grouped under the project; project knowledge auto-included                         | `Chat` parented to the project; instructions steer via typed ref; skills/objects arrive as feed `Binding` records (auditable, per-chat)                                   |
-| Outputs             | Artifacts live inside the conversation; export is manual                                 | `Project.artifacts`: a Collection of first-class ECHO objects (documents, sheets, contacts) — usable by every other plugin, filed explicitly by the model (`ProjectSkill`) |
-| Automation          | Separate surface (scheduled tasks / Cowork routines); not owned by a project             | `Routine` (instructions or operation + trigger) **owned by the project**, sharing its scope; triggers include cron *and* data events (ECHO feed/query)                    |
-| Memory              | Project memory: model-managed summaries of past chats                                    | (Planned here) the **fact store** (`@dxos/pipeline-rdf`): structured subject–predicate–object facts with provenance and confidence, queryable by any session              |
-| Extensibility       | Fixed product surface; MCP connectors for tools                                          | Seminal-plugin posture: any plugin contributes artifact types, skills, **templates**, and can create/target projects via operations                                        |
-| Tools               | MCP servers, skills                                                                      | `Skill` (registry-resolved toolkits over typed `Operation`s) — same concept, but tools operate on shared typed data, not opaque side effects                              |
+| Concern             | Claude Desktop                                                               | Composer Projects                                                                                                                                                          |
+| ------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Container           | Project: instructions + knowledge + chats                                    | `Project`: instructions + routines + artifacts + chats (ECHO object, local-first, sync/shareable)                                                                          |
+| Instructions        | Free-text "custom instructions" per project                                  | `Instructions`: markdown text + **skills** (toolkits) + **commands** (sentinels) + context objects — structured, reusable, referenced by ref (edits flow to live chats)    |
+| Knowledge / context | Uploaded files & connected docs, retrieved into every chat                   | `instructions.objects`: refs to **live typed objects** (a Mailbox, a Table, a Person) — no upload/copy; the object _is_ the source and stays current                       |
+| Chats               | Chats grouped under the project; project knowledge auto-included             | `Chat` parented to the project; instructions steer via typed ref; skills/objects arrive as feed `Binding` records (auditable, per-chat)                                    |
+| Outputs             | Artifacts live inside the conversation; export is manual                     | `Project.artifacts`: a Collection of first-class ECHO objects (documents, sheets, contacts) — usable by every other plugin, filed explicitly by the model (`ProjectSkill`) |
+| Automation          | Separate surface (scheduled tasks / Cowork routines); not owned by a project | `Routine` (instructions or operation + trigger) **owned by the project**, sharing its scope; triggers include cron _and_ data events (ECHO feed/query)                     |
+| Memory              | Project memory: model-managed summaries of past chats                        | (Planned here) the **fact store** (`@dxos/pipeline-rdf`): structured subject–predicate–object facts with provenance and confidence, queryable by any session               |
+| Extensibility       | Fixed product surface; MCP connectors for tools                              | Seminal-plugin posture: any plugin contributes artifact types, skills, **templates**, and can create/target projects via operations                                        |
+| Tools               | MCP servers, skills                                                          | `Skill` (registry-resolved toolkits over typed `Operation`s) — same concept, but tools operate on shared typed data, not opaque side effects                               |
 
 **Takeaways.**
 
-1. Claude's strongest loop — *instructions + standing knowledge make every chat in the project
-   smarter* — is exactly `Chat.instructions` + context bindings, already live. Parity requires the
+1. Claude's strongest loop — _instructions + standing knowledge make every chat in the project
+   smarter_ — is exactly `Chat.instructions` + context bindings, already live. Parity requires the
    knowledge half to be effortless: binding an object as standing context must be a one-gesture UI
    action (today it is data-only).
-2. Claude keeps automation outside the project; we deliberately pull routines *inside* (a routine
+2. Claude keeps automation outside the project; we deliberately pull routines _inside_ (a routine
    inherits project scope). That is our differentiator and currently our weakest edge: a headless
    routine gets only `instructions.objects` (see the OPEN decision in `TASKS.md`), so project scope
    does not yet actually reach routines.
@@ -37,7 +37,7 @@ we are deliberately building differently.
    deterministic, queryable, provenance-carrying. Nothing wires it to projects yet — use cases 8–10
    below close that.
 4. Claude's artifacts are trapped in chats. Ours are live objects other plugins can render and edit —
-   the demoable difference: a routine *maintains* a spreadsheet the user has open.
+   the demoable difference: a routine _maintains_ a spreadsheet the user has open.
 
 ## 2. Specification
 
@@ -51,15 +51,15 @@ this milestone; SHOULD = next; MAY = direction.
 - **Instructions** = markdown `text` + `skills` + `objects` (standing context) + `commands`.
   One Instructions object steers both chats (via `Chat.instructions`) and routines (via
   `RunInstructions`).
-- **Inputs vs outputs.** `instructions.objects` are *inputs*: standing context bound into every
-  session. `artifacts` are *outputs*: work products the project owns. They MUST remain distinct
+- **Inputs vs outputs.** `instructions.objects` are _inputs_: standing context bound into every
+  session. `artifacts` are _outputs_: work products the project owns. They MUST remain distinct
   (resolves the OPEN decision as direction 2 — keep `artifacts`): conflating them makes every
   produced object standing prompt context, which is bloat and the wrong default. An artifact MAY
   additionally be promoted to standing context by adding it to `instructions.objects`.
 - **Routines inherit project scope.** A routine linked into `project.routines` MUST run with the
   project bound into its session context (project ref + `ProjectSkill` + the project's context
   objects), the same bindings a project chat gets. This is the mechanism that makes a routine able
-  to *file artifacts back into its project* — the core loop of every use case below.
+  to _file artifacts back into its project_ — the core loop of every use case below.
 
 ### 2.2 Operations (programmatic surface)
 
@@ -78,7 +78,7 @@ this milestone; SHOULD = next; MAY = direction.
   fully-wired in-memory Project (instructions text, skills, context objects, starter routines);
   the create flow persists it with one `Database.add`.
 - The generic create dialog ("+ Project") MUST offer contributed templates (blank remains default).
-- Plugins contribute domain templates *and* their own entry points: e.g. plugin-inbox contributes an
+- Plugins contribute domain templates _and_ their own entry points: e.g. plugin-inbox contributes an
   "Inbox research" template whose `appliesTo` gates on a Mailbox subject, surfaced from the
   mailbox's toolbar/companion ("Set up project…"). Both directions the user asked about are thus the
   same mechanism: **inbox sets up a pre-wired project from its template; plugin-projects owns the
@@ -107,7 +107,7 @@ this milestone; SHOULD = next; MAY = direction.
 
 - ProjectArticle: header + instructions + routines gallery + artifacts gallery — exists. It MUST
   additionally surface: a **context section** (view/add/remove `instructions.objects` — restoring
-  the field hidden in #12383, now clearly labeled as *context*, distinct from artifacts) and the
+  the field hidden in #12383, now clearly labeled as _context_, distinct from artifacts) and the
   template picker on create.
 - A routine's card SHOULD show last-run status/outcome (today only the trigger summary).
 - Commands authoring UI SHOULD land (data-only today).
@@ -132,13 +132,13 @@ channels into project work — each with a different cost, determinism, and plac
    mailbox — onto the operation's typed input schema. No tokens, no nondeterminism, typed output,
    unit-testable without a model. UC-C's analyze-mailbox routine is exactly this.
 3. **Hybrid orchestration.** An instructions routine (or project chat) whose skills expose the
-   operations: the model supplies the judgment (*which senders are worth researching*), operations
-   supply the mechanical work (*run the research pipeline, upsert the profile*). UC-B is the
+   operations: the model supplies the judgment (_which senders are worth researching_), operations
+   supply the mechanical work (_run the research pipeline, upsert the profile_). UC-B is the
    canonical case.
 
 **Selection rule** (for templates and for users): use the lowest channel that suffices. Mechanical
 and fully specifiable → runnable routine (2). Requires language or judgment throughout →
-instructions (chat or instructions routine). Judgment only to *select* mechanical work → hybrid
+instructions (chat or instructions routine). Judgment only to _select_ mechanical work → hybrid
 (3). Channel 2 is dramatically cheaper and hardens best; templates SHOULD default to it wherever
 the task decomposes.
 
@@ -149,14 +149,14 @@ and a confirmation policy can key off it.
 
 **Gaps this exposes** (tracked in `TASKS.md`):
 
-- *Authoring UI for operation-action routines.* Only a template can scaffold `kind: 'runnable'`
+- _Authoring UI for operation-action routines._ Only a template can scaffold `kind: 'runnable'`
   today; the blank create flow is instructions-only. SHOULD: an operation picker + input-mapping
   form in the routine editor.
-- *Project-context input binding.* Trigger interpolation knows `{{event.*}}`/`{{trigger.*}}` but
+- _Project-context input binding._ Trigger interpolation knows `{{event.*}}`/`{{trigger.*}}` but
   nothing project-scoped; templates compensate by baking refs in at scaffold time, which binds the
   routine to one object forever. MAY: a `{{project.*}}` substitution so one template serves any
   project and survives repointing.
-- *Side-effect policy.* A deterministic routine encodes consent at scaffold time (the user enabled
+- _Side-effect policy._ A deterministic routine encodes consent at scaffold time (the user enabled
   the trigger); a model-invoked operation with external effects (send, unsubscribe) has no
   confirmation gate. SHOULD: operations flagged as externally-effectful require an explicit
   per-project allowance in instructions, and commands surface it.
@@ -165,18 +165,18 @@ and a confirmation policy can key off it.
 
 Ordered roughly by increasing machinery. **Bold** = the three prioritized in §4.
 
-| #   | Use case                            | One-liner                                                                                                                                                          | Exercises                                                     |
-| --- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| 1   | Project-from-thread                 | "Make this a project": an inbox conversation becomes a Project — thread as context, summary doc + task outline as first artifacts (`CreateProjectFromMessage` v2). | templates, Create op, inbox entry point                       |
-| 2   | **Sender ledger** (UC-A)            | A project routine maintains a Table artifact of inbox senders with message counts / last-seen, updated as mail syncs.                                              | routine scope, table skill, feed trigger, artifact upsert     |
-| 3   | **Sender research** (UC-B)          | CRM research as a *project*: new senders get Person/Organization profiles + dossier docs filed as artifacts (today's CRM routine template, project-scoped).        | cross-plugin template, CRM skill, artifacts, provenance       |
-| 4   | Client dossiers                     | Scheduled routine keeps one markdown dossier per client Organization current (web search + inbox activity); dossiers are artifacts, orgs are context.              | cron trigger, websearch skill, artifact update-in-place       |
-| 5   | Subscription audit                  | Routine maintains a table of bulk senders/newsletters with volume; chat command `$unsub <sender>` invokes `UnsubscribeSender`.                                     | commands, table skill, inbox ops as tools                     |
-| 6   | Meeting prep                        | Morning routine: calendar events + facts about attendees + recent threads → daily briefing doc.                                                                     | multi-source context, calendar skill, brain skill             |
-| 7   | Pipeline board                      | A `Pipeline` board (plugin-pipeline) is an artifact; project routines feed its columns (messages → contacts → orgs → notes) — the board is the project's dashboard. | plugin-pipeline reuse, views over artifacts                   |
-| 8   | **Fact-grounded summaries** (UC-C)  | Routine runs `AnalyzeMailbox` over the bound mailbox; project chats answer "summarize where things stand with X" from facts, citing source messages.               | RDF pipeline, brain skill, provenance, fact-store lifecycle   |
-| 9   | Fact-structured research            | Facts about an entity (employer, role, stated needs) parameterize web searches; findings come back as both a doc artifact and new facts (`wasDerivedFrom` project). | facts→search loop, fact write-back, per-project provenance    |
-| 10  | Projects as a tool                  | Another plugin runs an ad-hoc workflow *through* a project: CRM invokes `ProjectOperation.Create` with its template; the project is the workflow's visible ledger (routines = stages, artifacts = outputs, chats = intervention points). | Create op, seminal posture, workflow observability            |
+| #   | Use case                           | One-liner                                                                                                                                                                                                                                | Exercises                                                   |
+| --- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 1   | Project-from-thread                | "Make this a project": an inbox conversation becomes a Project — thread as context, summary doc + task outline as first artifacts (`CreateProjectFromMessage` v2).                                                                       | templates, Create op, inbox entry point                     |
+| 2   | **Sender ledger** (UC-A)           | A project routine maintains a Table artifact of inbox senders with message counts / last-seen, updated as mail syncs.                                                                                                                    | routine scope, table skill, feed trigger, artifact upsert   |
+| 3   | **Sender research** (UC-B)         | CRM research as a _project_: new senders get Person/Organization profiles + dossier docs filed as artifacts (today's CRM routine template, project-scoped).                                                                              | cross-plugin template, CRM skill, artifacts, provenance     |
+| 4   | Client dossiers                    | Scheduled routine keeps one markdown dossier per client Organization current (web search + inbox activity); dossiers are artifacts, orgs are context.                                                                                    | cron trigger, websearch skill, artifact update-in-place     |
+| 5   | Subscription audit                 | Routine maintains a table of bulk senders/newsletters with volume; chat command `$unsub <sender>` invokes `UnsubscribeSender`.                                                                                                           | commands, table skill, inbox ops as tools                   |
+| 6   | Meeting prep                       | Morning routine: calendar events + facts about attendees + recent threads → daily briefing doc.                                                                                                                                          | multi-source context, calendar skill, brain skill           |
+| 7   | Pipeline board                     | A `Pipeline` board (plugin-pipeline) is an artifact; project routines feed its columns (messages → contacts → orgs → notes) — the board is the project's dashboard.                                                                      | plugin-pipeline reuse, views over artifacts                 |
+| 8   | **Fact-grounded summaries** (UC-C) | Routine runs `AnalyzeMailbox` over the bound mailbox; project chats answer "summarize where things stand with X" from facts, citing source messages.                                                                                     | RDF pipeline, brain skill, provenance, fact-store lifecycle |
+| 9   | Fact-structured research           | Facts about an entity (employer, role, stated needs) parameterize web searches; findings come back as both a doc artifact and new facts (`wasDerivedFrom` project).                                                                      | facts→search loop, fact write-back, per-project provenance  |
+| 10  | Projects as a tool                 | Another plugin runs an ad-hoc workflow _through_ a project: CRM invokes `ProjectOperation.Create` with its template; the project is the workflow's visible ledger (routines = stages, artifacts = outputs, chats = intervention points). | Create op, seminal posture, workflow observability          |
 
 Use case 10 is the posture the user named: a Project is not only a user container but a **tool other
 plugins use to give long-running work a home** — visible progress, durable outputs, and a chat where
@@ -194,7 +194,7 @@ cross-plugin template/operation surface; **UC-C (fact summaries)** proves the RD
 1. **Routine project scope** (§2.1/§2.4). `RunInstructions` gains an optional bound-project input;
    `ProjectOperation.CreateRoutine` seeds it (and binds project + `ProjectSkill` into the routine's
    session the way `CreateChat` does for chats). Unit tests over the run-instructions path.
-   *This is the enabler — without it no routine can file artifacts.*
+   _This is the enabler — without it no routine can file artifacts._
 2. **`ProjectOperation.Create`** (§2.2) + handler + tests: the programmatic entry point.
 3. **`ProjectsCapabilities.Template`** (§2.3) + template picker in the create flow; blank template
    default. Mirrors `RoutineCapabilities.Template` closely enough to share the picker pattern.
@@ -241,17 +241,17 @@ cross-plugin template/operation surface; **UC-C (fact summaries)** proves the RD
 
 ### 4.5 Deliverables checklist
 
-| Item                                                        | Package                     |
-| ----------------------------------------------------------- | --------------------------- |
+| Item                                                        | Package                            |
+| ----------------------------------------------------------- | ---------------------------------- |
 | Routine project-scope binding + tests                       | assistant-toolkit, plugin-projects |
-| `ProjectOperation.Create` (+ `AddArtifact` alias) + handler | plugin-projects             |
-| `ProjectsCapabilities.Template` + picker                    | plugin-projects             |
-| Inbox research template + mailbox entry point               | plugin-inbox                |
-| CRM project template (port of routine template)             | plugin-crm                  |
-| Analyze-mailbox routine template                            | plugin-inbox (or -brain)    |
-| Artifact skills: table, sheet                               | plugin-projects (keys)      |
-| Context section in ProjectArticle                           | plugin-projects             |
-| Stories (below) + evals                                     | stories-projects, assistant-evals |
+| `ProjectOperation.Create` (+ `AddArtifact` alias) + handler | plugin-projects                    |
+| `ProjectsCapabilities.Template` + picker                    | plugin-projects                    |
+| Inbox research template + mailbox entry point               | plugin-inbox                       |
+| CRM project template (port of routine template)             | plugin-crm                         |
+| Analyze-mailbox routine template                            | plugin-inbox (or -brain)           |
+| Artifact skills: table, sheet                               | plugin-projects (keys)             |
+| Context section in ProjectArticle                           | plugin-projects                    |
+| Stories (below) + evals                                     | stories-projects, assistant-evals  |
 
 ## 5. Storybook strategy (stories-\*)
 

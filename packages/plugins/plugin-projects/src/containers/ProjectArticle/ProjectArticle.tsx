@@ -26,6 +26,9 @@ import { ProjectOperation } from '#types';
 const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));
 type HeaderValues = Schema.Schema.Type<typeof HeaderValues>;
 
+// The Context section edits only the instructions' standing context objects.
+const CONTEXT_FIELDS: readonly string[] = ['objects'];
+
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 /**
@@ -115,6 +118,14 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 <Form.FieldSet />
 
                 {instructions && <InstructionsEditor db={db} instructions={instructions} />}
+
+                {/* Standing context (inputs bound into every project session) — deliberately a
+                    separate labeled section from Artifacts (outputs the project owns). */}
+                {instructions && (
+                  <Form.Section title={t('context.label')}>
+                    <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
+                  </Form.Section>
+                )}
 
                 <Form.Section title={t('routines.label')}>
                   <ObjectGallery refs={project.routines} onOpen={handleOpen} onDelete={handleDeleteRoutine} />

@@ -102,6 +102,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-search": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

@@ -3,16 +3,17 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Project } from '@dxos/compute';
 
-import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, Templates } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const ProjectsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Project.Project] }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  Plugin.addModule({ activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
