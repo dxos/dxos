@@ -11,9 +11,14 @@ Two goals, both load-bearing:
 1. **First-class.** A lens is an ECHO concept alongside `Type` — definable statically in code or
    persisted in a space, resolved through a registry, with the same static/dynamic duality types
    already have.
-2. **Derived, not hand-written.** Everything computable is computed: the target type from the
-   lens, the overlay set from the mapping, the write path from the spec, the test instances from
-   the schema. §3 grades each of these honestly, including the one that doesn't fully work.
+2. **A lens always binds two declared types.** Both ends are written out; the mapping between them
+   is the only thing anyone authors, and it is as short as we can make it — matching properties map
+   themselves, target properties with no counterpart store themselves. §3 grades what that leaves
+   computable.
+
+**Near-term scope: a proof of concept.** The payoff being chased first is _multiple interfaces,
+each written against its own schema, driving the same object_. Foreign-type adaptation and
+migration support are long-term payoffs this shape enables and are explicitly not built first.
 
 The proof obligation: **a custom UI drives the object entirely through the lens schema, while
 100% of the data lands in the original object under its original schema (plus annotations) — such
@@ -36,21 +41,18 @@ re-deriving other shapes from it:
 
 A lens is the missing abstraction: one declaration, two directions, laws that hold.
 
-Two use cases drive the shape of the API, and in **both the target schema already exists** — which
-makes binding two written schemas the primary mode and derivation the convenience case:
+**Now:** one object, several interfaces, each written against its own schema. An interface is built
+once against a target type and works for every source that maps to it — because a lensed object
+carries the target's typename, so surfaces, forms, and cards resolve the interface already written
+for that type.
 
-1. **Adapt a foreign type to UIs you already have.** You have `DataType.Task` and everything that
-   renders it; you want `Linear.Issue` to flow through the same surfaces. Write `Issue → Task` and
-   the existing UI works unchanged, because a lensed object carries the _target's_ typename and
-   therefore resolves the target's surfaces.
-2. **Operate through a migration's destination shape.** The base type is going to change. The lens
-   lets code run against the new shape before, during, and after the data moves — which means it
-   must tolerate the new shape having fields the old data doesn't, and must be able to hand those
-   values over once the migration lands.
+**Later, enabled by the same shape:** adapting foreign types (`Linear.Issue` rendered by the `Task`
+UI) and running against a migration's destination shape before the data moves. Neither is built
+first; both fall out of binding two declared types.
 
-Both imply the same requirement: a target property with no counterpart in the base **must not be an
-error**. It stores itself in the object's annotations automatically, no declaration required
-(API.md §2.1).
+One requirement follows from all of them: a target property with no counterpart in the source
+**must not be an error**. It stores itself in the object's annotations automatically, no
+declaration required (API.md §2).
 
 ## 2. First-class in ECHO
 
@@ -62,18 +64,17 @@ at runtime with `Type.makeObjectFromJsonSchema`). Static gets you autocomplete; 
 user-authored schemas at the cost of dynamic typing. That tradeoff is already understood by
 everyone who uses ECHO, and lenses inherit it unchanged.
 
-**Concrete signatures: [API.md](./API.md)** — builder, coded lenses, derivation, the live handle,
-React hooks, registry, laws, and generation, with the open questions called out.
+**Concrete signatures: [API.md](./API.md)** — the mapping shorthands, coded lenses, the live
+handle, React hooks, registry, and laws, with the open questions called out.
 
 Proposed surface, shaped as a namespace module like `Type` / `Obj` / `View`:
 
 ```ts
-Lens.make(...)                       // static, code-defined
-Lens.Lens                            // ECHO entity for persisted lenses (cf. Type.Type)
-Lens.derive(baseType, lens)          // -> Type entity for the lensed shape   (§3, D1)
-Lens.generate(baseType, targetType)  // -> draft spec + unresolved holes      (§3, D3)
-Lens.checkLaws(lens, instances)      // property-based verification            (§3, D4)
-Obj.lens(obj, lens)                  // live lensed handle: reactive reads, minimal writes
+Lens.make(id, Source, Target, mapping); // the single authoring shape; both ends declared
+Lens.Lens; // ECHO entity for persisted lenses (cf. Type.Type)
+Lens.coverage(lens); // explicit / automatic / overlaid / dropped / suspicious
+Lens.checkLaws(lens); // property-based verification            (§3, D4)
+Obj.lens(obj, lens); // live lensed handle: reactive reads, minimal writes
 ```
 
 Registry: stored lenses resolve out of the space by source typename, exactly as stored types do.
@@ -83,10 +84,10 @@ Registry: stored lenses resolve out of the space by source typename, exactly as 
 `@dxos/echo` must not grow a WASM dependency; it runs in the shared worker and in every bundle.
 So the split is:
 
-- **`@dxos/echo`** — the `Lens` interface, the `Lens` ECHO entity, derivation, the registry, and
-  the read/write tiers. No heavy deps: derivation is JSON Schema in, JSON Schema out.
+- **`@dxos/echo`** — the `Lens` interface, the `Lens` ECHO entity, mapping resolution, the
+  registry, and the read/write tiers. No heavy deps: it is JSON Schema in, JSON Schema out.
 - **Optional engine package** — the panproto/WASM binding, registered at startup by whoever wants
-  declarative lens compilation and generation. Absent, static and coded lenses still work.
+  law-checking or (later) mapping generation. Absent, everything else still works.
 - **Coded lenses live with their dependencies** — the rich-text lens needs remark, so it ships in
   its own package, not in core.
 
@@ -96,63 +97,40 @@ becomes API surface anyone depends on. It is shaped as a namespace module from d
 promotion into core is a move plus a call-site update (two stories), not a redesign. Promotion is
 a tracked task, not a someday.
 
-## 3. What can be derived
+## 3. What is computed for you
 
-The interesting question, graded honestly. D1 and D4 work and carry the design; D2 works with one
-forced compromise; D3 does not work as inference and works well as propose-and-verify.
+Graded honestly, against the decision that a lens always binds two **declared** types (§ above).
+That decision retires the hardest problem rather than solving it.
 
-**Scope note:** D1 applies to _derive mode_. In **bind mode** — the primary case (§1) — the target
-is already written, so derivation runs as a **check** rather than a generator: derive the shape the
-mapping implies, diff it against the declared target, and the difference is the coverage report
-(API.md §2.4). Same machinery, opposite direction, and it is what surfaces an unmapped property as
-a deliberate overlay versus a mistake.
+### D1. Deriving the target type. **Retired — we don't want it.**
 
-### D1. base type + lens → **derived target type**. Yes — this is the backbone.
+An earlier draft computed the target schema from the mapping. Dropped: always having a hard type on
+both ends is worth more than not typing one out, because it is what lets an interface be written
+once against a stable target and reused across sources.
 
-A lens spec is a morphism on schemas, so applying it to the source's JSON Schema _yields_ the
-target's JSON Schema. The whole path already exists:
+The machinery still earns its keep, pointed the other way. Derive the shape the mapping _implies_,
+diff it against the **declared** target, and the difference is the coverage report: which target
+properties are explicitly mapped, which auto-mapped, which fall through to overlay, and which look
+like a mistake (API.md §2.1). Same computation, run as a check instead of a generator.
 
-```
-JsonSchema.toJsonSchema(Task) ──spec──▶ target JSON Schema ──▶ Type.makeObjectFromJsonSchema(...)
-```
+### D2. Static TypeScript types. **Solved, and for free.**
 
-The result is a real ECHO `Type` entity that forms, tables, and validation consume like any other.
-**Nobody hand-writes the derived type.** Consequences worth stating:
+This was the design's hardest open problem — inferring a target type through a chain of combinators
+— and binding a declared target dissolves it. `Lens.Target<typeof L>` is just
+`Type.InstanceType<typeof TargetType>`.
 
-- The lens `spec` is the single source of truth. The `target` field on a stored `Lens` becomes a
-  materialized **cache** — kept so a lens still renders where the engine isn't loaded — and CI
-  asserts the cache equals a fresh re-derivation. It is never edited by hand.
-- Change the base type, re-derive; the target follows. That's the thing hand-written derived types
-  can never do.
+The consequence worth noticing: it holds for **persisted** lenses too. A lens loaded from a space
+that targets a statically declared type still yields that static type at compile time — strictly
+better than the stored-_schema_ analogue, where dynamic typing is unavoidable. No combinator
+generics to maintain, and no op set whose design gets bent by what is convenient to express in
+TypeScript.
 
-### D2. **Static TypeScript types** for the derived shape. Partly — and the compromise is TS's, not ours.
+### D3. base type + target type → **derive the mapping**. Not as inference. Yes as propose-and-verify. **Long-term.**
 
-- **Persisted lens** — the spec is runtime data (JSON in a space). TypeScript cannot infer a type
-  from a runtime value, full stop. The derived type is dynamic, consumers get JSON-Schema-driven
-  forms rather than autocomplete. This is _exactly_ the existing tradeoff for stored types, so it
-  costs nothing new conceptually.
-- **Static lens** — achievable with a typed combinator builder, where each combinator carries a
-  type-level transform and emits the same spec data as its runtime value:
-
-  ```ts
-  const GtdLens = Lens.make(DataType.Task)
-    .rename('estimate', 'estimateHours')
-    .convert('estimateHours', minutesToHours)
-    .overlay('context', ContextSchema);
-  // typeof Lens.Target<typeof GtdLens> is inferred
-  ```
-
-  You get compile-time target types _and_ a runtime-derivable spec from one declaration. Cost: the
-  combinator types are gnarly, and they only cover ops the builder expresses.
-
-**Recommendation:** build runtime derivation (D1) first and add the typed builder for the static
-path once the op set has settled. The op set must be driven by the two lenses, not by what is
-convenient to type in TypeScript.
-
-### D3. base type + target type → **derive the lens**. Not as inference. Yes as propose-and-verify.
-
-Your instinct is right, and it's worth being precise about _why_, because the failure is
-structural rather than a matter of a better algorithm.
+Not in the proof of concept — the mappings we need are short enough to write. Recorded because bind
+mode is exactly this feature's input, so nothing here precludes it, and because the _reason_ it
+can't be fully automatic is worth stating once: the failure is structural rather than a matter of a
+better algorithm.
 
 **What a schema diff genuinely recovers** (panproto ships `lens generate` for this): identity
 correspondences; renames of same-typed properties; properties only in the source (⇒ drop into the
@@ -167,14 +145,16 @@ so enum correspondences and format conversions are recoverable rather than guess
 interesting content of the Task lens (§5.A), which is a useful reality check on how much
 generation can actually carry.
 
-So generation should emit a **draft with explicit holes** and refuse to be law-valid until they're
-filled. That reframes it from an oracle into a scaffolding tool, which is a thing that works:
+So generation would emit a **draft with explicit holes** rather than guessing — a scaffolding tool,
+not an oracle. Note the holes it reports are _not_ the same as properties that fall through to
+overlay: a target property with no counterpart at all is fine and silent, while one with a
+plausible counterpart whose value mapping can't be inferred must stay unresolved (API.md §2.1).
 
 - The holes are exactly where an LLM is useful, and panproto already ships an MCP server and
   Claude Code skills aimed at it. Property names, `title`s, and descriptions are the hints.
 - The holes are also a finding about _our_ schemas: `estimate` records no unit, so no tool —
-  human, statistical, or otherwise — can infer the factor 60. Richer annotations make more of the
-  lens derivable. That is actionable independent of this project.
+  human, statistical, or otherwise — can infer the factor 60. Richer annotations make more of a
+  mapping inferable. That is actionable independent of this project.
 
 **And the verification half is what makes a proposed lens trustworthy**, which is where this stops
 being hand-waving: propose cheaply, then verify mechanically with `checkLaws` over instances
@@ -186,13 +166,14 @@ the value.
 
 ### D4. Also derived, and cheaply
 
-- **The overlay property set** — the target properties the spec doesn't map from source. No
-  hand-maintained list; `overlayPolicy` shrinks to a policy rather than an enumeration.
-- **The T2 write path** — the path→path table compiled from the spec (§6.3).
+- **The identity mappings** — a target property with a same-named, type-compatible source property
+  maps itself; nothing to write. This is where mapping brevity mostly comes from.
+- **The overlay property set** — target properties nothing maps. No hand-maintained list.
+- **The T2 write path** — the path→path table compiled from the mapping (§6.3).
 - **Law-check instances** — from `GeneratorAnnotation`, per D3.
-- **The UI** — forms and tables are already schema-driven, so they render the derived target with
-  no lens-specific code. The custom UIs in §7 are custom because we _want_ to demonstrate a
-  bespoke interface, not because a generic one is impossible.
+- **The UI** — forms and tables are already schema-driven, so they render the target type with no
+  lens-specific code. The custom UIs in §7 are custom because we _want_ to demonstrate a bespoke
+  interface, not because a generic one is impossible.
 
 ## 4. Why panproto, and why it isn't the only implementation
 
@@ -228,13 +209,17 @@ shape for no gain. Note the consequence for D1: a coded lens declares its target
 
 ### A. `DataType.Task` → GTD task (declarative, structural)
 
-| Base (`Task`)                               | Lensed (GTD)                             | Op                                                              |
+`GtdTask` is a **written-out ECHO type**, not a derived one, so the lensed UI is an ordinary
+interface built against an ordinary type and the mapping is the only new artifact. `title` and
+`description` match by name and type and so are absent from the mapping entirely.
+
+| Base (`Task`)                               | Target (`GtdTask`)                       | Mapping                                                         |
 | ------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------- |
 | `status: 'todo' \| 'in-progress' \| 'done'` | `done: boolean` + `stage`                | lossy split; complement carries the discarded distinction       |
 | `priority: 'none'…'urgent'`                 | `priority: 1..5`                         | scalar convert, total both ways                                 |
 | `estimate` (minutes)                        | `estimateHours`                          | unit convert — float round-trip fidelity is a real failure mode |
-| `title`, `description`                      | unchanged                                | identity                                                        |
-| —                                           | `context` (`@home`/`@work`), `waitingOn` | **overlay** → annotation dictionary                             |
+| `title`, `description`                      | same                                     | **automatic** — omitted from the mapping                        |
+| —                                           | `context` (`@home`/`@work`), `waitingOn` | **overlay** → annotation dictionary, no declaration             |
 
 The lossy `status` split is the point: `done: false` alone cannot say whether the task is `todo`
 or `in-progress`, so `put` needs the complement to restore it. Textbook lens law case, and the
@@ -274,7 +259,7 @@ is Automerge cursors — the anchoring `@dxos/react-ui-editor` already uses for 
 ### 6.1 The lens entity
 
 ```
-Lens = { source: TypeDXN, target: JsonSchema (derived cache), spec: LensSpec }
+Lens = { source: TypeDXN, target: TypeDXN, mapping: Mapping }
 get : Source              -> { view: Target, complement: Complement }
 put : Target, Complement  -> Source
 ```
@@ -282,12 +267,14 @@ put : Target, Complement  -> Source
 ```ts
 Schema.Struct({
   name: Schema.optional(Schema.String),
-  source: Schema.String,               // typename@version of the base type
-  spec: Schema.Unknown,                // source of truth: declarative spec, or coded-lens id
-  target: Schema.optional(internal.JsonSchemaType), // D1 cache; CI asserts == re-derived
-  overlayPolicy: Schema.optional(...), // policy, not an enumeration (D4)
-})
+  source: Schema.String, // typename@version of the base type
+  target: Schema.String, // typename@version of the declared target type
+  mapping: Schema.Unknown, // partial: explicit entries only (API.md §2)
+});
 ```
+
+Both ends are typename references to declared types — the target is not a stored schema blob, so
+there is no cache to keep in sync and no re-derivation to verify.
 
 ### 6.2 Complement vs overlay
 
@@ -313,24 +300,21 @@ const LensOverlay = Annotation.make({
 Rules:
 
 - **Unmapped target properties overlay automatically** — no declaration, no error. A lens must never
-  fail to load because the target has a field the base lacks; that is the normal state of affairs
-  in both driving use cases (§1). `store` is the default; `reject` exists only for lenses that want
-  to be strict.
+  fail to load because the target has a field the source lacks; that is the normal state of affairs
+  (§1). `store` is the default; `reject` exists only for lenses that want to be strict.
 - Keyed lens DXN → property, so two lenses never collide and dropping a lens drops its overlay
-  cleanly. Every value is validated against that property's declaration in the target schema — in
-  bind mode that declaration always exists, so validation is stricter than in derive mode and free.
+  cleanly. Every value is validated against that property's declaration in the target type — which
+  always exists, since the target is always written out.
 - Overlay properties are **second-class by construction** — not queryable, not indexed, invisible to
-  consumers without the lens. Mid-migration this bites: a field lives in annotations for some
-  objects and in properties for others, so it cannot be queried uniformly until promotion completes.
-  State it plainly; it is a limit of the approach, not a gap to fix later.
-- **Promotion is a near-term requirement, not backlog.** `Lens.promote(obj, lens)` drains overlay
-  values into base properties that now exist. Use case 2 does not work without it: data written
-  through the lens while the base is un-migrated is stranded otherwise.
-- **Silent is not the same as invisible.** `Lens.coverage(lens)` reports mapped / overlaid / dropped,
-  and flags `suspicious` — an overlaid property that has a plausible source counterpart the mapping
-  missed. That case must never auto-overlay: storing `done` in annotations while `status` also
-  exists records the same fact twice and the two drift on the next write. A genuinely new field
-  overlays forever and correctly; a missed correspondence gets flagged (API.md §2.4, §8).
+  consumers without the lens. A field that needs querying belongs in the base type. (Draining
+  overlays into real properties once a base type gains them — `Lens.promote` — is a long-term
+  migration concern, not part of the proof of concept.)
+- **Silent is not the same as invisible.** `Lens.coverage(lens)` reports explicit / automatic /
+  overlaid / dropped, and flags `suspicious` — a name match with incompatible types, or an overlay
+  whose name resembles a source property. That case must never auto-resolve in either direction:
+  storing `done` in annotations while `status` also exists records the same fact twice and the two
+  drift on the next write. A genuinely new field overlays forever and correctly; a missed
+  correspondence gets flagged (API.md §2.1).
 
 ### 6.3 Read and write tiers
 
@@ -371,7 +355,7 @@ Two per lens, in `packages/stories/stories-lens`, all with `play` functions so C
 
 ### 7.1 Lensed UI + proof of persistence (single peer)
 
-Three panes: the **lensed UI** (built only against the derived target schema, importing no
+Three panes: the **lensed UI** (built only against the target type, importing no
 `DataType.Task` / `DataType.Text`); the **canonical UI** (standard `Form`, or the CodeMirror
 editor) live on the same object; and the **raw inspector** — the base object's JSON _and_
 `Obj.getMeta(obj).annotations`, live.
@@ -402,12 +386,13 @@ Demonstrated in both directions:
 1. **WASM in our runtime.** `@panproto/core` is a WASM build; unknown size, worker/`workerd`
    loadability, cold start. Gates the architecture → Phase 0. Fallback: implement the structural
    subset natively in TypeScript (a path table plus value codecs) and use panproto only at author
-   time to generate and law-check specs that ship as JSON. **The fallback still delivers both
-   lenses, all four stories, and D1** — it costs D3's generation half, which was always the
-   weakest link.
-2. **Derivation fidelity (D1).** Our JSON Schema carries ECHO-specific annotations (`PropertyMeta`,
-   `Format`, refs). A derived target must preserve the ones the UI depends on — a derived
-   `SingleSelect` that loses its option set renders as a bare string field.
+   time to law-check mappings. **The fallback still delivers both lenses and all four stories** —
+   it costs D3's generation half, which was always the weakest link, and which is out of the
+   proof-of-concept scope anyway.
+2. **Type compatibility for automatic mapping.** How strict is "same name, compatible type"?
+   Optionality mismatches (`string` vs `string | undefined`) are the common case and should
+   auto-map in the safe direction only; enum literals that differ must not auto-map at all
+   (API.md §10.1).
 3. **Reactivity composition.** The lensed atom must compose `Obj.atom` with `Annotation.atom`
    without over-firing.
 4. **Write minimality** (§6.4) — the correctness risk, covered by the concurrent-edit test.
