@@ -90,6 +90,44 @@ Channel path.** Work is the gap between Channel today and the decided scope:
 Deferred to feed phases (no plugin work): unread/read-state (phase 2 cursors),
 push latency (phase 2), history beyond device (phases 3–4).
 
+## Direction (2026-07-29, second pass — jdw)
+
+Three decisions extending the review above:
+
+1. **Rename `plugin-thread` → `plugin-chat`** (plugin id
+   `org.dxos.plugin.thread` → `org.dxos.plugin.chat`). Mechanical, own PR, all
+   call sites updated in the same change — no compatibility shims (repo rule).
+   Blast radius includes the shared `threadTranslations` imported by
+   plugin-review.
+2. **Threads become feed-backed — via the shared-feed model, not
+   feed-per-thread.** A `Thread` becomes metadata (name/status/agent) plus a
+   view over `(feed, threadId)`; `Message.threadId`/`parentMessage` already
+   exist. Feed-per-thread is rejected: it would mint hundreds of tiny feeds
+   against the ~1000 feeds/space budget.
+   - **Channel threads share the channel's feed** (Zulip's `(channel, topic)`
+     pair): one ordering, one sync stream, one future read cursor; main view
+     renders roots (`threadId == null`) with thread summaries; thread view
+     filters by `threadId`; Thread metadata object created lazily on first
+     reply.
+   - **Review comments move to a per-subject comments feed** (one per
+     document). `AnchoredTo` anchoring unchanged; only message storage moves
+     off the `thread.messages` ref-array. Per-subject beats one space-wide
+     comments feed on partial replication (replicate comment feeds only for
+     documents you open). Caveat: feeds/space budget now counts
+     documents-with-comments + channels; phase-3 epochs cover growth.
+3. **Thread-first channels** (Zulip/Roomy inspiration): any message can start
+   a thread; main-feed messages are primarily branching-off points — guided,
+   not forced. Mostly presentation: replies default into threads; the main
+   composer remains.
+
+Sequencing: rename → thread-over-feed model (Thread schema drops the messages
+ref-array; migration story TBD) → review port → thread-first UX.
+
+Coordination flags: `document-revisions` (burdon) is active in plugin-review —
+steps 2–3 must sequence with it. Per-thread unread granularity is finer than
+the per-feed cursor feed-phase-2 defines — needs per-thread high-water marks
+or channel-level granularity initially.
+
 ## Remaining open questions
 
 - Reactions schema: `Message.properties` LWW map vs `Reaction` relation
