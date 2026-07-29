@@ -29,6 +29,27 @@ anything into a new feed (that is the existing **hard fork**, see
 - Wiring the assistant chat UI. Same.
 - Retention/compaction of abandoned items. Owned by `feed-live-objects`.
 
+## Terminology
+
+Borrowed from git, because the shape is the same:
+
+| Here                                                      | Git                                                    |
+| --------------------------------------------------------- | ------------------------------------------------------ |
+| `parent` — the item an item continues from                | a commit's `parent`                                    |
+| `head` — where a walk starts                              | `HEAD`                                                 |
+| `Feed.history()`                                          | `git log --first-parent`                               |
+| `shallow` — the walk hit an unresolvable parent           | a shallow clone (`--depth`)                            |
+| items a fork left behind are **unreachable**, not deleted | unreachable / dangling commits, recoverable via reflog |
+
+The frame that makes the rest of this document read easily: **a feed is git's
+object store plus its reflog, and `Feed.history()` computes what HEAD reaches.**
+A soft fork is `git reset` — it moves what is reachable, it does not remove
+anything. The deferred branch enumeration is therefore a reflog view.
+
+Note that a **branch** in git is a named mutable ref, which is deliberately _not_
+what `Feed.history()` returns — it returns the history reachable from a head. An
+explicit branch ref is the deferred active-head pointer, below.
+
 ## Model
 
 Each feed item may carry an **explicit lineage parent**: the id of the item it
@@ -134,7 +155,7 @@ feed query with `orderBy`/`limit` routes through the host indexer
 `Feed.query` would therefore truncate first and filter second — `limit(20)`
 would return fewer than 20 items and a chain with holes in it.
 
-So resolution is `Feed.resolveBranch(items)`: a pure function over an
+So resolution is `Feed.history(items)`: a pure function over an
 already-materialized, already-deduped list. It behaves identically on both read
 paths, needs no query-plan surgery, leaves all existing consumers untouched, and
 is unit-testable without a database.
@@ -143,11 +164,11 @@ Pushing branch selection into the query plan (`Scope.feed(uri, { branch })`) so
 filtering happens _before_ `limit` stays available as a later optimization, once
 a feed is large enough that materializing the chain to resolve it hurts.
 
-### Absent or unresolvable parent → stop and truncate
+### Absent or unresolvable parent → stop and mark shallow
 
 A parent id may legitimately be missing: partial replication (feeds support
 `replicate(fromPosition)`), the item was `@deleted`, or the caller's filter
-excluded it. The walk stops there and reports `truncated: true`, so a UI can say
+excluded it. The walk stops there and reports `shallow: true`, so a UI can say
 "earlier history unavailable". Falling back to append order instead would
 present abandoned items as live, which is worse than showing less.
 
@@ -156,23 +177,23 @@ not parse (a corrupted or future-format replicated block). The resolver reads
 lineage as a tri-state (absent / present-and-valid / present-but-malformed)
 rather than collapsing malformed to absent, because collapsing would resolve a
 fork as an implicit continuation and silently resurrect exactly the items that
-fork abandoned, while still reporting `truncated: false`. `Feed.getParent`
+fork abandoned, while still reporting `shallow: false`. `Feed.getParent`
 returns `undefined` for both cases, since a caller cannot act on an id it cannot
-parse; only `resolveBranch` distinguishes them.
+parse; only `history` distinguishes them.
 
 ### Forward references terminate the walk
 
 A parent that appears at or after its child in the list is a cycle or a forward
 reference — possible with arbitrary multi-writer data. The walk requires the
 cursor to strictly decrease, so it always terminates; such an edge is reported
-as `truncated`.
+as `shallow`.
 
 ### Resolve over the projection you render
 
 `Feed.query(feed, Filter.type(Message.Message))` excludes interleaved items of
 other types, so "the previous item in append order" means "the previous item _in
 the list you passed_". Fork parents must point at items of the same projection;
-one pointing at a filtered-out item is treated as absent (truncated). This falls
+one pointing at a filtered-out item is treated as absent (shallow). This falls
 out of the resolver being a pure function over a caller-supplied list, and is
 the documented contract.
 
@@ -192,22 +213,22 @@ export interface AppendOptions {
   parent?: Entity.Unknown | Entity.Snapshot | EntityId;
 }
 
-export interface BranchOptions {
+export interface HistoryOptions {
   /** Item to resolve from. Defaults to the last item in `items` (latest-wins). */
   head?: Entity.Unknown | Entity.Snapshot | EntityId;
 }
 
-export interface Branch<T> {
+export interface History<T> {
   /** The resolved chain, in append order. */
   items: T[];
   /** A parent was referenced but not resolvable in `items`, so the chain is incomplete. */
-  truncated: boolean;
+  shallow: boolean;
 }
 
-export const resolveBranch: <T extends Entity.Unknown | Entity.Snapshot>(
+export const history: <T extends Entity.Unknown | Entity.Snapshot>(
   items: readonly T[],
-  options?: BranchOptions,
-) => Branch<T>;
+  options?: HistoryOptions,
+) => History<T>;
 
 // Existing signature gains an options bag.
 export const append: (
@@ -220,7 +241,7 @@ export const append: (
 `append`'s `parent` applies to the **first** item only; the rest of the batch
 chain implicitly in append order, which is what a batch means.
 
-`BranchOptions.head` is what makes the deferred explicit-head pointer cheap: the
+`HistoryOptions.head` is what makes the deferred explicit-head pointer cheap: the
 resolver already accepts an arbitrary starting point, so an active-branch
 pointer only has to decide _what_ to pass.
 
@@ -230,9 +251,9 @@ pointer only has to decide _what_ to pass.
 // Fork: continue the conversation from an earlier message.
 yield * Feed.append(feed, [Message.make({ sender, blocks })], { parent: m3 });
 
-// Read: resolve the live branch.
+// Read: the items reachable from the current head.
 const messages = yield * Feed.query(feed, Filter.type(Message.Message)).run;
-const { items, truncated } = Feed.resolveBranch(messages);
+const { items, shallow } = Feed.history(messages);
 ```
 
 ## Testing
@@ -282,7 +303,7 @@ const { items, truncated } = Feed.resolveBranch(messages);
 - `Feed.branches(items)` — enumerate leaves and their chains, for a "N other
   versions" affordance (Q3 #3). Additive; needs the full DAG.
 - An explicit active-branch head, most likely a field on `Feed.Feed`, passed to
-  `resolveBranch` via `head` (Q3 #2). Adds mutable multi-writer state, so only
+  `history` via `head` (Q3 #2). Adds mutable multi-writer state, so only
   worth it once branch _switching_ is actually wanted.
 - `Scope.feed(uri, { branch })` query-plan push-down, so branch filtering
   precedes `limit` in the indexer.

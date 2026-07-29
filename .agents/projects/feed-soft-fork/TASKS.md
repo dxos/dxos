@@ -9,7 +9,7 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/feed-soft-fork-94c32e`. PR
 - [x] DESIGN.md: model, rejected alternatives (block-level, sidecar markers,
       `Feed.Feed` metadata, transparent resolution in `Feed.query`), API.
 - [x] `Feed.PARENT_KEY` + `getParent` / `setParent` over `@meta` foreign keys.
-- [x] `Feed.resolveBranch` — linear-with-cuts walk, `head` override,
+- [x] `Feed.history` — linear-with-cuts walk, `head` override,
       truncation on absent parent, termination on forward reference / cycle.
 - [x] `Feed.append` options bag (`{ parent }`), applied to the first item.
 - [x] `packages/core/echo/echo/src/Feed.test.ts` — pure unit tests.
@@ -23,7 +23,7 @@ Rationale for each in DESIGN.md "Deferred".
 - [ ] `Feed.branches(items)` — enumerate leaves for a "N other versions"
       affordance.
 - [ ] Explicit active-branch head (likely a `Feed.Feed` field) fed to
-      `resolveBranch` via `head`; enables branch switching.
+      `history` via `head`; enables branch switching.
 - [ ] `Scope.feed(uri, { branch })` query-plan push-down so branch filtering
       precedes `limit` in the host indexer.
 - [ ] Assistant chat wiring: "revert to here" affordance + `SessionLoader` /

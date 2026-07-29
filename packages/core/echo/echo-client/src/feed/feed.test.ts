@@ -72,9 +72,9 @@ describe('Feed', () => {
       const inAppendOrder = [...results].sort((a, b) => position(a) - position(b));
       expect(Feed.getParent(inAppendOrder[3])).toBe(bob.id);
 
-      const branch = Feed.resolveBranch(inAppendOrder);
-      expect(branch.items.map((person) => person.name)).toEqual(['alice', 'bob', 'dave']);
-      expect(branch.truncated).toBe(false);
+      const history = Feed.history(inAppendOrder);
+      expect(history.items.map((person) => person.name)).toEqual(['alice', 'bob', 'dave']);
+      expect(history.shallow).toBe(false);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
