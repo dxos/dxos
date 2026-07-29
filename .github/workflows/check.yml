@@ -452,30 +452,6 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         run: moon run :bundle
 
-      # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed
-      # tarball rather than the source tree. This job already gates the Version Packages PR.
-      - name: Smoke test packed CLI
-        run: moon run cli:smoke
-
-      # Handed to the `cli-foreign` job, which runs them where this checkout does not exist. `cli:smoke`
-      # covers packaging here but reports self-containment as unverified: the container cannot create a
-      # mount namespace (`unshare failed: Operation not permitted`), and a path baked in at bundle time
-      # still resolves in the job that built it.
-      - name: Pack the CLI for the foreign-machine job
-        run: |
-          mkdir -p cli-verify
-          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli
-          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli-linux-x64
-          cp packages/devtools/cli/scripts/verify-installed.mjs cli-verify/
-
-      # The verifier travels with the tarballs because the job that runs them has no checkout.
-      - name: Upload packed CLI
-        uses: actions/upload-artifact@v4
-        with:
-          name: cli-verify
-          path: cli-verify/
-          retention-days: 1
-
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
       # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
@@ -522,17 +498,62 @@ jobs:
           path: test-results/playwright
           retention-days: 7
 
+  # Builds, packs and smoke-tests the CLI on its own runner, in parallel with `e2e`. It used to ride along
+  # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
+  # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
+  cli:
+    if: >-
+      startsWith(github.ref, 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/heads/changeset-release/') ||
+      startsWith(github.head_ref, 'changeset-release/') ||
+      inputs.e2e
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
+      # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.
+      - name: Smoke test packed CLI
+        run: moon run cli:smoke
+
+      - name: Pack the CLI for the foreign-machine job
+        run: |
+          mkdir -p cli-verify
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli-linux-x64
+          cp packages/devtools/cli/scripts/verify-installed.mjs cli-verify/
+
+      # The verifier travels with the tarballs because the job that runs them has no checkout.
+      - name: Upload packed CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-verify
+          path: cli-verify/
+          retention-days: 1
+
   # Runs the packed CLI where the tree that built it does not exist. Deliberately no checkout, no container
   # and a different runner: a `--compile`d binary is meant to carry everything, and when a dependency
   # resolves a path at bundle time instead — `@automerge/automerge`'s WASM, `classic-level`'s native addon —
   # it works in the job that built it and nowhere else, which is how @dxos/cli@0.10.0 shipped unrunnable.
   # `cli:smoke` cannot cover this in CI because the build container forbids mount namespaces.
   cli-foreign:
-    needs: e2e
-    # Runs whenever `e2e` produced the artifact, not only when it passed: the tarballs are uploaded before
-    # the Playwright suite starts, so gating on success would let an unrelated browser failure — or that
-    # job's 60 minute timeout — withhold the CLI verification. A missing artifact fails the download step.
-    if: ${{ !cancelled() && needs.e2e.result != 'skipped' }}
+    needs: cli
+    if: ${{ !cancelled() && needs.cli.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
