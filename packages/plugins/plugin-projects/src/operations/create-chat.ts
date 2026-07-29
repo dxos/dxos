@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { ProjectSkill } from '@dxos/assistant-toolkit';
 import { Operation, Project, Skill } from '@dxos/compute';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { AssistantOperation, getChatPath } from '@dxos/plugin-assistant';
+import { Database, Obj, Ref, Type } from '@dxos/echo';
+import { AssistantOperation } from '@dxos/plugin-assistant';
 
 import { ProjectOperation } from '#types';
 
@@ -52,7 +52,18 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = Proje
       );
 
       yield* Database.flush();
-      yield* Operation.invoke(LayoutOperation.Open, { subject: [getChatPath(db.spaceId, chat.id)] });
+
+      // Open the chat at its own node — a child of the project — not the Chats-section path
+      // `getChatPath` builds: plugin-assistant's section query now excludes project-parented chats, so
+      // no node exists there and the plank comes up blank.
+      const chatPath = GraphPath.getSpacePath(
+        db.spaceId,
+        GraphPath.GroupSegments.ai,
+        Type.getTypename(Project.Project),
+        project.id,
+        chat.id,
+      );
+      yield* Operation.invoke(LayoutOperation.Open, { subject: [chatPath] });
       return { chat };
     }),
   ),
