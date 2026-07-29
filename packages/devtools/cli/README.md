@@ -25,10 +25,20 @@ in `src/commands/plugin-defs.ts` and lives in the plugin package — e.g. `dx re
 ## Release
 
 ```bash
-moon run cli:bundle   # Compile per-platform binaries into dist/.
-moon run cli:smoke    # Pack, install, and run the host-platform tarball.
-moon run cli:publish  # Publish the platform packages, then the launcher.
+moon run cli:bundle          # Compile per-platform binaries into dist/.
+moon run cli:smoke           # Pack, install, and run the host-platform tarball.
+moon run cli:smoke-isolated  # Run it with the workspace's node_modules hidden (currently fails).
+moon run cli:publish         # Publish the platform packages, then the launcher.
 ```
+
+**The binary does not yet run off the machine that built it.** `smoke` and CI both build and run in the
+same place, so anything the bundle resolved at build time still resolves; `smoke-isolated` hides the
+workspace's `node_modules` to show what a user sees. Today it stops at `classic-level`, a native addon
+loaded during startup because `@dxos/kv-store`'s `level.ts` imports `level` at module scope and
+`client-services`' storage barrel re-exports it — nothing calls it. Behind it sit `sharp`, `koffi`,
+`node-datachannel` and other addons a single-file binary cannot carry. Which of them belong in a
+compiled CLI is a dependency-graph question; `cli:publish` should gate on `smoke-isolated` once they
+are gone.
 
 `bundle` produces `dist/cli` (the `@dxos/cli` launcher, published from `bin/dx.js`) plus one
 `dist/cli-<platform>-<arch>/dx` binary per target, each published as its own package and wired into
