@@ -5,7 +5,13 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, AutomationTemplates, OperationHandler, SkillDefinition } from '#capabilities';
+import {
+  AppGraphBuilder,
+  AutomationTemplates,
+  OperationHandler,
+  ProjectTemplates,
+  SkillDefinition,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { ProfileOf } from '#types';
@@ -23,6 +29,11 @@ export const CrmPlugin = Plugin.define(meta).pipe(
     id: 'crm-automation-templates',
     activatesOn: AppActivationEvents.SetupSchema,
     activate: AutomationTemplates,
+  }),
+  Plugin.addModule({
+    id: 'crm-project-templates',
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: ProjectTemplates,
   }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

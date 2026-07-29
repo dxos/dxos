@@ -823,6 +823,9 @@
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-projects/tsconfig.json"
+    },
+    {
       "path": "packages/common/storybook-addon-logger/tsconfig.json"
     },
     {
