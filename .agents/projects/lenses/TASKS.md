@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: Phase 1 CORE IS IMPLEMENTED and green in `@dxos/echo-panproto` (30 tests, build + lint clean) — mapping resolution, coverage, overlay storage, minimal writes, the live handle with target-typename identity, GetPut law check, registry, and declarative persistence. Next: a database-backed consumer (React `useLens` + the four stories), which is also where the `DataType.Task`→`GtdTask` lens must live since `core/echo` cannot depend on `sdk/types`. Uncommitted: none._
+_Resume: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Next: React `useLens` in an `echo-react` sibling, then the storybook stories. Uncommitted: none._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](../../../packages/core/echo/echo-panproto/API.md).
 This file is the ledger only.
@@ -131,10 +131,29 @@ Gated on the Phase 0 mdast spike.
 - [ ] **Tests** — round-trip fidelity on a document exercising both bullet styles, both heading
       styles, and reference links; byte-identical assertion after a single-block edit.
 
+## Phase 3b: Database verification — DONE
+
+The claim that made write-minimality load-bearing, checked headlessly in CI rather than only visually.
+`packages/core/echo/echo-client-e2e/src/lens.test.ts` (that package already depends on `@dxos/types`,
+so the real `Task` is available, and it has the replication harness).
+
+### Tasks
+
+- [x] **Live handle over an automerge-backed object** — reads, `Obj.update` writes, target-typename
+      identity, and the overlay landing in the object's annotations rather than as a stray property.
+- [x] **The overlay survives a reload** — `peer.reload()` + reopen; it is part of the object, so it
+      persists with it.
+- [x] **A lensed write names only what it changes** — asserted on the write set directly.
+- [x] **Two peers, one object, concurrent edits.** Peer 1 renames `title` through the canonical
+      `Task`; peer 2 completes it through the lens (`done = true`) and sets an overlay. Both survive
+      on both peers, the overlay replicates, and a later canonical-side `status` change shows through
+      the lens on the other peer. **This is the test that fails if a lens write is not minimal.**
+
 ## Phase 4: Stories
 
-The deliverable. `packages/stories/stories-lens`. Four stories, all with `play` functions so CI
-enforces them (DESIGN.md §7).
+`packages/stories/stories-lens`. The collaboration claim is now proven headlessly in Phase 3b, so
+these are the _visual_ deliverable — a human seeing two interfaces drive one object — rather than the
+correctness proof. Still worth `play` functions so CI keeps them honest.
 
 ### Tasks
 

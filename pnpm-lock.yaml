@@ -6312,6 +6312,9 @@ importers:
       '@dxos/echo-host':
         specifier: workspace:*
         version: link:../echo-host
+      '@dxos/echo-panproto':
+        specifier: workspace:*
+        version: link:../echo-panproto
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
