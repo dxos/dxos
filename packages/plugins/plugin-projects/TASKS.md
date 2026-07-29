@@ -259,6 +259,10 @@ summaries), and the `stories-projects` storybook strategy.
       dedupe verified; `SenderResearch.stories.tsx`.
 - [ ] **UC-C fact summaries** — analyze-mailbox operation-action routine template; brain skill in
       project instructions; `FactSummaries.stories.tsx`; `sender-ledger`/`fact-summary` evals.
+- [ ] **Operations-as-tools gaps (USE-CASES.md §2.7)** — authoring UI for operation-action routines
+      (operation picker + input-mapping form; templates-only today); `{{project.*}}` trigger input
+      substitution (scaffold-time ref literals bind a routine to one object forever); side-effect
+      policy for model-invoked external operations (send/unsubscribe need a per-project allowance).
 
 ## Milestone 4 (scoping): what comes after this PR
 

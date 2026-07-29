@@ -112,6 +112,55 @@ this milestone; SHOULD = next; MAY = direction.
 - A routine's card SHOULD show last-run status/outcome (today only the trigger summary).
 - Commands authoring UI SHOULD land (data-only today).
 
+### 2.7 Tools: how plugin operations reach a project
+
+A project's leverage comes from plugin-supplied **operations** as much as from instruction text.
+The two are not alternatives but a spectrum, and the design gives operations three distinct
+channels into project work — each with a different cost, determinism, and place for judgment:
+
+1. **Model tools, via skills** (judgment in the loop). A plugin wraps operations in a registry
+   `Skill` (`Skill.toolDefinitions({ operations })`); the skill reaches a project session through
+   `instructions.skills`, the pre-bound artifact/`ProjectSkill` set, or runtime `enable-skills`.
+   Additionally, a project template MAY compose a **project-owned Skill object** persisted in the
+   space — cherry-picking exactly the operations the project needs across several plugins (inbox's
+   `UnsubscribeSender` + table ops + brain queries) into one purpose-built toolkit, without minting
+   a registry key. `instructions.skills` accepts DB refs as readily as registry URIs, so this works
+   today.
+2. **Deterministic routine actions** (no model). `Routine.spec.kind = 'runnable'` points the
+   trigger directly at the operation. `trigger.input` maps event fields (`{{event.item}}`,
+   `{{trigger.*}}`) and scaffold-time literals — including an encoded ref, e.g. the project's bound
+   mailbox — onto the operation's typed input schema. No tokens, no nondeterminism, typed output,
+   unit-testable without a model. UC-C's analyze-mailbox routine is exactly this.
+3. **Hybrid orchestration.** An instructions routine (or project chat) whose skills expose the
+   operations: the model supplies the judgment (*which senders are worth researching*), operations
+   supply the mechanical work (*run the research pipeline, upsert the profile*). UC-B is the
+   canonical case.
+
+**Selection rule** (for templates and for users): use the lowest channel that suffices. Mechanical
+and fully specifiable → runnable routine (2). Requires language or judgment throughout →
+instructions (chat or instructions routine). Judgment only to *select* mechanical work → hybrid
+(3). Channel 2 is dramatically cheaper and hardens best; templates SHOULD default to it wherever
+the task decomposes.
+
+**Commands are the chat-side face of the same idea**: a sentinel (`$unsub <sender>`) is instruction
+text whose prompt directs a specific tool call — a user-facing verb bound to a plugin operation.
+Commands SHOULD name the operation they invoke (data, not just prose) so autocomplete can show it
+and a confirmation policy can key off it.
+
+**Gaps this exposes** (tracked in `TASKS.md`):
+
+- *Authoring UI for operation-action routines.* Only a template can scaffold `kind: 'runnable'`
+  today; the blank create flow is instructions-only. SHOULD: an operation picker + input-mapping
+  form in the routine editor.
+- *Project-context input binding.* Trigger interpolation knows `{{event.*}}`/`{{trigger.*}}` but
+  nothing project-scoped; templates compensate by baking refs in at scaffold time, which binds the
+  routine to one object forever. MAY: a `{{project.*}}` substitution so one template serves any
+  project and survives repointing.
+- *Side-effect policy.* A deterministic routine encodes consent at scaffold time (the user enabled
+  the trigger); a model-invoked operation with external effects (send, unsubscribe) has no
+  confirmation gate. SHOULD: operations flagged as externally-effectful require an explicit
+  per-project allowance in instructions, and commands surface it.
+
 ## 3. Use cases
 
 Ordered roughly by increasing machinery. **Bold** = the three prioritized in §4.
