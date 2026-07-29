@@ -1,6 +1,8 @@
 # Feed soft fork — TASKS
 
-Design: [DESIGN.md](./DESIGN.md). Branch `claude/feed-soft-fork-94c32e`.
+Design: [DESIGN.md](./DESIGN.md). Branch `claude/feed-soft-fork-94c32e`. PR
+[#12387](https://github.com/dxos/dxos/pull/12387) (preview
+`pr-12387-composer-main.dxos.workers.dev`).
 
 ## Phase 1 — feed-layer primitive
 
