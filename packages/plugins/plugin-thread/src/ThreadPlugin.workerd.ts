@@ -4,7 +4,7 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Channel, Message, Thread } from '@dxos/types';
+import { Channel, Message, Reaction, Thread } from '@dxos/types';
 
 import { ChannelBackendFeed, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
@@ -12,7 +12,7 @@ import { meta } from '#meta';
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Channel.Channel, Message.Message, Thread.Thread],
+    schema: [Channel.Channel, Message.Message, Reaction.Reaction, Thread.Thread],
   }),
   Plugin.addModule({
     id: 'channel-backend-feed',

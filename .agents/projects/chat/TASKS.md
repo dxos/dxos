@@ -9,7 +9,8 @@ dependency.
 Project created 2026-07-29; design unified same day. Architecture review
 DONE: no new plugin — all work lands in `plugin-thread` (stage 1), renamed to
 `plugin-chat` when proven (stage 2), review unification last (stage 3).
-NEXT: stage 1, schema + thread-first UX.
+Stage-1 schema slice DONE (`parentMessage` → Ref, `Reaction` type).
+NEXT: the `properties`-bag evaluation, then thread-first UX.
 
 ## Decisions log
 
@@ -27,17 +28,25 @@ NEXT: stage 1, schema + thread-first UX.
 
 ### Schema / types
 
-- [ ] Fix `Message.parentMessage`: bare `Obj.ID` → `Ref(Message.Message)`
-      (Message.ts:41); schema bump; audit other Message consumers (inbox,
-      assistant, transcription) for raw-id reads.
+- [x] Fix `Message.parentMessage`: bare `Obj.ID` → `Ref(Message.Message)`
+      (self-reference via `Schema.suspend`); schema bumped to
+      `org.dxos.type.message:0.2.0`. Consumers updated: inbox draft
+      create/order, assistant `execution-graph`, the onboarding exemplar
+      script + its generated `dx.json`, and the Timeline `research.json`
+      fixture. No migration: `isInstanceOf` ignores the version, and the only
+      writer (inbox reply drafts) is still unreleased. `AgentStatus`
+      (`@dxos/ai`) has its own `parentMessage` and stays an `EntityId` — it
+      addresses tracing-queue items, not feed messages.
 - [ ] Evaluate replacing the `Message.properties` bag with strongly-typed
       ECHO annotations (`topic`/`resolved` as typed annotations). Audit
       existing `properties` consumers first — the schema's LabelAnnotation
       reads `properties.subject`; inbox/assistant write other keys — so this
       needs a migration story, not a swap.
-- [ ] Add `Reaction` (`org.dxos.type.reaction` v0.1.0: `target: Ref<Message>`,
-      `emoji`, `sender: Actor`) to `@dxos/types`; register in the plugin's
-      schema module.
+- [x] Add `Reaction` (`org.dxos.type.reaction` v0.1.0: `target: Ref<Message>`,
+      `emoji`, `sender: Actor`, `created`) to `@dxos/types`; registered in the
+      plugin's schema module (all three entrypoints: browser/node/workerd).
+      Fold and toggle helpers are deliberately deferred to the UI task that
+      needs them, so they land with tests against real usage.
 - [ ] Define `topic` (thread name, roots only) via the mechanism chosen
       above.
 - [ ] Decide reaction identity/toggle mechanics: locate own reaction by
@@ -118,8 +127,22 @@ NEXT: stage 1, schema + thread-first UX.
       online roster); document the primitive — candidate for extraction, cf.
       plugin-calls swarm presence. Explicitly not feed-backed.
 
+## Blocked / needs a separate fix
+
+- [ ] `moon run plugin-onboarding:build-exemplar` fails on `main`
+      (`Missing "#model" specifier in "@dxos/plugin-onboarding"` — vite-node
+      resolves plugin-sketch's `#model` subpath import against the importing
+      package). The exemplar's `parentMessage` values were therefore rewritten
+      in place in `exemplar-space.dx.json` rather than regenerated; re-run the
+      generator once the resolution bug is fixed. Not caused by this project —
+      reproduced on a clean checkout.
+
 ## Cross-cutting / deferred
 
+- [ ] Propose `Ref.getEntityId` in `@dxos/echo` — ~20 call sites hand-roll
+      `EID.getEntityId(EID.tryParse(ref.uri)!)`, most with the banned non-null
+      assertion, and this change added two more local copies. Core-API
+      addition, so it needs Josiah's sign-off before it rides along.
 - [ ] Assistant `Chat`/`Channel` convergence decision (leaning: parallel).
 - [ ] Per-thread read-state: feed phase 2 cursor design must not preclude
       per-`threadId` high-water marks (mirrored in feed-live-objects TASKS).

@@ -795,20 +795,20 @@ const makeMailbox = (
   // `threadId`; it's mirrored into `properties.threadId` to match the shape synced (Gmail/JMAP) mail carries.
   const threadIdFor = (subject: string): string => `thread-${threadSlug(normalizeSubject(subject))}`;
 
-  const lastMessageIdByThread = new Map<string, string>();
+  const lastMessageByThread = new Map<string, Message.Message>();
   const messages: Message.Message[] = emails.map((email) => {
     const sender = email.senderOverride ?? senderFor(email.from as PersonKey); // 'noise' emails always carry senderOverride.
     const threadId = threadIdFor(email.subject);
-    const parentMessage = lastMessageIdByThread.get(threadId);
+    const parentMessage = lastMessageByThread.get(threadId);
     const message = Message.make({
       created: daysAgo(email.daysAgo, 10),
       sender,
       blocks: [textBlock(email.body)],
       threadId,
-      ...(parentMessage ? { parentMessage } : {}),
+      ...(parentMessage ? { parentMessage: Ref.make(parentMessage) } : {}),
       properties: { subject: email.subject, threadId, to: email.to },
     });
-    lastMessageIdByThread.set(threadId, message.id);
+    lastMessageByThread.set(threadId, message);
     return message;
   });
 

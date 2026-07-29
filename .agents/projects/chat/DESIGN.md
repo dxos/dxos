@@ -49,16 +49,18 @@ Message {
   id; created: string; sender: Actor
   blocks: ContentBlock[]
   attachments?; properties?: Record<string, any>
-  parentMessage?: Obj.ID         // reply target — stage 1 FIXES this to Ref<Message>
+  parentMessage?: Ref<Message>   // reply target (org.dxos.type.message:0.2.0)
   threadId?: string              // partition key; anchor id in comment channels
 }
 ```
 
 Stage-1 schema fixes:
 
-- **`parentMessage` becomes `Ref<Message>`** (today a bare `Obj.ID`) — schema
-  bump; audit the other Message consumers (inbox, assistant) for reads of the
-  raw id.
+- **`parentMessage` is a `Ref<Message>`** (was a bare `Obj.ID`) — shipped.
+  Self-referential, so the field is wrapped in `Schema.suspend`. A ref to
+  another item in the same feed resolves because the feed handle's resolver
+  carries feed context; the feed→database direction does not yet resolve, which
+  is why replies point at messages and never at db objects.
 - **Evaluate replacing the untyped `properties` bag with strongly-typed ECHO
   annotations.** If adopted, `topic`/`resolved` (below) ship as typed
   annotations instead of bag conventions. Caution: `properties` has existing
@@ -66,7 +68,7 @@ Stage-1 schema fixes:
   `properties.subject` (email), and inbox/assistant stuff other keys — so this
   is an evaluation with a migration story, not a drop-in swap.
 
-New:
+New (shipped):
 
 ```ts
 // org.dxos.type.reaction v0.1.0 — appended to the SAME feed as its target.
@@ -74,6 +76,7 @@ Reaction {
   target: Ref<Message>
   emoji: string
   sender: Actor
+  created: string                // ISO date, mirrors Message.created
 }
 ```
 

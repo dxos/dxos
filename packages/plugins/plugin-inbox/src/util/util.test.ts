@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -382,7 +382,7 @@ const makeDraft = (created: string, parent?: Message.Message) =>
   Obj.make(Message.Message, {
     created,
     sender: { name: 'Me' },
-    ...(parent ? { parentMessage: parent.id } : {}),
+    ...(parent ? { parentMessage: Ref.make(parent) } : {}),
     blocks: [{ _tag: 'text' as const, text: '' }],
     properties: { subject: 'Re: Topic', mailbox: DRAFT_MAILBOX },
   });
