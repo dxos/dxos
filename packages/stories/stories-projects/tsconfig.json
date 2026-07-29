@@ -58,6 +58,9 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
       "path": "../../plugins/plugin-projects"
     },
     {
@@ -65,6 +68,9 @@
     },
     {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-table"
     },
     {
       "path": "../../plugins/plugin-testing"

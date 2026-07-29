@@ -50,6 +50,7 @@ const Story = () => {
     if (!mailbox || !space) {
       return;
     }
+
     // Surface a failed setup in the story UI rather than leaving the rejection unobserved.
     invokePromise(
       ProjectOperation.Create,

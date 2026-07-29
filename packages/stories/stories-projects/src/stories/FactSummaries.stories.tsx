@@ -83,7 +83,7 @@ const meta = {
   title: 'stories/stories-projects/FactSummaries',
   render: Story,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column' }),
     withTheme(),
     withPluginManager({
       // SetupArtifactDefinition activates the plugins' skill-definition modules; without it the
@@ -150,6 +150,8 @@ export const Test: StoryType = {
     await waitFor(async () => expect(canvas.getByDisplayValue(/Mailbox Facts — Work/)).toBeInTheDocument(), {
       timeout: 30_000,
     });
-    await waitFor(async () => expect(canvas.getByText('Analyze Mailbox')).toBeInTheDocument(), { timeout: 10_000 });
+    await waitFor(async () => expect(canvas.getByText('Analyze Mailbox')).toBeInTheDocument(), {
+      timeout: 10_000,
+    });
   },
 };

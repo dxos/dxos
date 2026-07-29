@@ -14,11 +14,13 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
 import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
 import { ProjectOperation } from '@dxos/plugin-projects/types';
@@ -83,7 +85,7 @@ const meta = {
   title: 'stories/stories-projects/SenderResearch',
   render: Story,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column' }),
     withTheme(),
     withPluginManager({
       // SetupArtifactDefinition activates the plugins' skill-definition modules; without it the
@@ -106,6 +108,10 @@ const meta = {
         SpacePlugin({}),
         InboxPlugin(),
         CrmPlugin(),
+        // Own the webSearch/database and markdown skill definitions the template references —
+        // skill rows resolve labels from the registry, which only holds loaded plugins' skills.
+        AssistantPlugin(),
+        MarkdownPlugin(),
         ProjectsPlugin(),
         RoutinePlugin(),
       ],
@@ -147,6 +153,8 @@ export const Test: StoryType = {
     await waitFor(async () => expect(canvas.getByDisplayValue(/Sender Research — Clients/)).toBeInTheDocument(), {
       timeout: 30_000,
     });
-    await waitFor(async () => expect(canvas.getByText('Sender Research')).toBeInTheDocument(), { timeout: 10_000 });
+    await waitFor(async () => expect(canvas.getByText('Sender Research')).toBeInTheDocument(), {
+      timeout: 10_000,
+    });
   },
 };
