@@ -147,10 +147,11 @@ swap rather than a rewrite.
   external API. Out of scope for this project — phase 4's only obligation is to
   define `query`/`patchUp`/watermark semantics against the interface rather
   than against EDGE specifics, keeping the seam clean.
-- **Matrix / ATProto shelf.** The open-chat survey, Matrix integration
-  analysis, and ATProto-OAuth → OIDC identity-broker sketch are done and
-  parked; Matrix would be the first consumer of the `FeedBackend` workstream.
-  Revisit on demand.
+- **Matrix shelf.** The open-chat survey and Matrix integration analysis are
+  done and parked (an ATProto-OAuth → OIDC identity-broker sketch rides along
+  parenthetically). Matrix is a strong candidate for a `FeedBackend` consumer
+  and likely the long-term production chat backend — though the first
+  consumer could equally be freeq or another backend. Revisit on demand.
 
 ## Source map
 
