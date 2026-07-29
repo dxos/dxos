@@ -430,6 +430,7 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          persist-credentials: false
 
       - name: Extract branch
         id: extract_branch
@@ -516,7 +517,11 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 10
     steps:
+      # This job only runs a repository-local action, so it never needs git auth; leaving the token in
+      # `.git/config` would expose it to anything in the checked-out tree.
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       # Each report is `always()` so an undelivered one cannot suppress the rest — without it a failing
       # first report skips the e2e report, silencing the very signal this job exists to send. A failed
       # step still fails the job.
