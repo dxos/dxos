@@ -457,11 +457,6 @@ jobs:
       - name: Smoke test packed CLI
         run: moon run cli:smoke
 
-      # Runs the binary with the workspace's node_modules hidden. Both defects it guards against were
-      # invisible to every test that ran on the machine that built the binary, this job included.
-      - name: Smoke test CLI off its build machine
-        run: moon run cli:smoke-isolated
-
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
       # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.

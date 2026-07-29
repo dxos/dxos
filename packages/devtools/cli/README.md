@@ -26,15 +26,16 @@ in `src/commands/plugin-defs.ts` and lives in the plugin package — e.g. `dx re
 
 ```bash
 moon run cli:bundle          # Compile per-platform binaries into dist/.
-moon run cli:smoke           # Pack, install, and run the host-platform tarball.
-moon run cli:smoke-isolated  # Run it with the workspace's node_modules hidden (currently fails).
+moon run cli:smoke           # Pack, install, and run the tarballs with node_modules hidden.
+moon run cli:smoke-isolated  # Same isolation straight from dist/, skipping pack (dev shortcut).
 moon run cli:publish         # Publish the platform packages, then the launcher.
 ```
 
-`smoke` and CI both build and run the binary in the same place, so anything the bundle resolved at build
-time still resolves there. `smoke-isolated` hides the workspace's `node_modules` to show what every other
-machine sees, and it is the only thing that catches a binary reaching back into the tree that built it —
-two shipped defects were observable nowhere else:
+`smoke` gates `publish` and covers two independent axes. Packing and installing catches tarball problems
+— file modes, the `files` array, the launcher's platform mapping and its `require.resolve`. Running the
+result with the workspace's `node_modules` bind-mounted away catches a binary reaching back into the tree
+that built it, which nothing else can: a path resolved at bundle time still resolves wherever the binary
+was built, so both this test and CI would otherwise pass. Two shipped defects were visible only there:
 
 - `@automerge/automerge`'s node entry reads its WASM from a `__dirname`-derived path, which Bun resolves
   at bundle time.

@@ -10,15 +10,13 @@ import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 
 //
-// Runs the compiled binary with the workspace's `node_modules` replaced by an empty directory, which is
-// what every machine except the one that built it looks like. `smoke.ts` cannot detect this class of
-// defect — it builds and runs in the same place, so a path resolved at bundle time always resolves —
-// and neither can CI, which is how a binary that read its build machine's `node_modules` shipped as
-// @dxos/cli@0.10.0. Two separate causes were found this way: `@automerge/automerge`'s node entry
-// (`readFileSync` of a `__dirname`-derived path) and `classic-level`'s native addon.
+// Development shortcut: runs the binary straight out of `dist/` with the workspace's `node_modules`
+// hidden, skipping the pack-and-install that `smoke.ts` does. `cli:smoke` is the gate and covers this
+// same isolation against the installed tarballs — reach for this one while iterating on a build fix,
+// where waiting on `npm pack` of a 233 MB binary each round is the slow part.
 //
 // Commands are limited to `--help`-style invocations so nothing touches the network or a real profile;
-// the point is module initialisation, which is where all of these failures happen.
+// the point is module initialisation, which is where this class of failure happens.
 //
 
 const COMMANDS = [['--version'], ['--help'], ['registry', '--help'], ['function', '--help'], ['space', '--help']];

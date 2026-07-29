@@ -73,8 +73,8 @@ tasks:
     inputs:
       - scripts/smoke.ts
       - dist/**/*
-  # Runs the binary with the workspace's node_modules hidden, i.e. as every machine except the build one
-  # sees it. Two shipped defects were only ever observable here — see scripts/smoke-isolated.ts.
+  # Development shortcut — `smoke` is the gate and covers the same isolation. Skips pack-and-install so a
+  # build fix can be re-checked in seconds.
   smoke-isolated:
     command: bun
     args:
@@ -94,7 +94,6 @@ tasks:
     deps:
       - bundle
       - smoke
-      - smoke-isolated
     inputs:
       - scripts/publish.ts
       - dist/**/*
