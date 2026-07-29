@@ -66,7 +66,10 @@ export function rolldownLogMetaTransform(
     console.warn('No program', ctx.id);
     return null;
   }
-  transform(ms, ctx.ast, options.filename ?? ctx.id, { specs: options.to_transform });
+  transform(ms, ctx.ast, options.filename ?? ctx.id, {
+    specs: options.to_transform,
+    registerFiles: options.registerFiles ?? false,
+  });
   return { code: ms };
 }
 
@@ -264,12 +267,23 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
             meta.ast ??
             parseSync(id, code, { astType: 'ts', lang: meta.moduleType as 'ts' | 'tsx' | 'js' | 'jsx' | 'dts' })
               .program;
-          transform(ms, program, metaOptions!.filename ?? id, { specs: metaOptions!.to_transform });
+          transform(ms, program, metaOptions!.filename ?? id, {
+            specs: metaOptions!.to_transform,
+            registerFiles: isServe,
+          });
         }
         if (doWorkerInject) {
           ms.prepend(`import ${JSON.stringify(VITE_PLUGIN_LOG_RUNTIME_ID)};\n`);
         }
-        return { code: ms.toString() };
+        // Return a string + explicit source map (not the `RolldownMagicString` object): under the
+        // Vite pipeline the transform result's `code` must be a string, so returning the object leaks
+        // downstream as `[object Object]`. The map keeps dev breakpoints / stack traces aligned past
+        // the injected preamble `var __dxlog_file=…` line. (Returning the object only works in pure
+        // Rolldown / with `experimental.nativeMagicString`.)
+        return {
+          code: ms.toString(),
+          map: ms.generateMap({ hires: true, source: id, includeContent: false }).toString(),
+        };
       },
     } satisfies RolldownPlugin['transform'] as any;
   }

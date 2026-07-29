@@ -13,7 +13,6 @@ import {
   createCredentialSignerWithKey,
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
-import { type Space } from '@dxos/echo-host';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -32,6 +31,7 @@ import { type Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
+import { type Space } from '../space';
 import { EdgeFeedReplicator } from '../spaces';
 import { TrustedKeySetAuthVerifier } from './authenticator';
 

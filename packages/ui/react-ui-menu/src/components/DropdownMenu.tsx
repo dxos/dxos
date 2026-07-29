@@ -6,8 +6,9 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
-import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
+import { type MenuAction, type MenuItem, type MenuItemGroup, isSeparator } from '../types';
 import { executeMenuAction } from '../util';
 import { ActionLabel } from './ActionLabel';
 import { type MenuScopedProps, useMenuItems, useMenuScoped } from './Menu';
@@ -20,25 +21,41 @@ export type DropdownMenuProps = DropdownMenuRootProps & {
 
 const DropdownMenuItem = ({
   item,
+  group,
   onClick,
   __menuScope,
 }: MenuScopedProps<{
   item: MenuItem;
+  group?: MenuItemGroup;
   onClick: (action: MenuAction, event: MouseEvent) => void;
 }>) => {
   // TODO(thure): handle other items.
   const action = item as MenuAction;
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
   const { iconSize } = useMenuScoped('DropdownMenuItem', __menuScope);
+  // An item that declares `checked` is a select-group member: expose the checked role + state to AT so
+  // the current value is announced, not conveyed by the trailing check icon alone. Mutually-exclusive
+  // (single-select) groups use radio semantics; multi-select groups use checkbox.
+  const checkable = typeof action.properties?.checked === 'boolean';
+  const role = group?.properties?.selectCardinality === 'multiple' ? 'menuitemcheckbox' : 'menuitemradio';
   return (
     <NaturalDropdownMenu.Item
       onClick={handleClick}
       classNames='gap-2'
       disabled={action.properties?.disabled}
+      {...(checkable && { role, 'aria-checked': !!action.properties?.checked })}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
-      {action.properties?.icon && <Icon icon={action.properties!.icon} size={iconSize} />}
+      {action.properties?.icon && (
+        <Icon
+          icon={action.properties.icon}
+          size={iconSize}
+          classNames={mx(action.properties.spin && 'animate-spin', action.properties.iconClassNames)}
+        />
+      )}
       <ActionLabel action={action} />
+      {/* Trailing check marks the current value of a single-select group (`checked`). */}
+      {action.properties?.checked && <Icon icon='ph--check--regular' size={iconSize} classNames='mis-auto' />}
     </NaturalDropdownMenu.Item>
   );
 };
@@ -70,10 +87,11 @@ const DropdownMenuRoot = ({
       event.stopPropagation();
       // TODO(thure): Why does Dialog's modal-ness cause issues if we don't explicitly close the menu here?
       setOptionsMenuOpen(false);
+      const params = { parent: group, caller, modifiers: { shift: event.shiftKey } };
       if (onAction) {
-        onAction(action, { parent: group, caller });
+        onAction(action, params);
       } else {
-        void executeMenuAction(action, { parent: group, caller });
+        void executeMenuAction(action, params);
       }
     },
     [group, caller, onAction],
@@ -87,9 +105,13 @@ const DropdownMenuRoot = ({
       <NaturalDropdownMenu.Portal>
         <NaturalDropdownMenu.Content>
           <NaturalDropdownMenu.Viewport>
-            {items?.map((item) => (
-              <DropdownMenuItem key={item.id} item={item} onClick={handleActionClick} />
-            ))}
+            {items?.map((item) =>
+              isSeparator(item) ? (
+                <NaturalDropdownMenu.Separator key={item.id} />
+              ) : (
+                <DropdownMenuItem key={item.id} item={item} group={group} onClick={handleActionClick} />
+              ),
+            )}
           </NaturalDropdownMenu.Viewport>
           <NaturalDropdownMenu.Arrow />
         </NaturalDropdownMenu.Content>

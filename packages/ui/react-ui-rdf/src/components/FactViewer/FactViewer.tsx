@@ -128,7 +128,7 @@ const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
             onChange={(event) => setFilter(event.target.value)}
           />
         </Input.Root>
-        <div role='none' className={styles.toolbarSpacer()} />
+        <div className={styles.toolbarSpacer()} />
         <IconButton
           icon='ph--list--regular'
           iconOnly

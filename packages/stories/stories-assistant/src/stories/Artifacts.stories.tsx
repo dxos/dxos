@@ -12,13 +12,11 @@ import { Markdown } from '@dxos/plugin-markdown';
 import { ViewModel } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
+import { StoryRole } from '../modules';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Artifacts',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -37,18 +35,14 @@ export const WithChess: Story = {
       ]);
       return {
         plugins: [GamePlugin(), ChessPlugin()],
-        types: [Game, Chess.State],
+        types: [Game.Game, Chess.State],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
-      const [{ Chess }, { make: makeGame }] = await Promise.all([
-        import('@dxos/plugin-chess'),
-        import('@dxos/plugin-game'),
-      ]);
+      const [{ Chess }, { Game }] = await Promise.all([import('@dxos/plugin-chess'), import('@dxos/plugin-game')]);
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        makeGame({
+        Game.make({
           name: 'The Game',
           variant: Chess.make({
             pgn: [
@@ -73,14 +67,13 @@ export const WithChess: Story = {
     },
     onChatCreated: async ({ space, binder }) => {
       const { Game } = await import('@dxos/plugin-game');
-      const objects = await space.db.query(Filter.type(Game)).run();
+      const objects = await space.db.query(Filter.type(Game.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
+    skills: [AssistantSkill.key, ChessSkill.key],
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
-    skills: [AssistantSkill.key, ChessSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
 
@@ -100,7 +93,6 @@ export const WithMap: Story = {
         types: [View.View, Map.Map, Table.Table],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const [{ Map }, { Table }, { createLocationSchema }] = await Promise.all([
         import('@dxos/plugin-map'),
@@ -126,11 +118,10 @@ export const WithMap: Story = {
       const objects = await space.db.query(Filter.type(View.View)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
+    skills: [AssistantSkill.key, MapSkill.key],
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
-    skills: [AssistantSkill.key, MapSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
 
@@ -147,7 +138,6 @@ export const WithTrip: Story = {
         types: [Map.Map],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const { Map } = await import('@dxos/plugin-map');
       // TODO(burdon): Table.
@@ -191,8 +181,7 @@ export const WithTrip: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
 
@@ -208,7 +197,6 @@ export const WithBoard: Story = {
         types: [Board.Board],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const { Board } = await import('@dxos/plugin-board');
       space.db.add(Board.makeBoard());
@@ -220,7 +208,6 @@ export const WithBoard: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };

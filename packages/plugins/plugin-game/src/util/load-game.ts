@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Obj, type Ref, Type } from '@dxos/echo';
 
-import { Game } from '../types/Game';
+import * as Game from '../types/Game';
 
 export class GameVariantMismatchError extends Error {
   readonly _tag = 'GameVariantMismatchError';
@@ -26,9 +26,9 @@ export class GameVariantMismatchError extends Error {
  * Use in operation handlers that declare `input.game: GameRef<MyVariantState>`.
  */
 export const loadGame = <S extends Type.AnyObj>(
-  ref: Ref.Ref<Game>,
+  ref: Ref.Ref<Game.Game>,
   variantType: S,
-): Effect.Effect<{ game: Game; variant: Type.InstanceType<S> }, Error, Database.Service> =>
+): Effect.Effect<{ game: Game.Game; variant: Type.InstanceType<S> }, Error, Database.Service> =>
   Effect.gen(function* () {
     const game = yield* Database.load(ref);
     const variant = yield* Database.load(game.variant);

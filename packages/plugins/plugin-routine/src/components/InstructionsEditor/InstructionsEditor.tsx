@@ -12,37 +12,36 @@ import { Form } from '@dxos/react-ui-form';
 
 const INSTRUCTIONS_SCHEMA = Type.getSchema(Instructions.Instructions);
 
-// Owned-routine action fields surfaced for editing — the prompt text, the agent's `skills`,
-// and the context `objects` bound to its session at run. All live on the Instructions schema,
-// so a single form edits them together.
-const INSTRUCTIONS_FIELDS = new Set(['text', 'skills', 'objects']);
+// Owned-routine action fields surfaced for editing — the prompt text and the agent's `skills`. The
+// context `objects` are deliberately not editable here: the owning subject (a project's artifacts, a
+// chat's bindings) is what puts objects in context, so a second, divergent list would confuse.
+const INSTRUCTIONS_FIELDS = new Set(['text', 'skills']);
 
 export type InstructionsEditorProps = {
-  db?: Database.Database;
+  db?: Database.Database; // TODO(burdon): Should not be optional if instructions are not.
   instructions: Instructions.Instructions;
   readonly?: boolean;
 };
 
 /**
- * Sub-form: edits the owned Instructions in place — its `text` (Markdown), `skills`, and the
- * context `objects` bound to its session at run, all fields of the Instructions schema. A bare Form.Root +
- * FieldSet (no Viewport) keeps these fields left-aligned with the sibling general/action forms; the
- * rendered fields are written back so selections persist to the instructions.
+ * Sub-form: edits the owned Instructions in place — its `text` (Markdown) and `skills`, both fields of
+ * the Instructions schema. A bare Form.Root + FieldSet (no Viewport) keeps these fields left-aligned
+ * with the sibling general/action forms; the rendered fields are written back so selections persist to
+ * the instructions.
  */
 export const InstructionsEditor = ({ db: dbProp, instructions, readonly }: InstructionsEditorProps) => {
   // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
   const db = dbProp ?? Obj.getDatabase(instructions);
 
-  // `objects` is optional; normalize to an array so the ref-array field renders its add affordance.
   const defaultValues = useMemo<Partial<Instructions.Instructions>>(
-    () => ({ ...Obj.getSnapshot(instructions), objects: instructions.objects ? [...instructions.objects] : [] }),
+    () => ({ ...Obj.getSnapshot(instructions) }),
     [instructions],
   );
 
   const handleValuesChanged = useCallback(
     (values: Partial<Instructions.Instructions>, { isValid }: { isValid: boolean }) => {
-      // Skip while invalid (e.g. an empty ref slot just added by a skills/objects array field) so a
-      // partial selection isn't persisted; the write lands once the slot is filled.
+      // Skip while invalid (e.g. an empty ref slot just added by the skills array field) so a partial
+      // selection isn't persisted; the write lands once the slot is filled.
       if (!isValid) {
         return;
       }
@@ -52,7 +51,6 @@ export const InstructionsEditor = ({ db: dbProp, instructions, readonly }: Instr
           instructions.text = values.text;
         }
         instructions.skills = [...(values.skills ?? [])];
-        instructions.objects = [...(values.objects ?? [])];
       });
     },
     [instructions],

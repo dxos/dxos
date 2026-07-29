@@ -18,8 +18,6 @@ import { listTheme } from '../List.theme';
  * (e.g. an `Accordion.ItemBody`) can reuse `grid-cols-[var(--dx-rail-item)_1fr]` to line its
  * content up under the same content column.
  */
-const styles = listTheme.styles();
-
 export type ListItemContentProps = ThemedClassName<{
   /**
    * Leading icon: an icon name (rendered as a neutral size-5 `Icon`) or a custom `Icon` element
@@ -33,17 +31,22 @@ export type ListItemContentProps = ThemedClassName<{
 }>;
 
 export const ListItemContent = forwardRef<HTMLDivElement, ListItemContentProps>(
-  ({ classNames, icon, title, description }, forwardedRef) => (
-    <div ref={forwardedRef} className={styles.itemContentRoot({ class: mx(classNames) })}>
-      {icon != null && (
-        <div className={styles.itemContentIcon()}>
-          {typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon}
-        </div>
-      )}
-      <span className={styles.itemContentTitle()}>{title}</span>
-      {description != null && <span className={styles.itemContentDescription()}>{description}</span>}
-    </div>
-  ),
+  ({ classNames, icon, title, description }, forwardedRef) => {
+    // Drop the leading icon track when no icon is set, so the content isn't indented past empty space.
+    const hasIcon = icon != null;
+    const styles = listTheme.styles({ hasIcon });
+    return (
+      <div className={styles.itemContentRoot({ class: mx(classNames) })} ref={forwardedRef}>
+        {hasIcon && (
+          <div className={styles.itemContentIcon()}>
+            {typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon}
+          </div>
+        )}
+        <span className={styles.itemContentTitle()}>{title}</span>
+        {description != null && <span className={styles.itemContentDescription()}>{description}</span>}
+      </div>
+    );
+  },
 );
 
 ListItemContent.displayName = 'ItemContent';

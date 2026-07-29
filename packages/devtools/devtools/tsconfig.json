@@ -67,13 +67,13 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/edge-compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -128,6 +128,9 @@
     },
     {
       "path": "../../ui/react-ui-components"
+    },
+    {
+      "path": "../../ui/react-ui-debug"
     },
     {
       "path": "../../ui/react-ui-graph"

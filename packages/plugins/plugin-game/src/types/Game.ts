@@ -8,6 +8,8 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation } from '@dxos/schema';
 
+// @import-as-namespace
+
 /**
  * A player in a game.
  * `role` is variant-defined (e.g. 'white' | 'black' for chess, 'x' | 'o' for tictactoe).

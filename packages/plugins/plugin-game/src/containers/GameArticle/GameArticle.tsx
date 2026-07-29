@@ -16,7 +16,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { meta } from '#meta';
 import { type Game, GameCapabilities } from '#types';
 
-export type GameArticleProps = AppSurface.ObjectArticleProps<Game>;
+export type GameArticleProps = AppSurface.ObjectArticleProps<Game.Game>;
 
 export const GameArticle = ({ role, attendableId, subject: game }: GameArticleProps) => {
   const { t } = useTranslation(meta.profile.key);

@@ -38,6 +38,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
@@ -50,7 +53,7 @@
       "path": "../../core/compute/crawler"
     },
     {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/compute/nlp"
@@ -93,6 +96,12 @@
     },
     {
       "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-outliner"
+    },
+    {
+      "path": "../../plugins/plugin-progress"
     },
     {
       "path": "../../plugins/plugin-space"
@@ -150,6 +159,9 @@
     },
     {
       "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../storybook-testing"
     }
   ]
 }

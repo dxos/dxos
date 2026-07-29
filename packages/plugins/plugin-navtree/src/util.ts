@@ -64,15 +64,13 @@ export const resolveMigrationOperation = (
 // TODO(wittjosiah): Move into node implementation?
 export const sortActions = (actions: Node.Action[]): Node.Action[] =>
   actions.sort((a, b) => {
-    if (a.properties.disposition === b.properties.disposition) {
+    const aPrimary = Node.hasDisposition(a, 'list-item-primary');
+    const bPrimary = Node.hasDisposition(b, 'list-item-primary');
+    if (aPrimary === bPrimary) {
       return 0;
     }
 
-    if (a.properties.disposition === 'list-item-primary') {
-      return -1;
-    }
-
-    return 1;
+    return aPrimary ? -1 : 1;
   });
 
 export const getChildren = (
@@ -93,13 +91,13 @@ export const getChildren = (
  * Determines whether a node should be visible based on its disposition.
  */
 export const filterItems = (node: Node.Node, disposition?: string) => {
-  if (!disposition && node.properties.disposition === 'hidden') {
+  if (!disposition && Node.hasDisposition(node, 'hidden')) {
     return false;
   } else if (!disposition) {
     const action = Node.isAction(node);
-    return !action || node.properties.disposition === 'item';
+    return !action || Node.hasDisposition(node, 'item');
   } else {
-    return node.properties.disposition === disposition;
+    return Node.hasDisposition(node, disposition);
   }
 };
 

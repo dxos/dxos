@@ -28,8 +28,8 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'bookNotesCompanion',
-        // Bound to its own companion segment (`linkedSegment('notes')`), distinct from the atproto
-        // publishing companion of the same book.
+        // Bound to its own companion variant (`notes`), distinct from the atproto publishing
+        // companion of the same book.
         filter: AppSurface.allOf(
           AppSurface.object(AppSurface.Article, Book.Book, (data) => data.variant === NOTES_COMPANION_VARIANT),
           AppSurface.companion(AppSurface.Article),

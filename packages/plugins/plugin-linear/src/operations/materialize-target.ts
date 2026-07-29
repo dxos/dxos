@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Project } from '@dxos/types';
+import { ExternalProject } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
 import { LinearOperation } from '../types';
@@ -14,9 +14,9 @@ import { LinearOperation } from '../types';
 const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
 
 /**
- * Find-or-create the empty local root Project for a Linear team so a
- * {@link SyncBinding} relation can be created eagerly. The team's root is a
- * {@link Project} carrying the team's `LINEAR_SOURCE` foreign key; the team's
+ * Find-or-create the empty local root Project for a Linear team so an
+ * external-sync `Cursor` can be created eagerly. The team's root is an
+ * {@link ExternalProject} carrying the team's `LINEAR_SOURCE` foreign key; the team's
  * Linear projects and issues are pulled under it on sync. Idempotent: queried
  * by foreign key, so repeated calls return the existing root.
  */
@@ -38,14 +38,15 @@ const handler: Operation.WithHandler<typeof LinearOperation.MaterializeLinearTar
         const teamId = remoteTarget.id;
 
         return yield* Effect.gen(function* () {
-          const existing = yield* Database.query(Query.select(Filter.foreignKeys(Project.Project, [fkFor(teamId)])))
-            .run;
+          const existing = yield* Database.query(
+            Query.select(Filter.foreignKeys(ExternalProject.ExternalProject, [fkFor(teamId)])),
+          ).run;
           if (existing.length > 0) {
             return { target: Ref.make(existing[0]) };
           }
 
           const created = yield* Database.add(
-            Obj.make(Project.Project, {
+            Obj.make(ExternalProject.ExternalProject, {
               [Obj.Meta]: { keys: [fkFor(teamId)] },
               name: remoteTarget.name,
             }),

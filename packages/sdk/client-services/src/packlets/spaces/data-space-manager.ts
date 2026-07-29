@@ -21,22 +21,13 @@ import {
 } from '@dxos/credentials';
 import { Type } from '@dxos/echo';
 import {
-  AuthStatus,
-  CredentialServerExtension,
   DatabaseRoot,
   type EchoHost,
   EchoHostService,
   type EdgeAutomergeReplicator,
   EdgeAutomergeReplicatorService,
-  type IMetadataStore,
-  IMetadataStoreService,
   type MeshEchoReplicator,
   MeshEchoReplicatorService,
-  type Space,
-  type SpaceManager,
-  SpaceManagerService,
-  type SpaceProtocol,
-  type SpaceProtocolSession,
   findInlineObjectOfType,
 } from '@dxos/echo-host';
 import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -72,6 +63,16 @@ import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import { type Identity, IdentityProviderService, createAuthProvider } from '../identity';
 import { type InvitationsManager, InvitationsManagerService } from '../invitations';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata';
+import {
+  AuthStatus,
+  CredentialServerExtension,
+  type Space,
+  type SpaceManager,
+  SpaceManagerService,
+  type SpaceProtocol,
+  type SpaceProtocolSession,
+} from '../space';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 

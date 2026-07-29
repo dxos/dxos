@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -59,7 +59,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTe
         });
         yield* Operation.invoke(LayoutOperation.Open, {
           subject: [getRoutinesSettingsPath(db.spaceId)],
-          workspace: Paths.getSpacePath(db.spaceId),
+          workspace: GraphPath.getSpacePath(db.spaceId),
         });
       }),
     ),

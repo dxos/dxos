@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './active-topics';
+export * from './active-topics-report';
 export * from './agent';
 export * from './embeddings';
 export * from './eval-report';

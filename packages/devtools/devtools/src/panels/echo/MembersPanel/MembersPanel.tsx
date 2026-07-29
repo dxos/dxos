@@ -7,10 +7,10 @@ import React, { useMemo } from 'react';
 import { Format } from '@dxos/echo/Format';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { MasterDetailTable, PanelContainer } from '../../../components';
+import { MasterDetailTable } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
@@ -61,21 +61,22 @@ export const MembersPanel = (props: { space?: Space }) => {
   }, [members]);
 
   return (
-    <PanelContainer
-      toolbar={
-        props.space ? undefined : (
+    <Panel.Root>
+      {!props.space && (
+        <Panel.Toolbar asChild>
           <Toolbar.Root>
             <DataSpaceSelector />
           </Toolbar.Root>
-        )
-      }
-    >
-      <MasterDetailTable
-        properties={properties}
-        data={data}
-        detailsTransform={(item) => item._original}
-        detailsPosition='bottom'
-      />
-    </PanelContainer>
+        </Panel.Toolbar>
+      )}
+      <Panel.Content>
+        <MasterDetailTable
+          properties={properties}
+          data={data}
+          detailsTransform={(item) => item._original}
+          detailsPosition='bottom'
+        />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

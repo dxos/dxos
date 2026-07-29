@@ -3,6 +3,6 @@ language: typescript
 tags:
   - ts-compile
 tasks:
-  compile:
+  build:
     deps:
-      - esbuild-plugins:compile
+      - esbuild-plugins:build

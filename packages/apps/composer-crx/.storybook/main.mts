@@ -5,7 +5,7 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createConfig } from '../../../../tools/storybook-react/.storybook/main';
+import { createConfig } from '../../../../tools/storybook-react/.storybook/main.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const mock = (file: string) => resolve(here, 'mocks', file);

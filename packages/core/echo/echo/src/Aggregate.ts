@@ -6,19 +6,25 @@
 
 import type * as EffectTypes from 'effect/Types';
 
+import type { QueryAST } from '@dxos/echo-protocol';
+
+import type * as Order from './Order';
 import type * as Query from './Query';
 
 /**
  * The aggregate spec sans name; the name is supplied by the `Query.aggregate` record key. A tagged
- * union per kind so `property`/`limit` are present exactly when the kind uses them (no unused
- * optional fields to guard against at read sites).
+ * union per kind so `property`/`limit`/`order` are present exactly when the kind uses them (no
+ * unused optional fields to guard against at read sites).
  */
 export type Spec =
   | { kind: 'group'; property: string }
   | { kind: 'max'; property: string }
   | { kind: 'min'; property: string }
-  | { kind: 'items'; limit?: number }
+  | { kind: 'items'; limit?: number; order?: readonly QueryAST.Order[] }
   | { kind: 'count' };
+
+export const AggregateTypeId = '~@dxos/echo/Aggregate' as const;
+export type AggregateTypeId = typeof AggregateTypeId;
 
 /**
  * A per-group aggregate declaration, materialised as a top-level field on the flat result record
@@ -30,10 +36,9 @@ export type Spec =
  * `group` entries aggregates the entire input into a single row.
  */
 export interface Aggregate<T, V> {
-  // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Aggregate': { element: T; value: V };
+  readonly [AggregateTypeId]: { element: T; value: V };
 
-  'spec': Spec;
+  spec: Spec;
 }
 
 export type Any = Aggregate<any, any>;
@@ -47,15 +52,15 @@ export type AggregationResult<A extends Record<string, Any>> = EffectTypes.Simpl
 >;
 
 class AggregateClass<T, V> implements Aggregate<T, V> {
-  private static 'variance': Aggregate<any, any>['~Aggregate'] = {} as Aggregate<any, any>['~Aggregate'];
+  private static 'variance': Aggregate<any, any>[AggregateTypeId] = {} as Aggregate<any, any>[AggregateTypeId];
 
-  static 'is'(value: unknown): value is Any {
-    return typeof value === 'object' && value !== null && '~Aggregate' in value;
+  static is(value: unknown): value is Any {
+    return typeof value === 'object' && value !== null && AggregateTypeId in value;
   }
 
-  'constructor'(public readonly spec: Spec) {}
+  constructor(public readonly spec: Spec) {}
 
-  '~Aggregate' = AggregateClass.variance as Aggregate<T, V>['~Aggregate'];
+  [AggregateTypeId] = AggregateClass.variance as Aggregate<T, V>[AggregateTypeId];
 }
 
 /**
@@ -81,11 +86,18 @@ export const min = <T, K extends keyof T & string>(property: K): Aggregate<T, T[
   new AggregateClass({ kind: 'min', property });
 
 /**
- * Collect the group's members, optionally capped to `limit` per group. Opt-in — groups carry no
- * members unless this aggregate is declared.
+ * Collect the group's members, optionally ordered by `order` and capped to `limit` per group.
+ * Opt-in — groups carry no members unless this aggregate is declared.
+ *
+ * `order` is this aggregate's own per-group ordering — independent of any `orderBy` elsewhere in
+ * the query, which orders the whole input stream (and, following `aggregate`, the resulting
+ * groups), not this aggregate's member selection. Without `order`, members keep whatever order
+ * they arrived in from a preceding `orderBy` (unspecified if there is none), so a per-group
+ * top-`limit` moved position in the chain would silently change; declaring `order` here makes the
+ * ordering explicit and local to this aggregate regardless of where it sits.
  */
-export const items = <T>(options?: { limit?: number }): Aggregate<T, T[]> =>
-  new AggregateClass({ kind: 'items', limit: options?.limit });
+export const items = <T>(options?: { limit?: number; order?: Order.Any[] }): Aggregate<T, T[]> =>
+  new AggregateClass({ kind: 'items', limit: options?.limit, order: options?.order?.map((order) => order.ast) });
 
 /**
  * Count the group's members. Opt-in — groups carry no count unless this aggregate is declared.

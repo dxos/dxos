@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Database, DXN, Ref } from '@dxos/echo';
-import { GameRef } from '@dxos/plugin-game/types';
+import { Game } from '@dxos/plugin-game/types';
 
 import * as Chess from './Chess';
 import * as PlayerReview from './PlayerReview';
@@ -21,7 +21,7 @@ export const Move = Operation.make({
     icon: 'ph--play--regular',
   },
   input: Schema.Struct({
-    game: GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotations({
       description: 'The ID of the game object (variant must be Chess).',
     }),
     move: Schema.String.annotations({
@@ -45,7 +45,7 @@ export const Play = Operation.make({
     icon: 'ph--play--regular',
   },
   input: Schema.Struct({
-    game: GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotations({
       description: 'The ID of the game object (variant must be Chess).',
     }),
     side: Schema.optional(Schema.Literal('white', 'black', 'any')).annotations({

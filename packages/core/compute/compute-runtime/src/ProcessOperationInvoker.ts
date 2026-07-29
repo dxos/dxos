@@ -18,13 +18,16 @@ import * as Stream from 'effect/Stream';
 
 import { Process, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
+import { Context as DxosContext } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
 import type { ProcessNotFoundError } from './errors';
 import { ProcessManagerService } from './process-manager-service';
 import type * as ProcessManager from './ProcessManager';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker';
 
 export interface OperationFiber<T> {
   pid: Process.ID;
@@ -100,16 +103,36 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
  * Service resolution, storage, and lifecycle are handled by the process manager.
  *
  * When `parentProcessId` is set, spawned processes inherit the parent's trace context.
+ *
+ * When `remoteInvoker` is supplied, invocations requesting edge execution (`InvokeOptions.on === 'edge'`)
+ * are dispatched to the remote runtime by the operation's `meta.deployedId` instead of spawning a local
+ * process. Absent a remote invoker, edge invocations die with a descriptive error.
  */
 export const make = (opts: {
   manager: ProcessManager.Manager;
   handlerSet: OperationHandlerSet.OperationHandlerSet;
   parentProcessId?: Process.ID;
+  remoteInvoker?: RemoteOperationInvoker.Invoker;
 }): Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker => {
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
   const pendingCount = Effect.runSync(Ref.make(0));
   const pendingFibers = new Set<Fiber.RuntimeFiber<any>>();
   const fiberCache = new Map<Process.ID, OperationFiber<any>>();
+
+  // Dispatches an operation to the remote (EDGE) runtime, keyed by its deployment id. Used when an
+  // invocation opts into edge execution via `InvokeOptions.on === 'edge'`.
+  const invokeRemote = <I, O>(op: Operation.Definition<I, O>, input: I): Effect.Effect<O> =>
+    Effect.gen(function* () {
+      if (!opts.remoteInvoker) {
+        return yield* Effect.die(
+          new Error(
+            `Operation '${op.meta.key}' requested edge execution but no remote operation invoker is configured.`,
+          ),
+        );
+      }
+      invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot invoke on edge.`);
+      return yield* opts.remoteInvoker.invoke<I, O>(DxosContext.default(), op.meta.deployedId, input);
+    });
 
   const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
@@ -184,6 +207,16 @@ export const make = (opts: {
   ): Effect.Effect<O> => {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
+
+    // Edge dispatch bypasses the local process runtime; the remote runtime owns execution and its own
+    // process tree. A success event is still published so downstream consumers (e.g. history) observe it.
+    if (options?.on === 'edge') {
+      log('invoking operation on edge', { opKey: op.meta.key, deployedId: op.meta.deployedId });
+      return invokeRemote<I, O>(op, input).pipe(
+        Effect.tap((output) => PubSub.publish(pubsub, { operation: op, input, output, timestamp: Date.now() })),
+      );
+    }
+
     const traceMeta = options?.tracing as Trace.Meta | undefined;
     log('invoking operation', { opKey: op.meta.key, ...options });
     return Effect.gen(function* () {
@@ -223,6 +256,25 @@ export const make = (opts: {
   ): Effect.Effect<void> => {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
+
+    // Fire-and-forget edge dispatch. Tracked in `pendingFibers`/`pendingCount` so `awaitFollowups`
+    // still waits for the remote invocation to settle, mirroring the local scheduled path.
+    if (options?.on === 'edge') {
+      return Effect.gen(function* () {
+        log('scheduling operation on edge', { opKey: op.meta.key, deployedId: op.meta.deployedId });
+        yield* Ref.update(pendingCount, (count) => count + 1);
+        const fiber = yield* invokeRemote<I, O>(op, input).pipe(
+          Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
+          Effect.ignore,
+          Effect.forkDaemon,
+        );
+        pendingFibers.add(fiber);
+        fiber.addObserver(() => {
+          pendingFibers.delete(fiber);
+        });
+      });
+    }
+
     const traceMeta = options?.tracing as Trace.Meta | undefined;
     return Effect.gen(function* () {
       log('scheduling operation', { opKey: op.meta.key, ...options });
@@ -313,7 +365,10 @@ export const layer: Layer.Layer<
   Effect.gen(function* () {
     const manager = yield* ProcessManagerService;
     const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
-    const service = make({ manager, handlerSet });
+    // Optional: edge dispatch (`InvokeOptions.on === 'edge'`) is only available when a
+    // `RemoteOperationInvoker.Service` is present in context; otherwise edge invocations die.
+    const remoteInvoker = yield* Effect.serviceOption(RemoteOperationInvoker.Service);
+    const service = make({ manager, handlerSet, remoteInvoker: Option.getOrUndefined(remoteInvoker) });
     return Layer.mergeAll(Layer.succeed(Operation.Service, service), Layer.succeed(Service, service));
   }),
 );

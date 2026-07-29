@@ -19,6 +19,8 @@ export const translations = [
         'recently-closed.heading': 'Recently closed',
         'pending-results.message': 'Searching…',
         'search.label': 'Search',
+        'search-result-list.label': 'Search results',
+        'search-result-list.empty.label': 'No results',
       },
     },
   },

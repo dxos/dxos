@@ -15,13 +15,13 @@ import {
   AnchoredTo,
   Employer,
   Event,
+  ExternalProject,
   HasConnection,
   HasRelationship,
   HasSubject,
   Organization,
   Person,
   Pipeline,
-  Project,
   Task,
 } from '@dxos/types';
 
@@ -30,7 +30,7 @@ import {
   CreateObject,
   IdentityCreated,
   NavigationHandler,
-  NavigationResolver,
+  NavigationTargetResolver,
   OperationHandler,
   ReactRoot,
   ReactSurface,
@@ -53,7 +53,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
     activate: () => NavigationHandler({ invitationProp }),
   })),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
@@ -62,13 +61,13 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       AnchoredTo.AnchoredTo,
       Employer.Employer,
       Event.Event,
+      ExternalProject.ExternalProject,
       HasConnection.HasConnection,
       HasRelationship.HasRelationship,
       HasSubject.HasSubject,
       Organization.Organization,
       Person.Person,
       Pipeline.Pipeline,
-      Project.Project,
       Tag.Tag,
       Task.Task,
     ],
@@ -77,6 +76,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addTranslationsModule({
     translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
   }),
+  Plugin.addModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationTargetResolver }),
   Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?

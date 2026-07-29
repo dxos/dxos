@@ -21,8 +21,8 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'atprotoCompanion',
-        // Bound to its own companion segment (`linkedSegment('atproto')`) so it does not also match
-        // other companions of the same object (e.g. a book's notes).
+        // Bound to its own companion variant (`atproto`) so it does not also match other companions
+        // of the same object (e.g. a book's notes).
         filter: AppSurface.allOf(
           AppSurface.subject(
             AppSurface.Article,

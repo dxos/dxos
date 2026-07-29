@@ -8,14 +8,15 @@ import * as Layer from 'effect/Layer';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayerSpec } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { FactStore, type FactStoreApi, FeedCursors, type FeedCursorsApi } from '@dxos/pipeline-rdf';
+import { FactStore, type FactStoreApi } from '@dxos/pipeline-rdf';
 
 import { BrainCapabilities } from '#types';
 
 /**
- * Per-space in-memory registry: one shared {@link FactStore} plus per-feed processing cursors, used
- * as both the operation-injected services and the surface-read store. Facts and cursors live in the
- * same registry so they share the session lifetime (both reset together on reload).
+ * Per-space in-memory registry: the shared {@link FactStore}, used as both the operation-injected
+ * service and the surface-read store. Per-feed processing progress no longer lives here — it's a
+ * persisted `Cursor` (`@dxos/link`), found/created directly by the operation that drives the fact
+ * pipeline (e.g. `AnalyzeMailbox`), so it survives a reload independently of this in-memory store.
  */
 export type FactStoreRegistry = {
   /** The singleton in-memory FactStore for a space (created on first use). */
@@ -28,20 +29,14 @@ export type FactStoreRegistry = {
    * this is how surfaces re-query when the analysis pipeline (or a reset) mutates the store.
    */
   subscribe: (spaceId: string, listener: () => void) => () => void;
-  /** The per-feed processing cursors for a space (created on first use). */
-  feedCursorsFor: (spaceId: string) => FeedCursorsApi;
-  /** A Layer providing `FeedCursors` for a space, wrapping the same instance `feedCursorsFor` returns. */
-  feedCursorsLayerFor: (spaceId: string) => Layer.Layer<FeedCursors>;
 };
 
 /**
- * Creates a registry that lazily builds one shared in-memory FactStore + per-feed cursor map per
- * space. The store and feed-cursor pairs return the same instance for a given space, so an
- * operation's injected services and a surface's read store observe identical state.
+ * Creates a registry that lazily builds one shared in-memory FactStore per space, so an operation's
+ * injected service and a surface's read store observe identical state.
  */
 export const makeFactStoreRegistry = (): FactStoreRegistry => {
   const stores = new Map<string, FactStoreApi>();
-  const cursorsBySpace = new Map<string, Map<string, number>>();
   const listenersBySpace = new Map<string, Set<() => void>>();
 
   const notify = (spaceId: string): void => listenersBySpace.get(spaceId)?.forEach((listener) => listener());
@@ -75,31 +70,14 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
     return () => void listeners.delete(listener);
   };
 
-  const feedCursorsFor = (spaceId: string): FeedCursorsApi => {
-    let cursors = cursorsBySpace.get(spaceId);
-    if (!cursors) {
-      cursors = new Map();
-      cursorsBySpace.set(spaceId, cursors);
-    }
-
-    const map = cursors;
-    return {
-      get: (feedId) => map.get(feedId) ?? 0,
-      advance: (feedId, key) => void map.set(feedId, Math.max(map.get(feedId) ?? 0, key)),
-      reset: (feedId) => void map.delete(feedId),
-    };
-  };
-
   const layerFor = (spaceId: string): Layer.Layer<FactStore> => Layer.succeed(FactStore, forSpace(spaceId));
-  const feedCursorsLayerFor = (spaceId: string): Layer.Layer<FeedCursors> =>
-    Layer.succeed(FeedCursors, feedCursorsFor(spaceId));
-  return { forSpace, layerFor, subscribe, feedCursorsFor, feedCursorsLayerFor };
+  return { forSpace, layerFor, subscribe };
 };
 
 /**
- * Contributes a single shared {@link FactStoreRegistry} plus space-affinity {@link LayerSpec}s that
- * provide `FactStore` and `FeedCursors` to operations. All close over the SAME registry, so the
- * operation-injected store and the capability-read store resolve to the same per-space instance.
+ * Contributes a single shared {@link FactStoreRegistry} plus a space-affinity {@link LayerSpec} that
+ * provides `FactStore` to operations. Both close over the SAME registry, so the operation-injected
+ * store and the capability-read store resolve to the same per-space instance.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -116,22 +94,9 @@ export default Capability.makeModule(
       },
     );
 
-    const feedCursorsSpec = LayerSpec.make(
-      {
-        affinity: 'space',
-        requires: [],
-        provides: [FeedCursors],
-      },
-      (context) => {
-        invariant(context.space, 'space context required for FeedCursors layer');
-        return registry.feedCursorsLayerFor(context.space);
-      },
-    );
-
     return [
       Capability.contributes(BrainCapabilities.FactStoreRegistry, registry),
       Capability.contributes(Capabilities.LayerSpec, factStoreSpec),
-      Capability.contributes(Capabilities.LayerSpec, feedCursorsSpec),
     ];
   }),
 );

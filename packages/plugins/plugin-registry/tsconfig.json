@@ -46,6 +46,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -68,9 +71,6 @@
     },
     {
       "path": "../../sdk/client-protocol"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"

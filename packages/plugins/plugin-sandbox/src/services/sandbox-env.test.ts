@@ -5,11 +5,11 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Database, Ref } from '@dxos/echo';
 import { TestContextService } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
-import { AccessToken } from '@dxos/types';
+import { AccessToken } from '@dxos/link';
 
 import * as Sandbox from '../types/Sandbox';
 import { mergeExecEnv, resolveSandboxCredentialEnv } from './sandbox-env';

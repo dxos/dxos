@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
-import { AccessToken } from '@dxos/types';
+import { AccessToken } from '@dxos/link';
 
 import { Connection, Connector, type ConnectorEntry } from '#types';
 

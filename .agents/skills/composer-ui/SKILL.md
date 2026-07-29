@@ -15,9 +15,14 @@ to [[composer-plugins]] (which owns plugin _structure_: capabilities, surfaces, 
 and [[composite-components]] (which owns _authoring_ new `@dxos/react-ui` primitives). When you're
 laying out a container, picking a color class, wiring a toolbar, or writing a story, the rules live here.
 
-**Golden rule:** the design system already has a primitive, a token, or a layout for what you need.
+**Golden rule:** If the design system already has a primitive, a token, or a layout for what you need you must use it.
 Reaching for a raw `<div>` with custom classes, a native `<input>`, or a guessed color token is almost
 always a sign you missed an existing piece. Find it (grep an existing themed component) before inventing.
+
+Low-level components (plugin/_/src/components, react-ui-_). Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit` capabilitiess.
+Instead aspects that may be derived from capabilites must be passed as properties.
+Each component lives in its own subdirectory with an `index.ts` barrel.
+Use named exports; no default exports.
 
 ## Package family
 
@@ -64,6 +69,20 @@ is being phased out — prefer the kebab forms):
 Themed primitives accept overrides via a `classNames` prop (string or array) — never `className`.
 Pass functional layout hints (`p-4`, `space-y-4`, `flex`, `@container` queries) freely; pass color/size
 through tokens. If you're writing more than a layout hint by hand, you're probably missing a primitive.
+
+## Sizing vs logical utilities (post-Tailwind-3)
+
+**Sizing is physical.** Use `w-*` / `h-*` / `min-w-*` / `max-h-*` / `size-*` for width and height. The
+custom `is-*` / `bs-*` (inline-size / block-size) utilities were **dropped** — Tailwind core never shipped
+logical _size_ utilities and keeps width/height physical, so `is-full` / `bs-[20rem]` are dead classes.
+Prefer `w-full` / `h-[20rem]`.
+
+**Direction-sensitive spacing stays logical** — these Tailwind ships and they flip correctly under RTL, so
+keep using them: `ps-*` / `pe-*` (padding), `ms-*` / `me-*` (margin), `start-*` / `end-*` (inset),
+`border-s` / `border-e` (border side), `text-start` / `text-end` (alignment). Do **not** rewrite these to
+physical (`pl-`, `ml-`, `left-`, `text-left`).
+
+Rule of thumb: **width/height → physical; margin/padding/inset/border-side/text-align → logical.**
 
 ## Icons
 
@@ -124,12 +143,27 @@ See: `plugin-chess/src/containers/ChessArticle/`, `plugin-sample/src/containers/
 
 ## Lists, pickers, and stacks
 
-Pick the collection primitive by decision order — don't hand-roll a list of mapped `<div>`s:
+**Rule: never hand-roll a list.** Any vertical collection of rows — even a
+read-only display list — is built from a `@dxos/react-ui-list` primitive, never
+a `map()` over `<div>`/`<li>`. A mapped stack of `<div>`s in a review is a
+defect; reach for the primitive below instead. `@dxos/react-ui`'s core
+`List`/`ListItem` are **deprecated** — do not use them; `Listbox` is their
+successor.
+
+Pick the collection primitive by decision order:
 
 1. **Need a picker / combobox** (choose from a set, typeahead)? **Check for an existing one first** —
    `Picker` / `Combobox` / `Listbox` in [`@dxos/react-ui-list`](../../../packages/ui/react-ui-list/src/components),
    or a domain widget like `SearchList` (`@dxos/react-ui-search`). Reuse before building.
-2. **A simple flat or tree list**? Use `@dxos/react-ui-list` — `List`, `RowList`, `Tree`, `Accordion`.
+2. **A simple flat list** (display rows, selectable rows, or rows with per-row
+   controls)? Use **`Listbox`** from `@dxos/react-ui-list`:
+   `Listbox.Root` (headless; omit `value`/`onValueChange` for a non-selectable
+   `role=list`, pass them for single-select) → `Listbox.Content` (the `<ul>`) →
+   `Listbox.Item id=… classNames=…` (a row; put arbitrary children — labels via
+   `Listbox.ItemLabel`, buttons, a `Select` — inside). See
+   `plugin-space/src/components/ForeignKeys/ForeignKeys.tsx` for the read-only
+   idiom. For a **reorderable / master-detail** list use `OrderedList`; for
+   hierarchy use `Tree` / `Accordion`.
 3. **A reorderable / resizable / tiled collection of surfaces**? Use the **`Stack` from
    `@dxos/react-ui-mosaic`** (`MosaicStack` / `MosaicVirtualStack`, with `MosaicStackTileComponent`
    tiles).
@@ -137,7 +171,7 @@ Pick the collection primitive by decision order — don't hand-roll a list of ma
 **Do NOT use `@dxos/react-ui-stack` — it is deprecated.** (Some plugins still import it; don't copy them.)
 The live Stack is the Mosaic one.
 
-**`dx-current` / `dx-selected` are automatic.** `List` and `Stack` drive current-item and selection state
+**`dx-current` / `dx-selected` are automatic.** `Listbox` and `Stack` drive current-item and selection state
 themselves (via react-tabster keyboard navigation) — you don't set those classes or wire focus by hand.
 Like `Form`, both **own their own padding and spacing**, so drop them straight into a `ScrollArea.Viewport`
 without a padded wrapper.
@@ -152,15 +186,14 @@ keyboard shortcuts) target the right surface. Skipping this breaks plugin compos
 ```tsx
 const actionsAtom = useMemo(
   () =>
-    Atom.make(
-      (): ActionGraphProps =>
-        MenuBuilder.make()
-          .action(
-            'add',
-            { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' },
-            handleAdd,
-          )
-          .build(),
+    Atom.make((): ActionGraphProps =>
+      MenuBuilder.make()
+        .action(
+          'add',
+          { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' },
+          handleAdd,
+        )
+        .build(),
     ),
   [handleAdd],
 );
@@ -204,6 +237,37 @@ The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `
 read fields not surfaced on `Snapshot<T>`). For _collections_ of objects use the reactive `useQuery`
 rather than holding a plain array. (Pure presentational components that just receive scalar props don't
 need any of this — keep `useObject` at the container boundary where the ECHO object enters.)
+
+## State management
+
+Two state stores — don't conflate them (full detail:
+`packages/ui/react-ui-attention/AUDIT.md`):
+
+- **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
+  Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);
+  read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
+- **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
+  view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with
+  `define({ key, backend, schema, defaultValue })`; the `backend` sets durability —
+  `'local'` persists across reloads (best-effort; degrades to memory when storage is blocked),
+  `'memory'` is session-only. Read/write via `useViewState` / `useViewStateActions` (React), or
+  `Capability.get(AttentionCapabilities.ViewState)` (operations / graph-builders). Idiom
+  `org.dxos.react-ui-attention.viewState`.
+
+The tell: _configure-once-and-forget_ → Settings; _tracks-what-you're-currently-doing_ → ViewState.
+Keep at most **one Settings object and one ViewState object per aspect** per plugin — widen an
+existing schema, don't add a parallel store.
+
+Passing state into low-level components (which must not resolve capabilities): prefer a **writable
+atom** over a `value` + `onChange` pair — simpler, and it needs no provider ancestor, so the component
+stays generic. **Caveat:** a ViewState `local` atom does _not_ self-persist on a direct set —
+persistence lives in `manager.set`. To hand ViewState down as one atom (e.g. combined with a settings
+field), use a writable derived atom whose write calls `manager.set` (see `MessageArticle`'s
+`optionsAtom`).
+
+Consider factoring each state concern into a small **file-local hook** (e.g., `useMessageExpansion`,
+`useThreadViewActions`) so the container body reads as a sequence
+of named concerns instead of an inline wall.
 
 ## Forms
 
@@ -279,6 +343,23 @@ or wrap it in one element occupying slot 2:
 </Card.Header>
 ```
 
+**Content parts must live inside a subgrid part, never directly under `Card.Root`.** `Card.Title`,
+`Card.Text`, and `Card.Block` carry no column placement of their own — the center-track placement comes
+from `Card.Header` / `Card.Row` / `Card.Section`. A `Card.Text` (or `Card.Title`) dropped straight into
+`Card.Root` — or into `Card.Body`, which is `display:contents` and so doesn't place either — CSS-grid
+auto-places into a **gutter** track and renders squeezed/clamped. Wrap free body text in a `Card.Row`:
+
+```tsx
+<Card.Root>
+  <Card.Header>
+    <Card.Title>…</Card.Title>
+  </Card.Header>
+  <Card.Row>
+    <Card.Text variant='description'>…</Card.Text> {/* NOT a direct Card.Root/Card.Body child */}
+  </Card.Row>
+</Card.Root>
+```
+
 A card used as the child of `Focus.Item asChild` (or any Radix `Slot`/`asChild`) must be composable — a
 single element that forwards `ref` and spreads injected props, or the Slot's `ref`/handlers silently drop
 and current/keyboard/click wiring never attaches. Make presentational cards `forwardRef` and spread:
@@ -330,9 +411,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {
-  args: {
-    /* realistic props */
-  },
+  args: {/* realistic props */},
 };
 ```
 
@@ -375,7 +454,7 @@ never the repo root. If a story renders empty with "Invalid hook call" / "Cannot
 
 - Layout from `Panel.*` + `ScrollArea.*`; no wrapper `<div>`s for styling; `asChild` when the child is composable.
 - Let `Form`/`List`/`Stack` own their padding/spacing — don't double-pad them.
-- Collections: existing picker/combobox → `react-ui-list` list → Mosaic `Stack`. Never `@dxos/react-ui-stack` (deprecated).
+- Collections: never hand-roll a list of mapped `<div>`s — existing picker/combobox → `react-ui-list` (`Listbox` for flat lists; `OrderedList`/`Tree`/`Accordion` otherwise) → Mosaic `Stack`. `@dxos/react-ui` `List`/`ListItem` and `@dxos/react-ui-stack` are deprecated.
 - Colors from verified tokens (grep `semantic.css` / copy a component); no invented tokens, no `className`.
 - Toolbars via `MenuBuilder` + `useMenuActions` + `Menu.Root` with `attendableId`.
 - Object editing via composed `Form` (`Viewport`/`Content`/`FieldSet`) + schema; no native inputs; form never mutates `values`.

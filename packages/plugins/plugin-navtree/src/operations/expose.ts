@@ -10,7 +10,7 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { Graph } from '@dxos/plugin-graph';
-import { expandAttendableId } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { NavTreeCapabilities } from '../types';
 
@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Expose> = LayoutOper
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const { getItem, setItem } = yield* Capability.get(NavTreeCapabilities.State);
 
-      const prefixes = expandAttendableId(subject);
+      const prefixes = Attention.expandAttendableId(subject);
 
       for (const qualifiedId of prefixes) {
         Graph.expand(graph, qualifiedId, 'child');

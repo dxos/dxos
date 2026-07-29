@@ -24,7 +24,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { hero } from './hero-image';
-import { type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
+import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
 
 const supportsPasskeys =
   (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();
@@ -32,11 +32,18 @@ const supportsPasskeys =
 /** OAuth provider backing the "Atmosphere account" option (atproto / Bluesky). */
 const ATMOSPHERE_PROVIDER = 'atproto';
 
+const errorMessageKeys: Record<WelcomeError, string> = {
+  'email': 'email-error.message',
+  'oauth': 'oauth-error.message',
+  'passkey-dismissed': 'passkey-dismissed-error.message',
+  'passkey-rejected': 'passkey-rejected-error.message',
+  'passkey-failed': 'passkey-failed-error.message',
+};
+
 export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
 
-// Underline tab style (overrides the react-ui Tabs.Tab button chrome) to match the prior look:
-// flat, full-width tabs with a bottom border that highlights the active one.
+// Flat, full-width tabs with a bottom border that highlights the active one.
 const tabClassNames =
   'flex-1 rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
   'border-b-2 border-transparent text-description transition-colors hover:text-white ' +
@@ -116,6 +123,19 @@ export const Welcome = ({
   //
   // Login handlers
   //
+
+  // Holds `pending` for the whole WebAuthn ceremony so a second click can't open a duplicate prompt.
+  const handlePasskey = useCallback(async () => {
+    if (pending) {
+      return;
+    }
+    setPending(true);
+    try {
+      await onPasskey?.();
+    } finally {
+      setPending(false);
+    }
+  }, [pending, onPasskey]);
 
   const handleSendSignInLink = useCallback(async () => {
     if (!validEmail(email)) {
@@ -286,12 +306,12 @@ export const Welcome = ({
           >
             <Tabs.Viewport classNames='flex flex-col gap-6'>
               <Tabs.Tablist classNames='p-0 gap-1 border-b border-neutral-700'>
-                <Tabs.Tab value='login' classNames={tabClassNames}>
+                <Tabs.Button value='login' classNames={tabClassNames}>
                   {t('login-tab.label')}
-                </Tabs.Tab>
-                <Tabs.Tab value='signup' classNames={tabClassNames}>
+                </Tabs.Button>
+                <Tabs.Button value='signup' classNames={tabClassNames}>
                   {t('signup-tab.label')}
-                </Tabs.Tab>
+                </Tabs.Button>
               </Tabs.Tablist>
 
               <Tabs.Panel value='login'>
@@ -302,9 +322,9 @@ export const Welcome = ({
                   emailValue={email}
                   setEmailValue={setEmail}
                   emailRef={emailRef}
-                  emailError={error}
+                  error={error}
                   pending={pending}
-                  onPasskey={onPasskey}
+                  onPasskey={onPasskey ? handlePasskey : undefined}
                   onSendSignInLink={handleSendSignInLink}
                   onEmailKeyDown={handleEmailKeyDown}
                   onJoinIdentity={onJoinIdentity}
@@ -377,7 +397,7 @@ export const Welcome = ({
                       submitLabel={t('continue-button.label')}
                       submitDisabled={!validEmail(email) || pending}
                       onSubmit={handleCreateAccount}
-                      validation={error ? t('email-error.message') : null}
+                      validation={error === 'email' ? t(errorMessageKeys.email) : null}
                     />
                     {onCreateAccountWithOAuth && (
                       <>
@@ -408,6 +428,7 @@ export const Welcome = ({
                                 loginHint: atmosphereHandle,
                               })
                             }
+                            validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
                           />
                         </div>
                       </>
@@ -481,7 +502,7 @@ type LoginTabProps = {
   emailValue: string;
   setEmailValue: (value: string) => void;
   emailRef: React.Ref<HTMLInputElement>;
-  emailError?: boolean;
+  error?: WelcomeError | null;
   pending: boolean;
   onPasskey?: () => unknown;
   onSendSignInLink: () => void;
@@ -506,7 +527,7 @@ const LoginTab = ({
   emailValue,
   setEmailValue,
   emailRef,
-  emailError,
+  error,
   pending,
   onPasskey,
   onSendSignInLink,
@@ -622,10 +643,22 @@ const LoginTab = ({
       <h2 className='text-2xl'>{identity ? t('existing-identity.title') : t('welcome-back.title')}</h2>
       {/* Primary method */}
       {primary === 'passkey' && supportsPasskeys && onPasskey && (
-        <Button variant='primary' classNames='w-full justify-center gap-2' onClick={onPasskey}>
-          <Icon icon='ph--key--regular' size={5} />
-          <span>{t('sign-in-with-passkey-button.label')}</span>
-        </Button>
+        <div className='flex flex-col gap-2'>
+          <Button
+            variant='primary'
+            classNames='w-full justify-center gap-2 disabled:bg-neutral-800'
+            disabled={pending}
+            onClick={onPasskey}
+          >
+            <Icon icon='ph--key--regular' size={5} />
+            <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
+          </Button>
+          {error?.startsWith('passkey-') && (
+            <Input.Root>
+              <ValidationMessage>{t(errorMessageKeys[error])}</ValidationMessage>
+            </Input.Root>
+          )}
+        </div>
       )}
       {primary === 'email' && (
         <div className='flex flex-col gap-2'>
@@ -641,7 +674,7 @@ const LoginTab = ({
             submitLabel={t('send-link-button.label')}
             submitDisabled={!validEmail(emailValue) || pending}
             onSubmit={onSendSignInLink}
-            validation={emailError ? t('email-error.message') : null}
+            validation={error === 'email' ? t(errorMessageKeys.email) : null}
           />
         </div>
       )}
@@ -663,6 +696,7 @@ const LoginTab = ({
             submitLabel={t('continue-button.label')}
             submitDisabled={!atmosphereHandle || pending}
             onSubmit={() => onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle)}
+            validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
           />
         </div>
       )}
@@ -748,14 +782,21 @@ const InlineForm = ({
           {submitLabel}
         </Button>
       </div>
-      {validation && (
-        <Input.DescriptionAndValidation>
-          <Input.Validation classNames='flex px-2 pt-2 text-error-text'>{validation}</Input.Validation>
-        </Input.DescriptionAndValidation>
-      )}
+      {validation && <ValidationMessage>{validation}</ValidationMessage>}
     </Input.Root>
   );
 };
+
+/**
+ * Error text under a login control. Shared with {@link InlineForm} so a failure reads the same
+ * whether it came from a field (email, invitation code) or a button (passkey). Callers outside
+ * `InlineForm` must supply their own `Input.Root` — it is context only and renders no markup.
+ */
+const ValidationMessage = ({ children }: PropsWithChildren) => (
+  <Input.DescriptionAndValidation>
+    <Input.Validation classNames='flex px-2 pt-2 text-error-text'>{children}</Input.Validation>
+  </Input.DescriptionAndValidation>
+);
 
 /** Horizontal "or" separator between alternative auth methods. */
 const OrDivider = ({ children }: PropsWithChildren) => (

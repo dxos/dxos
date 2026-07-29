@@ -40,7 +40,7 @@ const value: ConfigProto = {
         subductionReplicator: true,
         signaling: true,
       },
-      servicesMode: Runtime.Client.ServicesMode.SHARED_WORKER,
+      servicesMode: Runtime.Client.ServicesMode.DEDICATED_WORKER,
       enableSnapshots: false,
       snapshotInterval: 60_000,
     },

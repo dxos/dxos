@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { type Script } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
+import { FunctionsServiceClient } from '@dxos/edge-compute';
 import { Panel } from '@dxos/react-ui';
 
 import { TestPanel } from '#components';

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Operation, Trigger } from '@dxos/compute';
 import { Feed, Filter } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 

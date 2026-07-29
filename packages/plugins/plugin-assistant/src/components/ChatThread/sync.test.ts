@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 
 import { EditorView } from '@codemirror/view';
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
@@ -92,6 +92,40 @@ describe('reducers', () => {
       });
       syncer.update(messages);
       expect(doc.content).toEqual('\n<prompt>Hello</prompt>\n\nHi there! How are you?\nHow can I help?\n');
+    }),
+  );
+
+  it.effect(
+    'tracks per-message document ranges',
+    Effect.fn(function* ({ expect }) {
+      const doc = new TestDocument();
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
+
+      const messages = [
+        createMessage('user', [{ _tag: 'text', text: 'Hello' }]),
+        createMessage('assistant', [{ _tag: 'text', text: 'Hi there!' }]),
+      ];
+
+      syncer.update(messages);
+      const ranges = syncer.getRanges();
+      expect(ranges.map((range) => range.id)).toEqual([messages[0].id, messages[1].id]);
+      // Ranges tile the document contiguously and slice back to each message's rendered content.
+      expect(ranges[0].from).toEqual(0);
+      expect(ranges[1].from).toEqual(ranges[0].to);
+      expect(ranges[1].to).toEqual(doc.length);
+      expect(doc.content.slice(ranges[0].from, ranges[0].to)).toContain('<prompt>Hello</prompt>');
+      expect(doc.content.slice(ranges[1].from, ranges[1].to)).toContain('Hi there!');
+
+      // Appending to the last message extends its range through the append path.
+      Obj.update(messages[1], (obj) => {
+        obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
+      });
+      syncer.update(messages);
+      const extended = syncer.getRanges();
+      expect(extended).toHaveLength(2);
+      expect(extended[0].to).toEqual(ranges[0].to);
+      expect(extended[1].to).toEqual(doc.length);
+      expect(doc.content.slice(extended[1].from, extended[1].to)).toContain('How can I help?');
     }),
   );
 
@@ -252,6 +286,46 @@ describe('reducers', () => {
       const closeTagCount = (doc.content.match(/<\/reasoning>/g) ?? []).length;
       expect(openTagCount).toBe(1);
       expect(closeTagCount).toBe(1);
+    }),
+  );
+});
+
+describe('MessageSyncer tool widget rehydration', () => {
+  it.effect(
+    'restores tool widget state after reset replaces the document',
+    Effect.fnUntraced(function* (_) {
+      const updates: { id: string; value: any }[] = [];
+      class RecordingDocument extends TestDocument {
+        override updateWidget(id: string, value: any) {
+          updates.push({ id, value });
+        }
+      }
+
+      const document = new RecordingDocument();
+      const syncer = new MessageSyncer(document, createBlockRenderer('thinking'));
+      const messages = [
+        createMessage('assistant', [
+          { _tag: 'toolCall', toolCallId: 'abc', name: 'search', input: '{}', providerExecuted: false },
+        ]),
+        createMessage('user', [
+          { _tag: 'toolResult', toolCallId: 'abc', name: 'search', result: 'ok', providerExecuted: false },
+        ]),
+      ] as Message.Message[];
+
+      syncer.reset(messages);
+      // `reset` rehydrates in a promise continuation after `setContent`.
+      yield* Effect.promise(() => Promise.resolve());
+      yield* Effect.promise(() => Promise.resolve());
+
+      // Reduce the dispatches the way the widget state store does: each is either a value or a
+      // function of the previous state, applied in arrival order.
+      const forTool = updates.filter((update) => update.id === 'abc');
+      expect(forTool.length).toBeGreaterThan(0);
+      const state = forTool.reduce<{ blocks: ContentBlock.Any[] }>(
+        (previous, { value }) => (typeof value === 'function' ? value(previous) : value),
+        { blocks: [] },
+      );
+      expect(state.blocks.map((block) => block._tag)).toEqual(['toolCall', 'toolResult']);
     }),
   );
 });

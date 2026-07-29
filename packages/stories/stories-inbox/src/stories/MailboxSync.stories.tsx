@@ -9,10 +9,13 @@ import React from 'react';
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { persistentClientServices } from '@dxos/client/testing';
+import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
@@ -20,84 +23,103 @@ import { Mailbox } from '@dxos/plugin-inbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import { translations as progressTranslations } from '@dxos/plugin-progress/translations';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/story-modules';
-import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
+import { ModuleContainer } from '@dxos/storybook-testing';
+import { Message, Organization, Person } from '@dxos/types';
 
-import { Module, StoryModulesPlugin, StorySyncPlugin } from '../testing';
+import { StoryRole } from '../modules';
+import { StorySyncPlugin } from '../testing';
+import { StoryModulesPlugin } from '../testing/modules';
 
-const SYNC_STORY_TYPES = [
+const TYPES = [
   AccessToken.AccessToken,
   Connection.Connection,
   Cursor.Cursor,
   Feed.Feed,
   Mailbox.Mailbox,
   Message.Message,
+  Operation.PersistentOperation,
   Organization.Organization,
   Person.Person,
-  SyncBinding.SyncBinding,
   Tag.Tag,
   TagIndex.TagIndex,
+  Trigger.Trigger,
 ];
 
 // Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
-const SYNC_STORY_CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
+const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'main' }));
+
+const DECORATORS = [
+  withSurfaceDebug(false),
+  withLayout({ layout: 'fullscreen' }),
+  withPluginManager(() => ({
+    setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
+    plugins: [
+      ...corePlugins(),
+      ClientPlugin({
+        types: TYPES,
+        ...CLIENT_SERVICES,
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            if (client.halo.identity.get()) {
+              return;
+            }
+
+            const { personalSpace } = yield* initializeIdentity(client);
+            personalSpace.db.add(Mailbox.make());
+            yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+          }),
+      }),
+      SpacePlugin({}),
+      InboxPlugin(),
+      ConnectorPlugin(),
+      DebugPlugin({}),
+      AssistantPlugin(),
+      PreviewPlugin(),
+      ProgressPlugin(),
+      RoutinePlugin(),
+      StorySyncPlugin(),
+      StoryModulesPlugin(),
+      StorybookPlugin({}),
+    ],
+  })),
+];
 
 const DefaultStory = () => (
   <ModuleContainer
-    layout={[[Module.Mailbox], [Module.Message], [Module.Connector, Module.Archive, Module.Stats]]}
+    layout={[
+      [StoryRole.Mailbox, StoryRole.Message],
+      [StoryRole.Archive, StoryRole.Stats, StoryRole.SyncState],
+      [StoryRole.Connector, StoryRole.Triggers],
+      [StoryRole.Trace],
+      [StoryRole.SwarmTrace],
+    ]}
     compact
   />
 );
 
 const meta = {
   title: 'stories/stories-inbox/MailboxSync',
-  render: DefaultStory,
-  decorators: [
-    withSurfaceDebug(false),
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager(() => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          types: SYNC_STORY_TYPES,
-          ...SYNC_STORY_CLIENT_SERVICES,
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              if (client.halo.identity.get()) {
-                return;
-              }
-
-              const { personalSpace: space } = yield* initializeIdentity(client);
-              space.db.add(Mailbox.make());
-              yield* Effect.promise(() => space.db.flush({ indexes: true }));
-            }),
-        }),
-        SpacePlugin({}),
-        InboxPlugin(),
-        ConnectorPlugin(),
-        DebugPlugin({}),
-        PreviewPlugin(),
-        StorySyncPlugin(),
-        StoryModulesPlugin(),
-        StorybookPlugin({}),
-      ],
-    })),
-  ],
+  component: DefaultStory,
+  decorators: DECORATORS,
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...inboxTranslations, ...connectorTranslations],
+    translations: [...inboxTranslations, ...connectorTranslations, ...progressTranslations],
   },
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  render: DefaultStory,
+};

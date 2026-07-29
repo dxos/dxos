@@ -3,19 +3,25 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom-react';
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import { Atom } from '@effect-atom/atom';
+import * as Option from 'effect/Option';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, UrlResolution } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { useActionRunner } from '@dxos/plugin-graph';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
+import { useIdentity } from '@dxos/halo-react';
+import { log } from '@dxos/log';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Panel } from '@dxos/react-ui';
-import { type ViewStateManager } from '@dxos/react-ui-attention';
-import { Editor } from '@dxos/react-ui-editor';
+import { ViewState } from '@dxos/react-ui-attention';
+import { Editor, type ViewModeItem, defaultViewModeItems, useEditorContext } from '@dxos/react-ui-editor';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
+import { Merge } from '@dxos/util';
 
 import {
   MarkdownEditor,
@@ -24,31 +30,151 @@ import {
   type MarkdownEditorProviderProps,
 } from '#components';
 import { useLinkQuery } from '#hooks';
-import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
+import {
+  type EditorBinding,
+  Markdown,
+  MarkdownCapabilities,
+  type MarkdownPluginState,
+  type ReviewMode,
+  type UseEditorBinding,
+  type ViewModeSelection,
+} from '#types';
+
+import { mergeConflicts } from '../../extensions';
+
+/**
+ * Built-in binding when no {@link MarkdownCapabilities.EditorBindingHook} is contributed: bind the
+ * object directly, no review affordances. The review mode is kept locally so contributed view-mode
+ * entries (e.g. Suggesting) still toggle without a versioning host.
+ */
+const useDefaultEditorBinding: UseEditorBinding = ({ object, viewMode, onViewModeChange }) => {
+  const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
+  const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
+  // Contributed review modes have no host here; remember the active one so its entry still checks.
+  const [activeReviewMode, setActiveReviewMode] = useState<ReviewMode | undefined>(undefined);
+  const selectViewMode = useCallback(
+    (selection: ViewModeSelection) => {
+      if (selection.kind === 'builtin') {
+        setActiveReviewMode(undefined);
+        onViewModeChange?.(selection.viewMode);
+      } else {
+        setActiveReviewMode(selection.reviewMode);
+        // Contributed modes are editable postures: step off a stale readonly view mode (mirrors
+        // `applyViewModeSelection` in the review binding) or the mode reads active but cannot type.
+        if (viewMode === 'readonly') {
+          onViewModeChange?.('source');
+        }
+      }
+    },
+    [onViewModeChange, viewMode],
+  );
+  return {
+    subject: object,
+    initialValue: docContent ?? textContent,
+    key: 'current',
+    viewMode,
+    loading: false,
+    ambient: true,
+    selectViewMode,
+    activeReviewMode,
+  };
+};
+
+/**
+ * Calls the (single) binding hook through a component boundary so a change in which hook is
+ * contributed remounts the boundary rather than violating the rules of hooks.
+ */
+// TODO(burdon): Review this mechanism.
+const BindingBoundary = ({
+  useBinding,
+  props,
+  children,
+}: {
+  useBinding: UseEditorBinding;
+  props: Parameters<UseEditorBinding>[0];
+  children: (binding: EditorBinding) => React.ReactNode;
+}) => <>{children(useBinding(props))}</>;
+
+// Mints a stable boundary key per hook identity: a REPLACED contribution (not just added/removed)
+// must also remount the boundary, or the new hook would run against the old hook's state order.
+const bindingKeys = new WeakMap<UseEditorBinding, number>();
+let nextBindingKey = 0;
+const bindingKeyOf = (hook: UseEditorBinding): string => {
+  let key = bindingKeys.get(hook);
+  if (key === undefined) {
+    key = ++nextBindingKey;
+    bindingKeys.set(hook, key);
+  }
+  return `binding-${key}`;
+};
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
-  {
-    id: string;
-    settings: Markdown.Settings;
-    viewState?: ViewStateManager;
-  } & Pick<MarkdownPluginState, 'extensionProviders'> &
-    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
+  Merge<
+    {
+      id: string;
+      settings: Markdown.Settings;
+      viewState?: ViewState.Manager;
+      /** Overrides the default navigation when an internal link resolves to a node. */
+      onSelectObject?: (objectId: string) => void;
+    },
+    Pick<MarkdownPluginState, 'extensionProviders'>,
+    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onViewModeChange'>,
     Pick<MarkdownEditorContentProps, 'editorStateStore'>
+  >
 >;
 
-export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
+export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>((props, forwardedRef) => {
+  const { subject: object, id, settings, viewMode } = props;
+  // At most one contributed binding hook is honored; the boundary key remounts the subtree
+  // whenever the effective hook's identity changes, keeping hook order legal.
+  const bindingHooks = useCapabilities(MarkdownCapabilities.EditorBindingHook);
+  if (bindingHooks.length > 1) {
+    log.warn('multiple EditorBindingHook contributions; only the first is honored', {
+      count: bindingHooks.length,
+    });
+  }
+  const useBinding = bindingHooks.length > 0 ? bindingHooks[0] : useDefaultEditorBinding;
+  const { onViewModeChange } = props;
+  const bindingProps = useMemo(
+    () => ({ object, id, viewMode, onViewModeChange, diffView: settings.diffView }),
+    [object, id, viewMode, onViewModeChange, settings.diffView],
+  );
+
+  return (
+    <BindingBoundary key={bindingKeyOf(useBinding)} useBinding={useBinding} props={bindingProps}>
+      {(binding) => <MarkdownArticleImpl {...props} binding={binding} ref={forwardedRef} />}
+    </BindingBoundary>
+  );
+});
+
+MarkdownArticle.displayName = 'MarkdownArticle';
+
+const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { binding: EditorBinding }>(
   (
-    { role, subject: object, id, attendableId, settings, extensionProviders, onSelectObject, viewMode, ...props },
+    {
+      role,
+      subject: object,
+      id,
+      attendableId,
+      settings,
+      extensionProviders,
+      onSelectObject,
+      viewMode,
+      onViewModeChange,
+      binding,
+      ...props
+    },
     forwardedRef,
   ) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
-    const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
-    const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
-    const initialValue = docContent ?? textContent;
 
-    // Extensions from other plugins.
+    // Local identity (collaboration awareness).
+    const identity = useIdentity();
+
+    // Extensions from other plugins, given the binding's review context.
     const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+    const extensionProps = binding.extensionProps;
     const extensions = useMemo<Extension[]>(() => {
       if (!Obj.instanceOf(Markdown.Document, object) && !Obj.instanceOf(Text.Text, object)) {
         return [];
@@ -58,26 +184,75 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       return [...(otherExtensionProviders ?? []), ...(extensionProviders ?? [])]
         .flat()
         .reduce((acc: Extension[], provider) => {
-          const extension = typeof provider === 'function' ? provider({ document, viewMode }) : provider;
+          const extension =
+            typeof provider === 'function'
+              ? provider({ document, viewMode, showComments: true, ...extensionProps })
+              : provider;
           if (extension) {
             acc.push(extension);
           }
 
           return acc;
         }, []);
-    }, [extensionProviders, otherExtensionProviders, object, viewMode]);
+    }, [extensionProviders, otherExtensionProviders, object, viewMode, extensionProps]);
 
-    // Toolbar actions from app graph.
-    const { graph } = useAppGraph();
+    // The binding's extensions (review overlays/compartments) are stable across keystrokes by
+    // construction — recreating this array remounts nothing but recreates the editor state config.
+    const combinedExtensions = useMemo<Extension[]>(
+      () => [...extensions, mergeConflicts(), ...(binding.extensions ?? [])],
+      [extensions, binding.extensions],
+    );
+
+    // Toolbar actions from the app graph. Branch selection / suggest / return-to-main live in the
+    // History companion (the advanced path); the ambient review mode (incl. Suggesting) is surfaced in
+    // the editor view-mode dropdown below.
+    const builder = useAppGraph();
+    const { graph } = builder;
     const runAction = useActionRunner();
-    const customActions = useMemo(() => {
-      return Atom.make((get) => {
-        const actions = get(graph.actions(attendableId ?? id));
-        const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-        const edges = nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' }));
-        return { nodes, edges };
-      });
-    }, [graph]);
+    const customActions = useMemo(
+      () => Atom.make((get) => graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction })),
+      [graph, attendableId, id],
+    );
+
+    // View-mode dropdown entries: the built-in editor modes plus any contributed review modes (e.g.
+    // Suggesting from plugin-review). Each entry forwards ONE selection to the binding, which owns
+    // what it means — the article does no mode arithmetic, so the review posture and the editor view
+    // mode can never be updated out of step here. Off the ambient path (an explicit branch/checkpoint
+    // is selected) the review mode has no effect, so only the built-in editor modes are shown.
+    const { ambient, activeReviewMode, selectViewMode } = binding;
+    const viewModeExtensions = useCapabilities(MarkdownCapabilities.ViewModeExtension);
+    // Bumped on every dropdown selection: the menu returns focus to its trigger on close, so the
+    // editor must be handed the focus back (the caret survives in editor state) — see RefocusEditor.
+    const [focusRequest, setFocusRequest] = useState(0);
+    const viewModes = useMemo<ViewModeItem[]>(() => {
+      const current = viewMode ?? 'source';
+      const contributed: ViewModeItem[] = ambient
+        ? [...viewModeExtensions]
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+            .map((extension) => ({
+              id: extension.id,
+              icon: extension.icon,
+              label: extension.label,
+              checked: activeReviewMode === extension.reviewMode,
+              onSelect: () => {
+                selectViewMode({ kind: 'contributed', reviewMode: extension.reviewMode });
+                setFocusRequest((count) => count + 1);
+              },
+            }))
+        : [];
+      const contributedActive = contributed.some((item) => item.checked);
+      const builtin: ViewModeItem[] = defaultViewModeItems.map((item) => ({
+        ...item,
+        // A contributed mode owns the single checked slot when active;
+        // otherwise the built-in matching the current editor view mode is checked.
+        checked: !contributedActive && item.id === current,
+        onSelect: () => {
+          selectViewMode({ kind: 'builtin', viewMode: item.id });
+          setFocusRequest((count) => count + 1);
+        },
+      }));
+      return [...builtin, ...contributed];
+    }, [viewMode, ambient, activeReviewMode, selectViewMode, viewModeExtensions]);
 
     // File upload.
     const [upload] = useCapabilities(AppCapabilities.FileUploader);
@@ -95,13 +270,15 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // Open linked objects.
     const { invokePromise } = useOperationInvoker();
     const handleSelectObject = useCallback(
-      (targetId: string) => {
+      (targetId: string, modifiers?: { shift: boolean }) => {
         if (onSelectObject) {
           onSelectObject(targetId);
         } else {
           void invokePromise?.(LayoutOperation.Open, {
             subject: [targetId],
             pivotId: attendableId,
+            disposition: 'auto',
+            modifiers: { shift: modifiers?.shift },
             // TODO(wittjosiah): This should probably pre-validate.
             navigation: 'immediate',
           });
@@ -110,32 +287,64 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       [onSelectObject, invokePromise, attendableId],
     );
 
+    // An internal link carries only a URL pathname; resolving it walks the graph, so it is async and
+    // no-ops when the link does not name an existing node.
+    const handleSelectLink = useCallback(
+      async (pathname: string, modifiers?: { shift: boolean }) => {
+        const nodeId = await EffectEx.runPromise(UrlResolution.resolveInternalLink(builder, pathname));
+        if (Option.isNone(nodeId)) {
+          log.warn('internal link did not resolve to a node', { pathname });
+          return;
+        }
+
+        handleSelectObject(nodeId.value, modifiers);
+      },
+      [builder, handleSelectObject],
+    );
+
+    if (binding.loading) {
+      return <Panel.Root role={role} ref={forwardedRef} />;
+    }
+
     return (
       <MarkdownEditorProvider
+        key={binding.key}
         id={id}
         attendableId={attendableId}
-        object={object}
+        object={binding.subject}
         compact={role !== AppSurface.Article.role}
-        extensions={extensions}
+        extensions={combinedExtensions}
         settings={settings}
-        viewMode={viewMode}
+        viewMode={binding.viewMode ?? viewMode}
+        identity={identity}
         onAction={runAction}
         onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}
-        onSelectObject={handleSelectObject}
+        onSelectLink={handleSelectLink}
+        onViewModeChange={onViewModeChange}
         {...props}
       >
         {(editorRootProps) => (
           <Editor.Root {...editorRootProps}>
+            <RegisterEditorView id={id} attendableId={attendableId} />
+            <RefocusEditor request={focusRequest} />
+            {binding.overlays}
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
                 <Panel.Toolbar>
-                  <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
+                  <MarkdownEditor.Toolbar
+                    classNames='dx-document'
+                    customActions={customActions}
+                    viewModes={viewModes}
+                  />
                 </Panel.Toolbar>
               )}
-              <Panel.Content>
-                <MarkdownEditor.Content initialValue={initialValue} />
-                <MarkdownEditor.Blocks />
+              <Panel.Content classNames='flex flex-col'>
+                {binding.banner}
+                <MarkdownEditor.Content initialValue={binding.initialValue} />
+                <Editor.Blocks />
+                {/* Developer diagnostics panel (live editor state), gated behind the debug setting. */}
+                {settings.debug && <Editor.Diagnostics />}
               </Panel.Content>
             </Panel.Root>
           </Editor.Root>
@@ -145,4 +354,50 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
   },
 );
 
-MarkdownArticle.displayName = 'MarkdownArticle';
+MarkdownArticleImpl.displayName = 'MarkdownArticleImpl';
+
+/**
+ * Registers the mounted editor view in the shared `EditorViews` registry so operations (e.g.
+ * `ScrollToAnchor` from comments/navigation) can target it by id. Must render inside `Editor.Root`.
+ */
+/**
+ * Hands focus back to the editor after a view-mode dropdown selection: the menu returns focus to its
+ * trigger on close, which strands the caret (still intact in editor state) until the user clicks.
+ * The menu's own focus return can land after close animations, so a single deferred focus loses the
+ * race — retry over a short bounded window instead, stopping as soon as the editor holds focus.
+ * Gated on the explicit selection counter so the editor never steals focus on ambient changes.
+ */
+const RefocusEditor = ({ request }: { request: number }) => {
+  const { controller } = useEditorContext('MarkdownArticle.RefocusEditor');
+  const view = controller?.view;
+  useEffect(() => {
+    if (request === 0 || !view) {
+      return;
+    }
+    const deadline = Date.now() + 500;
+    const interval = setInterval(() => {
+      if (view.hasFocus || Date.now() > deadline) {
+        clearInterval(interval);
+        return;
+      }
+      view.focus();
+    }, 50);
+    return () => clearInterval(interval);
+  }, [request, view]);
+
+  return null;
+};
+
+const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: string }) => {
+  const { controller } = useEditorContext('MarkdownArticle.RegisterEditorView');
+  const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
+  const view = controller?.view;
+  useEffect(() => {
+    if (view && editorViews) {
+      editorViews.register(attendableId ?? id, view, id);
+      return () => editorViews.unregister(attendableId ?? id);
+    }
+  }, [view, editorViews, attendableId, id]);
+
+  return null;
+};

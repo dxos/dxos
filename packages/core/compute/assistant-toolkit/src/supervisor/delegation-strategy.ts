@@ -6,12 +6,13 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
+import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
 import { Instructions } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { type Delegation, type DelegationStrategy } from '@dxos/functions-runtime';
+import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -39,26 +40,29 @@ const findChatForFeed = (feed: Feed.Feed): Effect.Effect<Chat.Chat | undefined, 
   });
 
 /**
- * Resolves the agent whose chat is backed by the given conversation feed, if any. Plain (agentless)
- * chats yield `undefined`, so artifact folding is skipped for them.
+ * Resolves the agent whose chat is backed by the given conversation feed, if any.
+ * Plain (agentless) chats yield `undefined`.
  */
 const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefined, never, Database.Service> =>
   Effect.gen(function* () {
-    const agents = yield* Database.query(Filter.type(Agent.Agent)).run;
-    for (const agent of agents) {
-      if (!agent.chat) {
-        continue;
-      }
-      const matches = yield* Effect.gen(function* () {
-        const chat = yield* Database.load(agent.chat!);
-        const chatFeed = yield* Database.load(chat.feed);
-        return chatFeed.id === feed.id;
-      }).pipe(Effect.orElseSucceed(() => false));
-      if (matches) {
-        return agent;
-      }
+    const chat = yield* findChatForFeed(feed);
+    return chat ? yield* Agent.loadForChat(chat) : undefined;
+  });
+
+/**
+ * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
+ * fully-qualified ref in the current space. Not resolved here — it resolves lazily when read.
+ */
+const resolveArtifactRef = (id: string): Effect.Effect<Ref.Ref<Obj.Unknown>, Error, Database.Service> =>
+  Effect.gen(function* () {
+    const parsed = EID.tryParse(id);
+    const candidate = (parsed ? EID.getEntityId(parsed) : undefined) ?? id;
+    if (!EntityId.isValid(candidate)) {
+      // Malformed LLM-reported id: fail so the caller's `orElseSucceed` drops it.
+      return yield* Effect.fail(new Error(`Invalid artifact id: ${id}`));
     }
-    return undefined;
+    const { db } = yield* Database.Service;
+    return db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId: candidate }));
   });
 
 /**
@@ -166,7 +170,8 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
   onComplete: (feed, id, exit) =>
     Effect.gen(function* () {
       const chat = yield* findChatForFeed(feed);
-      const agent = yield* findAgentForFeed(feed);
+      // Reuse the chat just resolved rather than re-scanning every chat for the same feed.
+      const agent = chat ? yield* Agent.loadForChat(chat) : undefined;
       const plan =
         chat?.plan != null ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
 
@@ -181,15 +186,13 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         });
       }
 
-      // Fold any artifacts the sub-agent produced into the supervisor agent's context, so follow-up
-      // turns can reference them. The sub-agent runs in its own session but in the same space, so
-      // the artifacts resolve by id. Keep the stored refs to embed as inline reference blocks below.
+      // Surface any artifacts the sub-agent produced as inline reference blocks in the notification
+      // message, so follow-up turns can reference them (durable filing belongs to the project's
+      // collection — the agent stores no artifacts).
       const artifactRefs: Ref.Ref<Obj.Unknown>[] = [];
       if (agent && Exit.isSuccess(exit)) {
         for (const artifactId of extractArtifactIds(exit.value)) {
-          const ref = yield* Agent.addArtifact(agent, { name: title, id: artifactId }).pipe(
-            Effect.orElseSucceed(() => undefined),
-          );
+          const ref = yield* resolveArtifactRef(artifactId).pipe(Effect.orElseSucceed(() => undefined));
           if (ref) {
             artifactRefs.push(ref);
           }

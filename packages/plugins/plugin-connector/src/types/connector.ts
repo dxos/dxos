@@ -7,13 +7,14 @@ import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import type { Client } from '@dxos/client';
 import type { Operation } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';
-import type { AccessToken } from '@dxos/types';
 
+import { type ConnectionTestError } from '../errors';
 import * as Connection from './Connection';
-import * as SyncBinding from './SyncBinding';
 
 /** Descriptor for one remote target returned by discovery operations. */
 export const RemoteTarget = Schema.Struct({
@@ -60,9 +61,9 @@ export const MaterializeTargetOutput = Schema.Struct({
 });
 export interface MaterializeTargetOutput extends Schema.Schema.Type<typeof MaterializeTargetOutput> {}
 
-/** Minimum input for provider {@link ConnectorEntry.sync} operations: one binding to reconcile. */
+/** Minimum input for provider {@link ConnectorEntry.sync} operations: one cursor to reconcile. */
 export type SyncInput = {
-  binding: Ref.Ref<SyncBinding.SyncBinding>;
+  binding: Ref.Ref<Cursor.Cursor>;
 };
 
 /**
@@ -83,6 +84,39 @@ export type OnTokenCreated = (input: {
    */
   existingTarget?: Ref.Ref<Obj.Unknown>;
 }) => Effect.Effect<void, never, HttpClient.HttpClient>;
+
+/**
+ * Hook fired after an external-sync {@link Cursor.Cursor} is created for a target — a single-target
+ * bind (Gmail, JMAP) or one newly-selected multi-target row (Calendar). Connectors use this to set up
+ * recurring background sync (a Routine wrapping a timer Trigger, invoking the same {@link sync}
+ * operation `ConnectorOperation.SyncConnection` invokes directly) for the target; unlike
+ * {@link OnTokenCreated}, this runs once per bound target rather than once per connection.
+ */
+export type OnCursorCreated = (input: {
+  connection: Connection.Connection;
+  cursor: Cursor.ExternalCursor;
+  target: Obj.Unknown;
+  db: Database.Database;
+}) => Effect.Effect<void, never>;
+
+/**
+ * Probe whether a connection's stored credential is still valid.
+ *
+ * Success means the credential authenticates against the live service; a typed
+ * `Effect.fail` carries a user-facing reason (e.g. "Google rejected the
+ * credential (401)."). Runs when a connection is opened so the UI can offer to
+ * reauthenticate a connection whose token has expired or been revoked.
+ *
+ * `client` is supplied for connectors whose credentials layer resolves through
+ * the client/Edge (e.g. atproto proxying); HTTP-only connectors ignore it.
+ * Optional on the interface: connectors without it are treated as
+ * "cannot test" and never prompt to reauthenticate on open.
+ */
+export type TestConnection = (input: {
+  accessToken: AccessToken.AccessToken;
+  connection: Connection.Connection;
+  client: Client;
+}) => Effect.Effect<void, ConnectionTestError, HttpClient.HttpClient>;
 
 /** OAuth spec for Connector.oauth. */
 export type ConnectorOAuthSpec = {
@@ -171,6 +205,14 @@ export type ConnectorEntry = {
    */
   credentialForm?: CredentialForm<any>;
   onTokenCreated?: OnTokenCreated;
+  /**
+   * Probe whether the stored credential still works (see {@link TestConnection}).
+   * When present, the connection is tested on open and — if the connector also
+   * declares {@link oauth} — the user is offered a reauthenticate action on failure.
+   */
+  testConnection?: TestConnection;
+  /** Set up recurring background sync for a newly-bound target (see {@link OnCursorCreated}). */
+  onCursorCreated?: OnCursorCreated;
 };
 
 /**

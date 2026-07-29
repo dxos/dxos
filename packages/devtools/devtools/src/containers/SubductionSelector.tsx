@@ -20,7 +20,10 @@ export const SubductionSelector = () => {
     const existing = await Storage();
     await SaveConfig(
       merge({}, existing, {
-        runtime: { client: { edgeFeatures: { subductionReplicator: checked } } },
+        // The two edge transports are mutually exclusive: flipping subduction off re-enables the
+        // legacy echo replicator, so replication never silently stops (neither flag set selects no
+        // edge replicator in the service context).
+        runtime: { client: { edgeFeatures: { subductionReplicator: checked, echoReplicator: !checked } } },
       }),
     );
     window.location.reload();

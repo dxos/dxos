@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
-import { withAuthorization } from '@dxos/functions';
+import { withAuthorization } from '@dxos/compute-runtime';
 
 import { JmapApiError } from '../../../errors';
 import { JmapCredentials } from '../../../services/jmap-credentials';

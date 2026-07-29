@@ -4,6 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Format } from '@dxos/echo';
+
 /**
  * A named API key scoped to a service domain, used by plugin settings to hold
  * third-party credentials (e.g. a MapTiler key for `maptiler.com`).
@@ -15,7 +17,7 @@ import * as Schema from 'effect/Schema';
 export const APIKey = Schema.Struct({
   name: Schema.String.annotations({ title: 'Name' }),
   domain: Schema.String.annotations({ title: 'Domain' }),
-  apiKey: Schema.String.annotations({ title: 'API key' }),
+  apiKey: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({ title: 'API key' }),
 }).annotations({ title: 'API key' });
 
 export interface APIKey extends Schema.Schema.Type<typeof APIKey> {}

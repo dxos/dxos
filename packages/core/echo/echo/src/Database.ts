@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-// @import-as-namespace
-
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
+import type { CleanupFn } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
@@ -62,6 +62,14 @@ export type AddOptions = {
    * @default 'linked-doc'
    */
   placeIn?: ObjectPlacement;
+
+  /**
+   * Append the object to this feed instead of the automerge-backed space database. The object is
+   * returned synchronously (a live feed object) and persisted in the background — confirm the write
+   * completed with {@link Database.flush}. Synchronous alternative to the async
+   * {@link Database.appendToFeed}; `placeIn` is ignored when set.
+   */
+  to?: Feed.Feed;
 };
 
 /**
@@ -92,6 +100,18 @@ export type FlushOptions = {
    * @default false
    */
   updates?: boolean;
+};
+
+/**
+ * A caller-owned, writable **independent instance** of one object bound to one branch: a distinct
+ * object instance (not a UI surface), separate from the device-global canonical object.
+ * @see Database.branch
+ */
+export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
+  /** Live object bound to the branch document (`'main'` -> the canonical live object). */
+  readonly object: T;
+  /** Release the binding (drops the doc-handle listener; never deletes the branch document). */
+  dispose(): void;
 };
 
 /**
@@ -148,6 +168,8 @@ export interface Database extends Queryable {
    *
    * Only Object and Relation entities are accepted. To persist a Type definition use
    * {@link addType} — passing a Type entity is rejected at compile time (and at runtime).
+   *
+   * Pass `{ to: feed }` to append to a feed instead (synchronous; confirm with {@link flush}).
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T & RejectTypeEntity<T>, opts?: AddOptions): T;
 
@@ -185,6 +207,60 @@ export interface Database extends Queryable {
    */
   flush(opts?: FlushOptions): Promise<void>;
 
+  //
+  // Branching. A branch is a writable alternate timeline of an object subtree (same object ids,
+  // shared automerge history, true CRDT merge-back). The registry is synced on the space root;
+  // the currently-viewed branch stays device-local.
+  //
+
+  /**
+   * The device-global current branch for an object id (`'main'` by default).
+   * @deprecated Prefer `Obj.getBranch(obj)` — it takes the object and reports the branch of that
+   * specific instance (including `db.branch()` independent instances), not just the device selection.
+   */
+  getCurrentBranch(objectId: string): string;
+
+  /**
+   * An immutable snapshot of the object at the given historical heads — a detached instance, not a
+   * pin on the live object. Prefer `Obj.getVersion(obj, heads)`.
+   */
+  getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T>;
+
+  /** All branch names available for an object, including the implicit `'main'` (always first). */
+  listBranches(objectId: string): string[];
+
+  /**
+   * Fork the object and its referenced subtree into a new branch (does not switch to it).
+   * @param opts.fromHeads Fork from a historical frontier instead of the tip (a bare heads array
+   *   applies to the root only; a map forks each member from its own frontier).
+   */
+  createBranch(
+    rootObjectId: string,
+    name: string,
+    opts?: { fromHeads?: readonly string[] | Record<string, readonly string[]> },
+  ): Promise<void>;
+
+  /** Switch the object's subtree to a branch (or back to `'main'`). Device-local; cascades to children. */
+  switchBranch(rootObjectId: string, name: string): Promise<void>;
+
+  /** Merge a branch back into main across the subtree, then switch back to main. */
+  mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void>;
+
+  /** Fold main's changes into a branch across the subtree (the reverse of {@link mergeBranch}). */
+  syncBranch(rootObjectId: string, name: string): Promise<void>;
+
+  /** Delete a branch (its documents lose their sync reference). Cannot delete `'main'`. */
+  deleteBranch(rootObjectId: string, name: string): void;
+
+  /**
+   * Create a caller-owned, writable binding to one branch of one object — a live object whose reads
+   * resolve the branch document and whose writes land on the branch document only. Multiple bindings
+   * to different branches of the same object may coexist; the device-global current branch and other
+   * bindings are unaffected. Binding to `'main'` returns the canonical live object. Bindings are
+   * ephemeral and never persisted — the caller must `dispose()`.
+   */
+  branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>>;
+
   /**
    * Removes feed items by ID.
    */
@@ -199,6 +275,14 @@ export interface Database extends Queryable {
    * Returns queue replication backlog for the feed's namespace.
    */
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
+
+  /**
+   * Disposes and drops the in-memory handle (live working-set / core cache) for a feed, so the next
+   * access re-reads it cold. Advanced cache-control; primarily used by tests to model a spawned
+   * process reading the feed with an empty in-memory cache. Public (not `_`-prefixed) so it survives
+   * declaration stripping for cross-package test use.
+   */
+  evictFeedHandle(feed: Feed.Feed): Promise<void>;
 
   /**
    * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
@@ -223,6 +307,17 @@ export interface Database extends Queryable {
    * Returns a renderable URL for the blob, if one can be produced.
    */
   getBlobUrl(blob: Blob.Blob): Promise<string | undefined>;
+
+  /**
+   * Get the current combined (automerge documents + feed blocks) sync state, reported against a
+   * single remote peer.
+   */
+  getSyncState(options?: GetSyncStateOptions): Promise<SyncState>;
+
+  /**
+   * Subscribe to combined sync state changes.
+   */
+  subscribeToSyncState(cb: (state: SyncState) => void, options?: GetSyncStateOptions): CleanupFn;
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {
@@ -338,6 +433,9 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError,
  * Adds an object or relation to the database.
  * @see {@link Database.add}
  */
+// The Effect wrapper intentionally omits the method's `opts` (e.g. `{ to: feed }`): it is applied
+// point-free (`Effect.forEach(Database.add)`), where a second parameter would collide with the
+// iteratee index. Effect-style feed appends go through `Database.appendToFeed` / `Feed.append`.
 export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
   Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'));
 
@@ -395,4 +493,77 @@ export const query: {
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
     Effect.withSpan('Database.query'),
     queryInternal.makeQueryResultEffect,
+  );
+
+/**
+ * Sync state of the database in relation to EDGE.
+ */
+export interface SyncState {
+  //
+  // Automerge
+  //
+
+  /**
+   * Total number of documents locally.
+   */
+  readonly localDocumentCount: number;
+  /**
+   * Total number of documents on the remote peer.
+   */
+  readonly remoteDocumentCount: number;
+  /**
+   * Total number of documents across this peer and the remote peer.
+   */
+  readonly totalDocumentCount: number;
+  /**
+   * Total number of documents that are not synced.
+   * Includes documents that are present only locally, only on the remote peer, or whether the peers have different versions.
+   */
+  readonly unsyncedDocumentCount: number;
+
+  //
+  // Feeds.
+  //
+
+  /**
+   * Blocks still to pull from remote. 0 when caught up.
+   */
+  readonly blocksToPull: string;
+  /**
+   * Unpositioned blocks still to push to remote. 0 when caught up.
+   */
+  readonly blocksToPush: string;
+  /**
+   * Total blocks stored locally for this namespace in the space.
+   */
+  readonly totalBlocks: string;
+}
+
+/**
+ * Options for reading combined sync state.
+ */
+export interface GetSyncStateOptions {
+  /**
+   * Peer to report the automerge document backlog against. Defaults to the EDGE peer.
+   * Provide explicitly in local/test topologies where there is no EDGE peer.
+   */
+  readonly peerId?: string;
+}
+
+/**
+ * Get the current sync state.
+ */
+export const getSyncState = (options?: GetSyncStateOptions): Effect.Effect<SyncState, never, Service> =>
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.getSyncState(options))));
+
+/**
+ * Subscribe to sync state changes.
+ */
+export const subscribeToSyncState = (options?: GetSyncStateOptions): Stream.Stream<SyncState, never, Service> =>
+  Stream.asyncScoped((emit) =>
+    Effect.gen(function* () {
+      const { db } = yield* Service;
+      const cleanup = db.subscribeToSyncState((state) => emit.single(state), options);
+      yield* Effect.addFinalizer(() => Effect.sync(cleanup));
+    }),
   );

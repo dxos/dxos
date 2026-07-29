@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Obj } from '@dxos/echo';
+import { Project } from '@dxos/compute';
 
-import { type Thread, Topic } from '../types';
+import { type Thread } from '../types';
 import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts';
 
+// TODO(burdon): Move to LLM.
 // Subject tokens that carry no topical signal; excluded from signatures and keywords.
 const DEFAULT_STOPWORDS: readonly string[] = [
   'the',
@@ -49,6 +50,11 @@ export type TopicOptions = {
   readonly stopwords?: readonly string[];
   /** Keywords retained per topic (most frequent first). */
   readonly maxKeywords?: number;
+  /**
+   * Drop identifier tokens (invoice hashes, order numbers, tracking codes) from subject signatures.
+   * These are unique per message, so they fragment otherwise-identical automated mail into singletons.
+   */
+  readonly dropIdTokens?: boolean;
 };
 
 export const DEFAULT_TOPIC_OPTIONS: Required<TopicOptions> = {
@@ -57,15 +63,18 @@ export const DEFAULT_TOPIC_OPTIONS: Required<TopicOptions> = {
   minTokenLength: 3,
   stopwords: DEFAULT_STOPWORDS,
   maxKeywords: 5,
+  dropIdTokens: true,
 };
 
 /** A topic before ECHO materialization: plain values so LLM enrichment can rewrite them freely. */
 export type TopicDraft = {
-  readonly label: string;
+  readonly name: string;
   readonly summary: string;
   readonly threadIds: readonly string[];
   readonly participants: readonly string[];
   readonly keywords: readonly string[];
+  readonly questions: readonly string[];
+  readonly tasks: readonly string[];
 };
 
 type Signature = {
@@ -74,12 +83,35 @@ type Signature = {
   readonly participants: Set<string>;
 };
 
+// Identifiers (invoice hashes, order numbers, tracking codes, years) carry no topical signal and are
+// unique per message, so they must be dropped or near-identical automated mail never collapses. A
+// token is an id if it is a pure number, a hex-looking string, or a digit-heavy alphanumeric code;
+// short version-like tokens ("q4", "v2") are kept.
+const isIdToken = (token: string): boolean => {
+  if (/^\d+$/.test(token)) {
+    return true;
+  }
+  const digits = (token.match(/\d/g) ?? []).length;
+  if (digits === 0) {
+    return false;
+  }
+  if (/^[0-9a-f]+$/.test(token) && token.length >= 6) {
+    return true;
+  }
+  return token.length >= 5 && digits / token.length >= 0.3;
+};
+
 const tokenize = (subject: string, options: Required<TopicOptions>): Set<string> =>
   new Set(
     subject
       .toLowerCase()
       .split(/[^a-z0-9]+/)
-      .filter((token) => token.length >= options.minTokenLength && !options.stopwords.includes(token)),
+      .filter(
+        (token) =>
+          token.length >= options.minTokenLength &&
+          !options.stopwords.includes(token) &&
+          !(options.dropIdTokens && isIdToken(token)),
+      ),
   );
 
 const jaccard = (left: Set<string>, right: Set<string>): number => {
@@ -160,16 +192,22 @@ export const clusterThreads = (threads: readonly Thread[], options?: TopicOption
       member.thread.summary.length > 0 ? [member.thread.summary] : [],
     );
 
+    // Roll up open questions / action items from the member threads (deduped, order-preserving).
+    const questions = [...new Set(cluster.members.flatMap((member) => member.thread.openQuestions ?? []))];
+    const tasks = [...new Set(cluster.members.flatMap((member) => member.thread.actionItems ?? []))];
+
     // Label from top keywords; a keyword-less cluster (e.g. blank subjects) falls back through the
     // first thread's subject to its threadId so the label is never empty.
     const first = cluster.members[0].thread;
     return {
-      label: keywords.length > 0 ? keywords.slice(0, 3).join(' ') : first.subject || first.threadId,
+      name: keywords.length > 0 ? keywords.slice(0, 3).join(' ') : first.subject || first.threadId,
       summary: summaries.join('\n'),
       threadIds: cluster.members.map((member) => member.thread.threadId),
       participants: [...cluster.participants].sort(),
       keywords,
-    };
+      questions,
+      tasks,
+    } satisfies TopicDraft;
   });
 };
 
@@ -188,8 +226,14 @@ export const summarizeTopics = async (
     drafts.map(async (draft) => {
       try {
         const summary = await summarize(
-          [prompts.topicSummary, `Topic: ${draft.label}`, `Threads:\n${draft.summary}`].join('\n\n'),
+          [
+            //
+            prompts.topicSummary,
+            `Topic: ${draft.name}`,
+            // `Threads:\n${draft.summary}`,
+          ].join('\n\n'),
         );
+
         return summary.trim().length > 0 ? { ...draft, summary: summary.trim() } : draft;
       } catch {
         return draft;
@@ -198,14 +242,16 @@ export const summarizeTopics = async (
   );
 };
 
-/** Materialize drafts as canonical Topic ECHO objects (done last; drafts stay freely mutable). */
-export const materializeTopics = (drafts: readonly TopicDraft[]): Topic[] =>
+/** Materialize drafts as canonical Project ECHO objects (done last; drafts stay freely mutable). */
+export const materializeTopics = (drafts: readonly TopicDraft[]): Project.Project[] =>
   drafts.map((draft) =>
-    Obj.make(Topic, {
-      label: draft.label,
-      summary: draft.summary,
-      threadIds: [...draft.threadIds],
-      participants: [...draft.participants],
-      keywords: [...draft.keywords],
+    Project.make({
+      name: draft.name,
+      // summary: draft.summary,
+      // threadIds: [...draft.threadIds],
+      // participants: [...draft.participants],
+      // keywords: [...draft.keywords],
+      // questions: [...draft.questions],
+      // tasks: [...draft.tasks],
     }),
   );

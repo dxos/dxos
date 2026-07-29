@@ -17,7 +17,7 @@ const make = () =>
     tools: Skill.toolDefinitions({
       // TODO(wittjosiah): LayoutOperation.Open requires Capability.Service which is only available
       //   via the compute-runtime layer (plugin-routine). Once Capability.Service is propagated
-      //   through LocalFunctionExecutionService, this will work without the compute-runtime dependency.
+      //   through the process operation runtime, this will work without the compute-runtime dependency.
       operations: [LayoutOperation.Open, AssistantOperation.ResolveNavigationTargets],
     }),
     instructions: templates.system,

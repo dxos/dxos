@@ -73,14 +73,13 @@ export const createProcessTraceService = (
           },
         ],
       });
-      // Ephemeral events are streamed live to subscribers and never
-      // persisted; non-ephemeral events are forwarded to the shared
-      // trace sink (feed persistence, devtools, etc.).
+      // Ephemeral events are streamed live to subscribers; every message is also
+      // forwarded to the shared trace sink so parallel adapters (e.g. progress)
+      // can observe status updates. Durable sinks filter ephemeral writes out.
       if (message.isEphemeral) {
         opts.onEphemeral(message);
-      } else {
-        opts.sink.write(message);
       }
+      opts.sink.write(message);
     } catch (err) {
       log.warn('trace write failed', { pid: opts.pid, event: event.key, err });
     }

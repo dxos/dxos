@@ -15,7 +15,6 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -27,6 +26,7 @@ import {
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
+import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata';
 import type { InvitationProtocol } from './invitation-protocol';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler';
 

@@ -5,10 +5,10 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Game } from '@dxos/plugin-game/types';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -28,7 +28,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
   const games = useQuery(
     db,
     gamesFeed
-      ? Query.select(Filter.type(Game)).from(Scope.feed(Obj.getURI(gamesFeed)))
+      ? Query.select(Filter.type(Game.Game)).from(Scope.feed(Obj.getURI(gamesFeed)))
       : Query.select(Filter.nothing()),
   );
 
@@ -85,14 +85,16 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
   );
 };
 
-const GameTile = ({ data: game }: { data: Game }) => {
+const GameTile = ({ data: game }: { data: Game.Game }) => {
   const { t } = useTranslation(meta.profile.key);
-  const objectMenuItems = useObjectMenuItems(game);
+  // The card menu renders in a portal; resolve the origin plank from the card element instead.
+  const [cardRef, pivotId] = useCardPivot();
+  const objectMenuItems = useObjectMenuItems(game, pivotId);
   const icon = Obj.getIcon(game)?.icon ?? 'ph--sword--regular';
 
   return (
     <Menu.Root>
-      <Card.Root fullWidth>
+      <Card.Root ref={cardRef} fullWidth>
         <Card.Header>
           <Card.Block>
             <Icon icon={icon} />

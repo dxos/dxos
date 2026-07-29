@@ -45,6 +45,7 @@ export type Observation = {
   readonly at?: string;
 };
 
+// TODO(burdon): Rename Actor?
 export interface AgentRegistryApi {
   /** Resolve identifiers to a canonical agent, creating one if none of them is known. */
   readonly resolve: (identifiers: readonly Identifier[], label?: string) => Effect.Effect<Profile, StateError>;

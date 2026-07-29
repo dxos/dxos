@@ -8,7 +8,13 @@
       "path": "../../../common/effect"
     },
     {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../common/log"
+    },
+    {
+      "path": "../progress"
     }
   ]
 }

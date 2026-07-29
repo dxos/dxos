@@ -21,7 +21,7 @@ Memoized-llm tests default to the **`direct`** preset (`@dxos/ai/testing` → `T
 Populate it from 1Password:
 
 ```bash
-pnpm -ws 1p-credentials   # exports DX_ANTHROPIC_API_KEY (see .env.1password)
+pnpm -ws 1p-credentials   # exports DX_ANTHROPIC_API_KEY (see .config/.env.1password)
 ```
 
 or export it directly: `export DX_ANTHROPIC_API_KEY=sk-ant-...`.

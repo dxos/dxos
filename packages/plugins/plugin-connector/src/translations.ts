@@ -3,11 +3,12 @@
 //
 
 import { Type } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { Connection, SyncBinding } from './types';
+import { Connection } from './types';
 
 export const translations = [
   {
@@ -34,6 +35,14 @@ export const translations = [
         'close.label': 'Close',
         'sync-connection.label': 'Sync now',
         'no-connector.message': 'No service plugin is registered for this connection.',
+        'connection-status.label': 'Status',
+        'connection-checking.message': 'Checking connection…',
+        'connection-valid.message': 'Connected.',
+        'connection-invalid.message': 'This connection is no longer authorized.',
+        'test-connection.label': 'Test connection',
+        'reauthenticate.label': 'Reauthenticate',
+        'reauthenticate.description': 'Sign in again to refresh this connection without losing its sync targets.',
+        'reauthenticating.label': 'Reauthenticating…',
         'sync-now.label': 'Sync now',
         'sync-now.description': 'Reconcile cards with the remote service.',
         'syncing.label': 'Syncing…',
@@ -71,7 +80,7 @@ export const translations = [
         'delete-object.label': 'Delete connection',
         'object-deleted.label': 'Connection deleted',
       },
-      [Type.getTypename(SyncBinding.SyncBinding)]: {
+      [Type.getTypename(Cursor.Cursor)]: {
         'typename.label': 'Sync binding',
         'typename.label_zero': 'Sync bindings',
         'typename.label_one': 'Sync binding',

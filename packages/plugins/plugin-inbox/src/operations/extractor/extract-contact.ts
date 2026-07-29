@@ -10,6 +10,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 
 import { InboxOperation } from '../../types';
 
+/** @deprecated Use ExtractContactFromMessage through the ExtractMessage dispatcher instead. */
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractContact> = InboxOperation.ExtractContact.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, actor }) {

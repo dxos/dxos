@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { forwardRef, useMemo } from 'react';
@@ -13,12 +13,12 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
-import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -49,9 +49,7 @@ const storyDeckSettings = Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
-      enableDeck: true,
       enableNativeRedirect: false,
-      encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
 
     return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
@@ -67,7 +65,6 @@ const storyDeckState = Capability.makeModule(() =>
       complementarySidebarPanel: undefined,
       activeDeck: 'default',
       previousDeck: 'default',
-      previousMode: {},
       decks: {
         default: { ...defaultDeck },
       },
@@ -76,6 +73,7 @@ const storyDeckState = Capability.makeModule(() =>
     const stateAtom = Atom.make<StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
 
     const defaultEphemeralDeckState: EphemeralDeckState = {
+      fullscreen: undefined,
       dialogContent: null,
       dialogOpen: false,
       dialogBlockAlign: undefined,
@@ -97,12 +95,12 @@ const storyDeckState = Capability.makeModule(() =>
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: getMode(deck),
+        mode: getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.solo ? [deck.solo] : deck.active,
+        active: deck.active,
         inactive: deck.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
       } satisfies AppCapabilities.Layout;
@@ -243,14 +241,14 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           connector: (node) =>
             Effect.succeed([
               AppNode.makeCompanion({
-                id: linkedSegment('alpha'),
+                variant: 'alpha',
                 label: 'Companion Alpha',
                 icon: 'ph--sidebar--regular',
                 data: { variant: 'alpha', parentId: node.id },
                 position: Position.first,
               }),
               AppNode.makeCompanion({
-                id: linkedSegment('beta'),
+                variant: 'beta',
                 label: 'Companion Beta',
                 icon: 'ph--chat-circle--regular',
                 data: { variant: 'beta', parentId: node.id },
@@ -354,24 +352,28 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Solo: Story = {
+export const OnePlank: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
+      // A singleton `active` list renders fullbleed; opening into a fresh deck yields that directly.
       await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: STORY_ITEMS[0].id });
     });
 
     return <DeckLayout />;
   },
 };
 
-export const Multi: Story = {
+export const ManyPlanks: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
       await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'multi' });
+      await invokePromise(LayoutOperation.Open, {
+        subject: [STORY_ITEMS[1].id],
+        disposition: 'add',
+        navigation: 'immediate',
+      });
     });
 
     return <DeckLayout />;

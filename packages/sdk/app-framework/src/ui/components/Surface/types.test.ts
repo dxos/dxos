@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 import { Position } from '@dxos/util';
 
 import * as Role from '../../../common/Role';
-import { type CapabilityManager } from '../../../core';
-import { isSurfaceAvailable } from './SurfaceComponent';
+import { useIsSurfaceAvailable } from './SurfaceComponent';
+import { indexByRole } from './SurfaceManager';
 import { type Filter, create, isFilter, makeFilter } from './types';
 
 describe('isFilter', () => {
@@ -60,30 +60,52 @@ describe('create', () => {
     const def = create({ id: 'pos', filter, component: () => null, position: Position.last });
     expect(def.position).toBe(Position.last);
   });
+
+  test('does not throw on an invalid local id (dropped at dispatch instead)', ({ expect }) => {
+    const token = Role.make<Record<string, any>>('org.dxos.test.role.article');
+    const filter = makeFilter(token, () => true);
+    expect(() => create({ id: 'gallery-article', filter, component: () => null })).not.toThrow();
+  });
 });
 
-describe('isSurfaceAvailable typing', () => {
+describe('indexByRole', () => {
+  const token = Role.make<Record<string, any>>('org.dxos.test.role.article');
+  const filter = makeFilter(token, () => true);
+
+  test('indexes definitions by role', ({ expect }) => {
+    const valid = create({ id: 'valid', filter, component: () => null });
+    const index = indexByRole([valid]);
+    expect(index.get(token.role)).toEqual([valid]);
+  });
+
+  test('does not filter on id validity (SurfaceManager is responsible for that)', ({ expect }) => {
+    const valid = create({ id: 'valid', filter, component: () => null });
+    const invalid = create({ id: 'gallery-article', filter, component: () => null });
+    const index = indexByRole([valid, invalid]);
+    expect(index.get(token.role)).toEqual([valid, invalid]);
+  });
+});
+
+describe('useIsSurfaceAvailable typing', () => {
   // These tests double as static assertions: the `@ts-expect-error` comments
   // fail to compile if the surrounding expression typechecks, so they verify
-  // the typed overload narrows `data` to the token's declared contract.
+  // the typed overload narrows `data` to the token's declared contract. The
+  // hook is never invoked — only its return type is used to type-check calls.
   const sectionToken = Role.make<{ attendableId: string; subject: string }>('org.dxos.test.role.section');
-  const capabilityManager = { getAll: () => [] } as unknown as CapabilityManager.CapabilityManager;
+  const isSurfaceAvailable = (() => false) as ReturnType<typeof useIsSurfaceAvailable>;
 
   test('typed overload accepts data matching the token contract', () => {
     // No error — data has all required fields.
-    isSurfaceAvailable(capabilityManager, {
-      type: sectionToken,
-      data: { attendableId: 'id', subject: 'x' },
-    });
+    isSurfaceAvailable({ type: sectionToken, data: { attendableId: 'id', subject: 'x' } });
   });
 
   test('typed overload rejects data missing required fields', () => {
     // @ts-expect-error — `data` is missing `attendableId` required by the token.
-    isSurfaceAvailable(capabilityManager, { type: sectionToken, data: { subject: 'x' } });
+    isSurfaceAvailable({ type: sectionToken, data: { subject: 'x' } });
   });
 
   test('typed overload rejects data with wrong field type', () => {
     // @ts-expect-error — `attendableId` must be a string, not a number.
-    isSurfaceAvailable(capabilityManager, { type: sectionToken, data: { attendableId: 123, subject: 'x' } });
+    isSurfaceAvailable({ type: sectionToken, data: { attendableId: 123, subject: 'x' } });
   });
 });

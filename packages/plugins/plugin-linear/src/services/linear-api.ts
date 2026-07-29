@@ -16,6 +16,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
+import { type AccessToken } from '@dxos/link';
 import { Connection } from '@dxos/plugin-connector';
 
 import { LINEAR_API_URL } from '../constants';
@@ -116,6 +117,19 @@ export class LinearCredentials extends Context.Tag('@dxos/plugin-linear/LinearCr
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
         const accessToken = yield* Database.load(connection.accessToken);
+        return { token: accessToken.token };
+      }),
+    );
+
+  /**
+   * Loads the access token directly and returns its `token` value. Used by callers that only have
+   * an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
+   */
+  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+    Layer.effect(
+      LinearCredentials,
+      Effect.gen(function* () {
+        const accessToken = yield* Database.load(accessTokenRef);
         return { token: accessToken.token };
       }),
     );

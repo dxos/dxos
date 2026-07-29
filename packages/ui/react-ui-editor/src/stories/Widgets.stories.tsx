@@ -10,7 +10,7 @@
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { random } from '@dxos/random';
@@ -35,9 +35,11 @@ import { EditorPreviewProvider, useEditorPreview } from '../components';
 import { useTextEditor } from '../hooks';
 import { EditorStory } from './components';
 
-// ----------------------------------------------------------------------------
+random.seed(123);
+
+//
 // XmlTags helpers
-// ----------------------------------------------------------------------------
+//
 
 const xmlRegistry = {
   test: {
@@ -85,9 +87,9 @@ const XmlTagsStory = ({ text }: { text?: string }) => {
   );
 };
 
-// ----------------------------------------------------------------------------
+//
 // Preview helpers
-// ----------------------------------------------------------------------------
+//
 
 const handlePreviewLookup = async ({ dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   random.seed(dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
@@ -147,9 +149,75 @@ const PreviewBlockCard = ({ dxn, label }: XmlWidgetProps<{ dxn: string; label: s
   );
 };
 
-// ----------------------------------------------------------------------------
+/** Obsidian-style height suffix in the image label: `![Sketch|400](echo:/…)`. */
+const parseBlockHeight = (label = ''): number | undefined => {
+  const match = /\|(\d+)$/.exec(label);
+  return match ? Number.parseInt(match[1], 10) : undefined;
+};
+
+/**
+ * Fixed-height block that mirrors the plugin-markdown sketch embed: it renders at exactly the height
+ * encoded in the label, so CM's reserved `estimatedHeight` and the measured height match — the setup
+ * that exercises the scroll/cull path (jitter, blank, flash, jump) without needing ECHO.
+ */
+const FixedHeightPreview = ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) => {
+  const height = parseBlockHeight(label) ?? 200;
+  return (
+    <div
+      style={{ height }}
+      className='grid place-items-center border border-separator rounded-md bg-base-surface text-description'
+    >
+      {label} · {height}px · {dxn}
+    </div>
+  );
+};
+
+/**
+ * Faithfully mimics a Surface-backed embed (the real plugin-markdown block): the content mounts
+ * asynchronously (like a Surface resolving) and runs an inner ResizeObserver (like the sketch's
+ * auto-fit) that re-lays-out whenever the container size changes — including the 0↔height blips that
+ * CM's scroll-culling produces as the node is detached and re-parented.
+ *
+ * NOTE: The scroll-*jump* on large scroll deltas is NOT specific to this async variant — verified via
+ * Playwright, `FixedHeightPreview` (plain inert div) jumps identically. It is CM's height-estimate
+ * re-anchor, not the widget. See `StubWidget` and CM #1727.
+ */
+const SurfaceLikePreview = ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) => {
+  const height = parseBlockHeight(label) ?? 200;
+  const ref = useRef<HTMLDivElement>(null);
+  const [resolved, setResolved] = useState(false);
+  // Async resolution, like a Surface looking up + mounting its component.
+  useEffect(() => {
+    const timer = setTimeout(() => setResolved(true), 30);
+    return () => clearTimeout(timer);
+  }, []);
+  // Inner ResizeObserver that does layout work on every size change, like the sketch's auto-fit.
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) {
+      return;
+    }
+    const observer = new ResizeObserver(() => {
+      // Touch layout the way an auto-fit would (read forces reflow).
+      void element.clientHeight;
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div
+      ref={ref}
+      style={{ height }}
+      className='grid place-items-center border border-separator rounded-md bg-base-surface text-description'
+    >
+      {resolved ? `Surface ${label} · ${height}px · ${dxn}` : 'resolving…'}
+    </div>
+  );
+};
+
+//
 // Meta
-// ----------------------------------------------------------------------------
+//
 
 const meta = {
   title: 'ui/react-ui-editor/Widgets',
@@ -161,9 +229,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// ----------------------------------------------------------------------------
+//
 // Stories
-// ----------------------------------------------------------------------------
+//
 
 const xmlTagsText = trim`
   # XML Tags
@@ -196,6 +264,8 @@ const previewText = trim`
   ## Deep dive
 
   ![ECHO](echo:/echo)
+
+  Text
 
 `;
 
@@ -236,6 +306,88 @@ export const Preview: Story = {
           <div key={id}>{createPortal(<Component {...props} />, root)}</div>
         ))}
       </EditorPreviewProvider>
+    );
+  },
+};
+
+const filler = (marker: string) =>
+  Array.from({ length: 20 }, (_, index) => `${marker} ${index + 1} - ${random.lorem.paragraphs()}`).join('\n\n');
+
+const previewScrollText = [
+  '# Preview blocks (scroll test)',
+  filler('Above'),
+  '![Sketch|400](echo:/sketch)',
+  filler('Below'),
+].join('\n\n');
+
+/**
+ * A fixed-height (400px) `echo:` block embed in a long scrollable document. Sets `estimatedHeight`
+ * from the label so CM reserves the right space, matching the plugin-markdown sketch embed. Use this
+ * to reproduce scroll behavior: scroll the block off-screen and back, and past the viewport edges.
+ */
+export const PreviewScroll: Story = {
+  render: () => {
+    const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+    const extensions = useMemo(
+      () => [
+        xmlTags({
+          registry: {
+            'dxn-preview': {
+              block: true,
+              urlSchemes: ['dxn:', 'echo:'],
+              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) => parseBlockHeight(label),
+              Component: FixedHeightPreview,
+            },
+          },
+          setWidgets,
+        }),
+      ],
+      [],
+    );
+
+    return (
+      <>
+        <EditorStory text={previewScrollText} extensions={extensions} />
+        {widgets.map(({ id, root, Component, props }) => (
+          <div key={id}>{createPortal(<Component {...props} />, root)}</div>
+        ))}
+      </>
+    );
+  },
+};
+
+/**
+ * Same long scrollable document as `PreviewScroll`, but the block renders a Surface-like component
+ * (async mount + inner ResizeObserver). Use this to reproduce the scroll jump that only appears with
+ * Surface-backed embeds, and to verify fixes against it.
+ */
+export const PreviewScrollSurface: Story = {
+  render: () => {
+    const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+    const extensions = useMemo(
+      () => [
+        xmlTags({
+          registry: {
+            'dxn-preview': {
+              block: true,
+              urlSchemes: ['dxn:', 'echo:'],
+              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) => parseBlockHeight(label),
+              Component: SurfaceLikePreview,
+            },
+          },
+          setWidgets,
+        }),
+      ],
+      [],
+    );
+
+    return (
+      <>
+        <EditorStory text={previewScrollText} extensions={extensions} />
+        {widgets.map(({ id, root, Component, props }) => (
+          <div key={id}>{createPortal(<Component {...props} />, root)}</div>
+        ))}
+      </>
     );
   },
 };

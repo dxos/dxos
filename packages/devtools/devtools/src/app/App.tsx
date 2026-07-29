@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { ClientProvider, type ClientProviderProps } from '@dxos/react-client';
 import { ErrorBoundary, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
+import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
 
 import { Devtools } from './Devtools';
 
@@ -32,7 +33,7 @@ export const App = (props: ClientProviderProps) => {
   const themeMode = useThemeWatcher();
 
   return (
-    <ThemeProvider {...{ tx: defaultTx, themeMode }} noCache>
+    <ThemeProvider {...{ tx: defaultTx, themeMode }} resourceExtensions={logPanelTranslations} noCache>
       <ErrorBoundary name='devtools.app'>
         <ClientProvider {...props}>
           <Devtools />

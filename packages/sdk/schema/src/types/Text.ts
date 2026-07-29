@@ -19,7 +19,15 @@ export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.text', '
   ),
 ) {}
 
-export type MakeProps = Partial<{ id: string; name: string; content: string }>;
+export type MakeProps = Partial<{
+  id: string;
+  name: string;
+  content: string;
+}>;
 
 export const make = (props: MakeProps = {}) =>
-  Obj.make(Text, { id: props.id, name: props.name, content: props.content ?? '' });
+  Obj.make(Text, {
+    id: props.id,
+    name: props.name,
+    content: props.content ?? '',
+  });

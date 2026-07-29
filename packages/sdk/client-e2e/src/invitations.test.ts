@@ -15,6 +15,7 @@ import {
   type DataSpace,
   InvitationsManager,
   InvitationsServiceImpl,
+  MetadataStore,
   type ServiceContext,
   createAdmissionKeypair,
 } from '@dxos/client-services';
@@ -28,7 +29,6 @@ import {
 import { InvitationsProxy } from '@dxos/client/invitations';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
-import { MetadataStore } from '@dxos/echo-host';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -633,7 +633,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: host.halo, guest: guest.halo }),
-      () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
+      () => [(host.services as any).host.context, (guest.services as any).host.context],
     );
   });
 
@@ -663,7 +663,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: space, guest: guest.spaces }),
-      () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
+      () => [(host.services as any).host.context, (guest.services as any).host.context],
     );
   });
 });

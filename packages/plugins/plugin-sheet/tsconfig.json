@@ -130,13 +130,13 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-comments"
-    },
-    {
       "path": "../plugin-graph"
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-review"
     },
     {
       "path": "../plugin-space"

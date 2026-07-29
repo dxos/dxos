@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
+import { useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
-import { useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypeURIFromQuery } from '@dxos/schema';
 

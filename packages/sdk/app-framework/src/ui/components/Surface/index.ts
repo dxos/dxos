@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Role from '../../../common/Role';
-// TODO(wittjosiah): Cleanup to avoid re-naming.
+import { Role } from '../../../common';
 import { SurfaceContext } from './context';
-import { SurfaceComponent, isSurfaceAvailable } from './SurfaceComponent';
+import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent';
 import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
 import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics';
 import {
@@ -35,7 +34,7 @@ export namespace Surface {
   export const Context = SurfaceContext;
 
   export const Surface = SurfaceComponent;
-  export const isAvailable = isSurfaceAvailable;
+  export const useIsAvailable = useIsSurfaceAvailable;
 
   export type Binding = SurfaceBindingType;
   export type Filter<TData> = SurfaceFilterType<TData>;

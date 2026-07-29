@@ -7,14 +7,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { View as _View } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
+import * as ExternalProject from './ExternalProject';
 import * as Person from './Person';
-import * as Project from './Project';
 
 export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.1.0'))(
   Schema.Struct({
@@ -77,11 +75,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         }),
       ),
     ),
-    project: Schema.optional(Ref.Ref(Project.Project).annotations({ title: 'Project' })),
-    // TODO(burdon): Created date metadata.
-    // due: Date,
-    // TODO(burdon): Generic tags.
-    // tags: [String],
+    project: Schema.optional(Ref.Ref(ExternalProject.ExternalProject).annotations({ title: 'Project' })),
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),

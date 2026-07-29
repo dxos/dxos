@@ -57,27 +57,38 @@ export interface AggregateResult {
   readonly '~@dxos/echo/Query.AggregateResult': true;
 }
 
+export const QueryTypeId = '~@dxos/echo/Query' as const;
+export type QueryTypeId = typeof QueryTypeId;
+
 // TODO(burdon): Narrow T to Entity.Unknown?
 export interface Query<T> {
-  // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Query': { value: T };
+  readonly [QueryTypeId]: { value: T };
 
-  'ast': QueryAST.Query;
+  ast: QueryAST.Query;
 
   /**
    * Filter the current selection based on a filter.
    * @param filter - Filter to select the objects.
    * @returns Query for the selected objects.
    */
-  'select'(filter: Filter.Filter<T>): Query<T>;
-  'select'(props: Filter.Props<T>): Query<T>;
+  select(filter: Filter.Filter<T>): Query<T>;
+  select(props: Filter.Props<T>): Query<T>;
+
+  /**
+   * Project the query's results to a single scalar property, for use as a membership set in
+   * `Filter.in(query.project('col'))` — an uncorrelated `col IN (SELECT property FROM ...)`
+   * semi-join. The subquery is resolved once at execution time. A projection is a terminal
+   * value, not a `Query`, so it cannot be chained further.
+   * @param property - Property path to project.
+   */
+  project<K extends RefPropKey<T>>(property: K): Projection<T[K]>;
 
   /**
    * Traverse an outgoing reference.
    * @param key - Property path inside T that is a reference or optional reference.
    * @returns Query for the target of the reference.
    */
-  'reference'<K extends RefPropKey<T>>(key: K): Query<ReferenceTraversalTarget<T[K]>>;
+  reference<K extends RefPropKey<T>>(key: K): Query<ReferenceTraversalTarget<T[K]>>;
 
   /**
    * Find objects referencing this object.
@@ -87,12 +98,12 @@ export interface Query<T> {
    */
   // TODO(dmaretskyi): any way to enforce `Ref.Target<Schema.Schema.Type<S>[key]> == T`?
   // TODO(dmaretskyi): Ability to go through arrays of references.
-  'referencedBy'<S extends Type$.AnyEntity>(
+  referencedBy<S extends Type$.AnyEntity>(
     target: S | URI.URI,
     key: RefPropKey<Type$.InstanceType<S>>,
   ): Query<Type$.InstanceType<S>>;
-  'referencedBy'<S extends Type$.AnyEntity>(target: S | URI.URI): Query<Type$.InstanceType<S>>;
-  'referencedBy'(): Query<any>;
+  referencedBy<S extends Type$.AnyEntity>(target: S | URI.URI): Query<Type$.InstanceType<S>>;
+  referencedBy(): Query<any>;
 
   /**
    * Find relations where this object is the source.
@@ -100,7 +111,7 @@ export interface Query<T> {
    * @param relation - Schema of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  'sourceOf'<R extends Type$.AnyRelation>(
+  sourceOf<R extends Type$.AnyRelation>(
     relation?: R | URI.URI,
     predicates?: Filter.Props<Type$.InstanceType<R>>,
   ): Query<Type$.InstanceType<R>>;
@@ -111,7 +122,7 @@ export interface Query<T> {
    * @param relation - Type entity of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  'targetOf'<R extends Type$.AnyRelation>(
+  targetOf<R extends Type$.AnyRelation>(
     relation?: R | URI.URI,
     predicates?: Filter.Props<Type$.InstanceType<R>>,
   ): Query<Type$.InstanceType<R>>;
@@ -120,25 +131,25 @@ export interface Query<T> {
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
    */
-  'source'(): Query<Relation.SourceOf<T>>;
+  source(): Query<Relation.SourceOf<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
    */
-  'target'(): Query<Relation.TargetOf<T>>;
+  target(): Query<Relation.TargetOf<T>>;
 
   /**
    * Get the parent object of the current selection.
    * @returns Query for the parent objects.
    */
-  'parent'(): Query<any>;
+  parent(): Query<any>;
 
   /**
    * Get all child objects of the current selection.
    * @returns Query for the child objects.
    */
-  'children'(): Query<any>;
+  children(): Query<any>;
 
   /**
    * Order the query results.
@@ -151,7 +162,7 @@ export interface Query<T> {
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
    */
-  'orderBy'(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
+  orderBy(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
 
   /**
    * Aggregate the query results into flat records. {@link Aggregate.group} entries partition the
@@ -161,16 +172,18 @@ export interface Query<T> {
    * {@link Order.property}.
    *
    * Groups are ordered by the first occurrence of their key in the incoming stream, so a preceding
-   * `orderBy` controls group order too. For example, message threads ordered by their most recent
+   * `orderBy` controls group order in the absence of a following one. {@link Aggregate.items}'s own
+   * `order` option is a separate, explicit per-group member ordering — pass it there rather than
+   * relying on a preceding `orderBy`, whose only well-defined job once `aggregate` follows is
+   * establishing initial group order. For example, message threads ordered by their most recent
    * message, each retaining up to 20 members newest-first:
    *
    * ```ts
    * Query.type(Message)
-   *   .orderBy(Order.property('created', 'desc'))
    *   .aggregate({
    *     threadId: Aggregate.group('threadId'),
    *     lastMessageAt: Aggregate.max('created'),
-   *     items: Aggregate.items({ limit: 20 }),
+   *     items: Aggregate.items({ limit: 20, order: [Order.property('created', 'desc')] }),
    *   })
    *   .orderBy(Order.property('lastMessageAt', 'desc'));
    * ```
@@ -180,7 +193,7 @@ export interface Query<T> {
    * @param aggregates - Record of aggregate declarations keyed by result field name.
    * @returns Query whose flat result records carry the named aggregates as fields.
    */
-  'aggregate'<const A extends Record<string, Aggregate.Aggregate<T, any>>>(
+  aggregate<const A extends Record<string, Aggregate.Aggregate<T, any>>>(
     aggregates: A,
   ): Query<Aggregate.AggregationResult<A>>;
 
@@ -189,7 +202,7 @@ export interface Query<T> {
    * @param limit - Maximum number of results to return.
    * @returns Query for the limited results.
    */
-  'limit'(limit: number): Query<T>;
+  limit(limit: number): Query<T>;
 
   /**
    * Skip a number of results (offset). Combined with `orderBy` and `limit`, expresses a windowed
@@ -197,7 +210,7 @@ export interface Query<T> {
    * @param skip - Number of leading results to skip.
    * @returns Query for the remaining results.
    */
-  'skip'(skip: number): Query<T>;
+  skip(skip: number): Query<T>;
 
   /**
    * Query from selected databases only.
@@ -210,7 +223,7 @@ export interface Query<T> {
    *
    * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
    */
-  'from'(database: Database.Database | Database.Database[], options?: { includeFeeds?: boolean }): Query<T>;
+  from(database: Database.Database | Database.Database[], options?: { includeFeeds?: boolean }): Query<T>;
 
   /**
    * Query from selected feeds only.
@@ -222,7 +235,7 @@ export interface Query<T> {
    * ```
    *
    */
-  'from'(feeds: Feed.Feed | Feed.Feed[]): Query<T>;
+  from(feeds: Feed.Feed | Feed.Feed[]): Query<T>;
 
   /**
    * Query from all accessible spaces.
@@ -235,7 +248,7 @@ export interface Query<T> {
    *
    * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
    */
-  'from'(allSpaces: 'all-accessible-spaces', options?: { includeFeeds?: boolean }): Query<T>;
+  from(allSpaces: 'all-accessible-spaces', options?: { includeFeeds?: boolean }): Query<T>;
 
   /**
    * Query from a dataset.
@@ -247,7 +260,7 @@ export interface Query<T> {
    * Query.type(Person).from(feed);
    * ```
    */
-  'from'(dataset: Dataset.Dataset): Query<T>;
+  from(dataset: Dataset.Dataset): Query<T>;
 
   /**
    * Query from the results of another query.
@@ -258,7 +271,7 @@ export interface Query<T> {
    * Query.select(Filter.props({ foo: 'foo' })).from(Query.select(Filter.type(Contact)).reference('org'));
    * ```
    */
-  'from'(query: Any): Query<T>;
+  from(query: Any): Query<T>;
 
   /**
    * Query from one or more raw scopes.
@@ -269,36 +282,48 @@ export interface Query<T> {
    * Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
    * ```
    */
-  'from'(...scopes: QueryAST.Scope[]): Query<T>;
+  from(...scopes: QueryAST.Scope[]): Query<T>;
 
   /**
    * Query from a raw scope or array of scopes.
    */
-  'from'(scope: QueryAST.Scope | QueryAST.Scope[]): Query<T>;
+  from(scope: QueryAST.Scope | QueryAST.Scope[]): Query<T>;
 
   /**
    * Add options to a query.
    */
-  'options'(options: QueryAST.QueryOptions): Query<T>;
+  options(options: QueryAST.QueryOptions): Query<T>;
 
   /**
    * Attach a diagnostic label for logs and tooling (execution semantics unchanged).
    */
-  'debugLabel'(label: string): Query<T>;
+  debugLabel(label: string): Query<T>;
 }
 
 export type Any = Query<any>;
 
 export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
+/**
+ * A query projected to a single scalar property (see {@link Query.project}).
+ */
+export type Projection<V = unknown> = internal.Projection<V>;
+
+/**
+ * Brand key for {@link Projection}. Re-exported (like {@link QueryTypeId}) so the sandboxed
+ * `query-lite` mirror can declare its own local constant with the same string literal and
+ * construct structurally-compatible projections without importing this module's runtime.
+ */
+export type ProjectionTypeId = internal.ProjectionTypeId;
+
 class QueryClass implements Any {
-  private static 'variance': Any['~Query'] = {} as Any['~Query'];
+  private static 'variance': Any[QueryTypeId] = {} as Any[QueryTypeId];
 
-  'constructor'(public readonly ast: QueryAST.Query) {}
+  constructor(public readonly ast: QueryAST.Query) {}
 
-  '~Query' = QueryClass.variance;
+  [QueryTypeId] = QueryClass.variance;
 
-  'select'(filter: Filter.Any | Filter.Props<any>): Any {
+  select(filter: Filter.Any | Filter.Props<any>): Any {
     if (Filter.is(filter)) {
       return new QueryClass({
         type: 'filter',
@@ -314,7 +339,11 @@ class QueryClass implements Any {
     }
   }
 
-  'reference'(key: string): Any {
+  project(property: string): Projection<any> {
+    return internal.makeProjection(this.ast, property);
+  }
+
+  reference(key: string): Any {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -322,7 +351,7 @@ class QueryClass implements Any {
     });
   }
 
-  'referencedBy'(target?: Type$.AnyEntity | URI.URI, key?: string): Any {
+  referencedBy(target?: Type$.AnyEntity | URI.URI, key?: string): Any {
     const uri = target !== undefined ? internal.getTypeURIFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
@@ -332,7 +361,7 @@ class QueryClass implements Any {
     });
   }
 
-  'sourceOf'(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
+  sourceOf(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -341,7 +370,7 @@ class QueryClass implements Any {
     });
   }
 
-  'targetOf'(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
+  targetOf(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -350,7 +379,7 @@ class QueryClass implements Any {
     });
   }
 
-  'source'(): Any {
+  source(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -358,7 +387,7 @@ class QueryClass implements Any {
     });
   }
 
-  'target'(): Any {
+  target(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -366,7 +395,7 @@ class QueryClass implements Any {
     });
   }
 
-  'parent'(): Any {
+  parent(): Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -374,7 +403,7 @@ class QueryClass implements Any {
     });
   }
 
-  'children'(): Any {
+  children(): Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -382,7 +411,7 @@ class QueryClass implements Any {
     });
   }
 
-  'orderBy'(...order: Order.Any[]): Any {
+  orderBy(...order: Order.Any[]): Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -390,7 +419,7 @@ class QueryClass implements Any {
     });
   }
 
-  'aggregate'(aggregates: Record<string, Aggregate.Any>): Any {
+  aggregate(aggregates: Record<string, Aggregate.Any>): Any {
     return new QueryClass({
       type: 'aggregate',
       query: this.ast,
@@ -398,7 +427,7 @@ class QueryClass implements Any {
     });
   }
 
-  'limit'(limit: number): Any {
+  limit(limit: number): Any {
     return new QueryClass({
       type: 'limit',
       query: this.ast,
@@ -406,7 +435,7 @@ class QueryClass implements Any {
     });
   }
 
-  'skip'(skip: number): Any {
+  skip(skip: number): Any {
     return new QueryClass({
       type: 'skip',
       query: this.ast,
@@ -414,7 +443,7 @@ class QueryClass implements Any {
     });
   }
 
-  'from'(
+  from(
     ...args:
       | [
           (
@@ -553,7 +582,7 @@ class QueryClass implements Any {
     });
   }
 
-  'options'(options: QueryAST.QueryOptions): Any {
+  options(options: QueryAST.QueryOptions): Any {
     return new QueryClass({
       type: 'options',
       query: this.ast,
@@ -561,7 +590,7 @@ class QueryClass implements Any {
     });
   }
 
-  'debugLabel'(label: string): Any {
+  debugLabel(label: string): Any {
     if (this.ast.type === 'options') {
       return new QueryClass({
         type: 'options',
@@ -578,7 +607,7 @@ class QueryClass implements Any {
 }
 
 export const is = (value: unknown): value is Any => {
-  return typeof value === 'object' && value !== null && '~Query' in value;
+  return typeof value === 'object' && value !== null && QueryTypeId in value;
 };
 
 /** Construct a query from an ast. */
@@ -624,6 +653,16 @@ export const type: {
     filter: Filter.type(type, predicates).ast,
   });
 };
+
+/**
+ * Project a query's results to a single scalar property, for use as a membership set in
+ * `Filter.in(Query.project(query, 'col'))`.
+ * @param query - Query to project.
+ * @param property - Property path to project.
+ * @returns Projection for use in `Filter.in`.
+ */
+export const project = <T, K extends RefPropKey<T>>(query: Query<T>, property: K): Projection<T[K]> =>
+  internal.makeProjection<T[K]>(query.ast, property);
 
 /**
  * Combine results of multiple queries.

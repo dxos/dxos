@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { SupportOperation } from '#types';
@@ -16,8 +16,8 @@ const handler: Operation.WithHandler<typeof SupportOperation.OnCreateSpace> = Su
       if (!isDefault) {
         return;
       }
-      const homePath = Paths.getSpaceHomePath(space.id);
-      yield* Operation.invoke(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: homePath });
+      const homePath = GraphPath.getSpaceHomePath(space.id);
+      yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath] });
       // Expose is scheduled because the navtree may not have rendered yet at this point.
       yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath });
     }),

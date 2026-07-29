@@ -10,12 +10,12 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
+import { AccessToken } from '@dxos/link';
 import { Connection } from '@dxos/plugin-connector';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, Card, Icon, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { AccessToken } from '@dxos/types';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

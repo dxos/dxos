@@ -50,7 +50,7 @@ export type NodeProperties = SharedProperties & {
 };
 
 export type ActionProperties = SharedProperties & {
-  disposition?: string;
+  disposition?: string | string[];
   hidden?: boolean;
   caller?: string;
   menuType?: 'dropdown';

@@ -200,7 +200,7 @@ export const getArriveAt = (seg: Segment): string | undefined =>
  * Sets the departure time (ISO 8601) across variants — `checkIn` for
  * accommodation, `departAt` otherwise.
  */
-export const setDepartAt = (seg: Segment, iso: string): void =>
+export const setDepartAt = (seg: Segment, iso: string): void => {
   Obj.update(seg, (seg) => {
     if (seg.details._tag === 'accommodation') {
       seg.details.checkIn = iso;
@@ -208,12 +208,13 @@ export const setDepartAt = (seg: Segment, iso: string): void =>
       seg.details.departAt = iso;
     }
   });
+};
 
 /**
  * Sets the arrival / end time (ISO 8601) across variants — `checkOut` for
  * accommodation, `arriveAt` otherwise.
  */
-export const setArriveAt = (seg: Segment, iso: string): void =>
+export const setArriveAt = (seg: Segment, iso: string): void => {
   Obj.update(seg, (seg) => {
     if (seg.details._tag === 'accommodation') {
       seg.details.checkOut = iso;
@@ -221,6 +222,7 @@ export const setArriveAt = (seg: Segment, iso: string): void =>
       seg.details.arriveAt = iso;
     }
   });
+};
 
 /**
  * "From" Place across variants.

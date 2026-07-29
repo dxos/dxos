@@ -54,7 +54,28 @@ If no idiom matches, proceed using the exemplar (`plugin-chess`); if you find yo
 
 ## Specification
 
-Each plugin MUST have a `PLUGIN.mdl` specification written in the **MDL** (`.mdl`) language defined by `@dxos/deus`. The authoritative references live under [`packages/reflect/deus/`](../../../packages/reflect/deus/):
+A plugin's design is captured in two artifacts across its lifecycle — a
+superpowers **design doc** during the initial build, then a durable
+**`PLUGIN.mdl`** that outlives the first session.
+
+### Initial plugin creation (first session)
+
+When creating a brand-new plugin, do NOT start with `PLUGIN.mdl`. Instead:
+
+1. Run the `superpowers:brainstorming` flow and write the approved design to a
+   separate design doc under `agents/superpowers/specs/YYYY-MM-DD-<name>-design.md`
+   (the DXOS override of the superpowers default `docs/superpowers/…` path).
+2. The user approves that design doc before any code is written.
+3. Implement Phase 1 against the design doc.
+4. **At the end of Phase 1, before opening the PR**, author
+   `packages/plugins/plugin-<name>/PLUGIN.mdl` from the design doc and the
+   as-built plugin. This is a required pre-PR step — the design doc drove the
+   build; `PLUGIN.mdl` is the hand-off spec that subsequent sessions consume.
+
+### `PLUGIN.mdl` — the durable spec
+
+`PLUGIN.mdl` is written in the **MDL** (`.mdl`) language defined by `@dxos/deus`.
+The authoritative references live under [`packages/reflect/deus/`](../../../packages/reflect/deus/):
 
 - [`docs/DESIGN.md`](../../../packages/reflect/deus/docs/DESIGN.md) — language specification.
 - [`docs/IDIOMS.md`](../../../packages/reflect/deus/docs/IDIOMS.md) — idiom format and `@idiom` JSDoc-tag conventions.
@@ -62,17 +83,20 @@ Each plugin MUST have a `PLUGIN.mdl` specification written in the **MDL** (`.mdl
 - [`lang/PLUGIN-.template.mdl`](../../../packages/reflect/deus/lang/PLUGIN-.template.mdl) — the plugin template.
 - [`src/extension/mdl.grammar`](../../../packages/reflect/deus/src/extension/mdl.grammar) — Lezer grammar (use only when chasing syntax questions).
 
-**The `PLUGIN.mdl` IS the design document.** Do not write a separate design doc (e.g., in `agents/superpowers/specs/`). During brainstorming, once the design is approved, write the spec directly as `packages/plugins/plugin-<name>/PLUGIN.mdl`. Use [`packages/reflect/deus/lang/PLUGIN-.template.mdl`](../../../packages/reflect/deus/lang/PLUGIN-.template.mdl) as the template and `packages/plugins/plugin-chess/PLUGIN.mdl` as a reference.
+Use the template as the starting structure and `packages/plugins/plugin-chess/PLUGIN.mdl`
+as a reference. `PLUGIN.mdl` is a **record of what has been built — not a
+working document**. Design exploration for new features (in any session) happens
+in a design doc under `agents/superpowers/specs/`; `PLUGIN.mdl` is updated only
+after the design AND implementation have settled. It must be:
 
-The specification is the source of truth for what the plugin does. It must be:
-
-- **Created first** — this is the first file written for any new plugin, before any code.
-- **Kept up-to-date** — when features are discussed, added, or changed, update the spec first.
-- **Used for testing** — derive user feature tests and acceptance criteria from the spec's `feat`, `req`, and `test` blocks.
-- **Reviewed before implementation** — the user must approve the PLUGIN.mdl before code is written.
-
-When the user discusses new features or changes, update `PLUGIN.mdl` to reflect the agreed requirements before implementing.
-Tests should verify the behaviors described in the spec.
+- **Present before a new plugin's first PR merges** — created at the close of
+  Phase 1 as described above; never omitted.
+- **Updated after the work settles** — when features are added or changed,
+  brainstorm and implement against a design doc, then bring `PLUGIN.mdl` in
+  line with the as-built plugin before the PR (never edit it speculatively
+  up front).
+- **Used for testing** — derive user feature tests and acceptance criteria from
+  the spec's `feat`, `req`, and `test` blocks.
 
 ## Workflow
 
@@ -80,26 +104,30 @@ Tests should verify the behaviors described in the spec.
 
 ## Creating a New Plugin
 
-When asked to create a new plugin, start with a minimal skeleton before adding features. The skeleton should include:
+When asked to create a new plugin, first produce the superpowers design doc (see
+Specification above), then start with a minimal skeleton before adding features.
+`PLUGIN.mdl` is NOT part of the initial skeleton — it is authored at the end of
+Phase 1, before the PR. The skeleton should include:
 
-1. `PLUGIN.mdl` — specification starter with initial feature/requirement blocks.
-2. `README.md` — brief description of the plugin's purpose.
-3. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
-4. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
-5. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
-6. `src/translations.ts` — initial translation resources.
-7. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
-8. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
-9. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
-10. `src/types/` — one schema type with `make()` factory.
-11. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
-12. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
-13. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
-14. `src/components/` — empty barrel, ready for primitives.
+1. `README.md` — brief description of the plugin's purpose.
+2. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
+3. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
+4. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
+5. `src/translations.ts` — initial translation resources.
+6. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
+7. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
+8. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
+9. `src/types/` — one schema type with `make()` factory.
+10. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
+11. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
+12. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
+13. `src/components/` — empty barrel, ready for primitives.
 
 Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, skills, settings, etc.).
 Register the plugin with `composer-app`.
+
+Once the plugin contributes a navtree section, apply both rules under **App graph** below — gate the section on a non-empty query, and default the create-object `targetNodeId` to the node that lists the objects.
 
 ## Directory Structure
 
@@ -113,6 +141,7 @@ plugin-foo/
     plugin.ts               # Plugin.lazy() wrapper; consumed via @dxos/plugin-foo/plugin.
     meta.ts                 # Plugin.Meta (id, name, description, icon, iconHue).
     translations.ts         # i18n resources keyed by typename and meta.id.
+    paths.ts                # Canonical qualified graph paths (only if the plugin owns navtree nodes).
     FooPlugin.tsx           # Plugin definition via Plugin.define(meta).pipe().
     skills/             # AI skill definitions.
       index.ts
@@ -121,6 +150,8 @@ plugin-foo/
       react-surface.tsx
       operation-handler.ts
       skill-definition.ts
+      app-graph-builder.ts  # Navtree sections, child nodes, actions.
+      create-object.ts      # SpaceCapabilities.CreateObjectEntry per type.
     components/             # Primitive UI components (no app-framework deps).
       index.ts
       MyComponent/
@@ -145,7 +176,7 @@ plugin-foo/
 
 ### Component (`src/components/`)
 
-Low-level UI. Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit`.
+Low-level UI (plugin/src/components, react-ui-\*). Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit`.
 Each component lives in its own subdirectory with an `index.ts` barrel.
 Use named exports; no default exports. Create a basic storybook for each.
 
@@ -353,6 +384,24 @@ Handler file shape (mirror `plugin-trip/src/operations/add-segment.ts`):
 
 See: `plugin-chess/src/operations/`, `plugin-trip/src/operations/add-segment.ts`, `plugin-chess-com/src/operations/sync-games.ts`
 
+### App graph (`src/capabilities/app-graph-builder.ts`)
+
+Extensions contribute navtree sections, their child nodes, and actions on any node. Assemble with `const extensions = yield* Effect.all([...])` then `Capability.contributes(AppCapabilities.AppGraphBuilder, extensions)` — the raw array fails the `BuilderExtensions` typecheck. Wire with `AppPlugin.addAppGraphModule`.
+
+Section hub: one extension matching `AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.<group>)` → `AppNode.makeSection({...})`, a second matching `node.type === SECTION_TYPE && isSpace(node.properties.space)` → the child nodes. Use `TypeSection.createTypeSectionExtension` when the section is keyed by typename.
+
+**Gate the section on content** — the connector queries the objects it lists and returns `Effect.succeed([])` while there are none, so the section is absent from spaces that don't use the plugin. Its `+` action goes with it, so the type also needs a `SpaceCapabilities.CreateObjectEntry` (`src/capabilities/create-object.ts`) for the first create.
+
+**Create where the objects are listed, not in the database** — `SpaceOperation.AddObject` navigates to `targetNodeId`, falling back to the database subtree when absent, so forwarding a bare `options.targetNodeId` strands the user under Database. Point it at the node whose children are the objects: the section, or its object-listing child when the hub nests one (plugin-studio's Artifacts hang off a virtual `Artifacts` node, not the Studio section):
+
+```ts
+targetNodeId: options.targetNodeId ?? getPublicationsPath(options.db.spaceId),
+```
+
+Declare paths once in `src/paths.ts` — `GraphPath.getSpacePath(spaceId, GroupSegments.<group>, <segment>)`, or `GraphPath.createTypeSectionPaths(Type, { groupId })` — and import them from both the graph builder and the create-object entries.
+
+See: `plugin-inbox/src/capabilities/app-graph-builder.ts`, `plugin-inbox/src/paths.ts`
+
 ## Plugin Definition
 
 The main plugin file wires everything together using `Plugin.define(meta).pipe()` with `AppPlugin` helper methods:
@@ -374,6 +423,93 @@ The main plugin file wires everything together using `Plugin.define(meta).pipe()
 | `addNavigationHandlerModule`  | Navigation handlers            | `OperationInvokerReady`   |
 
 See: `plugin-chess/src/ChessPlugin.tsx`
+
+### Module activation ordering
+
+Modules do **not** activate in registration order. Each module declares an
+event that triggers it (`activatesOn`), and ordering between modules is
+expressed through **shared activation events** — modules never reference each
+other directly. Two levers on `Plugin.addModule({...})`:
+
+- **`firesAfterActivation: [Event]`** — after this module's `activate` body
+  finishes, the framework fires `Event`; any module with `activatesOn: Event`
+  then runs. Use to publish "I'm ready" (e.g. `ClientEvents.ClientReady`).
+- **`firesBeforeActivation: [Event]`** — before this module's `activate` runs,
+  the framework activates `Event`'s contributors and **waits** for them. Use to
+  force a prerequisite (e.g. schema/migration setup) ahead of this module.
+
+To run module **B after** module A: A declares `firesAfterActivation: [E]`, B
+declares `activatesOn: E`. To force setup **before** B: B declares
+`firesBeforeActivation: [E]`. Combine events with `ActivationEvent.oneOf(...)`
+/ `allOf(...)`.
+
+Canonical example (idiom `org.dxos.app-framework.moduleActivationOrdering`):
+`plugin-client/src/ClientPlugin.ts` — the `Client` module fires
+`ClientEvents.ClientReady` after activating; `SchemaDefs`/`Migrations` listen on
+it and use `firesBeforeActivation` to sequence setup ahead of themselves.
+
+## Non-Browser Variants
+
+A plugin that must load outside a DOM (the `dx` CLI, workerd) ships one variant per environment,
+selected by the `#plugin` conditions: `src/FooPlugin.tsx` (browser default), `src/FooPlugin.node.ts`,
+`src/FooPlugin.workerd.ts`. **Only add a variant the plugin genuinely supports** — a front-end-only
+plugin has none, and its `#plugin` collapses to a single resolution (`plugin-deck`, `plugin-navtree`).
+
+**`lazy` defers evaluation, not bundling.** `Capability.lazy`, `OperationHandlerSet.lazy` and
+`React.lazy` all postpone the import at runtime while a bundler still walks it, so a barrel that
+merely _lists_ a React surface pulls React — and the `react-ui` graph behind it — into every
+consumer. Runtime laziness never keeps UI out of a node build; a node-conditioned barrel does.
+
+Each variant therefore needs its own barrels, conditioned in `package.json` `imports`:
+
+| Barrel          | Node file                  | Holds                                            |
+| --------------- | -------------------------- | ------------------------------------------------ |
+| `#capabilities` | `src/capabilities/node.ts` | Only the capabilities `FooPlugin.node` activates |
+| `#operations`   | `src/operations/node.ts`   | Only the operations a node host can serve        |
+
+**Re-export through the alias, not a relative path** — `src/plugin.ts` must use
+`export { FooOperationHandlerSet } from '#operations';`. A relative `'./operations'` bypasses the
+import map, so the node condition never applies and `./plugin` drags the browser set in anyway.
+
+What makes a contribution browser-only:
+
+- A `SpaceCapabilities.CreateObjectEntry` with a `customPanel` — the entry bundles the headless
+  object factory with a React component, so `CreateObject` is omitted from the node barrel.
+- An operation driving a live editor view or Surface (`scroll-to-anchor`).
+
+TypeScript resolves the `types` condition for every environment, so it always sees the full barrel —
+derive the node barrel from what `FooPlugin.node.ts` actually imports so the two agree.
+
+### Headless values in UI packages
+
+Much of what an operation handler needs is headless but lives behind a UI package's root barrel.
+Import the UI-free entrypoint instead of relocating the code:
+
+| Need                                               | Import from                      | Not                       |
+| -------------------------------------------------- | -------------------------------- | ------------------------- |
+| `Attention` / `Selection` / `ViewState`            | `@dxos/react-ui-attention/types` | the package root          |
+| `Cursor`, `cherryPickHunk`, `createComment`        | `@dxos/ui-editor/headless`       | the package root          |
+| `hues`, `Hue`, `toHue`                             | `@dxos/ui-theme/headless`        | the package root          |
+| The `Table` schema                                 | `@dxos/react-ui-table/types`     | the package root          |
+| `getSpace`, `ConnectionState`, `InvitationEncoder` | `@dxos/client/*`                 | `@dxos/react-client/*`    |
+| `Atom`, `Registry`, `Result`                       | `@effect-atom/atom`              | `@effect-atom/atom-react` |
+
+A package that reads its own files at runtime needs a bundler-friendly entry too: paths computed from
+`import.meta.url` land inside the compiled binary's embedded filesystem, where its siblings do not exist.
+
+### Guarding it
+
+`check-module-structure` traces the export and fails if React is reachable. Every plugin with a node
+variant has this task, and CI runs `moon run :check-module-structure`. Diagnose a failure by printing
+the chain:
+
+```bash
+pnpm exec dx-trace-imports --export ./plugin --to "{react,react-dom}" \
+  --conditions workerd,worker,node --max-chains 2
+```
+
+See: `plugin-map/src/capabilities/node.ts`, `plugin-sheet/src/operations/node.ts`,
+`plugin-client/package.json` (conditioned `#capabilities`), `plugin-map/moon.yml`
 
 ## React Surface
 
@@ -400,13 +536,19 @@ See: `plugin-chess/src/translations.ts`
 - New packages MUST have `"private": true`.
 - Define `#imports` aliases for internal barrels (`#capabilities`, `#components`, `#containers`, `#meta`, `#operations`, `#types`).
 - Define `exports` subpaths for anything other plugins need (`./types`, `./operations`).
+- A plugin with a node or workerd variant gives `#plugin`, `#capabilities` and (when needed)
+  `#operations` a per-condition map — `source` for the TS paths plus the built `node`/`workerd`
+  entries. See **Non-Browser Variants**.
 - Internal `@dxos` deps use `workspace:*`; external deps use `catalog:`.
 
 See: `plugin-chess/package.json`
 
 ## moon.yml
 
-Each `package.json` export subpath needs a matching `--entryPoint` in the `compile` task args.
+Each `package.json` export subpath needs a matching `--entryPoint` in the `compile` task args
+(vite-built plugins: a matching `entry` in `vite.config.ts`, including `capabilities/node`).
+A plugin with a node variant also carries a `check-module-structure` task — see
+**Non-Browser Variants**.
 
 See: `plugin-chess/moon.yml`
 
@@ -436,4 +578,6 @@ moon run plugin-foo:test-storybook
 - `src/FooPlugin.ts` (the `Plugin.define().pipe()` implementation) must have `export default FooPlugin` so `Plugin.lazy(() => import('#plugin'))` can resolve it.
 - If another plugin needs internals, expose dedicated public entrypoints (`types`, `operations`) instead of re-exporting from root.
 - Plugins should not depend on another plugin's root entrypoint for broad barrels.
+- Never rely on `Capability.lazy` / `OperationHandlerSet.lazy` / `React.lazy` to keep a dependency
+  out of a bundle — they defer evaluation, not bundling. See **Non-Browser Variants**.
 - The `Surface` component provides top-level `<Suspense>` for lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components.

@@ -15,7 +15,7 @@ import * as Role from '../../../common/Role';
 import { Capability, Plugin } from '../../../core';
 import { createTestApp } from '../../../testing/harness';
 import { render } from '../../../testing/react';
-import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
+import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent';
 import { setSurfaceDebug } from './SurfaceDebug';
 import { surfaceMetrics } from './SurfaceMetrics';
 import { type Definition, create, makeFilter } from './types';
@@ -48,6 +48,26 @@ const TestPlugin = Plugin.define(testMeta).pipe(
   Plugin.make,
 );
 
+const invalidIdMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceInvalidId'),
+  name: 'SurfaceInvalidIdTest',
+});
+
+// Contributes a single surface with a hyphenated (invalid) local id for role A.
+const InvalidIdPlugin = Plugin.define(invalidIdMeta).pipe(
+  Plugin.addModule({
+    id: 'surfaces',
+    activatesOn: ActivationEvents.SetupReactSurface,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(Capabilities.ReactSurface, [
+          create({ id: 'gallery-article', filter: makeFilter(RoleA), component: () => <span data-testid='invalid' /> }),
+        ]),
+      ),
+  }),
+  Plugin.make,
+);
+
 // A counter increments once per commit of the wrapped Surface subtree (mount or update).
 const probe = (counts: { value: number }) => () => {
   counts.value++;
@@ -59,6 +79,37 @@ describe('SurfaceComponent dispatch', () => {
     // Dispatch is synchronous (render() flushes effects in act), so the surface either rendered or it didn't.
     const view = render(harness, <SurfaceComponent type={RoleA} limit={0} />);
     expect(view.queryByTestId('a')).toBeNull();
+  });
+
+  test('drops a surface with an invalid id rather than dispatching it', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [InvalidIdPlugin()] });
+    const view = render(harness, <SurfaceComponent type={RoleA} />);
+    expect(view.queryByTestId('invalid')).toBeNull();
+  });
+});
+
+describe('useIsSurfaceAvailable', () => {
+  const IsAvailableProbe = ({ role, testId }: { role: Role.Role<any>; testId: string }) => {
+    const isSurfaceAvailable = useIsSurfaceAvailable();
+    return <span data-testid={testId}>{String(isSurfaceAvailable({ type: role }))}</span>;
+  };
+
+  test('reports false when no surface is contributed for the role', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [] });
+    const view = render(harness, <IsAvailableProbe role={RoleA} testId='result-none' />);
+    expect((await view.findByTestId('result-none')).textContent).toBe('false');
+  });
+
+  test('reports true once a matching surface is contributed', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [TestPlugin()] });
+    const view = render(harness, <IsAvailableProbe role={RoleA} testId='result-valid' />);
+    expect((await view.findByTestId('result-valid')).textContent).toBe('true');
+  });
+
+  test('reports false when the only contribution for the role has an invalid id', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [InvalidIdPlugin()] });
+    const view = render(harness, <IsAvailableProbe role={RoleA} testId='result-invalid' />);
+    expect((await view.findByTestId('result-invalid')).textContent).toBe('false');
   });
 });
 

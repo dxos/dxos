@@ -4,14 +4,13 @@
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Instructions, Operation, Trace, Trigger } from '@dxos/compute';
+import { Instructions, Operation, Routine, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client';
 
 import {
   AppGraphBuilder,
   CreateObject,
   LayerSpecs,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
   RegistrySync,
@@ -20,7 +19,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Routine } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -28,7 +26,6 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const RoutinePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
@@ -39,6 +36,7 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
+    // TODO(dmaretskyi): Seems to be contributing too late.
     activatesOn: ClientEvents.ClientReady,
     firesBeforeActivation: [ActivationEvents.SetupProcessManager],
     activate: LayerSpecs,

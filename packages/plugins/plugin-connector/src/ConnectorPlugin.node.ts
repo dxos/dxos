@@ -5,12 +5,11 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
-import { AccessToken, Cursor } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/link';
 
-import { AppGraphBuilder, CreateObject, Migrations, OperationHandler } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Connection, DerivedBinding, SyncBinding } from '#types';
+import { Connection } from '#types';
 
 import { connector } from './commands';
 
@@ -24,20 +23,7 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [
-      AccessToken.AccessToken,
-      Connection.Connection,
-      Cursor.Cursor,
-      Feed.Feed,
-      SyncBinding.SyncBinding,
-      // Registered so the 0.1.0 → 0.2.0 migration can decode legacy bindings.
-      SyncBinding.SyncBindingV1,
-      DerivedBinding.DerivedBinding,
-    ],
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.SetupMigration,
-    activate: Migrations,
+    schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed],
   }),
   Plugin.make,
 );

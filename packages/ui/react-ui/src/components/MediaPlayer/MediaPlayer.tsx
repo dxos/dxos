@@ -105,7 +105,8 @@ export const MediaPlayer = ({
   fit = 'cover',
 }: MediaPlayerProps) => {
   const fitClass = FIT_CLASS[fit];
-  if (isEmbedUrl(src)) {
+  // An explicit `kind` forces native playback even for extensionless URLs (e.g. `blob:`/`data:`).
+  if (kind || isEmbedUrl(src)) {
     const resolved = kind ?? detectMediaKind(src) ?? 'video';
     if (resolved === 'audio') {
       return (
@@ -123,16 +124,18 @@ export const MediaPlayer = ({
     }
 
     return (
-      <video
-        className={mx('max-w-full max-h-full aspect-video', fitClass, classNames)}
-        src={src}
-        controls={controls}
-        autoPlay={autoPlay}
-        loop={loop}
-        muted={muted}
-        crossOrigin={crossOrigin}
-        aria-label={alt}
-      />
+      <div className={mx('grid place-items-center', classNames)}>
+        <video
+          className={mx('max-w-full max-h-full aspect-video', fitClass)}
+          src={src}
+          controls={controls}
+          autoPlay={autoPlay}
+          loop={loop}
+          muted={muted}
+          crossOrigin={crossOrigin}
+          aria-label={alt}
+        />
+      </div>
     );
   }
 

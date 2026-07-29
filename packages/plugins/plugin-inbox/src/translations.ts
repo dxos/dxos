@@ -4,6 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as cardTranslations } from '@dxos/react-ui-card/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { Message } from '@dxos/types';
 
@@ -55,29 +56,19 @@ export const translations = [
         'action-delete.menu': 'Delete',
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
+        'draft.label': 'New message',
         'event.label': 'Event',
         'facts.label': 'Facts',
         'inbox.label': 'Inbox',
 
         'no-connections.label': 'No connections configured',
 
-        'sync-mailbox.label': 'Sync mailbox',
-        'sync-mailbox-error.title': 'Failed to sync mailbox',
-        'sync-mailbox-success.title': 'Mailbox sync complete',
+        'sync-mailbox.label': 'Sync',
         'empty-mailbox.message': 'Mailbox empty',
 
         'sync-calendar.label': 'Sync calendar',
-        'sync-calendar-error.title': 'Failed to sync calendar',
-        'sync-calendar-success.title': 'Calendar sync complete',
         'empty-calendar.message': 'Calendar empty',
 
-        'sync-contacts.label': 'Sync contacts',
-        'sync-contacts-error.title': 'Failed to sync contacts',
-        'sync-contacts-success.title': 'Contacts sync complete',
-
-        'show-contact.label': 'Show contact',
-        'create-contact.label': 'Create contact',
-        'remove-attendee.label': 'Remove attendee',
         'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
         'mailbox-account.label': 'Account',
@@ -115,6 +106,9 @@ export const translations = [
         'calendar-toolbar-create-event.menu': 'Create event',
         'calendar-toolbar-sync.menu': 'Save events to calendar',
 
+        'conversation-toolbar.label': 'Conversation toolbar',
+        'collapse-all.menu': 'Collapse all',
+        'expand-all.menu': 'Expand all',
         'message-toolbar.label': 'Message toolbar',
         'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
@@ -126,6 +120,7 @@ export const translations = [
         'message-toolbar-delete.menu': 'Delete',
         'message-toolbar-extract.menu': 'Extract',
         'message-toolbar-load-images.menu': 'Load remote images',
+        'message-toolbar-collapse.label': 'Collapse message',
 
         'message-body.placeholder': 'Enter message text...',
 
@@ -143,9 +138,15 @@ export const translations = [
 
         'mailboxes-section.label': 'Mailboxes',
         'all-mail.label': 'All Mail',
+        'sent.label': 'Sent',
         'drafts.label': 'Drafts',
-        'drafts.article.description': 'Draft list (coming soon).',
-        'drafts.empty.message': 'No drafts yet.',
+        'subscriptions.label': 'Subscriptions',
+        'subscriptions.toolbar.title': 'Subscriptions toolbar',
+        'subscriptions.empty.message': 'No bulk-mail subscriptions found.',
+        'subscriptions.count.label': '{{email}} · {{count}} messages',
+        'subscriptions.remove.label_zero': 'Remove',
+        'subscriptions.remove.label_one': 'Remove ({{count}})',
+        'subscriptions.remove.label_other': 'Remove ({{count}})',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',
@@ -163,6 +164,10 @@ export const translations = [
         'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 
+        'draft-to.label': 'To',
+        'draft-to.placeholder': 'Recipients',
+        'draft-cc.label': 'Cc',
+        'draft-bcc.label': 'Bcc',
         'draft-subject.label': 'Subject',
         'draft-subject.placeholder': 'Message subject',
         'draft-body.label': 'Body',
@@ -174,5 +179,6 @@ export const translations = [
       },
     },
   },
+  ...cardTranslations,
   ...componentsTranslations,
 ] as const satisfies Resource[];

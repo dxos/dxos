@@ -10,14 +10,14 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FactStore, FeedCursors } from '@dxos/pipeline-rdf';
+import { Cursor } from '@dxos/link';
+import { FactStore } from '@dxos/pipeline-rdf';
 import {
   Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-  SyncBinding,
 } from '@dxos/plugin-connector';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
@@ -104,6 +104,11 @@ export const DraftEmailAndOpen = Operation.make({
     body: Schema.optional(Schema.String),
     // TODO(wittjosiah): Should be Mailbox.Mailbox.
     mailbox: Schema.optional(Schema.Any),
+    /**
+     * Graph node id of the mailbox view the draft is composed from; a compose draft opens as a plank
+     * beside it. Defaults to the mailbox's own node when the caller has no view context.
+     */
+    contextId: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });
@@ -150,7 +155,7 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
     userId: Schema.String.pipe(Schema.optional),
@@ -160,38 +165,17 @@ export const GoogleMailSync = Operation.make({
       }),
       Schema.optional,
     ),
-    after: Schema.Union(Schema.Number, Schema.String).pipe(
-      Schema.annotations({
-        description: 'Oldest bound of the range to sync (the horizon), a unix timestamp or yyyy-MM-dd string.',
-      }),
-      Schema.optional,
-    ),
-    before: Schema.Union(Schema.Number, Schema.String).pipe(
-      Schema.annotations({
-        description:
-          'Newest bound of the range to sync, a unix timestamp or yyyy-MM-dd string. Defaults to today; backfill passes the oldest-synced date to cap a backward walk.',
-      }),
-      Schema.optional,
-    ),
-    direction: Schema.Literal('forward', 'backward').pipe(
-      Schema.annotations({
-        description:
-          'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
-      }),
-      Schema.optional,
-    ),
   }),
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
   services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
-}).pipe(Operation.visible);
+}).pipe(Operation.visible, Operation.idempotent);
 
 /**
- * Eagerly materializes the local Mailbox bound to a Gmail connection so a
- * {@link SyncBinding} can be created (relations require both endpoints to exist).
- * Gmail is a single-target connector with no remote selection, so a fresh Mailbox
- * is always created; the connection's `accessToken.account` seeds the default name.
+ * Eagerly materializes the local Mailbox bound to a Gmail connection so the sync cursor's target
+ * exists before the cursor is created. Gmail is a single-target connector with no remote selection,
+ * so a fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
  */
 export const MaterializeGmailTarget = Operation.make({
   meta: {
@@ -212,29 +196,9 @@ export const JmapSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
-    after: Schema.Union(Schema.Number, Schema.String).pipe(
-      Schema.annotations({
-        description: 'Oldest bound of the range to sync (the horizon), a unix timestamp or ISO string.',
-      }),
-      Schema.optional,
-    ),
-    before: Schema.Union(Schema.Number, Schema.String).pipe(
-      Schema.annotations({
-        description:
-          'Newest bound of the range to sync, a unix timestamp or ISO string. Defaults to today; backfill passes the oldest-synced date to cap a backward walk.',
-      }),
-      Schema.optional,
-    ),
-    direction: Schema.Literal('forward', 'backward').pipe(
-      Schema.annotations({
-        description:
-          'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
-      }),
-      Schema.optional,
-    ),
   }),
   output: Schema.Struct({
     newMessages: Schema.Number,
@@ -242,13 +206,13 @@ export const JmapSync = Operation.make({
   // Capability (on-arrival extractors), Database (feed I/O), Trace (status) — provided by the invoker;
   // HTTP client and JMAP credentials are provided by the handler from the connection.
   services: [Capability.Service, Database.Service, Trace.TraceService],
-}).pipe(Operation.visible);
+}).pipe(Operation.visible, Operation.idempotent);
 
 /**
- * Eagerly materializes the local Mailbox bound to a JMAP connection so a {@link SyncBinding} can be
- * created. JMAP is a single-target connector (the account inbox), so a fresh Mailbox is always
- * created; the connection's `accessToken.account` seeds the default name. Mirrors
- * {@link MaterializeGmailTarget}.
+ * Eagerly materializes the local Mailbox bound to a JMAP connection so the sync cursor's target
+ * exists before the cursor is created. JMAP is a single-target connector (the account inbox), so a
+ * fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
+ * Mirrors {@link MaterializeGmailTarget}.
  */
 export const MaterializeJmapTarget = Operation.make({
   meta: {
@@ -290,7 +254,7 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
     }),
     googleCalendarId: Schema.optional(Schema.String),
@@ -305,9 +269,9 @@ export const GoogleCalendarSync = Operation.make({
 }).pipe(Operation.visible);
 
 /**
- * Eagerly materializes the local Calendar for a selected remote Google calendar so a
- * {@link SyncBinding} can be created. Find-or-create keyed on the calendar's foreign key,
- * so re-running for the same remote calendar returns the existing Calendar.
+ * Eagerly materializes the local Calendar for a selected remote Google calendar so the sync
+ * cursor's target exists before the cursor is created. Find-or-create keyed on the calendar's
+ * foreign key, so re-running for the same remote calendar returns the existing Calendar.
  */
 export const MaterializeCalendarTarget = Operation.make({
   meta: {
@@ -344,31 +308,6 @@ export const CreateGoogleCalendarEvent = Operation.make({
   services: [Credential.CredentialsService],
 }).pipe(Operation.visible);
 
-/**
- * Push draft (locally-created, not-yet-synced) events for a calendar up to Google Calendar, then
- * reconcile: each created event is stamped with its Google foreign key and the local draft object
- * is removed (the canonical copy lands in the calendar feed on the next read-sync). Mirrors the
- * email draft → send flow. When `event` is given, only that draft event is synced.
- */
-export const SyncDraftEvents = Operation.make({
-  meta: {
-    key: makeKey('syncDraftEvents'),
-    name: 'Sync draft events',
-    description: 'Create locally-drafted calendar events on Google Calendar.',
-    icon: 'ph--calendar-check--regular',
-  },
-  // The Calendar (and optional Event) are passed as live ECHO objects (validated in the handler);
-  // services mirror GoogleCalendarSync since the handler creates events, then re-syncs the feed.
-  input: Schema.Struct({
-    calendar: Schema.Any,
-    event: Schema.optional(Schema.Any),
-  }),
-  output: Schema.Struct({
-    synced: Schema.Number,
-  }),
-  services: [Database.Service, Credential.CredentialsService],
-});
-
 export const RenameFilter = Operation.make({
   meta: {
     key: makeKey('renameFilter'),
@@ -381,44 +320,6 @@ export const RenameFilter = Operation.make({
     caller: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
-});
-
-/**
- * Delete a calendar event. A draft (local) event is simply removed from the database; a synced
- * event is deleted on Google Calendar (by its foreign key) and removed from the calendar feed.
- */
-export const DeleteEvent = Operation.make({
-  meta: {
-    key: makeKey('deleteEvent'),
-    name: 'Delete event',
-    description: 'Delete a calendar event locally and on Google Calendar.',
-    icon: 'ph--trash--regular',
-  },
-  input: Schema.Struct({
-    calendar: Schema.Any,
-    event: Schema.Any,
-  }),
-  output: Schema.Struct({ deleted: Schema.Boolean }),
-  services: [Database.Service, Credential.CredentialsService],
-});
-
-/**
- * Delete an email. A draft (local) message is simply removed from the database; a synced message is
- * moved to the trash on Gmail (by its foreign key) and removed from the mailbox feed.
- */
-export const DeleteEmail = Operation.make({
-  meta: {
-    key: makeKey('deleteEmail'),
-    name: 'Delete email',
-    description: 'Delete an email locally and move it to the Gmail trash.',
-    icon: 'ph--trash--regular',
-  },
-  input: Schema.Struct({
-    mailbox: Schema.Any,
-    message: Schema.Any,
-  }),
-  output: Schema.Struct({ deleted: Schema.Boolean }),
-  services: [Database.Service, Credential.CredentialsService],
 });
 
 export const GetGoogleContactGroups = Operation.make({
@@ -440,8 +341,8 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
-      description: 'Binding whose connection owns credentials and whose remoteId is the contact group to sync.',
+    binding: Ref.Ref(Cursor.Cursor).annotations({
+      description: 'Binding whose connection owns credentials and whose externalId is the contact group to sync.',
     }),
     pageSize: Schema.optional(Schema.Number),
   }),
@@ -450,20 +351,6 @@ export const GoogleContactsSync = Operation.make({
   }),
   services: [Database.Service, Credential.CredentialsService],
 }).pipe(Operation.visible);
-
-export const SyncContacts = Operation.make({
-  meta: {
-    key: makeKey('syncContacts'),
-    name: 'Sync Contacts',
-    description: 'Runs Google Contacts sync and notifies of progress.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding),
-  }),
-  output: Schema.Void,
-});
 
 export const ReadEmail = Operation.make({
   meta: {
@@ -521,6 +408,7 @@ export const ClassifyEmail = Operation.make({
   services: [AiService.AiService, Database.Service],
 });
 
+/** @deprecated Use {@link ExtractContactFromMessage} + the message extractor pipeline instead. */
 export const ExtractContact = Operation.make({
   meta: { key: makeKey('extractContact'), name: 'Extract Contact', icon: 'ph--user--regular' },
   services: [Capability.Service],
@@ -606,6 +494,7 @@ export const ExtractMessage = Operation.make({
 /** Default parallel extraction limit for {@link ExtractMailbox}. */
 export const DEFAULT_EXTRACT_MAILBOX_CONCURRENCY = 5;
 
+/** @deprecated Use batch dispatchers like on-arrival extractors or direct ExtractMessage invocations instead. */
 export const ExtractMailbox = Operation.make({
   meta: {
     key: makeKey('extractMailbox'),
@@ -647,7 +536,7 @@ export const AnalyzeMailbox = Operation.make({
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
   },
-  services: [AiService.AiService, Database.Service, FactStore, FeedCursors],
+  services: [AiService.AiService, Database.Service, FactStore],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
       description: 'Mailbox whose feed messages are analyzed.',
@@ -670,6 +559,47 @@ export const AnalyzeMailbox = Operation.make({
   output: Schema.Struct({
     processed: Schema.Number,
     facts: Schema.Number,
+  }),
+});
+
+export const CreateProjectFromMessage = Operation.make({
+  meta: {
+    key: makeKey('createProjectFromMessage'),
+    name: 'Create Project',
+    description: "Creates a Project seeded from a message's thread, with an LLM summary.",
+    icon: 'ph--stack--regular',
+  },
+  services: [AiService.AiService, Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox the message belongs to; the created project is anchored to it.',
+    }),
+    message: Type.getSchema(Message.Message).annotations({
+      description: 'Message whose thread seeds the project.',
+    }),
+  }),
+  output: Schema.Struct({
+    projectId: Schema.String,
+  }),
+});
+
+export const UnsubscribeSender = Operation.make({
+  meta: {
+    key: makeKey('unsubscribeSender'),
+    name: 'Unsubscribe',
+    description: 'Adds a skip-sender filter and fires the List-Unsubscribe one-click request for a bulk sender.',
+    icon: 'ph--prohibit--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Mailbox to add the skip-sender filter to.' }),
+    email: Schema.String.annotations({ description: 'Sender email to unsubscribe from and filter.' }),
+    unsubscribe: Schema.String.annotations({ description: 'The raw List-Unsubscribe header value.' }),
+  }),
+  output: Schema.Struct({
+    filtered: Schema.Boolean,
+    /** True when a List-Unsubscribe one-click HTTP request was sent successfully. */
+    unsubscribed: Schema.Boolean,
   }),
 });
 

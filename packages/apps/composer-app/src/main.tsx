@@ -24,6 +24,7 @@ import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
+import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -50,6 +51,9 @@ import {
   startupProfiler,
   translations,
 } from './util';
+
+// Injected by the `define` block in vite.config.ts; '' in production builds.
+declare const __DX_DEV_SERVER_BOOT_ID__: string;
 
 declare global {
   interface ImportMeta {
@@ -85,6 +89,15 @@ if (import.meta.env?.DEV) {
       log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
     });
   }
+}
+
+// Cross-tab reload coordination for persistent worker failures (dev only — see
+// `onPersistentWorkerFailure` below). The sessionStorage guard makes each tab escalate at most
+// once per tab session, so a failure that reloads don't fix cannot loop the reloads.
+const DEV_RELOAD_CHANNEL = 'dxos-dev-worker-reload';
+const DEV_RELOAD_GUARD_KEY = 'dxos.composer.dev-worker-reload';
+if (import.meta.env?.DEV) {
+  new BroadcastChannel(DEV_RELOAD_CHANNEL).onmessage = () => window.location.reload();
 }
 
 /**
@@ -334,27 +347,12 @@ const main = async () => {
   // Decide the deployment mode for client services. The factory is a dumb switch on
   // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
   // env / platform constraints. Worker factories are passed unconditionally; the factory only
-  // invokes the one required by the configured mode.
+  // invokes the one required by the configured mode. Host mode (in-thread services) is opt-in via
+  // DX_HOST; otherwise services run in a dedicated worker elected via a lock (leader/follower).
   const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
-  const useSharedWorker = isTrue(config.values.runtime?.app?.env?.DX_SHARED_WORKER);
-  // iOS has a SharedWorker crash bug (Apple FB11723920); if a caller asks for SharedWorker there,
-  // transparently fall back to in-process host mode instead of letting the factory throw later.
-  const isIos = typeof navigator !== 'undefined' && /iP(hone|ad|od)/.test(navigator.userAgent);
-  const sharedWorkerSupported = typeof SharedWorker !== 'undefined' && !isIos;
   const servicesMode = useLocalServices
     ? defs.Runtime.Client.ServicesMode.HOST
-    : useSharedWorker
-      ? sharedWorkerSupported
-        ? defs.Runtime.Client.ServicesMode.SHARED_WORKER
-        : defs.Runtime.Client.ServicesMode.HOST
-      : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
-
-  // Host and dedicated worker use OPFS-backed SQLite. SharedWorker still uses in-memory SQLite
-  // because OPFS is not available there (see `onconnect.ts`).
-  const sqliteMode =
-    servicesMode === defs.Runtime.Client.ServicesMode.SHARED_WORKER
-      ? defs.Runtime.Client.Storage.SqliteMode.MEMORY
-      : defs.Runtime.Client.Storage.SqliteMode.OPFS;
+    : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
 
   config = new Config(
     {
@@ -364,18 +362,14 @@ const main = async () => {
           signalTelemetryEnabled: !observabilityDisabled,
           singleClientMode: useSingleClientMode,
           servicesMode,
-          storage: { sqliteMode },
+          // Host and dedicated worker both use OPFS-backed SQLite.
+          storage: { sqliteMode: defs.Runtime.Client.Storage.SqliteMode.OPFS },
         },
       },
     },
     config.values,
   );
   const services = await createClientServices(config, {
-    createWorker: () =>
-      new SharedWorker(new URL('./workers/shared-worker', import.meta.url), {
-        type: 'module',
-        name: 'dxos-client-worker',
-      }),
     createDedicatedWorker: () =>
       new Worker(new URL('./workers/dedicated-worker', import.meta.url), {
         type: 'module',
@@ -384,10 +378,25 @@ const main = async () => {
     createCoordinatorWorker: () =>
       new SharedWorker(new URL('./workers/coordinator-worker', import.meta.url), {
         type: 'module',
-        name: 'dxos-coordinator-worker',
+        // Dev: SharedWorkers are keyed by (URL, name) and outlive vite restarts, so suffix the name
+        // with the server boot id — a restarted server then gets a fresh coordinator instead of
+        // attaching to a stale-code instance that new pages cannot negotiate with.
+        name: `dxos-coordinator-worker${__DX_DEV_SERVER_BOOT_ID__ && `-${__DX_DEV_SERVER_BOOT_ID__}`}`,
       }),
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
+    // Stale mixed-generation workers (tabs from before a dev-server restart) present as an endless
+    // boot spinner with only a console warning; in dev, force every same-origin tab through one
+    // coordinated reload so all generations converge. Production relies on the fatal dialog via the
+    // startup timeout (tagged for telemetry — see ResetDialog).
+    onPersistentWorkerFailure: (error) => {
+      log.error('worker connection failing persistently', { error });
+      if (import.meta.env?.DEV && !sessionStorage.getItem(DEV_RELOAD_GUARD_KEY)) {
+        sessionStorage.setItem(DEV_RELOAD_GUARD_KEY, '1');
+        new BroadcastChannel(DEV_RELOAD_CHANNEL).postMessage('reload');
+        window.location.reload();
+      }
+    },
   });
 
   profiler?.mark('services:end');
@@ -469,18 +478,33 @@ const main = async () => {
     }, [services]);
 
     return (
-      <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
-        <Tooltip.Provider>
-          <ResetDialog
-            error={error}
-            logStore={logStore}
-            observability={observability}
-            needRefresh={needRefresh}
-            onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-            onReset={import.meta.env.DEV ? handleReset : undefined}
-          />
-        </Tooltip.Provider>
-      </ThemeProvider>
+      // Double-fault guard: the themed dialog can itself fail to render (e.g. a
+      // vite dev mid-optimization module split breaks the ThemeContext/i18n
+      // identity), which would otherwise loop the outer 'app' boundary forever
+      // instead of reporting the original error. Falls back to the
+      // theme-independent ErrorFallback showing the startup error, and logs the
+      // dialog's own failure with the `fatal_dialog` tag (ResetDialog's tagged
+      // log never runs when its render crashes).
+      <ErrorBoundary
+        name='fatal-dialog'
+        onError={(dialogError) =>
+          log.error('fatal dialog failed to render', { error: dialogError, fatal_dialog: true })
+        }
+        fallbackRender={(props) => <ErrorFallback {...props} error={error} />}
+      >
+        <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
+          <Tooltip.Provider>
+            <ResetDialog
+              error={error}
+              logStore={logStore}
+              observability={observability}
+              needRefresh={needRefresh}
+              onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+              onReset={import.meta.env.DEV ? handleReset : undefined}
+            />
+          </Tooltip.Provider>
+        </ThemeProvider>
+      </ErrorBoundary>
     );
   };
 

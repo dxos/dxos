@@ -7,14 +7,14 @@ import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
-  type ClientServices,
   type ClientServicesProvider,
-  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
+  type Rpc,
   SpaceProperties,
   STATUS_TIMEOUT,
-  clientServiceBundle,
+  makeHandlersFromRpc,
+  serveClientServicesOverIFrame,
 } from '@dxos/client-protocol';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -34,8 +34,6 @@ import {
   subscribeStream,
 } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
-import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
@@ -67,9 +65,6 @@ export type ClientOptions = {
 
   /** Path to SQLite database file for persistent indexing in Node/Bun. Dervied from config's dataRoot. */
   sqlitePath?: string;
-
-  /** Create client worker. */
-  createWorker?: () => SharedWorker;
 
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
@@ -119,7 +114,7 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
-  private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
+  private _shellClientServer?: Rpc.GroupServer;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
   private _edgeIdentitySubscription?: { unsubscribe: () => void };
@@ -204,6 +199,16 @@ export class Client {
    */
   get status(): MulticastObservable<SystemStatus | null> {
     return this._status;
+  }
+
+  /**
+   * True while an in-progress {@link reset} is tearing down services. Consumers that react to
+   * service disconnect/reconnect (e.g. to force a reload) should check this before choosing a
+   * reload target — mid-reset, the current route is stale and reloading to it would reopen
+   * now-cleared UI, so navigate to the origin instead.
+   */
+  get resetting(): boolean {
+    return this._resetting;
   }
 
   /**
@@ -374,13 +379,11 @@ export class Client {
     this._config = this._options.config ?? new Config();
 
     if (!this._options.services) {
-      // Default services mode when not explicitly set in config. The Client entrypoint only exposes
-      // the SharedWorker and OPFS worker options (dedicated worker is a composer-app-level choice).
+      // Default services mode when not explicitly set in config. The Client entrypoint only runs
+      // services in-thread (HOST); the dedicated worker is a composer-app-level choice.
       const clientCfg = this._config.values.runtime?.client;
       if (!clientCfg?.servicesMode && !clientCfg?.remoteSource) {
-        const servicesMode = this._options.createWorker
-          ? Runtime.Client.ServicesMode.SHARED_WORKER
-          : Runtime.Client.ServicesMode.HOST;
+        const servicesMode = Runtime.Client.ServicesMode.HOST;
         // Default SQLite backing when the caller didn't set one:
         // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
         // - FILE when a sqlitePath or dataRoot is supplied (Node/Bun CLI or persistent config)
@@ -402,13 +405,11 @@ export class Client {
     // NOTE: Must currently match the host.
     log('client.initialize: creating services provider', {
       providedServices: !!this._options.services,
-      hasCreateWorker: !!this._options.createWorker,
       hasCreateOpfsWorker: !!this._options.createOpfsWorker,
       sqlitePath: this._options.sqlitePath,
     });
     this._services = await (this._options.services ??
       createClientServices(this._config, {
-        createWorker: this._options.createWorker,
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
@@ -589,28 +590,27 @@ export class Client {
       await this._shellManager.open();
       log('client._open: shell manager opened');
     }
-    if (this._iframeManager?.iframe) {
+    const iframeManager = this._iframeManager;
+    const shellIframe = iframeManager?.iframe;
+    if (iframeManager && shellIframe) {
       // TODO(wittjosiah): Remove. Workaround for socket runtime bug.
       //   https://github.com/socketsupply/socket/issues/893
       const origin =
-        this._iframeManager.source.origin === 'null'
-          ? this._iframeManager.source.toString().split('/').slice(0, 3).join('/')
-          : this._iframeManager.source.origin;
+        iframeManager.source.origin === 'null'
+          ? iframeManager.source.toString().split('/').slice(0, 3).join('/')
+          : iframeManager.source.origin;
 
-      this._shellClientProxy = createProtoRpcPeer({
-        exposed: clientServiceBundle,
-        handlers: this._services.services as ClientServices,
-        port: createIFramePort({
-          channel: DEFAULT_CLIENT_CHANNEL,
-          iframe: this._iframeManager.iframe,
-          origin,
-        }),
-        handlerRpcOptions: {
-          timeout: 60_000, // Timeout is specifically very high because shell will be managing its own timeouts on RPCs.
-        },
+      // Re-serve the client services to the shell iframe over effect-rpc, matching the shell's
+      // `ClientServicesProxy` consumer. Handlers are derived from the already-open effect-native
+      // `rpc` surface so calls forward straight to the underlying provider (worker or host). The
+      // server (and its byte `RpcPort` binding) is constructed inside `@dxos/client-protocol`, which
+      // resolves the iframe transport types in one consistent universe.
+      const shellServicesHandlers = makeHandlersFromRpc(this._services.rpc);
+      this._shellClientServer = await serveClientServicesOverIFrame({
+        iframe: shellIframe,
+        origin,
+        services: () => shellServicesHandlers,
       });
-
-      await this._shellClientProxy.open();
     }
 
     log('opened');
@@ -646,6 +646,8 @@ export class Client {
     this._statusStreamCleanup = undefined;
     await this._runtime?.close(this._ctx);
     await this._echoClient.close(this._ctx);
+    await this._shellClientServer?.close();
+    this._shellClientServer = undefined;
     log.verbose('client._close: closing services...');
     await this._services?.close();
     this._edgeIdentitySubscription?.unsubscribe();

@@ -5,17 +5,17 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Instructions, Trigger } from '@dxos/compute';
+import { Instructions, Routine, Trigger } from '@dxos/compute';
 import { type Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID, URI } from '@dxos/keys';
+import { AccessToken, Cursor } from '@dxos/link';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { Routine } from '#types';
-
 import { connectedRoutinesQuery, routinesForObject } from './routines-for-object';
+import { makeRoutine } from './wire';
 
 // A minimal feed-annotated host (like a mailbox): an object holding a `feed` ref.
 const FeedHost = Type.makeObject(DXN.make('org.dxos.test.feedHost', '0.1.0'))(
@@ -25,7 +25,15 @@ const FeedHost = Type.makeObject(DXN.make('org.dxos.test.feedHost', '0.1.0'))(
   }),
 );
 
-const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed.Feed, FeedHost];
+const types = [
+  Routine.Routine,
+  Trigger.Trigger,
+  Instructions.Instructions,
+  Feed.Feed,
+  FeedHost,
+  Cursor.Cursor,
+  AccessToken.AccessToken,
+];
 
 const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
   const { personalSpace } = await EffectEx.runAndForwardErrors(
@@ -68,6 +76,30 @@ describe('routines connected to an object', () => {
     await expect.poll(() => connectedIds(db, other), { timeout: 5_000 }).toEqual([]);
   });
 
+  test('cursor-ref: trigger bound (via `binding`) to a Cursor whose `spec.target` is the object', async ({
+    expect,
+  }) => {
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    const db = await initSpace(harness);
+
+    const target = db.add(Routine.make({ name: 'target', triggers: [] }));
+    const other = db.add(Routine.make({ name: 'other', triggers: [] }));
+    // A sync trigger references its target only indirectly: `input.binding` → Cursor → `spec.target` → target.
+    const token = db.add(AccessToken.make({ source: 'github.com', token: 'tok' }));
+    const cursor = db.add(Cursor.makeExternal({ source: Ref.make(token), target: qualifiedRef(db, target) }));
+    const trigger = db.add(
+      Trigger.make({ spec: Trigger.specTimer('*/10 * * * *'), input: { binding: qualifiedRef(db, cursor) } }),
+    );
+    const owner = db.add(Routine.make({ name: 'owner', triggers: [Ref.make(trigger)] }));
+    await db.flush();
+
+    expect(routinesForObject(target, [owner, other]).map((routine) => routine.id)).toEqual([owner.id]);
+    expect(routinesForObject(other, [owner])).toEqual([]);
+
+    await expect.poll(() => connectedIds(db, target), { timeout: 5_000 }).toEqual([owner.id]);
+    await expect.poll(() => connectedIds(db, other), { timeout: 5_000 }).toEqual([]);
+  });
+
   test("feed-ref: feed trigger bound to the object's feed", async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);
@@ -97,7 +129,7 @@ describe('routines connected to an object', () => {
     // The routine's action is owned instructions that bind the object as a context object — the second
     // connection path (O ← Instructions.objects ← Routine via spec.instructions), with no trigger involved.
     const instructions = db.add(Instructions.make({ objects: [qualifiedRef(db, target)] }));
-    const owner = db.add(Routine.make({ name: 'owner', instructions }));
+    const owner = db.add(makeRoutine({ name: 'owner', instructions }));
     await db.flush();
 
     expect(routinesForObject(target, [owner, other]).map((routine) => routine.id)).toEqual([owner.id]);

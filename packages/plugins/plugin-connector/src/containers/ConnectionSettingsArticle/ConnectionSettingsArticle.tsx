@@ -6,11 +6,11 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
@@ -50,7 +50,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
         return;
       }
       void invokePromise(LayoutOperation.Open, {
-        subject: [connectionDeckSubject(Paths.getSpacePath(db.spaceId), connection.id)],
+        subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connection.id)],
         navigation: 'immediate',
       });
     },

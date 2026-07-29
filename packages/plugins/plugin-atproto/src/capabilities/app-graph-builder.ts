@@ -6,11 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { Connection } from '@dxos/plugin-connector';
 import { GraphBuilder, Node, type NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
@@ -51,7 +50,7 @@ export default Capability.makeModule(
         connector: (object) =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment(ATPROTO_COMPANION_VARIANT),
+              variant: ATPROTO_COMPANION_VARIANT,
               label: ['companion.label', { ns: meta.profile.key }],
               icon: 'ph--broadcast--regular',
               data: object,
@@ -63,7 +62,7 @@ export default Capability.makeModule(
       // Positioned between Database (0) and Devtools (Infinity).
       GraphBuilder.createExtension({
         id: 'pdsSection',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.system),
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
         connector: (space, get) => {
           const hasAtprotoConnection = get(space.db.query(Filter.type(Connection.Connection)).atom).some(
             isAtprotoConnection,

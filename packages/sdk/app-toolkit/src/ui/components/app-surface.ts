@@ -540,6 +540,12 @@ export const DocumentTitle: Role.Role<DocumentTitleData<unknown>> = Role.make('o
 export const StatusIndicator: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.statusIndicator');
 
 /**
+ * Slot for the devtools-overview sub-surface. Defined here (not in plugin-devtools) so public
+ * contributor plugins can target it without depending on the private devtools plugin.
+ */
+export const DevtoolsOverview: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.devtoolsOverview');
+
+/**
  * Data passed to FormInput surface components by `useInputSurfaceLookup`.
  * Extra fields from `baseData` are accessible as `unknown` via the index signature.
  */

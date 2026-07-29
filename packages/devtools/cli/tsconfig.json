@@ -65,10 +65,7 @@
       "path": "../../core/compute/compute-runtime"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/edge-compute"
     },
     {
       "path": "../../core/compute/operation"
@@ -95,9 +92,6 @@
       "path": "../../plugins/plugin-client"
     },
     {
-      "path": "../../plugins/plugin-comments"
-    },
-    {
       "path": "../../plugins/plugin-connector"
     },
     {
@@ -120,6 +114,9 @@
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-review"
     },
     {
       "path": "../../plugins/plugin-routine"

@@ -196,7 +196,7 @@ const sanitizeObjects = (entries: { data: any; schema: Type.AnyObj }[]) => {
           const ref = value['/'];
           if (idMap.has(ref)) {
             // TODO(dmaretskyi): Whats the best way to represent a local url.
-            return { '/': `echo:/${idMap.get(ref)}` };
+            return { '/': `echo:///${idMap.get(ref)}` };
           } else {
             // Search URIs?
             return { '/': `search:?q=${encodeURIComponent(ref)}` };

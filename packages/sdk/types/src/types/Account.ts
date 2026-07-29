@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
+import { AccessToken } from '@dxos/link';
 
-import * as AccessToken from './AccessToken';
 import * as Provider from './Provider';
 
 /**

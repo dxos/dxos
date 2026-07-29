@@ -2,25 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Agent } from '@dxos/assistant-toolkit';
+import { Trigger } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
+import { URI } from '@dxos/keys';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { FeedAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
 
+/** Mirrors the foreign keys stamped by the agent-wizard automation compiler (`sync-automation`). */
+const AGENT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.AgentTrigger';
+const AGENT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.AgentTriggerTarget';
+
 export type AgentPropertiesProps = {
   agent: Agent.Agent;
+  /** Invoked with the FULL next subscription set when the user toggles one. */
+  onSubscriptionsChanged?: (subscriptions: Ref.Ref<Obj.Unknown>[]) => void;
 };
 
-export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
+export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentPropertiesProps) => {
   const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(agent);
 
@@ -43,36 +49,37 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
 
   const subscribedObjects = useQuery(db, feedFilter);
 
-  // Query all existing subscriptions (e.g., mail, calendar, etc.)
-  const existingSubscriptions = useAtomValue(
-    useMemo(
-      () =>
-        Obj.atom(agent).pipe((_) =>
-          Atom.make((get) => {
-            const agentObj = get(_);
-            const selectedSubscriptions: Obj.Unknown[] = subscribedObjects.filter((object) =>
-              agentObj.subscriptions.some((subscription) => subscription.uri === Obj.getURI(object)),
-            );
-
-            return selectedSubscriptions;
-          }),
-        ),
-      [agent, subscribedObjects],
-    ),
+  // The subscription state lives on the compiled automation (routine triggers), not the agent:
+  // a trigger's target foreign key holds the subscribed object's URI (`timer:` keys are schedules).
+  const triggers = useQuery(
+    db,
+    Filter.foreignKeys(Trigger.Trigger, [{ source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id }]),
+  );
+  const subscribedUris = useMemo(
+    () =>
+      new Set(
+        triggers
+          .map(
+            (trigger) => Obj.getMeta(trigger).keys.find((key) => key.source === AGENT_TRIGGER_TARGET_EXTENSION_KEY)?.id,
+          )
+          .filter((id): id is string => id !== undefined && !id.startsWith('timer:')),
+      ),
+    [triggers],
   );
 
-  // Create/remove agent subscription.
+  // Toggle recompiles the full subscription set (see `sync-automation`'s per-category reconcile).
   const handleSubscriptionChange = useCallback(
     (object: Obj.Unknown, checked: boolean) => {
-      Obj.update(agent, (agent) => {
-        if (checked) {
-          agent.subscriptions.push(Ref.fromURI(Obj.getURI(object)));
-        } else {
-          agent.subscriptions = agent.subscriptions.filter((subscription) => subscription.uri !== Obj.getURI(object));
-        }
-      });
+      const next = new Set(subscribedUris);
+      const uri = Obj.getURI(object);
+      if (checked) {
+        next.add(uri);
+      } else {
+        next.delete(uri);
+      }
+      onSubscriptionsChanged?.([...next].map((subscription) => Ref.fromURI(URI.make(subscription))));
     },
-    [agent],
+    [subscribedUris, onSubscriptionsChanged],
   );
 
   if (subscribedObjects.length === 0) {
@@ -89,7 +96,7 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
         <Input.Root key={object.id}>
           <div className='flex items-center gap-2'>
             <Input.Checkbox
-              checked={existingSubscriptions.includes(object)}
+              checked={subscribedUris.has(Obj.getURI(object))}
               onCheckedChange={(checked) => {
                 handleSubscriptionChange(object, checked === true);
               }}

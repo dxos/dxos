@@ -19,7 +19,7 @@ If `FILES` is empty, report clean and stop.
 ## 2. Commit
 
 - Group changes into **one or more** logical commits when unrelated (e.g. separate features, separate packages).
-- Use **conventional commits**: `feat(scope): …`, `fix(scope): …`, `refactor(scope): …`.
+- Message format: `scope: description`.
 - Stage **only** in-scope files; never stage excluded paths.
 - Create commits immediately — no review pass, no code changes.
 - **Do not push.**

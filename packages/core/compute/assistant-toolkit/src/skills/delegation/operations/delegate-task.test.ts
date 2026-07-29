@@ -5,10 +5,10 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Operation, Skill } from '@dxos/compute';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
@@ -42,12 +42,14 @@ describe('DelegateTask', () => {
         );
         yield* Database.flush();
 
-        const chatFeed = agent.chat?.target?.feed?.target;
+        const agentChat = yield* Agent.loadChat(agent);
+        const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
-        const chat = yield* Database.load(agent.chat!);
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
         const plan = yield* Database.load(chat.plan!);
         expect(plan.tasks).toHaveLength(1);
         expect(plan.tasks[0]).toMatchObject({
@@ -69,7 +71,8 @@ describe('DelegateTask', () => {
           { name: 'Supervisor', instructions: 'Test.' },
           DelegationSkill.make(),
         );
-        const chat = yield* Database.load(agent.chat!);
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
         const plan = yield* Chat.ensurePlan(chat);
         const taskId = Plan.TaskId.make('1-ab');
         Obj.update(plan, (plan) => {
@@ -77,12 +80,14 @@ describe('DelegateTask', () => {
         });
         yield* Database.flush();
 
-        const chatFeed = agent.chat?.target?.feed?.target;
+        const agentChat = yield* Agent.loadChat(agent);
+        const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
         yield* invokeDelegateTask({ id: taskId }, chatFeed);
 
-        const updatedChat = yield* Database.load(agent.chat!);
+        const updatedChat = yield* Agent.loadChat(agent);
+        invariant(updatedChat, 'Agent chat not found.');
         const updated = yield* Database.load(updatedChat.plan!);
         expect(updated.tasks).toHaveLength(1);
         expect(updated.tasks[0]).toMatchObject({
@@ -107,7 +112,8 @@ describe('DelegateTask', () => {
         );
         yield* Database.flush();
 
-        const chatFeed = agent.chat?.target?.feed?.target;
+        const agentChat = yield* Agent.loadChat(agent);
+        const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
         const exit = yield* invokeDelegateTask({ id: Plan.TaskId.make('1-ab'), title: 'New task' }, chatFeed).pipe(

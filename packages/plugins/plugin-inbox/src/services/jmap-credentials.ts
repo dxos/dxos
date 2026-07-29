@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Database, type Ref } from '@dxos/echo';
+import { type AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector';
 
@@ -24,16 +25,25 @@ export type Credentials = {
 /**
  * Service for accessing JMAP credentials.
  *
- * Mirrors `GoogleCredentials` (the Trello pattern): the `Connection` owns the `AccessToken`, and
- * sync/send ops compose `fromConnection(ref)` once at the operation boundary. Unlike Google, there
- * is no database-credential fallback — a JMAP connection always carries host + token in its token
- * record.
+ * Mirrors `GoogleCredentials`: an operation invoked with a `Connection` composes
+ * `fromConnection(ref)`; one invoked with an external-sync cursor composes
+ * `fromAccessToken(cursor.spec.source)` directly (the cursor no longer relates to `Connection`).
+ * Unlike Google, there is no database-credential fallback — a JMAP connection always carries host +
+ * token in its token record.
  */
 export class JmapCredentials extends Context.Tag('JmapCredentials')<JmapCredentials, Credentials>() {
-  /**
-   * Creates a credentials layer from a Connection ref. Loads the connection's `accessToken` and
-   * reads its `source` (host), `account`, and `token`.
-   */
+  /** Creates a credentials layer from an AccessToken ref. Loads its `source` (host), `account`, `token`. */
+  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+    Layer.effect(
+      JmapCredentials,
+      Effect.gen(function* () {
+        const accessToken = yield* Database.load(accessTokenRef);
+        log('using access token', { source: accessToken.source });
+        return { host: accessToken.source, account: accessToken.account, token: accessToken.token };
+      }),
+    );
+
+  /** Creates a credentials layer from a Connection ref. Loads its `accessToken`'s host/account/token. */
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       JmapCredentials,

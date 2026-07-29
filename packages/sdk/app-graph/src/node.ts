@@ -95,8 +95,9 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
   /** Will automatically add nodes with an edge from this node to each. */
   nodes?: NodeArg<unknown>[];
 
-  /** Will automatically add actions with an edge from this node to each. */
-  actions?: NodeArg<ActionData<any>>[];
+  /** Will automatically add actions with an edge from this node to each. An action child may itself
+   * be an action group (e.g. a toolbar dropdown group), so groups are accepted alongside actions. */
+  actions?: NodeArg<ActionData<any> | typeof actionGroupSymbol>[];
 
   /** Will automatically add specified edges. */
   edges?: [string, RelationInput][];
@@ -114,6 +115,9 @@ export type InvokeProps = {
   path?: string[];
 
   caller?: string;
+
+  /** Input modifiers held during the gesture that triggered the action (e.g. shift-clicking a menu item). */
+  modifiers?: { shift?: boolean };
 };
 
 /**
@@ -153,6 +157,19 @@ export const isActionGroup = (data: unknown): data is ActionGroup =>
 export type ActionLike = Action | ActionGroup;
 
 export const isActionLike = (data: unknown): data is Action | ActionGroup => isAction(data) || isActionGroup(data);
+
+/**
+ * Tests whether a node's `disposition` property (a single string or an array, letting one node opt
+ * into multiple surfaces at once) includes any of `key`. Every surface that routes nodes/actions by
+ * disposition (toolbar, nav-tree list-item, sigil menu, …) should filter through this rather than
+ * comparing `properties.disposition` directly, so a node can multi-target surfaces.
+ */
+export const hasDisposition = (node: Pick<Node, 'properties'>, key: string | string[]): boolean => {
+  const disposition = node.properties.disposition;
+  const dispositions = Array.isArray(disposition) ? disposition : disposition !== undefined ? [disposition] : [];
+  const keys = Array.isArray(key) ? key : [key];
+  return dispositions.some((candidate) => keys.includes(candidate));
+};
 
 //
 // Node Factories

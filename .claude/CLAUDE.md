@@ -19,12 +19,14 @@
 
 - Record a follow-up task with the `$track <text>` sentinel (anywhere in a
   message) or a line beginning `track: <text>`.
-- Manage the session registry (`.agents/sessions/registry.yml`) with
-  `$session new|list|end <name>`; each session has a `TASKS.md` + `DESIGN.md`.
-- Checkpoint session state with `$hydrate` (also `$checkpoint`) before stopping
-  or opening a PR; reload a session with `$resume [name]` (also `$rehydrate`) at
-  the start of a session — the registry resolves _which_ session (by name, else
-  by the entry whose branch matches HEAD).
+- Manage the project registry (`.agents/projects/registry.yml`) with
+  `$project new|list|end <name>`; each project has a `TASKS.md` + `DESIGN.md`.
+  Bare `$project` (or `$project list`) prints a numbered table of the current
+  user's projects (`list all` for everyone) — reply with a row number to resume.
+- Checkpoint project state with `$hydrate` (also `$checkpoint`) before stopping
+  or opening a PR; reload a project with `$resume [name]` (also `$rehydrate`) at
+  the start of a session — the registry resolves _which_ project (by name/row,
+  else the single active entry for the current user).
 - A `UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects these and injects
   the matching directive — append to the active `TASKS.md` (never a background
   task chip), manage the registry, or run the hydrate/resume handoff. See the

@@ -19,8 +19,8 @@
         "default": "./src/platform/node/index.ts"
       },
       "types": "./dist/types/src/platform/node/index.d.ts",
-      "browser": "./dist/lib/browser/platform/browser/index.mjs",
-      "default": "./dist/lib/node-esm/platform/node/index.mjs"
+      "browser": "./dist/lib/platform/browser.mjs",
+      "default": "./dist/lib/platform/node.mjs"
     },
     "#console-processor": {
       "source": {
@@ -28,29 +28,20 @@
         "default": "./src/processors/console-processor.ts"
       },
       "types": "./dist/types/src/processors/console-processor.d.ts",
-      "browser": "./dist/lib/browser/processors/console-stub.mjs",
-      "default": "./dist/lib/node-esm/processors/console-processor.mjs"
+      "browser": "./dist/lib/processors/console-stub.mjs",
+      "default": "./dist/lib/processors/console-processor.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "default": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./file-processor": {
       "source": "./src/processors/file-processor.ts",
       "types": "./dist/types/src/processors/file-processor.d.ts",
-      "node": {
-        "require": "./dist/lib/node/processors/file-processor.cjs",
-        "default": "./dist/lib/node-esm/processors/file-processor.mjs"
-      },
-      "default": "./dist/lib/node-esm/processors/file-processor.mjs"
+      "import": "./dist/lib/processors/file-processor.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

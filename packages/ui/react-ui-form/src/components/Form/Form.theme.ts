@@ -21,7 +21,8 @@ const formStyles = tv({
     sectionDescription: 'text-description',
     fieldSet: '',
     field: '',
-    fieldLabel: 'h-8 grid grid-cols-[1fr_auto_auto] items-center select-none',
+    // Columns: label (fills) → optional `labelEnd` readout → error icon (or its spacer) → optional trailing `button`.
+    fieldLabel: 'h-8 grid grid-cols-[1fr_auto_auto_auto] items-center select-none',
     fieldLabelText: '',
     fieldDescription: 'text-description',
     fieldControl: '',
@@ -31,10 +32,10 @@ const formStyles = tv({
     // Standalone submit row (full-width primary button).
     submit: 'flex w-full pt-form-padding',
     // Collapsible field-set body: indented column of sub-fields.
-    fieldSetBody: 'flex flex-col gap-2 px-2 pb-2',
+    fieldSetBody: 'flex flex-col px-2 pb-2',
     // Bordered container wrapping a collapsible nested group, plus its top spacing.
     fieldSetBox: 'border border-subdued-separator rounded-sm',
-    fieldSetBoxOuter: 'pt-trim-md',
+    fieldSetBoxOuter: '',
   },
   variants: {
     variant: {

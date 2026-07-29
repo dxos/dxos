@@ -19,13 +19,13 @@ export type UseSyncConnectionResult = {
   readonly syncing: boolean;
   /**
    * Invokes {@link ConnectorOperation.SyncConnection} which fans out over every
-   * {@link SyncBinding} sourced by the connection. No-op when `available` is false.
+   * external-sync cursor authenticated by the connection. No-op when `available` is false.
    */
   readonly sync: () => Promise<void>;
 };
 
 /**
- * Trigger a sync for every {@link SyncBinding} sourced by a {@link Connection}.
+ * Trigger a sync for every external-sync cursor authenticated by a {@link Connection}.
  * Delegates to the {@link ConnectorOperation.SyncConnection} operation so the
  * same fan-out logic is shared with the graph-builder action.
  */

@@ -99,6 +99,9 @@
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../worker-framework"
     }
   ]
 }

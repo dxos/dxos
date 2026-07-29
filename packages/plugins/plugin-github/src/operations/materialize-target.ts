@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Project } from '@dxos/types';
+import { ExternalProject } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants';
 import { GitHubOperation } from '../types';
@@ -14,9 +14,9 @@ import { GitHubOperation } from '../types';
 const fkFor = (id: string) => ({ source: GITHUB_SOURCE, id });
 
 /**
- * Find-or-create the empty local root Project for a GitHub repo so a
- * {@link SyncBinding} relation can be created eagerly. Idempotent: keyed by the
- * repo's GitHub foreign id (`remoteTarget.id`), it returns the existing Project
+ * Find-or-create the empty local root Project for a GitHub repo so a `Cursor`
+ * can reference it as its `spec.target`. Idempotent: keyed by the repo's
+ * GitHub foreign id (`remoteTarget.id`), it returns the existing Project
  * when one already carries that key. The repo's data is filled in lazily by the
  * sync operation; here we only stamp the foreign key + a display name.
  */
@@ -38,14 +38,14 @@ const handler: Operation.WithHandler<typeof GitHubOperation.MaterializeGitHubTar
 
         return yield* Effect.gen(function* () {
           const existing = yield* Database.query(
-            Query.select(Filter.foreignKeys(Project.Project, [fkFor(remoteTarget.id)])),
+            Query.select(Filter.foreignKeys(ExternalProject.ExternalProject, [fkFor(remoteTarget.id)])),
           ).run;
           if (existing.length > 0) {
             return { target: Ref.make(existing[0]) };
           }
 
           const created = yield* Database.add(
-            Obj.make(Project.Project, {
+            Obj.make(ExternalProject.ExternalProject, {
               [Obj.Meta]: { keys: [fkFor(remoteTarget.id)] },
               name: remoteTarget.name,
             }),

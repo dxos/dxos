@@ -10,13 +10,7 @@ import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import {
-  type DatabaseRoot,
-  type EchoHost,
-  type IMetadataStore,
-  type Space,
-  createMappedFeedWriter,
-} from '@dxos/echo-host';
+import { type DatabaseRoot, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
@@ -48,6 +42,9 @@ import { trace } from '@dxos/tracing';
 import { type AsyncCallback, CallbackCollection, ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
+import { type IMetadataStore } from '../metadata';
+import { createMappedFeedWriter } from '../pipeline';
+import { type Space } from '../space';
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { EdgeFeedReplicator } from './edge-feed-replicator';

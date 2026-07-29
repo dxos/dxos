@@ -59,6 +59,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/halo/halo"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -105,9 +108,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-debug"
     },
     {
       "path": "../plugin-graph"

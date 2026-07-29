@@ -14,11 +14,10 @@ import {
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type Context, LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
-import { createIdFromSpaceKey } from '../common/space-id';
 import {
   type AutomergeReplicator,
   type AutomergeReplicatorConnection,
@@ -45,6 +44,7 @@ export interface NetworkDataMonitor {
 
 export type EchoNetworkAdapterProps = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
+  getContainingSpaceIdForDocument: (documentId: string) => Promise<SpaceId | null>;
   isDocumentInRemoteCollection: (params: RemoteDocumentExistenceCheckProps) => Promise<boolean>;
   onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
@@ -151,10 +151,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       onConnectionAuthScopeChanged: this._onConnectionAuthScopeChanged.bind(this),
       isDocumentInRemoteCollection: this._params.isDocumentInRemoteCollection,
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
-      getContainingSpaceIdForDocument: async (documentId) => {
-        const key = await this._params.getContainingSpaceForDocument(documentId);
-        return key ? createIdFromSpaceKey(key) : null;
-      },
+      getContainingSpaceIdForDocument: this._params.getContainingSpaceIdForDocument,
     });
   }
 

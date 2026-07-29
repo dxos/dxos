@@ -4,6 +4,7 @@
 
 export * from './AnimatedBorder';
 export * from './Matrix';
+export * from './Minimap';
 export * from './NumericTabs';
 export * from './ProgressBar';
 export * from './QueryEditor';

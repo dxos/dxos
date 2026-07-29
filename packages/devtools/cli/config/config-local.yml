@@ -3,7 +3,7 @@ version: 1
 runtime:
   client:
     edgeFeatures:
-      echoReplicator: true
+      subductionReplicator: true
       feedReplicator: true
       signaling: true
       agents: true

@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Compartment } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import { type Atom, RegistryContext } from '@effect-atom/atom-react';
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -35,7 +35,6 @@ import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { meta } from '#meta';
-import { MarkdownCapabilities } from '#types';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
 
@@ -55,12 +54,15 @@ export type MarkdownEditorContentProps = ThemedClassName<{
   Pick<ThemeExtensionsOptions, 'slots'>;
 
 // TODO(burdon): Move controller to Root.
+// One compartment per module is safe: compartments are keyed per EditorState, so concurrent editors
+// reconfigure independently.
+const dynamicCompartment = new Compartment();
+
 export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEditorContentProps>(
   (
     {
       classNames,
       id,
-      attendableId,
       role,
       compact,
       viewMode,
@@ -90,20 +92,13 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     // Restore last selection and scroll point.
     const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
 
-    const {
-      parentRef,
-      view: editorView,
-      focusAttributes,
-    } = useTextEditor(
-      () => ({
-        ...(role !== AppSurface.Section.role && {
-          id,
-          scrollTo,
-          selection,
-          selectionEnd: true,
-        }),
-        initialValue,
-        extensions: [
+    // Everything that varies per render — view mode, theme, the binding's extensions — lives in one
+    // compartment and is RECONFIGURED on the live view below. Recreating the view on these deps was
+    // the teardown behind every mode-switch discontinuity (flicker, caret and focus loss, overlay
+    // geometry churn): CodeMirror reconfigures in place; only a different surface (`id`) recreates.
+    const dynamicExtensions = useCallback(
+      () =>
+        [
           createBasicExtensions({
             readOnly: viewMode === 'readonly',
             placeholder: t('editor.placeholder'),
@@ -132,19 +127,35 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
             }),
           extensions,
         ].filter(isTruthy),
-      }),
-      [id, viewMode, themeMode, extensions, compact],
+      [viewMode, themeMode, extensions, compact, slots, role, toolbarState, updateToolbarState, onFileUpload, t],
     );
 
-    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
+    const {
+      parentRef,
+      view: editorView,
+      focusAttributes,
+    } = useTextEditor(
+      () => ({
+        ...(role !== AppSurface.Section.role && {
+          id,
+          scrollTo,
+          selection,
+          selectionEnd: true,
+        }),
+        initialValue,
+        extensions: dynamicCompartment.of(dynamicExtensions()),
+      }),
+      [id],
+    );
 
-    const [editorViewRegistry] = useCapabilities(MarkdownCapabilities.EditorViews);
+    // Reconfigure the live view when any dynamic input changes — never recreate it.
     useEffect(() => {
-      if (editorView && editorViewRegistry) {
-        editorViewRegistry.register(attendableId ?? id, editorView, id);
-        return () => editorViewRegistry.unregister(attendableId ?? id);
+      if (editorView) {
+        editorView.dispatch({ effects: dynamicCompartment.reconfigure(dynamicExtensions()) });
       }
-    }, [editorView, editorViewRegistry, attendableId, id]);
+    }, [editorView, dynamicExtensions]);
+
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
 
     useTest(editorView);
 

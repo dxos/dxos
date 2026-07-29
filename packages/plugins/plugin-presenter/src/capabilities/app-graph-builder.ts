@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -12,7 +12,6 @@ import { Operation } from '@dxos/compute';
 import { Collection, Obj } from '@dxos/echo';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown';
-import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { PresenterOperation } from '#types';
@@ -44,7 +43,7 @@ export default Capability.makeModule(
 
         return Effect.succeed([
           AppNode.makeCompanion({
-            id: linkedSegment('presenter'),
+            variant: 'presenter',
             label: 'Presenter',
             icon: 'ph--presentation--regular',
             data: { type: meta.profile.key, object },

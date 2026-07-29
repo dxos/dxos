@@ -2,34 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
-import { DeckCapabilities, type EphemeralDeckState, StoredDeckState, defaultDeck, getMode } from '#types';
+import {
+  DeckCapabilities,
+  DEFAULT_DECK_ID,
+  type EphemeralDeckState,
+  StoredDeckState,
+  defaultDeck,
+  getMode,
+} from '#types';
 
-import { sanitizePersistedState } from '../util';
+import { migratePersistedState } from '../util';
+
+const STATE_KEY = `${meta.profile.key}.state`;
 
 /** Default persisted state. */
 const defaultDeckState: StoredDeckState = {
   sidebarState: 'expanded',
   complementarySidebarState: 'collapsed',
   complementarySidebarPanel: undefined,
-  activeDeck: 'default',
-  previousDeck: 'default',
+  activeDeck: DEFAULT_DECK_ID,
+  previousDeck: DEFAULT_DECK_ID,
   decks: {
-    default: { ...defaultDeck },
+    [DEFAULT_DECK_ID]: { ...defaultDeck },
   },
-  previousMode: {},
 };
 
 /** Default ephemeral state. */
 const defaultDeckEphemeralState: EphemeralDeckState = {
+  fullscreen: undefined,
   dialogContent: null,
   dialogOpen: false,
   dialogBlockAlign: undefined,
@@ -45,24 +54,19 @@ const defaultDeckEphemeralState: EphemeralDeckState = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    // Migrate a legacy (pre single-mode-deck) blob before the KVS atom's schema decode would
+    // otherwise silently strip its removed fields (see migratePersistedState for details).
+    migratePersistedState(STATE_KEY);
 
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
-      key: `${meta.profile.key}.state`,
+      key: STATE_KEY,
       schema: StoredDeckState,
       defaultValue: () => ({ ...defaultDeckState }),
     });
 
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
     const ephemeralAtom = Atom.make<EphemeralDeckState>({ ...defaultDeckEphemeralState }).pipe(Atom.keepAlive);
-
-    // Sanitize persisted state on startup (see sanitizePersistedState for details).
-    const currentState = registry.get(stateAtom);
-    const sanitizedState = sanitizePersistedState(currentState);
-    if (sanitizedState !== currentState) {
-      registry.set(stateAtom, sanitizedState);
-    }
 
     // Create derived layout atom (read-only) from both state atoms.
     const layoutAtom = Atom.make((get) => {
@@ -71,12 +75,12 @@ export default Capability.makeModule(
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: getMode(deck),
+        mode: getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.solo ? [deck.solo] : deck.active,
+        active: deck.active,
         inactive: deck.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
       } satisfies AppCapabilities.Layout;

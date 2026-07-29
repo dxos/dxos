@@ -158,6 +158,11 @@ export type RefFieldDataProps = {
 export type FormFieldOptions = {
   db?: Database.Database;
   readonly?: boolean;
+  /**
+   * When `readonly`, omit fields whose value is empty (an empty read-only row is just noise).
+   * Defaults to `true`; set `false` to keep every schema field visible as a static row.
+   */
+  hideEmpty?: boolean;
   layout?: FormPresentation;
   projection?: ProjectionModel;
   fieldMap?: FormFieldMap;

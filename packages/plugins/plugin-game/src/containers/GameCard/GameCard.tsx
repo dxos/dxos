@@ -11,7 +11,7 @@ import { useObject } from '@dxos/echo-react';
 
 import { type Game, GameCapabilities } from '#types';
 
-export type GameCardProps = AppSurface.ObjectCardProps<Game>;
+export type GameCardProps = AppSurface.ObjectCardProps<Game.Game>;
 
 export const GameCard = ({ role, subject: game }: GameCardProps) => {
   const variants = useCapabilities(GameCapabilities.VariantProvider);

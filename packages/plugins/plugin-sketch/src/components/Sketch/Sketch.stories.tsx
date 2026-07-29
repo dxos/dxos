@@ -9,7 +9,8 @@ import { createObject } from '@dxos/echo-client';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SketchBuilder, data } from '#testing';
+import { SketchBuilder } from '#model';
+import { data } from '#testing';
 import { Sketch } from '#types';
 
 import { migrateCanvas } from '../../migrations';
@@ -50,7 +51,7 @@ const DefaultStory = () => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoZoom />
+        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoCenter />
       </Panel.Content>
     </Panel.Root>
   );
@@ -92,7 +93,7 @@ const BuilderStory = () => {
   return (
     <Panel.Root>
       <Panel.Content asChild>
-        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoZoom />
+        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoCenter />
       </Panel.Content>
     </Panel.Root>
   );

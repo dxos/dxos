@@ -58,8 +58,8 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/log": "workspace:*",
-    "@dxos/util": "workspace:*",
+    "@dxos/log": "workspace:^",
+    "@dxos/util": "workspace:^",
     "rolldown": ">=1.0.0-beta.0",
     "vite": "catalog:"
   },

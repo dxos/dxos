@@ -20,8 +20,6 @@ import { AssistantSkill } from '@dxos/plugin-assistant/skills';
 import { ChessOperationHandlerSet } from '@dxos/plugin-chess/plugin';
 import { ChessSkill } from '@dxos/plugin-chess/skills';
 import { Chess } from '@dxos/plugin-chess/types';
-import { CommentOperationHandlerSet } from '@dxos/plugin-comments/plugin';
-import { CommentSkill } from '@dxos/plugin-comments/skills';
 import { Game } from '@dxos/plugin-game/types';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
 import { CalendarSkill, InboxSendSkill, InboxSkill } from '@dxos/plugin-inbox/skills';
@@ -33,6 +31,8 @@ import { MapSkill } from '@dxos/plugin-map/skills';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { MarkdownSkill } from '@dxos/plugin-markdown/skills';
 import { Markdown } from '@dxos/plugin-markdown/types';
+import { CommentOperationHandlerSet } from '@dxos/plugin-review/plugin';
+import { CommentSkill } from '@dxos/plugin-review/skills';
 import { ScriptOperationHandlerSet } from '@dxos/plugin-script/plugin';
 import { ScriptSkill } from '@dxos/plugin-script/skills';
 import { TableOperationHandlerSet } from '@dxos/plugin-table/plugin';
@@ -105,7 +105,7 @@ export const types: Type.AnyEntity[] = [
   // NOTE: Types referenced by skills above need to be added here.
   DataTypes,
   [Chat.Chat],
-  [Game, Chess.State],
+  [Game.Game, Chess.State],
   [Markdown.Document],
   [Mailbox.Mailbox, Calendar.Calendar, Feed.Feed],
   [Skill.Skill],

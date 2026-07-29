@@ -15,7 +15,7 @@ import isEqual from 'fast-deep-equal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Filter, Obj, Query, type Type } from '@dxos/echo';
+import { type Entity, Filter, Obj, Query, type Type } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -30,6 +30,7 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
+import { type BranchStore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 type OpenDatabaseOptions = {
@@ -40,6 +41,7 @@ type OpenDatabaseOptions = {
 
 type PeerOptions = {
   types?: Type.AnyEntity[];
+  registry?: Entity.Unknown[];
   assignQueuePositions?: boolean;
   /** Path to a file-based SQLite database for persistence tests. Uses in-memory SQLite when omitted. */
   storagePath?: string;
@@ -83,6 +85,7 @@ export class EchoTestBuilder extends Resource {
 
 export class EchoTestPeer extends Resource {
   private readonly _types: Type.AnyEntity[];
+  private readonly _registry: Entity.Unknown[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _storagePath?: string;
   private readonly _clients = new Set<EchoClient>();
@@ -93,16 +96,41 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
+  /**
+   * Device-local current-branch selections per space, held on the peer so they survive `reload()`
+   * (which recreates ECHO but not the peer). Stands in for the host metadata store; non-synced.
+   */
+  private readonly _branchStores = new Map<string, Map<string, string>>();
+
+  private _branchStoreFor(spaceId: string): BranchStore {
+    let map = this._branchStores.get(spaceId);
+    if (!map) {
+      map = new Map<string, string>();
+      this._branchStores.set(spaceId, map);
+    }
+    const store = map;
+    return {
+      load: async () => Object.fromEntries(store),
+      save: async (entries) => {
+        store.clear();
+        for (const [key, value] of Object.entries(entries)) {
+          store.set(key, value);
+        }
+      },
+    };
+  }
+
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
     never
   >;
 
-  constructor({ types, assignQueuePositions, storagePath }: PeerOptions = {}) {
+  constructor({ types, registry, assignQueuePositions, storagePath }: PeerOptions = {}) {
     super();
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
+    this._registry = registry ?? [];
     this._assignQueuePositions = assignQueuePositions;
     this._storagePath = storagePath;
   }
@@ -148,6 +176,7 @@ export class EchoTestPeer extends Resource {
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
     void this._echoClient.graph.registry.add(this._types);
+    void this._echoClient.graph.registry.add(this._registry);
   }
 
   get client() {
@@ -260,7 +289,13 @@ export class EchoTestPeer extends Resource {
     // NOTE: Client closes the database when it is closed.
     const root = await this.host.createSpaceRoot(this._ctx, spaceKey);
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase({
+      spaceId,
+      spaceKey,
+      reactiveSchemaQuery,
+      preloadSchemaOnOpen,
+      branchStore: this._branchStoreFor(String(spaceId)),
+    });
     await db.setSpaceRoot(root.url);
     await db.open();
 
@@ -290,7 +325,13 @@ export class EchoTestPeer extends Resource {
       resolvedRootUrl = this.host.spaces.find((s) => s.spaceId === spaceId)?.rootDocUrl;
       invariant(resolvedRootUrl, 'Root URL not found on host');
     }
-    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase({
+      spaceId,
+      spaceKey,
+      reactiveSchemaQuery,
+      preloadSchemaOnOpen,
+      branchStore: this._branchStoreFor(String(spaceId)),
+    });
     await db.setSpaceRoot(resolvedRootUrl);
     await db.open();
 

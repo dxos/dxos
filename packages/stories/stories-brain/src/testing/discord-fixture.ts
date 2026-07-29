@@ -21,13 +21,19 @@ export const parseDiscordFixture = (json: unknown): RDF.ExtractDocument[] => {
   const messages = (json as { messages?: FixtureMessage[] })?.messages ?? [];
   return messages
     .map((message): RDF.ExtractDocument => {
+      const key = message['@meta']?.keys?.[0]?.id ?? message.id;
       const text = (message.blocks ?? [])
         .filter((block) => block._tag === 'text' && block.text)
         .map((block) => block.text)
         .join('\n')
         .trim();
-      const key = message['@meta']?.keys?.[0]?.id ?? message.id;
-      return { text, source: `discord:${key}`, date: message.created, author: message.sender?.name };
+
+      return {
+        source: `discord:${key}`,
+        date: message.created,
+        author: message.sender?.name,
+        text,
+      };
     })
     .filter((doc) => doc.text.length > 0);
 };

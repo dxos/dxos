@@ -16,7 +16,6 @@ import {
   type ClientServices,
   type ClientServicesProvider,
   type ClientServicesRpc,
-  clientServiceBundle,
   makeInProcessClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
@@ -29,7 +28,6 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type ServiceBundle } from '@dxos/rpc';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
@@ -71,16 +69,7 @@ export const fromHost = async (
   config = new Config(),
   params?: LocalClientServicesParams,
 ): Promise<ClientServicesProvider> => {
-  const observabilityGroup = config.get('runtime.client.observabilityGroup');
-  const signalTelemetryEnabled = config.get('runtime.client.signalTelemetryEnabled');
-  const networking = await setupNetworking(config, {}, () =>
-    signalTelemetryEnabled
-      ? {
-          ...services.signalMetadataTags,
-          ...(observabilityGroup ? { group: observabilityGroup } : {}),
-        }
-      : {},
-  );
+  const networking = await setupNetworking(config, {});
 
   const services = new LocalClientServices({ config, ...networking, ...params });
   return services;
@@ -93,21 +82,20 @@ export const fromHost = async (
 const setupNetworking = async (
   config: Config,
   options: Partial<SwarmNetworkManagerOptions> = {},
-  signalMetadata?: () => void,
 ): Promise<{
   signalManager?: SignalManager;
   transportFactory: TransportFactory;
 }> => {
-  const { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } = await import('@dxos/messaging');
+  const { MemorySignalManager, MemorySignalManagerContext } = await import('@dxos/messaging');
   const { createRtcTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
 
   const signals = config.get('runtime.services.signaling');
   const edgeFeatures = config.get('runtime.client.edgeFeatures');
   if (signals || edgeFeatures?.signaling) {
     const {
-      signalManager = edgeFeatures?.signaling || !signals
-        ? undefined // EdgeSignalManager needs EdgeConnection and will be created in service-host
-        : new WebsocketSignalManager(signals, signalMetadata),
+      // EdgeSignalManager needs an EdgeConnection and is created in the services host; without edge
+      // signaling fall back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
+      signalManager = edgeFeatures?.signaling ? undefined : new MemorySignalManager(new MemorySignalManagerContext()),
       // TODO(wittjosiah): P2P networking causes seg fault in bun currently.
       transportFactory = isBun()
         ? MemoryTransportFactory
@@ -177,10 +165,6 @@ export class LocalClientServices implements ClientServicesProvider {
         this.signalMetadataTags.origin = window.location.origin;
       }
     }
-  }
-
-  get descriptors(): ServiceBundle<ClientServices> {
-    return clientServiceBundle;
   }
 
   get rpc() {

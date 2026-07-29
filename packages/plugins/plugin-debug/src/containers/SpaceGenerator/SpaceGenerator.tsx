@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { useProgress } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -12,12 +14,14 @@ import { Sheet } from '@dxos/plugin-sheet';
 import { Sketch } from '@dxos/plugin-sketch';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Panel, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { IconButton, Input, Panel, ScrollArea, ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Organization, Person, Task } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 import { sortKeys } from '@dxos/util';
 
 import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGenerators } from '#components';
+import { meta } from '#meta';
 
 // TODO(burdon): Make extensible.
 const staticTypes = [Markdown.Document, Sketch.Sketch, Sheet.Sheet, ComputeGraph];
@@ -94,8 +98,8 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     return (
       <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
+        <Panel.Toolbar>
+          <Toolbar.Root classNames='dx-document'>
             <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
             <Toolbar.Separator />
             <Input.Root>
@@ -115,9 +119,28 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         <Panel.Content asChild>
           <ScrollArea.Root thin orientation='vertical'>
             <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
-              <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
-              <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
-              <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
+              <SchemaTable
+                classNames='py-1'
+                types={staticTypes}
+                objects={info.objects}
+                label='Static Types'
+                onClick={handleCreateData}
+              />
+              <SchemaTable
+                classNames='py-1'
+                types={recordTypes}
+                objects={info.objects}
+                label='Record Types'
+                onClick={handleCreateData}
+              />
+              <SchemaTable
+                classNames='py-1'
+                types={presets.types}
+                objects={info.objects}
+                label='Presets'
+                onClick={handleCreateData}
+              />
+              <ProgressGenerator classNames='py-1' />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Content>
@@ -127,3 +150,76 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 );
 
 SpaceGenerator.displayName = 'SpaceGenerator';
+
+// Stable key for the test progress monitor within the shared registry.
+const TEST_PROGRESS_NAME = `${meta.profile.key}.test-progress`;
+
+type ProgressGeneratorProps = ThemedClassName;
+
+// Drives a synthetic progress monitor (10s over 10 steps) so the R0 rail meter can be exercised.
+const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
+  const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const monitor = useProgress(TEST_PROGRESS_NAME);
+  const running = monitor?.status === 'running';
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+
+  const clearTimer = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = undefined;
+    }
+  }, []);
+
+  const handleStart = useCallback(() => {
+    // Guard on the timer ref too: `running` (derived from the registry) can lag a fast second click.
+    if (!registry || running || intervalRef.current) {
+      return;
+    }
+
+    const steps = 10;
+    let current = 0;
+    const handle = registry.register(TEST_PROGRESS_NAME, {
+      label: 'Test Progress',
+      total: steps,
+      // Invoked by the meter's cancel control (R0 rail) or the local button.
+      onCancel: () => {
+        clearTimer();
+        handle.remove();
+      },
+    });
+
+    intervalRef.current = setInterval(() => {
+      current += 1;
+      handle.set(current);
+      if (current >= steps) {
+        clearTimer();
+        handle.done();
+        handle.remove();
+      }
+    }, 1_000);
+  }, [registry, running, clearTimer]);
+
+  // Tear down the timer and the registry entry if unmounted mid-run.
+  useEffect(
+    () => () => {
+      clearTimer();
+      registry?.cancel(TEST_PROGRESS_NAME);
+    },
+    [clearTimer, registry],
+  );
+
+  return (
+    <div className={mx('flex items-center gap-2 py-1', classNames)}>
+      <span className='grow'>Progress Monitor</span>
+      {running ? (
+        <IconButton
+          icon='ph--x--regular'
+          label='Cancel test progress'
+          onClick={() => registry?.cancel(TEST_PROGRESS_NAME)}
+        />
+      ) : (
+        <IconButton icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
+      )}
+    </div>
+  );
+};

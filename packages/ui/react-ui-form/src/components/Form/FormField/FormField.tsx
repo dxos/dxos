@@ -12,6 +12,7 @@ import React, { useMemo } from 'react';
 import { Annotation, Format } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
@@ -87,6 +88,7 @@ export const FormField = (props: FormFieldProps) => {
     fieldMap,
     fieldProvider,
     readonly,
+    hideEmpty = true,
     layout,
 
     // RefFieldProps
@@ -144,7 +146,7 @@ export const FormField = (props: FormFieldProps) => {
   // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own
   // empty-value checks, but those branches only apply when the value is
   // actually a non-null array/object, so this check doesn't interfere.
-  if (readonly && fieldState.getValue() == null) {
+  if (readonly && hideEmpty && fieldState.getValue() == null) {
     return null;
   }
 
@@ -310,8 +312,14 @@ FormField.displayName = 'Form.FormField';
 // Layout components
 //
 
-export const CompactIconButton = (props: IconButtonProps) => {
-  return <IconButton variant='ghost' iconOnly {...props} />;
+// End-of-row form buttons occupy a consistent 32px block (matching the standard `h-8` label row) with
+// the button inset so its hover fill never touches the row's top/bottom/right edges.
+export const CompactIconButton = ({ classNames, ...props }: IconButtonProps) => {
+  return (
+    <span className='grid size-8 shrink-0 place-items-center'>
+      <IconButton variant='ghost' iconOnly {...props} classNames={mx('min-h-0 h-7 w-7 p-0', classNames)} />
+    </span>
+  );
 };
 
 /**

@@ -4,7 +4,6 @@ tasks:
     command: pnpm exec vite build
     deps:
       - ^:build
-      - ^:compile
     inputs:
       - vite.config.ts
       - '*.html'
@@ -35,7 +34,7 @@ tasks:
   serve:
     command: pnpm exec vite dev
     deps:
-      - ^:compile
+      - ^:build
     preset: server
   preview:
     command: pnpm exec vite preview

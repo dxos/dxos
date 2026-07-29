@@ -33,6 +33,7 @@ import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
@@ -1036,6 +1037,10 @@ const createTeleportTestPeer = async (
     // If a document is in the remote collection we don't have it locally, so can't get spaceKey from it.
     getContainingSpaceForDocument: async (documentId) => {
       return options?.localDocuments ? (options.localDocuments.includes(documentId) ? spaceKey : null) : spaceKey;
+    },
+    getContainingSpaceIdForDocument: async (documentId) => {
+      const key = options?.localDocuments ? (options.localDocuments.includes(documentId) ? spaceKey : null) : spaceKey;
+      return key ? createIdFromSpaceKey(key) : null;
     },
     isDocumentInRemoteCollection: async (params) => {
       return options?.remoteCollections?.[params.peerId]?.includes(params.documentId) ?? false;

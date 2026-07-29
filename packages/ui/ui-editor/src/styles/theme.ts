@@ -44,7 +44,7 @@ const headings: Record<HeadingLevel, { className: string; fontSize: string; line
 };
 
 // Font families matching --font-body and --font-mono in theme.css.
-export const fontBody = '"Inter Variable", ui-sans-serif, system-ui, sans-serif';
+export const fontBody = '"Nunito Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif';
 export const fontMono = '"JetBrains Mono Variable", ui-monospace, "Cascadia Code", "Source Code Pro", monospace';
 
 export const markdownTheme = {
@@ -194,6 +194,8 @@ export const baseTheme = EditorView.baseTheme({
 
   /**
    * Selection (layer).
+   * NOTE: A browser dark-mode/reader extension can override `::selection` and reveal a second
+   * (native) selection over this layer; that is an extension artifact, not an editor bug.
    */
   '.cm-selectionBackground': {
     background: 'var(--color-cm-selection)',

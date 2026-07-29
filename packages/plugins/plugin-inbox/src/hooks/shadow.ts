@@ -24,10 +24,11 @@ export const findShadowObject = <T extends Obj.Unknown>(objects: readonly T[], u
  * Re-points a shadow object's annotation key from one object URI to another (e.g. when a draft event
  * is synced and replaced by its canonical feed copy, so its notes survive the transition).
  */
-export const reanchorShadowObject = (shadow: Obj.Unknown, fromUri: string, toUri: string): void =>
+export const reanchorShadowObject = (shadow: Obj.Unknown, fromUri: string, toUri: string): void => {
   Obj.update(shadow, (shadow) => {
     const key = Obj.getMeta(shadow).keys?.find((key) => key.source === SHADOW_KEY_SOURCE && key.id === fromUri);
     if (key) {
       key.id = toUri;
     }
   });
+};

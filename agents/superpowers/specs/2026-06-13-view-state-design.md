@@ -37,7 +37,7 @@ is purely in-memory and unpersisted.
 ## Concepts
 
 - **Aspect** — a named kind of per-context state, declared once:
-  `defineViewState({ key, backend, schema, defaultValue })`.
+  `define({ key, backend, schema, defaultValue })`.
   - `key: string` — unique aspect id (e.g. `'selection'`, `'editor'`).
   - `backend: 'memory' | 'local'` — (`'personal'` reserved for future).
   - `schema: Schema.Schema<T>` — Effect Schema; validates and (de)serializes persisted values.
@@ -49,7 +49,7 @@ is purely in-memory and unpersisted.
 ## Backend contract (reactive, async-tolerant)
 
 ```ts
-interface ViewStateBackend {
+interface Backend {
   // Returns a reactive, writable atom for (aspect, contextId).
   // May hydrate asynchronously; yields aspect.defaultValue() until loaded.
   atom<T>(aspect: AspectDef<T>, contextId: string): Atom.Writable<T>;
@@ -84,7 +84,7 @@ Backends:
 
 ## Manager + provider
 
-- **`ViewStateManager`** — owns the aspect registry and a backend-by-name map, constructed from
+- **`Manager`** — owns the aspect registry and a backend-by-name map, constructed from
   the effect-atom `Registry`. API:
   - `atom<T>(aspect, contextId): Atom.Writable<T>`
   - `get<T>(aspect, contextId): T`
@@ -109,10 +109,10 @@ the Selection section) as a thin wrapper over these generic hooks.
 Selection becomes:
 
 ```ts
-const selectionAspect = defineViewState({
+const aspect = define({
   key: 'selection',
   backend: 'memory',
-  schema: SelectionSchema, // existing union: single | multi | range | multi-range
+  schema: Selection, // existing union: single | multi | range | multi-range
   defaultValue: () => ({ mode: 'multi', ids: [] }),
 });
 ```
@@ -129,12 +129,12 @@ hook layer built directly on `useViewState` / `useViewStateActions` (not a paral
 
 ```ts
 // returns the resolved value for the requested mode
-export const useSelection = <T extends SelectionMode>(contextId?: string, mode?: T): SelectionResult<T> =>
-  Selection.resolve(useViewState(selectionAspect, contextId), mode);
+export const useSelection = <T extends SelectionMode>(contextId?: string, mode?: T): Result<T> =>
+  Selection.resolve(useViewState(aspect, contextId), mode);
 
 // wraps update() with the selection helpers
 export const useSelectionActions = (contextId: string) => {
-  const { update, clear } = useViewStateActions(selectionAspect, contextId);
+  const { update, clear } = useViewStateActions(aspect, contextId);
   return {
     single: (id: string) => update((prev) => Selection.single(id)),
     multi: (ids: string[]) => update(() => ({ mode: 'multi', ids })),
@@ -145,7 +145,7 @@ export const useSelectionActions = (contextId: string) => {
 };
 ```
 
-These wrappers hide `selectionAspect` so consumers never name it.
+These wrappers hide `aspect` so consumers never name it.
 
 ### Call-site migration
 
@@ -156,7 +156,7 @@ All current consumers migrate:
   with method names `single` / `multi` / `range` / `toggle` / `clear`.
 - `useSelectionManager()` is removed; nothing should reach the manager directly — uses route
   through the hooks. If a non-React consumer needs raw access, it takes the
-  `ViewStateManager` explicitly.
+  `Manager` explicitly.
 
 Known consumers include: `react-ui-table` (`useTableModel`), plugin-trip, plugin-map,
 plugin-feed, plugin-inbox (mailbox/calendar/drafts), plus the `SelectionProvider` mount points.
@@ -166,7 +166,7 @@ plugin-feed, plugin-inbox (mailbox/calendar/drafts), plus the `SelectionProvider
 Replace the editor's bespoke localStorage store with a `local`-backed aspect:
 
 ```ts
-const editorViewStateAspect = defineViewState({
+const editorViewStateAspect = define({
   key: 'editor',
   backend: 'local',
   schema: EditorSelectionStateSchema, // { scrollTo?: number; selection?: { anchor; head? } }
@@ -176,7 +176,7 @@ const editorViewStateAspect = defineViewState({
 
 - Add an Effect Schema for `EditorSelectionState` (currently a plain TS type).
 - `packages/ui/ui-editor/src/extensions/selection.ts`: the `selectionState()` extension reads
-  and writes through the `ViewStateManager` instead of `EditorStateStore`.
+  and writes through the `Manager` instead of `EditorStateStore`.
 - `plugin-markdown`: `createEditorStateStore` and the `EditorState` capability are removed;
   `MarkdownEditorContent` reads initial `{ scrollTo, selection }` from the ViewState aspect
   keyed by document id, and the editor extension persists via the same aspect.
@@ -190,18 +190,18 @@ const editorViewStateAspect = defineViewState({
 Everything lives in `react-ui-attention` (selection/attention already co-locate here). New
 files (suggested):
 
-- `src/view-state.ts` — `defineViewState`, `AspectDef`, `ViewStateManager`, backend
-  implementations (or split backends into `src/view-state/`).
-- `src/selection.ts` — reduced to the `selectionAspect` + helpers, re-using `SelectionSchema`.
+- `src/view-state/ViewState.ts` — `define`, `Aspect`, `Manager`, with backend
+  implementations in `src/view-state/backends.ts`.
+- `src/view-state/Selection.ts` — reduced to the `aspect` + helpers, re-using `Selection`.
 - `src/components/ViewStateProvider/` — replaces `SelectionProvider`.
 
 The package's UI-free `./types` entry point continues to re-export the non-DOM pieces
-(`defineViewState`, schemas, `SelectionSchema`, helpers).
+(`define`, schemas, `Selection`, helpers).
 
 ## Testing
 
 - Unit tests (vitest, `describe`/`test`, `test('…', ({ expect }) => …)`):
-  - `ViewStateManager`: registration, get/set/subscribe, atom identity per `(aspect, context)`.
+  - `Manager`: registration, get/set/subscribe, atom identity per `(aspect, context)`.
   - `memory` backend: isolation across contexts; default values.
   - `local` backend: persistence round-trip via an injected fake `Storage`; Schema
     encode/decode; cross-tab `storage` event; default on parse failure.

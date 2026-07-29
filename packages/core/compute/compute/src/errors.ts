@@ -4,16 +4,20 @@
 
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
+/**
+ * Raised when a function wants to yield to the scheduler to not exceed platform limits.
+ * The scheduler will re-run the function after the yield.
+ * It is assumed that the function can be retried with the same input.
+ * The function might have produced side-effects on the first run.
+ */
+export class RunAgainError extends BaseError.extend('RunAgainError', 'Run again') {}
+
 // Errors from @dxos/operation.
 
 export class InvokerNotInitializedError extends BaseError.extend(
   'InvokerNotInitializedError',
   'Invoker not initialized',
-) {
-  constructor() {
-    super();
-  }
-}
+) {}
 
 export class NoHandlerError extends BaseError.extend('NoHandlerError', 'No handler found for operation. ') {
   constructor(operationKey: string) {

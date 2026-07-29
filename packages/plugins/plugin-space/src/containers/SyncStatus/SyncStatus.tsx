@@ -87,6 +87,7 @@ const EdgeConnectionPopover = () => {
   );
 
   const isConnected = status?.state === EdgeStatus.ConnectionState.CONNECTED;
+  const edgeUrl = client.config.get('runtime.services.edge.url');
 
   return (
     <div className='flex flex-col gap-2 w-[240px] p-2' style={iconSize(4)}>
@@ -96,8 +97,8 @@ const EdgeConnectionPopover = () => {
           icon={isConnected ? 'ph--check-circle--regular' : 'ph--warning-circle--regular'}
           classNames={mx(isConnected ? 'text-success-text' : 'text-error-text animate-pulse')}
         />
-        <span className='font-medium text-sm'>
-          {isConnected ? t('sync-edge-connected.label') : t('sync-edge-disconnected.label')}
+        <span className='font-medium text-sm truncate' title={edgeUrl}>
+          {isConnected ? (edgeUrl ?? t('sync-edge-connected.label')) : t('sync-edge-disconnected.label')}
         </span>
       </div>
 

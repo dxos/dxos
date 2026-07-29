@@ -36,9 +36,4 @@ export const JMAP_MESSAGE_SOURCE = 'org.ietf.jmap';
 export const POPOVER_SAVE_FILTER = DXN.make(`${meta.profile.key}.saveFilterPopover`);
 
 export const MAILBOXES_SECTION_TYPE = `${meta.profile.key}.mailboxes-section`;
-export const MAILBOX_DRAFTS_TYPE = `${meta.profile.key}.drafts`;
-
-/**
- * Sentinel `data` value for the drafts folder graph node. Must be non-null so the nav tree can select it (`handleSelect` skips `!node.data`).
- */
-export const MAILBOX_DRAFTS_NODE_DATA = `${meta.profile.key}.drafts-folder` as const;
+export const MAILBOX_SUBSCRIPTIONS_TYPE = `${meta.profile.key}.subscriptions`;

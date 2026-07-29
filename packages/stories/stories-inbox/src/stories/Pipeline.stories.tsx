@@ -12,9 +12,10 @@ import { configPreset } from '@dxos/config';
 import { Database, Feed, Filter, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
+import { AccessToken, Cursor } from '@dxos/link';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { Mailbox } from '@dxos/plugin-inbox';
@@ -27,10 +28,12 @@ import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/story-modules';
-import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
+import { ModuleContainer } from '@dxos/storybook-testing';
+import { Message, Organization, Person } from '@dxos/types';
 
-import { Module, StoryAiPlugin, StoryModulesPlugin, StorySyncPlugin, seedDemoMessages } from '../testing';
+import { StoryRole } from '../modules';
+import { StoryAiPlugin, StorySyncPlugin, seedDemoMessages } from '../testing';
+import { StoryModulesPlugin } from '../testing/modules';
 
 /**
  * Schema for every object the connect+sync flow reads or writes: the mailbox + feed, the
@@ -46,7 +49,6 @@ const SYNC_STORY_TYPES = [
   Message.Message,
   Organization.Organization,
   Person.Person,
-  SyncBinding.SyncBinding,
   Tag.Tag,
   TagIndex.TagIndex,
 ];
@@ -79,7 +81,7 @@ type StoryArgs = {
 const DefaultStory = ({ seed = false }: StoryArgs) => (
   <>
     {seed && <SeedRunner />}
-    <ModuleContainer layout={[[Module.Mailbox], [Module.Message], [Module.Controls, Module.Facts]]} />
+    <ModuleContainer layout={[[StoryRole.Mailbox], [StoryRole.Message], [StoryRole.Controls, StoryRole.Facts]]} />
   </>
 );
 

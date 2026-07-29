@@ -14,12 +14,6 @@ export const getPlatform = (): Platform => {
         userAgent,
         uptime: Math.floor((Date.now() - window.performance.timeOrigin) / 1_000),
       };
-    } else if (typeof SharedWorkerGlobalScope !== 'undefined') {
-      // Shared worker.
-      return {
-        type: Platform.PLATFORM_TYPE.SHARED_WORKER,
-        uptime: Math.floor((Date.now() - performance.timeOrigin) / 1_000),
-      };
     } else {
       // Dedicated worker.
       return {

@@ -18,6 +18,21 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
+/**
+ * True when a rejected SQL op failed because its connection was already closed — the message
+ * `The database connection is not open` (raised by `@effect/sql-sqlite-node`), which arrives
+ * wrapped as an effect `SqlError`, so walk the `cause` chain. Signals teardown, not a real fault.
+ */
+export const isClosedConnectionError = (err: unknown): boolean => {
+  for (let cur: any = err, depth = 0; cur != null && depth < 5; cur = cur.cause, depth++) {
+    const message = typeof cur === 'string' ? cur : cur.message;
+    if (typeof message === 'string' && /connection is not open/i.test(message)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export type SqliteStorageOptions = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
 };
@@ -146,7 +161,11 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
 
   #buffer: Buffer = Buffer.alloc(0);
   #loaded = false;
+  // The one-shot initial DB read (populates `#buffer`); set once, on first access.
   #loading: Promise<void> | null = null;
+  // The latest in-flight DB write (from `write`/`del`); replaced on each save, so it always
+  // tracks the most recent one. `close()` drains both before reporting closed.
+  #saving: Promise<void> | null = null;
 
   constructor(
     private readonly filePath: string,
@@ -172,6 +191,11 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
     }
     if (!this.#loading) {
       this.#loading = this._loadFromDb();
+      // Mark the cached load promise as handled so that if it rejects after every awaiter is gone
+      // (e.g. the SQL runtime is disposed at teardown without close() being called on this file),
+      // the rejection is never surfaced as an unhandled rejection. Legitimate awaiters still observe
+      // the error through their own `.then`/`.catch` on the same promise returned below.
+      this.#loading.catch(() => {});
     }
     return this.#loading;
   }
@@ -187,11 +211,14 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
       );
       this.#buffer = rows.length > 0 ? Buffer.from(rows[0].data) : Buffer.alloc(0);
     } catch (err) {
-      // The SQL connection may close mid-read during teardown (the `#closed` guard in `_ensureLoaded`
-      // only catches reads that have not yet started). A read racing teardown rejects with
-      // "database connection is not open"; swallow it once closed and fall back to the empty buffer,
-      // otherwise surface the genuine error.
-      if (!this.#closed) {
+      // A read racing teardown rejects with "database connection is not open". The `#closed` guard
+      // in `_ensureLoaded` only catches reads not yet started, and `#closed` covers only this file
+      // being closed — during client disposal the shared SQL connection can be torn down while this
+      // file's `#closed` is still false (the container closed the connection without closing every
+      // file first). In either case a closed connection means there is nothing to load, so fall back
+      // to the empty `#buffer`; rethrow only a genuine error against a live connection. Swallowing an
+      // unhandled rejection here otherwise crashes the whole test worker (exit 1, no test failure).
+      if (!this.#closed && !isClosedConnectionError(err)) {
         throw err;
       }
     }
@@ -201,16 +228,27 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
   private async _saveToDb(): Promise<void> {
     const filePath = this.filePath;
     const data = this.#buffer;
-    await RuntimeProvider.runPromise(this.runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`INSERT OR REPLACE INTO hypercore_files (path, data) VALUES (${filePath}, ${data})`;
-      }),
-    );
+    try {
+      await RuntimeProvider.runPromise(this.runtime)(
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          yield* sql`INSERT OR REPLACE INTO hypercore_files (path, data) VALUES (${filePath}, ${data})`;
+        }),
+      );
+    } catch (err) {
+      // Symmetric with `_loadFromDb`: a write racing teardown rejects (as `SqlError: Failed to
+      // execute statement` wrapping "connection is not open") when the shared SQL connection is
+      // torn down before this file's `#closed` flips. Persisting to a dead connection is moot
+      // during disposal, so swallow it; rethrow only a genuine failure against a live connection.
+      // An unswallowed rejection here surfaces as an unhandled rejection that fails the test worker.
+      if (!this.#closed && !isClosedConnectionError(err)) {
+        throw err;
+      }
+    }
   }
 
   write(offset: number, data: Buffer, cb: Callback<any>): void {
-    this._ensureLoaded()
+    const saving = this._ensureLoaded()
       .then(() => {
         const end = offset + data.length;
         if (end > this.#buffer.length) {
@@ -221,8 +259,14 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
         data.copy(this.#buffer, offset);
         return this._saveToDb();
       })
-      .then(() => cb(null))
-      .catch((err) => cb(err));
+      .then(
+        () => cb(null),
+        (err) => cb(err),
+      );
+    // Track the in-flight save so `close()` can drain it before reporting closed — otherwise a
+    // write racing `close()` (e.g. a background sync write racing `client.reset()`'s teardown)
+    // keeps running against a connection the container may tear down immediately after.
+    this.#saving = saving.catch(() => {});
   }
 
   read(offset: number, size: number, cb: Callback<Buffer>): void {
@@ -242,7 +286,7 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
   }
 
   del(offset: number, size: number, cb: Callback<any>): void {
-    this._ensureLoaded()
+    const saving = this._ensureLoaded()
       .then(() => {
         const end = Math.min(offset + size, this.#buffer.length);
         if (offset < end) {
@@ -250,8 +294,12 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
         }
         return this._saveToDb();
       })
-      .then(() => cb(null))
-      .catch((err) => cb(err));
+      .then(
+        () => cb(null),
+        (err) => cb(err),
+      );
+    // See `write()`: track the in-flight save so `close()` can drain it before reporting closed.
+    this.#saving = saving.catch(() => {});
   }
 
   stat(cb: Callback<FileStat>): void {
@@ -264,9 +312,11 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
 
   close(cb: Callback<Error>): void {
     this.#closed = true;
-    // Drain any in-flight initial load before reporting closed, so a read never races a
-    // torn-down SQL connection (avoids "database connection is not open" unhandled rejections).
-    (this.#loading ?? Promise.resolve()).then(
+    // Drain any in-flight initial load and any in-flight write/del before reporting closed, so
+    // neither races a torn-down SQL connection (avoids "database connection is not open" errors,
+    // and the resulting stall in callers — e.g. `client.reset()`'s feed teardown — that wait on
+    // this file's `close()` to settle before tearing down the connection itself).
+    Promise.all([this.#loading ?? Promise.resolve(), this.#saving ?? Promise.resolve()]).then(
       () => cb(null),
       () => cb(null),
     );

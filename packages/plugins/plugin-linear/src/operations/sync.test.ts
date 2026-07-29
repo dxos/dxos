@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
-import { AccessToken, Cursor, Project, Task } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/link';
+import { Connection } from '@dxos/plugin-connector';
+import { ExternalProject, Task } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
 import { LinearApi } from '../services';
@@ -54,8 +55,7 @@ describe('plugin-linear sync', () => {
       AccessToken.AccessToken,
       Connection.Connection,
       Cursor.Cursor,
-      SyncBinding.SyncBinding,
-      Project.Project,
+      ExternalProject.ExternalProject,
       Task.Task,
     ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: LINEAR_SOURCE, token: 'tok' }));
@@ -63,14 +63,17 @@ describe('plugin-linear sync', () => {
       Obj.make(Connection.Connection, { name: 'Linear', connectorId: 'linear', accessToken: Ref.make(token) }),
     );
     // The binding's target is the team's local root Project.
-    const teamRoot = db.add(Project.make({ name: 'TEAM · Example' }));
+    const teamRoot = db.add(ExternalProject.make({ name: 'TEAM · Example' }));
     const binding = db.add(
-      SyncBinding.make({
-        [Relation.Source]: connection,
-        [Relation.Target]: teamRoot,
-        remoteId: 'team-1',
+      Cursor.makeExternal({
+        source: connection.accessToken,
+        target: Ref.make(teamRoot),
+        externalId: 'team-1',
       }),
     );
+    if (!Cursor.isExternal(binding)) {
+      throw new Error('expected external cursor');
+    }
     return { db, binding };
   };
 
@@ -83,7 +86,7 @@ describe('plugin-linear sync', () => {
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.created).toBe(true);
-    const snapshots = (binding.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['issue-1']?.title).toBe('Investigate flake');
     expect(snapshots['issue-1']?.status).toBe('in-progress');
     expect(snapshots['issue-1']?.priority).toBe('medium');
@@ -140,7 +143,7 @@ describe('plugin-linear sync', () => {
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(second.task.title).toBe('Renamed remotely');
-    const snapshots = (binding.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['issue-1']?.title).toBe('Renamed remotely');
   });
 
@@ -190,7 +193,7 @@ describe('plugin-linear sync', () => {
     expect(result.tasks).toBe(1);
     expect(issueUpdateInput).toEqual({ title: 'Edited locally' });
     // Snapshot refreshed so a subsequent push is a no-op.
-    const snapshots = (binding.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['issue-1']?.title).toBe('Edited locally');
   });
 
@@ -257,7 +260,7 @@ describe('plugin-linear sync', () => {
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     // Sanity check: the seeded snapshot really does say "no priority".
-    const snapshots = (binding.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['issue-1']?.priority).toBeUndefined();
 
     Obj.update(first.task, (task) => {

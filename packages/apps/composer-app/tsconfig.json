@@ -229,6 +229,9 @@
       "path": "../../plugins/plugin-attention"
     },
     {
+      "path": "../../plugins/plugin-blogger"
+    },
+    {
       "path": "../../plugins/plugin-bluesky"
     },
     {
@@ -256,9 +259,6 @@
       "path": "../../plugins/plugin-code"
     },
     {
-      "path": "../../plugins/plugin-comments"
-    },
-    {
       "path": "../../plugins/plugin-commerce"
     },
     {
@@ -280,6 +280,9 @@
       "path": "../../plugins/plugin-deck"
     },
     {
+      "path": "../../plugins/plugin-devtools"
+    },
+    {
       "path": "../../plugins/plugin-discord"
     },
     {
@@ -298,13 +301,7 @@
       "path": "../../plugins/plugin-freeq"
     },
     {
-      "path": "../../plugins/plugin-gallery"
-    },
-    {
       "path": "../../plugins/plugin-game"
-    },
-    {
-      "path": "../../plugins/plugin-generator"
     },
     {
       "path": "../../plugins/plugin-github"
@@ -313,7 +310,13 @@
       "path": "../../plugins/plugin-graph"
     },
     {
+      "path": "../../plugins/plugin-heygen"
+    },
+    {
       "path": "../../plugins/plugin-ibkr"
+    },
+    {
+      "path": "../../plugins/plugin-ideogram"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -382,10 +385,19 @@
       "path": "../../plugins/plugin-preview"
     },
     {
+      "path": "../../plugins/plugin-progress"
+    },
+    {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
       "path": "../../plugins/plugin-pwa"
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-review"
     },
     {
       "path": "../../plugins/plugin-routine"
@@ -439,6 +451,9 @@
       "path": "../../plugins/plugin-status-bar"
     },
     {
+      "path": "../../plugins/plugin-studio"
+    },
+    {
       "path": "../../plugins/plugin-support"
     },
     {
@@ -461,6 +476,9 @@
     },
     {
       "path": "../../plugins/plugin-trip"
+    },
+    {
+      "path": "../../plugins/plugin-typefully"
     },
     {
       "path": "../../plugins/plugin-video"
@@ -520,6 +538,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../sdk/worker-framework"
+    },
+    {
       "path": "../../ui/brand"
     },
     {
@@ -527,6 +548,9 @@
     },
     {
       "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-error-boundary"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"

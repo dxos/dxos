@@ -20,6 +20,7 @@ import {
   type ATTR_TYPE,
   EntityKind,
   KindId,
+  ObjectBranchId,
   ObjectDatabaseId,
   ObjectDeletedId,
   ObjectVersionId,
@@ -40,6 +41,7 @@ export {
   ATTR_DELETED,
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
+  ObjectBranchId,
   ObjectDatabaseId,
   ObjectDeletedId,
   ObjectVersionId,
@@ -60,6 +62,7 @@ export interface InternalObjectProps {
   readonly [MetaId]?: EntityMeta;
   [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
+  readonly [ObjectBranchId]?: string;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
   readonly [RelationSourceDXNId]?: EID.EID;

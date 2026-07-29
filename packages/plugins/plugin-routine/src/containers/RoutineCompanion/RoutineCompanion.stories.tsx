@@ -7,18 +7,19 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Instructions, Skill } from '@dxos/compute';
+import { Instructions, Routine, Skill } from '@dxos/compute';
 import { Filter, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Routine } from '#types';
 
+import { makeRoutine } from '../../util';
 import { RoutineCompanion } from './RoutineCompanion';
 
 const types = [Routine.Routine, Instructions.Instructions, Skill.Skill, Text.Text];
@@ -28,7 +29,7 @@ const seed = (space: Space) => {
   const subject = space.db.add(Text.make({ content: 'Meeting notes' }));
 
   space.db.add(
-    Routine.make({
+    makeRoutine({
       name: 'Summarize Notes',
       instructions: Instructions.make({ name: 'Summarize notes', objects: [Ref.make(subject)] }),
     }),

@@ -6,12 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, type NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { Book } from '#types';
@@ -30,7 +29,9 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Book type section in the content group.
       TypeSection.createTypeSectionExtension(Book.Book, {
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
+        urlKey: 'book',
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
+        groupSegment: GraphPath.GroupSegments.content,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,
@@ -46,7 +47,7 @@ export default Capability.makeModule(
         connector: (book) =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment(NOTES_COMPANION_VARIANT),
+              variant: NOTES_COMPANION_VARIANT,
               label: ['notes.label', { ns: meta.profile.key }],
               icon: 'ph--note--regular',
               data: book,

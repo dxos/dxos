@@ -30,13 +30,34 @@ const PROMPT = trim`
   - Output ONLY the reply body — no subject line, no quoted original, no commentary.
 `;
 
+/**
+ * The default reply-style Instructions. The §4 ladder found open-weight drafts scored well but too
+ * flowery ("if I may be so bold"); this steers every draft toward plain, direct prose unless the user
+ * overrides it. A proxy for the per-mailbox `Instructions` object the product will wire in.
+ */
+export const DEFAULT_DRAFT_INSTRUCTIONS = trim`
+  Write plainly and directly, the way a busy person actually emails.
+  - Lead with the answer or the decision in the first sentence.
+  - No obsequious or hedging preambles ("I hope this finds you well", "if I may be so bold",
+    "I just wanted to", "I was wondering if perhaps") — say it directly.
+  - Warm but not effusive: no flattery, no over-apologizing. At most one line of pleasantry.
+  - Short sentences, active voice, cut filler words. Human, not corporate.
+`;
+
 export type DraftOptions = {
   /**
    * User-authored instructions that steer the reply (tone, standing facts, sign-off, policies). A
    * proxy for the per-mailbox `Instructions` object (`@dxos/compute`) the product wires in; appended
-   * after the base rules so it can refine or override them.
+   * after the base rules so it can refine or override them. Omitted → `DEFAULT_DRAFT_INSTRUCTIONS`;
+   * pass an empty string to draft with the base rules only.
    */
   readonly instructions?: string;
+};
+
+/** Builds the full instruction preamble (base rules + steering instructions). Pure — unit-testable. */
+export const buildDraftPrompt = (instructions?: string): string => {
+  const steering = (instructions ?? DEFAULT_DRAFT_INSTRUCTIONS).trim();
+  return steering ? `${PROMPT}\n\nAdditional instructions from the user (follow these):\n${steering}` : PROMPT;
 };
 
 /**
@@ -55,10 +76,7 @@ export const draftReply = (
     if (!Mailbox.isReplyable(message)) {
       return { messageId, subject, draft: '', skipped: true };
     }
-    const instructions = options.instructions?.trim();
-    const prompt = instructions
-      ? `${PROMPT}\n\nAdditional instructions from the user (follow these):\n${instructions}`
-      : PROMPT;
+    const prompt = buildDraftPrompt(options.instructions);
     const draft = (yield* generateText(
       variant.model,
       variant.provider,

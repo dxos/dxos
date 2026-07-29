@@ -20,28 +20,32 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 2. **Format.** Run `pnpm format` (oxfmt — CI checks `oxfmt --check`).
 3. **Lint.** `moon run :lint -- --fix` must succeed.
 4. **Test.** `moon run :test` must pass.
-5. **Account for every file.** `git status`; commit ALL modified/untracked files,
-   including edits the user made in the shared worktree. Never leave changes
-   behind silently — commit them or confirm exclusion with the user.
-6. **Push**, then verify `git status` shows a clean working tree. If anything
+5. **Changeset.** If the change is consumer-relevant, add a `.changeset/*.md`
+   — see
+   [`agents/instructions/changesets.md`](../../../agents/instructions/changesets.md)
+   for when one is needed, which package to name, and bump levels.
+6. **Account for every file.** `git status`; commit ALL modified/untracked
+   files, including the changeset and edits the user made in the shared
+   worktree. Never leave changes behind silently — commit them or confirm
+   exclusion with the user.
+7. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
-7. **Open the PR** with `gh`. Title uses conventional-commit format
-   (`feat(scope): …`). In the description, summarize the changes and the
-   reasoning behind major decisions, and link any Linear issue as
-   `closes DX-123` or `part of DX-123`.
-8. **Monitor CI every 5 minutes:**
+8. **Open the PR** with `gh`. Title uses `scope: description`. In the
+   description, summarize the changes and the reasoning behind major
+   decisions, and link any Linear issue as `closes DX-123` or `part of DX-123`.
+9. **Monitor CI every 5 minutes:**
    `gh run list --branch <branch> --limit 3 --workflow "Check"` and
    `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL
    CI errors — even ones unrelated to this branch. Never merge around a red
    Check; fix the root cause with `gh run view <id> --log-failed`.
-9. **Address and RESPOND to every PR review comment.**
+10. **Address and RESPOND to every PR review comment.**
 
 ## Composer preview URL — always surface
 
 The `preview-deploy.yml` workflow posts a sticky `composer-preview` comment with
-a branch-alias URL (`https://<branch-alias>.composer-app.pages.dev`) and a
-per-deployment URL. Fetch it and include it verbatim next to the PR link in chat
-summaries AND the final message:
+a `*.workers.dev` preview-alias URL (a `wrangler versions upload --preview-alias`
+against composer-app's `main` env). Fetch it and include it verbatim next to the
+PR link in chat summaries AND the final message:
 
 ```
 gh pr view <pr> --json comments

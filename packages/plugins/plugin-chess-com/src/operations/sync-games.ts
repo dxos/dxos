@@ -17,8 +17,8 @@ import { ChessComAccount, ChessComOperation } from '../types';
 
 const gameForeignId = (uuid: string): string => `game/${uuid}`;
 
-const makeGameFromRemote = (remote: RemoteGame): Game =>
-  Obj.make(Game, {
+const makeGameFromRemote = (remote: RemoteGame): Game.Game =>
+  Obj.make(Game.Game, {
     name: `${remote.white.username} vs ${remote.black.username}`,
     players: [
       { role: 'white', name: remote.white.username },
@@ -43,7 +43,7 @@ export default ChessComOperation.SyncGames.pipe(
 
       const remoteGames = yield* fetchAllGames(username);
 
-      const existingGameIds = yield* Feed.query(gamesFeed, Filter.type(Game)).run.pipe(
+      const existingGameIds = yield* Feed.query(gamesFeed, Filter.type(Game.Game)).run.pipe(
         Effect.map((games) => games.map(ChessComAccount.getForeignKey)),
         Effect.map(Array.filter(Predicate.isNotUndefined)),
         Effect.map((ids) => new Set(ids)),

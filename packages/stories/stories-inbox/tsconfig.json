@@ -40,7 +40,16 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
       "path": "../../core/compute/extractor"
+    },
+    {
+      "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/pipeline-email"
     },
     {
       "path": "../../core/compute/pipeline-rdf"
@@ -53,6 +62,9 @@
     },
     {
       "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../plugins/plugin-assistant"
     },
     {
       "path": "../../plugins/plugin-brain"
@@ -74,6 +86,12 @@
     },
     {
       "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-progress"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
     },
     {
       "path": "../../plugins/plugin-space"
@@ -115,7 +133,7 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../story-modules"
+      "path": "../storybook-testing"
     }
   ]
 }

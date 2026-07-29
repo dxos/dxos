@@ -5,37 +5,38 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DatabaseSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Instructions, Operation, Trigger } from '@dxos/compute';
+import { Instructions, Operation, Routine, Trigger } from '@dxos/compute';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { CrmSkill } from '@dxos/plugin-crm';
 import { ProfileOf } from '@dxos/plugin-crm/types';
 import { InboxSkill, Mailbox } from '@dxos/plugin-inbox';
 import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
-import { Routine } from '@dxos/plugin-routine';
+import { meta as automationMeta } from '@dxos/plugin-routine';
 import { ViewModel } from '@dxos/schema';
-import { AccessToken, Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
+import { Cell } from '@dxos/storybook-testing';
+import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { StoryRole } from '../modules';
 import {
-  Module,
   ModuleContainer,
   ResearchInputQueue,
   addTestData,
-  config,
+  addToRootCollection,
   createDecorators,
   createTestMailbox,
-  loadMockInboxSnapshot,
+  loadMockInbox,
   organizations,
+  storyParameters,
   testTypes,
 } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Data',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -71,7 +72,6 @@ export const WithResearch: Story = {
         plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
       };
     },
-    config: config.remote,
     types: [...researchStoryEchoTypes, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
@@ -83,28 +83,26 @@ export const WithResearch: Story = {
       const documents = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
     },
-  }),
-  args: {
-    showContext: true,
-    layout: [[Module.Chat], [Module.Graph, Module.ExecutionGraph]],
     skills: [
       // AssistantSkill.key
       // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
       WebSearchSkill.key,
     ],
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [StoryRole.Graph, StoryRole.ExecutionGraph], [StoryRole.Context]],
   },
 };
 
 export const WithSearch: Story = {
   decorators: createDecorators({
-    config: config.remote,
     types: testTypes,
     onInit: async ({ space }) => {
       await addTestData(space);
     },
   }),
   args: {
-    layout: [[Module.Chat], [Module.Graph]],
+    layout: [[StoryRole.Chat], [StoryRole.Graph]],
   },
 };
 
@@ -113,21 +111,19 @@ export const WithSearch: Story = {
  */
 export const WithDatabase: Story = {
   decorators: createDecorators({
-    config: config.local,
     types: testTypes,
     onInit: async ({ space }) => {
       await addTestData(space);
     },
   }),
   args: {
-    layout: [[Module.Database]],
+    layout: [[StoryRole.Database]],
   },
 };
 
 export const WithResearchQueue: Story = {
   decorators: createDecorators({
     plugins: [],
-    config: config.remote,
     types: [...researchStoryEchoTypes, ResearchInputQueue, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
@@ -157,13 +153,18 @@ export const WithResearchQueue: Story = {
         }),
       );
     },
+    skills: [WebSearchSkill.key],
   }),
   args: {
     layout: [
-      [Module.ResearchInput, Module.ResearchOutput],
-      [Module.Triggers, Module.Invocations, Module.Routine, Module.Graph],
+      [StoryRole.ResearchInput, StoryRole.ResearchOutput],
+      [
+        { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+        StoryRole.Invocations,
+        StoryRole.Routine,
+        StoryRole.Graph,
+      ],
     ],
-    skills: [WebSearchSkill.key],
   },
 };
 
@@ -179,7 +180,6 @@ export const WithProject: Story = {
         plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()],
       };
     },
-    config: config.remote,
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     types: [
       Tag.Tag,
@@ -304,7 +304,7 @@ export const WithProject: Story = {
         jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
       });
 
-      space.db.add(
+      const project = space.db.add(
         Pipeline.make({
           name: 'Investor Research',
           columns: [
@@ -331,12 +331,18 @@ export const WithProject: Story = {
           ],
         }),
       );
+      addToRootCollection(space, [project]);
+
+      return [
+        [Cell.article(project)],
+        [
+          { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+          StoryRole.Invocations,
+        ],
+      ];
     },
-  }),
-  args: {
-    layout: [[Module.Project], [Module.Triggers, Module.Invocations]],
     skills: [],
-  },
+  }),
 };
 
 /**
@@ -345,7 +351,7 @@ export const WithProject: Story = {
  */
 export const WithCRM: Story = {
   decorators: createDecorators({
-    importSnapshot: loadMockInboxSnapshot,
+    importSnapshot: loadMockInbox,
     lazyPlugins: async () => {
       const [{ CrmPlugin }, { InboxPlugin }, { MarkdownPlugin }, { TablePlugin }] = await Promise.all([
         import('@dxos/plugin-crm/plugin'),
@@ -357,7 +363,6 @@ export const WithCRM: Story = {
         plugins: [CrmPlugin(), InboxPlugin(), MarkdownPlugin(), TablePlugin()],
       };
     },
-    config: config.remote,
     types: [
       AccessToken.AccessToken,
       Feed.Feed,
@@ -371,6 +376,18 @@ export const WithCRM: Story = {
       Tag.Tag,
       Trigger.Trigger,
     ],
+    onInit: async ({ space }) => {
+      // The snapshot normally provides a mailbox; fall back to an empty one so the object-bound
+      // cells always have a subject to render.
+      const [existing] = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = existing ?? space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      return [
+        [StoryRole.Chat],
+        [Cell.article(mailbox)],
+        [Cell.companion(mailbox, 'automation'), AppSurface.deckCompanion('trace')],
+        [StoryRole.Database],
+      ];
+    },
     onChatCreated: async ({ space, binder }) => {
       const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       const mailbox = mailboxes[0];
@@ -378,9 +395,6 @@ export const WithCRM: Story = {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
     },
-  }),
-  args: {
-    layout: [[Module.Chat], [Module.Inbox], [Module.RoutineCompanion, Module.Trace], [Module.Database]],
     skills: [
       AssistantSkill.key,
       CrmSkill.key,
@@ -389,5 +403,5 @@ export const WithCRM: Story = {
       MarkdownSkill.key,
       WebSearchSkill.key,
     ],
-  },
+  }),
 };

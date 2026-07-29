@@ -595,17 +595,15 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
 
   const toProfile = (row: AgentRow) =>
     identifiersOf(row.id).pipe(
-      Effect.map(
-        (identifiers): Profile => ({
-          id: row.id,
-          ...(row.label !== null ? { label: row.label } : {}),
-          identifiers,
-          messageCount: row.message_count,
-          ...(row.first_seen !== null ? { firstSeen: row.first_seen } : {}),
-          ...(row.last_seen !== null ? { lastSeen: row.last_seen } : {}),
-          ...(row.ref !== null ? { ref: row.ref } : {}),
-        }),
-      ),
+      Effect.map((identifiers): Profile => ({
+        id: row.id,
+        ...(row.label !== null ? { label: row.label } : {}),
+        identifiers,
+        messageCount: row.message_count,
+        ...(row.first_seen !== null ? { firstSeen: row.first_seen } : {}),
+        ...(row.last_seen !== null ? { lastSeen: row.last_seen } : {}),
+        ...(row.ref !== null ? { ref: row.ref } : {}),
+      })),
     );
 
   const agentRow = (id: string) =>

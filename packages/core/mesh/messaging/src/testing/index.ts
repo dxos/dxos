@@ -3,6 +3,7 @@
 //
 
 export * from './test-builder';
+export * from './test-edge-mesh';
 export * from './test-peer';
 export * from './test-messages';
 export * from './utils';

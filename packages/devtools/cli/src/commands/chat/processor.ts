@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -14,10 +14,9 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { type OperationHandlerSet, Skill } from '@dxos/compute';
+import { OperationHandlerSet, Skill } from '@dxos/compute';
 import { Database, Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
@@ -69,7 +68,7 @@ export class ChatProcessor {
       Effect.provide(
         Layer.mergeAll(AiService.model(DXN.getName(model)), ToolExecutionServices).pipe(
           Layer.provideMerge(OpaqueToolkit.providerLayer(this._toolkit)),
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: this._functions })),
+          Layer.provideMerge(OperationHandlerSet.provide(this._functions)),
         ),
       ),
       Effect.asVoid,

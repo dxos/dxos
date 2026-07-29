@@ -288,3 +288,30 @@ Sub-components: `Root`, `Viewport`.
 - [ ] 5. **Generalize Splitter terminology**: When adding horizontal support, rename `upper`/`lower` to `start`/`end` to be axis-agnostic. The current TODOs already note this.
 - [x] 6. **Popover.Viewport `overflow-hidden` redundancy**: When both `constrainBlock` and `constrainInline` are true (the default), two `overflow-hidden` classes are emitted. Consider applying `overflow-hidden` once unconditionally when either constraint is active.
 - [x] 7. **Container.Main `asChild` consideration**: Currently `Main` renders a hardcoded `<div>` with no `asChild` support. This is acceptable for its role as a layout root, but if use cases arise where it needs to merge onto a `<main>` or `<section>` element, `asChild` support could be added.
+
+#### Claude
+
+- sidebar
+  - bg
+  - text
+- main
+  - bg
+  - text
+- companion
+  - bg
+  - text
+
+- #0D0D0D main-bg
+- #0B0B0B sidebar-bg
+- #131313 panel-bg
+- #161616 panel-bg
+- #1C1C1C
+- #1F1F1F main-input
+- #202020 main-panel-bg
+- #242424 sidebar-select-bg
+- #898782 input-text
+- #F9F9F7 sidebar-select-text
+- #2B2B29 sidebar-panel-bg
+- #C3C2B8 sidebar-text
+- #E1E0DA main-text
+- #F9F9F7 sidebar-panel-text

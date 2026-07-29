@@ -5,7 +5,16 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import DOMPurify from 'dompurify';
-import React, { CSSProperties, MouseEventHandler, type ReactNode, forwardRef, useId, useMemo } from 'react';
+import React, {
+  CSSProperties,
+  type KeyboardEventHandler,
+  MouseEventHandler,
+  type ReactNode,
+  forwardRef,
+  useCallback,
+  useId,
+  useMemo,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { iconSize } from '@dxos/ui-theme';
@@ -33,10 +42,14 @@ type CardRootProps = {
   'id'?: string;
   'border'?: boolean;
   'fullWidth'?: boolean;
+  /** Adopt the parent grid's columns (via `subgrid`) instead of defining the card's own gutters —
+   * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`. */
+  'subgrid'?: boolean;
   'density'?: Density;
   'style'?: CSSProperties;
   'tabIndex'?: number;
   'onClick'?: MouseEventHandler<HTMLDivElement>;
+  'onKeyDown'?: KeyboardEventHandler<HTMLDivElement>;
   'data-selected'?: boolean;
   'data-testid'?: string;
 };
@@ -45,7 +58,7 @@ type CardRootProps = {
  * `Card.Root` does not support `asChild`. The Column grid is the root element
  * (one `<div>` carrying both the `dx-card` and `dx-column-root` classes
  * instead of the previous outer-card + inner-column pair), so caller-provided
- * HTML attributes — `onClick`, `tabIndex`, `style`, `data-*`, `grid-template-rows`
+ * HTML attributes — `onClick`, `onKeyDown`, `tabIndex`, `style`, `data-*`, `grid-template-rows`
  * overrides via `classNames` — land directly on the grid container.
  * Slot-parents (`Focus.Item asChild`, `Mosaic.Tile asChild`, etc.) continue to
  * work because `composable()` preserves the COMPOSABLE marker that slottable parents
@@ -53,7 +66,7 @@ type CardRootProps = {
  * `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
  */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(
-  ({ children, id, role, border = true, fullWidth, density, ...props }, forwardedRef) => {
+  ({ children, id, role, border = true, fullWidth, subgrid, density, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
 
@@ -61,6 +74,7 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
       <Column.Root
         asChild
         gutter='lg'
+        subgrid={subgrid}
         classNames={tx('card.root', { border, fullWidth }, className)}
         role={role ?? 'group'}
       >
@@ -186,11 +200,17 @@ type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
 
 function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps<T>) {
   const { t } = useTranslation(translationKey);
+  // A `Card.Root` with an `onClick` is a click target, and this menu sits inside it. React portals
+  // propagate through the React tree rather than the DOM, so without this both the trigger and the
+  // item selection reach the card's handler and activate it on the way past. Radix's `asChild`
+  // composes the trigger handler, so the menu still opens.
+  const stopPropagation = useCallback<MouseEventHandler>((event) => event.stopPropagation(), []);
   return (
     <CardBlock end>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger disabled={!items?.length} asChild>
           <IconButton
+            onClick={stopPropagation}
             iconOnly
             variant='ghost'
             icon='ph--dots-three-vertical--regular'
@@ -199,12 +219,13 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
         </DropdownMenu.Trigger>
         {(items?.length ?? 0) > 0 && (
           <DropdownMenu.Portal>
-            <DropdownMenu.Content>
+            <DropdownMenu.Content onClick={stopPropagation}>
               <DropdownMenu.Viewport>
-                {items?.map(({ label, onClick: onSelect }, index) => (
+                {items?.map(({ label, icon, onClick: onSelect }, index) => (
                   // `context` is the generic payload threaded to each handler; the cast is the
                   // generic boundary (T may be `void`, so `context` is typed `T | undefined`).
                   <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                    {icon && <Icon icon={icon} />}
                     {label}
                   </DropdownMenu.Item>
                 ))}
@@ -226,7 +247,11 @@ CardMenu.displayName = CARD_MENU_NAME;
 
 const CARD_BLOCK_NAME = 'Card.Block';
 
-type CardBlockProps = SlottableProps<{ end?: boolean; compact?: boolean; square?: boolean }>;
+type CardBlockProps = SlottableProps<{
+  end?: boolean;
+  compact?: boolean;
+  square?: boolean;
+}>;
 
 /**
  * Leading (default) or trailing (`end`) gutter slot of a Card row/header. Sized to the
@@ -252,6 +277,12 @@ CardBlock.displayName = CARD_BLOCK_NAME;
 
 const CARD_TITLE_NAME = 'Card.Title';
 
+/**
+ * Card heading text. Carries no column placement of its own, so it must be a child of a subgrid
+ * part — `Card.Header` (the usual home), `Card.Row`, or `Card.Section` — which places it in the
+ * center content track. Placed directly under `Card.Root` (or a `display:contents` `Card.Body`) it
+ * auto-places into a gutter track and renders clamped/misaligned.
+ */
 const CardTitle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { className, ...rest } = composableProps(props, { role: 'heading' });
@@ -370,6 +401,12 @@ CardRow.displayName = CARD_ROW_NAME;
 
 const CARD_TEXT_NAME = 'Card.Text';
 
+/**
+ * Body text within a Card. Carries no column placement of its own, so it must be a child of a subgrid
+ * part — `Card.Row` (the usual home), `Card.Header`, or `Card.Section` — which places it in the center
+ * content track. Placed directly under `Card.Root` (or a `display:contents` `Card.Body`) it auto-places
+ * into a gutter track and renders squeezed. Use `variant='description'` for muted secondary text.
+ */
 // `onClick` is opted in explicitly: `ComposableProps` deliberately excludes event handlers, but the
 // part spreads rest props onto its element, so the handler is forwarded at runtime.
 type CardTextProps = {
@@ -528,22 +565,22 @@ CardLink.displayName = CARD_LINK_NAME;
 export const Card = {
   Root: CardRoot,
 
-  // Header
+  // Containers
   Header: CardHeader,
+  Body: CardBody,
 
-  // Header / row parts
+  // Header components
   Block: CardBlock,
   DragHandle: CardDragHandle,
   ActionIconButton: CardActionIconButton,
   Menu: CardMenu,
   Title: CardTitle,
 
-  // Body
-  Body: CardBody,
+  // Body components
   Section: CardSection,
   Row: CardRow,
 
-  // Body parts
+  // Row components
   Text: CardText,
   Html: CardHtml,
   Poster: CardPoster,

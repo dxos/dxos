@@ -6,14 +6,13 @@ import * as EffectContext from 'effect/Context';
 import * as Layer from 'effect/Layer';
 
 import { type Context } from '@dxos/context';
-import type { CollectionId } from '@dxos/echo-protocol';
+import { type CollectionId, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
 import { ComplexSet, defaultMap } from '@dxos/util';
 
-import { createIdFromSpaceKey } from '../common/space-id';
 import {
   type AutomergeReplicator,
   type AutomergeReplicatorContext,
@@ -121,8 +120,11 @@ export class MeshEchoReplicator implements AutomergeReplicator {
         log('shouldAdvertise', { peerId: connection.peerId, documentId: params.documentId });
         invariant(this._context);
         try {
-          const spaceKey = await this._context.getContainingSpaceForDocument(params.documentId);
-          if (!spaceKey) {
+          // Resolve space membership via `getContainingSpaceIdForDocument`, which answers from the
+          // local collection state (the space root's document list) and so still identifies a doc
+          // the node owns whose handle is evicted or still loading.
+          const spaceId = await this._context.getContainingSpaceIdForDocument(params.documentId);
+          if (!spaceId) {
             const remoteDocumentExists = await this._context.isDocumentInRemoteCollection({
               documentId: params.documentId,
               peerId: connection.peerId,
@@ -138,8 +140,6 @@ export class MeshEchoReplicator implements AutomergeReplicator {
             // start replication of the document after we receive, even if the peer is not in the corresponding space.
             return remoteDocumentExists;
           }
-
-          const spaceId = await createIdFromSpaceKey(spaceKey);
 
           const authorizedDevices = this._authorizedDevices.get(spaceId);
 
@@ -157,7 +157,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
             remotePeer: connection.peerId,
             documentId: params.documentId,
             deviceKey: connection.remoteDeviceKey,
-            spaceKey,
+            spaceId,
             isAuthorized,
           });
           return isAuthorized;

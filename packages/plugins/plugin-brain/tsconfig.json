@@ -43,10 +43,16 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/types"
@@ -58,7 +64,16 @@
       "path": "../../ui/react-ui-rdf"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-inbox"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

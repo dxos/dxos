@@ -8,7 +8,7 @@ import { AppCapabilities, AppSpace } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
-import { type IdbLogStore } from '@dxos/log-store-idb';
+import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
 import { IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -92,8 +92,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
   }, [client, download, handleToast, onUpload, t]);
 
   const handleDownloadLogs = useCallback(async () => {
-    const ndjson = await logStore.export();
-    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
+    const file = await logStore.exportBlob({ maxSize: MANUAL_LOG_EXPORT_MAX_BYTES });
     const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
     download(file, fileName);
   }, [download, logStore]);

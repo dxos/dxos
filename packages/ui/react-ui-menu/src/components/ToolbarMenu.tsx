@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import {
   Input,
@@ -14,6 +14,7 @@ import {
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { mx } from '@dxos/ui-theme';
 import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProperties } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
@@ -55,22 +56,32 @@ export type ToolbarMenuActionProps = {
 const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: MenuAction }>) => {
   const { iconSize, onAction } = useMenuScoped('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
+  const [pending, setPending] = useState(false);
+  const pendingRef = useRef(false);
 
-  const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames } = action.properties;
-  const buttonVariant =
-    (action.properties as { variant?: string }).variant === 'primary' ? ('primary' as const) : ('ghost' as const);
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames, spin } = action.properties;
+  const buttonVariant = action.properties.variant === 'primary' ? ('primary' as const) : ('ghost' as const);
 
   const handleClick = useCallback(() => {
+    if (pendingRef.current) {
+      return;
+    }
+    pendingRef.current = true;
+    setPending(true);
+    const done = () => {
+      pendingRef.current = false;
+      setPending(false);
+    };
     if (onAction) {
-      onAction(action, {});
+      Promise.resolve(onAction(action, {})).then(done, done);
     } else {
-      void executeMenuAction(action);
+      executeMenuAction(action).then(done, done);
     }
   }, [action, onAction]);
 
   const commonProps = {
     variant: buttonVariant,
-    disabled,
+    disabled: disabled || pending,
     classNames,
     onClick: handleClick,
     ...(testId && { 'data-testid': testId }),
@@ -87,7 +98,7 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
       icon={icon}
       size={iconSize}
       iconOnly={iconOnly}
-      iconClassNames={iconClassNames}
+      iconClassNames={mx(spin && 'animate-spin', iconClassNames)}
       label={actionLabel(action, t)}
     />
   ) : (
@@ -155,6 +166,7 @@ const DropdownMenuToolbarItem = ({
     caretDown = true,
     icon: groupIcon,
     iconClassNames: groupIconClassNames,
+    spin: groupSpin,
   } = group.properties;
   const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked) as MenuAction | undefined;
   const icon =
@@ -164,6 +176,7 @@ const DropdownMenuToolbarItem = ({
     groupIcon;
   // Follow the same `applyActive` rule for `iconClassNames` so a per-item accent (e.g. tag colour) tracks the displayed icon.
   const iconClassNames = (applyActive && activeItem?.properties.iconClassNames) || groupIconClassNames;
+  const spin = (applyActive && activeItem?.properties.spin) || groupSpin;
   const labelAction = applyActive && activeItem ? activeItem : group;
 
   return (
@@ -176,7 +189,7 @@ const DropdownMenuToolbarItem = ({
             icon={icon}
             size={iconSize}
             iconOnly={iconOnly}
-            iconClassNames={iconClassNames}
+            iconClassNames={mx(spin && 'animate-spin', iconClassNames)}
             label={actionLabel(labelAction, t)}
             caretDown={caretDown}
             {...(testId && { 'data-testid': testId })}
@@ -199,7 +212,7 @@ const DropdownMenuToolbarItem = ({
 const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<ToolbarMenuActionProps>) => {
   const { iconSize, onAction } = useMenuScoped('ToggleGroupItem', __menuScope);
   const { t } = useTranslation(translationKey);
-  const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames } = action.properties;
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames, spin } = action.properties;
 
   const handleClick = useCallback(() => {
     if (onAction) {
@@ -224,7 +237,7 @@ const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<Toolbar
       icon={icon}
       size={iconSize}
       iconOnly={iconOnly}
-      iconClassNames={iconClassNames}
+      iconClassNames={mx(spin && 'animate-spin', iconClassNames)}
       label={actionLabel(action, t)}
     />
   ) : (

@@ -1,0 +1,320 @@
+---
+id: org.dxos.worker-framework
+name: WorkerFramework
+version: 0.10.0
+---
+
+Generic worker management framework for DXOS client services. It elects a single
+leader tab that hosts a dedicated worker, connects follower tabs to that worker
+via a coordinator that exchanges `MessagePort`s, and survives leader death through
+lock stealing, re-election, and reconnection. RPC over the worker boundary is
+effect-native (`@effect/rpc`).
+
+This spec captures the package's namespace modules and their public API, plus the
+framework's features and acceptance criteria.
+
+Modules follow the DXOS namespace-module styleguide: PascalCase file in `src/`,
+marked `// @import-as-namespace`, re-exported from an `index.ts` as
+`export * as <Name> from './<Name>'`, and consumed by callers as a namespace
+(`RpcTiming.serverLayer`, never a bare `rpcTimingServerLayer`). Members are
+unprefixed — the caller always reads `<Name>.<member>`. The subpath entrypoints
+(`client`, `worker`, `coordinator`) are each consumed as a namespace of the
+subpath (`import * as Client from '@dxos/worker-framework/client'`).
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term     | URI                          |
+|----------|------------------------------|
+| `module` | `org.dxos.mdl.module@1.0`    |
+| `feat`   | `org.dxos.mdl.feat@1.0`      |
+| `test`   | `org.dxos.mdl.test@1.0`      |
+
+## Modules
+
+### `@dxos/worker-framework` (root)
+
+The generic effect-rpc-over-`MessagePort` composition (client/serve helpers) is intentionally NOT
+part of this package. It lives as the `Rpc` namespace in `@dxos/client-protocol`, keeping
+worker-framework to transport plumbing (ports, leader election, coordinator, protocol). A minimal
+internal copy under `src/internal/rpc.ts` backs only the package's own stories and the RpcTiming test.
+
+```mdl
+module RpcTiming
+  desc: |
+    Effect RPC middleware that measures per-request queue-wait and service time
+    across the worker boundary. The client stamps a send timestamp header; the
+    server derives queue-wait from it, times the handler, records samples in a
+    bounded ring buffer, and logs slow requests.
+  api:
+    # Constants
+    SENT_AT_HEADER: string                # cross-thread send-time header ('x-dxos-rpc-sent-at').
+
+    # Types
+    Options: { minLogMs?: number }        # min queue-wait / service ms before logging (default 100).
+    MetadataService: {...}                # per-request timing: sentAt?, dispatchedAt, queueWaitMs?, serviceMs?.
+    Sample: {...}                         # one recorded RPC: tag, queueWaitMs?, serviceMs, at.
+    StatsSnapshot: {...}                  # samples[] + maxQueueWaitMs + maxServiceMs.
+
+    # Effect tags
+    Metadata: Context.Tag                 # request-scoped MetadataService tag.
+    Middleware: RpcMiddleware.Tag         # wrap middleware; provides Metadata; requiredForClient.
+
+    # Group wiring
+    applyMiddleware: (group) => group     # attaches Middleware to every RPC; idempotent.
+    serverLayer: (options?) => Layer      # derives queue-wait + service time, records + logs.
+    clientLayer: () => Layer              # stamps SENT_AT_HEADER on outbound RPCs.
+
+    # Stats collection
+    recordSample: (Sample) => void        # append one completed RPC (ring buffer, max 100).
+    getStatsSnapshot: () => StatsSnapshot  # snapshot of samples from the server middleware.
+    resetStats: () => void                # clear collected samples (tests).
+
+    # Option helpers (consumed by the RPC composition helpers)
+    isEnabled: (timing?) => boolean       # whether timing is on for a serve/client options bag.
+    resolveOptions: (timing?) => Options  # normalize boolean | Options to an Options bag.
+```
+
+`RpcTiming` lives in `src/RpcTiming.ts`. The `Metadata` and `Middleware` Effect tags
+retain the stable global identifiers `'RpcTimingMetadata'` / `'RpcTimingMiddleware'`;
+only their exported member names are unprefixed.
+
+### `@dxos/worker-framework/client`
+
+```mdl
+module Client
+  desc: |
+    The follower/leader tab connection. Runs leader election, coordinator port
+    exchange, worker lifecycle, and reconnection; service wiring is injected via
+    Options.onConnect. Entrypoint: @dxos/worker-framework/client.
+  api:
+    Connection: class extends Resource  # ctor(Options); open()/close(); clientId; onReconnect(cb); closed + reconnected events.
+    Options: {...}                      # createWorker, createCoordinator, leaderLockKey, config?, leaderTimeouts?, onConnect.
+    Handle: { close(): Promise }        # per-connection handle returned by Options.onConnect.
+    LeaderTimeouts: {...}               # heartbeatInterval?, staleTimeout?, portTimeout?, retryBackoff?.
+```
+
+### `@dxos/worker-framework/worker`
+
+```mdl
+module Worker
+  desc: |
+    The dedicated-worker runtime loop: storage lock, liveness lock, displacement
+    of prior workers, and the init/ready/session protocol with owner detection.
+    Entrypoint: @dxos/worker-framework/worker.
+  api:
+    run: (options: Options) => void     # start the worker message loop (defaults endpoint to `self`).
+    Options: {...}                      # endpoint?, storageLockKey, displaceChannel?, createRuntime.
+    RuntimeHandle: {...}                # createSession({ clientId, isOwner, onClose }) + optional idempotent stop().
+```
+
+### `@dxos/worker-framework/coordinator`
+
+```mdl
+module Coordinator
+  desc: |
+    Cross-tab message routing between followers and the leader. Strategy
+    implementations plus the SharedWorker entrypoint handler. Entrypoint:
+    @dxos/worker-framework/coordinator.
+  api:
+    SharedWorker: class implements WorkerCoordinator   # routes via a SharedWorker port; transfers session ports.
+    SharedWorkerOptions: { createWorker: () => SharedWorker }
+    SingleClient: class implements WorkerCoordinator   # echoes messages locally; native / single-window.
+    Memory: class implements WorkerCoordinator          # in-memory loopback for tests.
+    createOnConnect: () => (ev: MessageEvent) => void   # SharedWorker onconnect handler owning one routing table.
+    run: () => void                                     # install createOnConnect() on globalThis.onconnect.
+```
+
+### Shared protocol types
+
+```mdl
+module WorkerProtocol
+  desc: |
+    The wire protocol shared across the Client, Worker, and Coordinator modules.
+    Types only; re-exported from every entrypoint that references them.
+  api:
+    WorkerCoordinator: interface         # { onMessage: Event<CoordinatorMessage>; sendMessage(msg): void }.
+    CoordinatorMessage: union            # new-leader | leader-heartbeat | request-port | provide-port.
+    DedicatedWorkerMessage: union        # listening | init | ready | start-session | session.
+    WorkerEndpoint: interface            # postMessage / add + removeEventListener('message') / close?.
+    WorkerOrPort: Worker | MessagePort   # worker handle usable from a leader tab or a test port.
+```
+
+## Features
+
+```mdl
+feat F-1: Leader election
+
+  req F-1.1:
+    when: a tab opens a Client.Connection
+    then: it requests the LEADER Web Lock; the tab that acquires it is
+          the leader and hosts the worker, all others are followers
+
+  req F-1.2:
+    when: a tab holds the leader lock
+    then: it broadcasts a `leader-heartbeat` every `heartbeatInterval` (default 1s)
+
+  req F-1.3:
+    when: a follower observes no heartbeat for `staleTimeout` (default 5s) and the
+          leader lock is still held
+    then: it may steal the lock to force re-election, subject to a steal cooldown
+
+  req F-1.4:
+    when: a leader session fails (worker init/crash) rather than the lock being stolen
+    then: the tab re-enters election after a capped exponential backoff with jitter,
+          resetting the failure count once a session opens
+```
+
+```mdl
+feat F-2: Session and port exchange
+
+  req F-2.1:
+    when: a follower needs a worker session
+    then: it sends `request-port`; the leader asks the worker to `start-session`;
+          the worker returns app + system ports; the leader routes a directed
+          `provide-port` reply to only the requesting client
+
+  req F-2.2:
+    when: a follower sees a `new-leader` or `leader-heartbeat` before it has a port
+    then: it re-sends `request-port`, recovering from a missed one-shot `new-leader`
+          broadcast (heartbeats provide a recurring, idempotent retry)
+
+  req F-2.3:
+    when: the worker receives repeated `start-session` for the same clientId
+    then: it de-duplicates and serves a single session per client
+```
+
+```mdl
+feat F-3: Worker lifecycle and displacement
+
+  req F-3.1:
+    when: a worker starts
+    then: it holds the `storageLockKey` Web Lock for its whole lifetime and
+          broadcasts a stop signal so any previous worker for that lock tears down
+
+  req F-3.2:
+    when: a worker becomes ready
+    then: it holds a per-instance liveness Web Lock before advertising `ready`, and
+          releases it on shutdown so clients watching that key observe termination
+
+  req F-3.3:
+    when: the leader sends `init` with config and an `ownerClientId`
+    then: the worker builds its runtime, marks the owning client, and replies `ready`
+          with its `livenessLockKey`
+```
+
+```mdl
+feat F-4: Reconnection
+
+  req F-4.1:
+    when: the connected worker/leader terminates (liveness lock released or a new
+          leader is announced)
+    then: the follower closes the stale handle, reschedules the connect task, and
+          re-runs Options.onConnect against the new session
+
+  req F-4.2:
+    when: a reconnection (not the initial connection) succeeds
+    then: all `onReconnect` callbacks run and the `reconnected` event fires
+```
+
+```mdl
+feat F-5: RPC transport
+
+  req F-5.1:
+    when: a client is built with Rpc.makeClient / Rpc.makeClientOverProtocol
+    then: it speaks the effect-rpc worker protocol over the MessagePort at
+          effectively-unbounded concurrency, so a long-lived stream cannot block
+          other requests
+
+  req F-5.2:
+    when: serve/client options enable `timing`
+    then: RpcTiming.clientLayer stamps the send-time header and RpcTiming.serverLayer
+          records samples and logs requests slower than `minLogMs`
+```
+
+```mdl
+feat F-6: Coordinator strategies
+
+  req F-6.1:
+    when: multiple browser tabs share one worker
+    then: Coordinator.SharedWorker routes leadership/heartbeat traffic to all tabs
+          and directed `provide-port` (with transferred ports) to the requester
+
+  req F-6.2:
+    when: running single-window (e.g. native / Tauri) or in tests
+    then: Coordinator.SingleClient (local echo) or Coordinator.Memory (loopback)
+          satisfy the same WorkerCoordinator contract without a SharedWorker
+```
+
+## Acceptance
+
+```mdl
+test T-1: Single leader hosts the worker
+  given: two tabs opening a Client.Connection against the same leaderLockKey
+  when: both complete their initial connection
+  then:
+    - exactly one tab acquires the leader lock and spawns the worker
+    - the other tab receives app + system ports via provide-port
+    - both observe the same leaderId
+```
+
+```mdl
+test T-2: Follower reconnects after leader death
+  given: a follower connected to a worker hosted by a leader tab
+  when: the leader tab is terminated
+  then:
+    - the follower detects termination (liveness lock released)
+    - a surviving tab wins re-election and spawns a new worker
+    - the follower re-runs onConnect and fires the reconnected event
+```
+
+```mdl
+test T-3: Duplicate sessions are de-duplicated
+  given: a running worker and a follower client
+  when: the follower sends request-port repeatedly (e.g. on each heartbeat)
+  then:
+    - the worker serves exactly one session for that clientId
+    - extra start-session messages are ignored
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext module
+  uri: org.dxos.mdl.module@1.0
+  desc: |
+    An ESM namespace module following the DXOS namespace-module styleguide:
+    PascalCase file in src/, marked `// @import-as-namespace`, and re-exported
+    from index.ts as `export * as <Name> from './<Name>'`. Callers import it as a
+    namespace, so members are unprefixed (`RpcTiming.Options`, not `RpcTimingOptions`).
+    The file path is inferred from the block name (`RpcTiming` → `src/RpcTiming.ts`).
+    The full rules live in the styleguide referenced below rather than inline here.
+  styleguide: ../../../docs/style/namespace-modules.md
+  fields:
+    desc?: Prose
+    api: ApiMap         # public members reached as `<Name>.<member>`  (name: TypeExpr # comment)
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```

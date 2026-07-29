@@ -8,4 +8,4 @@ import { meta } from './meta';
 
 export const SheetPlugin = Plugin.lazy(meta, () => import('#plugin'));
 
-export { SheetOperationHandlerSet } from './operations';
+export { SheetOperationHandlerSet } from '#operations';

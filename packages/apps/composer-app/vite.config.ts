@@ -29,6 +29,9 @@ import { createConfig as createTestConfig } from '../../../vitest.base.config';
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
+// DX_PLUGIN_SET=minimal (serve-min task) swaps the full plugin registry for
+// plugin-defs.minimal.tsx without touching main.tsx.
+const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -53,23 +56,24 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   //   * `?url` static-asset imports (e.g. plugin-zen's m4a samples,
   //     plugin-script's `esbuild.wasm`) get real bundled URLs instead of
   //     the `""` empty-url stub that `dx-compile` writes into `dist`.
-  // Disabled under `DX_FASTBUNDLE` for the smoke-test/preview build where
-  // build speed wins over correctness for unchanged source.
-  !isFastBundle &&
-    importSource({
-      include: ['@dxos/**', '#*'],
-      exclude: [
-        '@dxos/random-access-storage',
-        '@dxos/lock-file',
-        '@dxos/network-manager',
-        '@dxos/teleport',
-        '@dxos/config',
-        '@dxos/client-services',
-        '@dxos/observability',
-        // TODO(dmaretskyi): Decorators break in lit.
-        '@dxos/lit-*',
-      ],
-    }),
+  // Under `DX_FASTBUNDLE` (smoke-test/preview build) only the `@dxos/**`-to-source
+  // forcing is skipped, where build speed wins over correctness for unchanged source.
+  // Package-internal `#*` subpath imports must still resolve to source, or they fall
+  // through to `dist/lib/neutral/*` and fail when a package has not been compiled.
+  importSource({
+    include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
+    exclude: [
+      '@dxos/random-access-storage',
+      '@dxos/lock-file',
+      '@dxos/network-manager',
+      '@dxos/teleport',
+      '@dxos/config',
+      '@dxos/client-services',
+      '@dxos/observability',
+      // TODO(dmaretskyi): Decorators break in lit.
+      '@dxos/lit-*',
+    ],
+  }),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   wasm(),
@@ -81,6 +85,13 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
  */
 export default defineConfig((env) => ({
   root: dirname,
+  define: {
+    // Per-dev-server-instance id (config re-evaluates on every server start/restart). main.tsx
+    // suffixes the coordinator SharedWorker *name* with it so a restarted server gets a fresh
+    // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
+    // URL + name). Empty in production builds — the name must stay stable across deploys.
+    __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+  },
   server: {
     host: true,
     https:
@@ -91,6 +102,21 @@ export default defineConfig((env) => ({
           }
         : undefined,
     watch: {
+      // Use the fs.watch backend, not fsevents. chokidar's fsevents handler keeps ONE native stream per
+      // root with a Set of listeners — one per watched path — and routes every event by running
+      // `indexOf` against every listener (lib/fsevents-handler.js, `cont.listeners.forEach`). Resolving
+      // `@dxos/*` from source means a watch per transformed module, so that set runs to thousands and
+      // grows as more of the app is browsed; a write burst then pins the main thread and the server
+      // stops responding (diagnosed via `moon run composer-app:diagnose-serve`: 4062 of 4064 samples in
+      // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
+      // this routing, so the scan happens regardless.
+      useFsEvents: false,
+      // Build output is not source, and the watch root spans the monorepo, so a single
+      // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
+      // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
+      // these in. Trade-off: rebuilding a package whose dist is consumed at runtime no longer triggers
+      // HMR, so that needs a server restart — the honest behaviour for a prebuilt dependency.
+      ignored: ['**/dist/**', '**/.moon/cache/**', '**/temp/**', '**/coverage/**', '**/*.tsbuildinfo'],
       // Coalesce write bursts (codemods, formatters, git checkout/rebase) into
       // a single HMR pass: chokidar holds add/change events until the file size
       // has been stable for `stabilityThreshold` ms, so a hundred-file burst
@@ -119,9 +145,8 @@ export default defineConfig((env) => ({
       clientFiles: [
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
-        './src/workers/shared-worker.ts',
         './src/workers/coordinator-worker.ts',
-        './src/plugin-defs.tsx',
+        isMinimalPluginSet ? './src/plugin-defs.minimal.tsx' : './src/plugin-defs.tsx',
       ],
     },
   },
@@ -280,7 +305,14 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
-      path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      // Under DX_PLUGIN_SET=minimal only the plugins registered in
+      // plugin-defs.minimal.tsx are scanned — keep the brace list in sync.
+      isMinimalPluginSet
+        ? path.resolve(
+            rootDir,
+            'packages/plugins/plugin-{assistant,attention,client,debug,deck,graph,inbox,markdown,navtree,observability,onboarding,outliner,preview,projects,registry,review,routine,settings,simple-layout,space,spotlight,status-bar,theme,thread}/src/index.{ts,tsx}',
+          )
+        : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
@@ -289,6 +321,9 @@ export default defineConfig((env) => ({
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
+      ...(isMinimalPluginSet
+        ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, 'src/plugin-defs.minimal.tsx') }]
+        : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },
@@ -296,6 +331,8 @@ export default defineConfig((env) => ({
       { find: /^path$/, replacement: '@dxos/node-std/path' },
       { find: /^node:crypto$/, replacement: '@dxos/node-std/crypto' },
       { find: /^crypto$/, replacement: '@dxos/node-std/crypto' },
+      { find: /^node:stream$/, replacement: '@dxos/node-std/stream' },
+      { find: /^stream$/, replacement: '@dxos/node-std/stream' },
       { find: /^tiktoken\/lite$/, replacement: path.resolve(dirname, 'stub.mjs') },
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
       //   source files — imports embedded inside compiled dist/ files bypass it entirely.
@@ -492,10 +529,6 @@ export default defineConfig((env) => ({
         ],
       },
     }),
-
-    // https://github.com/antfu-collective/vite-plugin-inspect#readme
-    // Open: http://localhost:5173/__inspect
-    isTrue(process.env.DX_INSPECT) && inspect(),
 
     isTrue(process.env.DX_STATS) && [
       visualizer({

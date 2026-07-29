@@ -7,18 +7,19 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Trace, Trigger } from '@dxos/compute';
+import { Routine, Trace, Trigger } from '@dxos/compute';
+import { FeedTraceSink } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { FeedTraceSink } from '@dxos/functions-runtime';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Routine } from '#types';
 
+import { makeRoutine } from '../../util';
 import { RoutineTraceCompanion } from './RoutineTraceCompanion';
 
 const types = [Routine.Routine, Trigger.Trigger, Feed.Feed, Trace.Message];
@@ -49,7 +50,7 @@ const runMessage = (opts: {
 const seed = (space: Space) =>
   Effect.gen(function* () {
     const trigger = Trigger.make({ enabled: true });
-    space.db.add(Routine.make({ name: 'Summarize Notes', trigger }));
+    space.db.add(makeRoutine({ name: 'Summarize Notes', trigger }));
     const feed = space.db.add(
       Feed.make({ kind: FeedTraceSink.TRACE_FEED_KIND, name: 'Execution Trace', namespace: 'trace' }),
     );
