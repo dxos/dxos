@@ -7,12 +7,13 @@ import * as Effect from 'effect/Effect';
 import { Instructions, Skill, Trigger } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { scaffoldProject } from '@dxos/plugin-projects/templates';
-import { type ProjectCapabilities } from '@dxos/plugin-projects/types';
+import { Mailbox } from '@dxos/plugin-inbox';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 
-import { Mailbox } from '../types';
+import { type ProjectCapabilities } from '#types';
+
+import { scaffoldProject } from './scaffold';
 
 /**
  * Skill keys composed into the project's instructions (chat sessions) and the starter routine.

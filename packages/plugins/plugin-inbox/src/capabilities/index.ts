@@ -17,6 +17,5 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   'OperationHandler',
   () => import('./operation-handler'),
 );
-export const ProjectTemplates = Capability.lazy('ProjectTemplates', () => import('./project-templates'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const InboxSettings = Capability.lazy('InboxSettings', () => import('./settings'));

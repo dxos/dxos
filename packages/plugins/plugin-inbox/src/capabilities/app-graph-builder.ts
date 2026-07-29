@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, LayoutOperation, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { ProjectOperation } from '@dxos/plugin-projects/types';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
@@ -33,7 +32,6 @@ import {
   getSentId,
   getSubscriptionsId,
 } from '../paths';
-import { inboxResearch } from '../templates';
 import { getMessageLabel, syncTarget } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
@@ -223,45 +221,6 @@ export default Capability.makeModule(
                 label: ['create-draft.label', { ns: meta.profile.key }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
-              },
-            }),
-          ]);
-        },
-      }),
-
-      GraphBuilder.createExtension({
-        id: 'mailboxProjectActions',
-        // Scoped to the primary mailbox node (`systemTag: 'inbox'`) so the action appears once, not on
-        // every sibling filter view.
-        match: (node) =>
-          node.properties.systemTag === 'inbox' && Mailbox.instanceOf(node.data)
-            ? Option.some(node.data)
-            : Option.none(),
-        actions: (mailbox) => {
-          const db = Obj.getDatabase(mailbox);
-          if (!db) {
-            return Effect.succeed([]);
-          }
-
-          return Effect.succeed([
-            Node.makeAction({
-              id: 'setupProject',
-              data: () =>
-                Effect.gen(function* () {
-                  // Creates an "Inbox research" project pre-wired to this mailbox (standing context,
-                  // inbox/table skills, starter sender-ledger routine) and opens it.
-                  const { subject } = yield* Operation.invoke(
-                    ProjectOperation.Create,
-                    { templateId: inboxResearch.id, subject: mailbox },
-                    { spaceId: db.spaceId },
-                  );
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [...subject] });
-                }),
-              properties: {
-                label: ['setup-project.label', { ns: meta.profile.key }],
-                icon: 'ph--stack-plus--regular',
-                disposition: 'list-item',
-                testId: 'inbox.mailbox.setupProject',
               },
             }),
           ]);

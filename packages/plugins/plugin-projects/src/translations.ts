@@ -31,6 +31,7 @@ export const translations = [
         'artifacts.label': 'Artifacts',
         'create-panel.name.placeholder': 'Project name (optional)',
         'create-panel.template.placeholder': 'Filter templates…',
+        'setup-project.label': 'Set up project',
         'create-chat.label': 'New chat',
         'create-routine.label': 'New routine',
         'object-card.untitled.label': 'Untitled',

@@ -101,6 +101,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
