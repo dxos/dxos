@@ -58,6 +58,7 @@
       "@dxos/echo-doc",
       "@dxos/echo-generator",
       "@dxos/echo-host",
+      "@dxos/echo-panproto",
       "@dxos/echo-protocol",
       "@dxos/echo-query",
       "@dxos/echo-react",
@@ -221,6 +222,7 @@
     [
       "@dxos/cli",
       "@dxos/plugin-assistant",
+      "@dxos/plugin-atproto",
       "@dxos/plugin-attention",
       "@dxos/plugin-blogger",
       "@dxos/plugin-bluesky",
@@ -255,6 +257,7 @@
       "@dxos/plugin-inbox",
       "@dxos/plugin-iroh-beacon",
       "@dxos/plugin-kanban",
+      "@dxos/plugin-library",
       "@dxos/plugin-linear",
       "@dxos/plugin-magazine",
       "@dxos/plugin-map",
