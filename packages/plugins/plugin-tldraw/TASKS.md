@@ -1,6 +1,6 @@
 # plugin-tldraw (né plugin-sketch) + plugin-illustrator — Tasks
 
-_Resume: Phase 3 (illustrator base extraction) implemented on branch claude/headless-diagramming-plugin-84ef17; PR pending. Next after landing: technical-drawing dialect (mermaid/UML variant with placement metadata — hierarchy, zoom, scenarios, slots)._
+_Resume: Phase 3 (illustrator base) COMPLETE on PR #12380 (branch claude/headless-diagramming-plugin-84ef17, head aaf24e4) — final CI run in flight, all package gates green, both new packages published to npm at 0.10.0. Next: land #12380 (land skill; user lands), then Phase 4 = technical-drawing dialect. OPEN DECISION for Phase 4: source of truth = one-shot compile vs live model (recommended) vs hybrid._
 
 ## Phase 1: Scene DSL (agent draws/edits diagrams)
 
@@ -43,9 +43,27 @@ Game/Chess-style split: headless host plugin + renderer variant plugins.
 - [x] **plugin-excalidraw onto the base** — dropped its root `Excalidraw` type + create operation; keeps `org.dxos.type.excalidraw.canvas`; new scene-DSL builder (style maps, render/read/apply); contributes VariantProvider (article only).
 - [x] **Consumers updated** — composer-app (Illustrator/Tldraw/Excalidraw plugins registered, assets → `/assets/plugin-tldraw`), plugin-debug, plugin-markdown/plugin-stack stories, plugin-onboarding exemplar, stories-assistant Sketch story, storybook-react static dirs, tsconfig/paths/changeset config.
 - [x] **Tests** — identical create→edit→read round-trip runs against BOTH builders (tldraw + excalidraw) via `AssistantTestLayer` + `extraServices` capability layer; 15 tldraw tests green, 2 excalidraw green.
-- [ ] **Open PR** — #12380 (changeset `illustrator-base-plugin.md`).
+- [x] **Open PR** — #12380 (changeset `illustrator-base-plugin.md`); CI green through `aaf24e4` bar the final in-flight run.
 - [x] **First publish** — `@dxos/plugin-illustrator` + `@dxos/plugin-tldraw` published at 0.10.0 (2026-07-28, burdon) with npm trusted publishing configured; both packages public, plugin-debug depends on them normally, `check-packages-published` green.
-- [ ] **Technical-drawing dialect** — mermaid/UML variant with placement metadata; hierarchical zoom, source-linked nodes, collapsible groups, auto-layout + slot routing, scenarios. NOT in this phase.
+- [ ] **Land #12380** — user lands (land skill); do not merge unprompted.
+
+## Phase 4 (next): technical-drawing dialect
+
+Mermaid/UML-flavoured text dialect **extended with placement metadata**, compiled through the
+illustrator dialect pipeline. Requirements from the 2026-07-28 brainstorm: hierarchical with
+infinite zoom; nodes tied to source (e.g. code) for generation; groups contain classes and
+collapse; automatic layout + line routing with smart slots on nodes; preserve straight lines;
+scenarios (arc visibility varies per scenario / selected node, toggleable); embedded text.
+Reference sketch: `packages/plugins/plugin-illustrator/docs/drawing.drawio.svg`.
+
+- [ ] **DECIDE: source of truth** — (a) one-shot compile: DSL → scene commands → ordinary
+      editable records (current dialect architecture, but collapse/scenarios/zoom cannot survive as
+      behaviours); (b) **live model (recommended)**: persist the DSL/parsed graph on the object and
+      compile view-state (zoom, collapsed groups, active scenario, selection) + model → records on
+      the fly, with manual edits round-tripping into placement metadata; (c) hybrid — live model plus
+      a "detach to sketch" that bakes the current view. Blocks the rest of Phase 4.
+- [ ] **Dialect + placement schema**, layout/routing engine (slots, straight-line preservation),
+      scenario model, collapse/zoom behaviour.
 - [ ] **Excalidraw native arrow bindings** — replace positional arrows + customData refs with real start/endBinding + boundElements sync.
 - [ ] **Illustrator PLUGIN.mdl deepening** — document capability contract once the dialect work firms it up.
 

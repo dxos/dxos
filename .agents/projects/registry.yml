@@ -48,8 +48,8 @@ projects:
     summary: Backend-neutral scene DSL so the agent can draw/edit sketches (world objects by id); tldraw backend, read/edit operations, sketch skill, live-AI storybook.
     tasks: packages/plugins/plugin-tldraw/TASKS.md
     design: agents/superpowers/specs/2026-07-23-sketch-scene-dsl-design.md
-    prs: [12324]
-    resume: 'Phase 3 (illustrator base) on PR #12380: plugin-illustrator host + VariantProvider capability; plugin-sketch renamed plugin-tldraw; excalidraw builder added; both variants pass the same round-trip test. Next: land #12380, then the technical-drawing dialect (mermaid/UML variant + placement metadata; live-model vs one-shot question OPEN).'
+    prs: [12324, 12380]
+    resume: 'Phase 3 (illustrator base) COMPLETE — PR #12380 head aaf24e4, working tree clean, final CI run in flight (all prior runs green; all three package gates pass). Shipped: @dxos/plugin-illustrator headless host (base Sketch type, scene DSL, dialect registry, sketch skill, renderer-agnostic ops, VariantProvider capability); plugin-sketch renamed @dxos/plugin-tldraw; plugin-excalidraw rebased onto the host with a new scene-DSL builder; same round-trip test green against both builders. Both new packages published to npm at 0.10.0 with trusted publishing (burdon). Live-verified in Composer; fixed dependsOn auto-enable, a LiveObject crash, and pre-existing lost-stroke saves. NEXT: user lands #12380 (land skill, do not merge unprompted), then Phase 4 = technical-drawing dialect (mermaid/UML + placement metadata: hierarchy/infinite zoom, source-linked nodes, collapsible groups, auto-layout + slot routing, scenarios, embedded text; ref packages/plugins/plugin-illustrator/docs/drawing.drawio.svg). BLOCKING DECISION for Phase 4: source of truth = one-shot compile vs live model (recommended) vs hybrid.'
 
   - name: mailbox-research
     status: active
