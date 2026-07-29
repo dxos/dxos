@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -25,6 +26,7 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
+import { ProjectOperation } from '#types';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them.
 const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));
@@ -39,7 +41,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { actions, onAction } = useToolbarActions(attendableId);
+  const { actions, onAction } = useToolbarActions(subject, attendableId);
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
   // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory, and a
@@ -102,22 +104,35 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 ProjectArticle.displayName = 'ProjectArticle';
 
 /**
- * Splices the graph actions opted into the toolbar (`disposition: 'toolbar'`) for the attended node —
- * currently just create-chat, which the graph builder also dispositions onto the project's navtree row,
- * so the two surfaces stay one action.
+ * The toolbar owns its create-chat button rather than relying on the graph action of the same name:
+ * graph actions are keyed by node id, so a toolbar built only from them is empty whenever the attended
+ * id is not the node the action hangs off. The graph action stays for the navtree row, and the splice
+ * below still picks up contributions from other plugins.
  */
 const useToolbarActions = (
+  project: Project.Project,
   attendableId: string,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
+  const { invokePromise } = useOperationInvoker();
 
   const actions = useMenuBuilder(
     (get): ActionGraphProps =>
       MenuBuilder.make()
+        .action(
+          'create-chat',
+          {
+            label: ['create-chat.label', { ns: meta.profile.key }],
+            icon: 'ph--chat-text--regular',
+            disposition: 'toolbar',
+            testId: 'projectsPlugin.createChat',
+          },
+          () => void invokePromise(ProjectOperation.CreateChat, { project }),
+        )
         .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
         .build(),
-    [graph, attendableId],
+    [graph, attendableId, project, invokePromise],
   );
 
   const onAction: ActionExecutor = useCallback(
