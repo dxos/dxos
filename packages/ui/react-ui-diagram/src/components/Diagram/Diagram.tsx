@@ -18,7 +18,7 @@ import {
   useNodesState,
   useReactFlow,
 } from '@xyflow/react';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
+import React, { type FC, type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
 import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -76,6 +76,10 @@ const DiagramRoot = ({ children, diagram, overlay, grid = GRID, onNodeMove }: Di
           ...(node.parent ? { parentId: node.parent, extent: 'parent' as const } : {}),
           // Groups paint behind their children so they do not cover them.
           ...(group ? { zIndex: 0 } : {}),
+          // `width`/`height` rather than only `style`: `extent: 'parent'` clamps a child against its
+          // parent's measured size, and an unmeasured parent clamps every child to its origin. The
+          // local mirror sets nodes once per projection, so that collapse would never self-correct.
+          ...(node.size ? { width: node.size.width, height: node.size.height } : {}),
           style: node.size ? { width: node.size.width, height: node.size.height } : undefined,
         };
       }),
@@ -184,11 +188,19 @@ const VARIANT: Record<NonNullable<DiagramBackgroundProps['variant']>, Background
   dots: BackgroundVariant.Dots,
 };
 
-/** Grid overlay, drawn at the snap pitch so nodes visibly sit on the lines they snap to. */
-const DiagramBackground = composable<HTMLDivElement, DiagramBackgroundProps>(({ variant = 'dots' }) => {
+/**
+ * Grid overlay, drawn at the snap pitch so nodes visibly sit on the lines they snap to.
+ *
+ * `offset` is the grid pitch rather than the default 0 to work around an operator-precedence bug in
+ * React Flow's Background: it computes `offset * zoom || 1 + gap / 2`, so an offset of 0 is falsy and
+ * the pattern is shifted by half a cell plus a pixel — leaving on-grid nodes visibly between dots.
+ * A whole cell is indistinguishable from none once the pattern tiles, so this aligns it to the
+ * flow origin. Not `composable`: Background is a memoized plain component with no ref to forward.
+ */
+const DiagramBackground: FC<DiagramBackgroundProps> = ({ variant = 'dots' }) => {
   const { grid } = useDiagramContext('Diagram.Background');
-  return <BackgroundPrimitive gap={grid} variant={VARIANT[variant]} />;
-});
+  return <BackgroundPrimitive gap={grid} offset={grid} variant={VARIANT[variant]} />;
+};
 
 DiagramBackground.displayName = 'Diagram.Background';
 
