@@ -19,13 +19,6 @@ const EXPIRY_SKEW_MS = 60_000;
 type CacheEntry = { accessToken: string; expiresAtMillis: number };
 
 /**
- * {@link Credential.AccessTokenResolver} backed by EDGE's `/oauth/token`.
- *
- * Tokens are cached per `accessTokenId` until shortly before they expire, so a sync that makes many
- * API calls costs one round-trip rather than one per call. `refresh` evicts first, which is how a
- * caller recovers from a token that was revoked before its stated expiry.
- */
-/**
  * {@link Credential.AccessTokenResolver} backed by the EDGE-side binding a function is invoked with.
  *
  * Server-side counterpart to {@link accessTokenResolverFromEdge}: a function context has no identity
@@ -62,6 +55,14 @@ export const accessTokenResolverFromService = (service: EdgeFunctionEnv.AccessTo
     };
   });
 
+/**
+ * {@link Credential.AccessTokenResolver} backed by EDGE's `/oauth/token`.
+ *
+ * Tokens are cached per `accessTokenId` until shortly before they expire, so a sync that makes many
+ * API calls costs one round-trip rather than one per call. `refresh` evicts first, which is how a
+ * caller recovers from a token that was revoked before its stated expiry. The client is resolved
+ * lazily so nothing touches EDGE unless a managed token is actually read.
+ */
 export const accessTokenResolverFromEdge = (getEdgeClient: () => EdgeHttpClient) =>
   Layer.sync(Credential.AccessTokenResolver, () => {
     const cache = new Map<string, CacheEntry>();
