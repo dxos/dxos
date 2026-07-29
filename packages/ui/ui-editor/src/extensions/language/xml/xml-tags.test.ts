@@ -20,8 +20,8 @@ import {
   navigatePreviousEffect,
   xmlTagRebuildEffect,
   xmlTagResetEffect,
-  xmlTagUpdateEffect,
   xmlTags,
+  xmlTagUpdateEffect,
 } from './xml-tags';
 
 //
@@ -467,6 +467,26 @@ describe('xmlTags widget state', () => {
     view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
     await flush();
     expect(widgetProps(view, 'a').blocks).toEqual(['A']);
+    view.destroy();
+  });
+
+  test('state reaches a mounted widget after a rebuild replaced its decoration instance', async ({ expect }) => {
+    let mounted: XmlWidgetState[] = [];
+    const view = createView(doc, { registry: stateRegistry, setWidgets: (widgets) => (mounted = widgets) });
+    await rebuild(view);
+    stubWidget(view, 'a').toDOM(view);
+
+    // Replacing the document rebuilds decorations into fresh widget instances, but `StubWidget.eq`
+    // (id equality) makes CodeMirror keep the rendered DOM — so the rebuilt instance has no root and
+    // an update routed through the decoration set would find nothing to re-render.
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: doc },
+      effects: xmlTagResetEffect.of(null),
+    });
+    expect(stubWidget(view, 'a').root).toBeNull();
+
+    view.dispatch({ effects: xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
+    expect(mounted.find((state) => state.id === 'a')?.props.blocks).toEqual(['A']);
     view.destroy();
   });
 

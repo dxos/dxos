@@ -317,6 +317,15 @@ const createWidgetMap = (setWidgets?: (widgets: XmlWidgetState[]) => void, debug
       }
       setWidgets?.([...widgets.values()]);
     },
+    updated: (id: string, widgetState: any) => {
+      const current = widgets.get(id);
+      if (!current || !widgetState) {
+        return;
+      }
+
+      widgets.set(id, { ...current, props: { ...current.props, ...widgetState } });
+      setWidgets?.([...widgets.values()]);
+    },
     unmounted: (id: string) => {
       widgets.delete(id);
       // A cull drops the portal for a frame before it re-mounts — this is the blank-space window.
@@ -463,22 +472,11 @@ const createWidgetUpdatePlugin = (
           notifier.reconcile(liveIds);
         }
 
-        // Check for widget update effects and re-render widgets.
+        // Re-render widgets whose state changed. Widgets not yet mounted pick their state up at mount
+        // time instead (see `withCurrentWidgetState`).
         for (const effect of update.transactions.flatMap((tr) => tr.effects)) {
           if (effect.is(xmlTagUpdateEffect)) {
-            const widgetState = widgetStateMap[effect.value.id];
-
-            // Find and render widget.
-            for (const range of decorationSetToArray(decorations)) {
-              const deco = range.value;
-              const widget = deco?.spec?.widget;
-
-              // NOTE: If the widget has not yet been mounted, then the root will be null.
-              if (widget && widget instanceof StubWidget && widget.id === effect.value.id && widget.root) {
-                const props = { ...widget.props, ...widgetState };
-                notifier.mounted({ id: widget.id, props, root: widget.root, Component: widget.Component });
-              }
-            }
+            notifier.updated(effect.value.id, widgetStateMap[effect.value.id]);
           }
         }
       }

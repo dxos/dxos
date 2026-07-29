@@ -160,20 +160,15 @@ export const Delayed: Story = {
 };
 
 /**
- * Tool rows must survive navigating away and back — they do NOT today, which this reproduces.
+ * Tool rows must survive navigating away and back.
  *
  * They render from out-of-band widget state, not from the document: `blockToMarkdown` emits a
  * `<toolCall id/>` placeholder and pushes the blocks via `updateWidget`; an empty state renders an
  * empty row. On remount `MessageSyncer.reset` replaces the document, which fires `xmlTagResetEffect`
- * and clears that state, then rehydrates it.
- *
- * The syncer half is correct and unit-tested (`sync.test.ts`, "restores tool widget state after reset
- * replaces the document"): it dispatches `toolCall` then `toolResult` for each id. The widgets also
- * mount — 40 of them, with the document text intact — but render empty, so the state is lost between
- * the syncer's dispatch and the widget's props. The remaining suspect is the editor-side application
- * (`xmlTagUpdateEffect` vs the `xmlTagResetEffect` fired by the same `setContent`).
- *
- * TODO(burdon): Un-skip once the widget state survives the reset.
+ * and clears that state, then rehydrates it — and that rehydration used to be dropped, because the
+ * rebuild it triggers replaces the widget instances the editor was routing updates through
+ * (`xml-tags.test.ts`, "state reaches a mounted widget after a rebuild replaced its decoration
+ * instance").
  */
 export const Remount: Story = {
   args: {
@@ -181,7 +176,6 @@ export const Remount: Story = {
     wait: true,
     remountable: true,
   },
-  tags: ['!test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
