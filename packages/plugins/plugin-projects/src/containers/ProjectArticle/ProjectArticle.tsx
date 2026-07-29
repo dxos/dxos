@@ -206,7 +206,7 @@ const ArtifactGallery = ({ refs, onOpen, onDelete }: ArtifactGalleryProps) => {
   }
 
   return (
-    <Masonry.Root Tile={ArtifactTile}>
+    <Masonry.Root Tile={ArtifactTile} center={true}>
       <Masonry.Content>
         <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} />
       </Masonry.Content>
