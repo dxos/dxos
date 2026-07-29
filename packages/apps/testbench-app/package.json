@@ -36,7 +36,6 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@ngneat/falso": "catalog:",
-    "@opentelemetry/api": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
@@ -44,7 +43,6 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-log": "workspace:*",
@@ -52,9 +50,7 @@
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "partykit": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:"
   }
 }

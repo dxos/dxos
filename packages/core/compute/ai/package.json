@@ -56,6 +56,7 @@
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/platform-node": "catalog:",
+    "@effect/workflow": "catalog:",
     "diff": "catalog:",
     "json-stable-stringify": "catalog:",
     "parsimmon": "catalog:",

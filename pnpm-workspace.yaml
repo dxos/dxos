@@ -828,6 +828,9 @@ peerDependencyRules:
     # Storybook's vite builder and workerize-loader both declare a webpack peer they never use;
     # nothing in the repo bundles with webpack.
     - webpack
+    # `@antv/layout` pulls in a transferable helper that expects the webpack loader; the layout code
+    # runs on the main thread here.
+    - workerize-loader
 
 strictPeerDependencies: true
 

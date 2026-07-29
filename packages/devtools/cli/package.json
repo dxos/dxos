@@ -73,6 +73,7 @@
     "@effect/rpc": "catalog:",
     "@effect/sql": "catalog:",
     "@effect/typeclass": "catalog:",
+    "@effect/workflow": "catalog:",
     "@lezer/common": "catalog:",
     "@lezer/markdown": "catalog:",
     "@opentui/core": "catalog:",

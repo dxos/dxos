@@ -11,7 +11,6 @@
   "author": "info@dxos.org",
   "type": "module",
   "devDependencies": {
-    "@cloudflare/workers-types": "catalog:",
-    "wrangler": "catalog:"
+    "@cloudflare/workers-types": "catalog:"
   }
 }

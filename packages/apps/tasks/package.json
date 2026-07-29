@@ -24,14 +24,13 @@
     "react-router-dom": "catalog:"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-top-level-await": "catalog:",
-    "vite-plugin-wasm": "catalog:",
-    "workbox-window": "catalog:"
+    "vite-plugin-wasm": "catalog:"
   }
 }

@@ -6,22 +6,11 @@ import type { Preprocessor } from 'knip';
 import { relative } from 'node:path';
 
 /**
- * Groupings whose dependencies have been audited and are known clean. `pnpm knip` reports the whole
- * repo so the next grouping can be worked on, while CI gates only on what has already been cleaned:
- * a regression fails the build, the untouched backlog does not.
- *
- * Extend this as each grouping is cleaned — the entry here is what makes the gate meaningful.
+ * Everything audited and known clean, which is now every workspace except the repo root. Root
+ * dependencies are consumed by moon tasks and the shared vitest/vite bases rather than by the few
+ * files knip can attribute to that workspace, so auditing them needs its own pass.
  */
-const GATED = [
-  'packages/common/',
-  'packages/core/',
-  'packages/sdk/',
-  'packages/devtools/',
-  'packages/plugins/',
-  'packages/ui/',
-  'packages/stories/',
-  'tools/',
-];
+const GATED = ['packages/', 'tools/', 'vendor/', 'docs/'];
 
 /**
  * `issues` is keyed by issue type: `files` holds absolute paths while every other type maps a

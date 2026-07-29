@@ -33,8 +33,5 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "discord.js": "catalog:"
-  },
-  "devDependencies": {
-    "@babel/core": "catalog:"
   }
 }

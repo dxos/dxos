@@ -36,7 +36,8 @@
     "hypercore": "catalog:",
     "hypercore-crypto": "catalog:",
     "hypercore-protocol": "catalog:",
-    "noise-protocol": "catalog:"
+    "noise-protocol": "catalog:",
+    "random-access-storage": "catalog:"
   },
   "publishConfig": {
     "access": "public"

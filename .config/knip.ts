@@ -45,7 +45,7 @@ const distTargets = (target: unknown): string[] => {
 const entryTargets = (target: unknown): string[] => {
   const source = sourceTargets(target).filter((path) => MODULE.test(path));
   if (source.length) {
-    return source;
+    return source.flatMap((path) => (path.endsWith('.d.ts') ? [path, path.replace(/\.d\.ts$/, '.{js,ts}')] : [path]));
   }
   return distTargets(target).flatMap((path) => {
     const match = /^\.\/dist\/(?:lib\/|types\/)?(?:src\/)?(.+?)\.(?:d\.ts|[cm]?jsx?)$/.exec(path);
@@ -79,6 +79,11 @@ const AUXILIARY_ENTRY = [
   'tailwind.{ts,js}',
   '.storybook/*.{ts,tsx,mts,mjs}',
   'bin/*.{ts,mts,js,mjs}',
+  'src/bin/*.{ts,mts,js,mjs}',
+  // Alias targets wired up in the storybook config, never imported by name.
+  '.storybook/mocks/**',
+  // Stand-in package trees the introspection tests read from disk.
+  'src/__fixtures__/**',
   'scripts/**/*.{ts,mts,js,mjs}',
 ];
 
@@ -102,6 +107,9 @@ const configuredDependencies = (dir: string, names: string[]): string[] => {
     // Ambient `declare module` shims: knip skips declaration files, so an `import ... from 'pkg'`
     // inside one is invisible to it even though the types would not resolve without the package.
     `${dir}/src/**/*.d.ts`,
+    // Bundling smoke tests name the packages they exercise as string literals rather than
+    // importing them.
+    `${dir}/src/**/*.test.{ts,tsx}`,
     // Stylesheets `@import` font and preset packages that no TypeScript file ever mentions, and
     // shaders pull theirs in through a glslify `#pragma`.
     `${dir}/src/**/*.css`,
@@ -170,6 +178,16 @@ const moonBuildArgs = (dir: string, flag: string): string[] => {
  * `bin` name, which routinely differs from the package name (`lezer-generator` ships in
  * `@lezer/generator`), so resolve each candidate's `bin` entries to match it.
  */
+/**
+ * Files a moon task names directly — an esbuild `--alias` target or a script its command runs.
+ * Neither is reachable through an import.
+ */
+const moonReferencedEntry = (dir: string): string[] => {
+  const tasks = globSync(`${dir}/moon.yml`).map((file) => readFileSync(file, 'utf8'))[0] ?? '';
+  const paths = [...tasks.matchAll(/([\w./-]+\.(?:mjs|cjs|jsx?|tsx?))/g)].map(([, path]) => path.replace(/^\.\//, ''));
+  return [...new Set(paths)].filter((path) => globSync(`${dir}/${path}`).length > 0);
+};
+
 const moonInvokedDependencies = (dir: string, names: string[]): string[] => {
   const tasks = globSync(`${dir}/moon.yml`).map((file) => readFileSync(file, 'utf8'))[0];
   if (!tasks) {
@@ -284,6 +302,7 @@ for (const manifest of globSync(
   const supplemental = [
     ...configuredEntry(dir),
     ...lazyImportedEntry(dir),
+    ...moonReferencedEntry(dir),
     ...ROOT_REFERENCED.filter((path) => path.startsWith(`${dir}/`)).map((path) => path.slice(dir.length + 1)),
   ];
 
@@ -321,6 +340,7 @@ const config: KnipConfig = {
   ignoreBinaries: [
     // System tools, not npm packages.
     'jq',
+    'sips',
     // Tailwind v4 ships its CLI as a separate `@tailwindcss/cli` package; the `tailwind-check`
     // script predates that split and is not wired into any task.
     'tailwindcss',
@@ -339,6 +359,11 @@ const config: KnipConfig = {
     // `dxos:` is a virtual scheme the function runtime resolves for user scripts; the script
     // templates that import it are shipped as text, not compiled.
     'dxos',
+    // Stand-in packages the introspection fixtures resolve among themselves.
+    /^@fixture\//,
+    // Required as a peer by a transitive `@effect/cluster`, so pnpm demands the workspace declare
+    // it even though nothing imports it and no direct dependency names it.
+    '@effect/workflow',
   ],
   // `require.resolve`d at runtime from the emitted bundle, so the path is relative to `dist` rather
   // than to the source file knip reads it from.

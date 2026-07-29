@@ -35,11 +35,8 @@
     "start": "tsx --conditions=source src/cli.ts"
   },
   "dependencies": {
-    "@dxos/effect-zod": "workspace:*",
     "@dxos/introspect": "workspace:*",
     "@dxos/introspect-tools": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@modelcontextprotocol/sdk": "catalog:",
     "effect": "catalog:",
     "zod": "catalog:"
