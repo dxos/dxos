@@ -61,10 +61,16 @@ export type ThreadRootProps = PropsWithChildren<
 const ThreadRoot = ({
   children,
   getMetadata,
+  getReactions,
+  getThreadSummary,
+  canDelete,
+  quickReactions,
   components,
   identityDid,
   editable,
   onMessageDelete,
+  onMessageReact,
+  onThreadOpen,
   onAcceptProposal,
   onAcceptChange,
   onRejectChange,
@@ -83,12 +89,18 @@ const ThreadRoot = ({
   return (
     <ThreadContextProvider
       getMetadata={getMetadata}
+      getReactions={getReactions}
+      getThreadSummary={getThreadSummary}
+      canDelete={canDelete}
+      quickReactions={quickReactions}
       components={components ?? {}}
       identityDid={identityDid}
       editable={editable}
       registerComposerFocus={registerComposerFocus}
       focusComposer={focusComposer}
       onMessageDelete={onMessageDelete}
+      onMessageReact={onMessageReact}
+      onThreadOpen={onThreadOpen}
       onAcceptProposal={onAcceptProposal}
       onAcceptChange={onAcceptChange}
       onRejectChange={onRejectChange}

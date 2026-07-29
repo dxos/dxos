@@ -9,7 +9,7 @@ import type * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type Obj } from '@dxos/echo';
-import { type Channel, type Message } from '@dxos/types';
+import { type Channel, type Message, type Reaction } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -39,6 +39,29 @@ export interface ChannelBackendProvider {
   subscribe: (channel: Channel.Channel, onMessages: (messages: readonly Message.Message[]) => void) => () => void;
   /** Sends a message through the backend. */
   send: (channel: Channel.Channel, message: Message.Message) => Effect.Effect<void, Error, Capability.Service>;
+  /**
+   * Deletes a message. Omitted by backends with no local-write path back to the source (a bridged
+   * Slack channel), which hides the affordance rather than failing at the click.
+   */
+  remove?: (channel: Channel.Channel, message: Message.Message) => Effect.Effect<void, Error, Capability.Service>;
+  /**
+   * Subscribes to the channel's reactions, same contract as {@link subscribe}. Omitted by backends
+   * that carry no reactions; the UI then renders none.
+   */
+  subscribeReactions?: (
+    channel: Channel.Channel,
+    onReactions: (reactions: readonly Reaction.Reaction[]) => void,
+  ) => () => void;
+  /** Appends a reaction. Required for the reaction affordance to appear. */
+  appendReaction?: (
+    channel: Channel.Channel,
+    reaction: Reaction.Reaction,
+  ) => Effect.Effect<void, Error, Capability.Service>;
+  /** Tombstones the author's own reaction (un-react). Required alongside {@link appendReaction}. */
+  removeReaction?: (
+    channel: Channel.Channel,
+    reaction: Reaction.Reaction,
+  ) => Effect.Effect<void, Error, Capability.Service>;
   /** Whether the channel is read-only. Defaults to "channel has foreign-key Obj.Meta". */
   readOnly?: (channel: Channel.Channel) => boolean;
 }

@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Identity, type Space } from '@dxos/halo';
 import { Card, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
-import { type ObjectTileComponent, Thread } from '@dxos/react-ui-thread';
+import { type ObjectTileComponent, Thread, type ThreadRootProps } from '@dxos/react-ui-thread';
 import { type Message } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
@@ -43,6 +43,22 @@ export type MessageThreadProps = ThemedClassName<{
    * Returning `true` signals the message was accepted; the textbox is then cleared.
    */
   onSend: (text: string) => boolean;
+  /** When true, the author may edit their own messages in place. */
+  editable?: boolean;
+  /** Placeholder for the composer; defaults to the channel message placeholder. */
+  placeholder?: string;
+  /** Folded reactions for a message (omit to render none). */
+  getReactions?: ThreadRootProps['getReactions'];
+  /** Folded thread branching from a message (omit to hide the affordance). */
+  getThreadSummary?: ThreadRootProps['getThreadSummary'];
+  /** Whether a message may be deleted (omit to allow every message). */
+  canDelete?: ThreadRootProps['canDelete'];
+  /** Toggle the local identity's reaction (omit to hide reactions). */
+  onMessageReact?: (messageId: string, emoji: string) => void;
+  /** Delete a message (omit to hide the affordance). */
+  onMessageDelete?: (messageId: string) => void;
+  /** Open the thread branching from a message (omit to hide the affordance). */
+  onThreadOpen?: (messageId: string) => void;
 }>;
 
 /**
@@ -52,7 +68,29 @@ export type MessageThreadProps = ThemedClassName<{
  * callback. Used by `ChannelArticle` and `ThreadArticle`.
  */
 export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
-  ({ id, identity, members, messages, activity, onSend, autoFocus, current, readOnly, classNames }, forwardedRef) => {
+  (
+    {
+      id,
+      identity,
+      members,
+      messages,
+      activity,
+      onSend,
+      autoFocus,
+      current,
+      readOnly,
+      editable,
+      placeholder,
+      getReactions,
+      getThreadSummary,
+      canDelete,
+      onMessageReact,
+      onMessageDelete,
+      onThreadOpen,
+      classNames,
+    },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(meta.profile.key);
 
     const components = useMemo(() => ({ Object: ObjectTile }), []);
@@ -77,7 +115,18 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
     );
 
     return (
-      <Thread.Root getMetadata={getMetadata} components={components} identityDid={identity?.did} editable={false}>
+      <Thread.Root
+        getMetadata={getMetadata}
+        getReactions={getReactions}
+        getThreadSummary={getThreadSummary}
+        canDelete={canDelete}
+        components={components}
+        identityDid={identity?.did}
+        editable={editable ?? false}
+        onMessageReact={onMessageReact}
+        onMessageDelete={onMessageDelete}
+        onThreadOpen={onThreadOpen}
+      >
         <Thread.Content
           id={id}
           current={current}
@@ -90,7 +139,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
               <Thread.Textbox
                 {...textboxMetadata}
                 autoFocus={autoFocus}
-                placeholder={t('message.placeholder')}
+                placeholder={placeholder ?? t('message.placeholder')}
                 onSend={onSend}
               />
               <Thread.Status activity={activity}>{t('activity.message')}</Thread.Status>

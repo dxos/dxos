@@ -9,8 +9,10 @@ dependency.
 Project created 2026-07-29; design unified same day. Architecture review
 DONE: no new plugin — all work lands in `plugin-thread` (stage 1), renamed to
 `plugin-chat` when proven (stage 2), review unification last (stage 3).
-Stage-1 schema slice DONE (`parentMessage` → Ref, `Reaction` type).
-NEXT: the `properties`-bag evaluation, then thread-first UX.
+**Stage 1 is COMPLETE** except for two items parked by decision (thread
+deep-linking, awaiting the url-deck grammar) and two that need a human or a
+two-peer harness (manual offline/propagation, two-client storybook).
+NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 
 ## Decisions log
 
@@ -37,55 +39,82 @@ NEXT: the `properties`-bag evaluation, then thread-first UX.
       writer (inbox reply drafts) is still unreleased. `AgentStatus`
       (`@dxos/ai`) has its own `parentMessage` and stays an `EntityId` — it
       addresses tracing-queue items, not feed messages.
-- [ ] Evaluate replacing the `Message.properties` bag with strongly-typed
-      ECHO annotations (`topic`/`resolved` as typed annotations). Audit
-      existing `properties` consumers first — the schema's LabelAnnotation
-      reads `properties.subject`; inbox/assistant write other keys — so this
-      needs a migration story, not a swap.
+- [x] Evaluate replacing the `Message.properties` bag with strongly-typed ECHO
+      annotations. DECIDED (josiah, 2026-07-29): **per-service typed instance
+      annotations** — chat owns `topic`, review will own `resolved`. The audit
+      found `properties` carrying transport headers no service should share
+      (`subject`/`to`/`cc`/`messageId`/`inReplyTo`/`references`/
+      `listUnsubscribe`/`snippet`/`mailbox`/`sentMessageId`, plus the
+      assistant's tool-call id), so the bag stays for now; the email headers may
+      migrate to their own annotation once this prototype proves out.
+      Mechanism: `Annotation.make` + `Annotation.get`/`set`, stored in
+      `Obj.getMeta(message).annotations` and so carried by the feed codec.
 - [x] Add `Reaction` (`org.dxos.type.reaction` v0.1.0: `target: Ref<Message>`,
       `emoji`, `sender: Actor`, `created`) to `@dxos/types`; registered in the
       plugin's schema module (all three entrypoints: browser/node/workerd).
       Fold and toggle helpers are deliberately deferred to the UI task that
       needs them, so they land with tests against real usage.
-- [ ] Define `topic` (thread name, roots only) via the mechanism chosen
-      above.
-- [ ] Decide reaction identity/toggle mechanics: locate own reaction by
-      `(sender, target, emoji)` query → `Feed.remove` to un-react; confirm
-      idempotency under offline retry.
+- [x] Define `topic` (thread name, roots only): `ThreadAnnotation.Topic`
+      (`org.dxos.chat.topic`) in plugin-thread, with `getTopic`/`setTopic`.
+      Keyed on the service, not the plugin id, so the stage-2 rename cannot
+      orphan persisted values.
+- [x] Decide reaction identity/toggle mechanics: `findOwnReaction` matches
+      `(senderKey, target, emoji)` and `ThreadOperation.ToggleReaction`
+      appends or tombstones that one item. Idempotency comes from the fold
+      counting _distinct senders_, so a duplicate item from an offline retry
+      cannot inflate a count (unit-tested).
 
 ### Thread-first channel UX
 
-- [ ] Main view: filter roots (`threadId == null` — verify filter semantics
-      for absent field over the feed query path).
-- [ ] Thread summary fold: reply count, participant set, last-activity per
-      `threadId` (headless util + tests; then a `ThreadSummary` row component
-      in `react-ui-thread` idiom).
-- [ ] "Start thread" affordance on any root message; thread panel
-      (companion/deck surface) filtered by `threadId`.
-- [ ] Reply composer defaults into the open thread; main composer posts roots.
-- [ ] Topic set/rename = author re-append of root with `properties.topic`;
-      render topic in summary row + thread header.
-- [ ] Deep-link a thread (coordinate with url-deck grammar — plugin-projects
-      has the same open need for chats; ask Josiah before inventing).
+- [x] Main view filters roots (`selectRoots`, `threadId === undefined`). Done
+      as an in-memory fold rather than a feed-level filter, which sidesteps the
+      absent-field query semantics entirely — revisit only if channel size
+      makes client-side folding too costly.
+- [x] Thread summary fold: `foldThreads` yields reply count, participant set
+      (deduped, first-seen order), topic and last activity, with unit tests.
+      Rendered by `Message.ThreadLink` as topic · count · relative time.
+      Remaining polish: participant avatars in the row.
+- [x] "Start thread" affordance on every root message; `ThreadPanel` renders
+      beside the channel, filtered by `threadId`.
+- [x] Reply composer posts into the open thread (`AppendChannelMessage` gained
+      `threadId`); the main composer still posts roots.
+- [x] Topic set/rename in the thread header, author-only, committed on
+      blur/Enter so a keystroke is not a feed re-append; the topic also renders
+      in the summary row.
+- [ ] Deep-link a thread. PARKED by josiah (2026-07-29) until the rest is
+      working — thread selection is component state for now. Needs the url-deck
+      pair-chain grammar, and plugin-projects has the same open need.
 
 ### Message actions
 
-- [ ] Edit: author-only guard → `Obj.update` (re-append); edited indicator
-      (compare `created` vs block append time? decide signal).
-- [ ] Delete: `Feed.remove`; tombstone rendering ("message deleted" stub)
-      since deleted objects hydrate with `Obj.isDeleted`.
-- [ ] Reactions UI: picker on hover/long-press; folded chips with counts +
-      own-state highlight; un-react on click.
-- [ ] Storybook coverage: message actions, reaction fold, thread summaries,
-      thread panel (plays for send/edit/delete/react/start-thread).
+- [x] Edit: author-only (`editable` + the tile's `isAuthor` check) → `Obj.update`,
+      which the feed persists as a re-append. No edited indicator yet — the
+      signal is still undecided (see the note below).
+- [x] Delete: `Feed.remove` via `ThreadOperation.RemoveChannelMessage`, gated
+      to the author's own messages by a new `canDelete` predicate on
+      `Thread.Root` (previously any participant could delete anyone's message).
+      No tombstone stub is needed: the feed query already excludes tombstoned
+      items, asserted by the `DeleteOwnOnly` play.
+- [x] Reactions UI: `Message.Reactions` — picker plus folded chips with counts
+      and own-state highlight; clicking an active chip un-reacts.
+- [x] Storybook coverage: `Roots`, `OpenThread`, `DeleteOwnOnly`,
+      `ReplyInThread`, `React`.
 
 ### Stage-1 verification
 
-- [ ] Unit: folds (reactions, summaries), reaction toggle idempotency.
-- [ ] Storybook plays as above; two-client storybook for optimistic send +
-      cross-peer convergence if the harness allows.
+- [x] Unit: folds (threads, reactions, participants, orphaned root) and
+      reaction toggle idempotency — 15 tests in `types/threads.test.ts`, plus
+      6 in `@dxos/types` for the schema changes.
+- [x] Storybook plays: 7 green in a real browser, covering roots-only
+      rendering, thread open/close, threaded reply, author-gated delete, and
+      the reaction round trip through the feed.
+- [ ] Two-client storybook for optimistic send + cross-peer convergence — not
+      attempted; needs a two-peer harness.
 - [ ] Manual: offline send (airplane-mode) → reconnect → `blocksToPush`
-      drains; edit/delete propagation between two clients.
+      drains; edit/delete propagation between two clients. Needs a human at a
+      browser; not runnable in the agent container.
+- [ ] Edited indicator: decide the signal (compare `created` against the block
+      append time?) — deferred with the edit affordance shipped without it.
 
 ## Stage 2 — rename plugin-thread → plugin-chat
 

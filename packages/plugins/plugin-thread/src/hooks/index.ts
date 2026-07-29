@@ -3,4 +3,5 @@
 //
 
 export * from './useMessages';
+export * from './useReactions';
 export * from './useStatus';

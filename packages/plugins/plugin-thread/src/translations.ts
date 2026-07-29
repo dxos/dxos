@@ -92,6 +92,12 @@ export const translations = [
 
         'channel-toolbar.title': 'Channel actions',
         'start-video-call.menu': 'Start video call',
+
+        'thread.heading': 'Thread',
+        'thread-back.label': 'Close thread',
+        'thread-topic.label': 'Topic',
+        'thread-topic.placeholder': 'Add a topic',
+        'thread-reply.placeholder': 'Reply in thread…',
       },
     },
   },

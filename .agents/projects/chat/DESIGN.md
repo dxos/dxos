@@ -61,12 +61,24 @@ Stage-1 schema fixes:
   another item in the same feed resolves because the feed handle's resolver
   carries feed context; the feed→database direction does not yet resolve, which
   is why replies point at messages and never at db objects.
-- **Evaluate replacing the untyped `properties` bag with strongly-typed ECHO
-  annotations.** If adopted, `topic`/`resolved` (below) ship as typed
-  annotations instead of bag conventions. Caution: `properties` has existing
-  structural consumers — the schema's `LabelAnnotation` reads
-  `properties.subject` (email), and inbox/assistant stuff other keys — so this
-  is an evaluation with a migration story, not a drop-in swap.
+- **Per-service typed annotations replace new `properties` keys** (decided
+  2026-07-29). Each service attaches its own typed instance annotation instead
+  of sharing one untyped bag: chat owns `topic`, review will own `resolved`.
+  `properties` itself stays — the audit found it carrying transport headers
+  (`subject`/`to`/`cc`/`messageId`/`inReplyTo`/`references`/`listUnsubscribe`/
+  `snippet`/`mailbox`/`sentMessageId`) plus the assistant's tool-call id, none
+  of which chat should inherit; the email set may move to its own annotation
+  once this prototype proves out.
+
+  ```ts
+  // plugin-thread/types/ThreadAnnotation.ts
+  export const Topic = Annotation.make({ id: 'org.dxos.chat.topic', schema: Schema.String });
+  ```
+
+  Values live in `Obj.getMeta(message).annotations`, so they travel with the
+  object through the feed codec. Keys are namespaced on the **service**
+  (`org.dxos.chat.*`), never the plugin id, so the stage-2 rename cannot
+  orphan persisted data.
 
 New (shipped):
 
@@ -80,13 +92,18 @@ Reaction {
 }
 ```
 
-Per-message thread metadata (typed annotations if the evaluation above
-adopts them; otherwise `properties` conventions), root messages only, folded
-at read:
+Per-message thread metadata, set on root messages only and folded at read:
 
-- `topic?: string` — thread name (Zulip topic; editable = author re-append).
-- `resolved?: boolean` — comment-thread resolution state (review channels;
-  leading candidate pending stage 3 validation).
+- `topic` — thread name (Zulip topic), shipped as the `org.dxos.chat.topic`
+  annotation. Renaming is an author re-append, so only the root's author may
+  do it: under last-flush-wins a second editor would silently clobber them.
+- `resolved` — comment-thread resolution state, to ship as review's own
+  annotation in stage 3 (same mechanism, `org.dxos.review.*`).
+
+A thread's id **is its root message's id**, so a thread needs no object of its
+own and comment channels inherit the same rule with the anchor as the id.
+`foldThreads` tolerates a missing root: deleting the branch point must not
+strand its replies.
 
 Relations: one relation per comments channel — Channel → document (companion
 pattern; exact relation type chosen in stage 3). No per-thread relations.

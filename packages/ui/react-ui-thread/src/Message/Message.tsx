@@ -4,9 +4,11 @@
 
 import { EditorView } from '@codemirror/view';
 import { format } from 'date-fns/format';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, {
   type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
+  Fragment,
   type ReactNode,
   forwardRef,
   useCallback,
@@ -19,6 +21,7 @@ import React, {
 import { Obj, Ref } from '@dxos/echo';
 import {
   Avatar,
+  Icon,
   IconButton,
   type ThemedClassName,
   useOnTransition,
@@ -34,7 +37,7 @@ import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 import { command } from '../command';
 import { useThreadContext } from '../context';
 import { translationKey } from '../translations';
-import { type MessageMetadata } from '../types';
+import { DEFAULT_REACTIONS, type MessageMetadata, type MessageReaction, type MessageThreadSummary } from '../types';
 
 const avatarSize = 7;
 
@@ -245,6 +248,132 @@ const TextBlock = ({
 };
 
 //
+// Reactions
+//
+
+export type MessageReactionsProps = {
+  /** Folded reactions, one entry per emoji. */
+  reactions: readonly MessageReaction[];
+  /** Emoji offered by the picker. */
+  quickReactions?: readonly string[];
+  /** Toggles the local identity's reaction. */
+  onReact: (emoji: string) => void;
+};
+
+/**
+ * Reaction chips plus an add-reaction picker, rendered beneath a message's body. A chip shows the
+ * emoji and its count and is active while the local identity is among the reactors; clicking it
+ * un-reacts. Counts and active state are computed by the host — see `getReactions`.
+ */
+const MessageReactions = ({ reactions, quickReactions = DEFAULT_REACTIONS, onReact }: MessageReactionsProps) => {
+  const { t } = useTranslation(translationKey);
+  const [picking, setPicking] = useState(false);
+
+  const handlePick = useCallback(
+    (emoji: string) => {
+      setPicking(false);
+      onReact(emoji);
+    },
+    [onReact],
+  );
+
+  return (
+    <div className='flex flex-wrap items-center gap-1 me-4 mt-1' data-testid='thread.message.reactions'>
+      {reactions.map(({ emoji, count, self }) => (
+        <button
+          key={emoji}
+          type='button'
+          data-testid='thread.message.reaction'
+          data-emoji={emoji}
+          aria-pressed={self}
+          className={mx(
+            'flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-xs dx-focus-ring',
+            self ? 'border-accentSurface bg-accentSurface text-accent-text' : 'border-separator text-description',
+          )}
+          onClick={() => onReact(emoji)}
+        >
+          <span aria-hidden>{emoji}</span>
+          <span>{count}</span>
+        </button>
+      ))}
+      <IconButton
+        data-testid='thread.message.react'
+        variant='ghost'
+        icon='ph--smiley--regular'
+        iconOnly
+        label={t('add-reaction.label')}
+        classNames={[buttonClassNames, reactions.length === 0 && hoverableControlItem]}
+        onClick={() => setPicking((value) => !value)}
+      />
+      {picking && (
+        <div role='group' aria-label={t('add-reaction.label')} className='flex items-center gap-0.5'>
+          {quickReactions.map((emoji) => (
+            <button
+              key={emoji}
+              type='button'
+              data-testid='thread.message.reaction-option'
+              data-emoji={emoji}
+              className='px-1 py-0.5 rounded-sm text-sm hover:bg-hoverSurface dx-focus-ring'
+              onClick={() => handlePick(emoji)}
+            >
+              <span aria-hidden>{emoji}</span>
+              <span className='sr-only'>{emoji}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+MessageReactions.displayName = 'Message.Reactions';
+
+//
+// Thread affordance
+//
+
+export type MessageThreadLinkProps = {
+  /** Folded thread; absent (or zero replies) renders the "start a thread" wording instead. */
+  summary?: MessageThreadSummary;
+  onOpen: () => void;
+};
+
+/**
+ * Thread affordance beneath a root message: "Start a thread" when none exists, otherwise the
+ * thread's topic, its reply count, and when it was last active.
+ */
+const MessageThreadLink = ({ summary, onOpen }: MessageThreadLinkProps) => {
+  const { t, dtLocale } = useTranslation(translationKey);
+  const replyCount = summary?.replyCount ?? 0;
+  const lastActivity = summary?.lastActivity ? new Date(summary.lastActivity) : undefined;
+
+  return (
+    <button
+      type='button'
+      data-testid='thread.message.open-thread'
+      className={mx(
+        'flex items-center gap-1.5 me-4 mt-1 text-xs dx-focus-ring rounded-sm min-w-0',
+        replyCount > 0 ? 'text-accent-text' : mx('text-description', hoverableControlItem),
+      )}
+      onClick={onOpen}
+    >
+      <Icon icon='ph--chats-circle--regular' size={4} />
+      {summary?.topic && <span className='truncate min-w-0 font-medium'>{summary.topic}</span>}
+      <span className='shrink-0'>
+        {replyCount > 0 ? t('reply-count.label', { count: replyCount }) : t('start-thread.label')}
+      </span>
+      {lastActivity && (
+        <time className='shrink-0 text-description' dateTime={lastActivity.toISOString()}>
+          {formatDistanceToNow(lastActivity, { addSuffix: true, locale: dtLocale })}
+        </time>
+      )}
+    </button>
+  );
+};
+
+MessageThreadLink.displayName = 'Message.ThreadLink';
+
+//
 // Textbox
 //
 
@@ -353,9 +482,15 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
   const { t } = useTranslation(translationKey);
   const {
     getMetadata,
+    getReactions,
+    getThreadSummary,
+    canDelete,
+    quickReactions,
     identityDid,
     editable,
     onMessageDelete,
+    onMessageReact,
+    onThreadOpen,
     onAcceptProposal,
     onAcceptChange,
     onRejectChange,
@@ -375,6 +510,8 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
   const handleAcceptChange = useCallback(() => onAcceptChange?.(message.id), [onAcceptChange, message.id]);
   const handleRejectChange = useCallback(() => onRejectChange?.(message.id), [onRejectChange, message.id]);
   const handleSelect = useCallback(() => onMessageSelect?.(message.id), [onMessageSelect, message.id]);
+  const handleReact = useCallback((emoji: string) => onMessageReact?.(message.id, emoji), [onMessageReact, message.id]);
+  const handleOpenThread = useCallback(() => onThreadOpen?.(message.id), [onThreadOpen, message.id]);
   const handleSave = useCallback(
     (text: string) => {
       Obj.update(message, (message) => {
@@ -387,11 +524,14 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     [message],
   );
 
+  const reactions = getReactions?.(message) ?? [];
+  const threadSummary = getThreadSummary?.(message);
+
   const showEdit = isAuthor && editable;
   const showAccept = hasProposal && !!onAcceptProposal;
   const showAcceptChange = hasChange && !!onAcceptChange;
   const showRejectChange = hasChange && !!onRejectChange;
-  const showDelete = !!onMessageDelete;
+  const showDelete = !!onMessageDelete && (canDelete?.(message) ?? true);
   const controls =
     showEdit || showAccept || showAcceptChange || showRejectChange || showDelete ? (
       <div className={buttonGroupClassNames}>
@@ -472,6 +612,10 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     >
       <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
       <MessageBody message={message} isAuthor={isAuthor} editing={editing} onSave={handleSave} />
+      {onMessageReact && (
+        <MessageReactions reactions={reactions} quickReactions={quickReactions} onReact={handleReact} />
+      )}
+      {onThreadOpen && <MessageThreadLink summary={threadSummary} onOpen={handleOpenThread} />}
     </MessageRoot>
   );
 };
@@ -500,7 +644,19 @@ export type MessageGroupProps = {
  */
 const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupProps) => {
   const { t } = useTranslation(translationKey);
-  const { getMetadata, identityDid, editable, onMessageDelete, onAcceptProposal } = useThreadContext('Message.Group');
+  const {
+    getMetadata,
+    getReactions,
+    getThreadSummary,
+    canDelete,
+    quickReactions,
+    identityDid,
+    editable,
+    onMessageDelete,
+    onMessageReact,
+    onThreadOpen,
+    onAcceptProposal,
+  } = useThreadContext('Message.Group');
   const [editing, setEditing] = useState(false);
 
   const first = messages[0];
@@ -525,7 +681,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
 
   const showEdit = isAuthor && editable;
   const showAccept = hasProposal && !!onAcceptProposal;
-  const showDelete = !!onMessageDelete;
+  const showDelete = !!onMessageDelete && (canDelete?.(first) ?? true);
   const controls =
     showEdit || showAccept || showDelete ? (
       <div className={buttonGroupClassNames}>
@@ -574,13 +730,25 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
     >
       <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
       {messages.map((message) => (
-        <MessageBody
-          key={message.id}
-          message={message}
-          isAuthor={isAuthor}
-          editing={editing && message === first}
-          onSave={handleSave}
-        />
+        <Fragment key={message.id}>
+          <MessageBody
+            message={message}
+            isAuthor={isAuthor}
+            editing={editing && message === first}
+            onSave={handleSave}
+          />
+          {/* Reactions and threads are per-message, unlike the group's edit/delete controls. */}
+          {onMessageReact && (
+            <MessageReactions
+              reactions={getReactions?.(message) ?? []}
+              quickReactions={quickReactions}
+              onReact={(emoji) => onMessageReact(message.id, emoji)}
+            />
+          )}
+          {onThreadOpen && (
+            <MessageThreadLink summary={getThreadSummary?.(message)} onOpen={() => onThreadOpen(message.id)} />
+          )}
+        </Fragment>
       ))}
     </MessageRoot>
   );
@@ -598,6 +766,8 @@ export const Message = {
   AuthorName: MessageAuthorName,
   Time: MessageTime,
   Body: MessageBody,
+  Reactions: MessageReactions,
+  ThreadLink: MessageThreadLink,
   Textbox: MessageTextbox,
   Tile: MessageTile,
   Group: MessageGroup,
