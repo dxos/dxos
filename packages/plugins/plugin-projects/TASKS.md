@@ -59,7 +59,8 @@ Initial priority (user, 2026-07-24):
 - [x] **Tool-call churn in project chats** — (#12386) the skill-manager prompt no longer mandates a
       `query-skills` call before every `enable-skills` (the list is already rendered into the prompt), project
       chats pre-bind the artifact-type skills, and `create-object` points at type-specific create tools.
-      Model-behavioral, so the real check is `assistant-evals` `projects.eval.ts` against a live model — NOT run.
+      USER-VERIFIED LIVE on the #12386 preview, 2026-07-29. Model-behavioral, so a single run is not a
+      guarantee — `assistant-evals` `projects.eval.ts` remains the repeatable check and has not been run.
 - [x] **PR strategy decision** — moot: the three MS2 commits shipped inside #12335's squash; verified present on main (ProjectArticle `getReactiveOrUndefined`, format.ts `## Instructions` + `<label>`, Projects.stories.tsx, minimal plugin set).
 - [ ] **PLUGIN.mdl for plugin-projects** — as-built record now that implementation settled.
 - [ ] **Commands-authoring UI** — InstructionsEditor edits text/skills only; `commands` currently data-only despite autocomplete shipping.
