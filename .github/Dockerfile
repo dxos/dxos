@@ -18,6 +18,10 @@ RUN apt-get update \
     xz-utils
 
 # Install Node.js from official binary tarball
+# NOTE: Keep node and pnpm in sync with .prototools.
+#  These exist only to bootstrap CI: the setup action runs `pnpm install` before any moon task, so they are
+#  used until moon's toolchain cache exists, and everything after that uses the .prototools versions. bun is
+#  deliberately absent — moon installs it, and a copy here would shadow the pinned one.
 ARG NODE_VERSION=24.11.1
 RUN ARCH=$(uname -m) \
   && if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ]; then ARCH="arm64"; else echo "Unsupported architecture: $ARCH"; exit 1; fi \
@@ -32,7 +36,7 @@ ENV NPM_CONFIG_PREFIX=/usr/local
 ENV PATH=$PATH:/usr/local/bin
 
 # Install pnpm.
-RUN npm install -g pnpm@10.13.1 \
+RUN npm install -g pnpm@10.28.0 \
   # Install playwright native dependencies.
   # NOTE: Keep playwright version in sync with the one in package.json.
   # https://playwright.dev/docs/docker#build-your-own-image

@@ -31,13 +31,14 @@ runs:
         moon-version: '2.4.5'
         proto-version: '0.58.2'
 
-    # Only the tools needed before moon runs. bun is deliberately absent: moon installs it from
-    # `.prototools` when a task needs it, so it does not exist yet at this point in a cold toolchain cache,
-    # and `scripts/build.ts` asserts its version where that actually matters.
     - name: Log out debug info
       run: |
         node --version
         pnpm --version
+        # moon installs bun from `.prototools` when a task needs it, so the shim is present whenever the
+        # toolchain cache carried it and absent on a cold one — never fail the job over a diagnostic.
+        # `scripts/build.ts` asserts the version where it actually matters.
+        bun --version || echo 'bun: not installed yet (moon installs it from .prototools)'
       shell: bash
 
     - name: PNPM Store Path
