@@ -8,6 +8,7 @@ import { Credential } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { log } from '@dxos/log';
+import { type EdgeFunctionEnv } from '@dxos/protocols';
 
 /**
  * Slack the cache allows against the server's expiry, covering clock skew plus the lifetime of a
@@ -24,6 +25,43 @@ type CacheEntry = { accessToken: string; expiresAtMillis: number };
  * API calls costs one round-trip rather than one per call. `refresh` evicts first, which is how a
  * caller recovers from a token that was revoked before its stated expiry.
  */
+/**
+ * {@link Credential.AccessTokenResolver} backed by the EDGE-side binding a function is invoked with.
+ *
+ * Server-side counterpart to {@link accessTokenResolverFromEdge}: a function context has no identity
+ * to sign a presentation with, so resolution goes through a service binding instead of HTTP. The
+ * binding is already bound to the invocation's space, so `spaceId` is not forwarded — a function
+ * cannot reach another space's credentials by asking for them.
+ */
+export const accessTokenResolverFromService = (service: EdgeFunctionEnv.AccessTokenService) =>
+  Layer.sync(Credential.AccessTokenResolver, () => {
+    const cache = new Map<string, CacheEntry>();
+
+    return {
+      resolve: async ({ accessTokenId, refresh }) => {
+        if (refresh) {
+          cache.delete(accessTokenId);
+        }
+
+        const cached = cache.get(accessTokenId);
+        if (cached && cached.expiresAtMillis - Date.now() > EXPIRY_SKEW_MS) {
+          return cached.accessToken;
+        }
+
+        const result = await service.getAccessToken({}, { accessTokenId });
+        if (!result.success) {
+          throw new Error(`Could not resolve managed access token ${accessTokenId}: ${result.reason}`);
+        }
+        cache.set(accessTokenId, { accessToken: result.accessToken, expiresAtMillis: result.expiresAtMillis });
+        log('resolved managed access token via service binding', {
+          accessTokenId,
+          expiresAtMillis: result.expiresAtMillis,
+        });
+        return result.accessToken;
+      },
+    };
+  });
+
 export const accessTokenResolverFromEdge = (getEdgeClient: () => EdgeHttpClient) =>
   Layer.sync(Credential.AccessTokenResolver, () => {
     const cache = new Map<string, CacheEntry>();

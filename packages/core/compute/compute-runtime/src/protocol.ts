@@ -30,7 +30,7 @@ import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
-import { configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
+import { accessTokenResolverFromService, configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
 
 /**
  * Services provided to invoked function handlers in the EDGE runtime.
@@ -205,15 +205,13 @@ class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
-    // Resolving a server-custodied token needs a presentation-authenticated EDGE call, and a function
-    // context holds only an `EchoClient` — no identity to sign one with. Connectors whose sync runs
-    // here (none today: sync routines use local timer triggers) would need the resolution brokered
-    // through `context.services` instead.
+    // A function context has no identity to sign a presentation with, so managed tokens resolve
+    // through the space-bound EDGE binding rather than the HTTP endpoint the client uses.
+    const accessTokenResolver = this.context.services.accessTokenService
+      ? accessTokenResolverFromService(this.context.services.accessTokenService)
+      : Credential.AccessTokenResolver.notAvailable;
     const credentials = dbLayer
-      ? credentialsLayerFromDatabase({ caching: true }).pipe(
-          Layer.provide(dbLayer),
-          Layer.provide(Credential.AccessTokenResolver.notAvailable),
-        )
+      ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer), Layer.provide(accessTokenResolver))
       : configuredCredentialsLayer([]);
 
     const aiLayer = this.context.services.functionsAiService
