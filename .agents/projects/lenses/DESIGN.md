@@ -36,6 +36,22 @@ re-deriving other shapes from it:
 
 A lens is the missing abstraction: one declaration, two directions, laws that hold.
 
+Two use cases drive the shape of the API, and in **both the target schema already exists** — which
+makes binding two written schemas the primary mode and derivation the convenience case:
+
+1. **Adapt a foreign type to UIs you already have.** You have `DataType.Task` and everything that
+   renders it; you want `Linear.Issue` to flow through the same surfaces. Write `Issue → Task` and
+   the existing UI works unchanged, because a lensed object carries the _target's_ typename and
+   therefore resolves the target's surfaces.
+2. **Operate through a migration's destination shape.** The base type is going to change. The lens
+   lets code run against the new shape before, during, and after the data moves — which means it
+   must tolerate the new shape having fields the old data doesn't, and must be able to hand those
+   values over once the migration lands.
+
+Both imply the same requirement: a target property with no counterpart in the base **must not be an
+error**. It stores itself in the object's annotations automatically, no declaration required
+(API.md §2.1).
+
 ## 2. First-class in ECHO
 
 ECHO already has exactly the duality a lens needs, and we should mirror it rather than invent a
@@ -84,6 +100,12 @@ a tracked task, not a someday.
 
 The interesting question, graded honestly. D1 and D4 work and carry the design; D2 works with one
 forced compromise; D3 does not work as inference and works well as propose-and-verify.
+
+**Scope note:** D1 applies to _derive mode_. In **bind mode** — the primary case (§1) — the target
+is already written, so derivation runs as a **check** rather than a generator: derive the shape the
+mapping implies, diff it against the declared target, and the difference is the coverage report
+(API.md §2.4). Same machinery, opposite direction, and it is what surfaces an unmapped property as
+a deliberate overlay versus a mistake.
 
 ### D1. base type + lens → **derived target type**. Yes — this is the backbone.
 
@@ -288,12 +310,27 @@ const LensOverlay = Annotation.make({
 });
 ```
 
-Rules: keyed lens DXN → property, so two lenses never collide and dropping a lens drops its
-overlay cleanly; every value validated against that property's schema in the derived target;
-overlay properties are **second-class by construction** — not queryable, not indexed, invisible to
-consumers without the lens — and a field that needs querying should be **promoted** into the base
-type; `overlayPolicy` decides what happens to an unmapped, non-overlay-able property (`reject`
-default, or `store`).
+Rules:
+
+- **Unmapped target properties overlay automatically** — no declaration, no error. A lens must never
+  fail to load because the target has a field the base lacks; that is the normal state of affairs
+  in both driving use cases (§1). `store` is the default; `reject` exists only for lenses that want
+  to be strict.
+- Keyed lens DXN → property, so two lenses never collide and dropping a lens drops its overlay
+  cleanly. Every value is validated against that property's declaration in the target schema — in
+  bind mode that declaration always exists, so validation is stricter than in derive mode and free.
+- Overlay properties are **second-class by construction** — not queryable, not indexed, invisible to
+  consumers without the lens. Mid-migration this bites: a field lives in annotations for some
+  objects and in properties for others, so it cannot be queried uniformly until promotion completes.
+  State it plainly; it is a limit of the approach, not a gap to fix later.
+- **Promotion is a near-term requirement, not backlog.** `Lens.promote(obj, lens)` drains overlay
+  values into base properties that now exist. Use case 2 does not work without it: data written
+  through the lens while the base is un-migrated is stranded otherwise.
+- **Silent is not the same as invisible.** `Lens.coverage(lens)` reports mapped / overlaid / dropped,
+  and flags `suspicious` — an overlaid property that has a plausible source counterpart the mapping
+  missed. That case must never auto-overlay: storing `done` in annotations while `status` also
+  exists records the same fact twice and the two drift on the next write. A genuinely new field
+  overlays forever and correctly; a missed correspondence gets flagged (API.md §2.4, §8).
 
 ### 6.3 Read and write tiers
 

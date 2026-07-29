@@ -61,8 +61,22 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
       the Phase 4 collaboration story in hand, not before.
 - [ ] **`Lens.derive(baseType, lens)` (D1)** — spec applied to source JSON Schema → target `Type`
       entity. The stored `target` is a cache; add a test asserting cache == fresh derivation.
-- [ ] **Derived overlay set (D4)** — target properties the spec doesn't map; no hand-maintained
-      list. `overlayPolicy` becomes policy, not enumeration.
+- [ ] **Bind mode — `Lens.between(Source, Target, mapping)`** (API.md §2.1). The primary authoring
+      direction: both schemas exist, the mapping is partial, unmapped target properties overlay
+      **automatically** with no declaration and no error.
+- [ ] **Derived overlay set (D4)** — target properties the mapping doesn't cover; no hand-maintained
+      list. Default is `store`, not `reject`.
+- [ ] **`Lens.coverage`** (API.md §2.4) — mapped / overlaid / dropped, plus `suspicious`: an
+      overlaid property with a plausible source counterpart. Never auto-overlay that case — it
+      records the same fact twice and the copies drift.
+- [ ] **`Lens.promote(obj, lens)`** — drain overlay values into base properties that now exist,
+      idempotent. Required by the migration use case, not backlog.
+- [ ] **Target typename identity** — `Obj.getTypename` on a lensed object returns the _target's_
+      typename so existing surfaces resolve, while `Obj.getURI` still resolves to the base object
+      (API.md §2.2). Plus `Lens.sourcesFor(Target)` reverse lookup.
+- [ ] **`put` totality audit for bind mode** — a UI written for the target will write anything the
+      target schema permits; every property needs a real inverse, an overlay, or an explicit
+      read-only marking the form honours. A silently dropped write is the worst outcome.
 - [ ] **T1 snapshot codec** — `get(obj)` / `put(view, obj)` in one `Obj.update`.
 - [ ] **T2 minimal-write** — diff the view, map changed paths back through the compiled table,
       assign only those (DESIGN.md §6.4). Non-pointwise specs fall back to T1 and are barred from
@@ -114,7 +128,7 @@ enforces them (DESIGN.md §7).
 - [ ] **Story: Task, lensed** — lensed form | canonical form | raw inspector, one peer.
 - [ ] **Story: Text, lensed** — block list | CodeMirror editor | raw inspector, one peer.
 - [ ] **Story: Task, collaborative** — `withMultiClientProvider({ numClients: 2, createSpace:
-  true })`, canonical UI in pane 0, lensed UI in pane 1, same object via a real invitation.
+true })`, canonical UI in pane 0, lensed UI in pane 1, same object via a real invitation.
   - `status` change on A propagates to `done`/`stage` on B, and back.
   - Overlay set on B persists, is invisible on A's form, appears in A's inspector annotations.
   - **Concurrent non-conflicting edits merge** (A edits `title` while B toggles `done`) — the
@@ -149,7 +163,11 @@ not by being planned.
 - [ ] Agent surface — lensed serialization for tools, writes validated through `put`.
 - [ ] External-protocol lenses (Linear / GitHub / ATProto lexicon) replacing hand-written
       connector mappers.
-- [ ] Overlay **promotion** — migrate an overlay property into the base type.
+- [ ] Third example lens exercising **bind mode** end to end (a foreign type adapted to
+      `DataType.Task`), proving existing surfaces render it unchanged. Promotion itself moved to
+      Phase 1.
+- [ ] Lens **retirement** — detect a lens whose mapping has collapsed to identity with an empty
+      overlay set (its migration finished) and remove it rather than leave permanent indirection.
 - [ ] Querying _through_ a structural lens (rewrite `Filter` on lensed property names).
 - [ ] Read-only lens as a redaction/capability boundary.
 - [ ] Lens versioning when the base type migrates — including whether the target re-derives

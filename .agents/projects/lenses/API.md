@@ -51,9 +51,122 @@ Applying a batch is the only write path:
 export const applyWrites = (obj: Obj.Unknown, writes: readonly Write[]): void;
 ```
 
-## 2. Defining a lens statically
+## 2. Two authoring directions
 
-### 2.1 The builder (recommended authoring surface)
+There are two ways a lens comes into existence, and they differ in whether the target schema
+already exists. **Bind mode is the primary one** — it serves both driving use cases — and derive
+mode is the convenience case.
+
+|                                                    | Target schema             | Use case                                                                                                                          |
+| -------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Bind** — `Lens.between(Source, Target, mapping)` | already written           | adapt a foreign type to UIs you already have (§2.2); operate through a migration's destination shape before the data moves (§2.3) |
+| **Derive** — `Lens.make(Source, builder)`          | computed from the mapping | a new shape over an existing type, with nothing to conform to (GTD)                                                               |
+
+Both produce the same `Lens.Lens<Source, Target>`. In derive mode the target is an output; in bind
+mode it is an input and the derived shape becomes a _check_ (§4).
+
+### 2.1 Bind mode — both schemas exist
+
+The mapping is **partial by design**. Anything you don't say is handled by a default:
+
+- a target property with no mapping → **automatically overlay-backed** (annotation dictionary), no
+  declaration needed;
+- a source property with no mapping → dropped from the view, restored by `put` from the live object.
+
+```ts
+export const IssueAsTask = Lens.between(Linear.Issue, DataType.Task, {
+  title: 'title', // identity rename
+  description: 'description',
+  estimate: { from: ['estimateMinutes'], get: ({ estimateMinutes }) => estimateMinutes },
+  status: {
+    from: ['state'],
+    get: ({ state }) => STATE_TO_STATUS[state],
+    put: (status) => ({ state: STATUS_TO_STATE[status] }),
+  },
+  // `priority`, `assigned`, `project` unmentioned -> overlay-backed automatically.
+});
+```
+
+Not declaring the holes is the point: a lens should never fail to load because the target has a
+field the source lacks. But silence is not the same as invisibility — see §2.4.
+
+### 2.2 Use case: adapt a foreign type to UIs you already have
+
+The payoff is that a lensed object carries the **target's** typename, so everything that dispatches
+on typename — surfaces, plugin `react-surface` resolution, forms, cards, the navtree — resolves the
+UI already written for `DataType.Task` and renders a `Linear.Issue` with it. No UI changes at all.
+
+```ts
+Obj.getTypename(Obj.lens(issue, IssueAsTask)); // 'org.dxos.type.task'
+Lens.sourcesFor(DataType.Task); // reverse lookup: every type adaptable to Task
+```
+
+This is the strongest argument for §5.2's decision that `Obj.lens` returns something the whole
+`Obj.*` API accepts: the adapted object has to be indistinguishable from a real one, or the
+existing UI won't take it.
+
+It also raises the stakes on `put` totality. A UI built for `Task` will write any value the `Task`
+schema permits, including into properties whose mapping is lossy or absent on `Linear.Issue`. Every
+such property needs either a real inverse, an overlay, or an explicit read-only marking that the
+form honours — a `put` that silently drops a write is the worst outcome here. `Lens.checkLaws`
+(§8) over generated `Task` instances is what catches it.
+
+### 2.3 Use case: operate through a migration's destination shape
+
+The base type is going to change; the lens lets code run against the new shape before, during, and
+after the data moves. Three consequences worth designing for rather than discovering:
+
+**Promotion.** Data written through the lens while the base is un-migrated lands in annotations. When
+the migration runs, those values must move into the now-real properties, or they are stranded.
+
+```ts
+/** Drain overlay values into base properties that now exist. Idempotent; safe to run per object. */
+export const promote: (obj: Obj.Unknown, lens: Lens.Any) => readonly Write[];
+```
+
+This is why promotion is a near-term requirement rather than the backlog item it was: use case 2
+does not work without it.
+
+**Queryability, stated plainly.** Overlay values are not queryable or indexed. Mid-migration, a new
+field lives in annotations for some objects and in properties for others, so it cannot be queried
+uniformly until promotion completes. Either promote eagerly (lazily per object on read/write) or
+accept that new fields aren't query-safe until the migration finishes. This is a real limitation of
+the approach, not a gap in the API.
+
+**Retirement.** Once the base type has migrated, the mapping collapses to identity and the lens
+should be deleted rather than left as permanent indirection. `Lens.coverage` (§2.4) makes that
+visible: a lens whose every property is `mapped: identity` and whose overlay set is empty has
+finished its job.
+
+### 2.4 Coverage — don't break, but don't hide either
+
+Auto-overlay must not become a silent typo sink. The lens reports what it did:
+
+```ts
+export const coverage: (lens: Lens.Any) => Coverage;
+
+export type Coverage = {
+  /** Target properties backed by a source mapping. */
+  readonly mapped: readonly string[];
+  /** Target properties with no source counterpart — stored in the annotation dictionary. */
+  readonly overlaid: readonly string[];
+  /** Source properties absent from the view; restored by `put`. */
+  readonly dropped: readonly string[];
+  /**
+   * Overlaid properties that have a plausible source counterpart the mapping missed.
+   * The dangerous case: storing `done` in annotations while `status` also exists lets the two
+   * drift. Distinct from a genuinely new field, which is fine to overlay forever.
+   */
+  readonly suspicious: readonly { property: string; candidates: readonly string[] }[];
+};
+```
+
+`suspicious` is the distinction between "doesn't break" and "quietly corrupts". A genuinely new
+field with no counterpart overlays silently and correctly; a field that looks like it _should_ have
+mapped gets flagged. Pin the expected coverage in a test and an accidental new hole shows up as a
+diff rather than as data quietly landing in annotations.
+
+### 2.5 Derive mode — the builder
 
 Pass-through is the default: properties the lens doesn't mention appear unchanged in the target,
 so adding a property to the base type carries into every lens for free. Dropping is explicit.
@@ -117,7 +230,10 @@ type GtdTask = Lens.Target<typeof GtdTask>;
 This is D2 from the design: static lenses get inferred types, and the same declaration emits the
 spec data that the persisted path uses. One authoring surface, both worlds.
 
-### 2.2 Coded lenses — the same interface, an opaque implementation
+In derive mode `.overlay(...)` stays available for declaring a new field's schema up front. It is
+sugar, not a gate: an unmapped target property is overlay-backed either way.
+
+### 2.6 Coded lenses — the same interface, an opaque implementation
 
 Proof that the interface isn't secretly panproto-shaped. The rich-text lens declares its target
 schema directly (it can't be derived from a spec) and returns splices:
@@ -158,19 +274,25 @@ const runtime = Lens.fromObject(stored); // Lens.Lens<Obj.Any, Obj.Any> — dyna
 Same trade as stored types: `Lens.fromObject` cannot produce compile-time types, so consumers get
 JSON-Schema-driven forms rather than autocomplete. Nothing new conceptually.
 
-## 4. Derivation (D1)
+## 4. Derivation, and what it means in each mode
 
 ```ts
-/** Derive the lensed shape as a real `Type` entity. Nobody hand-writes this. */
+/** Derive the lensed shape as a real `Type` entity. */
 export const deriveType: (lens: Lens.Any) => Type.AnyObj;
 export const deriveJsonSchema: (lens: Lens.Any) => JsonSchema.JsonSchemaType;
 
-const GtdTaskType = Lens.deriveType(GtdTask); // usable anywhere a Type is
-await db.addType(GtdTaskType); // optional: persist so peers see the shape without the lens
+/** Bind mode: compare the mapping's implied shape against the declared target. */
+export const checkTarget: (lens: Lens.Any) => Coverage;
 ```
 
-`deriveType` composes `JsonSchema.toJsonSchema(source)` → apply spec → `Type.makeObjectFromJsonSchema`.
-The `target` field on a stored lens is a cache of this, CI-asserted equal to a fresh derivation.
+- **Derive mode** — `deriveType` produces the target. Nobody hand-writes it; the stored `target` is
+  a cache, CI-asserted equal to a fresh derivation. Change the base type and the target follows.
+- **Bind mode** — the target is given, so derivation becomes _verification_: derive the shape the
+  mapping implies, diff it against the declared target, and the difference **is** the coverage
+  report (§2.4). Same machinery, opposite direction.
+
+`deriveType` composes `JsonSchema.toJsonSchema(source)` → apply mapping →
+`Type.makeObjectFromJsonSchema`.
 
 ## 5. Reading and writing
 
@@ -265,26 +387,34 @@ expect(Lens.checkLaws(GtdTask, { instances: 100 }).holds).to.be.true;
 Zero fixtures — `DataType.Task` already annotates every property with a generator, so
 `createProps` (`@dxos/schema/testing`) supplies the instances.
 
-Generation (D3) returns a draft that is _not_ usable until its holes are closed:
+Generation takes **two existing schemas** — which is exactly the bind-mode input, so it applies to
+both driving use cases rather than being an exotic extra:
 
 ```ts
 export const generate: (source: Type.AnyObj, target: Schema.Schema.Any) => Promise<GeneratedLens>;
 
 export type GeneratedLens = {
-  readonly spec: LensSpec;
-  /** Correspondences the diff could not infer. `Lens.fromSpec` throws while any remain. */
+  readonly mapping: Mapping;
+  /** Correspondences the diff could not infer. Never silently overlaid — see below. */
   readonly holes: readonly {
     readonly property: string;
-    readonly reason: 'no-correspondence' | 'ambiguous-candidates' | 'value-semantics';
-    readonly candidates?: readonly string[];
+    readonly reason: 'ambiguous-candidates' | 'value-semantics';
+    readonly candidates: readonly string[];
   }[];
 };
 ```
 
-Making holes a typed part of the return value — rather than a warning in a log — is what keeps
-generation honest about the §3 D3 limit: `done` from `status` comes back as
-`{ property: 'done', reason: 'value-semantics', candidates: ['status'] }`, because the diff can see
-the two are related and cannot see _how_.
+**Two kinds of hole, and conflating them is the one thing that would corrupt data.**
+
+- A target property with _no_ plausible source counterpart is not a hole at all — it is a new
+  field, it overlays automatically (§2.1), and generation says nothing about it.
+- A target property that _does_ have a plausible counterpart whose value mapping can't be inferred
+  is a real hole, and it must **not** default to an overlay. Overlaying `done` while `status` also
+  exists on the object stores the same fact twice, and the two drift the moment either side is
+  written. Generation reports it as
+  `{ property: 'done', reason: 'value-semantics', candidates: ['status'] }` — the diff can see the
+  two are related and cannot see _how_ — and `Lens.coverage` flags the same case as `suspicious`
+  if the mapping ships without resolving it.
 
 ## 9. Query integration (later, structural lenses only)
 
@@ -298,13 +428,19 @@ degrading to a full scan would be worse than not offering it.
 
 ## 10. Open questions
 
-1. **`Obj.lens` proxy vs a distinct `LensedObj<T>`** (§5.2) — decide with the Phase 2 story in hand.
-2. **Builder op vocabulary** — `rename`/`convert`/`derive`/`omit`/`overlay` covers both lenses.
+1. **Builder op vocabulary** — `rename`/`convert`/`derive`/`omit`/`overlay` covers both lenses.
    Resist growing it until a third lens demands it; every op is a type-level transform to maintain
    and a case in the T2 compiler.
+2. **Overlay validation in bind mode.** An auto-overlaid property is validated against the target
+   schema's declaration for it, which exists — so this is stricter than the derive-mode case and
+   costs nothing. Confirm that holds for refs and nested structs.
 3. **`Lens.Codec` totality** — `scale(1/60)` is not an isomorphism over floats. Either codecs
    declare their tolerance, or `checkLaws` compares with an epsilon and says so out loud.
 4. **Overlay reactivity granularity** — `useLens(obj, lens, 'context')` should subscribe via
    `Annotation.atomProperty` to one key, not the whole dictionary.
 5. **Naming** — `Lens.get`/`Lens.put` are the lens-theoretic terms and collide with nothing, but
    `Lens.get(obj, lens)` next to `Obj.getValue(obj, path)` may read oddly in review.
+6. **Two sources adapting to one target** (§2.2) — if a UI can be handed a `Linear.Issue` or a
+   `GitHub.Issue` both lensed to `Task`, does anything downstream need the _original_ typename
+   (icons, "open in Linear", delete semantics)? `Obj.getURI` still resolves to the base object, so
+   the information is available — but nothing currently makes a consumer aware it should look.
