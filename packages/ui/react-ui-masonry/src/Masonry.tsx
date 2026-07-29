@@ -56,9 +56,10 @@ type MasonryContextValue = {
   /**
    * Centre the columns when `maxColumnWidth` caps them narrower than the container. Off aligns them
    * to the start instead, which reads better when the grid sits in a form or list flow whose other
-   * rows are start-aligned.
+   * rows are start-aligned. Distinct from `Masonry.Content`'s `centered`, which is ScrollArea's
+   * scrollbar-padding balance and says nothing about column alignment.
    */
-  center: boolean;
+  centered: boolean;
 };
 
 const MASONRY_NAME = 'Masonry';
@@ -80,7 +81,7 @@ const MasonryRoot = ({
   maxColumnWidth = cardMaxInlineSize,
   gap = 0.75,
   animate = true,
-  center = true,
+  centered = true,
 }: MasonryRootProps) => (
   <MasonryProvider
     Tile={Tile!}
@@ -90,7 +91,7 @@ const MasonryRoot = ({
     maxColumnWidth={maxColumnWidth}
     gap={gap}
     animate={animate}
-    center={center}
+    centered={centered}
   >
     {children}
   </MasonryProvider>
@@ -169,7 +170,7 @@ type MasonryViewportProps<Item> = ThemedClassName<{
 
 const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
   ({ items, getId, selectedIds, onSelect, ...props }, forwardedRef) => {
-    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, center } =
+    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, centered } =
       useMasonryContext('Masonry.Viewport');
     const remInPx = usePx(1);
     // Measure the viewport's own content box (net of padding and scrollbar) rather
@@ -196,7 +197,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       containerWidth: contentWidth,
       gapPx,
       maxColumnWidthPx: maxColumnWidth * remInPx,
-      center,
+      centered,
     });
     useFlip({ nodes, ids, rects, columnCount, containerWidth: contentWidth, enabled: animate });
 

@@ -67,10 +67,10 @@ describe('layout', () => {
     };
 
     // Capped columns use 410 of 1000, so centring insets both sides by 295.
-    const centred = layout({ ...options, center: true });
+    const centred = layout({ ...options, centered: true });
     expect(centred.rects[0].x).toBe(295);
 
-    const startAligned = layout({ ...options, center: false });
+    const startAligned = layout({ ...options, centered: false });
     expect(startAligned.rects[0].x).toBe(0);
     expect(startAligned.rects[1].x).toBe(210);
 

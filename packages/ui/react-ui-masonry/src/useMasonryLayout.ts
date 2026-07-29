@@ -31,7 +31,7 @@ export type UseMasonryLayoutOptions = {
   /** Optional cap on column width (px). */
   maxColumnWidthPx?: number;
   /** Centre capped columns in the container (see `layout`). */
-  center?: boolean;
+  centered?: boolean;
 };
 
 /**
@@ -45,7 +45,7 @@ export const useMasonryLayout = ({
   containerWidth,
   gapPx,
   maxColumnWidthPx,
-  center,
+  centered,
 }: UseMasonryLayoutOptions): MasonryLayout => {
   const heights = useRef(new Map<string, number>());
   const nodes = useRef(new Map<string, HTMLElement>());
@@ -137,12 +137,12 @@ export const useMasonryLayout = ({
     // Positions are final only once every tile has contributed a real height.
     const measured = ids.every((id) => heights.current.has(id));
     return {
-      ...layout({ heights: tileHeights, columnCount, containerWidth, gapPx, maxColumnWidthPx, center }),
+      ...layout({ heights: tileHeights, columnCount, containerWidth, gapPx, maxColumnWidthPx, centered }),
       measured,
     };
     // `version` re-runs layout when a measured height changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ids, columnCount, containerWidth, gapPx, maxColumnWidthPx, center, version]);
+  }, [ids, columnCount, containerWidth, gapPx, maxColumnWidthPx, centered, version]);
 
   return { ...result, getTileRef, nodes };
 };
