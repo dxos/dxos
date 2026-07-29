@@ -35,6 +35,13 @@ export const elementId = (objectId: string, elementRef: string) => `${objectId}/
 const LINE_HEIGHT = 1.25;
 /** Rough advance width per character relative to font size (excalidraw measures precisely on load). */
 const CHAR_WIDTH = 0.6;
+/**
+ * Excalidraw's handwriting face (`fontFamily: 1`) is fetched lazily from `EXCALIDRAW_ASSET_PATH`,
+ * which the host app does not serve, so those glyphs paint blank; the system face always resolves.
+ */
+const FONT_FAMILY = 2;
+/** Distance held between an arrow tip and the shape it binds to, matching excalidraw's own gap. */
+const BINDING_GAP = 4;
 
 /** Deterministic 32-bit hash for seeds/nonces so renders are reproducible. */
 const hash = (value: string): number => {
@@ -90,7 +97,7 @@ const text = (options: BaseOptions & { text: string; fontSize: number }) => ({
   ...base(options),
   text: options.text,
   fontSize: options.fontSize,
-  fontFamily: 1,
+  fontFamily: FONT_FAMILY,
   textAlign: 'left',
   verticalAlign: 'top',
   containerId: null,
@@ -117,6 +124,29 @@ const textSize = (value: string, fontSize: number): { w: number; h: number } => 
     w: Math.max(...lines.map((line) => line.length)) * fontSize * CHAR_WIDTH,
     h: lines.length * fontSize * LINE_HEIGHT,
   };
+};
+
+const center = (box: ExternalBox): Scene.Point => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 });
+
+/**
+ * Point where the segment from a box's centre towards `toward` crosses the box outline, pushed out
+ * by `gap`. Arrows drawn centre-to-centre disappear under their shapes, so each end is clipped to
+ * the boundary; excalidraw then maintains the same contact point once the binding takes over.
+ */
+const edgePoint = (box: ExternalBox, toward: Scene.Point, gap: number): Scene.Point => {
+  const origin = center(box);
+  const dx = toward.x - origin.x;
+  const dy = toward.y - origin.y;
+  if (dx === 0 && dy === 0) {
+    return origin;
+  }
+  // Scale the direction until it first touches a vertical or horizontal face.
+  const scaleX = dx === 0 ? Infinity : box.w / 2 / Math.abs(dx);
+  const scaleY = dy === 0 ? Infinity : box.h / 2 / Math.abs(dy);
+  const hit = Math.min(scaleX, scaleY);
+  const length = Math.hypot(dx, dy);
+  const offset = hit + gap / length;
+  return { x: origin.x + dx * offset, y: origin.y + dy * offset };
 };
 
 /**
@@ -156,10 +186,16 @@ export const renderObject = (
     return external[handle];
   };
 
-  /** Centered label as a companion text element, folded back into `text` on read. */
+  /**
+   * Label as a companion text element bound to its shape, folded back into `text` on read.
+   * Binding makes excalidraw own the centring and keeps the two together — an unbound label is a
+   * separate shape the user can drag off the box it names.
+   */
   const label = (element: Scene.Element, value: string, bounds: ExternalBox) => {
-    const id = `${elementId(object.id, element.id)}__label`;
-    const fontSize = toFontSize(element.weight);
+    const containerId = elementId(object.id, element.id);
+    const id = `${containerId}__label`;
+    // Type scales with the object so a label stays proportionate to the shape enclosing it.
+    const fontSize = toFontSize(element.weight) * scale;
     const size = textSize(value, fontSize);
     content[id] = {
       ...text({
@@ -175,7 +211,15 @@ export const renderObject = (
         fontSize,
       }),
       strokeColor: toStyle(element).strokeColor,
+      containerId,
+      textAlign: 'center',
+      verticalAlign: 'middle',
+      autoResize: false,
     };
+    const container = content[containerId];
+    if (container) {
+      container.boundElements = [...(container.boundElements ?? []), { id, type: 'text' }];
+    }
   };
 
   for (const element of object.elements) {
@@ -267,7 +311,7 @@ export const renderObject = (
         break;
       }
       case 'text': {
-        const fontSize = toFontSize(element.weight);
+        const fontSize = toFontSize(element.weight) * scale;
         const size = textSize(element.text, fontSize);
         const position = point(element);
         content[id] = {
@@ -289,18 +333,16 @@ export const renderObject = (
         break;
       }
       case 'arrow': {
-        // Endpoints resolve to the center of the referenced element's box. Refs are remembered
-        // in customData so they round-trip; native excalidraw bindings are a follow-up.
+        // Endpoints are clipped to the referenced shape's outline and bound to it, so the arrow
+        // touches the shape and follows it when dragged. Refs stay in customData to round-trip.
         const from = element.from ? ref(element.from) : undefined;
         const to = element.to ? ref(element.to) : undefined;
         const fromBox = from ? box(from) : undefined;
         const toBox = to ? box(to) : undefined;
-        const start = fromBox
-          ? { x: fromBox.x + fromBox.w / 2, y: fromBox.y + fromBox.h / 2 }
-          : point(element.start ?? { x: 0, y: 0 });
-        const end = toBox
-          ? { x: toBox.x + toBox.w / 2, y: toBox.y + toBox.h / 2 }
-          : point(element.end ?? { x: 0, y: 0 });
+        const startAnchor = fromBox ? center(fromBox) : point(element.start ?? { x: 0, y: 0 });
+        const endAnchor = toBox ? center(toBox) : point(element.end ?? { x: 0, y: 0 });
+        const start = fromBox ? edgePoint(fromBox, endAnchor, BINDING_GAP) : startAnchor;
+        const end = toBox ? edgePoint(toBox, startAnchor, BINDING_GAP) : endAnchor;
         const minX = Math.min(start.x, end.x);
         const minY = Math.min(start.y, end.y);
         const bounds = {
@@ -322,6 +364,8 @@ export const renderObject = (
             ],
           }),
           ...style,
+          ...(from && fromBox ? { startBinding: { elementId: from, focus: 0, gap: BINDING_GAP } } : {}),
+          ...(to && toBox ? { endBinding: { elementId: to, focus: 0, gap: BINDING_GAP } } : {}),
         };
         if (element.text) {
           label(element, element.text, bounds);
@@ -332,6 +376,46 @@ export const renderObject = (
   }
 
   return content;
+};
+
+type BoundEntry = { id: string; type: string };
+
+/**
+ * Reconcile arrow bindings across the whole canvas: drop bindings whose shape is gone and mirror
+ * the survivors onto each shape's `boundElements`. Excalidraw discards a one-sided binding, and
+ * arrows may reference shapes belonging to other objects, so this runs once the map is complete.
+ */
+export const rebind = (content: CanvasContent): void => {
+  const alive = (id: unknown): boolean => typeof id === 'string' && !!content[id] && !content[id].isDeleted;
+  const arrowsByShape = new Map<string, BoundEntry[]>();
+
+  for (const [key, record] of Object.entries(content ?? {})) {
+    if (!record || record.isDeleted || record.type !== 'arrow') {
+      continue;
+    }
+    const arrowId = record.id ?? key;
+    for (const end of ['startBinding', 'endBinding'] as const) {
+      const elementId = record[end]?.elementId;
+      if (elementId === undefined) {
+        continue;
+      }
+      if (!alive(elementId)) {
+        record[end] = null;
+        continue;
+      }
+      arrowsByShape.set(elementId, [...(arrowsByShape.get(elementId) ?? []), { id: arrowId, type: 'arrow' }]);
+    }
+  }
+
+  for (const [key, record] of Object.entries(content ?? {})) {
+    if (!record || record.isDeleted || record.type === 'arrow') {
+      continue;
+    }
+    // Preserve non-arrow bindings (e.g. container text) the renderer does not own.
+    const kept = (record.boundElements ?? []).filter((entry: BoundEntry) => entry?.type !== 'arrow');
+    const next = [...kept, ...(arrowsByShape.get(record.id ?? key) ?? [])];
+    record.boundElements = next.length > 0 ? next : null;
+  }
 };
 
 /** Sample an arc (degrees, clockwise from +x, y-down screen coords) into spline points. */

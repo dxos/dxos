@@ -87,9 +87,11 @@ export const readStyle = (record: Record<string, any>): SceneStyle => {
   };
 };
 
-export const readTextStyle = (record: Record<string, any>): SceneStyle => {
+/** @param scale Object scale the font size was multiplied by on render. */
+export const readTextStyle = (record: Record<string, any>, scale = 1): SceneStyle => {
   const color = HEX_TO_COLOR[record.strokeColor];
-  const weight = (Object.entries(WEIGHT_TO_FONT_SIZE).find(([, size]) => size === record.fontSize)?.[0] ??
+  const fontSize = record.fontSize / scale;
+  const weight = (Object.entries(WEIGHT_TO_FONT_SIZE).find(([, size]) => size === fontSize)?.[0] ??
     'm') as Scene.Weight;
   return {
     ...(color && color !== 'black' ? { color } : {}),

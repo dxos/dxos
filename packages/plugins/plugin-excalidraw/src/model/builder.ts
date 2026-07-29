@@ -20,7 +20,7 @@ import {
 
 import { Excalidraw } from '../types';
 import { readScene } from './read';
-import { renderObject } from './render';
+import { rebind, renderObject } from './render';
 
 const handler: ContentHandler = {
   identify: (record) => {
@@ -52,7 +52,10 @@ const handler: ContentHandler = {
       }
       content[id] = record;
     }
+    rebind(content);
   },
+
+  prune: (content: ContentMap) => rebind(content),
 };
 
 /** Bounding boxes of managed elements, keyed by `objectId/elementId`, for cross-object arrows. */

@@ -64,7 +64,6 @@ Reference sketch: `packages/plugins/plugin-illustrator/docs/drawing.drawio.svg`.
       a "detach to sketch" that bakes the current view. Blocks the rest of Phase 4.
 - [ ] **Dialect + placement schema**, layout/routing engine (slots, straight-line preservation),
       scenario model, collapse/zoom behaviour.
-- [ ] **Excalidraw native arrow bindings** — replace positional arrows + customData refs with real start/endBinding + boundElements sync.
 - [ ] **Illustrator PLUGIN.mdl deepening** — document capability contract once the dialect work firms it up.
 
 ### Post-review fixes (2026-07-28, user testing)
@@ -89,8 +88,10 @@ Reference sketch: `packages/plugins/plugin-illustrator/docs/drawing.drawio.svg`.
 - [x] **CollectionModel.add audit** — no plugin needed changes. `Journal` and `Subscription` are VISIBLE (their hidden siblings are `JournalEntry`/`PostContent`); `Segment` and `Variant` are hidden but persisted with `db.add`, never `AddObject`; sandbox has no `AddObject` sites. Chess/TicTacToe state go through plugin-game and are now correctly persisted-but-unfiled.
 - [x] **Mermaid dialect** — `illustrator/model/mermaid.ts`: parses flowchart direction, node shapes, subgraphs and edges; ranks by longest path with DFS back-edge detection so `C --> Y --> C` doesn't chase the loop; emits one world object per node, a dashed frame per subgraph, and an `edges` object of bound arrows. `DrawingOperation.Generate` applies it through the variant builder.
 - [x] **Tests/storybooks** — generic mermaid unit tests in plugin-illustrator (6, incl. the reference flowchart); mermaid storybooks in plugin-tldraw and plugin-excalidraw.
-- [ ] **Excalidraw label rendering** — the compiler emits correct label text companions (unit-tested), but they do not appear on the excalidraw canvas; suspect a text-element field/font issue in the excalidraw component.
-- [ ] **Layout quality** — the hand-rolled layered layout does no crossing minimisation and arrows meet box centres. See the ELK/routing research.
+- [x] **Excalidraw label rendering** — root cause was `fontFamily: 1` (Virgil): excalidraw fetches that face lazily from `EXCALIDRAW_ASSET_PATH`, which the host app never sets, so the glyphs painted blank. Isolated in the browser (a version bump alone changed nothing; only the family did). Labels now use the system face, scale with the object, and are `containerId`-bound so they centre and travel with their shape instead of being draggable off it.
+- [x] **Excalidraw native arrow bindings** — arrows carry real `startBinding`/`endBinding`, endpoints are clipped to the shape outline instead of its centre, and `rebind()` mirrors them onto each shape's `boundElements` (excalidraw discards one-sided bindings) while clearing bindings to deleted shapes. Verified live: dragging a box re-routes its arrows and carries its label. Tests in `model/bindings.test.ts`.
+- [ ] **Serve excalidraw's own fonts** — set `EXCALIDRAW_ASSET_PATH` and serve `@excalidraw/excalidraw/dist/prod/fonts/**` so the handwriting faces resolve; until then all excalidraw text (user-typed included, not just generated labels) falls back to the system face.
+- [ ] **Layout quality** — the hand-rolled layered layout does no crossing minimisation. See the ELK/routing research.
 
 ### Tracked follow-ups
 

@@ -70,7 +70,7 @@ const readObject = (objectId: string, records: ElementRecord[]): ReadWorldObject
   const length = (px: number) => round(px / scale);
 
   const elements = shapes
-    .map((record) => readElement(record, { local, length, objectId, labels }))
+    .map((record) => readElement(record, { local, length, scale, objectId, labels }))
     .filter((element): element is Scene.Element => element !== undefined);
 
   return { id: objectId, origin, scale, elements };
@@ -79,6 +79,7 @@ const readObject = (objectId: string, records: ElementRecord[]): ReadWorldObject
 type ReadContext = {
   local: (abs: { x: number; y: number }) => Scene.Point;
   length: (px: number) => number;
+  scale: number;
   objectId: string;
   labels: Map<string, string>;
 };
@@ -110,7 +111,7 @@ const readElement = (record: ElementRecord, ctx: ReadContext): Scene.Element | u
         ...ctx.local({ x: record.x, y: record.y }),
         ...(record.autoResize === false ? { w: ctx.length(record.width) } : {}),
         text: record.text ?? '',
-        ...readTextStyle(record),
+        ...readTextStyle(record, ctx.scale),
       };
     }
     case 'line': {
