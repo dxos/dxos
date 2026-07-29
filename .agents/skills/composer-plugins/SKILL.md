@@ -159,7 +159,7 @@ but `bundled`.
 
 ## Directory Structure
 
-```
+```text
 plugin-foo/
   package.json
   moon.yml
