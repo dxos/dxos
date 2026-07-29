@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: Phase 0 — spike `@panproto/core` (WASM) loadability + the Task→GTD lens law-check, and confirm mdast source offsets survive a real markdown round-trip. Those two answers pick the architecture. Uncommitted: none. Last: DESIGN.md rewritten around the two lenses (Task, Text→rich text) and the four stories._
+_Resume: Phase 0 — spike `@panproto/core` (WASM) loadability, the Task→GTD law-check, **target-type derivation from a spec (D1)**, and mdast source-offset splicing. Those answers pick the architecture. Uncommitted: none. Last: DESIGN.md rewritten around lenses as a first-class ECHO concept (static or persisted, mirroring `Type`) with derivation graded honestly in §3._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md). This file is the ledger only.
 
@@ -8,57 +8,76 @@ Design and rationale live in [DESIGN.md](./DESIGN.md). This file is the ledger o
 schema, all data persists in the base object under its own schema plus annotations, and a second
 peer on the canonical UI collaborates with it live, in both directions.
 
+**The derivation goal:** nobody hand-writes the derived type (D1), the overlay set, the write
+path, or the test instances. See DESIGN.md §3 for what that does and doesn't reach.
+
 ## Phase 0: Spikes
 
-Two independent questions, both cheap, both architecture-deciding. Nothing else starts first.
+Cheap, independent, architecture-deciding. Nothing else starts first.
 
 ### Tasks
 
 - [ ] **Load `@panproto/core` in each target** — node (test runner), browser (vite), and
       `workerd`. ECHO runs in a shared worker; a WASM module that can't load there changes the
-      architecture. Record size and cold-start in DESIGN.md §6.1.
-- [ ] **Verify the TS SDK surface** listed in DESIGN.md §2 against the real package. Correct the
+      architecture. Record size and cold-start in DESIGN.md §8.1.
+- [ ] **Verify the TS SDK surface** listed in DESIGN.md §4 against the real package. Correct the
       design doc wherever the book and the package differ.
-- [ ] **JSON Schema round-trip** — `JsonSchema.toJsonSchema(DataType.Task)` → panproto → back.
-      Confirm ECHO-specific annotations (`PropertyMetaAnnotationId`, `FormatAnnotation`, refs)
-      survive or are cleanly ignored.
-- [ ] **Hand-author the Task→GTD lens** as a spec; run `checkLaws` on generated instances,
-      including the lossy `status` split. Go/no-go for the declarative path.
-- [ ] **mdast offset spike** (DESIGN.md §4.B) — parse a real document, confirm every block node
-      carries usable `position.*.offset`, edit one block, splice it back, and assert the rest of
-      the source is byte-identical. Throwaway node script, no ECHO.
-- [ ] **Decision: engine-in-runtime vs author-time-only.** Write it into DESIGN.md §6.1 with the
+- [ ] **D1 spike — derive a target type from a spec.** `JsonSchema.toJsonSchema(DataType.Task)` →
+      apply spec → target JSON Schema → `Type.makeObjectFromJsonSchema`. Confirm ECHO annotations
+      that the UI depends on (`PropertyMetaAnnotationId` SingleSelect options, `FormatAnnotation`,
+      refs) survive derivation — a derived SingleSelect that loses its options renders as a bare
+      string field (DESIGN.md §8.2). **This is the spike that decides whether the whole
+      derive-don't-write premise holds.**
+- [ ] **Hand-author the Task→GTD lens** as a spec; run `checkLaws` over instances generated from
+      the source type's `GeneratorAnnotation`s (`createProps`, `@dxos/schema/testing`), including
+      the lossy `status` split. Go/no-go for the declarative path.
+- [ ] **D3 reality check** — run panproto's `lens generate` on `Task` vs a hand-written GTD target
+      schema. Record exactly which correspondences it recovers and which holes it leaves; confirm
+      the §3 D3 claim that value semantics (`done === status === 'done'`, `estimate / 60`) are not
+      recoverable. Cheap, and it calibrates how much of D3 to build.
+- [ ] **mdast offset spike** (DESIGN.md §5.B) — parse a real document, confirm block nodes carry
+      usable `position.*.offset`, edit one block, splice it back, assert the rest is
+      byte-identical. Throwaway node script, no ECHO.
+- [ ] **Decision: engine-in-runtime vs author-time-only.** Write it into DESIGN.md §8.1 with
       measured numbers, then delete the losing branch from the design.
 
-## Phase 1: Core — lens interface, overlay, minimal writes
+## Phase 1: Core — the first-class surface
 
-No UI. Tests are the consumer. Both write tiers land here because the stories need T2.
+No UI. Tests are the consumer. Shaped as a namespace module from day one so promotion into
+`@dxos/echo` is a move, not a redesign (DESIGN.md §2.1).
 
 ### Tasks
 
 - [ ] **Scaffold `packages/sdk/lens` (`@dxos/lens`, `"private": true`)**; in-repo deps
-      `workspace:*`, external via catalog.
-- [ ] **`Lens` interface + `org.dxos.type.lens` ECHO type** (DESIGN.md §3.1), with both
-      registration paths (code-defined, ECHO-stored).
-- [ ] **T1 snapshot codec** — `get(obj)` / `put(view, obj)` in a single `Obj.update`.
+      `workspace:*`, external via catalog. Keep the panproto/WASM binding in a separate optional
+      package so core stays worker-safe.
+- [ ] **`Lens` interface + `org.dxos.type.lens` entity** (DESIGN.md §6.1), with both definition
+      paths — static (code) and persisted (space) — mirroring `Type` / `Type.Type`.
+- [ ] **`Lens.derive(baseType, lens)` (D1)** — spec applied to source JSON Schema → target `Type`
+      entity. The stored `target` is a cache; add a test asserting cache == fresh derivation.
+- [ ] **Derived overlay set (D4)** — target properties the spec doesn't map; no hand-maintained
+      list. `overlayPolicy` becomes policy, not enumeration.
+- [ ] **T1 snapshot codec** — `get(obj)` / `put(view, obj)` in one `Obj.update`.
 - [ ] **T2 minimal-write** — diff the view, map changed paths back through the compiled table,
-      assign only those (DESIGN.md §3.5). Non-pointwise specs fall back to T1 and are barred from
+      assign only those (DESIGN.md §6.4). Non-pointwise specs fall back to T1 and are barred from
       collaborative surfaces.
 - [ ] **Overlay storage** — `LensOverlay` annotation keyed lens DXN → property; validate each
-      value against the lens target; `overlayPolicy` (`reject` default | `store`).
-- [ ] **Law-check harness** usable by both declarative and coded lenses.
-- [ ] **Registry** — resolve built-in and space-stored lenses by source typename.
+      value against the derived target; `reject` default.
+- [ ] **`Lens.checkLaws` harness (D4)** — property-based, instances from `GeneratorAnnotation`,
+      usable by both declarative and coded lenses.
+- [ ] **Registry** — resolve static and space-stored lenses by source typename.
 
 ## Phase 2: Task → GTD lens
 
 ### Tasks
 
-- [ ] **`lenses/task-gtd.ts`** per the mapping table in DESIGN.md §4.A (status split, priority
+- [ ] **`lenses/task-gtd.ts`** per the mapping table in DESIGN.md §5.A (status split, priority
       convert, estimate unit convert, `context`/`waitingOn` overlay).
-- [ ] **Unit tests** — round-trip, law checks, overlay persistence, and an explicit test that a
-      lensed write touches _only_ the changed properties.
-- [ ] **Lensed UI** — a `Form` rendered from the lens target schema, importing no `DataType.Task`.
-- [ ] **Reactive read path** — composed `Obj.atom` + `Annotation.atom` view, no over-firing.
+- [ ] **Unit tests** — round-trip, laws, overlay persistence, and an explicit test that a lensed
+      write touches _only_ the changed properties.
+- [ ] **Lensed UI** — a `Form` rendered from the **derived** target schema, importing no
+      `DataType.Task`.
+- [ ] **Reactive read path** — composed `Obj.atom` + `Annotation.atom`, no over-firing.
 
 ## Phase 3: Text → rich text lens
 
@@ -73,19 +92,19 @@ Gated on the Phase 0 mdast spike.
 - [ ] **Complement holds the per-node source slice** so untouched blocks round-trip
       byte-identically.
 - [ ] **Block list UI** — typed row per block (heading + level control, paragraph, list). Not a
-      WYSIWYG; scope guard in DESIGN.md §4.B.
+      WYSIWYG; scope guard in DESIGN.md §5.B.
 - [ ] **Tests** — round-trip fidelity on a document exercising both bullet styles, both heading
-      styles, and reference links; plus a byte-identical assertion after a single-block edit.
+      styles, and reference links; byte-identical assertion after a single-block edit.
 
 ## Phase 4: Stories
 
 The deliverable. `packages/stories/stories-lens`. Four stories, all with `play` functions so CI
-enforces them (DESIGN.md §5).
+enforces them (DESIGN.md §7).
 
 ### Tasks
 
 - [ ] **Shared raw-inspector component** — live base-object JSON + `Obj.getMeta(obj).annotations`.
-      This is the proof-of-persistence pane; both single-peer stories use it.
+      The proof-of-persistence pane; both single-peer stories use it.
 - [ ] **Story: Task, lensed** — lensed form | canonical form | raw inspector, one peer.
 - [ ] **Story: Text, lensed** — block list | CodeMirror editor | raw inspector, one peer.
 - [ ] **Story: Task, collaborative** — `withMultiClientProvider({ numClients: 2, createSpace:
@@ -98,21 +117,42 @@ enforces them (DESIGN.md §5).
   - A types in one block while B edits a different block; both survive.
   - Untouched markdown is byte-identical after B's edit.
 
-## Phase 5: Backlog
+## Phase 5: Toward first-class
 
-- [ ] Stable block identity via Automerge cursors (the anchoring `@dxos/react-ui-editor` already
-      uses for comments), replacing per-parse ephemeral block ids (DESIGN.md §4.B).
+Only after the two lenses and four stories land — the model earns core placement by being proven,
+not by being planned.
+
+### Tasks
+
+- [ ] **Promote into `@dxos/echo`** — `Lens` module beside `Type`/`View`/`Annotation`; engine and
+      coded-lens packages stay outside core (DESIGN.md §2.1). Update every call site; no
+      compatibility re-exports.
+- [ ] **`Obj.lens(obj, lens)`** as the ergonomic entry point.
+- [ ] **Typed combinator builder (D2)** — static lenses with compile-time target types, emitting
+      the same spec data. Only after the op set has settled; the op set must not be driven by what
+      is convenient to type.
+- [ ] **`Lens.generate` (D3)** — draft spec + explicit unresolved holes, law-invalid until filled;
+      LLM/MCP assist for the holes. Scope set by the Phase 0 D3 reality check.
+- [ ] **Richer source annotations** so more of D3 is derivable — starting with units (`estimate`
+      records no unit, so the factor 60 is not inferable by anything). Useful independent of this
+      project.
+
+## Phase 6: Backlog
+
+- [ ] Stable block identity via Automerge cursors, replacing per-parse ephemeral ids.
 - [ ] Agent surface — lensed serialization for tools, writes validated through `put`.
 - [ ] External-protocol lenses (Linear / GitHub / ATProto lexicon) replacing hand-written
       connector mappers.
 - [ ] Overlay **promotion** — migrate an overlay property into the base type.
 - [ ] Querying _through_ a structural lens (rewrite `Filter` on lensed property names).
 - [ ] Read-only lens as a redaction/capability boundary.
-- [ ] Lens versioning policy when the base type migrates (DESIGN.md §6.6).
+- [ ] Lens versioning when the base type migrates — including whether the target re-derives
+      automatically (DESIGN.md §8.7).
 - [ ] Dropped from scope: Organization → schema.org lens.
 
 ## References
 
-- [DESIGN.md](./DESIGN.md) — model, tiers, concurrency rule, the two lenses, the four stories.
+- [DESIGN.md](./DESIGN.md) — first-class API (§2), derivation graded D1–D4 (§3), the two lenses
+  (§5), model and concurrency rule (§6), the four stories (§7).
 - panproto: https://github.com/panproto/panproto · book https://panproto.dev/book/ ·
   toolkit https://github.com/panproto/panproto-toolkit
