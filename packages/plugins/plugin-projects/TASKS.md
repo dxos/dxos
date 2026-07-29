@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN, auto-merge ARMED (squash, 2026-07-29 04:01) at the user's explicit direction — the two issues below did NOT get resolved first and are now post-land follow-ups, not gates: (1) BLOCKING-as-recorded: the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`); (2) MAJOR, needs Josiah: the URL binding for project chats. Phase 3 items 1-4 plus in-article routine creation are done and verified live. Next: watch #12383 through the merge queue, then re-open the context/artifact decision before any further schema work. Uncommitted: none._
+_PROJECT ENDED 2026-07-29 (registry entry moved to `ended`). All five PRs merged: #12335, #12365, #12370, #12383, #12386. This file stays as the ledger — the items below marked open were deliberately left unresolved, not forgotten, and are the starting point if the work resumes: (1) the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`) — the shipped change is UI-only, so the decision is still owed before any schema change; (2) URL binding for project chats, needs Josiah; (3) Milestone 4 scoping (post-PR doc, demo, Magazine/CRM reconciliation); (4) the intermittent "first click into empty deck attends but opens no plank". Uncommitted: none._
 
 PR #12383 carries: (1) `Chat.agent` removed and the chat↔agent linkage
 restored to the `CompanionTo` relation — that field was the edge closing the
