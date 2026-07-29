@@ -441,12 +441,14 @@ jobs:
       - name: Install Playwright
         run: pnpm run install-playwright
 
+      # A manual `e2e` dispatch takes the "All" path on any branch: affected-scoping resolves to nothing
+      # when the diff touches no project (e.g. a CI-only change), which would bundle and test nothing.
       - name: Bundle Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
         run: moon run :bundle --affected remote
 
       - name: Bundle All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         run: moon run :bundle
 
       # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed
@@ -464,7 +466,7 @@ jobs:
         run: rm -rf test-results
 
       - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
         timeout-minutes: 45
         uses: trunk-io/analytics-uploader@v1
         env:
@@ -477,11 +479,14 @@ jobs:
           run: moon run :e2e --affected remote --concurrency=1
 
       - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         timeout-minutes: 45
         uses: trunk-io/analytics-uploader@v1
         env:
           PLAYWRIGHT_BROWSER: all
+          # A manual dispatch must execute the suite: re-running the same commit otherwise replays a remote
+          # cache hit in seconds, which reports green without running a test and emits no JUnit XML.
+          MOON_CACHE: ${{ inputs.e2e && 'off' || 'read-write' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
