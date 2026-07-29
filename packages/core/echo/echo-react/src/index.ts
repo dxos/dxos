@@ -5,4 +5,5 @@
 export * from './useQuery';
 export * from './usePagination';
 export * from './useType';
+export * from './useLens';
 export * from './useObject';

@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Next: React `useLens` in an `echo-react` sibling, then the storybook stories. Uncommitted: none._
+_Resume: PHASES 1-4 DONE for the Task lens. `useLens` ships in `@dxos/echo-react`; `@dxos/stories-lens` has two passing storybook demos including the multi-peer one (canonical UI on peer 0, lensed UI on peer 1, real invitation). Remaining: the Text→rich-text lens (Phase 3) and its two stories. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Next: React `useLens` in an `echo-react` sibling, then the storybook stories. Uncommitted: none._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](../../../packages/core/echo/echo-panproto/API.md).
 This file is the ledger only.
@@ -151,25 +151,36 @@ so the real `Task` is available, and it has the replication harness).
 
 ## Phase 4: Stories
 
-`packages/stories/stories-lens`. The collaboration claim is now proven headlessly in Phase 3b, so
-these are the _visual_ deliverable — a human seeing two interfaces drive one object — rather than the
-correctness proof. Still worth `play` functions so CI keeps them honest.
+`packages/stories/stories-lens`. The collaboration claim is proven headlessly in Phase 3b, so these are
+the _visual_ deliverable — a human seeing two interfaces drive one object — with `play` functions so CI
+keeps them honest.
 
 ### Tasks
 
-- [ ] **Shared raw-inspector component** — live base-object JSON + `Obj.getMeta(obj).annotations`.
-      The proof-of-persistence pane; both single-peer stories use it.
-- [ ] **Story: Task, lensed** — lensed form | canonical form | raw inspector, one peer.
-- [ ] **Story: Text, lensed** — block list | CodeMirror editor | raw inspector, one peer.
-- [ ] **Story: Task, collaborative** — `withMultiClientProvider({ numClients: 2, createSpace:
-true })`, canonical UI in pane 0, lensed UI in pane 1, same object via a real invitation.
-  - `status` change on A propagates to `done`/`stage` on B, and back.
-  - Overlay set on B persists, is invisible on A's form, appears in A's inspector annotations.
-  - **Concurrent non-conflicting edits merge** (A edits `title` while B toggles `done`) — the
-    assertion that fails if write-minimality is violated.
-- [ ] **Story: Text, collaborative** — canonical CodeMirror in pane 0, block list in pane 1.
-  - A types in one block while B edits a different block; both survive.
-  - Untouched markdown is byte-identical after B's edit.
+- [x] **`useLens` in `@dxos/echo-react`** — beside `useObject`, mirroring its tuple and overload shape,
+      including the property overload that subscribes only through a mapping's `from`. Reactivity comes
+      from the base object's own atom; a lens holds no state.
+- [x] **`GtdTask` + the `Task`→`GtdTask` lens** in the stories package (not in `echo-panproto`, per the
+      layering correction in Phase 0).
+- [x] **Shared raw-inspector component** — live base-object JSON + the lens overlay from
+      `meta.annotations`. The proof-of-persistence pane.
+- [x] **Story: `SideBySide`** — canonical panel | lensed panel | raw inspector, one peer. Asserts the
+      lensed `done` toggle writing `status`, the reverse direction, and an overlay landing in
+      annotations and **not** as a property of the base object.
+- [x] **Story: `Collaboration`** — `withMultiClientProvider({ numClients: 2 })`, canonical UI on peer 0
+      and lensed UI on peer 1 over a real invitation. Asserts the lensed completion reaching the
+      canonical form on the other peer, the overlay replicating, a canonical rename reaching the lensed
+      title, and — the point — that rename **not** reverting the earlier lensed edit.
+- [x] Both stories pass in the browser runner; package build and lint clean.
+- [ ] **Text → rich text stories** — blocked on the Phase 3 lens, which is not built yet.
+
+### Notes for whoever runs these
+
+- The story timeout is raised to 60s in `vite.config.ts`: two clients, two identities, and an
+  invitation all happen before the first assertion, well past the 15s default.
+- Drive controlled inputs with `userEvent`, never a raw `.value` assignment — React tracks its own
+  value and never fires `onChange` for the latter. (Selects respond to a plain `change` event, which
+  is why they appear to work; text inputs do not.)
 
 ## Phase 5: Toward first-class
 

@@ -17,7 +17,7 @@ const typename = (entity: Type.AnyObj | string): string =>
   typeof entity === 'string' ? entity : Type.getTypename(entity);
 
 /** Register a code-defined lens. Re-registering the same id replaces it. */
-export const register = (lens: AnyLens): AnyLens => {
+export const register = <L extends AnyLens>(lens: L): L => {
   byId.set(lens.id, lens);
   return lens;
 };

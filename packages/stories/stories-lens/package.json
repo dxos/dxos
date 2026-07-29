@@ -1,0 +1,36 @@
+{
+  "name": "@dxos/stories-lens",
+  "version": "0.10.0",
+  "private": true,
+  "description": "Storybook demos for ECHO object lenses: two interfaces driving one object.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "exports": {},
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-panproto": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/storybook-testing": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/storybook-utils": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "vite": "catalog:"
+  }
+}
