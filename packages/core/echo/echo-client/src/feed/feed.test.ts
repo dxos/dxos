@@ -46,6 +46,38 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
+  // Lineage rides in item `@meta`, so it has to survive encode → append → query → dedupe.
+  test('soft fork lineage round-trips through a feed', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'forkable' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      const bob = Obj.make(TestSchema.Person, { name: 'bob' });
+      const carol = Obj.make(TestSchema.Person, { name: 'carol' });
+      yield* Feed.append(feed, [alice, bob, carol]);
+
+      // Continue from bob, abandoning carol.
+      const dave = Obj.make(TestSchema.Person, { name: 'dave' });
+      yield* Feed.append(feed, [dave], { parent: bob });
+
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
+      expect(results).toHaveLength(4);
+
+      const position = (person: TestSchema.Person) =>
+        Number(Obj.getKeys(person, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id);
+      const inAppendOrder = [...results].sort((a, b) => position(a) - position(b));
+      expect(Feed.getParent(inAppendOrder[3])).toBe(bob.id);
+
+      const branch = Feed.resolveBranch(inAppendOrder);
+      expect(branch.items.map((person) => person.name)).toEqual(['alice', 'bob', 'dave']);
+      expect(branch.truncated).toBe(false);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
   test('query feeds by kind', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed] });
     const db = await peer.createDatabase();

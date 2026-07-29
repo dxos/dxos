@@ -127,6 +127,16 @@ projects:
     design: .agents/projects/feed-live-objects/DESIGN.md
     prs: [12235]
     resume: 'PR #12235 MERGED to main as 7b270f2e. Follow-up work restructured into roadmap phases (DESIGN.md "Roadmap (post-#12235)" + TASKS.md), informed by an event-sourcing comparison against LiveStore: 1 insertionId version/order axis (correctness-shaped), 2 consumer cursors (Feed.cursor/next) + durable high-water subscription cursor replacing processedVersions + mutationTypes filter, 3 partial-object delta blocks + field-level LWW merge, 4 retention/compaction via snapshot-block prefix rewrite, 5 exploratory app-defined projections; cross-cutting: explicit policy for schema-invalid feed items (now silently dropped), getSyncState in devtools. Phases 1-4 land as their own PRs in dependency order. NEXT: phase 1.'
+  - name: feed-soft-fork
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-07-29
+    summary: Soft-fork a Feed — revert to an earlier item and continue from there, resolved at read time from per-item lineage in `@meta`, without copying into a new feed (the existing hard fork).
+    tasks: .agents/projects/feed-soft-fork/TASKS.md
+    design: .agents/projects/feed-soft-fork/DESIGN.md
+    resume: 'Phase 1 COMPLETE, unpushed on claude/feed-soft-fork-94c32e. `Feed.PARENT_KEY` / `getParent` / `setParent` over `@meta` foreign keys, `Feed.resolveBranch` (linear-with-cuts walk, `head` override, truncation on absent parent, termination on forward reference/cycle), `Feed.append` `{ parent }` option. 17 pure tests in echo/src/Feed.test.ts + a DB round-trip in echo-client/src/feed/feed.test.ts; echo + echo-client suites green (516 passed). Lineage deliberately does NOT live on the Block (concurrent writers already fork the block chain, and one item is N blocks) — see DESIGN.md "Rejected". Next: open a PR, then the backlog in TASKS.md (branch enumeration, explicit active-branch head, query-plan push-down, assistant chat wiring — which must not reuse `Message.parentMessage`, that means tool-call nesting).'
+
   - name: url-deck-redesign
     status: active
     user: josiah
