@@ -11,11 +11,11 @@ projects:
     user: josiah
     host: remote
     created: 2026-07-29
-    summary: ECHO lensing via panproto — declare a bidirectional lens over a base type and interact with objects through it; unmapped view fields persist in the entity annotation dictionary.
+    summary: ECHO lensing via panproto — declare a bidirectional lens over a base type and interact with objects through it; unmapped view fields persist in the entity annotation dictionary. Two lenses (Task→GTD, Text→rich text), proven by four storybook stories including live cross-lens collaboration.
     tasks: .agents/projects/lenses/TASKS.md
     design: .agents/projects/lenses/DESIGN.md
     prs: []
-    resume: 'Planning only, no code, no PR. Next: Phase 0 spike — load @panproto/core (WASM) in node/browser/workerd, verify the TS SDK surface against the book, round-trip DataType.Task JSON Schema, hand-author the Task→GTD lens and run checkLaws, and spike whether a complement can round-trip markdown formatting byte-identically. That decides engine-in-runtime vs author-time-only.'
+    resume: 'Planning only, no code, no PR. Scope set: Task→GTD (declarative panproto lens) and Text→rich text (coded lens, at the Text object level, splicing via mdast source offsets); Organization dropped. Each lens ships a single-peer story (lensed UI | canonical UI | raw inspector showing base JSON + meta.annotations) and a two-peer collaboration story via withMultiClientProvider (canonical UI in pane 0, lensed UI in pane 1, real invitation). Live collab forces minimal-write puts — a snapshot put clobbers a concurrent peer. Next: Phase 0 spikes — load @panproto/core (WASM) in node/browser/workerd, verify the TS SDK surface, law-check the Task→GTD spec, and confirm mdast position offsets support a byte-identical single-block splice.'
 
   - name: email-sync-stability
     status: active
