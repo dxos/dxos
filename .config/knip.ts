@@ -22,6 +22,35 @@ const sourceTargets = (target: unknown): string[] => {
   return typeof scope === 'string' ? sourceTargets(scope) : Object.values(scope as object).flatMap(sourceTargets);
 };
 
+const MODULE = /\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/;
+
+/** Collect every build-output path an `exports`/`imports` entry points at. */
+const distTargets = (target: unknown): string[] => {
+  if (typeof target === 'string') {
+    return target.startsWith('./dist/') ? [target] : [];
+  }
+  if (!target || typeof target !== 'object') {
+    return [];
+  }
+  return Object.values(target as object).flatMap(distTargets);
+};
+
+/**
+ * The entry points a package publishes. Packages that predate the `source` condition point straight
+ * at `dist`, so map those back through the layout the build mirrors — without it the real entry is
+ * never registered and every file in the package reads as unused.
+ */
+const entryTargets = (target: unknown): string[] => {
+  const source = sourceTargets(target).filter((path) => MODULE.test(path));
+  if (source.length) {
+    return source;
+  }
+  return distTargets(target).flatMap((path) => {
+    const match = /^\.\/dist\/(?:lib\/|types\/)?(?:src\/)?(.+?)\.(?:d\.ts|[cm]?jsx?)$/.exec(path);
+    return match ? [`src/${match[1]}.{ts,tsx,mts,js,mjs}`] : [];
+  });
+};
+
 /** Reachable from tooling rather than from a package entry point, so knip needs them spelled out. */
 const AUXILIARY_ENTRY = [
   'src/**/*.{test,spec}.{ts,tsx}',
@@ -113,7 +142,7 @@ for (const manifest of globSync(
   // Libraries are reachable from their declared entry points, which is what makes unreferenced
   // files (and the dependencies only they import) detectable. Apps declare none — their entry is an
   // `index.html` knip cannot see — so treat their whole source tree as reachable instead.
-  const declared = [...new Set([...Object.values(exports), ...Object.values(imports)].flatMap(sourceTargets))];
+  const declared = [...new Set([...Object.values(exports), ...Object.values(imports)].flatMap(entryTargets))];
 
   const entry = [...declared, ...moonBuildArgs(dir, 'entryPoint')];
 
