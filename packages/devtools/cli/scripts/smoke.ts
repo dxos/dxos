@@ -139,13 +139,15 @@ for (const { label, command, prefix } of entryPoints) {
     if (result.status !== 0) {
       failures.push(description);
       console.error(`[Smoke]   ✗ ${description} (exit ${result.status ?? result.error})`);
+      const lines = `${result.stdout ?? ''}${result.stderr ?? ''}`.split('\n').filter((line) => line.trim());
+      // Prefer the lines that name a cause, but never swallow the output when none of them match — an
+      // unrecognised failure is exactly the one worth seeing.
+      const diagnostic = lines.filter((line) => /error|ENOENT|No native build|loaded from|Cannot find/i.test(line));
+      const shown = diagnostic.length > 0 ? diagnostic.slice(0, 4) : lines.slice(-8);
       console.error(
-        `${result.stdout ?? ''}${result.stderr ?? ''}`
-          .split('\n')
-          .filter((line) => /error|ENOENT|No native build|loaded from|Cannot find/i.test(line))
-          .slice(0, 4)
-          .map((line) => `[Smoke]     ${line.trim()}`)
-          .join('\n'),
+        shown.length > 0
+          ? shown.map((line) => `[Smoke]     ${line.trim()}`).join('\n')
+          : '[Smoke]     (no output on stdout or stderr)',
       );
       continue;
     }
