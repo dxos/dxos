@@ -457,6 +457,23 @@ jobs:
       - name: Smoke test packed CLI
         run: moon run cli:smoke
 
+      # Handed to the `cli-foreign` job, which runs them where this checkout does not exist. `cli:smoke`
+      # covers packaging here but reports self-containment as unverified: the container cannot create a
+      # mount namespace (`unshare failed: Operation not permitted`), and a path baked in at bundle time
+      # still resolves in the job that built it.
+      - name: Pack the CLI for the foreign-machine job
+        run: |
+          mkdir -p cli-tarballs
+          npm pack --silent --pack-destination cli-tarballs ./packages/devtools/cli/dist/cli
+          npm pack --silent --pack-destination cli-tarballs ./packages/devtools/cli/dist/cli-linux-x64
+
+      - name: Upload packed CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-tarballs
+          path: cli-tarballs/*.tgz
+          retention-days: 1
+
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
       # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
@@ -502,6 +519,57 @@ jobs:
           name: playwright-report
           path: test-results/playwright
           retention-days: 7
+
+  # Runs the packed CLI where the tree that built it does not exist. Deliberately no checkout, no container
+  # and a different runner: a `--compile`d binary is meant to carry everything, and when a dependency
+  # resolves a path at bundle time instead — `@automerge/automerge`'s WASM, `classic-level`'s native addon —
+  # it works in the job that built it and nowhere else, which is how @dxos/cli@0.10.0 shipped unrunnable.
+  # `cli:smoke` cannot cover this in CI because the build container forbids mount namespaces.
+  cli-foreign:
+    needs: e2e
+    if: ${{ !cancelled() && needs.e2e.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download packed CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-tarballs
+          path: cli-tarballs
+
+      # `--omit=optional` so the launcher's optionalDependencies are not fetched from npm — those versions
+      # are published, so without it the released (and possibly broken) platform package could satisfy the
+      # dependency instead of the tarball built here.
+      # The `./` is load-bearing: npm reads a bare `dir/file.tgz` as the GitHub shorthand `owner/repo` and
+      # tries to clone it.
+      - name: Install from the tarballs
+        run: |
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund --omit=optional ./cli-tarballs/*.tgz
+
+      - name: Run every command through both entry points
+        run: |
+          set -euo pipefail
+          launcher="node node_modules/@dxos/cli/bin/dx.js"
+          binary="node_modules/@dxos/cli-linux-x64/dx"
+          while read -r command; do
+            for entry in "$launcher" "$binary"; do
+              if output=$($entry $command 2>&1); then
+                echo "  ok   $entry $command"
+              else
+                echo "  FAIL $entry $command"
+                echo "$output" | tail -12
+                exit 1
+              fi
+            done
+          done <<'COMMANDS'
+          --version
+          --help
+          registry --help
+          function --help
+          space --help
+          COMMANDS
+          echo "version: $($launcher --version)"
 
   # Reports every nightly job from one place. e2e is in `needs` so a cancelled e2e is still reported (its
   # former in-job step used `success() || failure()`, which skips on cancellation) and so the other three
