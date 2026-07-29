@@ -90,6 +90,11 @@ repoint.
       `chat.instructions` from the project when unset; Projects story mirrors it.
 - [x] **Lazy backfill for pre-existing chats** — same effect: any project companion chat
       without the field picks it up on open.
+- [x] **Project chats bind `ProjectSkill` + the project object** — a default project's instructions
+      carry no skills, so `Project.contextBindings` was empty and the chat got neither the
+      artifact-filing tools nor the project itself. The model could create a document but had no way
+      to file it, and no way to name the project if it had. Both are now bound unconditionally at
+      chat creation, on top of whatever the instructions add.
 - [x] **`ProjectOperation.CreateChat`** — invokes `AssistantOperation.CreateChat` with the project's
       instructions ref (by reference, never a copy), `Obj.setParent(chat, project)`, binds
       `Project.contextBindings`, `LayoutOperation.Open`. No `SpaceOperation.AddObject`.
