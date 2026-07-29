@@ -10,17 +10,18 @@ import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 
 //
-// Runs the compiled binary with the workspace's `node_modules` replaced by an empty directory, which
-// is what every machine except the one that built it looks like. `smoke.ts` cannot detect this class
-// of defect — it builds and runs in the same place, so a path baked in at bundle time always resolves
-// — and neither can CI, which is how a binary that reads its build machine's `node_modules` reached
-// npm as @dxos/cli@0.10.0.
+// Runs the compiled binary with the workspace's `node_modules` replaced by an empty directory, which is
+// what every machine except the one that built it looks like. `smoke.ts` cannot detect this class of
+// defect — it builds and runs in the same place, so a path resolved at bundle time always resolves —
+// and neither can CI, which is how a binary that read its build machine's `node_modules` shipped as
+// @dxos/cli@0.10.0. Two separate causes were found this way: `@automerge/automerge`'s node entry
+// (`readFileSync` of a `__dirname`-derived path) and `classic-level`'s native addon.
 //
-// NOT wired into CI yet: the binary still fails here, because it embeds native addons (`classic-level`
-// at startup, plus `sharp`, `koffi`, `node-datachannel` and friends in the graph) that a single-file
-// binary cannot carry. Deciding which of those belong in a compiled CLI is a graph question, not a
-// bundler one. Gate `cli:publish` on this once they are gone.
+// Commands are limited to `--help`-style invocations so nothing touches the network or a real profile;
+// the point is module initialisation, which is where all of these failures happen.
 //
+
+const COMMANDS = [['--version'], ['--help'], ['registry', '--help'], ['function', '--help'], ['space', '--help']];
 
 const platformKey = `${process.platform}-${process.arch}`;
 const binaryName = process.platform === 'win32' ? 'dx.exe' : 'dx';
@@ -38,28 +39,51 @@ if (process.platform !== 'linux') {
 
 const workspaceRoot = resolve('../../..');
 const nodeModules = join(workspaceRoot, 'node_modules');
+const empty = mkdtempSync(join(tmpdir(), 'dx-isolated-'));
 
 // `--map-root-user` so an unprivileged user can still create the namespace and bind-mount inside it.
-const empty = mkdtempSync(join(tmpdir(), 'dx-isolated-'));
-const script = `mount --bind "$1" "$2" || exit 42; shift 2; exec "$@"`;
-const result = spawnSync(
-  'unshare',
-  ['-m', '--map-root-user', 'bash', '-c', script, '--', empty, nodeModules, binary, '--version'],
-  { encoding: 'utf8', env: process.env },
-);
-rmSync(empty, { recursive: true, force: true });
+const script = 'mount --bind "$1" "$2" || exit 42; shift 2; exec "$@"';
+const runIsolated = (args: string[]) =>
+  spawnSync('unshare', ['-m', '--map-root-user', 'bash', '-c', script, '--', empty, nodeModules, binary, ...args], {
+    encoding: 'utf8',
+    env: process.env,
+  });
 
-if (result.error || result.status === 42) {
-  console.log(`[Isolated] Skipped: could not create a mount namespace (${result.error?.message ?? 'bind failed'}).`);
-  process.exit(0);
+console.log(`[Isolated] Running ${COMMANDS.length} commands with ${nodeModules} hidden...`);
+
+const failures: string[] = [];
+for (const args of COMMANDS) {
+  const label = `dx ${args.join(' ')}`;
+  const result = runIsolated(args);
+
+  if (result.error || result.status === 42) {
+    rmSync(empty, { recursive: true, force: true });
+    console.log(`[Isolated] Skipped: could not create a mount namespace (${result.error?.message ?? 'bind failed'}).`);
+    process.exit(0);
+  }
+
+  if (result.status === 0) {
+    console.log(`[Isolated]   ✓ ${label}`);
+    continue;
+  }
+
+  failures.push(label);
+  console.error(`[Isolated]   ✗ ${label} (exit ${result.status})`);
+  console.error(
+    `${result.stdout ?? ''}${result.stderr ?? ''}`
+      .split('\n')
+      .filter((line) => /error|ENOENT|No native build|loaded from/i.test(line))
+      .slice(0, 4)
+      .map((line) => `[Isolated]     ${line.trim()}`)
+      .join('\n'),
+  );
 }
 
-const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
-if (result.status !== 0) {
-  console.error(`[Isolated] \`dx --version\` failed with ${nodeModules} hidden (exit ${result.status}).`);
-  console.error('[Isolated] The binary is reaching back into the machine that built it:');
-  console.error(output.split('\n').slice(0, 12).join('\n'));
+rmSync(empty, { recursive: true, force: true });
+
+if (failures.length > 0) {
+  console.error(`[Isolated] ${failures.length} of ${COMMANDS.length} failed — the binary needs its build machine.`);
   process.exit(1);
 }
 
-console.log(`[Isolated] ✓ ${result.stdout.trim()} with ${nodeModules} hidden`);
+console.log(`[Isolated] ✓ all ${COMMANDS.length} commands ran with ${nodeModules} hidden`);

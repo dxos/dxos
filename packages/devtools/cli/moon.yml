@@ -73,9 +73,8 @@ tasks:
     inputs:
       - scripts/smoke.ts
       - dist/**/*
-  # Runs the binary with the workspace's node_modules hidden, i.e. as every machine except the build
-  # one sees it. Deliberately not a `publish` dep or a CI step yet — it still fails, because the binary
-  # embeds native addons it cannot carry (see the header in scripts/smoke-isolated.ts).
+  # Runs the binary with the workspace's node_modules hidden, i.e. as every machine except the build one
+  # sees it. Two shipped defects were only ever observable here — see scripts/smoke-isolated.ts.
   smoke-isolated:
     command: bun
     args:
@@ -95,6 +94,7 @@ tasks:
     deps:
       - bundle
       - smoke
+      - smoke-isolated
     inputs:
       - scripts/publish.ts
       - dist/**/*

@@ -31,14 +31,20 @@ moon run cli:smoke-isolated  # Run it with the workspace's node_modules hidden (
 moon run cli:publish         # Publish the platform packages, then the launcher.
 ```
 
-**The binary does not yet run off the machine that built it.** `smoke` and CI both build and run in the
-same place, so anything the bundle resolved at build time still resolves; `smoke-isolated` hides the
-workspace's `node_modules` to show what a user sees. Today it stops at `classic-level`, a native addon
-loaded during startup because `@dxos/kv-store`'s `level.ts` imports `level` at module scope and
-`client-services`' storage barrel re-exports it — nothing calls it. Behind it sit `sharp`, `koffi`,
-`node-datachannel` and other addons a single-file binary cannot carry. Which of them belong in a
-compiled CLI is a dependency-graph question; `cli:publish` should gate on `smoke-isolated` once they
-are gone.
+`smoke` and CI both build and run the binary in the same place, so anything the bundle resolved at build
+time still resolves there. `smoke-isolated` hides the workspace's `node_modules` to show what every other
+machine sees, and it is the only thing that catches a binary reaching back into the tree that built it —
+two shipped defects were observable nowhere else:
+
+- `@automerge/automerge`'s node entry reads its WASM from a `__dirname`-derived path, which Bun resolves
+  at bundle time.
+- `classic-level` binds a native addon that a single-file binary cannot carry. It loaded during startup
+  only because `@dxos/kv-store`'s main entry exported `createLevel` alongside its types, so importing the
+  package for a type pulled the addon in. The value now lives behind `@dxos/kv-store/level`.
+
+Other addons (`sharp`, `koffi`, `node-datachannel`) are still in the graph but are not reached during
+startup. Any command that does reach one will fail off the build machine, so extend `COMMANDS` in
+`scripts/smoke-isolated.ts` as coverage grows.
 
 `bundle` produces `dist/cli` (the `@dxos/cli` launcher, published from `bin/dx.js`) plus one
 `dist/cli-<platform>-<arch>/dx` binary per target, each published as its own package and wired into
