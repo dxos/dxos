@@ -132,7 +132,9 @@ export const ObjectCreate = Operation.make({
     name: 'Create object',
     icon: 'ph--plus--regular',
     description: trim`
-      Creates a new object and adds it to the current space.
+      Creates a new object of any type and adds it to the current space.
+      When a type has its own create tool (e.g. the markdown skill creates documents), prefer that
+      tool — it builds the object's owned parts correctly. Use this one for types that have none.
       Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
       References are provided in the following format: { "/": "echo:..." }.
       Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
