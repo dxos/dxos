@@ -113,6 +113,24 @@ const subductionWasmPlugin: BunPlugin = {
   },
 };
 
+/**
+ * Bun plugin that swaps `@automerge/automerge`'s `node` entry for its base64 entry. The node entry
+ * reads its WASM with `readFileSync(`${__dirname}/automerge_wasm_bg.wasm`)`, and Bun resolves that
+ * `__dirname` at bundle time — baking the build machine's `node_modules` path into the binary, which
+ * then dies with `ENOENT ... automerge_wasm_bg.wasm` on every other machine. The base64 entry inlines
+ * the same module, so the binary carries it.
+ */
+const automergeWasmPlugin: BunPlugin = {
+  name: 'automerge-wasm',
+  setup(build) {
+    build.onResolve({ filter: /^@automerge\/automerge$/ }, (args) => {
+      const importerDir = args.importer ? dirname(args.importer) : process.cwd();
+      const nodeEntry = Bun.resolveSync(args.path, importerDir);
+      return { path: join(dirname(nodeEntry), 'fullfat_base64.js') };
+    });
+  },
+};
+
 // Platform configurations.
 const platforms = [
   { target: 'bun-darwin-arm64', platform: 'darwin', arch: 'arm64', ext: '' },
@@ -153,7 +171,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
   const result = await Bun.build({
     entrypoints: ['./src/bin.ts'],
     target: 'bun',
-    plugins: [solidPlugin, rawImportPlugin, urlImportPlugin, nodeStdPlugin, subductionWasmPlugin],
+    plugins: [solidPlugin, rawImportPlugin, urlImportPlugin, nodeStdPlugin, subductionWasmPlugin, automergeWasmPlugin],
     compile: {
       target,
       outfile,

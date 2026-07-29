@@ -39,6 +39,19 @@ if (process.platform !== 'win32' && (mode & 0o111) === 0) {
   process.exit(1);
 }
 
+// `@automerge/automerge`'s node entry reads its WASM from a sibling file, and Bun resolves the
+// `__dirname` behind it at bundle time — baking in the build machine's path, so the binary runs here
+// and dies with ENOENT anywhere else. Running it cannot catch that: this test builds and runs on one
+// machine, as does CI, which is how it reached npm. Verified to match the binary that shipped it.
+const AUTOMERGE_NODE_WASM_ENTRY = 'wasm_bindgen_output/nodejs';
+
+const binaryBytes = Buffer.from(await Bun.file(join(platformDir, binaryName)).bytes());
+if (binaryBytes.includes(AUTOMERGE_NODE_WASM_ENTRY)) {
+  console.error(`[Smoke] ${binaryName} references "${AUTOMERGE_NODE_WASM_ENTRY}", read from disk at runtime.`);
+  console.error("[Smoke] That path is the build machine's — redirect the package in scripts/build.ts.");
+  process.exit(1);
+}
+
 const scratch = mkdtempSync(join(tmpdir(), 'dx-smoke-'));
 
 const run = (command: string, args: string[], cwd: string) => {
