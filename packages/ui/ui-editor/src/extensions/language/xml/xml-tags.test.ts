@@ -11,13 +11,16 @@ import { trim } from '@dxos/util';
 
 import { decorationSetToArray } from '../../../util';
 import { extendedMarkdown } from './extended-markdown';
+import { StubWidget } from './stub';
 import {
   type XmlWidgetDef,
   type XmlWidgetProps,
+  type XmlWidgetState,
   navigateNextEffect,
   navigatePreviousEffect,
   xmlTagRebuildEffect,
   xmlTagResetEffect,
+  xmlTagUpdateEffect,
   xmlTags,
 } from './xml-tags';
 
@@ -392,5 +395,94 @@ describe('xmlTags decorations', () => {
       expect(view.state.selection.main.head).toBeLessThan(view.state.doc.length);
       view.destroy();
     });
+  });
+});
+
+//
+// Widget state.
+//
+// `xmlTags` documents that widget state may be updated BEFORE the widget mounts (a thread returning
+// from a remount replaces the document, then rehydrates each widget's state out-of-band). These lock
+// in that contract at the editor level: the effect must survive the reset, must not be dropped when it
+// shares a transaction, and must reach a widget that mounts afterwards.
+//
+
+describe('xmlTags widget state', () => {
+  const stateRegistry: Record<string, XmlWidgetDef> = {
+    toolCall: { block: true, Component: () => null },
+  };
+
+  const doc = trim`
+    <toolCall id="a" />
+
+    <toolCall id="b" />
+  `;
+
+  /** The live StubWidget for an id, as CodeMirror would render it. */
+  const stubWidget = (view: EditorView, id: string): StubWidget<XmlWidgetProps> => {
+    for (const source of view.state.facet(EditorView.decorations)) {
+      const set = typeof source === 'function' ? source(view) : source;
+      if (!set) {
+        continue;
+      }
+      for (const { value } of decorationSetToArray(set)) {
+        const widget = value.spec?.widget;
+        if (widget instanceof StubWidget && widget.id === id) {
+          return widget;
+        }
+      }
+    }
+
+    throw new Error(`no widget: ${id}`);
+  };
+
+  const widgetProps = (view: EditorView, id: string): XmlWidgetProps => stubWidget(view, id).props;
+
+  test('applies every widget update effect in a single transaction', async ({ expect }) => {
+    const view = createView(doc, { registry: stateRegistry });
+    await rebuild(view);
+    view.dispatch({
+      effects: [
+        xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }),
+        xmlTagUpdateEffect.of({ id: 'b', value: { blocks: ['B'] } }),
+      ],
+    });
+    view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+    await flush();
+    expect(widgetProps(view, 'a').blocks).toEqual(['A']);
+    expect(widgetProps(view, 'b').blocks).toEqual(['B']);
+    view.destroy();
+  });
+
+  test('widget state survives the reset that replaces the document', async ({ expect }) => {
+    const view = createView('placeholder', { registry: stateRegistry });
+    await rebuild(view);
+
+    // What `setContent` dispatches on remount: replace the document and clear accumulated state.
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: doc },
+      effects: xmlTagResetEffect.of(null),
+    });
+    view.dispatch({ effects: xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
+    view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+    await flush();
+    expect(widgetProps(view, 'a').blocks).toEqual(['A']);
+    view.destroy();
+  });
+
+  test('a widget mounting after its state arrives receives that state', async ({ expect }) => {
+    let mounted: XmlWidgetState[] = [];
+    const view = createView(doc, { registry: stateRegistry, setWidgets: (widgets) => (mounted = widgets) });
+
+    // The one-shot parse-completion rebuild lands first and is never re-armed without a document
+    // change, so the state arriving afterwards cannot be picked up by another rebuild.
+    await rebuild(view);
+    view.dispatch({ effects: xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
+
+    // The widget mounts now — scrolled into CodeMirror's viewport, or portaled after the initial render.
+    const widget = stubWidget(view, 'a');
+    widget.toDOM(view);
+    expect(mounted.find((state) => state.id === 'a')?.props.blocks).toEqual(['A']);
+    view.destroy();
   });
 });
