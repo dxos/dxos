@@ -5,7 +5,15 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { FactStore, MailboxAction, OperationHandler, ReactSurface, Settings, SkillDefinition } from '#capabilities';
+import {
+  FactStore,
+  MailboxAction,
+  OperationHandler,
+  ProjectTemplates,
+  ReactSurface,
+  Settings,
+  SkillDefinition,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -37,6 +45,12 @@ export const BrainPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
     activate: MailboxAction,
+  }),
+  // Contributes the "Mailbox Facts" project template (UC-C): scheduled AnalyzeMailbox routine +
+  // brain-skill chats inside a project.
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: ProjectTemplates,
   }),
   Plugin.make,
 );

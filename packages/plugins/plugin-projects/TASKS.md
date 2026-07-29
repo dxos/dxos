@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: #12335, #12365, #12370, #12383, #12386 all MERGED — nothing in flight; the branch is level with `origin/main`. The project stays **active**: #12388 (docs-only, would have moved the registry entry to `ended`) was CLOSED unmerged. The two deliberately-unresolved items are now post-land follow-ups, not gates: (1) the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`) — the shipped change is UI-only, so the decision is still owed before any schema change; (2) MAJOR, needs Josiah: the URL binding for project chats. Next: re-open the context/artifact decision before any further schema work. Uncommitted: none._
+_Resume: Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented on this branch as ordered commits (user-directed, 2026-07-29): one growing PR, leave open for review. §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Next: open the PR (submit-pr), then user walkthrough of the three stories in `stories-projects`. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` is authored but unverified; run it live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
 
 PR #12383 carries: (1) `Chat.agent` removed and the chat↔agent linkage
 restored to the `CompanionTo` relation — that field was the edge closing the
@@ -249,16 +249,31 @@ summaries), and the `stories-projects` storybook strategy.
 
 ### Tasks (per USE-CASES.md §4/§5, sequencing §6)
 
-- [ ] **Groundwork PR** — routine project-scope binding (`RunInstructions` + `CreateRoutine`);
-      `ProjectOperation.Create` (+ `AddArtifact` alias); `ProjectsCapabilities.Template` + create-flow
-      picker; `ARTIFACT_SKILL_KEYS` += table, sheet; ProjectArticle context section
-      (`instructions.objects` rendered as labeled Context gallery with add/remove).
-- [ ] **UC-A sender ledger** — plugin-inbox "Inbox research" project template + mailbox entry point;
-      `stories-projects` package + `SenderLedger.stories.tsx`; idempotent-upsert test.
-- [ ] **UC-B sender research** — CRM routine template ported to a project template; artifact filing
-      dedupe verified; `SenderResearch.stories.tsx`.
-- [ ] **UC-C fact summaries** — analyze-mailbox operation-action routine template; brain skill in
-      project instructions; `FactSummaries.stories.tsx`; `sender-ledger`/`fact-summary` evals.
+- [x] **Groundwork** — `ProjectsCapabilities.Template` + blank template + `CreateProjectPanel`
+      picker; `ProjectOperation.Create` (template-driven, programmatic); `CreateRoutine` seeds
+      project scope (subject → `instructions.objects`, `seedProjectScope` adds ProjectSkill +
+      artifact skills); `ARTIFACT_SKILL_KEYS` += table, sheet; ProjectArticle **Context** section
+      (`InstructionsEditor` `fields` prop — only rendered fields write back). `AddArtifact` alias
+      NOT added: `org.dxos.function.project.artifactAdd`/`artifactList` are already public
+      operations with handlers registered by plugin-assistant, so other plugins can invoke them
+      as-is. plugin-projects 13 + plugin-routine 62 tests green.
+- [x] **UC-A sender ledger** — plugin-inbox `inboxResearch` project template ("Set up project" on
+      the primary mailbox node); starter feed-triggered Sender Ledger routine (disabled) owned by
+      the project; `stories-projects` package + `SenderLedger.stories.tsx` (play test drives the
+      real operation stack in Chromium and asserts Context/Routines/Artifacts render). Idempotent
+      upsert is graded by the eval below (model-behavioral, not unit-testable).
+- [x] **UC-B sender research** — `crmProject` template (routine-only CRM automation template kept);
+      research routine carries the project skill so profiles/dossiers are filed as artifacts;
+      structural tests + `SenderResearch.stories.tsx` green.
+- [x] **UC-C fact summaries** — plugin-brain `mailboxFacts` template: first **operation-action**
+      routine template (`spec: runnable` → `InboxOperation.AnalyzeMailbox`, timer trigger, mailbox
+      ref baked into `trigger.input`) + brain/inbox skills for chats; `FactSummaries.stories.tsx`
+      green (live loop = numbered manual steps on the story).
+- [ ] **Evals** — `sender-ledger.eval.ts` AUTHORED but NOT run live (no `DX_ANTHROPIC_API_KEY` in
+      the authoring session) — verify before trusting. `fact-summary.eval.ts` BLOCKED: the eval
+      harness has no fact-seeding path (seed() gets only `Database.Service`; FactStore is a
+      plugin LayerSpec) — needs either a PutFacts operation or FactStore in the harness
+      ServiceResolver.
 - [ ] **Operations-as-tools gaps (USE-CASES.md §2.7)** — authoring UI for operation-action routines
       (operation picker + input-mapping form; templates-only today); `{{project.*}}` trigger input
       substitution (scaffold-time ref literals bind a routine to one object forever); side-effect
