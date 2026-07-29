@@ -37,6 +37,7 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
   Schema.Struct({
     /** User-facing display name. */
     name: Schema.String.pipe(Schema.optional),
+
     /** Identifier for the feed's kind (e.g., plugin id). */
     kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
 
