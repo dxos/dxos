@@ -9,13 +9,14 @@ import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import { useCallback, useEffect, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
 
 import { useConnector } from '#hooks';
 
 import { type Connection } from '../types';
-import { credentialsLayerForObject } from '../util/credentials-layer';
+import { clientCredentialsLayer } from '../util/credentials-layer';
 
 export type TestConnectionStatus =
   /** No test has run yet (connection or its token not resolved). */
@@ -67,8 +68,11 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
       setError(undefined);
       return;
     }
-    // Wait for the token ref to resolve before probing.
-    if (!accessToken) {
+    // Wait for the token ref to resolve, and for a db to read its credential from, before probing.
+    // Both are checked ahead of `setStatus('testing')` so an unprobeable token stays idle rather
+    // than sticking on 'testing' forever.
+    const db = accessToken && Obj.getDatabase(accessToken);
+    if (!accessToken || !db) {
       return;
     }
 
@@ -76,16 +80,10 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
     setStatus('testing');
     setError(undefined);
 
-    const credentials = credentialsLayerForObject(client, accessToken);
-    if (!credentials) {
-      // An unbound token cannot be probed; leave the status idle rather than reporting it invalid.
-      return;
-    }
-
     void Effect.runPromiseExit(
       testConnection({ accessToken, connection, client }).pipe(
         Effect.provide(FetchHttpClient.layer),
-        Effect.provide(credentials),
+        Effect.provide(clientCredentialsLayer(client, db)),
       ),
     ).then((exit) => {
       if (cancelled) {
