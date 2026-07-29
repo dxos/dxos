@@ -35,13 +35,20 @@ echo "Found ${#PKG_ARRAY[@]} public packages to publish"
 # to dist/ by `cli:bundle` — rather than its own source directory, which is private and has no binary.
 # They are not workspace members, so the pnpm listing above can never see them.
 CLI_DIST=packages/devtools/cli/dist
-CLI_PACKAGES=()
-if [ -d "$CLI_DIST/cli" ]; then
-  CLI_PACKAGES=("$CLI_DIST/cli" "$CLI_DIST"/cli-*)
-  echo "Found ${#CLI_PACKAGES[@]} generated CLI packages to publish"
-else
-  echo "::warning::$CLI_DIST/cli is missing (run 'moon run cli:bundle') — publishing without the CLI"
+# nullglob so an unmatched `cli-*` drops out instead of reaching pkg-pr-new as a literal path.
+shopt -s nullglob
+CLI_PLATFORM_PACKAGES=("$CLI_DIST"/cli-*)
+shopt -u nullglob
+
+# Fail rather than publish a CLI-less preview — a per-commit CLI build going missing unnoticed is the
+# gap this publish exists to close.
+if [ ! -d "$CLI_DIST/cli" ] || [ ${#CLI_PLATFORM_PACKAGES[@]} -eq 0 ]; then
+  echo "No generated CLI packages in $CLI_DIST — run 'moon run cli:bundle' first"
+  exit 1
 fi
+
+CLI_PACKAGES=("$CLI_DIST/cli" "${CLI_PLATFORM_PACKAGES[@]}")
+echo "Found ${#CLI_PACKAGES[@]} generated CLI packages to publish"
 
 # Run pkg-pr-new publish with all public packages
 pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}"
