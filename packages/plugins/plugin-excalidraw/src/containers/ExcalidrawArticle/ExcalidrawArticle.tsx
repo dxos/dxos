@@ -4,6 +4,8 @@
 
 // Excalidraw ships its stylesheet as a sibling asset rather than injecting it at runtime.
 import '@excalidraw/excalidraw/index.css';
+// Loaded after excalidraw's own stylesheet so the overrides win.
+import './theme.css';
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
