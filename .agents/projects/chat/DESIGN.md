@@ -128,6 +128,35 @@ steps 2–3 must sequence with it. Per-thread unread granularity is finer than
 the per-feed cursor feed-phase-2 defines — needs per-thread high-water marks
 or channel-level granularity initially.
 
+## Direction (third pass — sequencing + Channel-absorbs-Thread refinements)
+
+**Model refinement (agreed):** no separate `Thread` object at all. Channel is
+the one conversation type; a thread is a `threadId` partition of the channel
+feed; review comments are a per-document comments Channel.
+
+- **Sequencing:** (1) prototype ALL new chat behavior in `plugin-thread`
+  first — thread-first channels, message actions, threading UI — against the
+  existing `Channel` type (already in `@dxos/types`, nothing to lift);
+  (2) once the model is proven, rename the plugin to `plugin-chat` and land;
+  (3) review-comments unification (replacing Thread) comes afterwards as its
+  own effort.
+- **Nav hygiene = the companion-chat pattern:** a Channel with a relation to a
+  document is excluded from the navtree custom section (same treatment as
+  assistant companion chats). No new mechanism.
+- **Anchoring: `threadId = anchor`.** In review channels there are no
+  per-thread `AnchoredTo` relations — the stable cursor-range anchor id IS the
+  thread id; sidebar placement and ordering derive from anchor position in the
+  document. Consequences to design deliberately:
+  - Per-thread resolved status needs a home (leading candidate: root-message
+    `properties`).
+  - Identical range → same thread (comments on the same selection join up) —
+    confirm as intended behavior.
+  - Deleted anchor text → orphaned thread (existing review behavior,
+    unchanged).
+- `Thread` (`org.dxos.type.thread`) is deleted in step 3 with a migration
+  (ref-array messages → feed messages); sequence explicitly with
+  document-revisions (burdon).
+
 ## Remaining open questions
 
 - Reactions schema: `Message.properties` LWW map vs `Reaction` relation

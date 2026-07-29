@@ -15,16 +15,18 @@ Work = the gaps below.
       Channel is already feed-backed with pluggable providers; review's
       comments are a separate AnchoredTo/Thread path sharing only types + UI
       primitives.
-- [ ] **Rename plugin-thread → plugin-chat** (own PR; plugin id, package,
-      call sites, shared translations — no shims).
-- [ ] **Thread-over-feed model**: Thread = metadata + view over
-      `(feed, threadId)`; drop the `messages` ref-array (schema bump);
-      channel threads share the channel feed; decide migration story for
-      existing Thread data.
-- [ ] **Port plugin-review** to feed-backed threads: per-subject comments
-      feed; AnchoredTo unchanged (coordinate with document-revisions).
-- [ ] **Thread-first channel UX**: roots + thread summaries in main view,
-      reply-into-thread default, thread view filtered by threadId.
+- [ ] **Stage 1 — prototype chat in plugin-thread** (Channel already in
+      @dxos/types): thread-first UX (roots + thread summaries in main view,
+      reply-into-thread default, thread view filtered by threadId; thread
+      topic = root-message property), message actions, threading UI.
+- [ ] **Stage 2 — rename plugin-thread → plugin-chat** once the model is
+      proven (own PR; plugin id, package, call sites, shared translations —
+      no shims).
+- [ ] **Stage 3 — review unification**: per-document comments Channel
+      (companion-chat nav-hiding via relation to the document);
+      `threadId = anchor`; delete Thread type with migration (coordinate
+      with document-revisions). Decide: resolved-status home (root-message
+      properties), identical-anchor join semantics, orphaned anchors.
 - [ ] Decide reactions schema (`Message.properties` map vs Reaction relation).
 - [ ] Message actions in UI: edit (Obj.update re-append), delete
       (Feed.remove), reactions.
