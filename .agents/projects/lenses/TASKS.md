@@ -49,9 +49,10 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
 
 ### Tasks
 
-- [ ] **Scaffold `packages/sdk/lens` (`@dxos/lens`, `"private": true`)**; in-repo deps
-      `workspace:*`, external via catalog. Keep the panproto/WASM binding in a separate optional
-      package so core stays worker-safe.
+- [ ] **Scaffold `packages/core/echo/echo-lens` (`@dxos/echo-lens`, `"private": true`)** — a
+      sibling of `echo-client`/`echo-react`, built against `@dxos/echo` and `@dxos/echo/internal`
+      rather than inside core, so it lands as an additive package. In-repo deps `workspace:*`,
+      external via catalog. React hooks and the panproto/WASM binding go in separate packages.
 - [ ] **`Lens.make(id, Source, Target, mapping)`** (API.md §1) — the single authoring shape; both
       ends are declared types. Static (code) and persisted (space) definition paths, mirroring
       `Type` / `Type.Type`. An ordinary ECHO object, **not** a new `EntityKind` (API.md §0).
@@ -76,6 +77,10 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
       schema permits; every property needs a real inverse, an overlay, or `Lens.readOnly` that the
       form renders as visibly non-editable. A silently dropped write is the worst outcome.
 - [ ] **T1 snapshot codec** — `get(obj)` / `put(view, obj)` in one `Obj.update`.
+- [ ] **T2 live proxy over public internals** — build it from `@dxos/echo/internal` (already a
+      declared subpath used by ~20 packages outside core). If it turns out to need a change inside
+      `Obj`'s proxy handler, that becomes its own small core PR — the one thing that could force
+      core work early (DESIGN.md §2.1).
 - [ ] **T2 minimal-write** — diff the view, map changed paths back through the compiled table,
       assign only those (DESIGN.md §6.4). Non-pointwise mappings fall back to T1 and are barred
       from collaborative surfaces.
@@ -142,10 +147,11 @@ not by being planned.
 
 ### Tasks
 
-- [ ] **Promote into `@dxos/echo`** — `Lens` module beside `Type`/`View`/`Annotation`; engine and
-      coded-lens packages stay outside core (DESIGN.md §2.1). Update every call site; no
-      compatibility re-exports.
-- [ ] **`Obj.lens(obj, lens)`** as the ergonomic entry point.
+- [ ] **Promote into `@dxos/echo`** — move the `Lens` module beside `Type`/`View`/`Annotation` and
+      add `Obj.lens(obj, lens)` as the entry point. Call sites change one import line
+      (`import * as Lens from '@dxos/echo-lens'` → `import { Lens } from '@dxos/echo'`); no
+      compatibility re-exports left behind. Hooks, engine, and coded lenses stay outside core
+      (DESIGN.md §2.1).
 - [ ] **Richer source annotations** so more of a mapping is inferable — starting with units
       (`estimate` records no unit, so the factor 60 is not inferable by anything). Useful
       independent of this project.

@@ -79,23 +79,45 @@ Obj.lens(obj, lens); // live lensed handle: reactive reads, minimal writes
 
 Registry: stored lenses resolve out of the space by source typename, exactly as stored types do.
 
-### 2.1 Where the code lives — and what must stay out of core
+### 2.1 Where the code lives — prototype as a sibling package
 
-`@dxos/echo` must not grow a WASM dependency; it runs in the shared worker and in every bundle.
-So the split is:
+A lens is, at the end of the day, just another ECHO object. So it gets built **outside** `@dxos/echo`
+as `@dxos/echo-lens` (`packages/core/echo/echo-lens`), a sibling of `echo-client`, `echo-react`,
+`echo-query`, and `echo-doc`. That is a much easier thing to land than a change to core, and three
+facts make it a real option rather than a compromise:
 
-- **`@dxos/echo`** — the `Lens` interface, the `Lens` ECHO entity, mapping resolution, the
-  registry, and the read/write tiers. No heavy deps: it is JSON Schema in, JSON Schema out.
-- **Optional engine package** — the panproto/WASM binding, registered at startup by whoever wants
-  law-checking or (later) mapping generation. Absent, everything else still works.
-- **Coded lenses live with their dependencies** — the rich-text lens needs remark, so it ships in
-  its own package, not in core.
+- **The internals are already public.** `@dxos/echo/internal` is a declared subpath export
+  (`./internal` in the package manifest) and is imported today by roughly twenty packages outside
+  echo core — `react-ui-form`, `react-ui-table`, `compute`, `echo-doc` among them. It re-exports the
+  `Obj` / `Entity` / `Type` / `Annotation` machinery, which is what the live proxy needs.
+- **There is precedent for the ergonomics living outside core.** `useObject` ships in `echo-react`,
+  not `@dxos/echo`. A `useLens` in a sibling package is the existing pattern, not a placeholder.
+- **Nothing about the data model needs core.** The lens entity is an ordinary object; the overlay is
+  an ordinary annotation; the writes are ordinary `Obj.update` / `Text.splice` calls.
 
-**Staging, stated plainly:** this gets prototyped in `packages/sdk/lens`, not committed straight
-into `@dxos/echo`, because the model should be proven by the two lenses and four stories before it
-becomes API surface anyone depends on. It is shaped as a namespace module from day one so
-promotion into core is a move plus a call-site update (two stories), not a redesign. Promotion is
-a tracked task, not a someday.
+**What promotion into core would actually be.** Worth stating, because it is what makes deferring
+safe: the only piece that _wants_ to live in `@dxos/echo` is the `Lens` module sitting beside
+`Type`/`View`/`Annotation` and `Obj.lens` as the entry point. Both are import-path changes at the
+call sites (`import * as Lens from '@dxos/echo-lens'` → `import { Lens } from '@dxos/echo'`), done
+in one change with no compatibility re-exports left behind, per the repo rule. The React hooks stay
+in a react sibling; the panproto engine binding and the coded rich-text lens stay outside core
+regardless, since neither dependency belongs in a package that loads in the shared worker.
+
+So promotion is cheap, optional, and reversible — which is the argument for not doing it up front.
+
+**The one thing that could force core work early:** if the live proxy turns out to need a change
+inside `Obj`'s proxy handler rather than composing over public internals. That surfaces in Phase 1,
+and if it does, it becomes its own small core PR rather than derailing the prototype.
+
+Package split within the prototype:
+
+- **`@dxos/echo-lens`** — the `Lens` interface, the `org.dxos.type.lens` entity, mapping resolution,
+  overlay storage, the registry, and the read/write tiers. Depends on `@dxos/echo` (including
+  `@dxos/echo/internal`), `@dxos/effect`, `@dxos/schema`. `"private": true`.
+- **React hooks** — `useLens`, in a react sibling mirroring `echo-react`.
+- **Optional engine package** — the panproto/WASM binding for law-checking (and, later, mapping
+  generation). Absent, everything else still works.
+- **Coded lenses ship with their dependencies** — the rich-text lens owns remark.
 
 ## 3. What is computed for you
 
@@ -405,12 +427,14 @@ Demonstrated in both directions:
 
 ## 9. Proposed layout
 
-- `packages/sdk/lens` — `@dxos/lens`, `"private": true`. Staging ground for what becomes
-  `@dxos/echo`'s `Lens` module (§2.1).
-  - `Lens.ts` (interface + ECHO entity), `derive.ts` (D1), `codec.ts` (T1), `live.ts` (T2),
-    `overlay.ts`, `registry.ts`, `laws.ts` (D4 harness over `GeneratorAnnotation` instances).
-  - `lenses/task-gtd.ts` (declarative).
-- Optional engine package — panproto/WASM binding: compile, generate (D3), `checkLaws`.
+- `packages/core/echo/echo-lens` — `@dxos/echo-lens`, `"private": true`. Sibling of `echo-client`
+  / `echo-react` / `echo-query`; staging ground for what eventually becomes `@dxos/echo`'s `Lens`
+  module (§2.1).
+  - `Lens.ts` (interface + ECHO entity), `mapping.ts` (resolution + shorthands), `coverage.ts`,
+    `codec.ts` (T1), `live.ts` (T2 proxy), `overlay.ts`, `registry.ts`, `laws.ts`.
+  - `lenses/task-gtd.ts`.
+- React hooks — `useLens`, in a react sibling mirroring `echo-react`.
+- Optional engine package — panproto/WASM binding for `checkLaws` (and, later, generation).
 - Rich-text lens package — the coded lens, owning the remark dependency.
 - `packages/stories/stories-lens` — four stories, two custom UIs, shared raw inspector.
 - No plugin until the stories prove the UI story is worth shipping.
