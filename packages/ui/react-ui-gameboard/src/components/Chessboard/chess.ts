@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom';
 import { Chess as ChessJS } from 'chess.js';
 import { type FC, type SVGProps } from 'react';
 

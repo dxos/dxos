@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentCapabilities } from '../types';

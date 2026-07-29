@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 
 import { Node } from '@dxos/app-graph';
 import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';

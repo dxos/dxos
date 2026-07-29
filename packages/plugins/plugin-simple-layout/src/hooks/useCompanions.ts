@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { useConnections } from '@dxos/plugin-graph';
+import { useConnections } from '@dxos/plugin-graph/hooks';
 import { Position } from '@dxos/util';
 
 import { PLANK_COMPANION_TYPE } from './actions';

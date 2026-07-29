@@ -4,6 +4,16 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-07-28 — CLI / node plugin variants (React out of non-browser builds)
+
+- `Capability.lazy` / `OperationHandlerSet.lazy` / `React.lazy` defer the import at RUNTIME; a bundler still walks them. A `#capabilities` barrel that merely lists `ReactSurface` pulled the whole plugin UI into every node/bun build — `plugin-map/plugin` alone dragged `@dxos/react-ui-geo`'s 4.4 MB of country geometry into the `dx` binary. Fix is a node-conditioned barrel (`src/capabilities/node.ts` + a `node` condition on `#plugin`/`#capabilities`), matching what `plugin-client` already did.
+- `src/plugin.ts` re-exporting the handler set as `from './operations'` BYPASSES the import map, so a node-conditioned `#operations` never applies. Must be `from '#operations'`. Cost a full rebuild cycle to spot (`plugin-sheet`).
+- `SpaceCapabilities.CreateObjectEntry` bundles the headless object factory with a `customPanel` React component, so `CreateObject` cannot load without React — omitted from `plugin-thread`'s node barrel. The pre-existing comment claiming the `#containers` barrel is lazily loaded "so the react-ui-form dependency graph isn't pulled in" is wrong for bundling; the barrel imports `ComponentType` at module scope regardless.
+- Headless values misfiled in UI packages were the rest of it: `renderByline` (returns `string[]`) in `@dxos/react-ui-transcription`, `formatForDisplay` in `@dxos/react-ui-form`, plus node code reaching `@dxos/react-client/{echo,mesh,invitations}` for `getSpace`/`ConnectionState`/`InvitationEncoder` and 180 files importing `Atom`/`Registry` from `@effect-atom/atom-react` instead of `@effect-atom/atom`. Prefer a UI-free entrypoint (`@dxos/ui-editor/headless`, `@dxos/ui-theme/headless`, `@dxos/react-ui-attention/types`) + a factoring-out TODO over relocating code across packages.
+- Moving a module INTO the package it imported from creates a self-referential circular import: `Table.ts` kept `import { ViewAnnotation } from '@dxos/schema'` after moving there, and `ViewAnnotation.set` was undefined during class definition. Full typecheck, 317 build tasks and every test passed — only running the compiled binary caught it. Verify bundled artifacts by RUNNING them.
+- A front-end-only plugin should ship no non-browser variant at all (`plugin-deck`, `plugin-navtree` had both node and workerd). Their activation tests were asserting the node variant's module set, so removing the variants left the tests without a subject.
+- Guard with `check-module-structure` (`dx-trace-imports --export ./plugin --to "{react,react-dom}" --conditions workerd,worker,node --fail-on present`), now on every plugin with a node variant plus the CLI entrypoint. `--max-chains N` without `--fail-on` prints the import chain for diagnosis.
+
 ## 2026-07-28 — plugin-studio + plugin-blogger (navtree section hygiene)
 
 - `SpaceOperation.AddObject`'s navigation subject comes from `getSubjectPathForNewObject` (`plugin-space/src/operations/add-object.ts`): `targetNodeId` → `${targetNodeId}/${objectId}`, else collection-item → collections path, else view-holder → view target's type path, else `GraphPath.getObjectPath` (database subtree).

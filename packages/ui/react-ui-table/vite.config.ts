@@ -7,9 +7,9 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
+    types: 'src/types/index.ts',
     testing: 'src/testing/index.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'jsdom' }, storybook: true },

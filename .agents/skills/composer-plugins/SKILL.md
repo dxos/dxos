@@ -448,6 +448,69 @@ Canonical example (idiom `org.dxos.app-framework.moduleActivationOrdering`):
 `ClientEvents.ClientReady` after activating; `SchemaDefs`/`Migrations` listen on
 it and use `firesBeforeActivation` to sequence setup ahead of themselves.
 
+## Non-Browser Variants
+
+A plugin that must load outside a DOM (the `dx` CLI, workerd) ships one variant per environment,
+selected by the `#plugin` conditions: `src/FooPlugin.tsx` (browser default), `src/FooPlugin.node.ts`,
+`src/FooPlugin.workerd.ts`. **Only add a variant the plugin genuinely supports** — a front-end-only
+plugin has none, and its `#plugin` collapses to a single resolution (`plugin-deck`, `plugin-navtree`).
+
+**`lazy` defers evaluation, not bundling.** `Capability.lazy`, `OperationHandlerSet.lazy` and
+`React.lazy` all postpone the import at runtime while a bundler still walks it, so a barrel that
+merely _lists_ a React surface pulls React — and the `react-ui` graph behind it — into every
+consumer. Runtime laziness never keeps UI out of a node build; a node-conditioned barrel does.
+
+Each variant therefore needs its own barrels, conditioned in `package.json` `imports`:
+
+| Barrel          | Node file                  | Holds                                            |
+| --------------- | -------------------------- | ------------------------------------------------ |
+| `#capabilities` | `src/capabilities/node.ts` | Only the capabilities `FooPlugin.node` activates |
+| `#operations`   | `src/operations/node.ts`   | Only the operations a node host can serve        |
+
+**Re-export through the alias, not a relative path** — `src/plugin.ts` must use
+`export { FooOperationHandlerSet } from '#operations';`. A relative `'./operations'` bypasses the
+import map, so the node condition never applies and `./plugin` drags the browser set in anyway.
+
+What makes a contribution browser-only:
+
+- A `SpaceCapabilities.CreateObjectEntry` with a `customPanel` — the entry bundles the headless
+  object factory with a React component, so `CreateObject` is omitted from the node barrel.
+- An operation driving a live editor view or Surface (`scroll-to-anchor`).
+
+TypeScript resolves the `types` condition for every environment, so it always sees the full barrel —
+derive the node barrel from what `FooPlugin.node.ts` actually imports so the two agree.
+
+### Headless values in UI packages
+
+Much of what an operation handler needs is headless but lives behind a UI package's root barrel.
+Import the UI-free entrypoint instead of relocating the code:
+
+| Need                                               | Import from                      | Not                       |
+| -------------------------------------------------- | -------------------------------- | ------------------------- |
+| `Attention` / `Selection` / `ViewState`            | `@dxos/react-ui-attention/types` | the package root          |
+| `Cursor`, `cherryPickHunk`, `createComment`        | `@dxos/ui-editor/headless`       | the package root          |
+| `hues`, `Hue`, `toHue`                             | `@dxos/ui-theme/headless`        | the package root          |
+| The `Table` schema                                 | `@dxos/react-ui-table/types`     | the package root          |
+| `getSpace`, `ConnectionState`, `InvitationEncoder` | `@dxos/client/*`                 | `@dxos/react-client/*`    |
+| `Atom`, `Registry`, `Result`                       | `@effect-atom/atom`              | `@effect-atom/atom-react` |
+
+A package that reads its own files at runtime needs a bundler-friendly entry too: paths computed from
+`import.meta.url` land inside the compiled binary's embedded filesystem, where its siblings do not exist.
+
+### Guarding it
+
+`check-module-structure` traces the export and fails if React is reachable. Every plugin with a node
+variant has this task, and CI runs `moon run :check-module-structure`. Diagnose a failure by printing
+the chain:
+
+```bash
+pnpm exec dx-trace-imports --export ./plugin --to "{react,react-dom}" \
+  --conditions workerd,worker,node --max-chains 2
+```
+
+See: `plugin-map/src/capabilities/node.ts`, `plugin-sheet/src/operations/node.ts`,
+`plugin-client/package.json` (conditioned `#capabilities`), `plugin-map/moon.yml`
+
 ## React Surface
 
 Surfaces are contributed via `Capability.contributes(Capabilities.ReactSurface, [...])` with `Surface.create()`.
@@ -473,13 +536,19 @@ See: `plugin-chess/src/translations.ts`
 - New packages MUST have `"private": true`.
 - Define `#imports` aliases for internal barrels (`#capabilities`, `#components`, `#containers`, `#meta`, `#operations`, `#types`).
 - Define `exports` subpaths for anything other plugins need (`./types`, `./operations`).
+- A plugin with a node or workerd variant gives `#plugin`, `#capabilities` and (when needed)
+  `#operations` a per-condition map — `source` for the TS paths plus the built `node`/`workerd`
+  entries. See **Non-Browser Variants**.
 - Internal `@dxos` deps use `workspace:*`; external deps use `catalog:`.
 
 See: `plugin-chess/package.json`
 
 ## moon.yml
 
-Each `package.json` export subpath needs a matching `--entryPoint` in the `compile` task args.
+Each `package.json` export subpath needs a matching `--entryPoint` in the `compile` task args
+(vite-built plugins: a matching `entry` in `vite.config.ts`, including `capabilities/node`).
+A plugin with a node variant also carries a `check-module-structure` task — see
+**Non-Browser Variants**.
 
 See: `plugin-chess/moon.yml`
 
@@ -509,4 +578,6 @@ moon run plugin-foo:test-storybook
 - `src/FooPlugin.ts` (the `Plugin.define().pipe()` implementation) must have `export default FooPlugin` so `Plugin.lazy(() => import('#plugin'))` can resolve it.
 - If another plugin needs internals, expose dedicated public entrypoints (`types`, `operations`) instead of re-exporting from root.
 - Plugins should not depend on another plugin's root entrypoint for broad barrels.
+- Never rely on `Capability.lazy` / `OperationHandlerSet.lazy` / `React.lazy` to keep a dependency
+  out of a bundle — they defer evaluation, not bundling. See **Non-Browser Variants**.
 - The `Surface` component provides top-level `<Suspense>` for lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components.

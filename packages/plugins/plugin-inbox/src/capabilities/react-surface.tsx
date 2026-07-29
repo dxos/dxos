@@ -9,7 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { getParentId, useNode } from '@dxos/plugin-graph';
+import { getParentId } from '@dxos/plugin-graph';
+import { useNode } from '@dxos/plugin-graph/hooks';
 import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
 import {
