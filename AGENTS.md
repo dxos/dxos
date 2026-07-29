@@ -115,6 +115,7 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Test all: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`
 - Lint & fix: `moon run :lint -- --fix`
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
+- Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
 - Storybook: `moon run storybook-react:serve` (port 9009)
 
 Ignore the `Auth token DEPOT_TOKEN does not exist` warning (remote-cache auth).

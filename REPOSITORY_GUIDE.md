@@ -378,6 +378,27 @@ Run `pnpm lint` to conform the entire repository with (equivalent of `lint --fix
 
 Run `pnpm lint:changed` to lint only what you've been working on using `pnpm changed-packages`.
 
+### Unused dependencies and dead code
+
+`pnpm knip` reports unused dependencies, dependencies that are imported without being declared, and
+source files nothing references. CI runs the same command in the **Check** workflow's `knip` job, so
+a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
+packages through their `source` export condition — so it needs no build and takes about 80 seconds.
+
+Most of what the config in `.config/knip.ts` does is teach knip the ways this repo reaches code
+without importing it: lazily via `() => import('./handler')`, by path from a moon task or vite
+alias, through a `browser` field substitution, from CSS `@import` and Tailwind `@plugin`, or from a
+glslify `#pragma`. Each rule is derived from the manifests and task definitions rather than
+hardcoded, so a new package is covered without touching the config. When knip reports something that
+is genuinely reachable, prefer extending the relevant rule over adding an ignore.
+
+**The repo root's own dependencies are not audited.** They are consumed by moon task commands and the
+shared vitest/vite bases rather than by the few files knip attributes to the root workspace, so
+nearly all of them read as unused, and removing them breaks `pnpm install` on peer resolution. The
+root workspace is still analysed — it is what supplies `vitest` and friends to every other package —
+but its dependencies are ignored. Auditing them needs a pass of its own; drop the
+`ignoreDependencies` entry on the `'.'` workspace to see that backlog.
+
 ### ESLint errors in vscode
 
 To make all eslint errors look yellow in `vscode`, open your user preferences (not workspace preferences) and add this to the JSON:

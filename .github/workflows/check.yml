@@ -141,7 +141,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Check dependencies
-        run: pnpm run knip-check
+        run: pnpm run knip
 
   test:
     strategy:

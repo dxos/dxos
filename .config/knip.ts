@@ -150,6 +150,22 @@ const configuredEntry = (dir: string): string[] => {
 };
 
 /**
+ * Files the package resolves by name at runtime rather than importing — `ThemePlugin` reads its
+ * injected dark-mode script this way. Deleting one breaks the build only when a bundler runs.
+ */
+const pathResolvedEntry = (dir: string): string[] => {
+  const targets = new Set<string>();
+  for (const file of globSync(`${dir}/src/**/*.{ts,tsx}`)) {
+    for (const [, name] of readFileSync(file, 'utf8').matchAll(/resolve\([^)]*?['"]([\w.-]+\.[a-z]+)['"]\)/g)) {
+      for (const match of globSync(`${dir}/src/**/${name}`)) {
+        targets.add(relative(dir, match));
+      }
+    }
+  }
+  return [...targets];
+};
+
+/**
  * Modules pulled in lazily as `() => import('./handler')`. Operation handler sets register their
  * implementations this way, and knip does not follow a dynamic import in that position.
  */
@@ -243,12 +259,21 @@ const ROOT_REFERENCED = globSync(['*.config.{ts,mts}', 'vitest/**/*.{ts,mjs}']).
   );
 });
 
+/**
+ * The root's own dependencies are deliberately not audited. They are consumed by moon task commands
+ * and the shared vitest/vite bases rather than by the handful of files knip attributes to the root
+ * workspace, so nearly all of them read as unused; removing them breaks `pnpm install` on peer
+ * resolution. Auditing them needs a pass of its own. The workspace itself still has to be analysed —
+ * it is what supplies `vitest` and friends to every other package — so this ignores the
+ * dependencies rather than the workspace. Drop this to see the root backlog.
+ */
+const rootManifest = JSON.parse(readFileSync('package.json', 'utf8'));
+
 const workspaces: KnipConfig['workspaces'] = {
-  // The root holds no package of its own; its dependencies are consumed by the shared vitest/vite
-  // bases and the repo scripts.
   '.': {
     entry: ['*.{ts,mts}', 'scripts/**/*.{ts,mjs}', 'vitest/**/*.{ts,mjs}'],
     project: ['*.{ts,mts}', 'scripts/**/*.{ts,mjs}', 'vitest/**/*.{ts,mjs}'],
+    ignoreDependencies: Object.keys({ ...rootManifest.dependencies, ...rootManifest.devDependencies }),
   },
 };
 
@@ -302,6 +327,7 @@ for (const manifest of globSync(
   const supplemental = [
     ...configuredEntry(dir),
     ...lazyImportedEntry(dir),
+    ...pathResolvedEntry(dir),
     ...moonReferencedEntry(dir),
     ...ROOT_REFERENCED.filter((path) => path.startsWith(`${dir}/`)).map((path) => path.slice(dir.length + 1)),
   ];
@@ -325,6 +351,9 @@ for (const manifest of globSync(
 
 const config: KnipConfig = {
   workspaces,
+  // The issue types this repo gates on. Unused exports and types are deliberately excluded: barrel
+  // files re-export far more than any one consumer uses, so they are noise here.
+  include: ['files', 'dependencies', 'devDependencies', 'unlisted', 'binaries', 'unresolved'],
   // Knip's exit code only counts issue types marked `error`; unused files default to a warning, so
   // without this the CI gate reports regressions and still passes.
   rules: {
@@ -341,6 +370,13 @@ const config: KnipConfig = {
     // System tools, not npm packages.
     'jq',
     'sips',
+    // Invoked in CI from the runner image rather than from the workspace.
+    'nx',
+    // Provided by the tauri toolchain a tagged task pulls in.
+    'tauri',
+    // Repo-local: a workspace tool and a checked-in script, neither an installed binary.
+    'beast',
+    'scripts/changed',
     // Tailwind v4 ships its CLI as a separate `@tailwindcss/cli` package; the `tailwind-check`
     // script predates that split and is not wired into any task.
     'tailwindcss',
