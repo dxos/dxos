@@ -67,10 +67,10 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
           />
         )}
       </Card.Header>
-      <Card.Body>
-        {/* Nothing renders for a type with no registered card surface; the header still identifies it. */}
-        <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
-      </Card.Body>
+      {/* The surface emits its own `Card.Body` (see BookmarkCard/RoutineCard), so this must not wrap it —
+          a second body would double the card's padding. Nothing renders for a type with no registered
+          card surface; the header still identifies it. */}
+      <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
     </Card.Root>
   );
 };
