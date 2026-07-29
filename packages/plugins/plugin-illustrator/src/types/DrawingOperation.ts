@@ -74,3 +74,22 @@ export const Edit = Operation.make({
   }),
   services: [Capability.Service, Database.Service],
 });
+
+export const Generate = Operation.make({
+  meta: {
+    key: makeKey('generate'),
+    name: 'Generate Drawing',
+    description:
+      'Replaces a drawing with a diagram compiled from a mermaid flowchart description. The dialect owns layout, so no coordinates are supplied.',
+    icon: 'ph--graph--regular',
+  },
+  input: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing).annotations({ description: 'The drawing to generate into.' }),
+    source: Schema.String.annotations({ description: 'Mermaid flowchart source.' }),
+  }),
+  output: Schema.Struct({
+    ...SceneOutput,
+    upserted: Schema.Array(Schema.String).annotations({ description: 'Object ids created or modified.' }),
+  }),
+  services: [Capability.Service, Database.Service],
+});

@@ -4,8 +4,16 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { ClientEvents } from '@dxos/plugin-client';
 
-import { CommentConfig, CreateObject, OperationHandler, ReactSurface, SkillDefinition } from '#capabilities';
+import {
+  CommentConfig,
+  CreateObject,
+  Migrations,
+  OperationHandler,
+  ReactSurface,
+  SkillDefinition,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Drawing } from '#types';
@@ -14,6 +22,10 @@ import { Drawing } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const IllustratorPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
+  }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

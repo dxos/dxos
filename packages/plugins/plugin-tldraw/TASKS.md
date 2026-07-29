@@ -83,6 +83,15 @@ Reference sketch: `packages/plugins/plugin-illustrator/docs/drawing.drawio.svg`.
 - [ ] **Migration for `org.dxos.type.sketch` → `org.dxos.type.drawing`** — NOT written; existing sketches will not resolve. The ECHO migration framework is dormant (composer-app migrations commented out).
 - [ ] **PLUGIN.mdl files** still describe the Sketch-era shape.
 
+### Phase 3.2: mermaid dialect + migration (2026-07-29)
+
+- [x] **`sketch` → `drawing` migration** — CORRECTION: the migration framework is NOT dormant. `Migration.define` is live and wired through `ClientCapabilities.Migration` (precedent: plugin-assistant). `LegacySketch.Sketch` (`org.dxos.type.sketch`) migrates to `Drawing`; the canvas keeps its typename so only the wrapper converts. Runs via `db.runMigrations` per space, idempotent.
+- [x] **CollectionModel.add audit** — no plugin needed changes. `Journal` and `Subscription` are VISIBLE (their hidden siblings are `JournalEntry`/`PostContent`); `Segment` and `Variant` are hidden but persisted with `db.add`, never `AddObject`; sandbox has no `AddObject` sites. Chess/TicTacToe state go through plugin-game and are now correctly persisted-but-unfiled.
+- [x] **Mermaid dialect** — `illustrator/model/mermaid.ts`: parses flowchart direction, node shapes, subgraphs and edges; ranks by longest path with DFS back-edge detection so `C --> Y --> C` doesn't chase the loop; emits one world object per node, a dashed frame per subgraph, and an `edges` object of bound arrows. `DrawingOperation.Generate` applies it through the variant builder.
+- [x] **Tests/storybooks** — generic mermaid unit tests in plugin-illustrator (6, incl. the reference flowchart); mermaid storybooks in plugin-tldraw and plugin-excalidraw.
+- [ ] **Excalidraw label rendering** — the compiler emits correct label text companions (unit-tested), but they do not appear on the excalidraw canvas; suspect a text-element field/font issue in the excalidraw component.
+- [ ] **Layout quality** — the hand-rolled layered layout does no crossing minimisation and arrows meet box centres. See the ELK/routing research.
+
 ### Tracked follow-ups
 
 - [x] **Hidden canvas showed as a second navtree item** — creating a sketch _inside a Collection_ listed the canvas beside it. Not variant-specific: `CollectionModel.add` pushed into `target.objects` unconditionally when the target was a collection, ignoring `HiddenAnnotation` (the non-collection branch calls `Database.add`, which is why creating at the space root looked fine). **Fixed systematically** in `@dxos/app-toolkit`: `CollectionModel.add` now persists a hidden object without filing it into any collection, so no plugin can leak an implementation-detail object into the navtree. Regression tests in `CollectionModel.test.ts`.

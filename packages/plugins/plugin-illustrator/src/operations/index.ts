@@ -7,5 +7,6 @@ import { OperationHandlerSet } from '@dxos/compute';
 export const IllustratorOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create'),
   () => import('./edit'),
+  () => import('./generate'),
   () => import('./read'),
 );

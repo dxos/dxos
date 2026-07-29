@@ -7,6 +7,7 @@ import { OperationHandlerSet } from '@dxos/compute';
 
 export const CommentConfig = Capability.lazy('CommentConfig', () => import('./comment-config'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const Migrations = Capability.lazy('IllustratorMigrations', () => import('./migrations'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),
