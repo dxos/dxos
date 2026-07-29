@@ -14,11 +14,9 @@
   "type": "module",
   "dependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-adapter-client": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

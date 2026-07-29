@@ -44,17 +44,14 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/index-core": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/kv-store": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
-    "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
@@ -65,7 +62,6 @@
     "fast-deep-equal": "catalog:"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {

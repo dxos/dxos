@@ -68,7 +68,6 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/functions-runtime-cloudflare": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -83,7 +82,7 @@
     "iso-did": "catalog:"
   },
   "devDependencies": {
-    "@effect/vitest": "catalog:",
+    "@aws-sdk/client-s3": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

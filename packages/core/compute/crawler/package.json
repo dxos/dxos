@@ -33,7 +33,6 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@effect/ai": "catalog:",
@@ -43,7 +42,6 @@
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:",
     "effect": "catalog:",
-    "tsx": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

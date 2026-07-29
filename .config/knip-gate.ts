@@ -3,6 +3,7 @@
 //
 
 import type { Preprocessor } from 'knip';
+import { relative } from 'node:path';
 
 /**
  * Groupings whose dependencies have been audited and are known clean. `pnpm knip` reports the whole
@@ -11,16 +12,19 @@ import type { Preprocessor } from 'knip';
  *
  * Extend this as each grouping is cleaned — the entry here is what makes the gate meaningful.
  */
-const GATED = ['packages/common/'];
-
-const isGated = (path: string) => GATED.some((prefix) => path.startsWith(prefix));
+const GATED = ['packages/common/', 'packages/core/'];
 
 /**
- * `issues` is keyed by issue type: `files` is a set of paths, every other type maps a file path to
- * its issues. `counters` is what knip's exit code is derived from, so it has to be recounted rather
- * than passed through.
+ * `issues` is keyed by issue type: `files` holds absolute paths while every other type maps a
+ * repo-relative path to its issues, so both forms have to be normalised before matching. `counters`
+ * is what knip's exit code is derived from, so it has to be recounted rather than passed through.
  */
 const preprocessor: Preprocessor = (options) => {
+  const isGated = (path: string) => {
+    const relativePath = path.startsWith('/') ? relative(options.cwd, path) : path;
+    return GATED.some((prefix) => relativePath.startsWith(prefix));
+  };
+
   const issues = {} as typeof options.issues;
   const counters = { ...options.counters };
 

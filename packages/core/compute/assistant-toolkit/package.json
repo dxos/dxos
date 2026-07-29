@@ -50,10 +50,8 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
-    "@effect/ai-anthropic": "catalog:",
     "@effect/platform": "catalog:",
-    "dfx": "catalog:",
-    "exa-js": "catalog:"
+    "dfx": "catalog:"
   },
   "devDependencies": {
     "@dxos/client-protocol": "workspace:*",

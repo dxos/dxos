@@ -22,16 +22,7 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../common/sql-sqlite"
-    },
-    {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../echo/echo"
-    },
-    {
-      "path": "../../echo/echo-client"
     },
     {
       "path": "../ai"

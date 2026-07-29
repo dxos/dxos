@@ -4,7 +4,7 @@
 
 import type { KnipConfig } from 'knip';
 import { globSync, readFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { basename, dirname } from 'node:path';
 
 /**
  * Collect the in-repo targets of an `exports`/`imports` entry, preferring the `source`
@@ -12,7 +12,9 @@ import { dirname } from 'node:path';
  */
 const sourceTargets = (target: unknown): string[] => {
   if (typeof target === 'string') {
-    return target.startsWith('./src/') ? [target] : [];
+    // Anything outside `dist` is checked in — that includes root-level compat shims a package
+    // publishes alongside `src` (`./module-stub.mjs`, `./testing.js`).
+    return target.startsWith('./') && !target.startsWith('./dist/') ? [target] : [];
   }
   if (!target || typeof target !== 'object') {
     return [];
@@ -61,6 +63,8 @@ const AUXILIARY_ENTRY = [
   'src/vitest-setup.{ts,tsx}',
   // Spawned as their own process, so nothing imports them.
   'src/**/*-subprocess.{ts,tsx}',
+  // Function bodies the runtime bundles by path rather than importing.
+  'src/functions/**/*.{ts,tsx}',
   '*.config.{ts,mts,cts,js,mjs,cjs}',
   '.storybook/*.{ts,tsx,mts,mjs}',
   'bin/*.{ts,mts,js,mjs}',
@@ -81,10 +85,22 @@ const PROJECT = [
  * regress bundling, so treat a string literal in a config file as a use.
  */
 const configuredDependencies = (dir: string, names: string[]): string[] => {
-  const sources = globSync([`${dir}/*.config.{ts,mts,cts,js,mjs,cjs}`, `${dir}/.storybook/*.{ts,mts,mjs}`]).map(
-    (file) => readFileSync(file, 'utf8'),
+  const sources = globSync([
+    `${dir}/*.config.{ts,mts,cts,js,mjs,cjs}`,
+    `${dir}/.storybook/*.{ts,mts,mjs}`,
+    // Ambient `declare module` shims: knip skips declaration files, so an `import ... from 'pkg'`
+    // inside one is invisible to it even though the types would not resolve without the package.
+    `${dir}/src/**/*.d.ts`,
+  ]).map((file) => readFileSync(file, 'utf8'));
+  if (!sources.length) {
+    return [];
+  }
+  const used = names.filter((name) => sources.some((source) => source.includes(`'${name}'`)));
+  // Knip credits an `@types/x` package only when `x` itself is imported, which a config or shim
+  // reference does not count as.
+  return [...used, ...used.map((name) => `@types/${name.replace('@', '').replace('/', '__')}`)].filter((name) =>
+    names.includes(name),
   );
-  return sources.length ? names.filter((name) => sources.some((source) => source.includes(`'${name}'`))) : [];
 };
 
 /**
@@ -95,6 +111,30 @@ const configuredDependencies = (dir: string, names: string[]): string[] => {
 const moonBuildArgs = (dir: string, flag: string): string[] => {
   const manifest = globSync(`${dir}/moon.yml`).map((file) => readFileSync(file, 'utf8'))[0];
   return [...(manifest ?? '').matchAll(new RegExp(`--${flag}=([^'"\\s]+)`, 'g'))].map(([, value]) => value);
+};
+
+/**
+ * Dependencies a moon task runs as a command rather than imports. The command is the package's
+ * `bin` name, which routinely differs from the package name (`lezer-generator` ships in
+ * `@lezer/generator`), so resolve each candidate's `bin` entries to match it.
+ */
+const moonInvokedDependencies = (dir: string, names: string[]): string[] => {
+  const tasks = globSync(`${dir}/moon.yml`).map((file) => readFileSync(file, 'utf8'))[0];
+  if (!tasks) {
+    return [];
+  }
+  return names.filter((name) => {
+    if (tasks.includes(name)) {
+      return true;
+    }
+    const manifest = globSync(`${dir}/node_modules/${name}/package.json`)[0];
+    if (!manifest) {
+      return false;
+    }
+    const { bin } = JSON.parse(readFileSync(manifest, 'utf8'));
+    const commands = typeof bin === 'string' ? [basename(name)] : Object.keys(bin ?? {});
+    return commands.some((command) => new RegExp(`\\b${command}\\b`).test(tasks));
+  });
 };
 
 /**
@@ -125,6 +165,7 @@ for (const manifest of globSync(
   const {
     exports = {},
     imports = {},
+    files = [],
     dependencies = {},
     devDependencies = {},
   } = JSON.parse(readFileSync(manifest, 'utf8'));
@@ -144,7 +185,11 @@ for (const manifest of globSync(
   // `index.html` knip cannot see — so treat their whole source tree as reachable instead.
   const declared = [...new Set([...Object.values(exports), ...Object.values(imports)].flatMap(entryTargets))];
 
-  const entry = [...declared, ...moonBuildArgs(dir, 'entryPoint')];
+  // `files` ships legacy CJS compat shims (`testing.js`) that no `exports` condition names, but
+  // consumers still resolve them by path.
+  const published = (files as string[]).filter((path) => MODULE.test(path));
+
+  const entry = [...declared, ...published, ...moonBuildArgs(dir, 'entryPoint')];
 
   workspaces[dir] = {
     entry: [...(entry.length ? entry : ['src/**/*.{ts,tsx,js,jsx,mjs,cjs}']), ...AUXILIARY_ENTRY],
@@ -152,6 +197,7 @@ for (const manifest of globSync(
     paths,
     ignoreDependencies: [
       ...configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
+      ...moonInvokedDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...bundledDependencies(dir),
     ],
   };
@@ -159,6 +205,17 @@ for (const manifest of globSync(
 
 const config: KnipConfig = {
   workspaces,
+  // Knip's exit code only counts issue types marked `error`; unused files default to a warning, so
+  // without this the CI gate reports regressions and still passes.
+  rules: {
+    files: 'error',
+    dependencies: 'error',
+    devDependencies: 'error',
+    optionalPeerDependencies: 'error',
+    unlisted: 'error',
+    binaries: 'error',
+    unresolved: 'error',
+  },
   ignoreDependencies: [
     //
     '@dxos/node-std',
@@ -167,7 +224,11 @@ const config: KnipConfig = {
   ],
   // `require.resolve`d at runtime from the emitted bundle, so the path is relative to `dist` rather
   // than to the source file knip reads it from.
-  ignoreUnresolved: [/^\.\.\/\.\.\/polyfills\//],
+  ignoreUnresolved: [
+    /^\.\.\/\.\.\/polyfills\//,
+    // Bundler resource queries (`?raw`, `?url`, `?worker`) are not part of the module path.
+    /\?[a-z]+$/,
+  ],
   // These plugins execute the config files they discover, and those import workspace packages
   // through `exports` conditions that only resolve after a build. The config files are covered
   // as ordinary entry points above, so their imports are still counted.

@@ -27,9 +27,6 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/test-utils"
-    },
-    {
       "path": "../../../common/tracing"
     },
     {
@@ -39,16 +36,10 @@
       "path": "../../halo/credentials"
     },
     {
-      "path": "../../halo/keyring"
-    },
-    {
       "path": "../../protocols"
     },
     {
       "path": "../edge-client"
-    },
-    {
-      "path": "../rpc"
     }
   ]
 }

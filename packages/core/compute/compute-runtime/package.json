@@ -57,11 +57,9 @@
     "@effect/platform": "catalog:",
     "@effect/rpc": "catalog:",
     "effect": "catalog:",
-    "i18next": "catalog:",
     "jsonata": "catalog:"
   },
   "devDependencies": {
-    "@dxos/kv-store": "workspace:*",
     "@dxos/types": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"

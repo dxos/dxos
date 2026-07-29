@@ -41,7 +41,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -53,7 +52,6 @@
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@tldraw/indices": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:"
   },

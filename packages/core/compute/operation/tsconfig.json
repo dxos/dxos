@@ -14,9 +14,6 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../common/test-utils"
-    },
-    {
       "path": "../../echo/echo"
     },
     {

@@ -79,14 +79,11 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "node-datachannel": "catalog:"
   },
   "devDependencies": {
-    "@dxos/edge-client": "workspace:*",
-    "@dxos/keyring": "workspace:*",
     "fetch-mock": "catalog:"
   },
   "publishConfig": {
