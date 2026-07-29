@@ -75,4 +75,6 @@ Reference sketch: `packages/plugins/plugin-illustrator/docs/drawing.drawio.svg`.
 
 ### Tracked follow-ups
 
+- [x] **Hidden canvas showed as a second navtree item** — creating a sketch _inside a Collection_ listed the canvas beside it. Not variant-specific: `CollectionModel.add` pushes into `target.objects` unconditionally when the target is a collection, ignoring `HiddenAnnotation` (the non-collection branch calls `Database.add`, which is why creating at the space root looked fine). Illustrator now persists the canvas with `Database.add` instead of `SpaceOperation.AddObject`.
+- [ ] **Same latent bug in plugin-game** — `create-object.ts` routes the hidden `Chess.State` through `AddObject`, so creating a Game inside a Collection should surface the state object as a sibling. Either mirror the `Database.add` fix or make `CollectionModel.add` respect `HiddenAnnotation` (the more general fix, but it touches every plugin). (found 2026-07-28)
 - [ ] **react-ui-debug LogPanel misses errors** (plugin-debug) — LogPanel doesn't catch errors like the Doc.createAccessor LiveObject throw; needs a context that keeps collecting logs even while the panel isn't visible. (tracked 2026-07-28)

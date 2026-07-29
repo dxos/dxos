@@ -30,18 +30,18 @@ export default Capability.makeModule(
           const variant = variants.find((entry) => entry.id === variantId);
           invariant(variant, `Unknown sketch variant: ${variantId}`);
 
+          const database = Database.makeService(options.db);
+
           // Build the canvas object via the variant's factory.
           const canvas = yield* variant
             .createCanvas(input ?? {})
-            .pipe(Effect.provideService(Database.Service, Database.makeService(options.db)));
+            .pipe(Effect.provideService(Database.Service, database));
 
-          // Add the canvas to the database. Stays hidden — it's referenced by the Sketch and
-          // shouldn't appear as a top-level item in the user's space.
-          yield* Operation.invoke(SpaceOperation.AddObject, {
-            object: canvas,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
+          // Persist the canvas directly rather than via `AddObject`: it is an implementation detail
+          // reached through `Sketch.canvas`, and `CollectionModel.add` files any object into a
+          // collection target regardless of HiddenAnnotation — which would surface the canvas as a
+          // second navtree item beside the sketch.
+          yield* Database.add(canvas).pipe(Effect.provideService(Database.Service, database));
 
           const sketch = Sketch.make({
             name: typeof input?.name === 'string' ? input.name : undefined,
