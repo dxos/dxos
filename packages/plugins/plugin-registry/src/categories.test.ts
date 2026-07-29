@@ -8,9 +8,6 @@ import { Plugin } from '@dxos/app-framework';
 
 import { getCategoryPredicate } from './categories';
 
-const makePlugin = (key: string, tags?: string[]) =>
-  Plugin.make(Plugin.define({ profile: { key, name: key, tags } }))();
-
 const context = { core: [], enabled: [], remoteIds: new Set<string>() };
 
 describe('getCategoryPredicate', () => {
@@ -37,8 +34,12 @@ describe('getCategoryPredicate', () => {
   });
 
   test('labs selects the labs tier regardless of core membership', ({ expect }) => {
-    const predicate = getCategoryPredicate('labs', context);
-    expect(predicate(makePlugin('labs-plugin', ['labs']))).toBe(true);
+    const key = 'labs-plugin';
+    const predicate = getCategoryPredicate('labs', { ...context, core: [key] });
+    expect(predicate(makePlugin(key, ['labs']))).toBe(true);
     expect(predicate(makePlugin('alpha-plugin', ['alpha']))).toBe(false);
   });
 });
+
+const makePlugin = (key: string, tags?: string[]) =>
+  Plugin.make(Plugin.define({ profile: { key, name: key, tags } }))();
