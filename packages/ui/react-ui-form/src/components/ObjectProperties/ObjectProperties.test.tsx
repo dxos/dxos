@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { composeStories } from '@storybook/react';
+import { composeStories } from '@storybook/react-vite';
 import { act, cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 

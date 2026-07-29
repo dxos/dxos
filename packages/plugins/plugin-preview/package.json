@@ -96,6 +96,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

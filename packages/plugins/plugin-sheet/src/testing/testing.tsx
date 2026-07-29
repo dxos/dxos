@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { type ComputeGraph, type ComputeGraphOptions, ComputeGraphRegistry } from '@dxos/compute-hyperformula';

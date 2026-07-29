@@ -30,7 +30,6 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -49,8 +48,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "fast-check": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

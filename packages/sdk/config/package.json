@@ -78,7 +78,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
     "effect": "catalog:",
@@ -90,8 +89,7 @@
   },
   "devDependencies": {
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/lodash.ismatch": "catalog:",
-    "webpack": "catalog:"
+    "@types/lodash.ismatch": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -103,6 +103,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@tanstack/react-virtual": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",

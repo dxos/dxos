@@ -70,6 +70,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

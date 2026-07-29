@@ -42,11 +42,6 @@
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "fast-check": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

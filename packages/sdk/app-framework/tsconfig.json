@@ -41,12 +41,6 @@
       "path": "../../common/storybook-addon-logger"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/test-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -65,16 +59,10 @@
       "path": "../../core/compute/operation"
     },
     {
-      "path": "../../core/echo/echo-client"
-    },
-    {
       "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"
-    },
-    {
-      "path": "../../ui/brand"
     },
     {
       "path": "../../ui/react-primitives/react-error-boundary"

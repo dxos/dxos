@@ -64,6 +64,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@react-three/drei": "catalog:",
     "@react-three/fiber": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
     "@types/geojson": "catalog:",
     "@types/leaflet": "catalog:",

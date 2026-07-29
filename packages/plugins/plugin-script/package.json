@@ -207,6 +207,7 @@
     "@effect/ai": "catalog:",
     "@effect/ai-anthropic": "catalog:",
     "@effect/platform": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "chess.js": "catalog:",

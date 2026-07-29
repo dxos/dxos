@@ -152,6 +152,7 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/printer": "catalog:",
     "@effect/printer-ansi": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

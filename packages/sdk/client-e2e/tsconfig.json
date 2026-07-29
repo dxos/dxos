@@ -31,12 +31,6 @@
       "path": "../../common/random-access-storage"
     },
     {
-      "path": "../../common/sql-sqlite"
-    },
-    {
-      "path": "../../common/tracing"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -46,16 +40,10 @@
       "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-host"
-    },
-    {
       "path": "../../core/echo/echo-protocol"
     },
     {
       "path": "../../core/halo/credentials"
-    },
-    {
-      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/protocols"

@@ -91,6 +91,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@tldraw/store": "catalog:",
     "@tldraw/tlschema": "catalog:",
     "@tldraw/utils": "catalog:",

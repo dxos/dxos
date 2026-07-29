@@ -51,7 +51,6 @@
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@oxc-project/types": "catalog:",
     "rolldown": "catalog:",
     "vite": "catalog:",

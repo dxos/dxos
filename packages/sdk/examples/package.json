@@ -30,7 +30,9 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:"
+  },
+  "devDependencies": {
+    "@storybook/react-vite": "catalog:"
   }
 }

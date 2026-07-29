@@ -155,6 +155,7 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@lezer/generator": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@tldraw/indices": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",

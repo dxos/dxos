@@ -84,6 +84,7 @@
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:"
   },
   "peerDependencies": {

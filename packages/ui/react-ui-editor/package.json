@@ -75,6 +75,7 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/platform": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/chai": "catalog:",
     "@types/chai-dom": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",

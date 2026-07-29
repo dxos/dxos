@@ -123,22 +123,18 @@
     "solid-js": "catalog:"
   },
   "devDependencies": {
-    "@dxos/brand": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "typedoc": "catalog:",
-    "vite": "catalog:",
-    "vite-plugin-solid": "catalog:"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@effect-atom/atom-react": "catalog:",

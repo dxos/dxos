@@ -36,6 +36,7 @@
     "@fontsource/k2d": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@rive-app/react-canvas": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

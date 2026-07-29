@@ -790,6 +790,7 @@ overrides:
   typescript: 'catalog:'
   undici: '>=7.18.2'
   vite: '>=8.1.4'
+  web-ext: ^10.5.0
   wrangler: '>=4.112.0'
   ws: '>=8.17.1'
 
@@ -822,6 +823,11 @@ peerDependencyRules:
     - '@effect/experimental'
     - '@effect/platform'
     - '@effect/rpc'
+    # planck declares a stage-js peer for its own demos; nothing in the repo renders with it.
+    - stage-js
+    # Storybook's vite builder and workerize-loader both declare a webpack peer they never use;
+    # nothing in the repo bundles with webpack.
+    - webpack
 
 strictPeerDependencies: true
 

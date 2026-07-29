@@ -64,9 +64,7 @@
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
-    "@dxos/messaging": "workspace:*",
     "@effect/platform": "catalog:",
-    "@types/debug": "catalog:",
     "@types/js-yaml": "catalog:"
   },
   "peerDependencies": {

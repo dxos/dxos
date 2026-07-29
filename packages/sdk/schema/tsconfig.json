@@ -33,9 +33,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -49,9 +46,6 @@
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../client-protocol"
     },
     {
       "path": "../react-client"

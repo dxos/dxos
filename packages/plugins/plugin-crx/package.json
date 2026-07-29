@@ -101,6 +101,7 @@
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
     "vite": "catalog:",

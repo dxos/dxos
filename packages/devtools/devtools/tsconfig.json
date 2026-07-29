@@ -16,9 +16,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -29,9 +26,6 @@
     },
     {
       "path": "../../common/effect"
-    },
-    {
-      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -61,9 +55,6 @@
       "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/compute/assistant"
-    },
-    {
       "path": "../../core/compute/compute"
     },
     {
@@ -71,9 +62,6 @@
     },
     {
       "path": "../../core/compute/conductor"
-    },
-    {
-      "path": "../../core/compute/edge-compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -109,13 +97,7 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/observability"
-    },
-    {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-edge-client"
     },
     {
       "path": "../../sdk/schema"

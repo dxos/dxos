@@ -63,9 +63,19 @@ const AUXILIARY_ENTRY = [
   'src/vitest-setup.{ts,tsx}',
   // Spawned as their own process, so nothing imports them.
   'src/**/*-subprocess.{ts,tsx}',
+  // Loaded via `new Worker(new URL('./x-worker.ts', import.meta.url))`, which knip does not follow.
+  'src/**/*-worker.{ts,tsx}',
   // Function bodies the runtime bundles by path rather than importing.
   'src/functions/**/*.{ts,tsx}',
+  // Ambient declarations and module augmentations: TypeScript picks these up from `include`, so
+  // nothing ever imports them. Scoped to checked-in locations — a bare `**` would pull the
+  // generated `dist/types` tree into the analysis.
+  '*.d.ts',
+  'src/**/*.d.ts',
+  '.storybook/*.d.ts',
   '*.config.{ts,mts,cts,js,mjs,cjs}',
+  // Deliberately blank, kept so editor tooling resolves the Tailwind config.
+  'tailwind.{ts,js}',
   '.storybook/*.{ts,tsx,mts,mjs}',
   'bin/*.{ts,mts,js,mjs}',
   'scripts/**/*.{ts,mts,js,mjs}',
@@ -104,6 +114,18 @@ const configuredDependencies = (dir: string, names: string[]): string[] => {
 };
 
 /**
+ * Files a build config points at by path rather than importing — vite `resolve.alias` replacements
+ * are the common case. The alias target is a real module that would otherwise read as unreferenced.
+ */
+const configuredEntry = (dir: string): string[] => {
+  const sources = globSync(`${dir}/*.config.{ts,mts,cts,js,mjs,cjs}`).map((file) => readFileSync(file, 'utf8'));
+  const referenced = sources.flatMap((source) => [...source.matchAll(/'([\w./-]+\.(?:mjs|cjs|jsx?|tsx?))'/g)]);
+  return [...new Set(referenced.map(([, path]) => path.replace(/^\.\//, '')))].filter(
+    (path) => !path.startsWith('.') && globSync(`${dir}/${path}`).length > 0,
+  );
+};
+
+/**
  * Read a repeated `--flag=value` build argument out of a workspace's moon task definition. Packages
  * with a browser build declare their entry points and the packages bundled into them there, and
  * neither is visible in the import graph.
@@ -138,6 +160,20 @@ const moonInvokedDependencies = (dir: string, names: string[]): string[] => {
 };
 
 /**
+ * Dependencies declared only to satisfy another dependency's peer requirement — `zone.js` backs
+ * OpenTelemetry's web auto-instrumentation. Nothing imports them, but dropping one breaks install.
+ */
+const peerSatisfyingDependencies = (dir: string, names: string[]): string[] => {
+  const required = new Set(
+    names.flatMap((name) => {
+      const manifest = globSync(`${dir}/node_modules/${name}/package.json`)[0];
+      return manifest ? Object.keys(JSON.parse(readFileSync(manifest, 'utf8')).peerDependencies ?? {}) : [];
+    }),
+  );
+  return names.filter((name) => required.has(name));
+};
+
+/**
  * A `--bundlePackage` is inlined into the workspace's own build, so esbuild resolves that package's
  * requires against this workspace. Its dependencies therefore have to be declared here too, even
  * though nothing in the workspace imports them.
@@ -147,6 +183,17 @@ const bundledDependencies = (dir: string): string[] =>
     const manifest = globSync(`${dir}/node_modules/${name}/package.json`)[0];
     return [name, ...(manifest ? Object.keys(JSON.parse(readFileSync(manifest, 'utf8')).dependencies ?? {}) : [])];
   });
+
+/**
+ * Files the shared root configs reach into a workspace for by path — the vitest browser log setup
+ * is loaded this way. Nothing in the owning workspace imports them.
+ */
+const ROOT_REFERENCED = globSync(['*.config.{ts,mts}', 'vitest/**/*.{ts,mjs}']).flatMap((file) => {
+  const source = readFileSync(file, 'utf8');
+  return [...source.matchAll(/'\.\/((?:packages|tools|vendor)\/[\w./-]+\.(?:mjs|cjs|jsx?|tsx?))'/g)].map(
+    ([, path]) => path,
+  );
+});
 
 const workspaces: KnipConfig['workspaces'] = {
   // The root holds no package of its own; its dependencies are consumed by the shared vitest/vite
@@ -166,6 +213,7 @@ for (const manifest of globSync(
     exports = {},
     imports = {},
     files = [],
+    browser = {},
     dependencies = {},
     devDependencies = {},
   } = JSON.parse(readFileSync(manifest, 'utf8'));
@@ -189,15 +237,37 @@ for (const manifest of globSync(
   // consumers still resolve them by path.
   const published = (files as string[]).filter((path) => MODULE.test(path));
 
-  const entry = [...declared, ...published, ...moonBuildArgs(dir, 'entryPoint')];
+  // The `browser` field swaps a node module for a browser one at bundle time; the replacement is
+  // never imported by name.
+  const substitutes = Object.values(browser as Record<string, string>).filter((path) => MODULE.test(path));
+
+  // An `index.html` is the real entry for an app, and knip cannot see through it, so nothing in the
+  // package looks reachable even when its manifest also declares library exports.
+  const isApp = globSync(`${dir}/index.html`).length > 0;
+
+  // What the package itself declares as its entry points. Only these decide whether the whole-source
+  // fallback applies — a supplemental reference must never make a package look fully mapped.
+  const entry = [...declared, ...published, ...substitutes, ...moonBuildArgs(dir, 'entryPoint')];
+
+  // Reached by path from a build config rather than declared, so they extend the entry set without
+  // standing in for it.
+  const supplemental = [
+    ...configuredEntry(dir),
+    ...ROOT_REFERENCED.filter((path) => path.startsWith(`${dir}/`)).map((path) => path.slice(dir.length + 1)),
+  ];
 
   workspaces[dir] = {
-    entry: [...(entry.length ? entry : ['src/**/*.{ts,tsx,js,jsx,mjs,cjs}']), ...AUXILIARY_ENTRY],
+    entry: [
+      ...(entry.length && !isApp ? entry : ['src/**/*.{ts,tsx,js,jsx,mjs,cjs}', '*.{ts,tsx,js,jsx,mjs,cjs}']),
+      ...supplemental,
+      ...AUXILIARY_ENTRY,
+    ],
     project: PROJECT,
     paths,
     ignoreDependencies: [
       ...configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...moonInvokedDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
+      ...peerSatisfyingDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...bundledDependencies(dir),
     ],
   };
@@ -209,23 +279,36 @@ const config: KnipConfig = {
   // without this the CI gate reports regressions and still passes.
   rules: {
     files: 'error',
+    // Referencing an optional peer is legitimate use, not an unused-code signal.
+    optionalPeerDependencies: 'off',
     dependencies: 'error',
     devDependencies: 'error',
-    optionalPeerDependencies: 'error',
     unlisted: 'error',
     binaries: 'error',
     unresolved: 'error',
   },
+  ignoreBinaries: [
+    // System tools, not npm packages.
+    'jq',
+    // Provided by @storybook/test-runner, which the storybook harness installs on demand.
+    'test-storybook',
+  ],
   ignoreDependencies: [
     //
     '@dxos/node-std',
     '@bufbuild/buf',
     '@bufbuild/protoc-gen-es',
+    // Virtual module the ui-theme vite plugin resolves at build time, not a package.
+    '@dxos-theme',
+    // Supplied by the editor at runtime to extensions, never installed.
+    'vscode',
   ],
   // `require.resolve`d at runtime from the emitted bundle, so the path is relative to `dist` rather
   // than to the source file knip reads it from.
   ignoreUnresolved: [
     /^\.\.\/\.\.\/polyfills\//,
+    // A moon/vite-node task name in a package script, not a module.
+    /^watch$/,
     // Bundler resource queries (`?raw`, `?url`, `?worker`) are not part of the module path.
     /\?[a-z]+$/,
   ],

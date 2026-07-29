@@ -13,9 +13,5 @@
   "author": "info@dxos.org",
   "scripts": {
     "codemorph": "vite-node ./src/main.ts"
-  },
-  "dependencies": {
-    "ts-morph": "catalog:"
-  },
-  "devDependencies": {}
+  }
 }

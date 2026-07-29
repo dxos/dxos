@@ -62,6 +62,7 @@
   },
   "devDependencies": {
     "@dxos/ui-types": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/lodash.merge": "catalog:",
     "@types/postcss-import": "catalog:",
     "esbuild": "catalog:",

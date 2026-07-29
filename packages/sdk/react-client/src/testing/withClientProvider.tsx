@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Decorator, type StoryContext } from '@storybook/react';
+import { type Decorator, type StoryContext } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Trigger } from '@dxos/async';

@@ -32,10 +32,7 @@
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/compute": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -51,8 +48,7 @@
   },
   "devDependencies": {
     "effect": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "typescript": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"
