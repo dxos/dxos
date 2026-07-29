@@ -160,6 +160,9 @@
       "path": "packages/core/echo/echo-host/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-panproto/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-protocol/tsconfig.json"
     },
     {
@@ -346,6 +349,9 @@
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-atproto/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-attention/tsconfig.json"
     },
     {
@@ -412,6 +418,9 @@
       "path": "packages/plugins/plugin-duffel/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
@@ -439,6 +448,9 @@
       "path": "packages/plugins/plugin-ideogram/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-illustrator/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
     },
     {
@@ -446,6 +458,9 @@
     },
     {
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-library/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-linear/tsconfig.json"
@@ -547,9 +562,6 @@
       "path": "packages/plugins/plugin-simple-layout/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-sketch/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-slack/tsconfig.json"
     },
     {
@@ -593,6 +605,9 @@
     },
     {
       "path": "packages/plugins/plugin-tictactoe/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-tldraw/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-transcription/tsconfig.json"
@@ -701,6 +716,9 @@
     },
     {
       "path": "packages/ui/react-ui-debug/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-diagram/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-dnd/tsconfig.json"
