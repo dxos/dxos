@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import type { Client } from '@dxos/client';
-import type { Operation } from '@dxos/compute';
+import type { Credential, Operation } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';
@@ -74,11 +74,6 @@ export type SyncOutput = any;
 /** Hook fired after OAuth creates an AccessToken for this connection. */
 export type OnTokenCreated = (input: {
   accessToken: AccessToken.AccessToken;
-  /**
-   * The token's usable value. Resolved by the caller because a server-custodied credential stores
-   * only a placeholder on the object — connectors must use this rather than `accessToken.token`.
-   */
-  accessTokenValue: string;
   connection: Connection.Connection;
   /**
    * Pre-existing local object the caller wants to bind as the connection's
@@ -88,7 +83,7 @@ export type OnTokenCreated = (input: {
    * (Gmail) materialize a fresh target object.
    */
   existingTarget?: Ref.Ref<Obj.Unknown>;
-}) => Effect.Effect<void, never, HttpClient.HttpClient>;
+}) => Effect.Effect<void, never, HttpClient.HttpClient | Credential.CredentialsService>;
 
 /**
  * Hook fired after an external-sync {@link Cursor.Cursor} is created for a target — a single-target
@@ -119,11 +114,9 @@ export type OnCursorCreated = (input: {
  */
 export type TestConnection = (input: {
   accessToken: AccessToken.AccessToken;
-  /** The token's usable value; see {@link OnTokenCreated.accessTokenValue}. */
-  accessTokenValue: string;
   connection: Connection.Connection;
   client: Client;
-}) => Effect.Effect<void, ConnectionTestError, HttpClient.HttpClient>;
+}) => Effect.Effect<void, ConnectionTestError, HttpClient.HttpClient | Credential.CredentialsService>;
 
 /** OAuth spec for Connector.oauth. */
 export type ConnectorOAuthSpec = {

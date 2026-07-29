@@ -22,7 +22,7 @@ import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
-import { resolveAccessTokenValue } from '../../util/access-token-value';
+import { clientCredentialsLayer } from '../../util/access-token-value';
 import { createSingleCursor } from './create-single-cursor';
 import { decodeOAuthMessageData, initiateOAuthFlow, openOAuthPopupWindow, openOAuthRedirectWindow } from './oauth';
 import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
@@ -83,6 +83,7 @@ const openConnectorFormDialog = (
 const runOnTokenCreated = (
   connector: ConnectorEntry,
   client: Client,
+  db: Database.Database,
   input: {
     accessToken: AccessToken.AccessToken;
     connection: Connection.Connection;
@@ -93,9 +94,9 @@ const runOnTokenCreated = (
   if (!onTokenCreated) {
     return Effect.void;
   }
-  return resolveAccessTokenValue(client, input.accessToken).pipe(
-    Effect.flatMap((accessTokenValue) => onTokenCreated({ ...input, accessTokenValue })),
+  return onTokenCreated(input).pipe(
     Effect.provide(FetchHttpClient.layer),
+    Effect.provide(clientCredentialsLayer(client, db)),
     Effect.catchAll((error) =>
       Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
     ),
@@ -151,7 +152,7 @@ const finalizePendingEntry = (
     const persistedConnection = db.add(connection);
     Obj.setParent(persistedToken, persistedConnection);
 
-    yield* runOnTokenCreated(connector, client, {
+    yield* runOnTokenCreated(connector, client, db, {
       accessToken: persistedToken,
       connection: persistedConnection,
       existingTarget,

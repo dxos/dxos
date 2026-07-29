@@ -13,6 +13,12 @@ import { type SpaceId } from '@dxos/keys';
 
 export type CredentialQuery = {
   service?: string;
+  /**
+   * Look up one specific `AccessToken` object instead of any credential for a service. Required
+   * wherever a space can hold several connections to the same service, since a by-service lookup
+   * picks among them arbitrarily.
+   */
+  accessTokenId?: string;
 };
 
 // TODO(dmaretskyi): Unify with other apis.
@@ -28,11 +34,13 @@ export type ServiceCredential = {
 };
 
 /**
- * Resolves a server-custodied credential (one stored as `MANAGED_ACCESS_TOKEN`) to a live token.
+ * Source for credentials EDGE custodies rather than replicating into the space (those stored as
+ * `MANAGED_ACCESS_TOKEN`).
  *
- * Managed tokens are held by EDGE rather than replicated into the space, so every consumer that
- * would otherwise read the value off the object goes through this instead. Implementations cache;
- * pass `refresh` to bypass that cache after an authorization failure.
+ * An implementation detail of {@link CredentialsService}, not a consumer-facing service: it exists
+ * as a tag only because the two surfaces reach EDGE differently — clients over authenticated HTTP,
+ * functions over a space-bound service binding. Implementations cache; pass `refresh` to bypass that
+ * cache after an authorization failure.
  */
 export class AccessTokenResolver extends Context.Tag('@dxos/functions/AccessTokenResolver')<
   AccessTokenResolver,

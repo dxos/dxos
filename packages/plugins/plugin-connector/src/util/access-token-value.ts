@@ -3,37 +3,46 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Redacted from 'effect/Redacted';
 
 import { type Client } from '@dxos/client';
-import { Context as DxContext } from '@dxos/context';
-import { Obj } from '@dxos/echo';
+import { Credential } from '@dxos/compute';
+import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import { Database, Obj } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
-import { isManagedAccessToken } from '@dxos/protocols';
 
 /**
- * The usable value of an {@link AccessToken.AccessToken}: the stored string, or — when the token is
- * server-custodied and the object holds only a placeholder — the live token fetched from EDGE.
+ * The usable value of an {@link AccessToken.AccessToken}, resolved through
+ * {@link Credential.CredentialsService} so a server-custodied token is fetched from EDGE and a
+ * plain one is read from the object — connectors do not distinguish between the two.
  *
- * For one-shot probes (`testConnection`, `onTokenCreated`). Sync paths resolve through
- * `Credential.AccessTokenResolver` instead, which caches across the many calls a sync run makes.
+ * Keyed by object id rather than by service: a space can hold several connections to the same
+ * provider, and a by-service lookup would pick among them arbitrarily.
  */
-export const resolveAccessTokenValue = (
-  client: Client,
+export const accessTokenValue = (
   accessToken: AccessToken.AccessToken,
-): Effect.Effect<string, Error> =>
-  Effect.gen(function* () {
-    if (!isManagedAccessToken(accessToken.token)) {
-      return accessToken.token;
-    }
+): Effect.Effect<string, never, Credential.CredentialsService> =>
+  Effect.map(Credential.CredentialsService.getApiKey({ accessTokenId: accessToken.id }), Redacted.value);
 
-    const spaceId = Obj.getDatabase(accessToken)?.spaceId;
-    if (!spaceId) {
-      return yield* Effect.fail(new Error('Cannot resolve a managed access token that is not bound to a space.'));
-    }
+/**
+ * The credentials layer for connector hooks, which run outside the operation layer graph. Resolution
+ * goes over authenticated HTTP because these run on the client, where an identity is available.
+ */
+export const clientCredentialsLayer = (
+  client: Client,
+  db: Database.Database,
+): Layer.Layer<Credential.CredentialsService> =>
+  credentialsLayerFromDatabase().pipe(
+    Layer.provide(Database.layer(db)),
+    Layer.provide(accessTokenResolverFromEdge(() => client.edge.http)),
+  );
 
-    const response = yield* Effect.tryPromise({
-      try: () => client.edge.http.getAccessToken(DxContext.default(), { spaceId, accessTokenId: accessToken.id }),
-      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-    });
-    return response.accessToken;
-  });
+/** The credentials layer for an object's own space. */
+export const credentialsLayerForObject = (
+  client: Client,
+  object: Obj.Unknown,
+): Layer.Layer<Credential.CredentialsService> | undefined => {
+  const db = Obj.getDatabase(object);
+  return db ? clientCredentialsLayer(client, db) : undefined;
+};

@@ -22,6 +22,7 @@ import {
   type SyncInput,
   type SyncOutput,
   type TestConnection,
+  accessTokenValue,
 } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -45,13 +46,13 @@ const GoogleUserInfo = Schema.Struct({
  * Google `/oauth2/v3/userinfo` email, or `undefined` if missing token, `account` already set, or no email.
  * Callers persist via e.g. `Obj.update`. Tracer disabled on the request (Effect + CORS: https://github.com/Effect-TS/effect/issues/4568).
  */
-const getAccountEmail = (accessTokenValue: string, account: string | undefined) =>
+const getAccountEmail = (token: string, account: string | undefined) =>
   Effect.gen(function* () {
-    if (!accessTokenValue || account) {
+    if (!token || account) {
       return undefined;
     }
 
-    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(accessTokenValue, 'Bearer')));
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
 
     const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
@@ -77,9 +78,10 @@ const isGoogleAuthRejection = (error: unknown): boolean =>
  * an actual 401/403 (an expired or revoked grant) is surfaced as "reauthenticate"; any other failure
  * after retries exhausted is reported as a distinct, less alarming message.
  */
-const testGoogleConnection: TestConnection = ({ accessTokenValue }) =>
+const testGoogleConnection: TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
-    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(accessTokenValue, 'Bearer')));
+    const token = yield* accessTokenValue(accessToken);
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(
       HttpClient.withTracerDisabledWhen(() => true),
       HttpClient.filterStatusOk,
@@ -110,9 +112,9 @@ const testGoogleConnection: TestConnection = ({ accessTokenValue }) =>
  * email so connections/mailboxes get a sensible default name. The sync target is
  * materialized separately (`materializeTarget`) when the binding is created.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken, accessTokenValue }) =>
+const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
-    const email = yield* getAccountEmail(accessTokenValue, accessToken.account);
+    const email = yield* getAccountEmail(yield* accessTokenValue(accessToken), accessToken.account);
     if (email) {
       Obj.update(accessToken, (accessToken) => {
         accessToken.account = email;

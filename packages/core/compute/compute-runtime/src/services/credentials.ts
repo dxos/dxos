@@ -92,14 +92,15 @@ export const credentialsLayerFromDatabase = ({ caching = false }: { caching?: bo
         }
 
         const accessTokens = await dbService.db.query(Query.type(AccessToken.AccessToken)).run();
-        const projections = accessTokens
-          .filter((accessToken) => accessToken.source === query.service)
-          .map((accessToken) => ({
-            accessTokenId: accessToken.id,
-            service: accessToken.source,
-            storedToken: accessToken.token,
-            account: accessToken.account,
-          }));
+        const matches = query.accessTokenId
+          ? accessTokens.filter((accessToken) => accessToken.id === query.accessTokenId)
+          : accessTokens.filter((accessToken) => accessToken.source === query.service);
+        const projections = matches.map((accessToken) => ({
+          accessTokenId: accessToken.id,
+          service: accessToken.source,
+          storedToken: accessToken.token,
+          account: accessToken.account,
+        }));
 
         if (caching) {
           cache.set(cacheKey, projections);
@@ -120,7 +121,11 @@ export const credentialsLayerFromDatabase = ({ caching = false }: { caching?: bo
         getCredential: async (query) => {
           const projections = await queryTokens(query);
           if (projections.length === 0) {
-            throw new Error(`Credential not found for service: ${query.service}`);
+            throw new Error(
+              query.accessTokenId
+                ? `Credential not found: ${query.accessTokenId}`
+                : `Credential not found for service: ${query.service}`,
+            );
           }
 
           return toCredential(projections[0]);
