@@ -162,6 +162,25 @@ feed; review comments are a per-document comments Channel.
   (ref-array messages → feed messages); sequence explicitly with
   document-revisions (burdon).
 
+## Appendix: external chat integration (long-term)
+
+`ChannelBackendProvider` is the interim pluggability layer, not the end-state.
+The proper way to integrate an external chat system (Matrix, etc.) natively
+into Composer is one level down: **keep every Channel on the default feed
+provider, and back the _feed itself_ with a different `FeedBackend`** — the
+feed-as-read-through-cache model (replicated live tail + evictable cached
+history ranges + watermarked paging; see feed-live-objects DESIGN.md,
+"Pluggable feed backend" companion workstream). The external system then
+inherits the full native experience for free — offline send via the outbox,
+optimistic updates, live objects, caching, and (post-phase-2) read state —
+while the chat plugin remains completely unaware of the backend.
+
+When that lands, `ChannelBackendProvider` should be retired (or reduced to a
+thin channel-creation/config concern): swapping `subscribe`/`send` at the
+plugin layer loses everything the feed pipeline provides and would duplicate
+it per provider. Until then it remains the cheap seam for shallow or read-only
+integrations. Long-term; not scheduled in the stages above.
+
 ## Remaining open questions
 
 - Reactions schema: `Message.properties` LWW map vs `Reaction` relation
