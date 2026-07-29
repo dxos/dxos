@@ -59,10 +59,39 @@ describe('update-scheduler', () => {
     expect(finished, 'no pass may still be in flight').toEqual(started);
   });
 
-  // `runBlocking` stores its pass in `_promise`, which `_settle` awaits and the dispose hook drains.
-  // So it has to leave `_promise` settled-and-cleared and non-rejecting: a retained promise defeats
-  // `_settle`'s fast path for every later call, and a retained *rejected* one makes `join()` and
-  // dispose throw, contradicting the "never rejects" contract on the field.
+  // `join` covers the round in flight and nothing else — that is its contract. It must not chase
+  // passes scheduled behind that round: a callback that re-triggers itself would otherwise keep the
+  // barrier running until some arbitrary cap and then return with work still pending, which is the
+  // false barrier this fix is about. `runBlocking` is the barrier that also covers a scheduled pass.
+  test('join waits for the running round only, not for work queued behind it', async () => {
+    const ctx = new Context();
+    let runs = 0;
+    const scheduler: UpdateScheduler = new UpdateScheduler(
+      ctx,
+      async () => {
+        runs++;
+        // Re-trigger from inside the callback, indefinitely.
+        scheduler.trigger();
+        await sleep(1);
+      },
+      // Throttled, so each chased pass would cost ~100ms.
+      { maxFrequency: 10 },
+    );
+
+    scheduler.trigger();
+    const started = Date.now();
+    await scheduler.join();
+    const elapsed = Date.now() - started;
+
+    expect(runs, 'the outstanding pass must have run').toBeGreaterThanOrEqual(1);
+    // One pass plus its throttle, not a chain of them.
+    expect(elapsed, `join took ${elapsed}ms — it is chasing newly scheduled passes`).toBeLessThan(500);
+    await ctx.dispose();
+  });
+
+  // `runBlocking` stores its pass in `_promise`, which `join()` and the dispose hook await directly.
+  // So it has to leave `_promise` settled-and-cleared and non-rejecting: a retained *rejected* one
+  // makes both throw, contradicting the "never rejects" contract on the field.
   test('a rejecting runBlocking does not poison later barriers', async () => {
     const ctx = new Context();
     let fail = true;
@@ -80,30 +109,5 @@ describe('update-scheduler', () => {
     await expect(scheduler.join()).resolves.toBeUndefined();
     await expect(scheduler.runBlocking()).resolves.toBeUndefined();
     await expect(ctx.dispose()).resolves.not.toThrow();
-  });
-
-  // Same guarantee for the non-scheduling barrier.
-  test('join waits for a throttled pass that has not started yet', async () => {
-    const ctx = new Context();
-    let running = 0;
-    let completed = 0;
-    const scheduler = new UpdateScheduler(
-      ctx,
-      async () => {
-        running++;
-        await sleep(20);
-        running--;
-        completed++;
-      },
-      { maxFrequency: 10 },
-    );
-
-    await scheduler.runBlocking();
-    scheduler.trigger();
-
-    await scheduler.join();
-
-    expect(completed, 'the throttled pass must have completed').toBeGreaterThanOrEqual(2);
-    expect(running, 'nothing may still be running').toEqual(0);
   });
 });

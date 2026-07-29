@@ -18,12 +18,6 @@ export type UpdateSchedulerOptions = {
  */
 const TIME_PERIOD = 1_000;
 
-/**
- * Guard on {@link UpdateScheduler._settle}: a callback that re-triggers itself cannot hang the
- * caller. Far above any legitimate chain.
- */
-const MAX_SETTLE_ROUNDS = 100;
-
 export class UpdateScheduler {
   /**
    * Promise that resolves when the callback is done.
@@ -53,7 +47,7 @@ export class UpdateScheduler {
     private readonly _params: UpdateSchedulerOptions = {},
   ) {
     _ctx.onDispose(async () => {
-      await this._settle(); // Context waits for callback to finish.
+      await this._promise; // Context waits for callback to finish.
     });
   }
 
@@ -97,7 +91,7 @@ export class UpdateScheduler {
           // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
           this._scheduled = false;
           // Only this pass may clear `_promise`: a concurrent `runBlocking` may have replaced it, and
-          // clearing that one would hide a running callback from `_settle`.
+          // clearing that one would hide a running callback from `_drainOutstanding`.
           const promise = this._callback().then(
             () => {
               if (this._promise === promise) {
@@ -117,7 +111,7 @@ export class UpdateScheduler {
         } finally {
           // Only this pass may clear `_scheduledTask`. The flag is reset before the callback runs, so
           // a `trigger()` from inside it (or from a listener it wakes) installs a newer task — nulling
-          // that would hide a pending pass from `_settle`, which is the very gap this class fixes.
+          // that would hide a pending pass from `runBlocking`'s drain, the very gap this fix closes.
           if (this._scheduledTask === task) {
             this._scheduled = false;
             this._scheduledTask = null;
@@ -136,11 +130,14 @@ export class UpdateScheduler {
   }
 
   /**
-   * Waits for the current task to finish if it is running, including one that has been scheduled but
-   * has not started yet. Does not schedule a new task.
+   * Waits for the current task to finish if it is running.
+   *
+   * Does not schedule a new task, and does not wait for one that is merely scheduled: a caller
+   * joining is asking about the round in flight, not about work queued behind it. Use
+   * {@link runBlocking} for a barrier that also covers a scheduled pass.
    */
   async join(): Promise<void> {
-    await this._settle();
+    await this._promise;
   }
 
   /**
@@ -154,14 +151,14 @@ export class UpdateScheduler {
    * flight (dxos/edge#758).
    */
   async runBlocking(): Promise<void> {
-    await this._settle();
+    await this._drainOutstanding();
     const callbackPromise = this._callback();
-    // `_promise` must end up null and must never reject: `_settle` awaits it (so a rejection would
-    // propagate into `join` and the dispose hook, against the "never rejects" contract above), and
-    // leaving it non-null would defeat `_settle`'s fast path for every later call. Note the identity
-    // check compares against the *tracked* promise -- the one actually stored -- since comparing the
-    // raw callback promise would never match and would leave `_promise` set forever. The caller still
-    // observes a rejection through `await callbackPromise` below.
+    // `_promise` must end up null and must never reject: `join` and the dispose hook await it
+    // directly, so a retained rejection would make both throw, against the "never rejects" contract
+    // on the field, and a retained promise would make every later `join` wait on an already-settled
+    // one. Note the identity check compares the *tracked* promise -- the one actually stored -- since
+    // comparing the raw callback promise would never match and would leave `_promise` set forever.
+    // The caller still observes a rejection through `await callbackPromise` below.
     const tracked: Promise<void> = callbackPromise.then(
       () => {
         if (this._promise === tracked) {
@@ -179,16 +176,20 @@ export class UpdateScheduler {
   }
 
   /**
-   * Waits until neither a running nor a scheduled pass remains. Loops because awaiting one can let
-   * another be scheduled behind it — the callback itself may trigger more work.
+   * Waits for the passes outstanding right now — a running callback and/or a scheduled one — and only
+   * those. Backs {@link runBlocking}.
+   *
+   * Deliberately does not chase passes scheduled *after* the call. A callback that re-triggers itself
+   * (a live subscription that keeps producing work, say) would otherwise keep this waiting until some
+   * arbitrary cap and then return with a pass still pending: the caller waits an age and gets a false
+   * barrier at the end of it, which is the very thing this fix is about. Bounding the wait to what was
+   * outstanding on entry is both terminating and honest — work triggered later is new work, not
+   * something the caller asked to wait for.
    */
-  private async _settle(): Promise<void> {
-    for (let round = 0; round < MAX_SETTLE_ROUNDS; round++) {
-      if (this._promise == null && this._scheduledTask == null) {
-        return;
-      }
-      await this._promise; // Can't be rejected.
-      await this._scheduledTask;
-    }
+  private async _drainOutstanding(): Promise<void> {
+    const running = this._promise;
+    const scheduled = this._scheduledTask;
+    await running; // Can't be rejected.
+    await scheduled;
   }
 }
