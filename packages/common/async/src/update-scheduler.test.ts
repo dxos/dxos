@@ -59,6 +59,29 @@ describe('update-scheduler', () => {
     expect(finished, 'no pass may still be in flight').toEqual(started);
   });
 
+  // `runBlocking` stores its pass in `_promise`, which `_settle` awaits and the dispose hook drains.
+  // So it has to leave `_promise` settled-and-cleared and non-rejecting: a retained promise defeats
+  // `_settle`'s fast path for every later call, and a retained *rejected* one makes `join()` and
+  // dispose throw, contradicting the "never rejects" contract on the field.
+  test('a rejecting runBlocking does not poison later barriers', async () => {
+    const ctx = new Context();
+    let fail = true;
+    const scheduler = new UpdateScheduler(ctx, async () => {
+      if (fail) {
+        throw new Error('callback failed');
+      }
+    });
+
+    // The caller must still see the failure.
+    await expect(scheduler.runBlocking()).rejects.toThrow('callback failed');
+
+    // ...but the barriers must not inherit it.
+    fail = false;
+    await expect(scheduler.join()).resolves.toBeUndefined();
+    await expect(scheduler.runBlocking()).resolves.toBeUndefined();
+    await expect(ctx.dispose()).resolves.not.toThrow();
+  });
+
   // Same guarantee for the non-scheduling barrier.
   test('join waits for a throttled pass that has not started yet', async () => {
     const ctx = new Context();

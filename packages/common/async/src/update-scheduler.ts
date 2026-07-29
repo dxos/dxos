@@ -63,7 +63,7 @@ export class UpdateScheduler {
     }
 
     this._scheduled = true;
-    this._scheduledTask = new Promise<void>((resolveScheduled) => {
+    const task: Promise<void> = new Promise<void>((resolveScheduled) => {
       scheduleMicroTask(this._ctx, async () => {
         try {
           // The previous task might still be running, so we need to wait for it to finish.
@@ -115,12 +115,18 @@ export class UpdateScheduler {
           // Awaited so `_scheduledTask` spans the callback as well as the scheduling.
           await promise;
         } finally {
-          this._scheduled = false;
-          this._scheduledTask = null;
+          // Only this pass may clear `_scheduledTask`. The flag is reset before the callback runs, so
+          // a `trigger()` from inside it (or from a listener it wakes) installs a newer task — nulling
+          // that would hide a pending pass from `_settle`, which is the very gap this class fixes.
+          if (this._scheduledTask === task) {
+            this._scheduled = false;
+            this._scheduledTask = null;
+          }
           resolveScheduled();
         }
       });
     });
+    this._scheduledTask = task;
   }
 
   forceTrigger(): void {
@@ -149,8 +155,27 @@ export class UpdateScheduler {
    */
   async runBlocking(): Promise<void> {
     await this._settle();
-    this._promise = this._callback();
-    await this._promise;
+    const callbackPromise = this._callback();
+    // `_promise` must end up null and must never reject: `_settle` awaits it (so a rejection would
+    // propagate into `join` and the dispose hook, against the "never rejects" contract above), and
+    // leaving it non-null would defeat `_settle`'s fast path for every later call. Note the identity
+    // check compares against the *tracked* promise -- the one actually stored -- since comparing the
+    // raw callback promise would never match and would leave `_promise` set forever. The caller still
+    // observes a rejection through `await callbackPromise` below.
+    const tracked: Promise<void> = callbackPromise.then(
+      () => {
+        if (this._promise === tracked) {
+          this._promise = null;
+        }
+      },
+      () => {
+        if (this._promise === tracked) {
+          this._promise = null;
+        }
+      },
+    );
+    this._promise = tracked;
+    await callbackPromise;
   }
 
   /**

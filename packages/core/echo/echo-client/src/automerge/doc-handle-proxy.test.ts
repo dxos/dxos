@@ -12,6 +12,8 @@ import { openAndClose } from '@dxos/test-utils';
 
 import { DocHandleProxy } from './doc-handle-proxy';
 
+type TestDoc = { first?: string; second?: string };
+
 describe('DocHandleProxy', () => {
   // Two `_sendUpdates` passes can be in flight for one handle (`UpdateScheduler.runBlocking` and a
   // `trigger`-scheduled pass both clear the same barrier). The staged heads used to live in a single
@@ -19,17 +21,17 @@ describe('DocHandleProxy', () => {
   // heads the *other* pass had staged — and if that other pass then failed, `saveSince` had nothing
   // left to report and its changes were never resent. Silent, permanent loss (dxos/edge#758).
   test('acknowledging one send does not mark a concurrent send as delivered', () => {
-    const handle = new DocHandleProxy<{ first?: string; second?: string }>({ initialValue: {} });
+    const handle = new DocHandleProxy<TestDoc>({ initialValue: {}, onDelete: () => {} });
     handle._setDocumentId('doc-1' as any);
 
-    handle.change((doc) => {
+    handle.change((doc: TestDoc) => {
       doc.first = 'a';
     });
     const firstSend = handle._getPendingChanges()!;
     expect(firstSend).toBeDefined();
 
     // A second pass stages its own, larger batch before the first is acknowledged.
-    handle.change((doc) => {
+    handle.change((doc: TestDoc) => {
       doc.second = 'b';
     });
     const secondSend = handle._getPendingChanges()!;
@@ -51,14 +53,14 @@ describe('DocHandleProxy', () => {
 
   // Acknowledgements can arrive out of order; a later one must not un-confirm delivered changes.
   test('an out-of-order acknowledgement does not move the sync point backwards', () => {
-    const handle = new DocHandleProxy<{ first?: string; second?: string }>({ initialValue: {} });
+    const handle = new DocHandleProxy<TestDoc>({ initialValue: {}, onDelete: () => {} });
     handle._setDocumentId('doc-2' as any);
 
-    handle.change((doc) => {
+    handle.change((doc: TestDoc) => {
       doc.first = 'a';
     });
     const firstSend = handle._getPendingChanges()!;
-    handle.change((doc) => {
+    handle.change((doc: TestDoc) => {
       doc.second = 'b';
     });
     const secondSend = handle._getPendingChanges()!;

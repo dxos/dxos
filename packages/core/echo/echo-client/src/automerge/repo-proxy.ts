@@ -64,11 +64,18 @@ export class RepoProxy extends Resource {
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
   /**
-   * Error from the most recent `_sendUpdates` pass, cleared at the start of each `flush` attempt.
-   * `_sendUpdates` cannot throw (it is a scheduler callback, and a rejection there would surface as
-   * an unhandled context error rather than reaching the writer), so this is how a failed batch
-   * becomes visible to {@link flush}.
+   * Error from the most recent failed `_sendUpdates` pass, with a counter that increments on every
+   * failure. `_sendUpdates` cannot throw (it is a scheduler callback, and a rejection there would
+   * surface as an unhandled context error rather than reaching the writer), so this is how a failed
+   * batch becomes visible to {@link flush}.
+   *
+   * The counter is what makes concurrent `flush()` calls safe: each reads it before its attempt and
+   * compares afterwards, so a failure is attributed to whichever attempts were in flight when it
+   * happened. A single field that each `flush` cleared would let one caller wipe a failure the other
+   * had not yet observed, and both would report success over a batch that is back on the pending
+   * list.
    */
+  private _sendFailureCount = 0;
   private _lastSendError: Error | undefined = undefined;
 
   /**
@@ -136,9 +143,9 @@ export class RepoProxy extends Resource {
     await Promise.all([...this._pendingCreations.values()]);
     // Wait for all updates to be sent, retrying a failed batch before giving up on it.
     for (let attempt = 1; ; attempt++) {
-      this._lastSendError = undefined;
+      const failuresBefore = this._sendFailureCount;
       await this._sendUpdatesJob?.runBlocking();
-      if (this._lastSendError == null) {
+      if (this._sendFailureCount === failuresBefore) {
         return;
       }
       // Closing makes the remaining work moot: nothing is waiting on this data any more.
@@ -146,7 +153,7 @@ export class RepoProxy extends Resource {
         return;
       }
       if (attempt >= FLUSH_ATTEMPTS) {
-        throw this._lastSendError;
+        throw this._lastSendError ?? new Error('Failed to send document updates.');
       }
       await sleep(FLUSH_RETRY_DELAY_MS * attempt);
     }
@@ -458,6 +465,7 @@ export class RepoProxy extends Resource {
       // batch did not land regardless of whether anyone else wants to hear about it.
       if (!isAbandoned) {
         this._lastSendError = err as Error;
+        this._sendFailureCount++;
       }
       if (!isAbandoned) {
         // Restore the state of pending updates if the RPC call failed.
