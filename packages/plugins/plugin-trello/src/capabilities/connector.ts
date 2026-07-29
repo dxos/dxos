@@ -32,7 +32,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
       return;
     }
     const creds = yield* TrelloApi.credentialsFromToken(
-      yield* Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id }),
+      yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id }),
     );
     const member = yield* TrelloApi.fetchMember().pipe(
       Effect.provide(Layer.succeed(TrelloApi.TrelloCredentials, creds)),
@@ -50,7 +50,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
 const testConnection: TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
     const creds = yield* TrelloApi.credentialsFromToken(
-      yield* Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id }),
+      yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id }),
     );
     yield* TrelloApi.fetchMember().pipe(Effect.provide(Layer.succeed(TrelloApi.TrelloCredentials, creds)));
   }).pipe(

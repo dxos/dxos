@@ -50,7 +50,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * UI can offer to reauthenticate.
  */
 const testConnection: TestConnection = ({ accessToken }) =>
-  Effect.flatMap(Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
+  Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
     SlackApi.fetchAuthTest().pipe(Effect.provide(Layer.succeed(SlackApi.SlackCredentials, { token }))),
   ).pipe(
     Effect.asVoid,

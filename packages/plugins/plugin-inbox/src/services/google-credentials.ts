@@ -5,7 +5,6 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Redacted from 'effect/Redacted';
 
 import { Credential } from '@dxos/compute';
 import { Database, type Ref } from '@dxos/echo';
@@ -23,7 +22,7 @@ import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
  * picks up a rotated token instead of holding the one that was live when it started.
  */
 const makeService = (query: Credential.CredentialQuery): Context.Tag.Service<GoogleCredentials> => ({
-  get: () => Effect.map(Credential.CredentialsService.getApiKey(query), Redacted.value),
+  get: () => Credential.getApiKeyValue(query),
 });
 
 /**

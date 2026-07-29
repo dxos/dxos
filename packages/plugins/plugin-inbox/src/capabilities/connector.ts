@@ -79,7 +79,7 @@ const isGoogleAuthRejection = (error: unknown): boolean =>
  */
 const testGoogleConnection: TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
-    const token = yield* Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id });
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(
       HttpClient.withTracerDisabledWhen(() => true),
@@ -114,7 +114,7 @@ const testGoogleConnection: TestConnection = ({ accessToken }) =>
 const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     const email = yield* getAccountEmail(
-      yield* Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id }),
+      yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id }),
       accessToken.account,
     );
     if (email) {

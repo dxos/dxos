@@ -43,7 +43,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * error so the connection UI can offer to reauthenticate.
  */
 const testConnection: TestConnection = ({ accessToken }) =>
-  Effect.flatMap(Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
+  Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
     GitHubApi.fetchUser().pipe(Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token }))),
   ).pipe(
     Effect.asVoid,

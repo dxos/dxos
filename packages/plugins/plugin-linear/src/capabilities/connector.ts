@@ -43,7 +43,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * connection UI can offer to reauthenticate.
  */
 const testConnection: TestConnection = ({ accessToken }) =>
-  Effect.flatMap(Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
+  Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
     LinearApi.fetchViewer().pipe(Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token }))),
   ).pipe(
     Effect.asVoid,
