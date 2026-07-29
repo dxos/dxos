@@ -135,9 +135,22 @@ swap rather than a rewrite.
   pipeline (the external cursor, e.g. last snowflake per channel, lives in a
   small ECHO object) emitting signals; add a capped-retention feed buffer only
   when multiple consumers or replay-within-a-window are needed.
-- **Matrix / ATProto shelf.** Bridge-feed (`FeedBackend`) design, ATProto-OAuth
-  → OIDC identity-broker sketch, and the open-chat survey are done and parked;
-  revisit on demand.
+- **Pluggable feed backend (`FeedBackend`).** Promote the implicit sync seam —
+  `SyncClient`'s injected `sendMessage`, with the server role played by whoever
+  answers `QueryRequest`/`AppendRequest` — to an explicit backend interface
+  (`query`/`append`/`subscribe`), so the phase-4 read-through machinery can
+  pair the Feed API with a non-EDGE backend (Matrix, IMAP, Discord) unchanged.
+  Per-backend adapter obligations live here, not in the feed phases: mapping
+  external ordering onto monotonic positions, send idempotency across outbox
+  retries (block identity → external message id), and serving `patchUp` (the
+  latest block for any id whose head lies outside a fetched range) from the
+  external API. Out of scope for this project — phase 4's only obligation is to
+  define `query`/`patchUp`/watermark semantics against the interface rather
+  than against EDGE specifics, keeping the seam clean.
+- **Matrix / ATProto shelf.** The open-chat survey, Matrix integration
+  analysis, and ATProto-OAuth → OIDC identity-broker sketch are done and
+  parked; Matrix would be the first consumer of the `FeedBackend` workstream.
+  Revisit on demand.
 
 ## Source map
 
