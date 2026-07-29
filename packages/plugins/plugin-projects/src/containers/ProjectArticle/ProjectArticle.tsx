@@ -119,6 +119,9 @@ const useToolbarActions = (
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const { invokePromise } = useOperationInvoker();
+  // The handler resolves `Database.Service`, which only the space context supplies — without this
+  // the invocation fails with ServiceNotAvailable.
+  const spaceId = Obj.getDatabase(project)?.spaceId;
 
   const actions = useMenuBuilder(
     (get): ActionGraphProps =>
@@ -131,11 +134,11 @@ const useToolbarActions = (
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
           },
-          () => void invokePromise(ProjectOperation.CreateChat, { project }),
+          () => void invokePromise(ProjectOperation.CreateChat, { project }, { spaceId }),
         )
         .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
         .build(),
-    [graph, attendableId, project, invokePromise],
+    [graph, attendableId, project, invokePromise, spaceId],
   );
 
   const onAction: ActionExecutor = useCallback(
