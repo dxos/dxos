@@ -8,10 +8,14 @@ about signatures before writing code. Everything is shaped to match the neighbou
 own schema, driving the same object_. Foreign-type adaptation and migration support are long-term
 payoffs this shape enables; they are explicitly not being built first.
 
-**Where it ships:** `@dxos/echo-lens`, a sibling package rather than a change to `@dxos/echo` — a
-lens is just another object, so nothing here needs to be inside core to work. Signatures are written
-as if the module were already `Lens` in core, so promotion is an import-path change (DESIGN.md
-§2.1). `Obj.lens` below reads `Lens.of` until then.
+**Where it ships:** `@dxos/echo-panproto` (existing, from PR #12395), as a new `Lens` namespace
+export beside the existing `Panproto` wire lens — a lens is just another object, so nothing here
+needs to be inside core to work. The existing `Panproto.Lens` (ECHO ↔ foreign wire record,
+snapshot encode/decode for publishing) is, in §1 terms, the degenerate case where the target is a
+plain `Schema.Schema.Any` and only the snapshot tier exists; converging it onto this interface
+later is a refactor, not a rewrite (DESIGN.md §2.1). Signatures are written as if the module were
+already `Lens` in core, so promotion is an import-path change. `Obj.lens` below reads `Lens.of`
+until then.
 
 ## 0. What "first-class" does and doesn't require
 

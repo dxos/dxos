@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: Phase 0 — spike `@panproto/core` (WASM) loadability, mapping resolution (how strict is "compatible type" for automatic mapping), the Task→GtdTask law-check, and mdast source-offset splicing. Uncommitted: none. Last: settled on a single authoring shape — a lens always binds two **declared** types (`Lens.make(id, Source, Target, mapping)`); target derivation and the typed combinator builder are both retired._
+_Resume: Phase 0 — spike the engine's law-check surface (`checkLaws`/`GetResult`), mapping-resolution strictness, the Task→GtdTask law-check, and mdast source-offset splicing; then Phase 1 in `@dxos/echo-panproto`. Uncommitted: none. Last: merged main to pull in PR #12395 (`@dxos/echo-panproto`: wire lens + runner + verified `@panproto/core@0.56.1` wasm engine) and rebased the plan on it — the object lens lands there as a new `Lens` namespace export._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](./API.md).
 This file is the ledger only.
@@ -22,11 +22,15 @@ Cheap, independent, architecture-deciding. Nothing else starts first.
 
 ### Tasks
 
-- [ ] **Load `@panproto/core` in each target** — node (test runner), browser (vite), and
-      `workerd`. ECHO runs in a shared worker; a WASM module that can't load there changes the
-      architecture. Record size and cold-start in DESIGN.md §8.1.
-- [ ] **Verify the TS SDK surface** listed in DESIGN.md §4 against the real package. Correct the
-      design doc wherever the book and the package differ.
+- [x] **Engine loadability + SDK surface** — resolved by `@dxos/echo-panproto` (PR #12395):
+      `@panproto/core@0.56.1` verified in node (CI) and browser (Composer via plugin-atproto),
+      isolated behind the lazy `/wasm` entrypoint so it never enters a static graph. Also learned:
+      the shipped TS API is structural-only (no value-expression step) — value conversions are
+      host-side named codecs, matching the runner's existing split.
+- [ ] **Law-check spike** — the one engine surface `echo-panproto` doesn't exercise: does
+      `LensHandle.checkLaws` (or `checkGetPut`/`checkPutGet`) work against 0.56.1, and does `get()`
+      return a usable `GetResult { view, complement }`? If not, `Lens.checkLaws` is implemented in
+      the runner instead; nothing else moves.
 - [ ] **Mapping resolution spike** — explicit entry, then automatic (same name + compatible type),
       then overlay. Settle how strict "compatible" is (DESIGN.md §8.2): optionality mismatches
       should auto-map in the safe direction only; differing enum literals must not auto-map at all.
@@ -39,8 +43,9 @@ Cheap, independent, architecture-deciding. Nothing else starts first.
 - [ ] **mdast offset spike** (DESIGN.md §5.B) — parse a real document, confirm block nodes carry
       usable `position.*.offset`, edit one block, splice it back, assert the rest is
       byte-identical. Throwaway node script, no ECHO.
-- [ ] **Decision: engine-in-runtime vs author-time-only.** Write it into DESIGN.md §8.1 with
-      measured numbers, then delete the losing branch from the design.
+- [ ] **Decision: where the engine runs for the object lens.** `echo-panproto` settled the pattern
+      (lazy `/wasm`, host-side); confirm the object lens needs nothing more — mapping resolution is
+      plain TypeScript, the engine consulted only at author/verify time. Record in DESIGN.md §8.1.
 
 ## Phase 1: Core — the first-class surface
 
@@ -49,10 +54,10 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
 
 ### Tasks
 
-- [ ] **Scaffold `packages/core/echo/echo-lens` (`@dxos/echo-lens`, `"private": true`)** — a
-      sibling of `echo-client`/`echo-react`, built against `@dxos/echo` and `@dxos/echo/internal`
-      rather than inside core, so it lands as an additive package. In-repo deps `workspace:*`,
-      external via catalog. React hooks and the panproto/WASM binding go in separate packages.
+- [ ] **Extend `@dxos/echo-panproto` with a `Lens` namespace export** — new modules beside the
+      existing `Panproto` wire lens (DESIGN.md §9); built against `@dxos/echo` and
+      `@dxos/echo/internal`. The existing `Panproto`/`runner`/`wasm` surface stays untouched.
+      React hooks go in a react sibling.
 - [ ] **`Lens.make(id, Source, Target, mapping)`** (API.md §1) — the single authoring shape; both
       ends are declared types. Static (code) and persisted (space) definition paths, mirroring
       `Type` / `Type.Type`. An ordinary ECHO object, **not** a new `EntityKind` (API.md §0).
@@ -149,7 +154,7 @@ not by being planned.
 
 - [ ] **Promote into `@dxos/echo`** — move the `Lens` module beside `Type`/`View`/`Annotation` and
       add `Obj.lens(obj, lens)` as the entry point. Call sites change one import line
-      (`import * as Lens from '@dxos/echo-lens'` → `import { Lens } from '@dxos/echo'`); no
+      (`import { Lens } from '@dxos/echo-panproto'` → `import { Lens } from '@dxos/echo'`); no
       compatibility re-exports left behind. Hooks, engine, and coded lenses stay outside core
       (DESIGN.md §2.1).
 - [ ] **Richer source annotations** so more of a mapping is inferable — starting with units

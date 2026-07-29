@@ -79,45 +79,56 @@ Obj.lens(obj, lens); // live lensed handle: reactive reads, minimal writes
 
 Registry: stored lenses resolve out of the space by source typename, exactly as stored types do.
 
-### 2.1 Where the code lives — prototype as a sibling package
+### 2.1 Where the code lives — extend `@dxos/echo-panproto`
 
-A lens is, at the end of the day, just another ECHO object. So it gets built **outside** `@dxos/echo`
-as `@dxos/echo-lens` (`packages/core/echo/echo-lens`), a sibling of `echo-client`, `echo-react`,
-`echo-query`, and `echo-doc`. That is a much easier thing to land than a change to core, and three
-facts make it a real option rather than a compromise:
+PR #12395 (merged) created **`@dxos/echo-panproto`** (`packages/core/echo/echo-panproto`), and the
+object-lens work lands there rather than in a new package. What the package already establishes —
+each of these was a Phase 0 unknown, now settled by shipped code:
 
-- **The internals are already public.** `@dxos/echo/internal` is a declared subpath export
-  (`./internal` in the package manifest) and is imported today by roughly twenty packages outside
-  echo core — `react-ui-form`, `react-ui-table`, `compute`, `echo-doc` among them. It re-exports the
-  `Obj` / `Entity` / `Type` / `Annotation` machinery, which is what the live proxy needs.
-- **There is precedent for the ergonomics living outside core.** `useObject` ships in `echo-react`,
-  not `@dxos/echo`. A `useLens` in a sibling package is the existing pattern, not a placeholder.
-- **Nothing about the data model needs core.** The lens entity is an ordinary object; the overlay is
-  an ordinary annotation; the writes are ordinary `Obj.update` / `Text.splice` calls.
+- **The engine works, and its isolation pattern is decided.** `@panproto/core@0.56.1` is wrapped
+  behind the `@dxos/echo-panproto/wasm` entrypoint and loaded lazily by the runner, so the durable
+  API never statically depends on the wasm. The SDK surface is verified against the real package
+  (`Panproto.init()` → `parseLexicon` → `migration().map().mapEdge().compile()` → `liftJson`), and
+  it runs in node (CI tests) and the browser (plugin-atproto ships it in Composer). The workerd
+  question is defused rather than answered: the wasm never enters the static graph, so nothing
+  breaks where it can't load.
+- **Lens-as-data precedent.** `Panproto.Lens` is a serializable Effect Schema value — an `adapters`
+  array (scalar / array / ref / meta / prefix / dateOnly / timestamp / struct / derive) plus an
+  optional structural `migration` — carried on a _type_ via `AtprotoRecordAnnotation` in
+  `@dxos/schema`. Exactly the shape our persisted lens needs.
+- **A working runner** executing declarative mappings against live ECHO objects via
+  `Obj.getValue`, with host-side codecs registered by name (`registerTextFormat`,
+  `registerRefType`) — the same named-codec pattern our coded value conversions need.
 
-**What promotion into core would actually be.** Worth stating, because it is what makes deferring
-safe: the only piece that _wants_ to live in `@dxos/echo` is the `Lens` module sitting beside
-`Type`/`View`/`Annotation` and `Obj.lens` as the entry point. Both are import-path changes at the
-call sites (`import * as Lens from '@dxos/echo-lens'` → `import { Lens } from '@dxos/echo'`), done
-in one change with no compatibility re-exports left behind, per the repo rule. The React hooks stay
-in a react sibling; the panproto engine binding and the coded rich-text lens stay outside core
-regardless, since neither dependency belongs in a package that loads in the shared worker.
+**Relationship between the two lens kinds, stated precisely.** The existing `Panproto.Lens` is a
+**wire lens**: ECHO object ↔ foreign JSON record, snapshot encode/decode, one direction at a time,
+built for publishing (atproto). The object lens this project adds is ECHO object ↔ **declared ECHO
+target type**: a live handle with reactive reads, minimal writes, overlay persistence, and typename
+identity. In API.md §1 terms, the wire lens is the degenerate case where the target is a plain
+`Schema.Schema.Any` and only the snapshot tier exists — so the two share a package honestly, and
+converging the wire lens onto the object-lens interface later is a refactor, not a rewrite. Until
+then they are sibling modules: the existing `Panproto` namespace stays as-is; the object lens ships
+as a new `Lens` namespace export from the same package.
 
-So promotion is cheap, optional, and reversible — which is the argument for not doing it up front.
+Package split:
 
-**The one thing that could force core work early:** if the live proxy turns out to need a change
-inside `Obj`'s proxy handler rather than composing over public internals. That surfaces in Phase 1,
-and if it does, it becomes its own small core PR rather than derailing the prototype.
-
-Package split within the prototype:
-
-- **`@dxos/echo-lens`** — the `Lens` interface, the `org.dxos.type.lens` entity, mapping resolution,
-  overlay storage, the registry, and the read/write tiers. Depends on `@dxos/echo` (including
-  `@dxos/echo/internal`), `@dxos/effect`, `@dxos/schema`. `"private": true`.
+- **`@dxos/echo-panproto`** — existing `Panproto` (wire lens + runner) plus new `Lens` (object
+  lens: entity, mapping resolution, coverage, overlay, read/write tiers, registry). Depends on
+  `@dxos/echo` (including `@dxos/echo/internal`, a public subpath already used by ~20 packages).
+- **`@dxos/echo-panproto/wasm`** — the engine, unchanged; the object lens uses it the same way the
+  runner does (lazily, optionally).
 - **React hooks** — `useLens`, in a react sibling mirroring `echo-react`.
-- **Optional engine package** — the panproto/WASM binding for law-checking (and, later, mapping
-  generation). Absent, everything else still works.
 - **Coded lenses ship with their dependencies** — the rich-text lens owns remark.
+
+**Promotion into `@dxos/echo`** stays the long-term intent once the model is proven: move the
+`Lens` module beside `Type`/`View`/`Annotation`, add `Obj.lens` as the entry point — an import-path
+change at call sites, no compatibility re-exports. The engine, the wire runner, the hooks, and the
+coded lenses stay outside core regardless; none of those dependencies belongs in a package that
+loads in the shared worker.
+
+**The one thing that could force core work early:** if the live proxy needs a change inside `Obj`'s
+proxy handler rather than composing over public internals. That surfaces in Phase 1, and if it does
+it becomes its own small core PR rather than derailing the prototype.
 
 ## 3. What is computed for you
 
@@ -206,26 +217,30 @@ with `check_laws` mechanically verifying GetPut and PutGet. It ingests ~47 schem
 provides the `lens generate` half of D3. Bindings: Rust, `@panproto/core` (WASM/TypeScript),
 Python, a CLI, and an MCP server + Claude Code skills.
 
-The interop boundary is JSON Schema, which we have both ways already
-(`JsonSchema.toJsonSchema` / `toEffectSchema`, `Type.makeObjectFromJsonSchema`).
+**The engine is already in the repo and verified** — `@dxos/echo-panproto/wasm` wraps
+`@panproto/core@0.56.1` and exercises `Panproto.init()` → `parseLexicon` →
+`migration().map().mapEdge().compile()` → `liftJson` in CI (§2.1). One scope note from that
+integration, learned the honest way: the shipped TS API exposes **structural** graph transforms
+(vertex/edge alignment, renames, nesting) but no value-expression step — which is exactly why
+`echo-panproto` splits every lens into a structural `migration` (engine) plus host-side `adapters`
+(runner). Our object lens inherits that split: the engine handles structure, and value conversions
+are named host-side codecs.
 
-**But the `Lens` interface is uniform and the implementation is pluggable:**
+**And the `Lens` interface is uniform, the implementation pluggable:**
 
-- **Declarative lens** — a panproto spec compiled to `get`/`put` by the engine. Generated or
-  hand-authored, law-checked by the engine, and _derivable_ per D1. Task → GTD.
+- **Declarative lens** — a serializable mapping (structural pass + named value codecs), executed by
+  the engine + runner. Task → GtdTask.
 - **Coded lens** — a TypeScript module exporting the same `get`/`put`/complement shape, registered
-  under a lens id, for transformations no schema diff can express: parsing, tree construction,
-  serialization. Text → rich text.
+  under a lens id, for transformations no per-property mapping can express: parsing, tree
+  construction, serialization. Text → rich text.
 
 Both register in the same registry and are exercised by the same law harness; no consumer knows
 which kind it holds. Pretending a markdown parser is a schema diff would bend the design out of
-shape for no gain. Note the consequence for D1: a coded lens declares its target schema directly
-(it cannot be derived from a spec), so derivation covers declarative lenses only.
+shape for no gain.
 
-**Unverified from docs, confirm in Phase 0** (TS SDK surface, per the book): `Panproto.init()`,
-`MigrationBuilder.map/.mapEdge/.resolve/.compile` → `CompiledMigration.lift/.get/.put`,
-`LensHandle.get/.put/.checkLaws/.toJson`, `Panproto.composeLenses`,
-`Panproto.parseJson/.toJson/.convert`, `get()` returning `GetResult { view, complement }`.
+Still to verify (the law-check surface is not yet exercised by `echo-panproto`):
+`LensHandle.checkLaws` / `checkGetPut` / `checkPutGet`, and whether `get()` returns a usable
+`GetResult { view, complement }` for round-tripping. That is the remaining Phase 0 engine spike.
 
 ## 5. The two lenses
 
@@ -405,12 +420,12 @@ Demonstrated in both directions:
 
 ## 8. Risks and open questions
 
-1. **WASM in our runtime.** `@panproto/core` is a WASM build; unknown size, worker/`workerd`
-   loadability, cold start. Gates the architecture → Phase 0. Fallback: implement the structural
-   subset natively in TypeScript (a path table plus value codecs) and use panproto only at author
-   time to law-check mappings. **The fallback still delivers both lenses and all four stories** —
-   it costs D3's generation half, which was always the weakest link, and which is out of the
-   proof-of-concept scope anyway.
+1. **WASM in our runtime — largely resolved by `echo-panproto`.** The engine runs in node and the
+   browser today, and its lazy `/wasm` entrypoint keeps it out of every static graph, so nothing
+   breaks where it can't load. Residual: the law-check surface is unexercised (§4), and running the
+   engine _inside_ the shared worker (rather than only host-side) is unproven — but the object lens
+   never requires that: mapping resolution is plain TypeScript, and the engine is only consulted at
+   author/verify time.
 2. **Type compatibility for automatic mapping.** How strict is "same name, compatible type"?
    Optionality mismatches (`string` vs `string | undefined`) are the common case and should
    auto-map in the safe direction only; enum literals that differ must not auto-map at all
@@ -427,14 +442,15 @@ Demonstrated in both directions:
 
 ## 9. Proposed layout
 
-- `packages/core/echo/echo-lens` — `@dxos/echo-lens`, `"private": true`. Sibling of `echo-client`
-  / `echo-react` / `echo-query`; staging ground for what eventually becomes `@dxos/echo`'s `Lens`
-  module (§2.1).
-  - `Lens.ts` (interface + ECHO entity), `mapping.ts` (resolution + shorthands), `coverage.ts`,
-    `codec.ts` (T1), `live.ts` (T2 proxy), `overlay.ts`, `registry.ts`, `laws.ts`.
-  - `lenses/task-gtd.ts`.
+- `packages/core/echo/echo-panproto` — existing package (PR #12395); the object lens lands beside
+  the wire lens as a new `Lens` namespace export, staging ground for what eventually becomes
+  `@dxos/echo`'s `Lens` module (§2.1).
+  - Existing: `Panproto.ts`/`lens.ts` (wire lens schema), `runner.ts` (encode/decode + named
+    codecs), `wasm.ts` (engine).
+  - New: `Lens.ts` (interface + ECHO entity), `mapping.ts` (resolution + shorthands),
+    `coverage.ts`, `codec.ts` (T1), `live.ts` (T2 proxy), `overlay.ts`, `registry.ts`, `laws.ts`,
+    `lenses/task-gtd.ts`.
 - React hooks — `useLens`, in a react sibling mirroring `echo-react`.
-- Optional engine package — panproto/WASM binding for `checkLaws` (and, later, generation).
 - Rich-text lens package — the coded lens, owning the remark dependency.
 - `packages/stories/stories-lens` — four stories, two custom UIs, shared raw inspector.
 - No plugin until the stories prove the UI story is worth shipping.
