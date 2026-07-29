@@ -36,21 +36,15 @@
     "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
   },
   "dependencies": {
-    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@fontsource-variable/inter": "catalog:",
     "@fontsource-variable/jetbrains-mono": "catalog:",
     "@fontsource-variable/nunito": "catalog:",
     "@fontsource/poiret-one": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
     "@tailwindcss/forms": "catalog:",
     "@tailwindcss/postcss": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "autoprefixer": "catalog:",
-    "esbuild-style-plugin": "catalog:",
-    "globby": "catalog:",
-    "lodash.merge": "catalog:",
     "postcss": "catalog:",
     "postcss-import": "catalog:",
     "postcss-nesting": "catalog:",
@@ -63,7 +57,6 @@
   "devDependencies": {
     "@dxos/ui-types": "workspace:*",
     "@storybook/react-vite": "catalog:",
-    "@types/lodash.merge": "catalog:",
     "@types/postcss-import": "catalog:",
     "esbuild": "catalog:",
     "vite": "catalog:"

@@ -34,7 +34,6 @@
   ],
   "dependencies": {
     "@dxos/echo": "workspace:*",
-    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
@@ -45,7 +44,6 @@
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",

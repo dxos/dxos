@@ -17,19 +17,7 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
-    },
-    {
-      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -42,9 +30,6 @@
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -62,12 +47,6 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/compute-runtime"
-    },
-    {
-      "path": "../../core/compute/conductor"
-    },
-    {
       "path": "../../core/compute/link"
     },
     {
@@ -80,22 +59,10 @@
       "path": "../../core/echo/echo-doc"
     },
     {
-      "path": "../../core/echo/echo-protocol"
-    },
-    {
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../plugins/plugin-assistant"
-    },
-    {
-      "path": "../../plugins/plugin-attention"
     },
     {
       "path": "../../plugins/plugin-board"
@@ -113,16 +80,10 @@
       "path": "../../plugins/plugin-crm"
     },
     {
-      "path": "../../plugins/plugin-deck"
-    },
-    {
       "path": "../../plugins/plugin-explorer"
     },
     {
       "path": "../../plugins/plugin-game"
-    },
-    {
-      "path": "../../plugins/plugin-graph"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -164,16 +125,10 @@
       "path": "../../plugins/plugin-testing"
     },
     {
-      "path": "../../plugins/plugin-theme"
-    },
-    {
       "path": "../../plugins/plugin-thread"
     },
     {
       "path": "../../plugins/plugin-transcription"
-    },
-    {
-      "path": "../../plugins/plugin-wnfs"
     },
     {
       "path": "../../sdk/app-framework"
@@ -185,13 +140,7 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/config"
-    },
-    {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-edge-client"
     },
     {
       "path": "../../sdk/schema"
@@ -200,19 +149,7 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/lit-ui"
-    },
-    {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../ui/react-ui-canvas-compute"
-    },
-    {
-      "path": "../../ui/react-ui-canvas-editor"
     },
     {
       "path": "../../ui/react-ui-chat"
@@ -227,16 +164,7 @@
       "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/react-ui-experimental"
-    },
-    {
       "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-graph"
-    },
-    {
-      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-masonry"
@@ -245,16 +173,10 @@
       "path": "../../ui/react-ui-menu"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-table"
-    },
-    {
-      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/ui-editor"

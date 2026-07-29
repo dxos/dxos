@@ -26,11 +26,8 @@
   ],
   "dependencies": {
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
-    "@radix-ui/primitive": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-tabs": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:"
@@ -38,7 +35,6 @@
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

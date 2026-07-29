@@ -31,10 +31,8 @@
     "@dxos/lit-grid": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@lit/react": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-popper": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:"
   },
   "devDependencies": {
@@ -42,7 +40,6 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

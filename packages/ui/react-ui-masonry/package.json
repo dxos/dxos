@@ -25,31 +25,17 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo-react": "workspace:*",
-    "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/types": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
-    "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
-    "@dxos/client": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

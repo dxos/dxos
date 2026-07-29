@@ -35,7 +35,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -43,19 +42,13 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
-    "@radix-ui/primitive": "catalog:",
-    "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-menu": "catalog:",
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",

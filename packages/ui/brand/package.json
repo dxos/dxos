@@ -31,9 +31,7 @@
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@fontsource/k2d": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@rive-app/react-canvas": "catalog:",
     "@storybook/react-vite": "catalog:",

@@ -24,18 +24,14 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/log": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@emoji-mart/data": "catalog:",
     "@emoji-mart/react": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
-    "emoji-mart": "catalog:",
-    "react-resize-detector": "catalog:"
+    "emoji-mart": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

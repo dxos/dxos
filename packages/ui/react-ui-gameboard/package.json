@@ -31,8 +31,6 @@
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
-    "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
-    "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
@@ -49,10 +47,8 @@
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@svgr/cli": "catalog:",
-    "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "lodash.defaultsdeep": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

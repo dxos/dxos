@@ -36,12 +36,8 @@
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@lit/react": "catalog:",
     "lit": "catalog:"
-  },
-  "devDependencies": {
-    "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

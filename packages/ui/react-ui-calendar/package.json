@@ -33,26 +33,18 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:",
     "react-resize-detector": "catalog:",
-    "react-virtualized": "catalog:",
-    "react-window": "catalog:"
+    "react-virtualized": "catalog:"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/react-virtualized": "catalog:",
-    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

@@ -63,7 +63,6 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@dxos/storybook-utils": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "vite": "catalog:"

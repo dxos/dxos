@@ -25,22 +25,11 @@
     "src"
   ],
   "dependencies": {
-    "@ark-ui/solid": "catalog:",
-    "@dxos/async": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/node-std": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@solid-primitives/resize-observer": "^2.0.26",
-    "solid-element": "catalog:"
+    "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
-    "@effect-atom/atom": "catalog:",
-    "@solidjs/testing-library": "catalog:",
-    "effect": "catalog:",
     "solid-js": "catalog:",
-    "vite-plugin-solid": "catalog:"
+    "storybook-solidjs-vite": "catalog:"
   },
   "peerDependencies": {
     "@effect-atom/atom": "catalog:",

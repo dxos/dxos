@@ -25,21 +25,15 @@
   ],
   "dependencies": {
     "@dxos/debug": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
     "bind-event-listener": "catalog:",
     "d3": "catalog:",
     "react-resize-detector": "catalog:",
     "transformation-matrix": "catalog:"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",

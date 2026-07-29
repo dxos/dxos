@@ -54,7 +54,6 @@
     "@dxos/brand": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-audio": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",

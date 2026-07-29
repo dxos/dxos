@@ -12,7 +12,15 @@ import { relative } from 'node:path';
  *
  * Extend this as each grouping is cleaned — the entry here is what makes the gate meaningful.
  */
-const GATED = ['packages/common/', 'packages/core/', 'packages/sdk/', 'packages/devtools/', 'tools/'];
+const GATED = [
+  'packages/common/',
+  'packages/core/',
+  'packages/sdk/',
+  'packages/devtools/',
+  'packages/ui/',
+  'packages/stories/',
+  'tools/',
+];
 
 /**
  * `issues` is keyed by issue type: `files` holds absolute paths while every other type maps a

@@ -56,7 +56,8 @@ const entryTargets = (target: unknown): string[] => {
 /** Reachable from tooling rather than from a package entry point, so knip needs them spelled out. */
 const AUXILIARY_ENTRY = [
   'src/**/*.{test,spec}.{ts,tsx}',
-  'src/**/*.stories.{ts,tsx}',
+  // Solid and Lit storybooks use their own suffix so the react storybook does not pick them up.
+  'src/**/*.{stories,solid-stories,lit-stories}.{ts,tsx}',
   'src/**/*.eval.{ts,tsx}',
   'src/testing/**/*.{ts,tsx}',
   'src/playwright/**/*.{ts,tsx}',
@@ -101,11 +102,26 @@ const configuredDependencies = (dir: string, names: string[]): string[] => {
     // Ambient `declare module` shims: knip skips declaration files, so an `import ... from 'pkg'`
     // inside one is invisible to it even though the types would not resolve without the package.
     `${dir}/src/**/*.d.ts`,
+    // Stylesheets `@import` font and preset packages that no TypeScript file ever mentions, and
+    // shaders pull theirs in through a glslify `#pragma`.
+    `${dir}/src/**/*.css`,
+    `${dir}/src/**/*.{glsl,frag,vert}`,
   ]).map((file) => readFileSync(file, 'utf8'));
   if (!sources.length) {
     return [];
   }
-  const used = names.filter((name) => sources.some((source) => source.includes(`'${name}'`)));
+  // A CSS `@import` names a file inside the package, so match the subpath form as well. Fontsource
+  // packages are additionally referenced only by the family they provide (`@fontsource/poiret-one`
+  // supplies `'Poiret One'`), which no import statement mentions.
+  const family = (name: string) => name.replace(/^@fontsource(-variable)?\//, '').replace(/-/g, ' ');
+  const used = names.filter((name) =>
+    sources.some(
+      (source) =>
+        source.includes(`'${name}'`) ||
+        source.includes(`'${name}/`) ||
+        (name.startsWith('@fontsource') && new RegExp(family(name), 'i').test(source)),
+    ),
+  );
   // Knip credits an `@types/x` package only when `x` itself is imported, which a config or shim
   // reference does not count as.
   return [...used, ...used.map((name) => `@types/${name.replace('@', '').replace('/', '__')}`)].filter((name) =>
@@ -290,6 +306,9 @@ const config: KnipConfig = {
   ignoreBinaries: [
     // System tools, not npm packages.
     'jq',
+    // Tailwind v4 ships its CLI as a separate `@tailwindcss/cli` package; the `tailwind-check`
+    // script predates that split and is not wired into any task.
+    'tailwindcss',
     // Provided by @storybook/test-runner, which the storybook harness installs on demand.
     'test-storybook',
   ],

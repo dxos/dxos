@@ -21,16 +21,7 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo"
     },
     {
       "path": "../react-primitives/react-hooks"

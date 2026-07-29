@@ -32,9 +32,6 @@
       "path": "../../common/sql-sqlite"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -89,9 +86,6 @@
       "path": "../../plugins/plugin-discord"
     },
     {
-      "path": "../../plugins/plugin-graph"
-    },
-    {
       "path": "../../plugins/plugin-inbox"
     },
     {
@@ -119,9 +113,6 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
@@ -134,16 +125,10 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
       "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-graph"
     },
     {
       "path": "../../ui/react-ui-list"
@@ -156,9 +141,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../../ui/ui-types"
     },
     {
       "path": "../storybook-testing"
