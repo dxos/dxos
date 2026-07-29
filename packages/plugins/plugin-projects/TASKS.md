@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN, auto-merge ARMED (squash, 2026-07-29 04:01) at the user's explicit direction — the two issues below did NOT get resolved first and are now post-land follow-ups, not gates: (1) BLOCKING-as-recorded: the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`); (2) MAJOR, needs Josiah: the URL binding for project chats. Phase 3 items 1-4 plus in-article routine creation are done and verified live. Next: watch #12383 through the merge queue, then re-open the context/artifact decision before any further schema work. Uncommitted: none._
+_Resume: #12335, #12365, #12370, #12383, #12386 all MERGED — nothing in flight; the branch is level with `origin/main`. The project stays **active**: #12388 (docs-only, would have moved the registry entry to `ended`) was CLOSED unmerged. The two deliberately-unresolved items are now post-land follow-ups, not gates: (1) the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`) — the shipped change is UI-only, so the decision is still owed before any schema change; (2) MAJOR, needs Josiah: the URL binding for project chats. Next: re-open the context/artifact decision before any further schema work. Uncommitted: none._
 
 PR #12383 carries: (1) `Chat.agent` removed and the chat↔agent linkage
 restored to the `CompanionTo` relation — that field was the edge closing the
