@@ -2,17 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEventHandler, useCallback } from 'react';
+import React, { type KeyboardEventHandler, type MouseEventHandler, useCallback } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
+import { Card, DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
 export type ArtifactCardProps = {
   object: Obj.Unknown;
   onClick?: () => void;
+  onDelete?: () => void;
 };
 
 /**
@@ -20,7 +21,7 @@ export type ArtifactCardProps = {
  * driven entirely by schema annotations (icon) and the object's label rather than any one type's
  * fields. Reactive via {@link useObject} so a rename shows without navigating away and back.
  */
-export const ArtifactCard = ({ object: objectProp, onClick }: ArtifactCardProps) => {
+export const ArtifactCard = ({ object: objectProp, onClick, onDelete }: ArtifactCardProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [object] = useObject(objectProp);
   const label = Obj.getLabel(object)?.trim() || t('artifact-card.untitled.label');
@@ -47,6 +48,10 @@ export const ArtifactCard = ({ object: objectProp, onClick }: ArtifactCardProps)
     [onClick],
   );
 
+  // The whole card is the click target, so the trigger must not also open the object. Radix's
+  // `asChild` composes this with its own handler, so the menu still opens.
+  const stopPropagation = useCallback<MouseEventHandler>((event) => event.stopPropagation(), []);
+
   return (
     <Card.Root
       fullWidth
@@ -61,6 +66,35 @@ export const ArtifactCard = ({ object: objectProp, onClick }: ArtifactCardProps)
           <Icon icon={icon} />
         </Card.Block>
         <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
+        {onDelete && (
+          <Card.Block>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <IconButton
+                  onClick={stopPropagation}
+                  icon='ph--dots-three-vertical--regular'
+                  iconOnly
+                  density='xs'
+                  variant='ghost'
+                  tabIndex={-1}
+                  label={t('artifact-card.options.label')}
+                  data-testid='projectsPlugin.artifactOptions'
+                />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item onSelect={onDelete} data-testid='projectsPlugin.artifactDelete'>
+                      <Icon icon='ph--trash--regular' />
+                      <span>{t('artifact-card.delete.label')}</span>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </Card.Block>
+        )}
       </Card.Header>
       {typeLabel && (
         <Card.Body>

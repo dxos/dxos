@@ -13,6 +13,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { type Node, useActionRunner } from '@dxos/plugin-graph';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
@@ -72,6 +73,16 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, attendableId],
   );
 
+  // Deletes the object and splices it out of the artifacts collection, closing any open plank —
+  // `RemoveObjects` does all three, given the collection as its target.
+  const artifactsCollection = Obj.getReactiveOrUndefined(artifacts);
+  const handleDelete = useCallback(
+    (object: Obj.Unknown) => {
+      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object], target: artifactsCollection });
+    },
+    [invokePromise, artifactsCollection],
+  );
+
   const handleValuesChanged = useCallback(
     (values: Partial<HeaderValues>) => {
       updateProject((project) => {
@@ -108,7 +119,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 </Form.Section>
 
                 <Form.Section title={t('artifacts.label')}>
-                  <ArtifactGallery refs={artifacts?.objects ?? []} onOpen={handleOpen} />
+                  <ArtifactGallery refs={artifacts?.objects ?? []} onOpen={handleOpen} onDelete={handleDelete} />
                 </Form.Section>
               </Form.Content>
             </Form.Viewport>
@@ -166,15 +177,16 @@ const useToolbarActions = (
   return { actions, onAction };
 };
 
-type ArtifactTileData = { object: Obj.Unknown; onClick: () => void };
+type ArtifactTileData = { object: Obj.Unknown; onClick: () => void; onDelete: () => void };
 
 type ArtifactGalleryProps = {
   refs: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
   onOpen: (object: Obj.Unknown) => void;
+  onDelete: (object: Obj.Unknown) => void;
 };
 
 /** A project's artifacts as clickable cards. Unresolved refs are omitted until their target loads. */
-const ArtifactGallery = ({ refs, onOpen }: ArtifactGalleryProps) => {
+const ArtifactGallery = ({ refs, onOpen, onDelete }: ArtifactGalleryProps) => {
   // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`
   // synchronously would leave the gallery permanently empty.
   // `useObjects` is the resolution trigger; the live entities are re-read from `.target` because the
@@ -185,8 +197,8 @@ const ArtifactGallery = ({ refs, onOpen }: ArtifactGalleryProps) => {
       refs
         .map((ref) => ref.target)
         .filter((object): object is Obj.Unknown => !!object)
-        .map((object) => ({ object, onClick: () => onOpen(object) })),
-    [refs, loaded, onOpen],
+        .map((object) => ({ object, onClick: () => onOpen(object), onDelete: () => onDelete(object) })),
+    [refs, loaded, onOpen, onDelete],
   );
 
   if (items.length === 0) {
@@ -203,7 +215,7 @@ const ArtifactGallery = ({ refs, onOpen }: ArtifactGalleryProps) => {
 };
 
 const ArtifactTile = memo(({ data }: { data: ArtifactTileData | undefined; index: number }) =>
-  data ? <ArtifactCard object={data.object} onClick={data.onClick} /> : null,
+  data ? <ArtifactCard object={data.object} onClick={data.onClick} onDelete={data.onDelete} /> : null,
 );
 
 ArtifactTile.displayName = 'ArtifactTile';
