@@ -1,14 +1,17 @@
 # plugin-projects — Tasks
 
-_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN — NOT LANDABLE YET: two issues must be resolved first, both in Phase 3 below — (1) BLOCKING: the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`); (2) MAJOR, needs Josiah: the URL binding for project chats. Phase 3 items 1-4 are done and verified live end-to-end (chat creates from the toolbar, appears under its project, respects instructions, files artifacts). Uncommitted: none._
+_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN, auto-merge ARMED (squash, 2026-07-29 04:01) at the user's explicit direction — the two issues below did NOT get resolved first and are now post-land follow-ups, not gates: (1) BLOCKING-as-recorded: the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`); (2) MAJOR, needs Josiah: the URL binding for project chats. Phase 3 items 1-4 plus in-article routine creation are done and verified live. Next: watch #12383 through the merge queue, then re-open the context/artifact decision before any further schema work. Uncommitted: none._
 
-PR #12383 carries four things: (1) `Chat.agent` removed and the chat↔agent linkage
+PR #12383 carries: (1) `Chat.agent` removed and the chat↔agent linkage
 restored to the `CompanionTo` relation — that field was the edge closing the
 Agent↔Chat import cycle, so `agent-chat.ts` and both namespace facades are gone,
 the lifecycle folded back into `Agent`, `Agent.loadForChat` added as the inverse
 of `loadChat`; (2) the dead `LegacyCompanionTo` migration deleted; (3) an
 echo-client fix for nested records read off detached objects; (4) `Chat.test.ts`,
-`sync.test.ts`, and the delegation-strategy section in DESIGN.md.
+`sync.test.ts`, and the delegation-strategy section in DESIGN.md; (5) Phase 3's
+project chats (toolbar create, navtree children, Chats-section exclusion);
+(6) in-article routine creation, the shared routines/artifacts card gallery, and
+the `RoutineCard` trigger summary.
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
@@ -107,7 +110,12 @@ repoint.
       `chats: Ref<Collection>` fallback (and its 0.3.0 bump) is not needed. The `url` binding is NOT
       done — see the MAJOR issue below.
 
-### BLOCKING — resolve before landing: context/artifact model across the core types
+### OPEN (was "resolve before landing") — context/artifact model across the core types
+
+> Status 2026-07-29: #12383 was landed with this unresolved, at the user's direction. The interim
+> step taken was UI-only — `InstructionsEditor` no longer renders `objects`, so it no longer reads as
+> a second artifacts list — while the schema field and every runtime consumer are untouched. That
+> buys time but decides nothing; the decision below is still owed before any schema change.
 
 `Project` carries both `instructions.objects` (inputs bound into a session) and `artifacts` (outputs
 the project owns), and they render as two near-identical ref lists in the article — which is the
