@@ -180,6 +180,7 @@
       "@dxos/stories-assistant",
       "@dxos/stories-brain",
       "@dxos/stories-inbox",
+      "@dxos/stories-projects",
       "@dxos/storybook-addon-logger",
       "@dxos/storybook-testing",
       "@dxos/storybook-utils",

@@ -206,6 +206,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-projects"
+    },
+    {
       "path": "../plugin-routine"
     },
     {

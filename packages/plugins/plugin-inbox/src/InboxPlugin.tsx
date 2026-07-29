@@ -19,6 +19,7 @@ import {
   InboxSettings,
   NavigationTargetResolver,
   OperationHandler,
+  ProjectTemplates,
   ReactSurface,
   SkillDefinition,
 } from '#capabilities';
@@ -49,6 +50,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({ activatesOn: AppActivationEvents.SetupSchema, activate: ProjectTemplates }),
   Plugin.addModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationTargetResolver }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
