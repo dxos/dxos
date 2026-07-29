@@ -72,8 +72,14 @@ Stage-1 schema fixes:
 
   ```ts
   // plugin-thread/types/ThreadAnnotation.ts
-  export const ThreadName = Annotation.make({ id: 'org.dxos.chat.threadName', schema: Schema.String });
+  export const Thread = Annotation.make({
+    id: 'org.dxos.chat.thread',
+    schema: Schema.Struct({ name: Schema.optional(Schema.String) }),
+  });
   ```
+
+  **One annotation per concern, not per field.** Further thread state joins this
+  struct rather than minting `org.dxos.chat.threadResolved` and friends.
 
   Values live in `Obj.getMeta(message).annotations`, so they travel with the
   object through the feed codec. Keys are namespaced on the **service**
@@ -94,10 +100,11 @@ Reaction {
 
 Per-message thread metadata, set on root messages only and folded at read:
 
-- **thread name** — shipped as the `org.dxos.chat.threadName` annotation.
+- **thread name** — the `name` field of the `org.dxos.chat.thread` annotation.
   (Zulip calls this a topic; we name it for what it is.) Renaming is an author
   re-append, so only the root's author may do it: under last-flush-wins a
-  second editor would silently clobber them.
+  second editor would silently clobber them. Clearing the last populated field
+  drops the annotation instead of leaving an empty struct behind.
 - `resolved` — comment-thread resolution state, to ship as review's own
   annotation in stage 3 (same mechanism, `org.dxos.review.*`).
 

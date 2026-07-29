@@ -92,7 +92,7 @@ export const foldThreads = (messages: readonly Message.Message[]): ReadonlyMap<s
     summaries.set(threadId, {
       threadId,
       root,
-      name: root && ThreadAnnotation.getThreadName(root),
+      name: root && ThreadAnnotation.getName(root),
       replies,
       participants,
       lastActivity: replies.at(-1)?.created ?? root?.created,

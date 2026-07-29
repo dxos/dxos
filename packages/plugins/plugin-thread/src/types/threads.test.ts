@@ -89,7 +89,7 @@ describe('threads', () => {
 
     test('picks up the thread name from its root', ({ expect }) => {
       const root = makeMessage({ text: 'root' });
-      ThreadAnnotation.setThreadName(root, 'Q2 planning');
+      ThreadAnnotation.setName(root, 'Q2 planning');
       const reply = makeMessage({ text: 'a', threadId: root.id });
       expect(foldThreads([root, reply]).get(root.id)?.name).to.eq('Q2 planning');
     });

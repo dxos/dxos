@@ -54,11 +54,12 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       plugin's schema module (all three entrypoints: browser/node/workerd).
       Fold and toggle helpers are deliberately deferred to the UI task that
       needs them, so they land with tests against real usage.
-- [x] Define the thread name (roots only): `ThreadAnnotation.ThreadName`
-      (`org.dxos.chat.threadName`) in plugin-thread, with
-      `getThreadName`/`setThreadName`. Named for the thing rather than Zulip's
-      "topic" jargon (josiah, 2026-07-29). Keyed on the service, not the plugin
-      id, so the stage-2 rename cannot orphan persisted values.
+- [x] Define the thread name (roots only): the `name` field of a single
+      `ThreadAnnotation.Thread` annotation (`org.dxos.chat.thread`), with
+      `getThread`/`getName`/`setName`. Shape set by josiah (2026-07-29): one
+      annotation per _concern_, so later thread state becomes another field in
+      this struct rather than another annotation. Keyed on the service, not the
+      plugin id, so the stage-2 rename cannot orphan persisted values.
 - [x] Decide reaction identity/toggle mechanics: `findOwnReaction` matches
       `(senderKey, target, emoji)` and `ThreadOperation.ToggleReaction`
       appends or tombstones that one item. Idempotency comes from the fold

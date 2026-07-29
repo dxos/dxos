@@ -149,7 +149,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const handleRename = useCallback(
     (name: string) => {
       if (openThreadRoot) {
-        ThreadAnnotation.setThreadName(openThreadRoot, name);
+        ThreadAnnotation.setName(openThreadRoot, name);
       }
     },
     [openThreadRoot],
@@ -241,7 +241,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
               threadId={openThreadId}
               root={openThreadRoot}
               replies={openThread?.replies ?? []}
-              name={openThread?.name ?? (openThreadRoot && ThreadAnnotation.getThreadName(openThreadRoot))}
+              name={openThread?.name ?? (openThreadRoot && ThreadAnnotation.getName(openThreadRoot))}
               identity={identity ?? undefined}
               members={members}
               readOnly={readOnly}
