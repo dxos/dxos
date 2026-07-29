@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { createObject } from '@dxos/echo-client';
-import { type MessageMetadata } from '@dxos/react-ui-thread';
+import { type MessageLike, type MessageMetadata } from '@dxos/react-ui-thread';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -29,7 +29,7 @@ const message = (name: string, text: string): Message.Message =>
 
 // CommentThread is space-agnostic: metadata is injected. The story supplies simple resolvers (author
 // name from the message sender; a fixed composer author), so no client/space is needed.
-const getMetadata = (message: Message.Message): MessageMetadata =>
+const getMetadata = (message: MessageLike): MessageMetadata =>
   getMessageMetadata(Obj.getURI(message), undefined, message.sender);
 const authorMetadata: MessageMetadata = { id: 'you', authorName: 'You' };
 

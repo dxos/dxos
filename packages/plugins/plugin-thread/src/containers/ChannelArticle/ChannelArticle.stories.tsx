@@ -241,6 +241,76 @@ export const ReplyInThread: Story = {
   },
 };
 
+/**
+ * The main channel offers "start a thread" and withholds reply; inside a thread it is the other way
+ * round. That asymmetry is what pushes conversation into threads rather than growing the channel.
+ */
+export const ThreadAffordances: Story = {
+  args: {
+    subject: undefined,
+    attendableId: 'story',
+    role: AppSurface.Article.role,
+    roomId: '04a1d1911703b8e929d0649021a965',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(async () => {
+      await expect(await canvas.findByText('Hello, channel.')).toBeVisible();
+    }, TIMEOUT);
+
+    // Main channel: start-thread on every message, reply on none.
+    await expect((await canvas.findAllByTestId('thread.message.start-thread')).length).toBeGreaterThan(0);
+    await expect(canvas.queryAllByTestId('thread.message.reply')).toHaveLength(0);
+
+    await userEvent.click(await canvas.findByText('1 reply'));
+    const panel = within(await canvas.findByTestId('thread.panel'));
+
+    // Inside the thread: reply, and no way to nest another thread.
+    await expect((await panel.findAllByTestId('thread.message.reply')).length).toBeGreaterThan(0);
+    await expect(panel.queryAllByTestId('thread.message.start-thread')).toHaveLength(0);
+  },
+};
+
+/** Replying inside a thread banners the target, then renders the sent message with its quote. */
+export const QuoteReply: Story = {
+  args: {
+    subject: undefined,
+    attendableId: 'story',
+    role: AppSurface.Article.role,
+    roomId: '04a1d1911703b8e929d0649021a965',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await waitFor(() => canvas.findByText('1 reply'), TIMEOUT));
+    const panelElement = await canvas.findByTestId('thread.panel');
+    const panel = within(panelElement);
+
+    await userEvent.click((await panel.findAllByTestId('thread.message.reply'))[0]);
+    await expect(await panel.findByTestId('thread.reply-banner')).toBeVisible();
+
+    const placeholder = await panel.findByText(/reply in thread/i, {}, TIMEOUT);
+    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+    if (!editor) {
+      throw new Error('Thread composer not found.');
+    }
+    await userEvent.click(editor);
+    await userEvent.type(editor, 'Answering that specific point.');
+    await userEvent.keyboard('{Enter}');
+
+    // Sequential asserts so a failure names its step: send lands, banner clears, quote resolves.
+    await expect(await panel.findByText('Answering that specific point.', {}, TIMEOUT)).toBeVisible();
+    await waitFor(async () => {
+      await expect(panel.queryByTestId('thread.reply-banner')).toBeNull();
+    });
+    await waitFor(async () => {
+      // The quote resolves through `parentMessage` (reactively, via useObject).
+      await expect((await panel.findAllByTestId('thread.message.quote')).length).toBeGreaterThan(0);
+    }, TIMEOUT);
+  },
+};
+
 /** Reacting to a message adds a chip showing the emoji and its count. */
 export const React_: Story = {
   name: 'React',

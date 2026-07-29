@@ -26,7 +26,10 @@ export { command } from './command';
 export { useThreadContext } from './context';
 export type {
   MessageCallbacks,
+  MessageLike,
   MessageMetadata,
+  MessageReaction,
+  MessageThreadSummary,
   ObjectTileComponent,
   ThreadComponents,
   ThreadContextValue,

@@ -9,6 +9,13 @@ import { type Message } from '@dxos/types';
 import { type FallbackValue } from '@dxos/util';
 
 /**
+ * A message as the metadata resolver sees it. Accepts a snapshot as well as a live object because a
+ * quoted parent arrives from `useObject` as a snapshot, and resolving metadata only ever reads
+ * fields.
+ */
+export type MessageLike = Message.Message | Obj.Snapshot<Message.Message>;
+
+/**
  * Presentational metadata for a message author, resolved by the host (e.g. from
  * space members / identity) and supplied to the UI layer — keeps this package
  * free of `@dxos/react-client`.
@@ -62,8 +69,16 @@ export type MessageCallbacks = {
   onMessageDelete?: (messageId: string) => void;
   /** Toggle the local identity's reaction with `emoji` (omit to hide reactions entirely). */
   onMessageReact?: (messageId: string, emoji: string) => void;
-  /** Start (or open) the thread branching from a message (omit to hide the affordance). */
+  /**
+   * Start (or open) the thread branching from a message. Offered in a channel's main view only —
+   * threads do not nest, and withholding it inside a thread is what pushes conversation into threads.
+   */
   onThreadOpen?: (messageId: string) => void;
+  /**
+   * Quote-reply to a message, targeting it by `parentMessage`. Offered inside a thread only — the
+   * main view offers "start a thread" instead, so replies land in a thread rather than the channel.
+   */
+  onMessageReply?: (messageId: string) => void;
   /** Accept an assistant proposal block on a message (omit to hide the affordance). */
   onAcceptProposal?: (messageId: string) => void;
   /** Accept a suggested-change block on a message (omit to hide the affordance). */
@@ -79,7 +94,7 @@ export type ThreadContextValue = {
   /** The selected message, accented in the list. */
   currentMessageId?: string;
   /** Resolve presentational metadata for a message. */
-  getMetadata: (message: Message.Message) => MessageMetadata;
+  getMetadata: (message: MessageLike) => MessageMetadata;
   /** Resolve a message's folded reactions. Omit (or return empty) to render none. */
   getReactions?: (message: Message.Message) => readonly MessageReaction[];
   /** Emoji offered by the reaction picker. Defaults to {@link DEFAULT_REACTIONS}. */

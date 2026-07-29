@@ -9,6 +9,7 @@ import { useObject } from '@dxos/echo-react';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
 import {
   Message as MessageComponent,
+  type MessageLike,
   type MessageMetadata,
   Thread,
   type ThreadComponents,
@@ -40,7 +41,7 @@ export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   identityDid?: string;
   current?: boolean;
   /** Resolve a message author's presentational metadata; supplied by the container (space-aware). */
-  getMetadata: (message: Message.Message) => MessageMetadata;
+  getMetadata: (message: MessageLike) => MessageMetadata;
   onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
   onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
   onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;

@@ -31,6 +31,11 @@ export type ThreadPanelProps = ThemedClassName<{
   canDelete?: ThreadRootProps['canDelete'];
   onMessageReact?: (messageId: string, emoji: string) => void;
   onMessageDelete?: (messageId: string) => void;
+  /** Quote-reply to a message. Offered inside threads only, which is why the panel takes it. */
+  onMessageReply?: (messageId: string) => void;
+  /** Message the composer currently targets. */
+  replyTo?: Message.Message;
+  onCancelReply?: () => void;
   /** Renames the thread; omit when the local identity may not (only the root's author may). */
   onRename?: (name: string) => void;
   onClose: () => void;
@@ -55,6 +60,9 @@ export const ThreadPanel = ({
   canDelete,
   onMessageReact,
   onMessageDelete,
+  onMessageReply,
+  replyTo,
+  onCancelReply,
   onRename,
   onClose,
   onSend,
@@ -116,6 +124,9 @@ export const ThreadPanel = ({
         canDelete={canDelete}
         onMessageReact={onMessageReact}
         onMessageDelete={onMessageDelete}
+        onMessageReply={onMessageReply}
+        replyTo={replyTo}
+        onCancelReply={onCancelReply}
         onSend={onSend}
       />
     </div>

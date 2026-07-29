@@ -40,6 +40,8 @@ export type ChannelArticleProps = AppSurface.ObjectArticleProps<
     fullscreen?: boolean;
     /** Always render the chat, even while in this channel's call (used by the in-call chat companion). */
     chatOnly?: boolean;
+    /** Thread to open on mount — set when the article is reached via a thread's navtree node. */
+    threadId?: string;
   }
 >;
 
@@ -51,7 +53,7 @@ export type ChannelArticleProps = AppSurface.ObjectArticleProps<
  * carries foreign-key `Obj.Meta`" when the provider has none. When plugin-calls is present, a
  * "Start video call" action switches the article to the call surface and the chat moves to a companion.
  */
-export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly }: ChannelArticleProps) => {
+export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly, threadId }: ChannelArticleProps) => {
   const identity = useIdentity();
   const space = channel ? getSpace(channel) : undefined;
   const members = useMembers(space?.id);
@@ -69,7 +71,8 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
 
   // Thread-first: the main list renders roots only, each carrying a summary of the thread that
   // branches from it; the open thread renders beside it.
-  const [openThreadId, setOpenThreadId] = useState<string | undefined>(undefined);
+  const [openThreadId, setOpenThreadId] = useState<string | undefined>(threadId);
+  const [replyToId, setReplyToId] = useState<string | undefined>(undefined);
   const roots = useMemo(() => selectRoots(messages), [messages]);
   const threads = useMemo(() => foldThreads(messages), [messages]);
   const foldedReactions = useMemo(() => foldReactions(reactions, identity?.did), [reactions, identity?.did]);
@@ -124,6 +127,19 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
     [channel, messages, invokePromise],
   );
 
+  // Replies are scoped to the open thread, so switching or closing threads drops a pending target.
+  const handleOpenThread = useCallback((messageId: string | undefined) => {
+    setOpenThreadId(messageId);
+    setReplyToId(undefined);
+  }, []);
+
+  const replyTo = useMemo(
+    () => (replyToId ? messages.find((message) => message.id === replyToId) : undefined),
+    [messages, replyToId],
+  );
+
+  const handleCancelReply = useCallback(() => setReplyToId(undefined), []);
+
   const handleSendReply = useCallback(
     (text: string) => {
       if (!channel || !identity || readOnly || !openThreadId) {
@@ -134,10 +150,12 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
         sender: { identityDid: identity.did },
         text,
         threadId: openThreadId,
+        ...(replyTo ? { parentMessage: replyTo } : {}),
       });
+      setReplyToId(undefined);
       return true;
     },
-    [channel, identity, readOnly, openThreadId, invokePromise],
+    [channel, identity, readOnly, openThreadId, replyTo, invokePromise],
   );
 
   // Only the root's author may rename a thread: the name is an annotation on the root message, and
@@ -233,7 +251,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
             canDelete={canDelete}
             onMessageReact={canReact ? handleReact : undefined}
             onMessageDelete={canRemove ? handleDelete : undefined}
-            onThreadOpen={setOpenThreadId}
+            onThreadOpen={handleOpenThread}
           />
           {openThreadId && (
             <ThreadPanel
@@ -250,8 +268,11 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
               canDelete={canDelete}
               onMessageReact={canReact ? handleReact : undefined}
               onMessageDelete={canRemove ? handleDelete : undefined}
+              onMessageReply={readOnly ? undefined : setReplyToId}
+              replyTo={replyTo}
+              onCancelReply={handleCancelReply}
               onRename={canRenameThread ? handleRename : undefined}
-              onClose={() => setOpenThreadId(undefined)}
+              onClose={() => handleOpenThread(undefined)}
               onSend={handleSendReply}
             />
           )}

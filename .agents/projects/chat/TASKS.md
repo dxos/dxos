@@ -84,11 +84,33 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       so a keystroke is not a feed re-append; the name also renders in the
       summary row.
 - [ ] Deep-link a thread. PARKED by josiah (2026-07-29) until the rest is
-      working — thread selection is component state for now. Needs the url-deck
+      working — thread selection is component state for now (the navtree
+      thread nodes open via surface data, not URL). Needs the url-deck
       pair-chain grammar, and plugin-projects has the same open need.
+- [ ] Explore starting threads from anywhere (inside threads, from replies) —
+      jdw: Discord-only for now, revisit later.
 
 ### Message actions
 
+- [x] Hover toolbar (jdw round 2): every message offers react · delete-own;
+      **the main channel adds start-thread and withholds reply, threads add
+      reply and withhold start-thread** — Discord's model, deliberately
+      pushing conversation into threads. The reaction picker moved into the
+      hover controls so an un-reacted message carries no persistent chrome;
+      the summary row now renders only once a thread exists.
+- [x] Quote-reply (threads only): hover reply → banner above the composer
+      names the target (cancelable; switching threads clears it) → send
+      writes `Message.parentMessage` (the stage-1 Ref, previously written by
+      nothing) → the sent message renders a compact quote above its body.
+      Quote resolution uses `useObject` per the `useObjectReactive` idiom —
+      `ref.target` is not reactive (jdw).
+- [x] FIXED upstream stale-closure bug this exposed: `MessageTextbox` builds
+      its CodeMirror keymap once (`useTextEditor` deps are `[id, extensions]`),
+      so Enter held the first `onSend` closure forever and silently dropped
+      the reply target. `Thread.Textbox` now uses the latest-ref pattern
+      (identity-stable callback reading `onSendRef.current`), same as
+      `EditorView.onChange`. Any host whose `onSend` closure changes between
+      renders was affected.
 - [x] Edit: author-only (`editable` + the tile's `isAuthor` check) → `Obj.update`,
       which the feed persists as a re-append. No edited indicator yet — the
       signal is still undecided (see the note below).
@@ -97,19 +119,32 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       `Thread.Root` (previously any participant could delete anyone's message).
       No tombstone stub is needed: the feed query already excludes tombstoned
       items, asserted by the `DeleteOwnOnly` play.
-- [x] Reactions UI: `Message.Reactions` — picker plus folded chips with counts
-      and own-state highlight; clicking an active chip un-reacts.
+- [x] Reactions UI: folded chips with counts and own-state highlight; clicking
+      an active chip un-reacts; picker in the hover toolbar.
 - [x] Storybook coverage: `Roots`, `OpenThread`, `DeleteOwnOnly`,
-      `ReplyInThread`, `React`.
+      `ReplyInThread`, `ThreadAffordances` (the channel/thread asymmetry),
+      `QuoteReply` (banner → send → quote), `React`.
+
+### Navtree
+
+- [x] Threads as children of the channel node (jdw round 2):
+      `channelThreads` graph extension folds the feed and emits one node per
+      thread, ordered by last activity, labelled by thread name falling back
+      to the root's first line. Nodes carry a `(channel, threadId)`
+      `ThreadSelection` — deliberately not a bare `Message`, since
+      plugin-inbox claims the article surface for every non-draft message —
+      and a `channelThread` surface opens `ChannelArticle` with that thread
+      already open.
 
 ### Stage-1 verification
 
 - [x] Unit: folds (threads, reactions, participants, orphaned root) and
       reaction toggle idempotency — 15 tests in `types/threads.test.ts`, plus
       6 in `@dxos/types` for the schema changes.
-- [x] Storybook plays: 7 green in a real browser, covering roots-only
-      rendering, thread open/close, threaded reply, author-gated delete, and
-      the reaction round trip through the feed.
+- [x] Storybook plays: 9 green in a real browser, covering roots-only
+      rendering, thread open/close, threaded reply, author-gated delete, the
+      reaction round trip, the channel/thread affordance asymmetry, and the
+      quote-reply round trip (banner, `parentMessage`, rendered quote).
 - [ ] Two-client storybook for optimistic send + cross-peer convergence — not
       attempted; needs a two-peer harness.
 - [ ] Manual: offline send (airplane-mode) → reconnect → `blocksToPush`

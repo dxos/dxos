@@ -71,6 +71,7 @@ const ThreadRoot = ({
   onMessageDelete,
   onMessageReact,
   onThreadOpen,
+  onMessageReply,
   onAcceptProposal,
   onAcceptChange,
   onRejectChange,
@@ -101,6 +102,7 @@ const ThreadRoot = ({
       onMessageDelete={onMessageDelete}
       onMessageReact={onMessageReact}
       onThreadOpen={onThreadOpen}
+      onMessageReply={onMessageReply}
       onAcceptProposal={onAcceptProposal}
       onAcceptChange={onAcceptChange}
       onRejectChange={onRejectChange}
@@ -423,6 +425,53 @@ const ThreadMessages = ({
 ThreadMessages.displayName = 'Thread.Messages';
 
 //
+// Reply banner
+//
+
+export type ThreadReplyBannerProps = {
+  /** Message the composer is currently targeting. */
+  replyTo: MessageType.Message;
+  onCancel: () => void;
+};
+
+/**
+ * Banner above the composer naming the message a reply targets, with a cancel affordance. Rendered
+ * only while a reply is pending — sending or cancelling clears it.
+ */
+const ThreadReplyBanner = ({ replyTo, onCancel }: ThreadReplyBannerProps) => {
+  const { t } = useTranslation(translationKey);
+  const { getMetadata } = useThreadContext('Thread.ReplyBanner');
+  const { authorName } = getMetadata(replyTo);
+  const text = replyTo.blocks
+    .flatMap((block) => (block._tag === 'text' ? [block.text] : []))
+    .join(' ')
+    .trim();
+
+  return (
+    <div
+      data-testid='thread.reply-banner'
+      className='col-start-2 flex items-center gap-2 mis-[var(--dx-rail-size)] me-2 mb-1 ps-2 py-1 rounded-sm bg-activeSurface text-xs min-w-0'
+    >
+      <Icon icon='ph--arrow-bend-up-left--regular' size={4} classNames='shrink-0 text-description' />
+      <span className='shrink-0 text-description'>{t('replying-to.label', { name: authorName })}</span>
+      <span className='truncate min-w-0 text-description'>{text}</span>
+      <IconButton
+        data-testid='thread.reply-banner.cancel'
+        variant='ghost'
+        density='sm'
+        icon='ph--x--regular'
+        iconOnly
+        label={t('cancel-reply.label')}
+        classNames='ms-auto shrink-0'
+        onClick={onCancel}
+      />
+    </div>
+  );
+};
+
+ThreadReplyBanner.displayName = 'Thread.ReplyBanner';
+
+//
 // Textbox
 //
 
@@ -465,12 +514,18 @@ const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, .
     [themeMode, placeholder, t, extensions, count],
   );
 
+  // The editor keymap captures this callback once (`useTextEditor` does not rebuild on prop
+  // changes), so it must stay identity-stable yet always call the CURRENT `onSend` — the host's
+  // closure changes between renders (e.g. it carries the reply target), and a stale capture would
+  // silently send without it. Same latest-ref pattern as `EditorView`'s `onChange`.
+  const onSendRef = useRef(onSend);
+  onSendRef.current = onSend;
   const handleSend = useCallback(() => {
     const text = messageRef.current;
-    if (!text?.length || !onSend) {
+    if (!text?.length || !onSendRef.current) {
       return;
     }
-    if (onSend(text)) {
+    if (onSendRef.current(text)) {
       messageRef.current = '';
       setCount((value) => value + 1);
     }
@@ -535,6 +590,7 @@ export const Thread = {
   Content: ThreadContent,
   Header: ThreadHeader,
   Messages: ThreadMessages,
+  ReplyBanner: ThreadReplyBanner,
   Textbox: ThreadTextbox,
   Status: ThreadStatus,
 };

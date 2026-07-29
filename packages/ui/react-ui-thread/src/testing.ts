@@ -8,7 +8,7 @@ import { type ValueGenerator, createGenerator } from '@dxos/schema/testing';
 import { Message } from '@dxos/types';
 import { hexToFallback } from '@dxos/util';
 
-import { type MessageMetadata } from './types';
+import { type MessageLike, type MessageMetadata } from './types';
 
 const generator: ValueGenerator = random as any;
 
@@ -35,7 +35,7 @@ export const createMessages = (count = 8): Message.Message[] => {
 };
 
 /** Story metadata resolver mapping a message's sender to presentational fields. */
-export const getStoryMetadata = (message: Message.Message): MessageMetadata => {
+export const getStoryMetadata = (message: MessageLike): MessageMetadata => {
   const did = message.sender.identityDid ?? '0';
   const fallback = hexToFallback(did);
   return {

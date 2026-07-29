@@ -49,6 +49,8 @@ export const AppendChannelMessage = Operation.make({
     text: Schema.String,
     /** Thread to post into (the root message's id). Absent posts a new root to the main view. */
     threadId: Schema.optional(Schema.String),
+    /** Message being quote-replied to, if any. Offered inside threads only. */
+    parentMessage: Schema.optional(Type.getSchema(Message.Message)),
   }),
   output: Schema.Void,
 });

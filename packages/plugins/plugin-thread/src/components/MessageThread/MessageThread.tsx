@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Identity, type Space } from '@dxos/halo';
 import { Card, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
-import { type ObjectTileComponent, Thread, type ThreadRootProps } from '@dxos/react-ui-thread';
+import { type MessageLike, type ObjectTileComponent, Thread, type ThreadRootProps } from '@dxos/react-ui-thread';
 import { type Message } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
@@ -59,6 +59,12 @@ export type MessageThreadProps = ThemedClassName<{
   onMessageDelete?: (messageId: string) => void;
   /** Open the thread branching from a message (omit to hide the affordance). */
   onThreadOpen?: (messageId: string) => void;
+  /** Quote-reply to a message (omit to hide the affordance). */
+  onMessageReply?: (messageId: string) => void;
+  /** Message the composer currently targets; renders the reply banner above it. */
+  replyTo?: Message.Message;
+  /** Clears the pending reply target. */
+  onCancelReply?: () => void;
 }>;
 
 /**
@@ -87,6 +93,9 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
       onMessageReact,
       onMessageDelete,
       onThreadOpen,
+      onMessageReply,
+      replyTo,
+      onCancelReply,
       classNames,
     },
     forwardedRef,
@@ -98,7 +107,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
     const textboxMetadata = useMemo(() => getMessageMetadata(id, identity), [id, identity]);
 
     const getMetadata = useCallback(
-      (message: Message.Message) => {
+      (message: MessageLike) => {
         // TODO(burdon): Factor out.
         const sender = members.find(
           (member) =>
@@ -126,6 +135,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
         onMessageReact={onMessageReact}
         onMessageDelete={onMessageDelete}
         onThreadOpen={onThreadOpen}
+        onMessageReply={onMessageReply}
       >
         <Thread.Content
           id={id}
@@ -136,6 +146,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
           <Thread.Messages id={id} messages={messages} />
           {!readOnly && (
             <>
+              {replyTo && onCancelReply && <Thread.ReplyBanner replyTo={replyTo} onCancel={onCancelReply} />}
               <Thread.Textbox
                 {...textboxMetadata}
                 autoFocus={autoFocus}

@@ -151,7 +151,10 @@ export const findOwnReaction = (
   );
 
 /** Object id a reaction targets, when its ref addresses an ECHO object. */
-export const targetMessageId = (reaction: Reaction.Reaction): string | undefined => {
-  const eid = EID.tryParse(reaction.target.uri);
+export const targetMessageId = (reaction: Reaction.Reaction): string | undefined => refEntityId(reaction.target);
+
+/** Object id a ref addresses, when it points at an ECHO object. */
+const refEntityId = (ref: { uri: string }): string | undefined => {
+  const eid = EID.tryParse(ref.uri);
   return eid ? EID.getEntityId(eid) : undefined;
 };

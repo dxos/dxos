@@ -19,8 +19,8 @@ import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useAttention, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
-import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
+import { type MessageLike, type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
+import { AnchoredTo, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
 import { hexToHue } from '@dxos/util';
 
@@ -108,7 +108,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const space = getSpace(subject);
   const members = useMembers(space?.id);
   const getMetadata = useCallback(
-    (message: MessageType.Message) => {
+    (message: MessageLike) => {
       const senderIdentity = members.find(
         (member) =>
           (message.sender.identityDid && member.did === message.sender.identityDid) ||

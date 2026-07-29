@@ -19,6 +19,7 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import {
   Avatar,
   Icon,
@@ -261,21 +262,15 @@ export type MessageReactionsProps = {
 };
 
 /**
- * Reaction chips plus an add-reaction picker, rendered beneath a message's body. A chip shows the
- * emoji and its count and is active while the local identity is among the reactors; clicking it
- * un-reacts. Counts and active state are computed by the host — see `getReactions`.
+ * Folded reaction chips, rendered beneath a message's body. A chip shows the emoji and its count and
+ * is active while the local identity is among the reactors; clicking it un-reacts. Counts and active
+ * state are computed by the host — see `getReactions`. Adding a reaction lives in the hover controls
+ * ({@link MessageReactionPicker}) so an un-reacted message carries no persistent chrome.
  */
-const MessageReactions = ({ reactions, quickReactions = DEFAULT_REACTIONS, onReact }: MessageReactionsProps) => {
-  const { t } = useTranslation(translationKey);
-  const [picking, setPicking] = useState(false);
-
-  const handlePick = useCallback(
-    (emoji: string) => {
-      setPicking(false);
-      onReact(emoji);
-    },
-    [onReact],
-  );
+const MessageReactions = ({ reactions, onReact }: Omit<MessageReactionsProps, 'quickReactions'>) => {
+  if (reactions.length === 0) {
+    return null;
+  }
 
   return (
     <div className='flex flex-wrap items-center gap-1 me-4 mt-1' data-testid='thread.message.reactions'>
@@ -296,15 +291,32 @@ const MessageReactions = ({ reactions, quickReactions = DEFAULT_REACTIONS, onRea
           <span>{count}</span>
         </button>
       ))}
-      <IconButton
-        data-testid='thread.message.react'
-        variant='ghost'
-        icon='ph--smiley--regular'
-        iconOnly
-        label={t('add-reaction.label')}
-        classNames={[buttonClassNames, reactions.length === 0 && hoverableControlItem]}
-        onClick={() => setPicking((value) => !value)}
-      />
+    </div>
+  );
+};
+
+MessageReactions.displayName = 'Message.Reactions';
+
+export type MessageReactionPickerProps = {
+  quickReactions?: readonly string[];
+  onReact: (emoji: string) => void;
+};
+
+/** Add-reaction control for the hover toolbar: a button that reveals a row of quick reactions. */
+const MessageReactionPicker = ({ quickReactions = DEFAULT_REACTIONS, onReact }: MessageReactionPickerProps) => {
+  const { t } = useTranslation(translationKey);
+  const [picking, setPicking] = useState(false);
+
+  const handlePick = useCallback(
+    (emoji: string) => {
+      setPicking(false);
+      onReact(emoji);
+    },
+    [onReact],
+  );
+
+  return (
+    <>
       {picking && (
         <div role='group' aria-label={t('add-reaction.label')} className='flex items-center gap-0.5'>
           {quickReactions.map((emoji) => (
@@ -322,11 +334,61 @@ const MessageReactions = ({ reactions, quickReactions = DEFAULT_REACTIONS, onRea
           ))}
         </div>
       )}
+      <IconButton
+        data-testid='thread.message.react'
+        variant='ghost'
+        icon='ph--smiley--regular'
+        iconOnly
+        label={t('add-reaction.label')}
+        classNames={[buttonClassNames, hoverableControlItem]}
+        onClick={() => setPicking((value) => !value)}
+      />
+    </>
+  );
+};
+
+MessageReactionPicker.displayName = 'Message.ReactionPicker';
+
+//
+// Quoted parent
+//
+
+export type MessageQuoteProps = {
+  /** The reply whose `parentMessage` is quoted; renders nothing when it targets nothing. */
+  message: MessageType.Message;
+};
+
+/**
+ * Compact reference to the message a reply targets, rendered above the reply's own body. Subscribes
+ * to the ref via `useObject` rather than reading `ref.target`, which is undefined until the target
+ * loads and never re-renders when it arrives. Renders nothing until it resolves — a quote is
+ * context, and an empty placeholder is worse than none.
+ */
+const MessageQuote = ({ message }: MessageQuoteProps) => {
+  const { getMetadata } = useThreadContext('Message.Quote');
+  const [parent] = useObject(message.parentMessage);
+  if (!parent) {
+    return null;
+  }
+
+  const { authorName } = getMetadata(parent);
+  const text = parent.blocks
+    .flatMap((block) => (block._tag === 'text' ? [block.text] : []))
+    .join(' ')
+    .trim();
+
+  return (
+    <div
+      data-testid='thread.message.quote'
+      className='flex items-baseline gap-1.5 me-4 mb-0.5 ps-2 border-is-2 border-separator text-xs text-description min-w-0'
+    >
+      <span className='shrink-0 font-medium'>{authorName}</span>
+      <span className='truncate min-w-0'>{text}</span>
     </div>
   );
 };
 
-MessageReactions.displayName = 'Message.Reactions';
+MessageQuote.displayName = 'Message.Quote';
 
 //
 // Thread affordance
@@ -491,6 +553,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     onMessageDelete,
     onMessageReact,
     onThreadOpen,
+    onMessageReply,
     onAcceptProposal,
     onAcceptChange,
     onRejectChange,
@@ -512,6 +575,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
   const handleSelect = useCallback(() => onMessageSelect?.(message.id), [onMessageSelect, message.id]);
   const handleReact = useCallback((emoji: string) => onMessageReact?.(message.id, emoji), [onMessageReact, message.id]);
   const handleOpenThread = useCallback(() => onThreadOpen?.(message.id), [onThreadOpen, message.id]);
+  const handleReply = useCallback(() => onMessageReply?.(message.id), [onMessageReply, message.id]);
   const handleSave = useCallback(
     (text: string) => {
       Obj.update(message, (message) => {
@@ -532,9 +596,45 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
   const showAcceptChange = hasChange && !!onAcceptChange;
   const showRejectChange = hasChange && !!onRejectChange;
   const showDelete = !!onMessageDelete && (canDelete?.(message) ?? true);
+  // Reply and start-thread are mutually exclusive by design: the host offers start-thread in a
+  // channel's main view and reply inside a thread, so answering a message pulls the conversation
+  // into a thread rather than growing the channel.
+  const showReact = !!onMessageReact;
+  const showReply = !!onMessageReply;
+  const showStartThread = !!onThreadOpen;
   const controls =
-    showEdit || showAccept || showAcceptChange || showRejectChange || showDelete ? (
+    showReact ||
+    showReply ||
+    showStartThread ||
+    showEdit ||
+    showAccept ||
+    showAcceptChange ||
+    showRejectChange ||
+    showDelete ? (
       <div className={buttonGroupClassNames}>
+        {showReact && <MessageReactionPicker quickReactions={quickReactions} onReact={handleReact} />}
+        {showReply && (
+          <IconButton
+            data-testid='thread.message.reply'
+            variant='ghost'
+            icon='ph--arrow-bend-up-left--regular'
+            iconOnly
+            label={t('reply-message.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={handleReply}
+          />
+        )}
+        {showStartThread && (
+          <IconButton
+            data-testid='thread.message.start-thread'
+            variant='ghost'
+            icon='ph--chats-circle--regular'
+            iconOnly
+            label={t('start-thread.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={handleOpenThread}
+          />
+        )}
         {showEdit && (
           <IconButton
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
@@ -611,11 +711,11 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
       ]}
     >
       <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
+      <MessageQuote message={message} />
       <MessageBody message={message} isAuthor={isAuthor} editing={editing} onSave={handleSave} />
-      {onMessageReact && (
-        <MessageReactions reactions={reactions} quickReactions={quickReactions} onReact={handleReact} />
-      )}
-      {onThreadOpen && <MessageThreadLink summary={threadSummary} onOpen={handleOpenThread} />}
+      {showReact && <MessageReactions reactions={reactions} onReact={handleReact} />}
+      {/* The summary row appears only once a thread exists; starting one is a hover control. */}
+      {showStartThread && threadSummary && <MessageThreadLink summary={threadSummary} onOpen={handleOpenThread} />}
     </MessageRoot>
   );
 };
@@ -655,6 +755,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
     onMessageDelete,
     onMessageReact,
     onThreadOpen,
+    onMessageReply,
     onAcceptProposal,
   } = useThreadContext('Message.Group');
   const [editing, setEditing] = useState(false);
@@ -682,9 +783,40 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
   const showEdit = isAuthor && editable;
   const showAccept = hasProposal && !!onAcceptProposal;
   const showDelete = !!onMessageDelete && (canDelete?.(first) ?? true);
+  const showReact = !!onMessageReact;
+  const showReply = !!onMessageReply;
+  const showStartThread = !!onThreadOpen;
   const controls =
-    showEdit || showAccept || showDelete ? (
+    showReact || showReply || showStartThread || showEdit || showAccept || showDelete ? (
       <div className={buttonGroupClassNames}>
+        {showReact && (
+          <MessageReactionPicker
+            quickReactions={quickReactions}
+            onReact={(emoji) => onMessageReact?.(first.id, emoji)}
+          />
+        )}
+        {showReply && (
+          <IconButton
+            data-testid='thread.message.reply'
+            variant='ghost'
+            icon='ph--arrow-bend-up-left--regular'
+            iconOnly
+            label={t('reply-message.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={() => onMessageReply?.(first.id)}
+          />
+        )}
+        {showStartThread && (
+          <IconButton
+            data-testid='thread.message.start-thread'
+            variant='ghost'
+            icon='ph--chats-circle--regular'
+            iconOnly
+            label={t('start-thread.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={() => onThreadOpen?.(first.id)}
+          />
+        )}
         {showEdit && (
           <IconButton
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
@@ -731,6 +863,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
       <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
       {messages.map((message) => (
         <Fragment key={message.id}>
+          <MessageQuote message={message} />
           <MessageBody
             message={message}
             isAuthor={isAuthor}
@@ -741,12 +874,11 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           {onMessageReact && (
             <MessageReactions
               reactions={getReactions?.(message) ?? []}
-              quickReactions={quickReactions}
               onReact={(emoji) => onMessageReact(message.id, emoji)}
             />
           )}
-          {onThreadOpen && (
-            <MessageThreadLink summary={getThreadSummary?.(message)} onOpen={() => onThreadOpen(message.id)} />
+          {onThreadOpen && getThreadSummary?.(message) && (
+            <MessageThreadLink summary={getThreadSummary(message)} onOpen={() => onThreadOpen(message.id)} />
           )}
         </Fragment>
       ))}
@@ -767,6 +899,8 @@ export const Message = {
   Time: MessageTime,
   Body: MessageBody,
   Reactions: MessageReactions,
+  ReactionPicker: MessageReactionPicker,
+  Quote: MessageQuote,
   ThreadLink: MessageThreadLink,
   Textbox: MessageTextbox,
   Tile: MessageTile,
