@@ -74,30 +74,6 @@ describe('resizeAxis', () => {
 // The resize path converts the pointer delta to model space before snapping. Snapping a screen-space
 // delta lands the edge off-grid at any scale other than 1, which is what these cover.
 describe('resize edge snapping under zoom', () => {
-  const snap = createSnap({ width: PITCH, height: PITCH });
-
-  /** Mirrors the `resize` branch of `useDragMonitor`'s `onDrag`. */
-  const resizeEdge = (
-    scale: number,
-    initial: { x: number; y: number; width: number; height: number },
-    screenDelta: { x: number; y: number },
-    anchor: { x: number; y: number },
-  ) => {
-    const projection = new ProjectionMapper({ width: 1000, height: 1000 }, scale, { x: 0, y: 0 });
-    const [from, to] = projection.toModel([
-      { x: 0, y: 0 },
-      { x: screenDelta.x, y: screenDelta.y },
-    ]);
-    const delta = pointSubtract(to, from);
-    const edge = snap({
-      x: initial.x + (anchor.x * initial.width) / 2 + delta.x,
-      y: initial.y + (anchor.y * initial.height) / 2 + delta.y,
-    });
-    const x = resizeAxis(initial.x, initial.width, anchor.x, edge.x, BOUNDS);
-    const y = resizeAxis(initial.y, initial.height, anchor.y, edge.y, BOUNDS);
-    return { right: x.center + x.size / 2, bottom: y.center + y.size / 2, width: x.size, height: y.size };
-  };
-
   const initial = { x: 0, y: 0, width: 150, height: 150 };
 
   for (const scale of [0.5, 1, 2, 1.75]) {
@@ -114,3 +90,27 @@ describe('resize edge snapping under zoom', () => {
     expect(zoomedOut.width).toBeGreaterThan(zoomedIn.width);
   });
 });
+
+const snap = createSnap({ width: PITCH, height: PITCH });
+
+/** Mirrors the `resize` branch of `useDragMonitor`'s `onDrag`. */
+const resizeEdge = (
+  scale: number,
+  initial: { x: number; y: number; width: number; height: number },
+  screenDelta: { x: number; y: number },
+  anchor: { x: number; y: number },
+) => {
+  const projection = new ProjectionMapper({ width: 1000, height: 1000 }, scale, { x: 0, y: 0 });
+  const [from, to] = projection.toModel([
+    { x: 0, y: 0 },
+    { x: screenDelta.x, y: screenDelta.y },
+  ]);
+  const delta = pointSubtract(to, from);
+  const edge = snap({
+    x: initial.x + (anchor.x * initial.width) / 2 + delta.x,
+    y: initial.y + (anchor.y * initial.height) / 2 + delta.y,
+  });
+  const x = resizeAxis(initial.x, initial.width, anchor.x, edge.x, BOUNDS);
+  const y = resizeAxis(initial.y, initial.height, anchor.y, edge.y, BOUNDS);
+  return { right: x.center + x.size / 2, bottom: y.center + y.size / 2, width: x.size, height: y.size };
+};
