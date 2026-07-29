@@ -33,6 +33,7 @@
   ],
   "dependencies": {
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@panproto/core": "catalog:",
     "effect": "catalog:"

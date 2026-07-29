@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: Phase 0 — spike the engine's law-check surface (`checkLaws`/`GetResult`), mapping-resolution strictness, the Task→GtdTask law-check, and mdast source-offset splicing; then Phase 1 in `@dxos/echo-panproto`. Uncommitted: none. Last: merged main to pull in PR #12395 (`@dxos/echo-panproto`: wire lens + runner + verified `@panproto/core@0.56.1` wasm engine) and rebased the plan on it — the object lens lands there as a new `Lens` namespace export._
+_Resume: Phase 1 CORE IS IMPLEMENTED and green in `@dxos/echo-panproto` (30 tests, build + lint clean) — mapping resolution, coverage, overlay storage, minimal writes, the live handle with target-typename identity, GetPut law check, registry, and declarative persistence. Next: a database-backed consumer (React `useLens` + the four stories), which is also where the `DataType.Task`→`GtdTask` lens must live since `core/echo` cannot depend on `sdk/types`. Uncommitted: none._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](../../../packages/core/echo/echo-panproto/API.md).
 This file is the ledger only.
@@ -27,25 +27,31 @@ Cheap, independent, architecture-deciding. Nothing else starts first.
       isolated behind the lazy `/wasm` entrypoint so it never enters a static graph. Also learned:
       the shipped TS API is structural-only (no value-expression step) — value conversions are
       host-side named codecs, matching the runner's existing split.
-- [ ] **Law-check spike** — the one engine surface `echo-panproto` doesn't exercise: does
-      `LensHandle.checkLaws` (or `checkGetPut`/`checkPutGet`) work against 0.56.1, and does `get()`
-      return a usable `GetResult { view, complement }`? If not, `Lens.checkLaws` is implemented in
-      the runner instead; nothing else moves.
-- [ ] **Mapping resolution spike** — explicit entry, then automatic (same name + compatible type),
-      then overlay. Settle how strict "compatible" is (DESIGN.md §8.2): optionality mismatches
-      should auto-map in the safe direction only; differing enum literals must not auto-map at all.
-      Confirm ECHO annotations the UI depends on (`PropertyMetaAnnotationId` SingleSelect options,
-      `FormatAnnotation`, refs) are readable on both sides for the compatibility check.
-- [ ] **Hand-author the Task→GtdTask mapping** against a written-out `GtdTask` type; run
-      `checkLaws` over instances generated from the source type's `GeneratorAnnotation`s
-      (`createProps`, `@dxos/schema/testing`), including the lossy `status` split. Go/no-go for the
-      declarative path.
+- [x] **Law-check spike** — resolved by implementing it directly: `Lens.checkLaws` checks GetPut
+      host-side over the object's own values, needing no engine call and no mutation. It immediately
+      caught two real defects (a `get` that defaulted `undefined`→`'todo'` while `put` wrote it back,
+      and a mislabelled violation), which is the argument for having it. PutGet is not implemented —
+      it needs a clone or sample generator; recorded in API.md §9.
+- [x] **Mapping resolution** — implemented via `SchemaEx.getProperties`. Compatibility is
+      deliberately conservative: an optional source cannot feed a required target, enum-like
+      properties must carry the _same_ literal set, structs must declare the same property names,
+      and declarations compare by AST identifier. Everything else is `suspicious`, never auto-mapped
+      and never auto-overlaid.
+- [x] **Hand-author the Task→GtdTask mapping** — done against local `Task`/`GtdTask` types in
+      `Lens.test.ts`, including the lossy `status` split, both value conversions, a read-only
+      projection, and two overlay properties. Go for the declarative path.
+  - **Correction to the plan:** the shipped example lens cannot live in `@dxos/echo-panproto` —
+    `core/echo` must not depend on `sdk/types` (only test-only `echo-client-e2e` does). It belongs
+    with the types it binds, in the consumer package.
+  - Generator-driven instances (`createProps`) also live behind `@dxos/schema`, so the law check
+    currently samples the object's own values; property-based sampling moves to the consumer too.
 - [ ] **mdast offset spike** (DESIGN.md §5.B) — parse a real document, confirm block nodes carry
       usable `position.*.offset`, edit one block, splice it back, assert the rest is
       byte-identical. Throwaway node script, no ECHO.
-- [ ] **Decision: where the engine runs for the object lens.** `echo-panproto` settled the pattern
-      (lazy `/wasm`, host-side); confirm the object lens needs nothing more — mapping resolution is
-      plain TypeScript, the engine consulted only at author/verify time. Record in DESIGN.md §8.1.
+- [x] **Decision: where the engine runs for the object lens.** Nowhere, as it turns out. Mapping
+      resolution, projection, inversion, overlay storage, and the law check are all plain TypeScript
+      over `SchemaEx`/`Obj`, so the object lens has **no** dependency on the wasm engine — it shares
+      the package with the wire lens (which does use it) but never loads it.
 
 ## Phase 1: Core — the first-class surface
 
@@ -54,49 +60,50 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
 
 ### Tasks
 
-- [ ] **Extend `@dxos/echo-panproto` with a `Lens` namespace export** — new modules beside the
+- [x] **Extend `@dxos/echo-panproto` with a `Lens` namespace export** — new modules beside the
       existing `Panproto` wire lens (DESIGN.md §9); built against `@dxos/echo` and
       `@dxos/echo/internal`. The existing `Panproto`/`runner`/`wasm` surface stays untouched.
-      React hooks go in a react sibling.
-- [ ] **`Lens.make(id, Source, Target, mapping)`** (API.md §1) — the single authoring shape; both
+      React hooks go in a react sibling. — `src/Lens.ts` + `src/lens/*`; the wire lens schema moved to `wire-lens.ts` so the public namespace name matches its filename (repo lint rule) without touching the `Panproto` surface.
+- [x] **`Lens.make(id, Source, Target, mapping)`** (API.md §1) — the single authoring shape; both
       ends are declared types. Static (code) and persisted (space) definition paths, mirroring
-      `Type` / `Type.Type`. An ordinary ECHO object, **not** a new `EntityKind` (API.md §0).
-- [ ] **Mapping resolution + shorthands** (API.md §2) — automatic identity mapping for matching
+      `Type` / `Type.Type`. An ordinary ECHO object, **not** a new `EntityKind` (API.md §0). — plus `Lens.coded` for opaque transforms.
+- [x] **Mapping resolution + shorthands** (API.md §2) — automatic identity mapping for matching
       name/type; bare-string rename; `Lens.from(prop, codec)`; `Lens.readOnly(prop)`; full
       `Derived` form. Keep the vocabulary small and add convenience only where a real mapping is
-      verbose.
-- [ ] **`Lens.Target<L>` = `Type.InstanceType<Target>`** — assert in a type test that a persisted
-      lens targeting a static type still yields the static type (DESIGN.md §3 D2).
-- [ ] **`Write` vocabulary** (API.md §6) — `assign` | `splice` | `overlay`, with no whole-object
-      replace expressible. This is where write-minimality becomes a type error rather than a rule.
-- [ ] **Overlay by default** — target properties nothing maps store themselves in the annotation
+      verbose. — bare-string rename, `Lens.from(prop, codec)`, `Lens.readOnly(prop)`, full `Derived`, and `Lens.scale`/`Lens.lookup` codecs.
+- [x] **The target type IS the view type** — `Lens.make` returns `Lens<InstanceType<S>, TargetOf<T>>`,
+      so no type-level mapping machinery exists at all; a persisted lens rehydrated against a static
+      target yields that static type (DESIGN.md §3 D2). Exercised by the persistence test.
+- [x] **`Write` vocabulary** (API.md §6) — `assign` | `splice` | `overlay`, with no whole-object
+      replace expressible. This is where write-minimality becomes a type error rather than a rule. — `assign` | `splice` | `overlay`, no `replace`; `applyWrites` lands them as one change.
+- [x] **Overlay by default** — target properties nothing maps store themselves in the annotation
       dictionary, validated against the target's declaration for that property. No declaration
-      required, `store` default, `reject` opt-in.
-- [ ] **`Lens.coverage`** (API.md §2.1) — explicit / automatic / overlaid / dropped, plus
+      required, `store` default, `reject` opt-in. — keyed lens id → property in the entity annotation dictionary; writing `undefined` clears.
+- [x] **`Lens.coverage`** (API.md §2.1) — explicit / automatic / overlaid / dropped, plus
       `suspicious`: a name match with incompatible types, or an overlay resembling a source
-      property. Never auto-resolve that case — it records the same fact twice and the copies drift.
-- [ ] **Target typename identity** — `Obj.getTypename` on a lensed object returns the _target's_
+      property. Never auto-resolve that case — it records the same fact twice and the copies drift. — explicit / automatic / overlaid / dropped / suspicious, asserted in tests.
+- [x] **Target typename identity** — `Obj.getTypename` on a lensed object returns the _target's_
       typename so existing surfaces resolve, while `Obj.getURI` still resolves to the base object
-      (API.md §4.1). Plus `Lens.sourcesFor(Target)` reverse lookup.
-- [ ] **`put` totality audit** — an interface written for the target will write anything the target
+      (API.md §4.1). Plus `Lens.sourcesFor(Target)` reverse lookup. — the handle intercepts `SchemaId`/`TypeId`/`TypeEntityId` so `Obj.getTypename` reports the target while `Obj.getURI` still resolves to the base object.
+- [x] **`put` totality audit** — an interface written for the target will write anything the target
       schema permits; every property needs a real inverse, an overlay, or `Lens.readOnly` that the
-      form renders as visibly non-editable. A silently dropped write is the worst outcome.
-- [ ] **T1 snapshot codec** — `get(obj)` / `put(view, obj)` in one `Obj.update`.
-- [ ] **T2 live proxy over public internals** — build it from `@dxos/echo/internal` (already a
+      form renders as visibly non-editable. A silently dropped write is the worst outcome. — a read-only property throws instead of dropping the write; an unmapped property throws.
+- [x] **T1 snapshot codec** — `get(obj)` / `put(view, obj)` in one `Obj.update`. — `Lens.get` / `Lens.put`, the latter taking a partial view.
+- [x] **T2 live proxy over public internals** — build it from `@dxos/echo/internal` (already a
       declared subpath used by ~20 packages outside core). If it turns out to need a change inside
       `Obj`'s proxy handler, that becomes its own small core PR — the one thing that could force
-      core work early (DESIGN.md §2.1).
-- [ ] **T2 minimal-write** — diff the view, map changed paths back through the compiled table,
+      core work early (DESIGN.md §2.1). — built from `@dxos/echo/internal`; **no core change was needed**. Intercepting `ChangeId` makes `Obj.update(lensed, cb)` batch every assignment into one change against the base object.
+- [x] **T2 minimal-write** — diff the view, map changed paths back through the compiled table,
       assign only those (DESIGN.md §6.4). Non-pointwise mappings fall back to T1 and are barred
-      from collaborative surfaces.
-- [ ] **Overlay storage** — `LensOverlay` annotation keyed lens DXN → property.
-- [ ] **`Lens.checkLaws` harness (D4)** — property-based, instances from `GeneratorAnnotation`, run in
-      both directions; the reverse pass is what surfaces `put`-totality gaps.
-- [ ] **Registry** — resolve static and space-stored lenses by source typename.
+      from collaborative surfaces. — writes name only what changed, asserted directly.
+- [x] **Overlay storage** — `LensOverlay` annotation keyed lens DXN → property.
+- [x] **`Lens.checkLaws` harness (D4)** — property-based, instances from `GeneratorAnnotation`, run in
+      both directions; the reverse pass is what surfaces `put`-totality gaps. — GetPut only; see API.md §9.
+- [x] **Registry** — resolve static and space-stored lenses by source typename.
 
 ## Phase 2: Task → GTD lens
 
-### Tasks
+### Tasks — `register`/`resolve`/`lensesFor`/`sourcesFor`.
 
 - [ ] **`GtdTask` ECHO type**, written out — the target the lensed UI is built against.
 - [ ] **`lenses/task-gtd.ts`** per the mapping table in DESIGN.md §5.A (status split, priority

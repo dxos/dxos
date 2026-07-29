@@ -4,7 +4,7 @@
 
 import { Obj } from '@dxos/echo';
 
-import { type Adapter, type Lens } from './lens';
+import { type Adapter, type Lens } from './wire-lens';
 
 //
 // The runner executes a declarative {@link Lens} against a live ECHO object, both directions. It applies

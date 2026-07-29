@@ -1,8 +1,16 @@
-# ECHO Lenses — Proposed API
+# ECHO Lenses — API
 
-Concrete surface proposal for the `Lens` (object lens) namespace of this package. Rationale and plan: [DESIGN.md](../../../../.agents/projects/lenses/DESIGN.md). Nothing here is implemented; the point is to argue
-about signatures before writing code. Everything is shaped to match the neighbouring modules
-(`Obj`, `Type`, `View`, `Annotation`) so a lens reads as an ECHO concept rather than a bolt-on.
+The `Lens` (object lens) namespace of this package: **one live ECHO object viewed through a second
+declared type**. There is never a second object — reads project the base object and writes invert
+onto it. Rationale and roadmap: [DESIGN.md](../../../../.agents/projects/lenses/DESIGN.md).
+
+Sibling of the `Panproto` **wire** lens in this package, which instead crosses the serialization
+boundary to a foreign record (`wire-lens.ts` holds its schema). Shaped to match the neighbouring ECHO
+modules (`Obj`, `Type`, `View`, `Annotation`), so promotion into `@dxos/echo` is an import-path change.
+
+**Status: implemented, proof of concept.** The mapping, overlay storage, live handle, law check,
+registry, and persistence below all work and are covered by `Lens.test.ts`. Known gaps are listed in
+§9. `Obj.lens` reads `Lens.of` until the module moves into core.
 
 **Scope:** the near-term goal is a proof of concept — _multiple interfaces, each written against its
 own schema, driving the same object_. Foreign-type adaptation and migration support are long-term
@@ -33,16 +41,16 @@ kind is a separate, evidence-backed decision.
 ## 1. One shape: a lens binds two declared types
 
 ```ts
-export const make: <S extends Type.AnyObj, T extends Schema.Schema.Any>(
+export const make: <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Schema.Any>(
   id: string,
   source: S,
   target: T,
-  mapping: Mapping<S, T>,
-) => Lens<S, T>;
+  mapping?: Mapping<Type.InstanceType<S>, TargetOf<T>>,
+) => Lens<Type.InstanceType<S>, TargetOf<T>>;
 ```
 
 Both ends are always written out. There is no mode where the target is computed from the mapping —
-that was the earlier proposal and it is dropped. Consequences, all good:
+that was an earlier proposal and it is dropped. Consequences, all good:
 
 - **Types are free.** `Lens.Target<typeof L>` is just `Type.InstanceType<typeof TargetType>`. No
   type-level transform machinery, no combinator chain whose generics have to track renames. This
@@ -263,9 +271,9 @@ export type Write =
       readonly deleteCount: number;
       readonly insert: string;
     }
-  | { readonly kind: 'overlay'; readonly property: string; readonly value: unknown };
+  | { readonly kind: 'overlay'; readonly lens: string; readonly property: string; readonly value: unknown };
 
-/** Apply writes in a single change transaction. Validates against the base type first. */
+/** Apply writes as a single change against the base object. */
 export const applyWrites: (obj: Obj.Unknown, writes: readonly Write[]) => void;
 ```
 
@@ -304,18 +312,34 @@ Property-based, over instances built from the source type's `GeneratorAnnotation
 run in reverse over generated _target_ instances, which is what surfaces the `put`-totality gaps
 described in §4.1.
 
-## 9. Later
+## 9. Gaps in the proof of concept
 
-Deliberately not in the proof of concept, recorded so the shape doesn't preclude them:
+What is implemented, and what is not:
+
+- **Not database-backed yet.** Every test builds objects with `Obj.make` (no space), matching this
+  package's existing `Panproto.test.ts`. Adding a real database here would mean depending on
+  `@dxos/echo-client`, so the automerge-backed path — and the two-peer collaboration story that is
+  the whole point of write-minimality — is exercised from a consumer package instead.
+- **PutGet is not checked.** `checkLaws` verifies GetPut (reading a view and putting it straight back
+  changes nothing), which needs no mutation. Writing an arbitrary value and reading it back needs a
+  clone or a sample generator; it is not implemented.
+- **No React hook yet.** `useLens` belongs in a react sibling, mirroring where `useObject` lives.
+- **Automatic mapping does not recurse into structs.** Two same-named structs match on their property
+  _names_ only, so a same-shaped struct with differently-typed leaves is a known false positive.
+- **`Lens.readOnly` is enforced at the write, not in the rendered schema.** A form built from the
+  target type will still render the property as editable and then throw on save; carrying the marking
+  into the schema the form consumes is the fix.
+- **Persistence covers declarative entries only.** A rename, a read-only projection, and a conversion
+  naming a registered codec serialize; an inline `get`/`put` pair throws rather than storing a lens
+  that would quietly lose a property.
+
+Deliberately out of scope, recorded so the shape doesn't preclude them:
 
 - **Generation** — `Lens.generate(source, target)` proposing a draft mapping from two schemas, with
-  unresolvable value semantics reported as typed holes rather than guessed. Bind mode is exactly its
-  input, so this fits without redesign.
-- **Migration support** — `Lens.promote(obj, lens)` draining overlay values into base properties
-  that now exist, plus a policy for the mid-migration window where a field is queryable for some
-  objects and not others. Long-term; the proof of concept does not attempt it.
-- **Query integration** — `db.query(...).lens(L)` as post-query mapping; rewriting filters over
-  target property names into source terms is strictly later and only sound for pointwise mappings.
+  unresolvable value semantics reported as typed holes rather than guessed.
+- **Migration support** — `Lens.promote(obj, lens)` draining overlay values into base properties that
+  now exist, plus a policy for the window where a field is queryable for some objects and not others.
+- **Query integration** — `db.query(...).lens(L)` as post-query mapping.
 
 ## 10. Open questions
 
