@@ -29,5 +29,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-thread',
     icon: { key: 'ph--video-conference--regular', hue: 'rose' },
     spec: 'PLUGIN.mdl',
+    tags: ['alpha'],
   },
 });

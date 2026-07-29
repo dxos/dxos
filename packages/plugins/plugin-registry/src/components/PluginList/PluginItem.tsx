@@ -219,6 +219,7 @@ export const PluginItem = ({
 const tagColors: Record<RegistryTagType, ChromaticPalette | NeutralPalette> = {
   new: 'rose',
   beta: 'teal',
+  alpha: 'orange',
   labs: 'blue',
   popular: 'green',
   featured: 'pink',
