@@ -50,8 +50,9 @@ Initial priority (user, 2026-07-24):
 - [ ] **P1 remaining: delete flow** — verify navtree ⋮ delete for projects; ALSO: intermittent "first click into empty deck attends but opens no plank" (repro needed).
 - [x] **PR strategy decision** — moot: the three MS2 commits shipped inside #12335's squash; verified present on main (ProjectArticle `getReactiveOrUndefined`, format.ts `## Instructions` + `<label>`, Projects.stories.tsx, minimal plugin set).
 - [ ] **PLUGIN.mdl for plugin-projects** — as-built record now that implementation settled.
-- [ ] **Commands-authoring UI** — InstructionsEditor edits text/skills/objects only; `commands` currently data-only despite autocomplete shipping.
-- [ ] **In-article routine creation** — (the project-scoped chat list moved to Phase 3).
+- [ ] **Commands-authoring UI** — InstructionsEditor edits text/skills only; `commands` currently data-only despite autocomplete shipping.
+- [x] **In-article routine creation** — `ProjectOperation.CreateRoutine` toolbar action scaffolds the blank template through `RoutineOperation.CreateRoutine`, links it into `project.routines`, and opens it. Routines and artifacts now share one `ObjectGallery` (masonry of `ObjectCard`, click to open, ⋮ delete).
+- [x] **Hide `instructions.objects` from the form** — interim step toward the BLOCKING decision below: the field is no longer rendered by `InstructionsEditor` (so it no longer reads as a second artifacts list) but the schema field and every runtime consumer are untouched. Affects the routine form and the Agent article too.
 - [ ] **App-graph Project node children: artifacts + routines** — Phase 3 adds the chat children and the branch-node plumbing; these two reuse it.
 - [ ] **ProjectOperation.Create + operation-handler/events** — extension point 2 (other plugins create/target projects).
 - [ ] **Project templates capability** — plugins contribute instructions+skills+routines presets (mirrors automation-templates).

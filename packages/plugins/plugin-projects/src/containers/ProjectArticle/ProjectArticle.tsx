@@ -15,11 +15,10 @@ import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Listbox } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { ArtifactCard } from '#components';
+import { ObjectCard } from '#components';
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
 
@@ -31,8 +30,8 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
 
 /**
  * Article surface for a {@link Project}: one form-styled body (header fields, the owned instructions
- * sub-form, and sections listing linked routines and artifacts). `Form.Viewport` owns the scroll and
- * gutter so fields stay inset from the panel edges. Creating routines/artifacts here is milestone 2.
+ * sub-form, and card galleries of the linked routines and artifacts). `Form.Viewport` owns the scroll
+ * and gutter so fields stay inset from the panel edges.
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -67,11 +66,23 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // Deletes the object and splices it out of the artifacts collection, closing any open plank —
   // `RemoveObjects` does all three, given the collection as its target.
   const artifactsCollection = Obj.getReactiveOrUndefined(artifacts);
-  const handleDelete = useCallback(
+  const handleDeleteArtifact = useCallback(
     (object: Obj.Unknown) => {
       void invokePromise(SpaceOperation.RemoveObjects, { objects: [object], target: artifactsCollection });
     },
     [invokePromise, artifactsCollection],
+  );
+
+  // Routines are linked, not owned: the ref is spliced here and `RemoveObjects` (no target) removes the
+  // object from the space's root collection, where the create flow filed it.
+  const handleDeleteRoutine = useCallback(
+    (object: Obj.Unknown) => {
+      updateProject((project) => {
+        project.routines = project.routines.filter((routineRef) => routineRef.target?.id !== object.id);
+      });
+      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object] });
+    },
+    [invokePromise, updateProject],
   );
 
   const handleValuesChanged = useCallback(
@@ -106,11 +117,11 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 {instructions && <InstructionsEditor db={db} instructions={instructions} />}
 
                 <Form.Section title={t('routines.label')}>
-                  <ObjectList label={t('routines.label')} refs={project.routines} />
+                  <ObjectGallery refs={project.routines} onOpen={handleOpen} onDelete={handleDeleteRoutine} />
                 </Form.Section>
 
                 <Form.Section title={t('artifacts.label')}>
-                  <ArtifactGallery refs={artifacts?.objects ?? []} onOpen={handleOpen} onDelete={handleDelete} />
+                  <ObjectGallery refs={artifacts?.objects ?? []} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
                 </Form.Section>
               </Form.Content>
             </Form.Viewport>
@@ -147,27 +158,40 @@ const useToolbarActions = (project: Project.Project) => {
           },
           () => void invokePromise(ProjectOperation.CreateChat, { project }, { spaceId }),
         )
+        .action(
+          'create-routine',
+          {
+            label: ['create-routine.label', { ns: meta.profile.key }],
+            icon: 'ph--lightning--regular',
+            disposition: 'toolbar',
+            testId: 'projectsPlugin.createRoutine',
+          },
+          () => void invokePromise(ProjectOperation.CreateRoutine, { project }, { spaceId }),
+        )
         .build(),
     [project, invokePromise, spaceId],
   );
 };
 
-type ArtifactTileData = { object: Obj.Unknown; onClick: () => void; onDelete: () => void };
+type ObjectTileData = { object: Obj.Unknown; onClick: () => void; onDelete: () => void };
 
-type ArtifactGalleryProps = {
+type ObjectGalleryProps = {
   refs: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
   onOpen: (object: Obj.Unknown) => void;
   onDelete: (object: Obj.Unknown) => void;
 };
 
-/** A project's artifacts as clickable cards. Unresolved refs are omitted until their target loads. */
-const ArtifactGallery = ({ refs, onOpen, onDelete }: ArtifactGalleryProps) => {
+/**
+ * A project's linked objects (routines or artifacts) as clickable cards. Unresolved refs are omitted
+ * until their target loads.
+ */
+const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
   // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`
   // synchronously would leave the gallery permanently empty.
   // `useObjects` is the resolution trigger; the live entities are re-read from `.target` because the
   // card needs the object, not a snapshot.
   const loaded = useObjects(refs);
-  const items = useMemo<ArtifactTileData[]>(
+  const items = useMemo<ObjectTileData[]>(
     () =>
       refs
         .map((ref) => ref.target)
@@ -181,7 +205,7 @@ const ArtifactGallery = ({ refs, onOpen, onDelete }: ArtifactGalleryProps) => {
   }
 
   return (
-    <Masonry.Root Tile={ArtifactTile} centered={false}>
+    <Masonry.Root Tile={ObjectTile} centered={false}>
       <Masonry.Content centered={false} padding={false}>
         <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} />
       </Masonry.Content>
@@ -189,44 +213,8 @@ const ArtifactGallery = ({ refs, onOpen, onDelete }: ArtifactGalleryProps) => {
   );
 };
 
-const ArtifactTile = memo(({ data }: { data: ArtifactTileData | undefined; index: number }) =>
-  data ? <ArtifactCard object={data.object} onClick={data.onClick} onDelete={data.onDelete} /> : null,
+const ObjectTile = memo(({ data }: { data: ObjectTileData | undefined; index: number }) =>
+  data ? <ObjectCard object={data.object} onClick={data.onClick} onDelete={data.onDelete} /> : null,
 );
 
-ArtifactTile.displayName = 'ArtifactTile';
-
-type ObjectListProps = {
-  label: string;
-  refs: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
-};
-
-/** Read-only list of resolved object references. */
-const ObjectList = ({ label, refs }: ObjectListProps) => (
-  <Listbox.Root>
-    <Listbox.Viewport>
-      <Listbox.Content aria-label={label}>
-        {refs.map((objectRef) => (
-          <ObjectRow key={objectRef.uri} objectRef={objectRef} />
-        ))}
-      </Listbox.Content>
-    </Listbox.Viewport>
-  </Listbox.Root>
-);
-
-type ObjectRowProps = {
-  objectRef: Ref.Ref<Obj.Unknown>;
-};
-
-/** One object row; resolves the reference reactively for its label and is omitted while unresolved. */
-const ObjectRow = ({ objectRef }: ObjectRowProps) => {
-  const [object] = useObject(objectRef);
-  if (!object) {
-    return null;
-  }
-
-  return (
-    <Listbox.Item id={object.id}>
-      <span className='truncate'>{Obj.getLabel(object) ?? object.id}</span>
-    </Listbox.Item>
-  );
-};
+ObjectTile.displayName = 'ObjectTile';

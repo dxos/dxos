@@ -4,4 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const ProjectOperationHandlerSet = OperationHandlerSet.lazy(() => import('./create-chat'));
+export const ProjectOperationHandlerSet = OperationHandlerSet.lazy(
+  () => import('./create-chat'),
+  () => import('./create-routine'),
+);

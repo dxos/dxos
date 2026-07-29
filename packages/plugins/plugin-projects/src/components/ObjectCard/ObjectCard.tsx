@@ -12,22 +12,22 @@ import { Card, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-export type ArtifactCardProps = {
+export type ObjectCardProps = {
   object: Obj.Unknown;
   onClick?: () => void;
   onDelete?: () => void;
 };
 
 /**
- * Summary tile for one of a project's artifacts. The collection holds `Obj.Unknown`, so nothing here
- * is type-specific: the header comes from schema annotations (icon) and the object's label, and the
- * body delegates to the object's own `CardContent` surface, so a document previews as a document.
+ * Summary tile for one of a project's linked objects (an artifact or a routine). Nothing here is
+ * type-specific: the header comes from schema annotations (icon) and the object's label, and the body
+ * delegates to the object's own `CardContent` surface, so a document previews as a document.
  * Reactive via {@link useObject} so a rename shows without navigating away and back.
  */
-export const ArtifactCard = ({ object: objectProp, onClick, onDelete }: ArtifactCardProps) => {
+export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCardProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [object] = useObject(objectProp);
-  const label = Obj.getLabel(object)?.trim() || t('artifact-card.untitled.label');
+  const label = Obj.getLabel(object)?.trim() || t('object-card.untitled.label');
   const icon = Obj.getIcon(object)?.icon ?? 'ph--file--regular';
 
   // `Card.Root` renders `role='button'` when clickable but provides no keyboard handling itself, so
@@ -63,7 +63,7 @@ export const ArtifactCard = ({ object: objectProp, onClick, onDelete }: Artifact
         <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
         {onDelete && (
           <Card.Menu
-            items={[{ label: t('artifact-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }]}
+            items={[{ label: t('object-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }]}
           />
         )}
       </Card.Header>
