@@ -38,14 +38,26 @@ runs:
       run: moon setup
       shell: bash
 
+    # `.github/Dockerfile` installs node and pnpm to bootstrap CI while moon installs them from
+    # `.prototools`, so the two can drift and only a cold toolchain cache would reveal it — print what PATH
+    # resolves next to the pin and flag a divergence. Logged rather than failed: the image's copies are used
+    # only until moon's cache exists. bun is absent from the image on purpose, and `moon setup` populates
+    # moon's toolchain without creating a proto shim, so a bare `bun` exits 127 and only the pin can be read.
     - name: Log out debug info
       run: |
-        node --version
-        pnpm --version
-        # Through proto because bun reaches PATH by neither route the others do: it is not installed in
-        # `.github/Dockerfile`, and `moon setup` populates moon's toolchain without creating a proto shim,
-        # so a bare `bun` exits 127. moon tasks are unaffected — they resolve it from the toolchain.
-        proto run bun -- --version
+        for tool in node pnpm; do
+          resolved=$( ("$tool" --version 2>/dev/null || true) | tail -1)
+          pinned=$( (proto run "$tool" -- --version 2>/dev/null || true) | tail -1)
+          if [ -z "$resolved" ] || [ -z "$pinned" ]; then
+            status=UNKNOWN
+          elif [ "$resolved" = "$pinned" ]; then
+            status=ok
+          else
+            status=MISMATCH
+          fi
+          printf '%-5s PATH=%-12s pinned=%-12s %s\n' "$tool" "${resolved:-<absent>}" "${pinned:-<none>}" "$status"
+        done
+        printf '%-5s pinned=%s\n' bun "$( (proto run bun -- --version 2>/dev/null || true) | tail -1)"
       shell: bash
 
     - name: PNPM Store Path
