@@ -52,7 +52,7 @@ first; both fall out of binding two declared types.
 
 One requirement follows from all of them: a target property with no counterpart in the source
 **must not be an error**. It stores itself in the object's annotations automatically, no
-declaration required (LENS-API.md §2).
+declaration required (API.md §2).
 
 ## 2. First-class in ECHO
 
@@ -64,7 +64,7 @@ at runtime with `Type.makeObjectFromJsonSchema`). Static gets you autocomplete; 
 user-authored schemas at the cost of dynamic typing. That tradeoff is already understood by
 everyone who uses ECHO, and lenses inherit it unchanged.
 
-**Concrete signatures: [LENS-API.md](../../../packages/core/echo/echo-panproto/docs/LENS-API.md)** — the mapping shorthands, coded lenses, the live
+**Concrete signatures: [API.md](../../../packages/core/echo/echo-panproto/API.md)** — the mapping shorthands, coded lenses, the live
 handle, React hooks, registry, and laws, with the open questions called out.
 
 Proposed surface, shaped as a namespace module like `Type` / `Obj` / `View`:
@@ -104,7 +104,7 @@ each of these was a Phase 0 unknown, now settled by shipped code:
 **wire lens**: ECHO object ↔ foreign JSON record, snapshot encode/decode, one direction at a time,
 built for publishing (atproto). The object lens this project adds is ECHO object ↔ **declared ECHO
 target type**: a live handle with reactive reads, minimal writes, overlay persistence, and typename
-identity. In LENS-API.md §1 terms, the wire lens is the degenerate case where the target is a plain
+identity. In API.md §1 terms, the wire lens is the degenerate case where the target is a plain
 `Schema.Schema.Any` and only the snapshot tier exists — so the two share a package honestly, and
 converging the wire lens onto the object-lens interface later is a refactor, not a rewrite. Until
 then they are sibling modules: the existing `Panproto` namespace stays as-is; the object lens ships
@@ -144,7 +144,7 @@ once against a stable target and reused across sources.
 The machinery still earns its keep, pointed the other way. Derive the shape the mapping _implies_,
 diff it against the **declared** target, and the difference is the coverage report: which target
 properties are explicitly mapped, which auto-mapped, which fall through to overlay, and which look
-like a mistake (LENS-API.md §2.1). Same computation, run as a check instead of a generator.
+like a mistake (API.md §2.1). Same computation, run as a check instead of a generator.
 
 ### D2. Static TypeScript types. **Solved, and for free.**
 
@@ -181,7 +181,7 @@ generation can actually carry.
 So generation would emit a **draft with explicit holes** rather than guessing — a scaffolding tool,
 not an oracle. Note the holes it reports are _not_ the same as properties that fall through to
 overlay: a target property with no counterpart at all is fine and silent, while one with a
-plausible counterpart whose value mapping can't be inferred must stay unresolved (LENS-API.md §2.1).
+plausible counterpart whose value mapping can't be inferred must stay unresolved (API.md §2.1).
 
 - The holes are exactly where an LLM is useful, and panproto already ships an MCP server and
   Claude Code skills aimed at it. Property names, `title`s, and descriptions are the hints.
@@ -306,7 +306,7 @@ Schema.Struct({
   name: Schema.optional(Schema.String),
   source: Schema.String, // typename@version of the base type
   target: Schema.String, // typename@version of the declared target type
-  mapping: Schema.Unknown, // partial: explicit entries only (LENS-API.md §2)
+  mapping: Schema.Unknown, // partial: explicit entries only (API.md §2)
 });
 ```
 
@@ -351,7 +351,7 @@ Rules:
   whose name resembles a source property. That case must never auto-resolve in either direction:
   storing `done` in annotations while `status` also exists records the same fact twice and the two
   drift on the next write. A genuinely new field overlays forever and correctly; a missed
-  correspondence gets flagged (LENS-API.md §2.1).
+  correspondence gets flagged (API.md §2.1).
 
 ### 6.3 Read and write tiers
 
@@ -429,7 +429,7 @@ Demonstrated in both directions:
 2. **Type compatibility for automatic mapping.** How strict is "same name, compatible type"?
    Optionality mismatches (`string` vs `string | undefined`) are the common case and should
    auto-map in the safe direction only; enum literals that differ must not auto-map at all
-   (LENS-API.md §10.1).
+   (API.md §10.1).
 3. **Reactivity composition.** The lensed atom must compose `Obj.atom` with `Annotation.atom`
    without over-firing.
 4. **Write minimality** (§6.4) — the correctness risk, covered by the concurrent-edit test.

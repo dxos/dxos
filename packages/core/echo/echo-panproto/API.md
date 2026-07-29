@@ -1,6 +1,6 @@
 # ECHO Lenses — Proposed API
 
-Concrete surface proposal for the `Lens` (object lens) namespace of this package. Rationale and plan: [DESIGN.md](../../../../../.agents/projects/lenses/DESIGN.md). Nothing here is implemented; the point is to argue
+Concrete surface proposal for the `Lens` (object lens) namespace of this package. Rationale and plan: [DESIGN.md](../../../../.agents/projects/lenses/DESIGN.md). Nothing here is implemented; the point is to argue
 about signatures before writing code. Everything is shaped to match the neighbouring modules
 (`Obj`, `Type`, `View`, `Annotation`) so a lens reads as an ECHO concept rather than a bolt-on.
 
