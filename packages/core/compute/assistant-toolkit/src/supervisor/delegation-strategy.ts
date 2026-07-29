@@ -170,7 +170,8 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
   onComplete: (feed, id, exit) =>
     Effect.gen(function* () {
       const chat = yield* findChatForFeed(feed);
-      const agent = yield* findAgentForFeed(feed);
+      // Reuse the chat just resolved rather than re-scanning every chat for the same feed.
+      const agent = chat ? yield* Agent.loadForChat(chat) : undefined;
       const plan =
         chat?.plan != null ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
 

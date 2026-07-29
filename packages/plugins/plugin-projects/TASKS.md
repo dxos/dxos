@@ -2,7 +2,7 @@
 
 _Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN — NOT LANDABLE YET: two issues must be resolved first, both in Phase 3 below — (1) BLOCKING: the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`); (2) MAJOR, needs Josiah: the URL binding for project chats. Phase 3 items 1-4 are done and verified live end-to-end (chat creates from the toolbar, appears under its project, respects instructions, files artifacts). Uncommitted: none._
 
-#12383 carries four things: (1) `Chat.agent` removed and the chat↔agent linkage
+PR #12383 carries four things: (1) `Chat.agent` removed and the chat↔agent linkage
 restored to the `CompanionTo` relation — that field was the edge closing the
 Agent↔Chat import cycle, so `agent-chat.ts` and both namespace facades are gone,
 the lifecycle folded back into `Agent`, `Agent.loadForChat` added as the inverse
@@ -239,9 +239,7 @@ Points to settle with Josiah:
 
 - [x] **`Chat.agent` removed; linkage is the `CompanionTo` relation** — the field (phase B) was the
       edge that closed the Agent↔Chat import cycle and forced both types into one module behind
-      namespace facades. `Agent` and `Chat` are now independent leaves; `AgentChat` (new namespace)
-      holds the lifecycle — `makeInitialized`, `resetChatHistory`, `loadChat`, `loadAgent` — and is
-      the only module needing both. No migration (the field shipped one day earlier at `chat@0.1.0`,
+      namespace facades. `Agent` and `Chat` are now independent leaves; `Agent` owns the lifecycle, including `loadForChat`. No migration (the field shipped one day earlier at `chat@0.1.0`,
       added without a bump). `check-cycles` green; the #12370 changeset amended in place.
 - [x] **Regenerate the agent-skill memoized recordings** — moot: #12357 (G2 → C) deleted
       `skills/{agent,planning}/skill.test.ts` outright, taking the failing `expense tracking list`

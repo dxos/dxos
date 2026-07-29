@@ -16,28 +16,6 @@ import { ProjectOperation } from '#types';
 
 import { createProjectActionExtension } from './app-graph-builder';
 
-const SUBJECT_ID = 'subject';
-
-/** Graph holding one node whose data is `subject`, so the extension's match runs against it. */
-const getSubjectActions = async (subject: unknown) => {
-  const rootExtensions = await EffectEx.runPromise(
-    GraphBuilder.createExtension({
-      id: 'testRoot',
-      match: NodeMatcher.whenRoot,
-      connector: () => Effect.succeed([{ id: SUBJECT_ID, type: 'test', data: subject }]),
-    }),
-  );
-  const actionExtensions = await EffectEx.runPromise(createProjectActionExtension());
-  const context = setupGraphBuilder({ extensions: [...rootExtensions, ...actionExtensions] });
-
-  await context.expand(Node.RootId);
-  // Actions are their own relation, materialized lazily like connections.
-  await context.expand(qualifyId(Node.RootId, SUBJECT_ID), 'action');
-
-  // `graph.actions` returns an atom; read it through the registry the builder was created with.
-  return context.registry.get(context.graph.actions(qualifyId(Node.RootId, SUBJECT_ID)));
-};
-
 describe('project app graph builder', () => {
   test('contributes create-chat to a project node, for the navtree row', async ({ expect }) => {
     const project = Project.make({ name: 'Test' });
@@ -60,3 +38,25 @@ describe('project app graph builder', () => {
     expect(await getSubjectActions({ notAProject: true })).toEqual([]);
   });
 });
+
+const SUBJECT_ID = 'subject';
+
+/** Graph holding one node whose data is `subject`, so the extension's match runs against it. */
+const getSubjectActions = async (subject: unknown) => {
+  const rootExtensions = await EffectEx.runPromise(
+    GraphBuilder.createExtension({
+      id: 'testRoot',
+      match: NodeMatcher.whenRoot,
+      connector: () => Effect.succeed([{ id: SUBJECT_ID, type: 'test', data: subject }]),
+    }),
+  );
+  const actionExtensions = await EffectEx.runPromise(createProjectActionExtension());
+  const context = setupGraphBuilder({ extensions: [...rootExtensions, ...actionExtensions] });
+
+  await context.expand(Node.RootId);
+  // Actions are their own relation, materialized lazily like connections.
+  await context.expand(qualifyId(Node.RootId, SUBJECT_ID), 'action');
+
+  // `graph.actions` returns an atom; read it through the registry the builder was created with.
+  return context.registry.get(context.graph.actions(qualifyId(Node.RootId, SUBJECT_ID)));
+};

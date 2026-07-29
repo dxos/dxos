@@ -73,9 +73,8 @@ describe('project chats graph extension', () => {
   test('re-emits when a chat is newly parented to the project', async ({ expect }) => {
     const { addChat, getChildIds } = await setupTestContext();
 
-    // The risk this extension was flagged for: the connector reads a hierarchy query rather than a
-    // ref array, so a newly parented chat has to re-run it. Falling back to a `chats` Collection
-    // field on Project would only be necessary if this failed.
+    // The connector reads a hierarchy query rather than a ref array, so it must re-run when a chat
+    // is newly parented.
     const chat = await addChat('First');
     expect(getChildIds()).toEqual([qualifyId(Node.RootId, PROJECT_ID, chat.id)]);
 

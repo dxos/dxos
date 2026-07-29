@@ -71,7 +71,7 @@ export const createProjectChatsExtension = () =>
         return Effect.succeed([]);
       }
 
-      const children = get(db.query(Query.select(Filter.id(project.id)).children()).atom) as Obj.Unknown[];
+      const children = get(db.query(Query.select(Filter.id(project.id)).children()).atom);
       return Effect.succeed(
         children
           .filter(Obj.instanceOf(Chat.Chat))

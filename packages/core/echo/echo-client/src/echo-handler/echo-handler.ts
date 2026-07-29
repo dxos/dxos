@@ -379,7 +379,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       if (isEchoObjectField(value) || isDetachedObjectField(value)) {
         // The value is a value-object field of another object — database-backed or detached. We don't
         // want to create a reference to it or have shared mutability, we need to copy by value.
-        return recurse({ ...value });
+        // Arrays are copied as arrays: spreading one into an object literal would turn it into a
+        // record of numeric keys.
+        return recurse(Array.isArray(value) ? [...value] : { ...value });
       } else if (isProxy(value)) {
         throw new Error('Object references must be wrapped with `Ref.make`');
       } else if (Ref.isRef(value)) {
