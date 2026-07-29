@@ -3,5 +3,6 @@
 //
 
 export * from './deprecated';
+export * from './formatting';
 export * from './schema';
 export * from './validate';

@@ -59,8 +59,6 @@ export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   variant?: 'hide-disabled' | 'default';
   close?: boolean | 'minify-start' | 'minify-end';
   capabilities: PlankCapabilities;
-  /** Whether the deck is in `solo` mode (a single active plank; companions excluded). */
-  soloLook?: boolean;
   /** Whether this plank is currently displayed fullscreen. */
   fullscreen?: boolean;
   pin?: 'start' | 'end' | 'both';
@@ -71,18 +69,7 @@ export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
 // NOTE(thure): Pinning & unpinning are disabled indefinitely.
 export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
   (
-    {
-      children,
-      classNames,
-      variant = 'default',
-      capabilities,
-      soloLook,
-      fullscreen,
-      pin,
-      close = false,
-      onClick,
-      ...props
-    },
+    { children, classNames, variant = 'default', capabilities, fullscreen, pin, close = false, onClick, ...props },
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.profile.key);
@@ -91,9 +78,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
     return (
       <ButtonGroup {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
-        {/* Fullscreen is only offered for a singleton-active (solo-look) deck; "solo this plank" out of a
-            multi-plank deck is covered by the existing close-others graph action instead. */}
-        {capabilities.fullscreenToggle && soloLook && (
+        {capabilities.fullscreenToggle && (
           <PlankControl
             label={t(fullscreen ? 'exit-fullscreen.label' : 'show-fullscreen-plank.label')}
             classNames={buttonClassNames}
@@ -104,27 +89,23 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
         {/* Reordering controls (move plank toward start/end) are hidden for now; restore when the deck's
             reordering UX is revisited. The `increment-start`/`increment-end` adjustments and capabilities
-            remain wired.
-        {!soloLook && (
-          <>
-            <PlankControl
-              label={t('increment-start.label')}
-              disabled={!capabilities.incrementStart}
-              classNames={buttonClassNames}
-              icon='ph--caret-left--regular'
-              onClick={() => onClick?.('increment-start')}
-            />
-            <PlankControl
-              label={t('increment-end.label')}
-              disabled={!capabilities.incrementEnd}
-              classNames={buttonClassNames}
-              icon='ph--caret-right--regular'
-              onClick={() => onClick?.('increment-end')}
-            />
-          </>
-        )} */}
+            remain wired, and already encode ordering (a lone plank can move in neither direction).
+        <PlankControl
+          label={t('increment-start.label')}
+          disabled={!capabilities.incrementStart}
+          classNames={buttonClassNames}
+          icon='ph--caret-left--regular'
+          onClick={() => onClick?.('increment-start')}
+        />
+        <PlankControl
+          label={t('increment-end.label')}
+          disabled={!capabilities.incrementEnd}
+          classNames={buttonClassNames}
+          icon='ph--caret-right--regular'
+          onClick={() => onClick?.('increment-end')}
+        /> */}
 
-        {close && !soloLook && (
+        {close && (
           <PlankControl
             label={t(`${typeof close === 'string' ? 'minify' : 'close'}.label`)}
             classNames={buttonClassNames}

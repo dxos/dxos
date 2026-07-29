@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Cursor, isRangeVisible, scrollCommentIntoView } from '@dxos/ui-editor';
+import { Cursor, isRangeVisible, scrollCommentIntoView } from '@dxos/ui-editor/headless';
 
 import { MarkdownCapabilities, MarkdownOperation } from '../types';
 

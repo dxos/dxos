@@ -11,6 +11,7 @@ export default defineConfig({
     'FilePlugin.node': 'src/FilePlugin.node.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
+    'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',

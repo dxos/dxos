@@ -15,15 +15,41 @@ Set `DX_DEBUG=debug` (or `verbose`, `info`, `warn`, `error`) for log output:
 DX_DEBUG=debug ./bin/dx chat
 ```
 
-## Compile standalone binary
+## Where commands live
 
-To produce a single-file binary for distribution:
+`src/commands/*` holds only the CLI's own topics (`admin`, `chat`, `debug`, `function`, `hub`,
+`mailbox`, `mcp`, `reflect`, `reset`). Everything else is contributed by the Composer plugins listed
+in `src/commands/plugin-defs.ts` and lives in the plugin package — e.g. `dx registry publish` is
+`packages/plugins/plugin-registry/src/commands/registry/`. Run `dx --help` for the merged topic list.
+
+## Release
 
 ```bash
-moon run cli:compile
+moon run cli:bundle   # Compile per-platform binaries into dist/.
+moon run cli:smoke    # Pack, install, and run the host-platform tarball.
+moon run cli:publish  # Publish the platform packages, then the launcher.
 ```
 
-The compiled binaries land under `dist/cli-<platform>-<arch>/dx`.
+`bundle` produces `dist/cli` (the `@dxos/cli` launcher, published from `bin/dx.js`) plus one
+`dist/cli-<platform>-<arch>/dx` binary per target, each published as its own package and wired into
+the launcher's `optionalDependencies`.
+
+These constraints are easy to break and only observable in the published artifact, which is what
+`smoke` exists to catch:
+
+- The binary must carry mode 755 all the way into the tarball — the launcher `execFileSync`s it by
+  path, so npm never applies the executable bit for us. `pnpm publish` normalizes file modes to
+  0644, hence `scripts/publish.ts` uses `npm publish`.
+- Nothing may be marked `external` in the compiled build unless it is also reachable at runtime.
+  Externals become plain requires inside Bun's embedded filesystem (`/$bunfs`), where no
+  `node_modules` exists, so an external that any command touches fails at startup. Assets are
+  inlined instead — see the `?url`, `node-std`, and `subduction-wasm` plugins in `scripts/build.ts`.
+- A package that reads its own files at runtime (rather than importing them) needs a bundler-friendly
+  entry point; the paths it computes from `import.meta.url` land inside `/$bunfs`, where its siblings
+  do not exist.
+- The pinned bun version is part of the artifact's correctness, so `.prototools` is a `bundle` input.
+  1.3.4 leaked `--smol` into `process.argv` of every compiled binary, which made `dx` reject its own
+  arguments.
 
 ## Admin Commands
 

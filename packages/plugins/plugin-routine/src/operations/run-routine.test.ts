@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';

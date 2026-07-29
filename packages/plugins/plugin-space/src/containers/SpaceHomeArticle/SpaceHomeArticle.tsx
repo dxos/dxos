@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Column, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,

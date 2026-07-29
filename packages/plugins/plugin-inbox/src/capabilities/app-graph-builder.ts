@@ -387,6 +387,8 @@ export default Capability.makeModule(
                   // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  // The toolbar emits `data-testid` only for actions that set one; browser-e2e waits on it.
+                  testId: 'inbox.mailbox.sync',
                 },
               },
             ];

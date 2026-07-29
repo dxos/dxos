@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 
 import { type MulticastObservable } from '@dxos/async';
 

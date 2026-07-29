@@ -445,6 +445,11 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :bundle
 
+      # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed
+      # tarball rather than the source tree. This job already gates the Version Packages PR.
+      - name: Smoke test packed CLI
+        run: moon run cli:smoke
+
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
       # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.

@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 
 import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 import { type MessageMetadata } from '@dxos/react-ui-thread';
 import { hexToFallback, toFallback } from '@dxos/util';
 

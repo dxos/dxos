@@ -21,7 +21,7 @@ import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, Registry } from '@effect-atom/atom-react';
+import { type Atom, Registry } from '@effect-atom/atom';
 import { afterEach, assert, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';

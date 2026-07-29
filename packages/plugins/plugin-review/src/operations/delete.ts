@@ -33,7 +33,11 @@ const handler: Operation.WithHandler<typeof CommentOperation.Delete> = CommentOp
               [subjectId]: state.drafts[subjectId]?.filter((_, draftIndex) => draftIndex !== index),
             },
           });
-          return {};
+          // Dropping the entry above consumes the draft's claim, which makes a concurrent
+          // `add-message` roll its persist back. That comment was submitted, so it still deserves an
+          // undo entry; a draft that was never submitted has nothing to restore. `add-message` marks
+          // the transition by setting `status` before it persists.
+          return thread.status === 'active' ? { thread, anchor } : {};
         }
       }
 
