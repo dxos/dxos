@@ -132,7 +132,6 @@
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
-    "@dxos/plugin-tictactoe": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/plugin-trello": "workspace:*",
     "@dxos/plugin-trip": "workspace:*",

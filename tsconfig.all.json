@@ -592,9 +592,6 @@
       "path": "packages/plugins/plugin-thread/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-tictactoe/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-transcription/tsconfig.json"
     },
     {

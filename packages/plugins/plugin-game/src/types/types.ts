@@ -11,7 +11,7 @@ import type { Database, Obj, Type } from '@dxos/echo';
 import * as Game from './Game';
 
 /**
- * Contribution from a variant plugin (e.g. plugin-chess, plugin-tictactoe).
+ * Contribution from a variant plugin (e.g. plugin-chess).
  * Defines how a game variant is created, rendered, and the roles its players take.
  */
 export type GameVariant = {
