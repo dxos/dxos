@@ -2,7 +2,8 @@
 
 _Resume: Phase 0 — spike `@panproto/core` (WASM) loadability, the Task→GTD law-check, **target-type derivation from a spec (D1)**, and mdast source-offset splicing. Those answers pick the architecture. Uncommitted: none. Last: DESIGN.md rewritten around lenses as a first-class ECHO concept (static or persisted, mirroring `Type`) with derivation graded honestly in §3._
 
-Design and rationale live in [DESIGN.md](./DESIGN.md). This file is the ledger only.
+Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](./API.md).
+This file is the ledger only.
 
 **The bar for "done" on both lenses:** a custom UI drives the object entirely through the lens
 schema, all data persists in the base object under its own schema plus annotations, and a second
@@ -51,8 +52,13 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
 - [ ] **Scaffold `packages/sdk/lens` (`@dxos/lens`, `"private": true`)**; in-repo deps
       `workspace:*`, external via catalog. Keep the panproto/WASM binding in a separate optional
       package so core stays worker-safe.
-- [ ] **`Lens` interface + `org.dxos.type.lens` entity** (DESIGN.md §6.1), with both definition
-      paths — static (code) and persisted (space) — mirroring `Type` / `Type.Type`.
+- [ ] **`Lens` interface + `org.dxos.type.lens` entity** (DESIGN.md §6.1, API.md §2–3), with both
+      definition paths — static (code) and persisted (space) — mirroring `Type` / `Type.Type`. An
+      ordinary ECHO object, **not** a new `EntityKind` (API.md §0).
+- [ ] **`Write` vocabulary** (API.md §1) — `assign` | `splice` | `overlay`, with no whole-object
+      replace expressible. This is where write-minimality becomes a type error rather than a rule.
+- [ ] **Resolve `Obj.lens` proxy vs a distinct `LensedObj<T>`** (API.md §5.2, §10.1) — decide with
+      the Phase 4 collaboration story in hand, not before.
 - [ ] **`Lens.derive(baseType, lens)` (D1)** — spec applied to source JSON Schema → target `Type`
       entity. The stored `target` is a cache; add a test asserting cache == fresh derivation.
 - [ ] **Derived overlay set (D4)** — target properties the spec doesn't map; no hand-maintained
@@ -108,7 +114,7 @@ enforces them (DESIGN.md §7).
 - [ ] **Story: Task, lensed** — lensed form | canonical form | raw inspector, one peer.
 - [ ] **Story: Text, lensed** — block list | CodeMirror editor | raw inspector, one peer.
 - [ ] **Story: Task, collaborative** — `withMultiClientProvider({ numClients: 2, createSpace:
-    true })`, canonical UI in pane 0, lensed UI in pane 1, same object via a real invitation.
+  true })`, canonical UI in pane 0, lensed UI in pane 1, same object via a real invitation.
   - `status` change on A propagates to `done`/`stage` on B, and back.
   - Overlay set on B persists, is invisible on A's form, appears in A's inspector annotations.
   - **Concurrent non-conflicting edits merge** (A edits `title` while B toggles `done`) — the

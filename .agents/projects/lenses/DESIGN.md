@@ -46,6 +46,9 @@ at runtime with `Type.makeObjectFromJsonSchema`). Static gets you autocomplete; 
 user-authored schemas at the cost of dynamic typing. That tradeoff is already understood by
 everyone who uses ECHO, and lenses inherit it unchanged.
 
+**Concrete signatures: [API.md](./API.md)** — builder, coded lenses, derivation, the live handle,
+React hooks, registry, laws, and generation, with the open questions called out.
+
 Proposed surface, shaped as a namespace module like `Type` / `Obj` / `View`:
 
 ```ts
