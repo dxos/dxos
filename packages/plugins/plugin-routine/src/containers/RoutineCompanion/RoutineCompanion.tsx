@@ -166,6 +166,13 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
     [statusFor, t],
   );
 
+  const renderActions = useCallback(
+    (routine: Routine.Routine) => (
+      <RoutineRowActions routine={routine} getMenu={getMenu} label={t('routine-actions.label')} />
+    ),
+    [getMenu, t],
+  );
+
   // Render guard placed after every hook so hook order stays stable: a non-persisted subject (no database)
   // has nothing to list.
   if (!db) {
@@ -202,9 +209,7 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
                 selectedId={selectedId}
                 detail={detail}
                 onSelect={handleSelect}
-                renderActions={(routine) => (
-                  <RoutineRowActions routine={routine} getMenu={getMenu} label={t('routine-actions.label')} />
-                )}
+                renderActions={renderActions}
                 getIcon={getIcon}
                 getLabel={getLabel}
                 getAdornment={getAdornment}
