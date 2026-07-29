@@ -102,6 +102,15 @@ export default defineConfig((env) => ({
           }
         : undefined,
     watch: {
+      // Build output is not source. The dev server resolves `@dxos/*` from source, so its watch root
+      // spans the whole monorepo, and fsevents routes each event by scanning every watched root — so
+      // a single `moon run <pkg>:build`, which rewrites dist across many packages, pins the main
+      // thread in the watcher callback and the server stops responding (diagnosed via
+      // `moon run composer-app:diagnose-serve`: 1096 of 1100 non-idle samples in fse_dispatch_event).
+      // Vite already ignores .git, node_modules, test-results and its cache dir, and merges these in.
+      // Trade-off: rebuilding a package whose dist is consumed at runtime no longer triggers HMR, so
+      // that now needs a server restart — which is the honest behaviour for a prebuilt dependency.
+      ignored: ['**/dist/**', '**/.moon/cache/**', '**/temp/**', '**/coverage/**', '**/*.tsbuildinfo'],
       // Coalesce write bursts (codemods, formatters, git checkout/rebase) into
       // a single HMR pass: chokidar holds add/change events until the file size
       // has been stable for `stabilityThreshold` ms, so a hundred-file burst
