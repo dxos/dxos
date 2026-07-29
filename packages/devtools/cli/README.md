@@ -51,6 +51,22 @@ These constraints are easy to break and only observable in the published artifac
   1.3.4 leaked `--smol` into `process.argv` of every compiled binary, which made `dx` reject its own
   arguments.
 
+## Preview builds
+
+Every push to `main` publishes the generated packages to [pkg.pr.new](https://pkg.pr.new), so a fix is
+installable without waiting for an npm release. Install the package for your own platform:
+
+```bash
+npm i https://pkg.pr.new/@dxos/cli-linux-x64@<commit-sha>
+npx dx --version
+```
+
+Install the platform package rather than the `@dxos/cli` launcher: npm must download a URL
+dependency's tarball to read its `os`/`cpu` fields, so it cannot skip the platforms it will discard,
+and a launcher install fetches all five (~330 MB). Each platform package declares its own `dx` bin for
+this reason. Installing from npm is unaffected — the launcher's `dx` takes precedence when both are
+present, and registry dependencies are platform-filtered without downloading.
+
 ## Admin Commands
 
 Edge admin commands for managing spaces and identities. Requires an admin key and Edge URL,

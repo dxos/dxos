@@ -31,6 +31,18 @@ fi
 read -ra PKG_ARRAY <<< "$PUBLIC_PACKAGES"
 echo "Found ${#PKG_ARRAY[@]} public packages to publish"
 
+# `@dxos/cli` publishes generated packages — a launcher plus one prebuilt binary per platform, written
+# to dist/ by `cli:bundle` — rather than its own source directory, which is private and has no binary.
+# They are not workspace members, so the pnpm listing above can never see them.
+CLI_DIST=packages/devtools/cli/dist
+CLI_PACKAGES=()
+if [ -d "$CLI_DIST/cli" ]; then
+  CLI_PACKAGES=("$CLI_DIST/cli" "$CLI_DIST"/cli-*)
+  echo "Found ${#CLI_PACKAGES[@]} generated CLI packages to publish"
+else
+  echo "::warning::$CLI_DIST/cli is missing (run 'moon run cli:bundle') — publishing without the CLI"
+fi
+
 # Run pkg-pr-new publish with all public packages
-pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}"
+pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}"
 

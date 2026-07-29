@@ -186,6 +186,9 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     os: [platform],
     cpu: [arch],
     main: `./${binaryName}`,
+    // Installable on its own: npm must download a URL dependency's tarball to read its `os`/`cpu`,
+    // so reaching the binary through the launcher's `optionalDependencies` fetches every platform.
+    bin: { dx: `./${binaryName}` },
     files: [binaryName, 'LICENSE'],
     publishConfig: {
       access: 'public',

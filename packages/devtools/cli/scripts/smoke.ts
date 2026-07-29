@@ -71,16 +71,36 @@ console.log('[Smoke] Installing tarballs...');
 writeFileSync(join(scratch, 'package.json'), JSON.stringify({ name: 'dx-smoke', private: true }, null, 2));
 run('npm', ['install', '--no-audit', '--no-fund', '--omit=optional', platformTarball, mainTarball], scratch);
 
-console.log('[Smoke] Running `dx --version`...');
-const dx = join(scratch, 'node_modules', '.bin', 'dx');
-const result = spawnSync(dx, ['--version'], { cwd: scratch, encoding: 'utf8', env: process.env });
+const checkVersion = (label: string, command: string, args: string[]): string => {
+  console.log(`[Smoke] Running ${label}...`);
+  const result = spawnSync(command, [...args, '--version'], { cwd: scratch, encoding: 'utf8', env: process.env });
+  if (result.status !== 0) {
+    console.error(`[Smoke] ${label} failed (exit ${result.status ?? result.error}).`);
+    console.error(result.stdout);
+    console.error(result.stderr);
+    rmSync(scratch, { recursive: true, force: true });
+    process.exit(1);
+  }
+  return result.stdout.trim();
+};
+
+// Both packages declare a `dx` bin and npm links only one of them, so each is invoked by path —
+// going through `node_modules/.bin/dx` would silently drop either the launcher (its platform
+// mapping and executable-bit recovery) or the standalone platform install from this test.
+const launcherVersion = checkVersion('the launcher', 'node', [
+  join(scratch, 'node_modules', '@dxos', 'cli', 'bin', 'dx.js'),
+]);
+const platformVersion = checkVersion(
+  'the platform binary',
+  join(scratch, 'node_modules', '@dxos', `cli-${platformKey}`, binaryName),
+  [],
+);
+
 rmSync(scratch, { recursive: true, force: true });
 
-if (result.status !== 0) {
-  console.error(`[Smoke] \`dx --version\` failed (exit ${result.status ?? result.error}).`);
-  console.error(result.stdout);
-  console.error(result.stderr);
+if (launcherVersion !== platformVersion) {
+  console.error(`[Smoke] launcher reported "${launcherVersion}" but the binary reported "${platformVersion}".`);
   process.exit(1);
 }
 
-console.log(`[Smoke] ✓ ${result.stdout.trim()}`);
+console.log(`[Smoke] ✓ ${launcherVersion} (launcher and platform binary)`);
