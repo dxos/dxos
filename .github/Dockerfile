@@ -41,8 +41,12 @@ RUN npm install -g pnpm@10.13.1 \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Bun.
-# NOTE: Keep bun version in sync with .prototools
-ARG BUN_VERSION=1.3.4
+# NOTE: Keep bun version in sync with .prototools.
+#  Unlike node and pnpm, bun is not declared in .moon/toolchains.yml, so moon never installs it and this
+#  is what a bare `bun` resolves to. Drift here is silent: 1.3.4 stayed after .prototools moved to 1.3.11
+#  and compiled a CLI binary that rejected its own arguments. The image tag tracks NODE_VERSION, so a
+#  change here needs the image rebuilt (push to main touching this file, or dispatch docker-image.yml).
+ARG BUN_VERSION=1.3.11
 RUN ARCH=$(uname -m) \
   && if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ]; then ARCH="aarch64"; else echo "Unsupported architecture: $ARCH"; exit 1; fi \
   && curl -fsSL https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-$ARCH.zip -o /tmp/bun.zip \
