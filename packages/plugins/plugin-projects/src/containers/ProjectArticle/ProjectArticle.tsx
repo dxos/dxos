@@ -11,7 +11,7 @@ import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { type Node, useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel, useTranslation } from '@dxos/react-ui';
@@ -167,14 +167,8 @@ const useToolbarActions = (
     [graph, attendableId, project, invokePromise, spaceId],
   );
 
-  const onAction: ActionExecutor = useCallback(
-    (action) => {
-      void runAction(action as Node.Action, { caller: meta.profile.key });
-    },
-    [runAction],
-  );
-
-  return { actions, onAction };
+  // `runAction` is the executor; wrapping it only to re-tag the action would need a cast.
+  return { actions, onAction: runAction };
 };
 
 type ArtifactTileData = { object: Obj.Unknown; onClick: () => void; onDelete: () => void };
