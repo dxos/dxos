@@ -8,11 +8,11 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
 
-import { Sketch } from '#types';
+import { Drawing } from '#types';
 
 const activate = Effect.fnUntraced(function* () {
   return Capability.contributes(AppCapabilities.CommentConfig, {
-    id: Type.getTypename(Sketch.Sketch),
+    id: Type.getTypename(Drawing.Drawing),
     comments: 'unanchored',
   });
 });

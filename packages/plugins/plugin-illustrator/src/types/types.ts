@@ -7,41 +7,41 @@ import type { ComponentType } from 'react';
 
 import type { Database, Obj, Type } from '@dxos/echo';
 
-import { type SketchBuilder } from '#model';
+import { type DrawingBuilder } from '#model';
 
-import type * as Sketch from './Sketch';
+import type * as Drawing from './Drawing';
 
 /**
- * Contribution from a canvas renderer plugin (e.g. plugin-tldraw, plugin-excalidraw).
- * Defines how a sketch variant is created, rendered, and how the scene DSL maps onto it.
+ * Contribution from a renderer plugin (e.g. plugin-tldraw, plugin-excalidraw).
+ * Defines how a drawing variant is created, rendered, and how the scene DSL maps onto it.
  */
-export type SketchVariant = {
-  /** Stable id, typically the canvas typename (e.g. 'org.dxos.type.canvas'). */
+export type DrawingVariant = {
+  /** Renderer dialect claimed by this variant; matched against `Canvas.schema` (e.g. 'tldraw.com/2'). */
   id: string;
   /** Human-readable variant name (e.g. 'tldraw'). */
   label: string;
   /** Optional Phosphor icon name (e.g. 'ph--compass-tool--regular'). */
   icon?: string;
-  /** ECHO Type entity of the canvas object referenced by `Sketch.canvas`. */
-  canvasType: Type.AnyObj;
   /**
-   * Build an empty canvas object. May allocate ECHO objects, run effects, etc.
-   * Returned object is added to the database alongside the Sketch.
+   * Canvas type, when the renderer extends the base `Drawing.Canvas` with its own fields.
+   * Omit to use the base type — the common case, since `schema` already discriminates.
    */
-  createCanvas: (input?: Record<string, any>) => Effect.Effect<Obj.Any, Error, Database.Service>;
+  canvasType?: Type.AnyObj;
+  /** Build an empty canvas. Defaults to a base `Drawing.Canvas` stamped with `id` as its schema. */
+  createCanvas?: (input?: Record<string, any>) => Effect.Effect<Drawing.Canvas, Error, Database.Service>;
   /** Maps the scene DSL onto this variant's canvas records. */
-  builder: SketchBuilder;
+  builder: DrawingBuilder;
   /** Optional Card surface component for this variant. */
-  card?: ComponentType<SketchVariantSurfaceProps>;
+  card?: ComponentType<DrawingVariantSurfaceProps>;
   /** Optional Article/Section/Slide surface component for this variant. */
-  article?: ComponentType<SketchVariantSurfaceProps>;
+  article?: ComponentType<DrawingVariantSurfaceProps>;
 };
 
-export type SketchVariantSurfaceProps = {
-  /** The base Sketch object (may be a snapshot from useObject/Surface). */
-  sketch: Obj.Snapshot<Sketch.Sketch> | Sketch.Sketch;
+export type DrawingVariantSurfaceProps = {
+  /** The base Drawing object (may be a snapshot from useObject/Surface). */
+  drawing: Obj.Snapshot<Drawing.Drawing> | Drawing.Drawing;
   /** The resolved LIVE canvas object — variant store adapters need `Doc.createAccessor`. */
-  canvas: Obj.Unknown;
+  canvas: Drawing.Canvas;
   /** Surface role passed through from the host. */
   role?: string;
   /** Attendable id passed through from the host. */

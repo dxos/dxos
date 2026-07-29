@@ -4,6 +4,6 @@
 
 export * from './types';
 
+export * as Drawing from './Drawing';
+export * as DrawingOperation from './DrawingOperation';
 export * as IllustratorCapabilities from './IllustratorCapabilities';
-export * as Sketch from './Sketch';
-export * as SketchOperation from './SketchOperation';

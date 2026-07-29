@@ -5,20 +5,20 @@
 import { Skill, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { SketchOperation } from '#types';
+import { DrawingOperation } from '#types';
 
-const SKILL_KEY = 'org.dxos.skill.sketch';
+const SKILL_KEY = 'org.dxos.skill.drawing';
 
-const operations = [SketchOperation.Create, SketchOperation.Read, SketchOperation.Edit];
+const operations = [DrawingOperation.Create, DrawingOperation.Read, DrawingOperation.Edit];
 
 const make = () =>
   Skill.make({
     key: SKILL_KEY,
-    name: 'Sketch',
+    name: 'Drawing',
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
-        {{! Sketch }}
+        {{! Drawing }}
 
         You can draw and edit diagrams on a shared canvas using a scene DSL.
 
@@ -44,8 +44,8 @@ const make = () =>
 
         ## Workflow
 
-        1. If no sketch exists in context, create one first.
-        2. ALWAYS call read before editing an existing sketch — it returns the scene as you
+        1. If no drawing exists in context, create one first.
+        2. ALWAYS call read before editing an existing drawing — it returns the scene as you
            (or the user) last left it, with origins derived from the live canvas, so it stays
            correct even after the user drags shapes around. Note "unmanaged" counts shapes the
            user drew by hand that are not part of the scene.

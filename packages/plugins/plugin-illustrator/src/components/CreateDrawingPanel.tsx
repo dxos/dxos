@@ -10,20 +10,20 @@ import { useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
-import { IllustratorCapabilities, type SketchVariant } from '#types';
+import { IllustratorCapabilities, type DrawingVariant } from '#types';
 
-export type CreateSketchPanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
+export type CreateDrawingPanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to IllustratorCapabilities.VariantProvider. */
-  variants?: SketchVariant[];
+  variants?: DrawingVariant[];
 };
 
 /**
- * Variant picker for sketches (SearchList over contributed `SketchVariant[]`).
+ * Variant picker for drawings (SearchList over contributed `DrawingVariant[]`).
  * On select, calls `onCreateObject({ variantId })`; plugin-illustrator's
  * CreateObjectEntry.createObject resolves the variantId, builds the canvas via
- * variant.createCanvas, then wraps it in a Sketch.
+ * variant.createCanvas, then wraps it in a Drawing.
  */
-export const CreateSketchPanel = ({ onCreateObject, variants: variantsProp }: CreateSketchPanelProps) => {
+export const CreateDrawingPanel = ({ onCreateObject, variants: variantsProp }: CreateDrawingPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   const capabilityVariants = useCapabilities(IllustratorCapabilities.VariantProvider);
   const variants = variantsProp ?? capabilityVariants;
@@ -49,7 +49,7 @@ export const CreateSketchPanel = ({ onCreateObject, variants: variantsProp }: Cr
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
-        data-testid='create-sketch-panel.variant-input'
+        data-testid='create-drawing-panel.variant-input'
         placeholder={t('create-panel.variant.placeholder')}
       />
       <SearchList.Viewport>

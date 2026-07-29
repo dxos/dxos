@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 
-import { SketchOperation } from '../types';
-import { resolveVariant } from '../util/load-sketch';
+import { DrawingOperation } from '../types';
+import { resolveVariant } from '../util/load-drawing';
 
-const handler: Operation.WithHandler<typeof SketchOperation.Edit> = SketchOperation.Edit.pipe(
+const handler: Operation.WithHandler<typeof DrawingOperation.Edit> = DrawingOperation.Edit.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ sketch, commands }) {
-      const { canvas, variant } = yield* resolveVariant(sketch);
+    Effect.fn(function* ({ drawing, commands }) {
+      const { canvas, variant } = yield* resolveVariant(drawing);
       const { upserted, removed } = variant.builder.apply(canvas, commands);
       const { scene, unmanaged } = variant.builder.read(canvas);
       return { scene, unmanaged, upserted, removed };

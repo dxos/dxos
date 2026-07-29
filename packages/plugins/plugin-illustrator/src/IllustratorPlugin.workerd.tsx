@@ -6,10 +6,10 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
-import { Sketch } from '#types';
+import { Drawing } from '#types';
 
 export const IllustratorPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Sketch.Sketch] }),
+  AppPlugin.addSchemaModule({ schema: [Drawing.Drawing] }),
   Plugin.make,
 );
 

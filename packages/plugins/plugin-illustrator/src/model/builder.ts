@@ -3,42 +3,47 @@
 //
 
 //
-// Renderer-neutral builder contract: each canvas variant (tldraw, excalidraw, …) implements
-// `SketchBuilder` to compile the scene DSL onto its concrete records and derive the scene back
+// Renderer-neutral builder contract: each variant (tldraw, excalidraw, …) implements
+// `DrawingBuilder` to compile the scene DSL onto its canvas records and derive the scene back
 // from them. Implementations are contributed via `IllustratorCapabilities.VariantProvider`.
 //
 
-import { type Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 
+import * as Drawing from '../types/Drawing';
+import { type ApplyResult, type ContentHandler, type ContentMap, type ReadResult, applyCommands } from './content';
 import type * as Scene from './scene';
 
-/** A world object as derived from the canvas: placement is always resolved. */
-export type ReadWorldObject = Scene.WorldObject & {
-  origin: Scene.Point;
-  scale: number;
-};
-
-export type ReadResult = {
-  scene: { objects: ReadWorldObject[] };
-  /** Shapes on the canvas not managed by the DSL (hand-drawn by users). */
-  unmanaged: number;
-};
-
-export type ApplyResult = {
-  /** Object ids created or modified. */
-  upserted: string[];
-  /** Shape records removed. */
-  removed: number;
+/**
+ * Maps the scene DSL onto a canvas. Geometry is derived from the live records — not a stored
+ * copy — so the model stays coherent after users drag or resize shapes in the renderer's UI.
+ */
+export type DrawingBuilder = {
+  /** Renderer dialect this builder handles; matched against `Canvas.schema`. */
+  readonly schema: string;
+  /** Derive the neutral scene from the canvas. */
+  read: (canvas: Drawing.Canvas) => ReadResult;
+  /** Apply a batch of edit commands atomically. */
+  apply: (canvas: Drawing.Canvas, commands: readonly Scene.Command[]) => ApplyResult;
 };
 
 /**
- * Maps the scene DSL onto a renderer-specific canvas object.
- * Geometry is derived from the live canvas records — not a stored copy — so the model stays
- * coherent after users drag or resize shapes in the renderer's UI.
+ * Builds a {@link DrawingBuilder} from the renderer's {@link ContentHandler}, so a variant only
+ * supplies its record encoding and inherits the ECHO write semantics and command bookkeeping.
  */
-export type SketchBuilder = {
-  /** Derive the neutral scene from the canvas. */
-  read: (canvas: Obj.Any) => ReadResult;
-  /** Apply a batch of edit commands atomically (implementations wrap their own `Obj.update`). */
-  apply: (canvas: Obj.Any, commands: readonly Scene.Command[]) => ApplyResult;
-};
+export const makeBuilder = ({ schema, handler }: { schema: string; handler: ContentHandler }): DrawingBuilder => ({
+  schema,
+  read: (canvas) => {
+    invariant(Obj.instanceOf(Drawing.Canvas, canvas));
+    return handler.read(canvas.content);
+  },
+  apply: (canvas, commands) => {
+    invariant(Obj.instanceOf(Drawing.Canvas, canvas));
+    let result: ApplyResult = { upserted: [], removed: 0 };
+    Obj.update(canvas, (canvas) => {
+      result = applyCommands(canvas.content as ContentMap, commands, handler);
+    });
+    return result;
+  },
+});

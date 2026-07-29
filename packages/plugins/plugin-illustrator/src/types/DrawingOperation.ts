@@ -14,12 +14,12 @@ import { DXN } from '@dxos/keys';
 import { meta } from '#meta';
 import { Scene } from '#model';
 
-import * as Sketch from './Sketch';
+import * as Drawing from './Drawing';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Sketch', icon: 'ph--pencil-simple--regular' },
+  meta: { key: makeKey('create'), name: 'Create Drawing', icon: 'ph--pencil-simple--regular' },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     variant: Schema.optional(Schema.String).annotations({
@@ -27,7 +27,7 @@ export const Create = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    object: Type.getSchema(Sketch.Sketch),
+    object: Type.getSchema(Drawing.Drawing),
   }),
   services: [Capability.Service, Database.Service],
 });
@@ -43,13 +43,13 @@ const SceneOutput = {
 export const Read = Operation.make({
   meta: {
     key: makeKey('read'),
-    name: 'Read Sketch',
+    name: 'Read Drawing',
     description:
-      'Returns the current scene of a sketch: world objects (by id) with their elements in object-local units. Call before editing an existing sketch.',
+      'Returns the current scene of a drawing: world objects (by id) with their elements in object-local units. Call before editing an existing drawing.',
     icon: 'ph--eye--regular',
   },
   input: Schema.Struct({
-    sketch: Ref.Ref(Sketch.Sketch).annotations({ description: 'The sketch to read.' }),
+    drawing: Ref.Ref(Drawing.Drawing).annotations({ description: 'The drawing to read.' }),
   }),
   output: Schema.Struct(SceneOutput),
   services: [Capability.Service, Database.Service],
@@ -58,13 +58,13 @@ export const Read = Operation.make({
 export const Edit = Operation.make({
   meta: {
     key: makeKey('edit'),
-    name: 'Edit Sketch',
+    name: 'Edit Drawing',
     description:
-      'Applies scene commands to a sketch: upsert/move/remove world objects or individual elements by id. Returns the resulting scene.',
+      'Applies scene commands to a drawing: upsert/move/remove world objects or individual elements by id. Returns the resulting scene.',
     icon: 'ph--pencil-simple-line--regular',
   },
   input: Schema.Struct({
-    sketch: Ref.Ref(Sketch.Sketch).annotations({ description: 'The sketch to edit.' }),
+    drawing: Ref.Ref(Drawing.Drawing).annotations({ description: 'The drawing to edit.' }),
     commands: Schema.Array(Scene.Command).annotations({ description: 'Commands applied in order, atomically.' }),
   }),
   output: Schema.Struct({

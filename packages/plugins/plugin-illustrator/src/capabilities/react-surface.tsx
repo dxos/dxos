@@ -9,28 +9,28 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { SketchArticle, SketchCard } from '#containers';
+import { DrawingArticle, DrawingCard } from '#containers';
 
-import { Sketch } from '../types';
+import { Drawing } from '../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'sketch',
+        id: 'drawing',
         filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, Sketch.Sketch),
-          AppSurface.object(AppSurface.Section, Sketch.Sketch),
-          AppSurface.object(AppSurface.Slide, Sketch.Sketch),
+          AppSurface.object(AppSurface.Article, Drawing.Drawing),
+          AppSurface.object(AppSurface.Section, Drawing.Drawing),
+          AppSurface.object(AppSurface.Slide, Drawing.Drawing),
         ),
         component: ({ data: { subject, attendableId, extrinsic }, role }) => (
-          <SketchArticle role={role} subject={subject} attendableId={attendableId} extrinsic={extrinsic} />
+          <DrawingArticle role={role} subject={subject} attendableId={attendableId} extrinsic={extrinsic} />
         ),
       }),
       Surface.create({
-        id: 'sketchCard',
-        filter: AppSurface.object(AppSurface.CardContent, Sketch.Sketch),
-        component: ({ data, role }) => <SketchCard role={role} subject={data.subject} editable={data.editable} />,
+        id: 'drawingCard',
+        filter: AppSurface.object(AppSurface.CardContent, Drawing.Drawing),
+        component: ({ data, role }) => <DrawingCard role={role} subject={data.subject} editable={data.editable} />,
       }),
     ]),
   ),

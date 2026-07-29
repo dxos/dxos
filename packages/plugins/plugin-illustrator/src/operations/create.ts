@@ -7,19 +7,19 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
-import { IllustratorCapabilities, Sketch, SketchOperation } from '../types';
-import { UnknownSketchVariantError } from '../util/load-sketch';
+import { Drawing, DrawingOperation, IllustratorCapabilities } from '../types';
+import { UnknownDrawingVariantError } from '../util/load-drawing';
 
-const handler: Operation.WithHandler<typeof SketchOperation.Create> = SketchOperation.Create.pipe(
+const handler: Operation.WithHandler<typeof DrawingOperation.Create> = DrawingOperation.Create.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, variant: variantId }) {
       const variants = yield* Capability.getAll(IllustratorCapabilities.VariantProvider);
       const variant = variantId ? variants.find((entry) => entry.id === variantId) : variants[0];
       if (!variant) {
-        return yield* Effect.fail(new UnknownSketchVariantError(variantId ?? '(none registered)'));
+        return yield* Effect.fail(new UnknownDrawingVariantError(variantId ?? '(none registered)'));
       }
-      const canvas = yield* variant.createCanvas();
-      return { object: Sketch.make({ name, canvas }) };
+      const canvas = variant.createCanvas ? yield* variant.createCanvas() : Drawing.makeCanvas({ schema: variant.id });
+      return { object: Drawing.make({ name, canvas }) };
     }),
   ),
 );

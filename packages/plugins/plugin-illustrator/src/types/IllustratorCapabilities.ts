@@ -8,12 +8,12 @@ import { Capability } from '@dxos/app-framework';
 
 import { meta } from '#meta';
 
-import type { SketchVariant } from './types';
+import type { DrawingVariant } from './types';
 
 /**
- * A sketch variant contribution. Each renderer plugin (tldraw, excalidraw, ...)
- * contributes one of these via `Capability.contributes(IllustratorCapabilities.VariantProvider, variant)`.
+ * A drawing variant contribution. Each renderer plugin (tldraw, excalidraw, ...) contributes one
+ * via `Capability.contributes(IllustratorCapabilities.VariantProvider, variant)`.
  * Consumers iterate via `Capability.getAll(IllustratorCapabilities.VariantProvider)` (Effect) or
  * `useCapabilities(IllustratorCapabilities.VariantProvider)` (React).
  */
-export const VariantProvider = Capability.make<SketchVariant>(`${meta.profile.key}.capability.variant`);
+export const VariantProvider = Capability.make<DrawingVariant>(`${meta.profile.key}.capability.variant`);

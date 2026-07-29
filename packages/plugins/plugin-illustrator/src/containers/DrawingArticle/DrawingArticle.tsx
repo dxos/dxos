@@ -6,22 +6,22 @@ import React from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, type Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { IllustratorCapabilities, type Sketch } from '#types';
+import { type Drawing, IllustratorCapabilities } from '#types';
+import { findVariant } from '#util';
 
-export type SketchArticleProps = AppSurface.ObjectArticleProps<Sketch.Sketch> & {
+export type DrawingArticleProps = AppSurface.ObjectArticleProps<Drawing.Drawing> & {
   extrinsic?: boolean;
 };
 
-/** Resolves the sketch's canvas and delegates rendering to the matching variant's article. */
-export const SketchArticle = ({ role, attendableId, subject: sketch, extrinsic }: SketchArticleProps) => {
+/** Resolves the drawing's canvas and delegates rendering to the variant claiming its schema. */
+export const DrawingArticle = ({ role, attendableId, subject: drawing, extrinsic }: DrawingArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const variants = useCapabilities(IllustratorCapabilities.VariantProvider);
-  const ref = sketch.canvas as Ref.Ref<Obj.Unknown>;
+  const ref = drawing.canvas;
   // Subscribe via the snapshot for load/re-render, but hand variants the LIVE object —
   // their store adapters need `Doc.createAccessor`, which rejects snapshots.
   const [snapshot] = useObject(ref);
@@ -31,18 +31,17 @@ export const SketchArticle = ({ role, attendableId, subject: sketch, extrinsic }
     return null;
   }
 
-  const typename = Obj.getTypename(canvas);
-  const match = variants.find((variant) => variant.id === typename);
+  const match = findVariant(variants, canvas);
   if (!match?.article) {
     return (
       <div className='p-4 text-sm'>
-        {t('unsupported-variant.label', { defaultValue: 'Unsupported sketch variant' })}
+        {t('unsupported-variant.label', { defaultValue: 'Unsupported drawing variant' })}
       </div>
     );
   }
 
   const Component = match.article;
-  return <Component sketch={sketch} canvas={canvas} role={role} attendableId={attendableId} extrinsic={extrinsic} />;
+  return <Component drawing={drawing} canvas={canvas} role={role} attendableId={attendableId} extrinsic={extrinsic} />;
 };
 
-SketchArticle.displayName = 'SketchArticle';
+DrawingArticle.displayName = 'DrawingArticle';

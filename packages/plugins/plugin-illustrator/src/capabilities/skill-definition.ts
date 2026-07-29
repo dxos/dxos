@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { SketchSkill } from '#skills';
+import { DrawingSkill } from '#skills';
 
-const skillDefinition = () => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, SketchSkill)]);
+const skillDefinition = () => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, DrawingSkill)]);
 
 export default skillDefinition;
