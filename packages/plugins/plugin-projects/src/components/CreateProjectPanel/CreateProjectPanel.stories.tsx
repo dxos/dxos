@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
@@ -17,7 +18,9 @@ import { CreateProjectPanel } from './CreateProjectPanel';
 const meta: Meta<typeof CreateProjectPanel> = {
   title: 'plugins/plugin-projects/CreateProjectPanel',
   component: CreateProjectPanel,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  // An empty plugin manager satisfies the component's unconditional `useCapabilities` hook; the
+  // story supplies templates via the prop override.
+  decorators: [withTheme(), withLayout({ layout: 'column' }), withPluginManager({ plugins: [] })],
   parameters: { translations: [...translations, ...reactUiTranslations] },
   args: {
     // Static templates so the story renders without a plugin manager (no capability context).
