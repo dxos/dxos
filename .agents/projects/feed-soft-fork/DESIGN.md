@@ -247,11 +247,13 @@ const { items, truncated } = Feed.resolveBranch(messages);
 
 ## Gotchas
 
-- **`Message.parentMessage` is not this.** It already means tool-call /
-  sub-agent nesting in
-  [`execution-graph.ts`](../../../packages/core/compute/assistant/src/util/execution-graph.ts).
-  Conversation lineage lives in `@meta` and must not be conflated with it when
-  chat is eventually wired up.
+- **`Message.parentMessage` is not this**, and it is about to carry a third
+  meaning. Today it means tool-call / sub-agent nesting in
+  [`execution-graph.ts`](../../../packages/core/compute/assistant/src/util/execution-graph.ts);
+  the `chat` work-stream plans to retype it `Ref(Message)` and use it for
+  **replies**. Fork lineage is a fourth relationship and stays in `@meta` —
+  coordinate with `chat` before either touches the other, since a single field
+  cannot mean nesting, replies, and lineage at once.
 - **Lineage is mutable.** `Obj.update` re-appends the whole object including
   meta, so a later block can change an item's parent — that is how "move a
   branch" would be implemented, but it also means lineage is last-flush-wins at

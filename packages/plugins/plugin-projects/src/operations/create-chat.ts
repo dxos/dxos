@@ -14,6 +14,8 @@ import { AssistantOperation } from '@dxos/plugin-assistant';
 
 import { ProjectOperation } from '#types';
 
+import { ARTIFACT_SKILL_KEYS } from '../skills/keys';
+
 const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = ProjectOperation.CreateChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project }) {
@@ -35,7 +37,10 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = Proje
       //    model can only name it if it is in context;
       //  - `ProjectSkill`, so a created object can be filed into the project's artifacts. Filing is a
       //    tool call the model makes deliberately (see DESIGN.md), so without this the chat creates
-      //    documents that belong to no project.
+      //    documents that belong to no project;
+      //  - the artifact-type skills, so producing the artifact the user asked for does not cost a
+      //    `query-skills`/`enable-skills` round trip first (a companion chat gets these from its
+      //    subject's `SkillsAnnotation`; a project chat has no single subject to read them from).
       // Bound by registry URI rather than a DB clone, as the assistant's default skills are.
       const { skills, objects } = Project.contextBindings(project);
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -45,7 +50,10 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = Proje
       yield* Effect.promise(() =>
         binder.use((binder: AiContext.Binder) =>
           binder.bind({
-            skills: [Ref.fromURI(Skill.registryURI(ProjectSkill.key)), ...skills],
+            skills: [
+              ...[ProjectSkill.key, ...ARTIFACT_SKILL_KEYS].map((key) => Ref.fromURI(Skill.registryURI(key))),
+              ...skills,
+            ],
             objects: [Ref.make(project), ...objects],
           }),
         ),
