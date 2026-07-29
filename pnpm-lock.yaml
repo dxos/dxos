@@ -14376,6 +14376,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu

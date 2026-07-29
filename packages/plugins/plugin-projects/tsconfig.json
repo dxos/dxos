@@ -70,6 +70,9 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {

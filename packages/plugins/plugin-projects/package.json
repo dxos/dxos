@@ -29,6 +29,11 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
     },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/components.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -94,6 +99,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

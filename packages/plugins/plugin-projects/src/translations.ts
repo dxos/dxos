@@ -29,6 +29,7 @@ export const translations = [
         'routines.label': 'Routines',
         'artifacts.label': 'Artifacts',
         'create-chat.label': 'New chat',
+        'artifact-card.untitled.label': 'Untitled',
       },
     },
   },

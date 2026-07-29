@@ -9,6 +9,7 @@ export default defineConfig({
     index: 'src/index.ts',
     ProjectsPlugin: 'src/ProjectsPlugin.tsx',
     capabilities: 'src/capabilities/index.ts',
+    components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     types: 'src/types/index.ts',
     meta: 'src/meta.ts',
