@@ -25,10 +25,9 @@ in `src/commands/plugin-defs.ts` and lives in the plugin package — e.g. `dx re
 ## Release
 
 ```bash
-moon run cli:bundle          # Compile per-platform binaries into dist/.
-moon run cli:smoke           # Pack, install, and run the tarballs with node_modules hidden.
-moon run cli:smoke-isolated  # Same isolation straight from dist/, skipping pack (dev shortcut).
-moon run cli:publish         # Publish the platform packages, then the launcher.
+moon run cli:bundle   # Compile per-platform binaries into dist/.
+moon run cli:smoke    # Pack, install, and run the tarballs with node_modules hidden.
+moon run cli:publish  # Publish the platform packages, then the launcher.
 ```
 
 `smoke` gates `publish` and covers two independent axes. Packing and installing catches tarball problems
@@ -45,7 +44,7 @@ was built, so both this test and CI would otherwise pass. Two shipped defects we
 
 Other addons (`sharp`, `koffi`, `node-datachannel`) are still in the graph but are not reached during
 startup. Any command that does reach one will fail off the build machine, so extend `COMMANDS` in
-`scripts/smoke-isolated.ts` as coverage grows.
+`scripts/smoke.ts` as coverage grows.
 
 `bundle` produces `dist/cli` (the `@dxos/cli` launcher, published from `bin/dx.js`) plus one
 `dist/cli-<platform>-<arch>/dx` binary per target, each published as its own package and wired into

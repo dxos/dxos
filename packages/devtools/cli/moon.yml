@@ -79,20 +79,6 @@ tasks:
     inputs:
       - scripts/smoke.ts
       - dist/**/*
-  # Development shortcut — `smoke` is the gate and covers the same isolation. Skips pack-and-install so a
-  # build fix can be re-checked in seconds.
-  smoke-isolated:
-    command: bun
-    args:
-      - ./scripts/smoke-isolated.ts
-    deps:
-      - bundle
-    options:
-      cache: false
-      timeout: 120
-    inputs:
-      - scripts/smoke-isolated.ts
-      - dist/**/*
   publish:
     command: bun
     args:
