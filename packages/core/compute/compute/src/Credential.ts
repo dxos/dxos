@@ -90,6 +90,13 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
       return yield* Effect.promise(() => credentials.getCredential(query));
     });
 
+  /**
+   * The credential's API key as a plain string — what a caller passing it to an HTTP client needs.
+   * Resolves a server-custodied value transparently, so callers never branch on where it came from.
+   */
+  static getApiKeyValue = (query: CredentialQuery): Effect.Effect<string, never, CredentialsService> =>
+    Effect.map(CredentialsService.getApiKey(query), Redacted.value);
+
   static getApiKey = (query: CredentialQuery): Effect.Effect<Redacted.Redacted<string>, never, CredentialsService> =>
     Effect.gen(function* () {
       const credential = yield* CredentialsService.getCredential(query);

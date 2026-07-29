@@ -11,7 +11,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { type Operation } from '@dxos/compute';
+import { Credential, type Operation } from '@dxos/compute';
 import { withAuthorization } from '@dxos/compute-runtime';
 import { Database, Obj } from '@dxos/echo';
 import {
@@ -22,7 +22,6 @@ import {
   type SyncInput,
   type SyncOutput,
   type TestConnection,
-  accessTokenValue,
 } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -80,7 +79,7 @@ const isGoogleAuthRejection = (error: unknown): boolean =>
  */
 const testGoogleConnection: TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
-    const token = yield* accessTokenValue(accessToken);
+    const token = yield* Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id });
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(
       HttpClient.withTracerDisabledWhen(() => true),
@@ -114,7 +113,10 @@ const testGoogleConnection: TestConnection = ({ accessToken }) =>
  */
 const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
-    const email = yield* getAccountEmail(yield* accessTokenValue(accessToken), accessToken.account);
+    const email = yield* getAccountEmail(
+      yield* Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id }),
+      accessToken.account,
+    );
     if (email) {
       Obj.update(accessToken, (accessToken) => {
         accessToken.account = email;

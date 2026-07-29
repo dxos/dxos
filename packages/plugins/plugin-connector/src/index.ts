@@ -8,4 +8,3 @@ export { ConnectionTestError } from './errors';
 export * from './meta';
 export * from './types';
 export { isCursorForConnection, isCursorForTarget } from './util';
-export { accessTokenValue } from './util';

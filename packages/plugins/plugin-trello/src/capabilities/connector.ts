@@ -6,14 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
+import { Credential } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import {
-  ConnectionTestError,
-  Connector,
-  type OnTokenCreated,
-  type TestConnection,
-  accessTokenValue,
-} from '@dxos/plugin-connector';
+import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { TRELLO_SOURCE } from '../constants';
@@ -36,7 +31,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
     if (accessToken.account) {
       return;
     }
-    const creds = yield* TrelloApi.credentialsFromAccessToken(accessToken);
+    const creds = yield* TrelloApi.credentialsFromToken(
+      yield* Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id }),
+    );
     const member = yield* TrelloApi.fetchMember().pipe(
       Effect.provide(Layer.succeed(TrelloApi.TrelloCredentials, creds)),
     );
@@ -52,7 +49,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  */
 const testConnection: TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
-    const creds = yield* TrelloApi.credentialsFromAccessToken({ token: yield* accessTokenValue(accessToken) });
+    const creds = yield* TrelloApi.credentialsFromToken(
+      yield* Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id }),
+    );
     yield* TrelloApi.fetchMember().pipe(Effect.provide(Layer.succeed(TrelloApi.TrelloCredentials, creds)));
   }).pipe(
     Effect.mapError(

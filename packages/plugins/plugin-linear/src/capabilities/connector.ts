@@ -6,14 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
+import { Credential } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import {
-  ConnectionTestError,
-  Connector,
-  type OnTokenCreated,
-  type TestConnection,
-  accessTokenValue,
-} from '@dxos/plugin-connector';
+import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants';
@@ -48,7 +43,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * connection UI can offer to reauthenticate.
  */
 const testConnection: TestConnection = ({ accessToken }) =>
-  Effect.flatMap(accessTokenValue(accessToken), (token) =>
+  Effect.flatMap(Credential.CredentialsService.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
     LinearApi.fetchViewer().pipe(Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token }))),
   ).pipe(
     Effect.asVoid,

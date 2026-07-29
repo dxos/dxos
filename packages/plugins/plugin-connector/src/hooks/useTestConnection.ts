@@ -15,7 +15,7 @@ import { useClient } from '@dxos/react-client';
 import { useConnector } from '#hooks';
 
 import { type Connection } from '../types';
-import { credentialsLayerForObject } from '../util/access-token-value';
+import { credentialsLayerForObject } from '../util/credentials-layer';
 
 export type TestConnectionStatus =
   /** No test has run yet (connection or its token not resolved). */
