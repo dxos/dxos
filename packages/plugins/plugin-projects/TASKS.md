@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN, CI running on tip `e193704c9f`, review round addressed and replied. NEXT: land #12383, then Phase 3 UI, in order — `ProjectOperation.CreateChat`, `projectChats` graph extension (navtree chat children), exclude project chats from the top-level Chats section, `ProjectArticle` toolbar, then the Phase 3 test row. After that: commands-authoring UI / outliner skill. Uncommitted: none._
+_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN — Chat.agent removal + dead LegacyCompanionTo migration + echo-client detached-record fix + Phase 3 items 1-4 (ProjectOperation.CreateChat, projectChats navtree children, Chats-section exclusion, ProjectArticle toolbar). NEXT: land #12383. BLOCKED ON JOSIAH: the URL binding for project chats (MAJOR issue in Phase 3 below) — his grammar, needs agreement before implementing. Also still open: end-to-end live verification (nothing has clicked the toolbar yet). Uncommitted: none._
 
 #12383 carries four things: (1) `Chat.agent` removed and the chat↔agent linkage
 restored to the `CompanionTo` relation — that field was the edge closing the
@@ -98,9 +98,46 @@ repoint.
 - [x] **`projectChats` graph extension** — `children()` query → `AppNode.makeObject` per chat.
       The flagged re-emission risk does NOT materialize: `project-chats.test.ts` drives a real ECHO db
       through `setupGraphBuilder` and the connector re-runs when a chat is newly parented, so the
-      `chats: Ref<Collection>` fallback (and its 0.3.0 bump) is not needed. STILL OPEN on this item:
-      the `url` binding — the node exists but a project chat has no parent-resolving path yet, so deep
-      links to one will not resolve.
+      `chats: Ref<Collection>` fallback (and its 0.3.0 bump) is not needed. The `url` binding is NOT
+      done — see the MAJOR issue below.
+
+### MAJOR — review with Josiah: URL binding for project chats
+
+A project chat has a navtree node but **no `UrlBinding`**, so it is not URL-addressable: clicking it
+opens the chat, but the URL does not reflect it and a refresh or shared link cannot restore it.
+Josiah owns this grammar (`url-deck-redesign`, `.agents/projects/url-deck-redesign/DESIGN.md`), so the
+approach should be agreed with him before implementing rather than decided here.
+
+The problem: a Chats-section chat has a fixed node shape and so uses a static `path`
+(`@dxos/app-graph` prefers this — "the preferred deterministic case"):
+
+```
+root/<workspace>/ai/org.dxos.type.assistant.chat/<chatId>     static path + id
+root/<workspace>/ai/org.dxos.type.project/<projectId>/<chatId>  a PROJECT chat
+```
+
+The project id sits mid-path and is not derivable from `/chat/<chatId>`, so a project chat needs a
+dynamic `GraphBuilder.PathResolver` (`{ id, workspace, workspaceBaseId } => Effect<string | null>`)
+that resolves the chat, reads its parent project, and returns the candidate id — the one-hop version of
+what plugin-space's `object` key does over collection ancestry
+(`plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts:169`).
+
+Points to settle with Josiah:
+
+1. **Key sharing.** The design says reuse the `chat` key across both extensions. `resolveKeyId`
+   (`@dxos/app-graph/src/path-resolution.ts:188`) tries every static path before any resolver, so
+   `/chat/<id>` would first attempt the Chats-section path, fail verification for a project chat, then
+   fall through to the resolver. Confirm that fall-through is intended and not merely incidental — it
+   is load-bearing for this design, and it costs a failed materialize on every project-chat resolve.
+2. **Reverse direction.** With a resolver-backed binding, `urlRepresentation` takes the last node-id
+   segment as the id, yielding `/chat/<chatId>`. A static path would instead produce
+   `<projectId>+<chatId>`. Worth confirming the resolver form is the intended way to express "same key,
+   different depth".
+3. **Whether project chats should be addressed under the project instead** (e.g. a `topic` pair
+   followed by a chat pair), which would sidestep the resolver entirely but changes the URL shape.
+4. **Cold deep link** — the Phase 3 test row calls for verifying navtree children survive one; that
+   test is meaningless until this is resolved.
+
 - [x] **Exclude project chats from the top-level Chats section** — plugin-assistant's section query
       is now the exported `standaloneChatsQuery`: every chat minus `CompanionTo` sources minus
       `Project` children. `standalone-chats-query.test.ts` seeds all three kinds against a real db and
