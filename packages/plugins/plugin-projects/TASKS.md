@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN — Chat.agent removal + dead LegacyCompanionTo migration + echo-client detached-record fix + Phase 3 items 1-4 (ProjectOperation.CreateChat, projectChats navtree children, Chats-section exclusion, ProjectArticle toolbar). NEXT: land #12383. BLOCKED ON JOSIAH: the URL binding for project chats (MAJOR issue in Phase 3 below) — his grammar, needs agreement before implementing. Also still open: end-to-end live verification (nothing has clicked the toolbar yet). Uncommitted: none._
+_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN — NOT LANDABLE YET: two issues must be resolved first, both in Phase 3 below — (1) BLOCKING: the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`); (2) MAJOR, needs Josiah: the URL binding for project chats. Phase 3 items 1-4 are done and verified live end-to-end (chat creates from the toolbar, appears under its project, respects instructions, files artifacts). Uncommitted: none._
 
 #12383 carries four things: (1) `Chat.agent` removed and the chat↔agent linkage
 restored to the `CompanionTo` relation — that field was the edge closing the
@@ -105,6 +105,50 @@ repoint.
       through `setupGraphBuilder` and the connector re-runs when a chat is newly parented, so the
       `chats: Ref<Collection>` fallback (and its 0.3.0 bump) is not needed. The `url` binding is NOT
       done — see the MAJOR issue below.
+
+### BLOCKING — resolve before landing: context/artifact model across the core types
+
+`Project` carries both `instructions.objects` (inputs bound into a session) and `artifacts` (outputs
+the project owns), and they render as two near-identical ref lists in the article — which is the
+symptom, not the problem. Now that a project chat binds the project object itself, artifacts are
+reachable transitively, so the two overlap. Decide the model before landing; the shape of `Project`
+and `Instructions` is hard to change once spaces hold data.
+
+The two candidate directions (user, 2026-07-28):
+
+1. **Drop `Project.artifacts`, rely on `instructions.objects`.** One list, no duplication. Costs: the
+   artifacts Collection buys ordering, drag-rearrange and the existing collection UI, none of which a
+   ref array on `Instructions` has; and it conflates inputs with outputs — every artifact the project
+   ever produced would become standing context for every session, which is prompt bloat and the wrong
+   default. `ProjectSkill.artifact-add`/`artifact-list` would retarget.
+2. **Keep artifacts, give routines their own context mechanism.** `instructions.objects` is currently
+   the ONLY standing context a routine gets: `RunInstructions`
+   (`assistant-toolkit/src/operations/run-instructions.ts:70`) runs headless — no `Chat`, no
+   `Chat.instructions`, no project — so removing the field from the chat path is safe but removing it
+   outright silently strips context from every routine (`RoutineCompanion` demonstrates exactly this
+   wiring). A routine would need either its own context field or a project it inherits scope from.
+
+Review these together rather than piecemeal — each pair already has an unresolved edge:
+
+- **`Instructions`** — `text` (prompt) + `skills` (toolkit) + `objects` (context) + `commands`.
+  Is `objects` an instructions concern at all, or a session concern that landed here because routines
+  had nowhere else to put it?
+- **`Project`** — `instructions` (owned) + `routines` + `artifacts`, chats by ECHO parent edge. Is
+  `artifacts` an output collection or the project's context? Currently documented as the former,
+  wired as neither (the model files into it, nothing reads it back into a session).
+- **`Chat`** — `instructions` ref + `plan` + feed. Gets project + `ProjectSkill` bound at creation
+  (`plugin-projects/src/operations/create-chat.ts`). Bindings are written at creation, so a chat does
+  not follow later changes to the project's context — an accepted staleness that should be revisited
+  here.
+- **`Routine`** — instructions + trigger. The only consumer of `instructions.objects` that has no
+  alternative. Does a routine belong to a project (inheriting its scope), which is the same question
+  as the Agent convergence below?
+- **`Agent`** — 0.2.0 identity/preset holding an `instructions` ref, owning no conversation state.
+  DESIGN.md "Agent ↔ Project convergence" already asks where durable work products live; that answer
+  and this one have to agree.
+
+Related and already recorded: DESIGN.md "The delegation strategy, and why `Plan` is not an artifact"
+(the promote-a-completed-plan question is the same inputs/outputs boundary).
 
 ### MAJOR — review with Josiah: URL binding for project chats
 
