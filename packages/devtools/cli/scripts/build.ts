@@ -113,6 +113,24 @@ const subductionWasmPlugin: BunPlugin = {
   },
 };
 
+/**
+ * Bun plugin that swaps `@automerge/automerge`'s `node` entry for its base64 entry. The node entry
+ * reads its WASM with `readFileSync(`${__dirname}/automerge_wasm_bg.wasm`)`, and Bun resolves that
+ * `__dirname` at bundle time — baking the build machine's `node_modules` path into the binary, which
+ * then dies with `ENOENT ... automerge_wasm_bg.wasm` on every other machine. The base64 entry inlines
+ * the same module, so the binary carries it.
+ */
+const automergeWasmPlugin: BunPlugin = {
+  name: 'automerge-wasm',
+  setup(build) {
+    build.onResolve({ filter: /^@automerge\/automerge$/ }, (args) => {
+      const importerDir = args.importer ? dirname(args.importer) : process.cwd();
+      const nodeEntry = Bun.resolveSync(args.path, importerDir);
+      return { path: join(dirname(nodeEntry), 'fullfat_base64.js') };
+    });
+  },
+};
+
 // Platform configurations.
 const platforms = [
   { target: 'bun-darwin-arm64', platform: 'darwin', arch: 'arm64', ext: '' },
@@ -121,6 +139,21 @@ const platforms = [
   { target: 'bun-linux-x64', platform: 'linux', arch: 'x64', ext: '' },
   { target: 'bun-windows-x64', platform: 'win32', arch: 'x64', ext: '.exe' },
 ] as const;
+
+// The compiler version is part of the artifact — 1.3.4 leaked `--smol` into `process.argv` so the binary
+// rejected its own arguments — and CI resolved a bare `bun` from its image rather than the pin, because
+// `setup-toolchain` runs with `auto-install: false` and no bun shim existed. Fail here rather than ship a
+// binary built by an unpinned compiler.
+const pinnedBun = (await Bun.file('../../../.prototools').text()).match(/^bun\s*=\s*"([^"]+)"/m)?.[1];
+if (!pinnedBun) {
+  console.error('[Build] No `bun` pin found in .prototools.');
+  process.exit(1);
+}
+if (Bun.version !== pinnedBun) {
+  console.error(`[Build] Running bun ${Bun.version} but .prototools pins ${pinnedBun}.`);
+  console.error('[Build] Invoke through proto (`proto run bun -- ./scripts/build.ts`), as moon.yml does.');
+  process.exit(1);
+}
 
 // Read version from source package.json.
 const sourcePackage = await Bun.file('package.json').json();
@@ -153,7 +186,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
   const result = await Bun.build({
     entrypoints: ['./src/bin.ts'],
     target: 'bun',
-    plugins: [solidPlugin, rawImportPlugin, urlImportPlugin, nodeStdPlugin, subductionWasmPlugin],
+    plugins: [solidPlugin, rawImportPlugin, urlImportPlugin, nodeStdPlugin, subductionWasmPlugin, automergeWasmPlugin],
     compile: {
       target,
       outfile,
@@ -186,6 +219,9 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     os: [platform],
     cpu: [arch],
     main: `./${binaryName}`,
+    // Installable on its own: npm must download a URL dependency's tarball to read its `os`/`cpu`,
+    // so reaching the binary through the launcher's `optionalDependencies` fetches every platform.
+    bin: { dx: `./${binaryName}` },
     files: [binaryName, 'LICENSE'],
     publishConfig: {
       access: 'public',

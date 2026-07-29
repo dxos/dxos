@@ -59,12 +59,13 @@ import {
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format, FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { Drawing } from '@dxos/plugin-illustrator';
 import { Calendar, Mailbox, SystemTags } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Map as MapView } from '@dxos/plugin-map';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Sheet } from '@dxos/plugin-sheet';
-import { Sketch } from '@dxos/plugin-sketch';
+import { Tldraw } from '@dxos/plugin-tldraw';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Table } from '@dxos/react-ui-table/types';
 import { Tagging, TagIndex, ViewModel } from '@dxos/schema';
@@ -139,8 +140,8 @@ const SCHEMAS: Type.AnyEntity[] = [
   Task.Task,
   Mailbox.Mailbox,
   Calendar.Calendar,
-  Sketch.Sketch,
-  Sketch.Canvas,
+  Drawing.Drawing,
+  Drawing.Canvas,
   Sheet.Sheet,
   Table.Table,
   Kanban.Kanban,
@@ -1345,9 +1346,9 @@ const addRoastLogViews = async (space: Space, people: Record<PersonKey, Person.P
 //       ValidationError: At shape(type = geo).index: Expected an index key, got "b2"
 //   - Safe rule: use 'a1', 'a2', … 'a9', 'a10', 'a11', … for sequential shapes
 //     on a single page.  Never use 'b1', 'b2', etc. as a "next row".
-//   - The error is silently swallowed by plugin-sketch's useAsyncEffect, so a
+//   - The error is silently swallowed by plugin-tldraw's useAsyncEffect, so a
 //     bad index key results in an empty canvas with no console error in the UI.
-//   - Upstream reference: packages/plugins/plugin-sketch/src/hooks/useStoreAdapter.ts
+//   - Upstream reference: packages/plugins/plugin-tldraw/src/hooks/useStoreAdapter.ts
 //
 
 // Minimal tldraw v3 schema with geo shapes only.
@@ -1509,9 +1510,15 @@ const makeFlavorWheelContent = (): Record<string, unknown> => {
   ]);
 };
 
-const makeSketches = (): { floorPlan: Sketch.Sketch; flavorWheel: Sketch.Sketch } => ({
-  floorPlan: Sketch.make({ name: 'Roastery floor plan', canvas: { content: makeFloorPlanContent() } }),
-  flavorWheel: Sketch.make({ name: 'Spring blend flavor wheel', canvas: { content: makeFlavorWheelContent() } }),
+const makeSketches = (): { floorPlan: Drawing.Drawing; flavorWheel: Drawing.Drawing } => ({
+  floorPlan: Drawing.make({
+    name: 'Roastery floor plan',
+    canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: makeFloorPlanContent() }),
+  }),
+  flavorWheel: Drawing.make({
+    name: 'Spring blend flavor wheel',
+    canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: makeFlavorWheelContent() }),
+  }),
 });
 
 //

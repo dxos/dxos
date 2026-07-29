@@ -8,7 +8,7 @@
 // import { type Space } from '@dxos/client/echo';
 // import { TestBuilder } from '@dxos/client/testing';
 // import { Markdown } from '@dxos/plugin-markdown';
-// import { DiagramType } from '@dxos/plugin-sketch';
+// import { DiagramType } from '@dxos/plugin-tldraw';
 // import { CollectionType, ChannelType, ThreadType } from '@dxos/plugin-space';
 // import { TableType } from '@dxos/schema';
 //
