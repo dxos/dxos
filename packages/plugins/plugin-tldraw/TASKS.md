@@ -129,6 +129,33 @@ Superseded the "technical-drawing dialect on the whiteboard" framing above. Full
 - [ ] **Serve excalidraw's own fonts** — set `EXCALIDRAW_ASSET_PATH` and serve `@excalidraw/excalidraw/dist/prod/fonts/**` so the handwriting faces resolve; until then all excalidraw text (user-typed included, not just generated labels) falls back to the system face.
 - [ ] **Layout quality** — the hand-rolled layered layout does no crossing minimisation. See the ELK/routing research.
 
+### Phase 4 spike: react-ui-diagram (2026-07-29)
+
+`packages/ui/react-ui-diagram` built and verified in storybook — proves the tier boundaries
+before any migration. Spec section: "Spike (built 2026-07-29)".
+
+- [x] **Package scaffolded** — private, `@xyflow/react` + effect; `.storybook/` config (the
+      `ts-test-storybook` tag needs a per-package `main.mts` or `:test` fails at startup).
+- [x] **Neutral model** — `Node`/`Edge`/`Graph` with `parent` + `sourcePort`/`targetPort`, plus
+      `Port`/`Compartment`/`Overlay`/`Projection`. Lives in the package pending the `@dxos/graph`
+      rewrite; field names are the ones that rewrite preserves.
+- [x] **Hierarchy-aware layered layout** — cycle-safe ranking, groups sized to contents,
+      parent-relative coordinates, overlay pins beating computed positions.
+- [x] **React Flow renderer** — groups via `parentId` + `extent: 'parent'`, compartments and ports
+      as plain DOM, snap to grid. Attribution left ON given the licensing note.
+- [x] **Two stories** — `Default`: two columns, `react-ui-editor` mermaid source | live projection
+      (verified live: typing `Y --> Z[New Node]` took it to 7 nodes / 8 links). `Neutral`: a
+      hand-written `Projection` with compartments and 3 ports on one side, no DSL — the decoupling test.
+- [x] **13 tests** green — projection goldens, back-edge ranking, group insetting, overlay pins,
+      termination on fully-cyclic and self-parented graphs.
+- [x] **Three bugs the design missed** — (1) a port needs BOTH a source and a target handle, since
+      React Flow resolves an edge end by (id, type) and silently drops the edge otherwise; (2) edges
+      must be lifted to the level being ranked, or a level whose edges all cross a group boundary
+      collapses into one row; (3) `Diagram` collided with itself (model type vs component) → `Projection`.
+- [ ] **Not done, by design** — write-back (`apply`), the ontology + derived toolbar, ELK routing,
+      progressive-zoom LOD. Edges are beziers that cut through group interiors.
+- [ ] **`@dxos/graph` rewrite** — step 1 of the spec phasing; move the neutral model there.
+
 ### Tracked follow-ups
 
 - [x] **Hidden canvas showed as a second navtree item** — creating a sketch _inside a Collection_ listed the canvas beside it. Not variant-specific: `CollectionModel.add` pushed into `target.objects` unconditionally when the target was a collection, ignoring `HiddenAnnotation` (the non-collection branch calls `Database.add`, which is why creating at the space root looked fine). **Fixed systematically** in `@dxos/app-toolkit`: `CollectionModel.add` now persists a hidden object without filing it into any collection, so no plugin can leak an implementation-detail object into the navtree. Regression tests in `CollectionModel.test.ts`.

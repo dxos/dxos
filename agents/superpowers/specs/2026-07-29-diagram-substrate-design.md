@@ -1,7 +1,7 @@
 # Constrained diagramming substrate
 
 Date: 2026-07-29
-Status: design approved, not implemented
+Status: design approved; `react-ui-diagram` spike built and verified (see Spike below)
 
 A diagramming layer that renders technical drawings projected from a source-of-truth DSL,
 allows constrained editing that writes back to that DSL, and replaces
@@ -174,11 +174,14 @@ What `project` returns is that graph plus the two things the renderer needs and 
 cannot supply — resolved geometry and a provenance map:
 
 ```ts
-const Diagram = Schema.Struct({
+const Projection = Schema.Struct({
   graph: Graph.Graph, // nodes/edges/parent/ports
-  provenance: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  provenance: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
 });
 ```
+
+Named for the operation, not the artifact, so it does not collide with the `Diagram`
+component — a collision the spike hit immediately.
 
 There is no separate `Group` entity: a group is a node whose ontology kind admits
 children, which is also how React Flow models it (`type: 'group'`). One entity kind fewer
@@ -196,7 +199,7 @@ type Dialect<Source> = {
   readonly id: string;
   readonly ontology: Ontology;
   readonly mode: 'readonly' | 'round-trip';
-  project: (source: Source, overlay: Overlay) => Diagram;
+  project: (source: Source, overlay: Overlay) => Projection;
   apply?: (source: Source, intent: Intent) => Effect.Effect<void, DialectError>;
 };
 ```
@@ -313,15 +316,53 @@ established Game → Chess/TicTacToe pattern already used for tldraw/excalidraw 
 The tier boundaries are what make this testable:
 
 - **Round-trip property:** `print(parse(text)) === text` for canonical text dialects.
-- **Projection goldens:** source → `Diagram` snapshots, no renderer involved.
+- **Projection goldens:** source → `Projection` snapshots, no renderer involved.
 - **Intent matrix:** each `Intent` × each `mode` → expected source vs overlay mutation.
 - **Ontology:** illegal connections rejected before the source is touched.
-- **Renderer stories:** fed a hand-written `Diagram`, no DSL involved — this is the test
+- **Renderer stories:** fed a hand-written `Projection`, no DSL involved — this is the test
   that proves the decoupling.
 
 Failure modes: parse errors surface as canvas diagnostics and hold the last good
 projection rather than blanking; ontology violations are rejected pre-write; a failed
 `apply` leaves the source untouched.
+
+## Spike (built 2026-07-29)
+
+`packages/ui/react-ui-diagram` exists and is verified in storybook. It proves the tier
+boundaries before any migration is attempted; it is not yet the finished package.
+
+Built:
+
+- Neutral model (`src/types/diagram.ts`) — `Node`/`Edge`/`Graph` with `parent` and
+  `sourcePort`/`targetPort`, plus `Port`, `Compartment`, `Overlay`, `Projection`. Lives here
+  pending the `@dxos/graph` rewrite; the field names are the ones that rewrite preserves.
+- Hierarchy-aware layered layout (`src/model/layout.ts`) — cycle-safe ranking, groups sized
+  to their contents, parent-relative coordinates, pinned overlay positions winning over
+  computed ones.
+- React Flow renderer (`src/components/Diagram/`) — groups via `parentId` + `extent`,
+  compartments and ports as ordinary DOM, snap to grid.
+- Mermaid projection (`src/testing/mermaid.ts`) — a **story fixture**, not the dialect: the
+  real one belongs in `plugin-illustrator` with a span-aware parser and a canonical printer.
+- Two stories: `Default` (mermaid source | live projection, two columns) and `Neutral` (a
+  hand-written `Projection`, no DSL — the decoupling test).
+- 13 tests: projection goldens, ranking/back-edge behaviour, group insetting, overlay pins,
+  and termination on fully-cyclic and self-parented graphs.
+
+Three bugs the spike surfaced that the design had not anticipated:
+
+1. **A port needs both a source and a target handle.** React Flow resolves an edge end by
+   (id, type) and _silently drops_ the edge when no handle of the matching type exists.
+   Legality belongs to the ontology, so every port renders both.
+2. **Edges must be lifted to the level being ranked.** `X --> A` reaches into a group, so
+   ranking the root level against only root-level edges sees no edges at all and collapses
+   X / CORE / Y into one row. Each level ranks against edges re-expressed in terms of that
+   level's entities.
+3. **`Diagram` collided with itself** — the model type and the component wanted the same
+   name; hence `Projection`.
+
+Deliberately not done: write-back (`apply`), the ontology and the toolbar it drives, ELK,
+and progressive-zoom LOD. Edges are beziers through group interiors, which orthogonal
+routing addresses.
 
 ## Phasing
 

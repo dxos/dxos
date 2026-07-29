@@ -9,7 +9,7 @@
 // the seam is that nothing outside this module knows how positions were derived.
 //
 
-import { type Edge, type Graph, type Node, type Overlay, type Point, childrenOf, isGroup } from '../types';
+import { type Edge, type Graph, type Node, type Overlay, type Point, childrenOf, findNode, isGroup } from '../types';
 
 export const NODE_WIDTH = 160;
 export const NODE_HEIGHT = 64;
@@ -93,6 +93,31 @@ const rank = (nodes: readonly Node[], edges: readonly Edge[]): Map<string, numbe
 type Size = { width: number; height: number };
 type Placed = { origin: Point; size: Size };
 
+/** The ancestor of `id` that sits directly inside `level`, or undefined if `id` is elsewhere. */
+const ancestorAt = (graph: Graph, id: string, level: string | undefined): string | undefined => {
+  const seen = new Set<string>();
+  let current = findNode(graph, id);
+  while (current && !seen.has(current.id)) {
+    if (current.parent === level) {
+      return current.id;
+    }
+    seen.add(current.id);
+    current = current.parent ? findNode(graph, current.parent) : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * Re-express edges in terms of the entities at `level`, dropping those that do not connect two
+ * distinct ones. Ids are synthesised because a lifted edge is a ranking constraint, not a link.
+ */
+const lift = (graph: Graph, level: string | undefined, edges: readonly Edge[]): Edge[] =>
+  edges.flatMap((edge) => {
+    const source = ancestorAt(graph, edge.source, level);
+    const target = ancestorAt(graph, edge.target, level);
+    return source && target && source !== target ? [{ ...edge, id: `${source}->${target}`, source, target }] : [];
+  });
+
 /**
  * Place the children of `parent` and return the box they occupy. Recurses first, so a group's
  * footprint reflects its own contents. `inset` shifts computed positions to clear the parent's
@@ -124,10 +149,10 @@ const layoutLevel = (
     }
   }
 
-  // Only edges wholly within this level can influence this level's ranking.
-  const ids = new Set(members.map((node) => node.id));
-  const internal = graph.edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target));
-  const ranks = rank(members, internal);
+  // Rank against edges lifted to this level: an edge into a group's child constrains the group
+  // itself, so `X --> A` must rank X above CORE. Without lifting, a level whose every edge crosses
+  // a group boundary sees no edges and collapses into a single row.
+  const ranks = rank(members, lift(graph, parent, graph.edges));
 
   const lanes = new Map<number, Node[]>();
   for (const node of members) {
