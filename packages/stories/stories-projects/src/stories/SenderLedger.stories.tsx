@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -43,20 +43,26 @@ const Story = () => {
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const [project] = useQuery(space?.db, Filter.type(Project.Project));
   const { invokePromise } = useOperationInvoker();
+  const [error, setError] = useState<string>();
 
   const handleCreate = useCallback(() => {
     if (!mailbox || !space) {
       return;
     }
-    void invokePromise(
+    // Surface a failed setup in the story UI rather than leaving the rejection unobserved.
+    invokePromise(
       ProjectOperation.Create,
       { templateId: INBOX_RESEARCH_TEMPLATE_ID, subject: mailbox },
       { spaceId: space.id },
-    );
+    ).catch((cause: unknown) => setError(String(cause)));
   }, [mailbox, space, invokePromise]);
 
   if (!space?.db || !mailbox) {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
+  }
+
+  if (error) {
+    return <div role='alert'>{error}</div>;
   }
 
   return (

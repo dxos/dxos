@@ -67,8 +67,8 @@ Initial priority (user, 2026-07-24):
 - [x] **In-article routine creation** — `ProjectOperation.CreateRoutine` toolbar action scaffolds the blank template through `RoutineOperation.CreateRoutine`, links it into `project.routines`, and opens it. Routines and artifacts now share one `ObjectGallery` (masonry of `ObjectCard`, click to open, ⋮ delete).
 - [x] **Hide `instructions.objects` from the form** — interim step toward the BLOCKING decision below: the field is no longer rendered by `InstructionsEditor` (so it no longer reads as a second artifacts list) but the schema field and every runtime consumer are untouched. Affects the routine form and the Agent article too.
 - [ ] **App-graph Project node children: artifacts + routines** — Phase 3 adds the chat children and the branch-node plumbing; these two reuse it.
-- [ ] **ProjectOperation.Create + operation-handler/events** — extension point 2 (other plugins create/target projects).
-- [ ] **Project templates capability** — plugins contribute instructions+skills+routines presets (mirrors automation-templates).
+- [x] **ProjectOperation.Create + operation-handler/events** — shipped in milestone 4 groundwork (PR #12389).
+- [x] **Project templates capability** — shipped in milestone 4 groundwork as `ProjectCapabilities.Template` (PR #12389).
 - [ ] **"/" completion of commands (and "@", "$")** — unify chat-prompt completion triggers.
 - [ ] **inbox naming sweep** — action id 'create-topic' + Attention.linkedSegment('topic') → 'project' (verify companion segment resolution after rename).
 
@@ -249,7 +249,7 @@ summaries), and the `stories-projects` storybook strategy.
 
 ### Tasks (per USE-CASES.md §4/§5, sequencing §6)
 
-- [x] **Groundwork** — `ProjectsCapabilities.Template` + blank template + `CreateProjectPanel`
+- [x] **Groundwork** — `ProjectCapabilities.Template` + blank template + `CreateProjectPanel`
       picker; `ProjectOperation.Create` (template-driven, programmatic); `CreateRoutine` seeds
       project scope (subject → `instructions.objects`, `seedProjectScope` adds ProjectSkill +
       artifact skills); `ARTIFACT_SKILL_KEYS` += table, sheet; ProjectArticle **Context** section
@@ -257,8 +257,9 @@ summaries), and the `stories-projects` storybook strategy.
       NOT added: `org.dxos.function.project.artifactAdd`/`artifactList` are already public
       operations with handlers registered by plugin-assistant, so other plugins can invoke them
       as-is. plugin-projects 13 + plugin-routine 62 tests green.
-- [x] **UC-A sender ledger** — plugin-inbox `inboxResearch` project template ("Set up project" on
-      the primary mailbox node); starter feed-triggered Sender Ledger routine (disabled) owned by
+- [x] **UC-A sender ledger** — `inboxResearch` project template + "Set up project" mailbox-node
+      action, both in plugin-projects (publishable plugin-inbox cannot depend on the private
+      plugin; the action is injected into the mailbox node, plugin-brain-style); starter feed-triggered Sender Ledger routine (disabled) owned by
       the project; `stories-projects` package + `SenderLedger.stories.tsx` (play test drives the
       real operation stack in Chromium and asserts Context/Routines/Artifacts render). Idempotent
       upsert is graded by the eval below (model-behavioral, not unit-testable).

@@ -8,7 +8,7 @@ import { evalite } from 'evalite';
 
 import { ProjectSkill } from '@dxos/assistant-toolkit';
 import { Project } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { Table } from '@dxos/react-ui-table/types';
@@ -26,6 +26,7 @@ import { getDefaultSkills } from '../skills';
 // verify live before trusting pass rates.
 
 const PROJECT_NAME = 'Inbox Research';
+const SENDER_EMAIL = 'alice@example.com';
 
 /** Mirrors the inbox-research template's routine instructions, adapted for a batched eval input. */
 const INSTRUCTIONS = trim`
@@ -44,13 +45,13 @@ const INSTRUCTIONS = trim`
 
 const MESSAGES = [
   {
-    from: { email: 'alice@example.com', name: 'Alice Example' },
+    from: { email: SENDER_EMAIL, name: 'Alice Example' },
     date: '2026-07-01T10:00:00.000Z',
     subject: 'Kickoff',
     body: 'Looking forward to the kickoff.',
   },
   {
-    from: { email: 'alice@example.com', name: 'Alice Example' },
+    from: { email: SENDER_EMAIL, name: 'Alice Example' },
     date: '2026-07-02T09:30:00.000Z',
     subject: 'Re: Kickoff',
     body: 'Attaching the agenda.',
@@ -90,13 +91,29 @@ const task = createEvalRunner({
     Effect.gen(function* () {
       const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
       const tables = yield* Database.query(Filter.type(Table.Table)).run;
+
+      // Row-level assertion, schema-agnostic (table rows are objects of a table-owned dynamic
+      // schema): scan every object carrying the sender's email and read its count/lastSeen
+      // properties. Exactly one such row with count 2 proves the upsert deduped.
+      const everything = yield* Database.query(Query.select(Filter.everything())).run;
+      const senderRows = everything.filter(
+        (candidate): candidate is Obj.Unknown & { count?: unknown; lastSeen?: unknown } =>
+          Obj.isObject(candidate) &&
+          !Obj.instanceOf(Table.Table, candidate) &&
+          Object.values(Obj.getSnapshot(candidate)).includes(SENDER_EMAIL),
+      );
+      const [row] = senderRows;
+      const rowCount = typeof row?.count === 'string' ? Number(row.count) : row?.count;
+      const rowUpserted =
+        senderRows.length === 1 && rowCount === MESSAGES.length && String(row?.lastSeen ?? '').startsWith('2026-07-02');
+
       if (!project?.artifacts) {
-        return { tableCount: tables.length, filedCount: 0 };
+        return { tableCount: tables.length, filedCount: 0, senderRowCount: senderRows.length, rowUpserted };
       }
       const artifacts = yield* Database.load(project.artifacts);
       const tableIds = new Set(tables.map((table) => entityId(Obj.getURI(table))));
       const filedCount = artifacts.objects.filter((ref) => tableIds.has(entityId(ref.uri))).length;
-      return { tableCount: tables.length, filedCount };
+      return { tableCount: tables.length, filedCount, senderRowCount: senderRows.length, rowUpserted };
     }),
 });
 
@@ -118,6 +135,11 @@ evalite('Projects — sender-ledger routine maintains one filed table', {
       name: 'ledger-deduped',
       description: 'Exactly one table exists and it is filed exactly once (no duplicate ledger).',
       scorer: ({ output }) => (output.dbQuery.tableCount === 1 && output.dbQuery.filedCount === 1 ? 1 : 0),
+    },
+    {
+      name: 'row-upserted',
+      description: 'Exactly one sender row exists, with count 2 and lastSeen from the later message.',
+      scorer: ({ output }) => (output.dbQuery.rowUpserted ? 1 : 0),
     },
   ],
 });

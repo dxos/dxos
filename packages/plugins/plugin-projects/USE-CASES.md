@@ -30,9 +30,11 @@ we are deliberately building differently.
    knowledge half to be effortless: binding an object as standing context must be a one-gesture UI
    action (today it is data-only).
 2. Claude keeps automation outside the project; we deliberately pull routines _inside_ (a routine
-   inherits project scope). That is our differentiator and currently our weakest edge: a headless
-   routine gets only `instructions.objects` (see the OPEN decision in `TASKS.md`), so project scope
-   does not yet actually reach routines.
+   inherits project scope). That is our differentiator. Shipped in this milestone: `CreateRoutine`
+   and the domain templates seed the project (context) and the project/artifact skills into a
+   routine's instructions, so headless runs carry project scope. Remaining limitation: the seeding
+   is scaffold-time — a routine created outside a project, or before this milestone, gets nothing
+   retroactively.
 3. Claude's "project memory" is unstructured and model-managed. Our answer should be the fact store:
    deterministic, queryable, provenance-carrying. Nothing wires it to projects yet — use cases 8–10
    below close that.
@@ -73,16 +75,17 @@ this milestone; SHOULD = next; MAY = direction.
 
 ### 2.3 Templates
 
-- `ProjectsCapabilities.Template` MUST exist, mirroring `RoutineCapabilities.Template`:
+- `ProjectCapabilities.Template` MUST exist, mirroring `RoutineCapabilities.Template`:
   `{ id, label, icon?, appliesTo?(subject), scaffold(ctx) → Effect<Project> }` — scaffold returns a
   fully-wired in-memory Project (instructions text, skills, context objects, starter routines);
   the create flow persists it with one `Database.add`.
 - The generic create dialog ("+ Project") MUST offer contributed templates (blank remains default).
-- Plugins contribute domain templates _and_ their own entry points: e.g. plugin-inbox contributes an
-  "Inbox research" template whose `appliesTo` gates on a Mailbox subject, surfaced from the
-  mailbox's toolbar/companion ("Set up project…"). Both directions the user asked about are thus the
-  same mechanism: **inbox sets up a pre-wired project from its template; plugin-projects owns the
-  generic option.**
+- Plugins contribute domain templates _and_ their own entry points: an "Inbox research" template
+  whose `appliesTo` gates on a Mailbox subject, surfaced from the mailbox's node ("Set up
+  project…"). Both directions the user asked about are thus the same mechanism: **a pre-wired
+  project from a domain template; plugin-projects owns the generic option.** (Ownership note: the
+  inbox template and mailbox action live in plugin-projects, not plugin-inbox — publishable
+  plugin-inbox cannot depend on private plugin-projects; private CRM/brain contribute their own.)
 
 ### 2.4 Sessions
 
@@ -205,10 +208,10 @@ cross-plugin template/operation surface; **UC-C (fact summaries)** proves the RD
 
 ### 4.2 UC-A — Sender ledger
 
-- plugin-inbox contributes an **"Inbox research" project template**: context = the Mailbox; skills =
-  inbox, table, brain; starter routine = "maintain sender ledger" (feed trigger on the mailbox,
-  instructions to upsert rows `{sender, count, lastSeen}` into a Table artifact, creating it on
-  first run).
+- An **"Inbox research" project template** (in plugin-projects — see the §2.3 ownership note):
+  context = the Mailbox; skills = inbox, table; starter routine = "maintain sender ledger" (feed
+  trigger on the mailbox, instructions to upsert rows `{sender, count, lastSeen}` into a Table
+  artifact, creating it on first run).
 - Entry point: "Set up project…" action on the Mailbox node/toolbar → invokes
   `ProjectOperation.Create` with the template and the mailbox as subject.
 - Missing pieces beyond groundwork: none new — this is deliberately the smallest full loop.
