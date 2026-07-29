@@ -1,6 +1,6 @@
 # ECHO Lenses — Proposed API
 
-Concrete surface for [DESIGN.md](./DESIGN.md). Nothing here is implemented; the point is to argue
+Concrete surface proposal for the `Lens` (object lens) namespace of this package. Rationale and plan: [DESIGN.md](../../../../../.agents/projects/lenses/DESIGN.md). Nothing here is implemented; the point is to argue
 about signatures before writing code. Everything is shaped to match the neighbouring modules
 (`Obj`, `Type`, `View`, `Annotation`) so a lens reads as an ECHO concept rather than a bolt-on.
 
@@ -13,7 +13,7 @@ export beside the existing `Panproto` wire lens — a lens is just another objec
 needs to be inside core to work. The existing `Panproto.Lens` (ECHO ↔ foreign wire record,
 snapshot encode/decode for publishing) is, in §1 terms, the degenerate case where the target is a
 plain `Schema.Schema.Any` and only the snapshot tier exists; converging it onto this interface
-later is a refactor, not a rewrite (DESIGN.md §2.1). Signatures are written as if the module were
+later is a refactor, not a rewrite (project DESIGN.md §2.1). Signatures are written as if the module were
 already `Lens` in core, so promotion is an import-path change. `Obj.lens` below reads `Lens.of`
 until then.
 

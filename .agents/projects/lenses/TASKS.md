@@ -2,7 +2,7 @@
 
 _Resume: Phase 0 — spike the engine's law-check surface (`checkLaws`/`GetResult`), mapping-resolution strictness, the Task→GtdTask law-check, and mdast source-offset splicing; then Phase 1 in `@dxos/echo-panproto`. Uncommitted: none. Last: merged main to pull in PR #12395 (`@dxos/echo-panproto`: wire lens + runner + verified `@panproto/core@0.56.1` wasm engine) and rebased the plan on it — the object lens lands there as a new `Lens` namespace export._
 
-Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](./API.md).
+Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [LENS-API.md](../../../packages/core/echo/echo-panproto/docs/LENS-API.md).
 This file is the ledger only.
 
 **Scope: proof of concept.** The payoff being chased is _multiple interfaces, each written against
@@ -58,26 +58,26 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
       existing `Panproto` wire lens (DESIGN.md §9); built against `@dxos/echo` and
       `@dxos/echo/internal`. The existing `Panproto`/`runner`/`wasm` surface stays untouched.
       React hooks go in a react sibling.
-- [ ] **`Lens.make(id, Source, Target, mapping)`** (API.md §1) — the single authoring shape; both
+- [ ] **`Lens.make(id, Source, Target, mapping)`** (LENS-API.md §1) — the single authoring shape; both
       ends are declared types. Static (code) and persisted (space) definition paths, mirroring
-      `Type` / `Type.Type`. An ordinary ECHO object, **not** a new `EntityKind` (API.md §0).
-- [ ] **Mapping resolution + shorthands** (API.md §2) — automatic identity mapping for matching
+      `Type` / `Type.Type`. An ordinary ECHO object, **not** a new `EntityKind` (LENS-API.md §0).
+- [ ] **Mapping resolution + shorthands** (LENS-API.md §2) — automatic identity mapping for matching
       name/type; bare-string rename; `Lens.from(prop, codec)`; `Lens.readOnly(prop)`; full
       `Derived` form. Keep the vocabulary small and add convenience only where a real mapping is
       verbose.
 - [ ] **`Lens.Target<L>` = `Type.InstanceType<Target>`** — assert in a type test that a persisted
       lens targeting a static type still yields the static type (DESIGN.md §3 D2).
-- [ ] **`Write` vocabulary** (API.md §6) — `assign` | `splice` | `overlay`, with no whole-object
+- [ ] **`Write` vocabulary** (LENS-API.md §6) — `assign` | `splice` | `overlay`, with no whole-object
       replace expressible. This is where write-minimality becomes a type error rather than a rule.
 - [ ] **Overlay by default** — target properties nothing maps store themselves in the annotation
       dictionary, validated against the target's declaration for that property. No declaration
       required, `store` default, `reject` opt-in.
-- [ ] **`Lens.coverage`** (API.md §2.1) — explicit / automatic / overlaid / dropped, plus
+- [ ] **`Lens.coverage`** (LENS-API.md §2.1) — explicit / automatic / overlaid / dropped, plus
       `suspicious`: a name match with incompatible types, or an overlay resembling a source
       property. Never auto-resolve that case — it records the same fact twice and the copies drift.
 - [ ] **Target typename identity** — `Obj.getTypename` on a lensed object returns the _target's_
       typename so existing surfaces resolve, while `Obj.getURI` still resolves to the base object
-      (API.md §4.1). Plus `Lens.sourcesFor(Target)` reverse lookup.
+      (LENS-API.md §4.1). Plus `Lens.sourcesFor(Target)` reverse lookup.
 - [ ] **`put` totality audit** — an interface written for the target will write anything the target
       schema permits; every property needs a real inverse, an overlay, or `Lens.readOnly` that the
       form renders as visibly non-editable. A silently dropped write is the worst outcome.
