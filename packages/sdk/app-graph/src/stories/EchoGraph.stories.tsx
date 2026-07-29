@@ -15,7 +15,6 @@ import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
-import { Path, Tree, type TreeModel } from '@dxos/react-ui-list';
 import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
@@ -281,134 +280,111 @@ export const JsonView: Story = {
   },
 };
 
+/**
+ * One row of {@link GraphTree}. Subscribes to just its own node and child list, so a mutation anywhere in
+ * the graph re-renders only the rows it actually touches — which is the behaviour this story exists to show.
+ */
+const GraphTreeItem = ({
+  graph,
+  id,
+  ancestors,
+  selectedId,
+  onSelect,
+}: {
+  graph: Graph.ExpandableGraph;
+  id: string;
+  ancestors: readonly string[];
+  selectedId?: string;
+  onSelect: (id: string) => void;
+}) => {
+  const [open, setOpen] = useState(true);
+  const node = Option.getOrUndefined(useAtomValue(graph.node(id)));
+  const children = useAtomValue(graph.connections(id, 'child'));
+
+  // The graph may be cyclic; recursing into an id already on the path would never terminate.
+  const path = useMemo(() => [...ancestors, id], [ancestors, id]);
+  const safeChildren = useMemo(() => children.filter((child) => !path.includes(child.id)), [children, path]);
+
+  const icon = node?.type === 'org.dxos.type.space' ? 'ph--planet--regular' : 'ph--circle-dashed--regular';
+  const expandable = safeChildren.length > 0;
+
+  return (
+    <div role='treeitem' aria-expanded={expandable ? open : undefined}>
+      <div
+        className={mx(
+          'flex items-center gap-1 p-1 rounded cursor-pointer',
+          selectedId === id && 'bg-primary-500 text-primary-100',
+        )}
+        style={{ paddingInlineStart: `${ancestors.length}rem` }}
+        onClick={() => onSelect(id)}
+      >
+        {expandable ? (
+          <IconButton
+            iconOnly
+            variant='ghost'
+            density='sm'
+            icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+            label={open ? 'Collapse' : 'Expand'}
+            onClick={(event) => {
+              // Toggling disclosure must not also select the row.
+              event.stopPropagation();
+              setOpen((open) => !open);
+            }}
+          />
+        ) : (
+          <Icon icon='ph--dot--regular' classNames={getSize(4)} />
+        )}
+        <Icon icon={icon} classNames={getSize(4)} />
+        <span className='truncate'>{node?.id ?? id}</span>
+      </div>
+      {expandable && open && (
+        <div role='group'>
+          {safeChildren.map((child) => (
+            <GraphTreeItem
+              key={child.id}
+              graph={graph}
+              id={child.id}
+              ancestors={path}
+              selectedId={selectedId}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const NO_ANCESTORS: readonly string[] = [];
+
+/** Minimal tree view over the graph, built from `@dxos/react-ui` primitives only. */
+const GraphTree = ({ graph }: { graph: Graph.ExpandableGraph }) => {
+  const [selectedId, setSelectedId] = useState<string>();
+  const onSelect = useCallback((id: string) => setSelectedId((current) => (current === id ? undefined : id)), []);
+
+  return (
+    <div role='tree' className='p-2 overflow-auto'>
+      <GraphTreeItem
+        graph={graph}
+        id={Node.RootId}
+        ancestors={NO_ANCESTORS}
+        selectedId={selectedId}
+        onSelect={onSelect}
+      />
+    </div>
+  );
+};
+
 export const TreeView: Story = {
   render: () => {
     const client = useClient();
     const registry = useContext(RegistryContext);
     const graph = useMemo(() => createGraph(client, registry), [client, registry]);
-    const stateRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
-
-    const getOrCreateState = useMemo(
-      () => (pathKey: string) => {
-        let atom = stateRef.current.get(pathKey);
-        if (!atom) {
-          atom = Atom.make({ open: true, current: false }).pipe(Atom.keepAlive);
-          stateRef.current.set(pathKey, atom);
-        }
-        return atom;
-      },
-      [],
-    );
-
-    const childIdsFamily = useMemo(
-      () =>
-        Atom.family((id: string) =>
-          Atom.make((get) => {
-            const connections = get(graph.connections(id, 'child'));
-            return connections.map((connection) => connection.id);
-          }),
-        ),
-      [graph],
-    );
-
-    const itemFamily = useMemo(
-      () =>
-        Atom.family((id: string) =>
-          Atom.make((get) => {
-            const node = get(graph.node(id));
-            return Option.isSome(node) ? node.value : undefined;
-          }),
-        ),
-      [graph],
-    );
-
-    const itemPropsFamily = useMemo(
-      () =>
-        Atom.family((pathKey: string) => {
-          const path = pathKey.split('~');
-          const id = path[path.length - 1];
-          return Atom.make((get) => {
-            const nodeOpt = get(graph.node(id));
-            const node = Option.isSome(nodeOpt) ? nodeOpt.value : undefined;
-            if (!node) {
-              return { id, label: id };
-            }
-            const connections = get(graph.connections(node.id, 'child'));
-            const safeChildren = connections.filter((n) => !path.includes(n.id));
-            const parentOf =
-              safeChildren.length > 0
-                ? safeChildren.map(({ id }) => id)
-                : node.properties.role === 'branch'
-                  ? []
-                  : undefined;
-            return {
-              id: node.id,
-              label: node.id,
-              icon: node.type === 'org.dxos.type.space' ? 'ph--planet--regular' : 'ph--circle-dashed--regular',
-              parentOf,
-            };
-          });
-        }),
-      [graph],
-    );
-
-    const itemOpenFamily = useMemo(
-      () =>
-        Atom.family((pathKey: string) => {
-          const stateAtom = getOrCreateState(pathKey);
-          return Atom.make((get) => get(stateAtom).open);
-        }),
-      [getOrCreateState],
-    );
-
-    const itemCurrentFamily = useMemo(
-      () =>
-        Atom.family((pathKey: string) => {
-          const stateAtom = getOrCreateState(pathKey);
-          return Atom.make((get) => get(stateAtom).current);
-        }),
-      [getOrCreateState],
-    );
-
-    const model: TreeModel<Node.Node> = useMemo(
-      () => ({
-        childIds: (parentId?: string) => childIdsFamily(parentId ?? Node.RootId),
-        item: (id: string) => itemFamily(id),
-        itemProps: (path: string[]) => itemPropsFamily(path.join('~')),
-        itemOpen: (path: string[]) => itemOpenFamily(Path.create(...path)),
-        itemCurrent: (path: string[]) => itemCurrentFamily(Path.create(...path)),
-      }),
-      [childIdsFamily, itemFamily, itemPropsFamily, itemOpenFamily, itemCurrentFamily],
-    );
-
-    const onOpenChange = useCallback(
-      ({ path: _path, open }: { path: string[]; open: boolean }) => {
-        const path = Path.create(..._path);
-        const atom = stateRef.current.get(path);
-        if (atom) {
-          const prev = registry.get(atom);
-          registry.set(atom, { ...prev, open });
-        }
-      },
-      [registry],
-    );
-
-    const onSelect = useCallback(
-      ({ path: _path, current }: { path: string[]; current: boolean }) => {
-        const path = Path.create(..._path);
-        const atom = stateRef.current.get(path);
-        if (atom) {
-          const prev = registry.get(atom);
-          registry.set(atom, { ...prev, current });
-        }
-      },
-      [registry],
-    );
 
     return (
       <>
         <Controls />
-        <Tree model={model} id={Node.RootId} onOpenChange={onOpenChange} onSelect={onSelect} />
+        <GraphTree graph={graph} />
       </>
     );
   },

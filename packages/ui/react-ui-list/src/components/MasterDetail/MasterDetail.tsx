@@ -5,7 +5,8 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Column, Icon, IconBlock, Panel, ScrollArea, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { Column, Icon, IconBlock, IconButton, Panel, ScrollArea, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { type ActionGraphProps, Menu, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { Empty } from '../Empty';
@@ -13,8 +14,9 @@ import { OrderedList } from '../OrderedList';
 
 // Presentation-only master-detail layout: a selectable list (master) above a single detail pane, with
 // an optional empty state. The parent owns the detail content (the selected item's form/preview) and
-// the selection state. Nest by placing another `MasterDetail` in the `detail` slot. Per-row actions
-// (e.g. an overflow menu) are supplied via `renderActions` so this primitive stays menu-agnostic.
+// the selection state. Nest by placing another `MasterDetail` in the `detail` slot.
+
+const EMPTY_MENU: ActionGraphProps = { nodes: [], edges: [] };
 
 export type MasterDetailRecord = { id: string };
 
@@ -38,8 +40,12 @@ export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
   getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
   /** Build the row's trailing adornment reactively (e.g. a status badge); `undefined` for none. */
   getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
-  /** Render trailing per-row actions (e.g. an overflow menu). The parent owns the menu system. */
-  renderActions?: (item: T) => ReactNode;
+  /**
+   * Build the row's overflow (three-dots) menu. Run inside each row's `useMenuBuilder`, so it should
+   * subscribe to that item's reactive state via `get` (e.g. an `enabled` flag) — the menu then updates
+   * live without re-rendering the whole list.
+   */
+  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
   /** Message shown when there are no items. */
   emptyLabel?: string;
   /**
@@ -61,7 +67,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   getLabel,
   getIcon,
   getAdornment,
-  renderActions,
+  getMenu,
   emptyLabel,
   orientation = 'vertical',
   detail,
@@ -78,7 +84,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
               getLabel={getLabel}
               getIcon={getIcon}
               getAdornment={getAdornment}
-              renderActions={renderActions}
+              getMenu={getMenu}
               onSelect={onSelect}
             />
           ))}
@@ -127,7 +133,7 @@ type MasterDetailRowProps<T extends MasterDetailRecord> = {
   getLabel: (get: Atom.Context, item: T) => string;
   getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
   getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
-  renderActions?: (item: T) => ReactNode;
+  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
   onSelect?: (id: string | undefined) => void;
 };
 
@@ -137,7 +143,7 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   getLabel,
   getIcon,
   getAdornment,
-  renderActions,
+  getMenu,
   onSelect,
 }: MasterDetailRowProps<T>) => {
   // Resolve the label, icon, and adornment reactively per row — each subscribes (via `get`) only to this
@@ -145,6 +151,8 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   const label = useAtomValue(useMemo(() => Atom.make((get) => getLabel(get, item)), [getLabel, item]));
   const icon = useAtomValue(useMemo(() => Atom.make((get) => getIcon?.(get, item)), [getIcon, item]));
   const adornment = useAtomValue(useMemo(() => Atom.make((get) => getAdornment?.(get, item)), [getAdornment, item]));
+  // Built per row so the menu subscribes to just this item's state and updates without re-rendering the list.
+  const menu = useMenuBuilder((get) => getMenu?.(get, item) ?? EMPTY_MENU, [getMenu, item]);
 
   return (
     <OrderedList.Item
@@ -169,7 +177,21 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
           </Tooltip.Trigger>
         </Tooltip.Provider>
       )}
-      {renderActions?.(item)}
+      {getMenu && (
+        <Menu.Root {...menu}>
+          <Menu.Trigger asChild>
+            <IconButton
+              iconOnly
+              variant='ghost'
+              density='sm'
+              icon='ph--dots-three-vertical--regular'
+              label='Actions'
+              onClick={(event) => event.stopPropagation()}
+            />
+          </Menu.Trigger>
+          <Menu.Content />
+        </Menu.Root>
+      )}
     </OrderedList.Item>
   );
 };
