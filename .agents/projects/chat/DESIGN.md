@@ -181,10 +181,27 @@ plugin layer loses everything the feed pipeline provides and would duplicate
 it per provider. Until then it remains the cheap seam for shallow or read-only
 integrations. Long-term; not scheduled in the stages above.
 
+## Principle: feed items are single-writer
+
+Feeds have no merge semantics — conflict mode is last-flush-wins at
+whole-object granularity (#12235). Therefore no shared mutable state on feed
+items: anything multiple participants affect is expressed as **separate
+per-author immutable items folded at read time**. (Matrix models reactions the
+same way: `m.reaction` is its own event referencing the target.)
+
+- **Reactions (decided):** `Reaction` is its own data type appended to the
+  channel feed — `{ target: Ref<Message>, emoji, sender }` — NOT a property on
+  the Message (concurrent LWW clobbering) and NOT a Relation (relations relate
+  objects; this is a datum referencing a message). Render by folding reactions
+  per target; un-react = tombstone your own reaction item.
+- **Replies:** same pattern from the other side — `Message.parentMessage`
+  (already in the schema) refs the prior message within a thread; reference,
+  never mutation.
+- Message _edits_ remain author-only re-appends, which single-writer makes
+  safe.
+
 ## Remaining open questions
 
-- Reactions schema: `Message.properties` LWW map vs `Reaction` relation
-  objects appended to the feed (relation survives edit-re-appends better).
 - Assistant `Chat` / `Channel` convergence: same storage idiom, different
   types — unify on Channel with an agent-backend, or keep parallel and share
   only Message + UI primitives? (Leaning: keep parallel for now; converge

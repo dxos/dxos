@@ -27,9 +27,12 @@ Work = the gaps below.
       `threadId = anchor`; delete Thread type with migration (coordinate
       with document-revisions). Decide: resolved-status home (root-message
       properties), identical-anchor join semantics, orphaned anchors.
-- [ ] Decide reactions schema (`Message.properties` map vs Reaction relation).
+- [x] Decide reactions schema — `Reaction` object type appended to the feed
+      (`target: Ref<Message>`, emoji, sender); per-author immutable items,
+      folded at read; un-react = tombstone own item. See DESIGN.md
+      "Principle: feed items are single-writer".
 - [ ] Message actions in UI: edit (Obj.update re-append), delete
-      (Feed.remove), reactions.
+      (Feed.remove), reactions (fold Reaction items per target).
 - [ ] Notifications via subscription triggers on the channel feed.
 - [ ] Ephemeral presence/typing primitive (EDGE messaging, not feeds; cf.
       plugin-calls swarm presence).
