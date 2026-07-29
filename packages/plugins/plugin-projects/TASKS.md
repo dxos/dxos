@@ -270,6 +270,18 @@ summaries), and the `stories-projects` storybook strategy.
       routine template (`spec: runnable` → `InboxOperation.AnalyzeMailbox`, timer trigger, mailbox
       ref baked into `trigger.input`) + brain/inbox skills for chats; `FactSummaries.stories.tsx`
       green (live loop = numbered manual steps on the story).
+- [ ] **Stories do no processing** — the three `stories-projects` stories scaffold a project from a
+      template and render its article; nothing runs. No AiService in the harness (mock or ollama), no
+      messages seeded, every scaffolded trigger `enabled: false`. To exercise the loop: a mock
+      AiService + seeded messages + enabled trigger for a CI play test, and/or an ollama-backed
+      `*Live` variant (`tags: ['!test']`) — `AnalyzeMailbox` is the best candidate, being
+      deterministic apart from the extraction model. Blocked behind the table-tool decision below for
+      UC-A.
+- [ ] **Routines gallery empty in the story harness** — `ObjectGallery` renders nothing for
+      `project.routines` under `ModuleContainer`; it DID render pre-refactor (card + trigger summary +
+      ⋮ menu). The template links the routine (asserted by its unit test) and the Routines section
+      header renders, so it is the masonry/ref-resolution path inside the grid cell, not the data.
+      Story assertions skip the card until diagnosed.
 - [ ] **Evals** — `sender-ledger.eval.ts` RUN LIVE 2026-07-29 (key via `op inject` from the user's
       `~/.env.tpl`; smoke 100% first) and it FAILED — a real finding, not eval noise: the agent's
       own completeJob failure says "Cannot create the Sender Ledger table with available tools".

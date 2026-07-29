@@ -18,10 +18,10 @@ import { findObject } from '../assertions';
 import { createEvalRunner } from '../runner';
 import { getDefaultSkills } from '../skills';
 
-// UC-A (plugin-projects USE-CASES.md §4.2): the sender-ledger routine's headless task, run through
-// the same RunInstructions path a feed-triggered routine uses. The input batches two messages from
-// the SAME sender so one run also exercises the dedupe instruction: a correct run yields exactly
-// one ledger table, filed exactly once into the project's artifacts.
+// The sender-ledger routine's headless task, run through the same RunInstructions path a
+// feed-triggered routine uses. The input batches two messages from the SAME sender so one run also
+// exercises the dedupe instruction: a correct run yields exactly one ledger table, filed exactly
+// once into the project's artifacts, holding exactly one row for that sender.
 // TODO(burdon): Authored without a live run (no DX_ANTHROPIC_API_KEY in the authoring session) —
 // verify live before trusting pass rates.
 

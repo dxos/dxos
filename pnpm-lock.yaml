@@ -20883,6 +20883,9 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-markdown
       '@dxos/plugin-projects':
         specifier: workspace:*
         version: link:../../plugins/plugin-projects
@@ -20892,6 +20895,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
+      '@dxos/plugin-table':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-table
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../../plugins/plugin-testing

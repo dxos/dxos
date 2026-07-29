@@ -46,8 +46,8 @@ export const BrainPlugin = Plugin.define(meta).pipe(
     activatesOn: AppActivationEvents.SetupSettings,
     activate: MailboxAction,
   }),
-  // Contributes the "Mailbox Facts" project template (UC-C): scheduled AnalyzeMailbox routine +
-  // brain-skill chats inside a project.
+  // Contributes the "Mailbox Facts" project template: a scheduled AnalyzeMailbox routine plus
+  // brain-skill chats, scoped to one project.
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSchema,
     activate: ProjectTemplates,

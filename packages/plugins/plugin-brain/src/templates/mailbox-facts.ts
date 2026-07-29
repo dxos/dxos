@@ -29,12 +29,13 @@ const PROJECT_INSTRUCTIONS = trim`
 `;
 
 /**
- * "Mailbox facts" project template (UC-C, USE-CASES.md §4.4): the mailbox as standing context,
- * brain + inbox skills for its chats, and a starter **operation-action** routine that runs
- * `InboxOperation.AnalyzeMailbox` on a schedule — a deterministic pipeline (channel 2 of §2.7), no
- * model in the trigger loop; the extraction model runs inside the operation. Facts land in the
- * space fact store keyed by provenance, not in the artifacts collection. Only applies to a Mailbox
- * subject.
+ * "Mailbox facts" project template: the mailbox as standing context, brain + inbox skills for its
+ * chats, and a starter routine that runs `InboxOperation.AnalyzeMailbox` on a schedule.
+ *
+ * The routine binds the operation directly rather than an instructions prompt, so the trigger loop
+ * is deterministic — the extraction model runs inside the operation, not around it. Extracted facts
+ * land in the space fact store keyed by provenance, so they are queryable by any session but are
+ * not artifacts the project owns. Only applies to a Mailbox subject.
  */
 export const mailboxFacts: ProjectCapabilities.Template = {
   id: 'org.dxos.project.mailboxFacts',

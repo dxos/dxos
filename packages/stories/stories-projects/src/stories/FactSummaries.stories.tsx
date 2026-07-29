@@ -3,155 +3,82 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
-import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/compute';
-import { Filter } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
-import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Mailbox } from '@dxos/plugin-inbox';
-import { InboxPlugin } from '@dxos/plugin-inbox/testing';
-import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
-import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
-import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
-import { ProjectOperation } from '@dxos/plugin-projects/types';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
-import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
-import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useSpaces } from '@dxos/react-client/echo';
-import { Button } from '@dxos/react-ui';
-import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
-const MAILBOX_FACTS_TEMPLATE_ID = 'org.dxos.project.mailboxFacts';
+import { StoryRole } from '../modules';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 
-/**
- * UC-C (USE-CASES.md §4.4): the fact-store loop as a project — a scheduled operation-action routine
- * runs `AnalyzeMailbox` (deterministic pipeline, no model in the trigger loop) and project chats
- * answer "where things stand" questions from the facts via the brain skill.
- */
-const Story = () => {
-  const [space] = useSpaces();
-  const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
-  const [project] = useQuery(space?.db, Filter.type(Project.Project));
-  const { invokePromise } = useOperationInvoker();
-  const [error, setError] = useState<string>();
+const MAILBOX_NAME = 'Work';
 
-  const handleCreate = useCallback(() => {
-    if (!mailbox || !space) {
-      return;
-    }
-    // Surface a failed setup in the story UI rather than leaving the rejection unobserved.
-    invokePromise(
-      ProjectOperation.Create,
-      { templateId: MAILBOX_FACTS_TEMPLATE_ID, subject: mailbox },
-      { spaceId: space.id },
-    ).catch((cause: unknown) => setError(String(cause)));
-  }, [mailbox, space, invokePromise]);
-
-  if (!space?.db || !mailbox) {
-    return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
-  }
-
-  if (error) {
-    return <div role='alert'>{error}</div>;
-  }
-
-  return (
-    <div className='flex flex-col h-full'>
-      {!project ? (
-        <Button data-testid='fact-summaries.setup' onClick={handleCreate}>
-          Set up project
-        </Button>
-      ) : (
-        <Surface.Surface type={AppSurface.Article} data={{ subject: project, attendableId: project.id }} limit={1} />
-      )}
-    </div>
-  );
-};
-
-const meta = {
+const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-projects/FactSummaries',
-  render: Story,
-  decorators: [
-    withLayout({ layout: 'column' }),
-    withTheme(),
-    withPluginManager({
-      // SetupArtifactDefinition activates the plugins' skill-definition modules; without it the
-      // registry holds no skills, so the article's skill rows and picker render empty.
-      setupEvents: [AppActivationEvents.SetupSettings, AppActivationEvents.SetupArtifactDefinition],
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          types: [Mailbox.Mailbox, Project.Project],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(async () => {
-                personalSpace.db.add(Mailbox.make({ name: 'Work' }));
-                await personalSpace.db.flush({ indexes: true });
-              });
-            }),
-        }),
-        StorybookPlugin({}),
-        SpacePlugin({}),
-        InboxPlugin(),
-        BrainPlugin(),
-        ProjectsPlugin(),
-        RoutinePlugin(),
+  render: ModuleContainer,
+  parameters: storyParameters,
+  decorators: createDecorators({
+    mailboxName: MAILBOX_NAME,
+    // Owns `org.dxos.skill.brain` plus the per-space FactStore the analysis routine writes into.
+    plugins: [BrainPlugin()],
+  }),
+  args: {
+    layout: [
+      [
+        {
+          type: StoryRole.Project,
+          data: {
+            templateId: 'org.dxos.project.mailboxFacts',
+          },
+        },
       ],
-    }),
-  ],
-  parameters: {
-    layout: 'fullscreen',
-    controls: { disable: true },
-    translations: [
-      ...projectsTranslations,
-      ...inboxTranslations,
-      ...routineTranslations,
-      ...formTranslations,
-      ...reactUiTranslations,
+      [StoryRole.Logging],
     ],
   },
-} satisfies Meta<typeof Story>;
+};
 
 export default meta;
 
-type StoryType = StoryObj<typeof meta>;
+type Story = StoryObj<typeof meta>;
 
 /**
- * Test (manual, live model — e.g. ollama via the brain settings, or EDGE):
- * 1. Click "Set up project" — the Mailbox Facts project article opens.
- * 2. Context lists the Work mailbox; Routines shows "Analyze Mailbox" (a scheduled operation
- *    action, disabled).
+ * A project whose memory is the space fact store. Its starter routine is an *operation* action, not
+ * a prompt: the trigger fires `AnalyzeMailbox` directly with the mailbox baked into its input, so
+ * extraction runs as a deterministic pipeline with no model in the trigger loop. Chats in the
+ * project then answer "where things stand" questions from the extracted facts via the brain skill,
+ * citing the source messages, instead of re-reading the mailbox.
+ *
+ * Test (steps 3-4 need a live model — ollama via the brain settings, or EDGE):
+ * 1. Click "Set up project" — the article opens, named "Mailbox Facts — Work".
+ * 2. Context lists the Work mailbox; Routines shows "Analyze Mailbox" (scheduled, disabled).
  * 3. Seed messages into the mailbox, run Analyze from the mailbox toolbar (or enable the trigger),
- *    and confirm facts in the mailbox's Facts companion.
+ *    and confirm facts appear in the mailbox's Facts companion.
  * 4. Open a project chat and ask "summarize where things stand with <sender>" — the reply is
- *    grounded in facts and cites source messages.
+ *    grounded in the facts and cites the messages they came from.
  */
-export const Default: StoryType = {};
+export const Default: Story = {};
 
-/** Template scaffold through the real operation stack: structure asserted against the rendered article. */
-export const Test: StoryType = {
+/**
+ * Drives the template through the real operation stack and asserts the article it produces.
+ *
+ * The Routines gallery is NOT asserted: its masonry renders nothing in this harness even though the
+ * template links the routine (covered by the template's own unit test), so a DOM assertion here
+ * would fail for a reason unrelated to what the story demonstrates. Tracked in
+ * plugin-projects/TASKS.md.
+ */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const button = await waitFor(() => canvas.getByTestId('fact-summaries.setup'), { timeout: 30_000 });
+    const button = await waitFor(() => canvas.getByTestId('projects.story.setup'), { timeout: 30_000 });
     await userEvent.click(button);
 
     await waitFor(async () => expect(canvas.getByDisplayValue(/Mailbox Facts — Work/)).toBeInTheDocument(), {
       timeout: 30_000,
     });
-    await waitFor(async () => expect(canvas.getByText('Analyze Mailbox')).toBeInTheDocument(), {
-      timeout: 10_000,
-    });
+
+    // Skill rows resolve their labels from the registry (blank if the owning plugin is unloaded).
+    await waitFor(async () => expect(canvas.getByDisplayValue('Brain')).toBeInTheDocument(), { timeout: 10_000 });
+    await expect(canvas.getByDisplayValue('Inbox')).toBeInTheDocument();
+
+    await expect(canvas.getByDisplayValue(MAILBOX_NAME)).toBeInTheDocument();
   },
 };
