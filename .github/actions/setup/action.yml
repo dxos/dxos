@@ -31,11 +31,15 @@ runs:
         moon-version: '2.4.5'
         proto-version: '0.58.2'
 
+    # Diagnostics only — must never gate a job. `bash -e` made a missing tool here fail every job,
+    # including the many that do not use it: a restored toolchain cache without a `bun` shim took down
+    # test/storybook/workerd repo-wide, even though only the `cli` binary build invokes bun (and proto
+    # installs it on demand when that task actually runs).
     - name: Log out debug info
       run: |
-        node --version
-        pnpm --version
-        bun --version
+        node --version || echo 'node: not on PATH'
+        pnpm --version || echo 'pnpm: not on PATH'
+        bun --version || echo 'bun: not on PATH'
       shell: bash
 
     - name: PNPM Store Path
