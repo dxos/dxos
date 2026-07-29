@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
+import { Drawing } from '@dxos/plugin-illustrator/types';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Excalidraw } from '#types';
@@ -20,7 +21,7 @@ import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adap
  * @param options - Adapter callbacks, notably `onUpdate` for scene changes.
  * @returns The ExcalidrawStoreAdapter instance managing the scene elements.
  */
-export const useStoreAdapter = (canvas?: Excalidraw.Canvas, options: ExcalidrawStoreAdapterProps = {}) => {
+export const useStoreAdapter = (canvas?: Drawing.Canvas, options: ExcalidrawStoreAdapterProps = {}) => {
   // Lazy initializer: the article re-renders on every pointer down/up, and the eager form would
   // construct (and discard) an adapter each time.
   const [adapter] = useState(() => new ExcalidrawStoreAdapter(options));

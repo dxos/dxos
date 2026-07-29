@@ -11,17 +11,17 @@ import { describe } from 'vitest';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Capability, CapabilityManager } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Ref, Type } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import {
+  Drawing,
+  DrawingOperation,
   IllustratorCapabilities,
   IllustratorOperationHandlerSet,
-  Sketch,
-  SketchOperation,
 } from '@dxos/plugin-illustrator';
 
-import { excalidrawBuilder } from '#model';
+import { ExcalidrawBuilder } from '#model';
 
 import { Excalidraw } from './types';
 
@@ -30,21 +30,19 @@ EntityId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   operationHandlers: IllustratorOperationHandlerSet,
   extraServices: Layer.sync(Capability.Service, () => capabilityService()),
-  types: [Sketch.Sketch, Excalidraw.Canvas],
+  types: [Drawing.Drawing, Drawing.Canvas],
   disableLlmMemoization: true,
 });
 
-/** Capability manager pre-loaded with the excalidraw sketch variant, as the plugin would contribute it. */
+/** Capability manager pre-loaded with the excalidraw drawing variant, as the plugin would contribute it. */
 const capabilityService = () => {
   const manager = CapabilityManager.make({ registry: Registry.make() });
   manager.contribute({
     interface: IllustratorCapabilities.VariantProvider,
     implementation: {
-      id: Type.getTypename(Excalidraw.Canvas),
+      id: Excalidraw.EXCALIDRAW_SCHEMA,
       label: 'Excalidraw',
-      canvasType: Excalidraw.Canvas,
-      createCanvas: () => Effect.sync(() => Excalidraw.makeCanvas()),
-      builder: excalidrawBuilder,
+      builder: ExcalidrawBuilder,
     },
     module: 'test',
   });
@@ -55,19 +53,19 @@ const capabilityService = () => {
  * Same round-trip as the tldraw variant test, run through the excalidraw builder — proves the
  * illustrator operations are renderer-agnostic.
  */
-describe('excalidraw sketch variant', () => {
+describe('excalidraw drawing variant', () => {
   it.effect(
     'create → edit → read round-trip preserves untouched objects',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const { object: sketch } = yield* Operation.invoke(SketchOperation.Create, { name: 'Portrait' });
-        yield* Database.add(sketch);
+        const { object: drawing } = yield* Operation.invoke(DrawingOperation.Create, { name: 'Portrait' });
+        yield* Database.add(drawing);
         yield* Database.flush();
-        const ref = Ref.make(sketch);
+        const ref = Ref.make(drawing);
 
         // Draw a face.
-        const face = yield* Operation.invoke(SketchOperation.Edit, {
-          sketch: ref,
+        const face = yield* Operation.invoke(DrawingOperation.Edit, {
+          drawing: ref,
           commands: [
             {
               op: 'upsert-object',
@@ -89,14 +87,14 @@ describe('excalidraw sketch variant', () => {
         expect(face.scene.objects).toHaveLength(1);
 
         // Read the scene (what the agent would do before a follow-up edit).
-        const read = yield* Operation.invoke(SketchOperation.Read, { sketch: ref });
+        const read = yield* Operation.invoke(DrawingOperation.Read, { drawing: ref });
         const readFace = read.scene.objects.find((object) => object.id === 'face');
         expect(readFace?.origin).toEqual({ x: 100, y: 100 });
         expect(readFace?.elements.map((element) => element.id)).toEqual(['head', 'left-eye', 'right-eye', 'smile']);
 
         // Add a hat above the face and turn the smile into a frown — by id, without resending the face.
-        const edit = yield* Operation.invoke(SketchOperation.Edit, {
-          sketch: ref,
+        const edit = yield* Operation.invoke(DrawingOperation.Edit, {
+          drawing: ref,
           commands: [
             {
               op: 'upsert-object',
@@ -127,8 +125,8 @@ describe('excalidraw sketch variant', () => {
         );
 
         // Remove the hat again.
-        const removed = yield* Operation.invoke(SketchOperation.Edit, {
-          sketch: ref,
+        const removed = yield* Operation.invoke(DrawingOperation.Edit, {
+          drawing: ref,
           commands: [{ op: 'remove-object', objectId: 'hat' }],
         });
         expect(removed.scene.objects.map((object) => object.id)).toEqual(['face']);

@@ -9,7 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { useProgress } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { Sketch } from '@dxos/plugin-illustrator';
+import { Drawing } from '@dxos/plugin-illustrator';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Sheet } from '@dxos/plugin-sheet';
 import { useClient } from '@dxos/react-client';
@@ -24,7 +24,7 @@ import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGe
 import { meta } from '#meta';
 
 // TODO(burdon): Make extensible.
-const staticTypes = [Markdown.Document, Sketch.Sketch, Sheet.Sheet, ComputeGraph];
+const staticTypes = [Markdown.Document, Drawing.Drawing, Sheet.Sheet, ComputeGraph];
 const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
 
 export type SpaceGeneratorProps = {

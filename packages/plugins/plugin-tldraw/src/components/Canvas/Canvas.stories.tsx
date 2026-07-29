@@ -12,26 +12,29 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { RecordBuilder } from '#model';
 import { data } from '#testing';
+import { Tldraw } from '#types';
 
 import { migrateCanvas } from '../../migrations';
 import { CanvasComponent } from './Canvas';
 
 const DefaultStory = () => {
-  const [canvas, setCanvas] = useState(createObject(Drawing.makeCanvas({ content: data.v2 })));
+  const [canvas, setCanvas] = useState(
+    createObject(Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: data.v2 })),
+  );
 
   const handleClear = () => {
-    setCanvas(createObject(Drawing.makeCanvas()));
+    setCanvas(createObject(Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA })));
   };
 
   const handleCreate = () => {
-    const canvas = createObject(Drawing.makeCanvas({ content: data.v2 }));
+    const canvas = createObject(Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: data.v2 }));
     console.log(JSON.stringify(canvas, undefined, 2));
     setCanvas(canvas);
   };
 
   const handleMigrate = async () => {
     const content = await migrateCanvas(data.v1);
-    setCanvas(createObject(Drawing.makeCanvas({ content })));
+    setCanvas(createObject(Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content })));
   };
 
   return (
@@ -75,6 +78,7 @@ const BuilderStory = () => {
   const [canvas] = useState(() =>
     createObject(
       Drawing.makeCanvas({
+        schema: Tldraw.TLDRAW_SCHEMA,
         content: new RecordBuilder()
           .rectangle({ id: 'a', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid' })
           .ellipse({ id: 'b', x: 360, y: 0, text: 'ECHO', color: 'green' })

@@ -73,6 +73,16 @@ Reference sketch: `packages/plugins/plugin-illustrator/docs/drawing.drawio.svg`.
 - [x] **LiveObject crash on create** — `useObject` returns snapshots; dispatch containers now pass `ref.target` (live) since store adapters need `Doc.createAccessor`.
 - [x] **Lost strokes (pre-existing)** — tldraw's `'event'` stream fires before the tool commits its shape, so pointer_up-driven saves flushed one gesture behind; plus the attention-triggered adapter reopen recreated the store under a still-mounted editor. Fixed: debounced auto-save in the store listener, editor keyed by store instance, flush-on-unmount. Verified live: cold load → draw → reload → stroke persists.
 
+### Phase 3.1: Drawing rename + shared canvas (2026-07-29)
+
+- [x] **`Sketch` → `Drawing`** — `org.dxos.type.sketch` → `org.dxos.type.drawing`; `SketchBuilder` → `DrawingBuilder`, `SketchVariant` → `DrawingVariant`, `SketchOperation` → `DrawingOperation`, containers/panel/skill renamed to match.
+- [x] **`schema` + `content` pushed into the base type** — illustrator owns `Drawing.Canvas` (`org.dxos.type.canvas`, hidden); tldraw's and excalidraw's canvas types are deleted, and `DrawingVariant.canvasType`/`createCanvas` are now optional for renderers that need no extra fields (neither does today).
+- [x] **Variant resolution keys on `Canvas.schema`** — forced by the collapse: with one shared canvas type, typename no longer discriminates. `makeCanvas` takes a REQUIRED `schema` so a canvas can never be built unresolvable (this caught 8 call sites that would have silently rendered "Unsupported drawing variant").
+- [x] **Common content-map logic factored out** — `illustrator/model/content.ts` owns the upsert/remove/move command loop, companion-record accounting and index seeding; renderers supply a `ContentHandler` (`identify`/`render`/`read`/`translate` + optional `scaffold`/`merge`/`prune`). Both `apply.ts` files deleted (~130 duplicated lines each). tldraw's page scaffold + dangling-binding sweep and excalidraw's version bumps survive as handler hooks.
+- [x] **`DrawingBuilder` implemented by both** — `makeBuilder({schema, handler})` supplies the ECHO write path; `TldrawBuilder` (record builder renamed `RecordBuilder`) and `ExcalidrawBuilder`. Both variant round-trip tests still pass unchanged, which is the evidence the extraction is behaviour-preserving.
+- [ ] **Migration for `org.dxos.type.sketch` → `org.dxos.type.drawing`** — NOT written; existing sketches will not resolve. The ECHO migration framework is dormant (composer-app migrations commented out).
+- [ ] **PLUGIN.mdl files** still describe the Sketch-era shape.
+
 ### Tracked follow-ups
 
 - [x] **Hidden canvas showed as a second navtree item** — creating a sketch _inside a Collection_ listed the canvas beside it. Not variant-specific: `CollectionModel.add` pushed into `target.objects` unconditionally when the target was a collection, ignoring `HiddenAnnotation` (the non-collection branch calls `Database.add`, which is why creating at the space root looked fine). **Fixed systematically** in `@dxos/app-toolkit`: `CollectionModel.add` now persists a hidden object without filing it into any collection, so no plugin can leak an implementation-detail object into the navtree. Regression tests in `CollectionModel.test.ts`.

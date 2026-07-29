@@ -21,7 +21,7 @@ describe('ExcalidrawPlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('sketch-variant'), moduleId('schema'), moduleId('ReactSurface')]),
+      expect.arrayContaining([moduleId('drawing-variant'), moduleId('schema'), moduleId('ReactSurface')]),
     );
   });
 });

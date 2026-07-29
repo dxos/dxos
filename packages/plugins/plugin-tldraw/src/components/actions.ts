@@ -9,8 +9,6 @@ import { Doc } from '@dxos/echo-doc';
 import { Drawing } from '@dxos/plugin-illustrator/types';
 import { getDeep } from '@dxos/util';
 
-import type { Tldraw } from '#types';
-
 /**
  * Snap to grid.
  */

@@ -6,7 +6,7 @@ import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { EID, Filter, Key, Type, View } from '@dxos/echo';
 import { OperationInvoker } from '@dxos/operation';
-import { Sketch } from '@dxos/plugin-illustrator';
+import { Drawing } from '@dxos/plugin-illustrator';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Sheet } from '@dxos/plugin-sheet';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -71,10 +71,15 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    Type.getTypename(Sketch.Sketch),
+    Type.getTypename(Drawing.Drawing),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const obj = space.db.add(Sketch.make({ name: random.commerce.productName(), canvas: Tldraw.makeCanvas() }));
+        const obj = space.db.add(
+          Drawing.make({
+            name: random.commerce.productName(),
+            canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }),
+          }),
+        );
         return obj;
       });
 

@@ -17,8 +17,8 @@ import {
   type Fill,
   type PathProps,
   type Point,
-  type ShapeProps,
   RecordBuilder,
+  type ShapeProps,
 } from './RecordBuilder';
 
 export const DEFAULT_SCALE = 1;

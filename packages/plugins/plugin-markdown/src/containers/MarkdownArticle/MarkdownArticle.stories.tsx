@@ -16,13 +16,14 @@ import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { Sketch } from '@dxos/plugin-illustrator';
+import { Drawing } from '@dxos/plugin-illustrator';
 import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Tldraw, TldrawModel } from '@dxos/plugin-tldraw';
+import { TldrawModel } from '@dxos/plugin-tldraw';
+import { Tldraw } from '@dxos/plugin-tldraw';
 import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -43,7 +44,7 @@ random.seed(1);
 const generator: ValueGenerator = random as any;
 
 // A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test sketch.
-const SKETCH_CONTENT = new TldrawModel.TldrawBuilder()
+const SKETCH_CONTENT = new TldrawModel.RecordBuilder()
   .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
   .build();
 
@@ -104,7 +105,14 @@ const meta = {
         IllustratorPlugin(),
         TldrawPlugin(),
         ClientPlugin({
-          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Sketch.Sketch, Tldraw.Canvas],
+          types: [
+            Markdown.Document,
+            Text.Text,
+            Person.Person,
+            Organization.Organization,
+            Drawing.Drawing,
+            Drawing.Canvas,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
@@ -126,9 +134,9 @@ const meta = {
                 );
 
                 objects.push(
-                  Sketch.make({
+                  Drawing.make({
                     name: 'Test Sketch',
-                    canvas: Tldraw.makeCanvas({ content: SKETCH_CONTENT }),
+                    canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: SKETCH_CONTENT }),
                   }),
                 );
 

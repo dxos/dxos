@@ -15,19 +15,19 @@ import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type SketchVariantSurfaceProps } from '@dxos/plugin-illustrator/types';
+import { type DrawingVariantSurfaceProps } from '@dxos/plugin-illustrator/types';
+import { Drawing } from '@dxos/plugin-illustrator/types';
 import { Flex, Panel, composable, composableProps, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';
-import { Excalidraw as ExcalidrawTypes } from '#types';
 
-export type ExcalidrawArticleProps = SketchVariantSurfaceProps;
+export type ExcalidrawArticleProps = DrawingVariantSurfaceProps;
 
 /**
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
 export const ExcalidrawArticle = ({ role, canvas, attendableId }: ExcalidrawArticleProps) => {
-  invariant(Obj.instanceOf(ExcalidrawTypes.Canvas, canvas));
+  invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);

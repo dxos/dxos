@@ -4,19 +4,19 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Drawing } from '@dxos/plugin-illustrator/types';
 
-import { ExcalidrawSettings, ReactSurface, SketchVariant } from '#capabilities';
+import { DrawingVariant, ExcalidrawSettings, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Excalidraw } from '#types';
 
 export const ExcalidrawPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    id: 'sketch-variant',
+    id: 'drawing-variant',
     activatesOn: AppActivationEvents.SetupSchema,
-    activate: SketchVariant,
+    activate: DrawingVariant,
   }),
-  AppPlugin.addSchemaModule({ schema: [Excalidraw.Canvas] }),
+  AppPlugin.addSchemaModule({ schema: [Drawing.Canvas] }),
   AppPlugin.addSettingsModule({ activate: ExcalidrawSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

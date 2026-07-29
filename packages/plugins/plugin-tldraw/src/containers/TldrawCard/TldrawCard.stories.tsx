@@ -11,12 +11,14 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { RecordBuilder } from '#model';
+import { Tldraw } from '#types';
 
 import { TldrawCard } from './TldrawCard';
 
 const CardStory = () => {
   const { drawing, canvas } = useMemo(() => {
     const canvas = Drawing.makeCanvas({
+      schema: Tldraw.TLDRAW_SCHEMA,
       content: new RecordBuilder()
         .rectangle({ id: 'a', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid' })
         .ellipse({ id: 'b', x: 360, y: 0, text: 'ECHO', color: 'green' })

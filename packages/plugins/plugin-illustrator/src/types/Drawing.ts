@@ -25,10 +25,13 @@ export class Canvas extends Type.makeObject<Canvas>(DXN.make('org.dxos.type.canv
   }).pipe(HiddenAnnotation.set(true)),
 ) {}
 
-export type MakeCanvasOptions = Partial<Obj.MakeProps<typeof Canvas>>;
+export type MakeCanvasOptions = Omit<Partial<Obj.MakeProps<typeof Canvas>>, 'schema'> & {
+  /** Required at construction: matches the canvas to a renderer variant. */
+  schema: string;
+};
 
 /** Creates a {@link Canvas} for the given renderer schema. */
-export const makeCanvas = ({ schema, content = {} }: MakeCanvasOptions = {}): Canvas =>
+export const makeCanvas = ({ schema, content = {} }: MakeCanvasOptions): Canvas =>
   Obj.make(Canvas, { schema, content });
 
 /** Type guard for {@link Canvas} objects. */

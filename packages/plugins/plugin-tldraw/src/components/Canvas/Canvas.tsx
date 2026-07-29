@@ -18,7 +18,7 @@ import { useMergeRefs } from '@dxos/react-hooks';
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';
-import { type Settings, type Tldraw } from '#types';
+import { type Settings } from '#types';
 
 import { handleSnap } from '../actions';
 import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';

@@ -5,21 +5,20 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { IllustratorCapabilities, type SketchVariant } from '@dxos/plugin-illustrator/types';
+import { type DrawingVariant, IllustratorCapabilities } from '@dxos/plugin-illustrator/types';
 
 import { ExcalidrawArticle } from '#containers';
-import { excalidrawBuilder } from '#model';
+import { ExcalidrawBuilder } from '#model';
 
 import { Excalidraw } from '../types';
 
-const variant: SketchVariant = {
-  id: Type.getTypename(Excalidraw.Canvas),
+// No `canvasType`/`createCanvas`: excalidraw stores its elements in the base `Drawing.Canvas`,
+// discriminated by `schema`.
+const variant: DrawingVariant = {
+  id: Excalidraw.EXCALIDRAW_SCHEMA,
   label: 'Excalidraw',
   icon: 'ph--compass-tool--regular',
-  canvasType: Excalidraw.Canvas,
-  createCanvas: () => Effect.sync(() => Excalidraw.makeCanvas()),
-  builder: excalidrawBuilder,
+  builder: ExcalidrawBuilder,
   article: ExcalidrawArticle,
 };
 

@@ -59,7 +59,7 @@ import {
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format, FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { Sketch } from '@dxos/plugin-illustrator';
+import { Drawing } from '@dxos/plugin-illustrator';
 import { Calendar, Mailbox, SystemTags } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Map as MapView } from '@dxos/plugin-map';
@@ -140,8 +140,8 @@ const SCHEMAS: Type.AnyEntity[] = [
   Task.Task,
   Mailbox.Mailbox,
   Calendar.Calendar,
-  Sketch.Sketch,
-  Tldraw.Canvas,
+  Drawing.Drawing,
+  Drawing.Canvas,
   Sheet.Sheet,
   Table.Table,
   Kanban.Kanban,
@@ -1510,14 +1510,14 @@ const makeFlavorWheelContent = (): Record<string, unknown> => {
   ]);
 };
 
-const makeSketches = (): { floorPlan: Sketch.Sketch; flavorWheel: Sketch.Sketch } => ({
-  floorPlan: Sketch.make({
+const makeSketches = (): { floorPlan: Drawing.Drawing; flavorWheel: Drawing.Drawing } => ({
+  floorPlan: Drawing.make({
     name: 'Roastery floor plan',
-    canvas: Tldraw.makeCanvas({ content: makeFloorPlanContent() }),
+    canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: makeFloorPlanContent() }),
   }),
-  flavorWheel: Sketch.make({
+  flavorWheel: Drawing.make({
     name: 'Spring blend flavor wheel',
-    canvas: Tldraw.makeCanvas({ content: makeFlavorWheelContent() }),
+    canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: makeFlavorWheelContent() }),
   }),
 });
 
