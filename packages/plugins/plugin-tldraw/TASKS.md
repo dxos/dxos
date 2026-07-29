@@ -1,6 +1,6 @@
 # plugin-tldraw (né plugin-sketch) + plugin-illustrator — Tasks
 
-_Resume: Phase 3 (illustrator base) COMPLETE on PR #12380 (branch claude/headless-diagramming-plugin-84ef17, head aaf24e4) — final CI run in flight, all package gates green, both new packages published to npm at 0.10.0. Next: land #12380 (land skill; user lands), then Phase 4 = technical-drawing dialect. OPEN DECISION for Phase 4: source of truth = one-shot compile vs live model (recommended) vs hybrid._
+_Resume: Phases 3/3.1/3.2 COMPLETE on PR #12380 (branch claude/headless-diagramming-plugin-84ef17, head f4a33fc) — main merged, excalidraw labels + native arrow bindings fixed, both new packages published to npm at 0.10.0. Next: land #12380 (land skill; user lands). Phase 4 is DESIGNED and APPROVED but NOT implemented — the old "technical-drawing dialect on a whiteboard" framing is superseded: DSL is truth, the diagram is a projection, substrate is React Flow, neutral representation is an extended `@dxos/graph`. Design + phasing: `agents/superpowers/specs/2026-07-29-diagram-substrate-design.md`. Implementation starts at step 1 (extend `@dxos/graph` with `Node.parent` + `Edge.sourcePort`/`targetPort`)._
 
 ## Phase 1: Scene DSL (agent draws/edits diagrams)
 
@@ -56,15 +56,49 @@ collapse; automatic layout + line routing with smart slots on nodes; preserve st
 scenarios (arc visibility varies per scenario / selected node, toggleable); embedded text.
 Reference sketch: `packages/plugins/plugin-illustrator/docs/drawing.drawio.svg`.
 
-- [ ] **DECIDE: source of truth** — (a) one-shot compile: DSL → scene commands → ordinary
-      editable records (current dialect architecture, but collapse/scenarios/zoom cannot survive as
-      behaviours); (b) **live model (recommended)**: persist the DSL/parsed graph on the object and
-      compile view-state (zoom, collapsed groups, active scenario, selection) + model → records on
-      the fly, with manual edits round-tripping into placement metadata; (c) hybrid — live model plus
-      a "detach to sketch" that bakes the current view. Blocks the rest of Phase 4.
+- [x] **DECIDED (2026-07-29): source of truth is the DSL.** None of (a)/(b)/(c) as framed — the
+      diagram is a _projection_ used to edit an underlying spec, and the spec stays authoritative.
+      Design: `agents/superpowers/specs/2026-07-29-diagram-substrate-design.md`.
 - [ ] **Dialect + placement schema**, layout/routing engine (slots, straight-line preservation),
       scenario model, collapse/zoom behaviour.
 - [ ] **Illustrator PLUGIN.mdl deepening** — document capability contract once the dialect work firms it up.
+
+### Phase 4 design: constrained diagram substrate (2026-07-29)
+
+Superseded the "technical-drawing dialect on the whiteboard" framing above. Full design in
+`agents/superpowers/specs/2026-07-29-diagram-substrate-design.md`; decisions taken:
+
+- [x] **DSL is truth; the diagram is a projection.** Render-only state the DSL cannot express
+      (pinned positions, free text blocks, labels for read-only sources) lives in a separate
+      **overlay** — the only ECHO-persisted tier, because it is the only one needing CRDT sync.
+      `CanvasBoard` already validates the split (`computeGraph` truth + `layout` overlay).
+- [x] **Substrate: React Flow (`@xyflow/react`, MIT), not a whiteboard.** It is a _controlled_
+      component — our model is authoritative and the canvas is its projection, which is the
+      DSL-is-truth property one level down. tldraw/excalidraw invert it, so "constrained" could
+      only be reached by removal. Already proven twice in-repo (`GraphCanvas`, `react-ui-board/Chain`).
+- [x] **Licensing checked.** `@tldraw/*` 3.0.0 is **not open source** — ships `LicenseManager.js` +
+      `watermarks.js`, requires a paid agreement for production use. Not retired here; the intent is
+      to move `plugin-tldraw` out of the monorepo into a third-party non-production repo later.
+      React Flow is MIT but xyflow asks that `hideAttribution` (already set in `GraphCanvas.tsx`)
+      only be used with a Pro subscription. Both need a real review, not an engineering call.
+- [x] **Neutral representation: extend `@dxos/graph`, not a new package.** Add `Node.parent` and
+      `Edge.sourcePort`/`targetPort`. Justified by existing duplication: ports were already invented
+      twice incompatibly (`ComputeEdge` required `input`/`output`; `Connection` optional), and
+      hierarchy twice (`plugin-explorer`'s `TreeNodeType.children`, `react-ui-graph`'s cluster
+      projector). Both fields optional → all 12 consumers unaffected; published pkg, so additive
+      minor + changeset. A group is a node whose kind admits children, not a third entity.
+- [x] **Write-back is not an architectural fork.** Because canonical text forbids comments and free
+      formatting, `print(parse(text)) === text` holds — an AST plus a printer suffices, no CST or
+      trivia tracking. Fidelity becomes a per-dialect property (`mode: 'readonly' | 'round-trip'`).
+- [x] **Ontology lives in the schema.** `Type.makeRelation({source, target})` embeds
+      `relationSource`/`relationTarget` as DXNs in the JSON Schema, so one declaration drives the
+      toolbar, connection legality, ELK constraints and the AI tool schema. Only cardinality /
+      acyclicity needs a predicate.
+- [ ] **Packages:** `react-ui-canvas` stays (substrate-independent viewport); new
+      `react-ui-diagram` (named for the artifact, not the substrate); `react-ui-canvas-editor`
+      deleted once conductor migrates; `react-ui-canvas-compute`'s 25 shapes port to node kinds.
+- [ ] **Open:** union endpoints for `makeRelation`; progressive-zoom LOD semantics; React Flow is
+      DOM-based so >1–2k nodes needs virtualisation; fate of the existing `Scene.Command` DSL.
 
 ### Post-review fixes (2026-07-28, user testing)
 
