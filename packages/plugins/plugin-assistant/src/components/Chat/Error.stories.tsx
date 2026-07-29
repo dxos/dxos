@@ -56,7 +56,7 @@ const FailureToast = ({ rawError }: FailureToastProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/components/Chat',
+  title: 'plugins/plugin-assistant/components/Error',
   render: FailureToast,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { translations },

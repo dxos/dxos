@@ -37,11 +37,25 @@ export type BlockRenderer = (
 ) => string | undefined;
 
 /**
+ * Callbacks a widget can invoke through {@link MessageThreadContext}.
+ *
+ * React widgets are portaled by `MarkdownStream` without its `onEvent`, so interactive widgets reach
+ * the thread through the context they already receive in their props.
+ */
+export type MessageThreadHandlers = {
+  /** Soft-fork the thread from the given message. */
+  onRewind?: (messageId: string) => void;
+};
+
+/**
  * Thread context passed to renderer.
  * This enables the renderer to "stream" content into the widget state.
  */
 export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
-  constructor(private readonly _widgetState?: XmlWidgetStateManager) {}
+  constructor(
+    private readonly _widgetState?: XmlWidgetStateManager,
+    private readonly _handlers: MessageThreadHandlers = {},
+  ) {}
 
   updateWidget<T>(id: string, value: StateDispatch<T>) {
     this._widgetState?.updateWidget(id, value);
@@ -50,6 +64,10 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
   // TODO(burdon): Resolve name from hypergraph.
   getObjectLabel(_id: URI.URI) {
     return 'Object';
+  }
+
+  rewind(messageId: string) {
+    this._handlers.onRewind?.(messageId);
   }
 }
 
@@ -87,8 +105,9 @@ export class MessageSyncer {
   constructor(
     private readonly _document: TextModel,
     private readonly _renderer: BlockRenderer,
+    handlers: MessageThreadHandlers = {},
   ) {
-    this._context = new MessageThreadContext(this._document);
+    this._context = new MessageThreadContext(this._document, handlers);
   }
 
   get context() {

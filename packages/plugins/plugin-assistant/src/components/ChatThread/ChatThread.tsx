@@ -82,9 +82,20 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       initializedRef.current = true;
     }, [controller, error]);
 
+    // Widget callbacks are routed through the syncer's context, so they must be referentially stable
+    // — rebuilding the syncer replaces the document.
+    const onEventRef = useRef(onEvent);
+    useEffect(() => {
+      onEventRef.current = onEvent;
+    }, [onEvent]);
+    const handleRewind = useCallback((id: string) => onEventRef.current?.({ type: 'rewind', id }), []);
+
     // Update document.
     const renderer = useMemo(() => createBlockRenderer(viewType), [viewType]);
-    const syncer = useMemo(() => controller && new MessageSyncer(controller, renderer), [controller, renderer]);
+    const syncer = useMemo(
+      () => controller && new MessageSyncer(controller, renderer, { onRewind: handleRewind }),
+      [controller, renderer, handleRewind],
+    );
     useEffect(() => {
       if (!syncer) {
         return;

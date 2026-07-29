@@ -15,6 +15,7 @@ import {
   FallbackWidget,
   ReasoningWidget,
   ReferenceWidget,
+  RewindWidget,
   SelectWidget,
   StatsWidget,
   StatusWidget,
@@ -115,6 +116,10 @@ export const componentRegistry: XmlWidgetRegistry = {
   // React Widgets (portaled outside of the editor)
   //
 
+  'rewind': {
+    block: true,
+    Component: RewindWidget,
+  },
   'summary': {
     block: true,
     Component: SummaryWidget,
@@ -208,7 +213,9 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
         if (block.disposition === 'synthetic') {
           return renderXMLBlock('synthetic', { content: block.text, pending: block.pending });
         } else {
-          return `\n<prompt>${block.text}</prompt>\n`;
+          // Blank line before the toolbar: `<prompt>` is an HTML block, and a single newline would
+          // let CommonMark absorb the toolbar tag into it rather than parsing it as its own block.
+          return `\n<prompt>${block.text}</prompt>\n\n${renderPromptToolbar(message)}\n`;
         }
       } else {
         const text = block.text.trim();
@@ -290,6 +297,13 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
     }
   }
 };
+
+/**
+ * Mini toolbar below a user prompt: rewind (soft fork) plus when the prompt was sent.
+ * `messageId` rather than `id` because a tag's `id` attribute would shadow the widget's own id.
+ */
+const renderPromptToolbar = (message: Message.Message) =>
+  `<rewind messageId="${escapeXmlAttribute(message.id)}" created="${escapeXmlAttribute(message.created)}" />`;
 
 /**
  * Escape text embedded in generated XML so the mixed XML parser does not treat `&`, `<`, `>` as markup.
