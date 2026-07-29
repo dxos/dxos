@@ -514,24 +514,32 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+      # Each report is `always()` so an undelivered one cannot suppress the rest — without it a failing
+      # first report skips the e2e report, silencing the very signal this job exists to send. A failed
+      # step still fails the job.
       - name: Send test report
+        if: always()
         uses: ./.github/actions/test-report
         with:
           name: test-24.11.1
           result: ${{ needs.test.result }}
       - name: Send storybook report
+        if: always()
         uses: ./.github/actions/test-report
         with:
           name: storybook-24.11.1
           result: ${{ needs.storybook.result }}
       - name: Send workerd report
+        if: always()
         uses: ./.github/actions/test-report
         with:
           name: workerd-24.11.1
           result: ${{ needs.workerd.result }}
       - name: Send e2e report
+        if: always()
         uses: ./.github/actions/test-report
         with:
           name: e2e

@@ -13,8 +13,15 @@ ORANGE=16744192
 RED=16711680
 GH_BUILD_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
+# Workflow commands are newline-delimited, so an unescaped webhook response could forge annotations.
+function escape() {
+  local value=${1//'%'/'%25'}
+  value=${value//$'\r'/'%0D'}
+  printf '%s' "${value//$'\n'/'%0A'}"
+}
+
 if [ -z "${DISCORD_TEST_REPORT_WEBHOOK:-}" ]; then
-  echo "::error title=Test report not sent::DISCORD_TEST_REPORT_WEBHOOK is unset ($NAME: $RESULT)"
+  echo "::error title=Test report not sent::DISCORD_TEST_REPORT_WEBHOOK is unset ($(escape "$NAME"): $(escape "$RESULT"))"
   exit 1
 fi
 
@@ -28,13 +35,13 @@ function notify() {
   )
   echo "$message"
   response=$(
-    curl --silent --show-error --write-out '\n%{http_code}' -H "Content-Type: application/json" \
-      -d "$message" "$DISCORD_TEST_REPORT_WEBHOOK"
+    curl --silent --show-error --connect-timeout 10 --max-time 30 --write-out '\n%{http_code}' \
+      -H "Content-Type: application/json" -d "$message" "$DISCORD_TEST_REPORT_WEBHOOK"
   )
   status=${response##*$'\n'}
   body=${response%$'\n'*}
   if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
-    echo "::error title=Test report not delivered::Discord webhook returned $status ($NAME: $RESULT) $body"
+    echo "::error title=Test report not delivered::Discord webhook returned $status ($(escape "$NAME"): $(escape "$RESULT")) $(escape "$body")"
     return 1
   fi
 }
