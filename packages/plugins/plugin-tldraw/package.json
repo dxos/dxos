@@ -116,7 +116,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "@tldraw/assets": "catalog:",
     "@tldraw/editor": "catalog:",
     "@tldraw/state": "catalog:",

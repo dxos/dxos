@@ -98,7 +98,6 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",

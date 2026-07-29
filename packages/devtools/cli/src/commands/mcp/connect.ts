@@ -21,7 +21,7 @@ export const connect = Command.make(
   'connect',
   {
     url: Args.text({ name: 'url' }).pipe(
-      Args.withDescription('MCP server URL (e.g. https://space-agent.dxos.workers.dev).'),
+      Args.withDescription('MCP server URL (e.g. https://mcp-space-service.dxos.workers.dev).'),
     ),
     spaceId: Options.text('space-id').pipe(
       Options.withDescription('Space(s) to bring into the session context; repeatable. Defaults to the first space.'),

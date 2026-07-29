@@ -7,8 +7,8 @@
 import solidPlugin from '@opentui/solid/bun-plugin';
 import type { BunPlugin } from 'bun';
 import { existsSync } from 'fs';
-import { copyFile, mkdir, rm, writeFile } from 'fs/promises';
-import { dirname, join } from 'path';
+import { chmod, copyFile, mkdir, rm, writeFile } from 'fs/promises';
+import { dirname, extname, join } from 'path';
 
 /**
  * Bun plugin that handles Vite-style `?raw` suffix imports — `import code from 'pkg?raw'`
@@ -32,6 +32,83 @@ const rawImportPlugin: BunPlugin = {
         contents: `export default ${JSON.stringify(contents)};`,
         loader: 'js',
       };
+    });
+  },
+};
+
+const URL_IMPORT_MIME_TYPES: Record<string, string> = {
+  '.wasm': 'application/wasm',
+};
+
+/**
+ * Bun plugin that handles Vite-style `?url` suffix imports — `import url from 'pkg/asset.wasm?url'`
+ * inlines the asset as a `data:` URL. Required because `@dxos/plugin-script` imports
+ * `esbuild-wasm/esbuild.wasm?url` and hands it to `initialize({ wasmURL })`; a compiled binary has
+ * no sibling assets to point a URL at, and marking the import external only defers the failure to
+ * startup (externals become plain requires inside Bun's embedded filesystem, which has no
+ * `node_modules`). The MIME type is explicit because `WebAssembly.compileStreaming` rejects
+ * anything but `application/wasm`.
+ */
+const urlImportPlugin: BunPlugin = {
+  name: 'url-import',
+  setup(build) {
+    build.onResolve({ filter: /\?url$/ }, (args) => {
+      const basePath = args.path.replace(/\?url$/, '');
+      const importerDir = args.importer ? dirname(args.importer) : process.cwd();
+      const resolved = Bun.resolveSync(basePath, importerDir);
+      return { path: resolved, namespace: 'url' };
+    });
+    build.onLoad({ filter: /.*/, namespace: 'url' }, async (args) => {
+      const mimeType = URL_IMPORT_MIME_TYPES[extname(args.path)] ?? 'application/octet-stream';
+      const base64 = Buffer.from(await Bun.file(args.path).bytes()).toString('base64');
+      return {
+        contents: `export default ${JSON.stringify(`data:${mimeType};base64,${base64}`)};`,
+        loader: 'js',
+      };
+    });
+  },
+};
+
+const NODE_STD_PREFIX = '@dxos/node-std/';
+
+/** Subpaths whose `node` condition resolves to a bare `export * from 'node:<mod>'` re-export. */
+const NODE_STD_BUILTINS = ['assert', 'buffer', 'crypto', 'events', 'fs', 'fs/promises', 'path', 'stream', 'util'];
+
+/**
+ * Bun plugin that swaps `@dxos/node-std/<mod>` for the node builtin it re-exports. The shims exist
+ * to give browser and workerd builds a replacement, which a bun target has no need for — and they
+ * cannot be bundled: Bun miscompiles `export * from 'node:<mod>'` into `__reExport(exports, node_<mod>)`
+ * against a namespace binding it never emits, so the binary dies with `node_<mod> is not defined`.
+ * A `require` stub is used rather than resolving to `node:<mod>` directly, which Bun's resolver
+ * rejects, or marking the import external, which leaves the unresolvable specifier in the binary.
+ */
+const nodeStdPlugin: BunPlugin = {
+  name: 'node-std',
+  setup(build) {
+    build.onResolve({ filter: /^@dxos\/node-std\// }, (args) => {
+      const subpath = args.path.slice(NODE_STD_PREFIX.length);
+      return NODE_STD_BUILTINS.includes(subpath) ? { path: args.path, namespace: 'node-std' } : undefined;
+    });
+    build.onLoad({ filter: /.*/, namespace: 'node-std' }, (args) => ({
+      contents: `module.exports = require('node:${args.path.slice(NODE_STD_PREFIX.length)}');\n`,
+      loader: 'js',
+    }));
+  },
+};
+
+/**
+ * Bun plugin that swaps `@automerge/automerge-subduction`'s `node` entry for its `web` entry.
+ * The node entry `readFileSync`s the WASM module from a directory next to itself, which does not
+ * exist inside Bun's embedded filesystem — the client fails to start with `ENOENT ... /$bunfs/
+ * wasm_bindgen/automerge_subduction_wasm_bg.wasm`. The web entry inlines the same module as base64.
+ */
+const subductionWasmPlugin: BunPlugin = {
+  name: 'subduction-wasm',
+  setup(build) {
+    build.onResolve({ filter: /^@automerge\/automerge-subduction$/ }, (args) => {
+      const importerDir = args.importer ? dirname(args.importer) : process.cwd();
+      const base64Entry = Bun.resolveSync(`${args.path}/wasm-base64`, importerDir);
+      return { path: join(dirname(base64Entry), 'web.js') };
     });
   },
 };
@@ -76,9 +153,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
   const result = await Bun.build({
     entrypoints: ['./src/bin.ts'],
     target: 'bun',
-    plugins: [solidPlugin, rawImportPlugin],
-    // TODO(wittjosiah): These aren't used by any cli plugins so why is this needed?
-    external: ['@dxos/react-ui-*', 'esbuild-wasm/esbuild.wasm?url'],
+    plugins: [solidPlugin, rawImportPlugin, urlImportPlugin, nodeStdPlugin, subductionWasmPlugin],
     compile: {
       target,
       outfile,
@@ -90,6 +165,10 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     console.error(`[Build] Failed to compile ${packageName}:`, result.logs);
     throw new Error(`Build failed for ${packageName}`);
   }
+
+  // The launcher execs this binary by path rather than through npm's `bin` field, so npm never
+  // applies the executable bit on install — it has to survive from here into the tarball.
+  await chmod(outfile, 0o755);
 
   // Copy LICENSE file.
   await copyFile('LICENSE', join(outDir, 'LICENSE'));
@@ -130,6 +209,7 @@ await mkdir(join(mainDir, 'bin'), { recursive: true });
 const wrapperScript = `#!/usr/bin/env node
 
 const { execFileSync } = require('child_process');
+const { chmodSync } = require('fs');
 const { join } = require('path');
 
 const PLATFORMS = {
@@ -152,7 +232,16 @@ if (!pkg) {
 try {
   const binary = process.platform === 'win32' ? 'dx.exe' : 'dx';
   const binPath = join(require.resolve(pkg), '..', binary);
-  execFileSync(binPath, process.argv.slice(2), { stdio: 'inherit' });
+  try {
+    execFileSync(binPath, process.argv.slice(2), { stdio: 'inherit' });
+  } catch (error) {
+    // Recover from a packer that normalized the binary's mode (pnpm pack drops the executable bit).
+    if (error.code !== 'EACCES') {
+      throw error;
+    }
+    chmodSync(binPath, 0o755);
+    execFileSync(binPath, process.argv.slice(2), { stdio: 'inherit' });
+  }
 } catch (error) {
   if (error.code === 'MODULE_NOT_FOUND') {
     console.error(\`Platform-specific package not found: \${pkg}\`);

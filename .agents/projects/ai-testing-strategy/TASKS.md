@@ -1,6 +1,18 @@
 # AI Testing Strategy — Tasks
 
-_Resume: **PR #12307 is marked ready for review** (no longer draft), CI green
+_Resume: **PR #12307 MERGED** (2026-07-23). Work continues on
+`claude/ai-testing-strategy-next-3pkl86` (PR #12357, ready for review, merged with `main`).
+**Phase 1 item 1 is COMPLETE — G2 is closed:** all 10 G2 files converted off memoized replay, every
+`.conversations.json` in the group deleted, zero `runMemoizedTests` references left outside G3 and
+`memoization.test.ts` (which tests the machinery itself). Operation tests live one file per handler
+beside the handler, on a per-package shared `OperationTestLayer`; handlers that reach a model
+internally run on `ScriptedLanguageModel`. Remaining live backlog: Phase 1 item 2 (E context-assembly
+and F schema round-trip), Phase 2 item 4 (loosen `employerRoleCorrect` / `onlyWebSearchUsed`, then
+drop explicit skill naming — **needs a live `DX_ANTHROPIC_API_KEY`**), Phase 3 (G3 → D across the 4
+agent-runtime files, then shrink the memoization layer), the standalone `.agent/` deletion, the
+`Ref.Ref(Relation.Unknown)` typing defect blocking `RelationDelete`, and the batch-run flake noted
+under Phase 1.
+Historical detail for #12307: CI green
 (build/check/test/storybook/workerd all pass). All 6 G1 scenarios are ported to scored evals with
 real quality signal beyond existence checks (DB-effect assertions + an LLM judge on
 `crm-mailbox`). `@dxos/assistant-e2e` is un-merged back out of `@dxos/assistant-evals` — kept as
@@ -14,7 +26,7 @@ lives here instead). Per-eval timeouts replaced the flat 360s `vitest.config.ts`
 via evalite's source + its v1 beta + [issue #68](https://github.com/mattpocock/evalite/issues/68)
 that evalite has no per-eval timeout of its own — the global `testTimeout`, now 180s, is only the
 outer safety net). Pushed to `claude/ai-testing-strategy-9ctzjt` through commit `c62073d0cf`.
-NEXT: await review on PR #12307._
+(Historical: that PR's own next step was review, long since done.)_
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
@@ -28,7 +40,7 @@ deleting it, remove all committed conversation fixtures, switch the gating mecha
 D-tier tests + `operationServiceLayerNoop`; MERGED);
 [#12307](https://github.com/dxos/dxos/pull/12307) (Phase 2 — DB-effect/tool-invocation/LLM-judge
 assertion helpers + all 6 G1 scenarios ported to `@dxos/assistant-evals`; `@dxos/assistant-e2e`
-kept as its own deprecated package rather than merged in; ready for review).
+kept as its own deprecated package rather than merged in; MERGED).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
@@ -45,7 +57,10 @@ as primary coverage.
   — once those are ported or dropped, the package can be removed entirely.
 - **G2** — per-operation / skill: plugin-markdown create/update, plugin-magazine, plugin-assistant,
   assistant-toolkit run-instructions + database/memory/planning/agent skills, AiSummarizer.
-  **Convert to mocked C unit tests before deleting.**
+  **Convert to operation (C) tests that drive the real handler before deleting**, not mocks. Which
+  harness depends on the package: plugin packages boot real plugins with `createComposerTestApp` and
+  call `harness.invoke(Op, input)`; non-plugin packages (assistant-toolkit, ai) use
+  `AssistantTestLayer({ disableLlmMemoization: true })` with `Operation.invoke`.
 - **G3** — agent-runtime session: functions, AgentService, request, xml-response.
   **Convert to scripted-model D tests before deleting.**
 
@@ -135,8 +150,86 @@ as primary coverage.
       (would be testing a nonexistent feature). Tool-error / malformed-output branches deferred.
 - [x] ~~Delete G1 (`@dxos/assistant-e2e`) + fixtures; replace with one scripted-model boot-smoke~~
       **Superseded** — see the revised-plan entry above; G1 is gated in place, not deleted.
-- [ ] Convert G2 → deterministic mocked C unit tests; golden-args fixture convention; delete each
-      G2 fixture once its unit test lands.
+- [x] **Convert G2 → deterministic operation (C) tests — DONE, G2 CLOSED.** No G2 test replays a
+      frozen conversation; every `.conversations.json` in the group is deleted. **Approach corrected twice by direct
+      guidance.** (1) These are not "mocked unit tests" — they drive the _real_ handler and assert it
+      behaves, which is what the memoized conversation tests were incidentally covering. (2) The
+      conversion is a **replacement, not a gating exercise**: per file, write the operation tests,
+      then _delete_ the memoized tests and their `.conversations.json`, leaving **zero
+      `runMemoizedTests` references behind**. An earlier pass that pushed the gate down to per-test
+      `skipIf` was wrong — it multiplied the conditions (one `describe` gate became 17 in
+      `database/skill.test.ts`) instead of removing them.
+      **File layout (direct guidance): one `.test.ts` per operation handler, beside the handler**,
+      with at least one test per handler — not one combined suite per skill. This is the convention
+      the packages already used (`update-tasks.test.ts`, `delegate-task.test.ts`,
+      `accept-change.test.ts`); a first pass wrote combined `database-operations.test.ts` /
+      `skill.test.ts` suites and had to be split. Put the file beside the handler it exercises —
+      `sync-triggers` belongs under `agent-wizard/operations/`, not the agent skill. Name the suite
+      after the operation, and rename tests whose filename does not match their handler
+      (`update.test.ts` → `update-markdown.test.ts`).
+      **Converting a package must not be net-negative:** if deleting a memoized test leaves a handler
+      with no coverage, add the handler test in the same change. plugin-markdown initially lost 4
+      tests and gained none; it now covers `CreateMarkdown` and `Open`, which had never been tested.
+      Which harness: plugin packages boot real plugins with `createComposerTestApp`
+      (`@dxos/plugin-testing/harness`) and call `harness.invoke(Op, input)` —
+      `plugin-sample/src/SamplePlugin.test.ts` and `plugin-chess` are the templates, and nothing else
+      in the repo calls it; non-plugin packages (assistant-toolkit, ai) use
+      `AssistantTestLayer({ disableLlmMemoization: true })` with `Operation.invoke`, per the existing
+      `skills/*/operations/*.test.ts` convention (`update-tasks.test.ts`, `delegate-task.test.ts`).
+      `OperationCapture` (`app-framework/testing/operationCapture.ts`) still has no callers anywhere.
+      **What makes deletion safe:** agent-level behaviour now lives in the graded evals from #12307,
+      so a replayed conversation that an eval already covers is pure duplication — and several of the
+      deleted tests asserted nothing at all (two submitted a prompt and awaited completion; one only
+      printed a console dump). Deterministic behaviour lives in the operation tests; the replay tier
+      goes away. Cast-free per the no-cast rule: outputs typed `Schema.Unknown` are narrowed with
+      `Schema.decodeUnknown`. Watch for URI-form mismatches when asserting refs — a same-space ref
+      stores `echo:/<id>` while `Obj.getURI` returns `echo://<space>/<id>`, and handlers differ in
+      which they return (`get-context` returns the qualified form, tags/bindings the local one).
+  - [x] **database skill — DONE.** `skill.test.ts` + `skill.conversations.json` deleted; 16 tests in
+        `operations/*.test.ts`, one file per handler: objects (create, create-with-encoded-reference,
+        update, delete, load), query (by typename, `in`-param feed scoping, `includeQueues`), context
+        (add/remove, asserted on the `Binding` written to the feed), schema (add input decoding, add
+        field creation, list with exclusions), relation create, tag add/remove. Non-vacuous: verified
+        by mutation — breaking `object-update`'s property write fails its test.
+  - [x] **plugin-markdown — DONE.** 4 memoized tests + 2 fixtures deleted (duplicated
+        `markdown.eval.ts`); the 5 direct `MarkdownOperation.Create`/`Update` tests remain. Package
+        now reports 27 passed / **0 skipped**.
+  - [x] **agent skill — DONE.** 4 memoized tests + fixture deleted; added `get-context` (reports the
+        bound agent's name, instructions and formatted plan), which binds the agent to its own chat
+        feed via `AiContext.Binder` so the `Harness.HarnessService`-scoped handler resolves it.
+        **Reworked by the `main` merge:** upstream removed `AddArtifact` and `Agent.artifacts` (the
+        operation moved to a new `project` skill), so the `add-artifact` test written here was
+        dropped rather than kept against a deleted API; `SyncTriggers` became
+        `SyncAutomation({ agent, cron })` and `AgentWorker` became `Relay`, so `sync-triggers.test.ts`
+        is now `agent-wizard/operations/sync-automation.test.ts`, rewritten against the new API and
+        carrying `main`'s added assertion that the trigger is wrapped in a `Routine` aggregate.
+  - [x] **Shared layer — DONE (direct guidance).** The per-handler files each restated the same
+        `AssistantTestLayer` block; extracted to each package's existing testing entrypoint —
+        `OperationTestLayer` from `@dxos/assistant-toolkit/testing` (merges every handler set in the
+        package; the sets are lazy, so registering all of them costs nothing until one is invoked)
+        and the markdown equivalent from `#testing`. To keep the shared layer free of a
+        plugin-markdown dependency the agent tests no longer use `Markdown.Document` as their sample
+        artifact (the type is incidental to what they assert).
+  - [x] **Remaining G2 files — DONE.** Split by what each needed:
+    - **memory** — handlers are pure DB, so direct operation tests: `save`, `query` (list / text /
+      limit), `delete`.
+    - **run-instructions, curate-magazine, plan-reminder, AssistantPlugin, AiSummarizer** — these
+      reach a model _inside_ the handler, so they run on `ScriptedLanguageModel` through the layer's
+      `aiService` seam (`AssistantTestLayer({ aiService })`, or the plugin's own
+      `aiServiceMiddleware` for AssistantPlugin). Scripting keeps the assertion on the operation, not
+      on model output. Two gained coverage a frozen conversation structurally could not:
+      `plan-reminder` now covers all three branches (continue / stop / no-model-when-done), and
+      `AiSummarizer` asserts the response is wrapped in an assistant summary block rather than merely
+      that a summary block exists. `curate-magazine` folded into `curate-magazine.test.ts` beside its
+      handler (the separate `.skill.test.ts` is gone); planning's `skill.test.ts` is gone too, its
+      predicate tests moved to `types/Plan.test.ts`.
+      Note the scripted agent loop needs a **terminating turn**: after a tool result is fed back the
+      loop calls again, so script `[toolCall(...), text('Done.')]` or it fails as exhausted.
+  - [ ] **Flake to watch:** in a multi-package batch run `plugin-markdown` (2 tests) and
+        `plugin-magazine` (1 test) each failed once and then passed 30/30 and 58/58 on a forced
+        rerun, with no failure detail captured. Looked like cross-package parallelism or a stale
+        moon cache rather than the tests themselves, but it was not reproduced — confirm on CI.
+
 - [ ] Context-assembly (E) + schema round-trip (F) tests. E: snapshot the assembled prompt
       (system + skill instructions + bound objects + tool descriptions) from `formatSystemPrompt` /
       `AiPreprocessor.preprocessPrompt` — pure function of inputs, no model; catches skill/instruction
@@ -149,7 +242,7 @@ as primary coverage.
 
 ## Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 
-- [x] **PR #12307 (draft):** first DB-effect scorer + first ported G1 scenario:
+- [x] **PR #12307 (MERGED):** first DB-effect scorer + first ported G1 scenario:
       `assistant-evals/src/assertions.ts` (`objectExists(type, predicate)` — dimension-G
       deterministic assertion helper, queries the DB directly rather than trusting the agent's
       `completedCriteria` self-report) and `assistant-evals/src/evals/database.eval.ts` (ported
@@ -282,6 +375,17 @@ as primary coverage.
 
 ## Follow-ups (out of band)
 
+- [ ] **`Ref.Ref(Relation.Unknown)` is `Ref<never>` — found while writing the database operation
+      tests.** The last overload in `echo/src/Ref.ts` is kind-blind:
+      `<S extends internal.UnknownTypeSchema<any, any>>(schema: S): RefSchema<Schema.Schema.Type<S> &
+Obj.Unknown>`. For a relation schema that intersects the relation and object kind brands, which
+      collapse to `never` — the exact failure the _preceding_ overload's comment warns about, but the
+      guard was never applied to this one. Consequence: any operation declaring
+      `Ref.Ref(Relation.Unknown)` cannot be invoked from typed code without a cast. Exactly one does
+      today — `DatabaseOperations.RelationDelete` — so its test is deferred with a TODO rather than
+      cast around, so `relation-delete` has no test file yet. Fix is to split the overload on
+      `Entity.Kind.Relation` and intersect with `Relation.Unknown`, mirroring the typed-schema
+      overload above it. Core `@dxos/echo` typing change — own PR, needs a repo-wide typecheck.
 - [x] **Blocking evals — FIXED:** root-caused the evalite-specific `plugin-routine` registry-sync
       race (`registry-sync.ts:74`, `handler.meta` read before population). Reproduced
       deterministically on a fresh worktree/machine (not sandbox-specific), then bisected the cause
@@ -312,5 +416,6 @@ as primary coverage.
 
 ## Deferred / open questions
 
-- Whether plugin-markdown create/update (largest G2 fixtures) convert cleanly to mocked unit tests
-  or need the scripted-model primitive too.
+- ~~Whether plugin-markdown create/update convert cleanly to mocked unit tests or need the
+  scripted-model primitive~~ — **answered:** both invoke the handler directly with no model on the
+  path, so neither mocks nor the scripted model were needed.

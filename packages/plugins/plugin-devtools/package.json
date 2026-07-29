@@ -118,7 +118,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "@tldraw/tldraw": "catalog:",
     "react-resize-detector": "catalog:"
   },

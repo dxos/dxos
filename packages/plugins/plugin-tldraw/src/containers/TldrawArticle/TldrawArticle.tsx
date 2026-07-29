@@ -8,7 +8,7 @@ import { useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { useActions } from '@dxos/plugin-graph';
+import { useActions } from '@dxos/plugin-graph/hooks';
 import { type SketchVariantSurfaceProps } from '@dxos/plugin-illustrator/types';
 import { Flex, Panel } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
