@@ -42,12 +42,38 @@ const PROJECT = [
   'scripts/**/*.{ts,mts,js,mjs}',
 ];
 
-const workspaces: KnipConfig['workspaces'] = {};
+/**
+ * Dependencies a workspace's build config names as bare strings rather than importing — Vite's
+ * `optimizeDeps.include` and `dedupe` lists are the bulk of them. Dropping these would silently
+ * regress bundling, so treat a string literal in a config file as a use.
+ */
+const configuredDependencies = (dir: string, names: string[]): string[] => {
+  const sources = globSync([`${dir}/*.config.{ts,mts,cts,js,mjs,cjs}`, `${dir}/.storybook/*.{ts,mts,mjs}`]).map(
+    (file) => readFileSync(file, 'utf8'),
+  );
+  return sources.length ? names.filter((name) => sources.some((source) => source.includes(`'${name}'`))) : [];
+};
 
-for (const manifest of globSync(['packages/**/package.json', 'tools/**/package.json', 'vendor/**/package.json'], {
-  exclude: (path) => path.includes('node_modules'),
-})) {
-  const { exports = {}, imports = {} } = JSON.parse(readFileSync(manifest, 'utf8'));
+const workspaces: KnipConfig['workspaces'] = {
+  // The root holds no package of its own; its dependencies are consumed by the shared vitest/vite
+  // bases and the repo scripts.
+  '.': {
+    entry: ['*.{ts,mts}', 'scripts/**/*.{ts,mjs}', 'vitest/**/*.{ts,mjs}'],
+    project: ['*.{ts,mts}', 'scripts/**/*.{ts,mjs}', 'vitest/**/*.{ts,mjs}'],
+  },
+};
+
+for (const manifest of globSync(
+  ['packages/**/package.json', 'tools/**/package.json', 'vendor/**/package.json', 'docs/package.json'],
+  { exclude: (path) => path.includes('node_modules') },
+)) {
+  const dir = dirname(manifest);
+  const {
+    exports = {},
+    imports = {},
+    dependencies = {},
+    devDependencies = {},
+  } = JSON.parse(readFileSync(manifest, 'utf8'));
 
   // Self-referencing subpath imports (`#meta`, `#plugin`) are otherwise unresolvable: knip follows
   // the published conditions, which point at unbuilt `dist`, and then treats the importer as dead.
@@ -59,13 +85,16 @@ for (const manifest of globSync(['packages/**/package.json', 'tools/**/package.j
     }
   }
 
-  workspaces[dirname(manifest)] = {
-    entry: [
-      ...new Set([...Object.values(exports), ...Object.values(imports)].flatMap(sourceTargets)),
-      ...AUXILIARY_ENTRY,
-    ],
+  // Libraries are reachable from their declared entry points, which is what makes unreferenced
+  // files (and the dependencies only they import) detectable. Apps declare none — their entry is an
+  // `index.html` knip cannot see — so treat their whole source tree as reachable instead.
+  const declared = [...new Set([...Object.values(exports), ...Object.values(imports)].flatMap(sourceTargets))];
+
+  workspaces[dir] = {
+    entry: [...(declared.length ? declared : ['src/**/*.{ts,tsx}']), ...AUXILIARY_ENTRY],
     project: PROJECT,
     paths,
+    ignoreDependencies: configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
   };
 }
 
