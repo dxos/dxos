@@ -15,7 +15,7 @@ import { meta } from '#meta';
 
 import { getRecordAnnotation } from '../annotation';
 import { isAtprotoConnection } from '../connection';
-import { PDS_NODE_TYPE } from '../pds';
+import { PDS_NODE_TYPE, PDS_URL_KEY } from '../pds';
 
 /** The companion segment/variant for the publishing companion — shared with its surface binding. */
 export const ATPROTO_COMPANION_VARIANT = 'atproto';
@@ -62,6 +62,7 @@ export default Capability.makeModule(
       // Positioned between Database (0) and Devtools (Infinity).
       GraphBuilder.createExtension({
         id: 'pdsSection',
+        url: { key: PDS_URL_KEY, kind: 'singleton', path: [GraphPath.GroupSegments.system] },
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
         connector: (space, get) => {
           const hasAtprotoConnection = get(space.db.query(Filter.type(Connection.Connection)).atom).some(
@@ -72,8 +73,9 @@ export default Capability.makeModule(
           }
           return Effect.succeed([
             Node.make({
-              // Segment id (no '/'); the graph qualifies it under the space's system group.
-              id: PDS_NODE_TYPE,
+              // Segment id (no '/'); the graph qualifies it under the space's system group. Must equal
+              // the registered singleton URL key — see {@link PDS_URL_KEY}.
+              id: PDS_URL_KEY,
               type: PDS_NODE_TYPE,
               data: { type: PDS_NODE_TYPE, space },
               properties: {

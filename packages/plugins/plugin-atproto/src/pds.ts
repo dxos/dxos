@@ -11,6 +11,13 @@ import { meta } from '#meta';
 /** Node/subject type for the virtual PDS browser node in the system section. */
 export const PDS_NODE_TYPE = `${meta.profile.key}.pds`;
 
+/**
+ * Registered URL key for the PDS browser, and necessarily the node's own id: the node is a singleton
+ * (one per space, addressed without an object id), and a singleton resolves as
+ * `root/<workspace>/<...path>/<key>` — its terminal segment IS the key.
+ */
+export const PDS_URL_KEY = 'pds';
+
 /** Synthetic subject carried by the PDS node; its space scopes the atproto connections. */
 export type PdsSubject = { type: string; space: Space };
 
