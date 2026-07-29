@@ -30,7 +30,6 @@ export const translations = [
         'artifacts.label': 'Artifacts',
         'create-chat.label': 'New chat',
         'artifact-card.untitled.label': 'Untitled',
-        'artifact-card.options.label': 'Options',
         'artifact-card.delete.label': 'Delete',
       },
     },

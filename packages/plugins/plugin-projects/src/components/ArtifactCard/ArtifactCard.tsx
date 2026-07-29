@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEventHandler, type MouseEventHandler, useCallback } from 'react';
+import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -48,10 +48,6 @@ export const ArtifactCard = ({ object: objectProp, onClick, onDelete }: Artifact
     [onClick],
   );
 
-  // The whole card is the click target, so the trigger must not also open the object. Radix's
-  // `asChild` composes this with its own handler, so the menu still opens.
-  const stopPropagation = useCallback<MouseEventHandler>((event) => event.stopPropagation(), []);
-
   return (
     <Card.Root
       fullWidth
@@ -67,33 +63,9 @@ export const ArtifactCard = ({ object: objectProp, onClick, onDelete }: Artifact
         </Card.Block>
         <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
         {onDelete && (
-          <Card.Block>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <IconButton
-                  onClick={stopPropagation}
-                  icon='ph--dots-three-vertical--regular'
-                  iconOnly
-                  density='xs'
-                  variant='ghost'
-                  tabIndex={-1}
-                  label={t('artifact-card.options.label')}
-                  data-testid='projectsPlugin.artifactOptions'
-                />
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item onSelect={onDelete} data-testid='projectsPlugin.artifactDelete'>
-                      <Icon icon='ph--trash--regular' />
-                      <span>{t('artifact-card.delete.label')}</span>
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-          </Card.Block>
+          <Card.Menu
+            items={[{ label: t('artifact-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }]}
+          />
         )}
       </Card.Header>
       {typeLabel && (
