@@ -70,11 +70,11 @@ handle, React hooks, registry, and laws, with the open questions called out.
 Proposed surface, shaped as a namespace module like `Type` / `Obj` / `View`:
 
 ```ts
-Lens.between(id, Source, Target, mapping); // define a lens; both ends declared
-Lens.make(obj, lens); // apply one: the live lensed view (Obj.lens after core promotion)
+Lens.make(id, Source, Target, mapping); // the single authoring shape; both ends declared
 Lens.Lens; // ECHO entity for persisted lenses (cf. Type.Type)
 Lens.coverage(lens); // explicit / automatic / overlaid / dropped / suspicious
 Lens.checkLaws(lens); // property-based verification            (§3, D4)
+Obj.lens(obj, lens); // live lensed handle: reactive reads, minimal writes
 ```
 
 Registry: stored lenses resolve out of the space by source typename, exactly as stored types do.

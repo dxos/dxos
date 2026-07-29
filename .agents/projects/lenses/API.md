@@ -14,11 +14,8 @@ needs to be inside core to work. The existing `Panproto.Lens` (ECHO ↔ foreign 
 snapshot encode/decode for publishing) is, in §1 terms, the degenerate case where the target is a
 plain `Schema.Schema.Any` and only the snapshot tier exists; converging it onto this interface
 later is a refactor, not a rewrite (DESIGN.md §2.1). Signatures are written as if the module were
-already `Lens` in core, so promotion is an import-path change.
-
-**Naming:** `Lens.between` _defines_ a lens; `Lens.make` _applies_ one — it makes the lensed view
-of an object, matching ECHO's constructor verb (`Obj.make`, `Ref.make`, `View.make`). After core
-promotion, `Obj.lens(obj, lens)` becomes sugar for `Lens.make`.
+already `Lens` in core, so promotion is an import-path change. `Obj.lens` below reads `Lens.of`
+until then.
 
 ## 0. What "first-class" does and doesn't require
 
@@ -36,7 +33,7 @@ kind is a separate, evidence-backed decision.
 ## 1. One shape: a lens binds two declared types
 
 ```ts
-export const between: <S extends Type.AnyObj, T extends Schema.Schema.Any>(
+export const make: <S extends Type.AnyObj, T extends Schema.Schema.Any>(
   id: string,
   source: S,
   target: T,
@@ -73,7 +70,7 @@ Source properties that no target property consumes are **dropped** from the view
 `put` from the live object.
 
 ```ts
-export const IssueAsTask = Lens.between('org.dxos.lens.issue-as-task', Linear.Issue, DataType.Task, {
+export const IssueAsTask = Lens.make('org.dxos.lens.issue-as-task', Linear.Issue, DataType.Task, {
   // 2. `title` and `description` match by name and type — omitted entirely.
 
   // Rename shorthand: a bare string names the source property.
@@ -168,7 +165,7 @@ export const RichText = Lens.coded('org.dxos.lens.rich-text', DataType.Text, Blo
 });
 ```
 
-`Lens.between` and `Lens.coded` both produce a `Lens<S, T>`; no consumer can tell them apart.
+`Lens.make` and `Lens.coded` both produce a `Lens<S, T>`; no consumer can tell them apart.
 
 ## 4. Using a lens
 
@@ -179,9 +176,9 @@ The lensed object _is_ an object, so every `Obj.*` function keeps working — an
 resolution, forms, cards, navtree) resolves the interface written for the target type.
 
 ```ts
-export const make: <S, T>(obj: S, lens: Lens<S, T>) => Obj.OfShape<T>; // Obj.lens after promotion
+export const lens: <S, T>(obj: S, lens: Lens<S, T>) => Obj.OfShape<T>; // in Obj
 
-const task = Lens.make(issue, IssueAsTask);
+const task = Obj.lens(issue, IssueAsTask);
 Obj.getTypename(task); // 'org.dxos.type.task' — existing Task UIs render it
 Obj.getURI(task); // still resolves to the underlying issue
 Obj.update(task, (task) => {
