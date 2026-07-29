@@ -50,5 +50,10 @@ jobs:
       - name: Bundle CLI
         run: moon run cli:bundle
 
+      # Gate the preview on the same check as `cli:publish`. Without it this workflow published a binary
+      # compiled by the CI image's bun rather than the pinned one, which rejected its own arguments.
+      - name: Smoke test CLI
+        run: moon run cli:smoke
+
       - name: Publish to pkg.pr.new
         run: .github/workflows/scripts/pkg-pr-new-publish.sh

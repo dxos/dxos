@@ -31,8 +31,14 @@ tasks:
   # `#ts-build:build` fan-out (e.g. storybook serve no longer waits on it).
   # Type-checking is provided by the `typecheck` tag's `build` task.
   bundle:
-    command: bun
+    # Through proto rather than a bare `bun`, because the compiler version is part of the artifact and a
+    # bare `bun` takes whatever comes first on PATH — in the CI image that was 1.3.4, which leaks `--smol`
+    # into `process.argv` so the binary rejects its own arguments. `.prototools` pins the version.
+    command: proto
     args:
+      - run
+      - bun
+      - '--'
       - ./scripts/build.ts
     deps:
       - ^:build
