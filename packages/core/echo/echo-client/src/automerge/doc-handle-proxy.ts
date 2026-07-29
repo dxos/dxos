@@ -71,11 +71,6 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
 
   private _lastSentHeads: A.Heads = [];
   /**
-   * Heads that are currently being synced.
-   * If sync is successful, they will be moved to `_lastSentHeads`.
-   */
-  private _currentlySendingHeads: A.Heads = [];
-  /**
    * Identifier for internal usage.
    * @internal
    */
@@ -240,10 +235,18 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
-   * Get pending changes since last write.
+   * Get pending changes since last write, with the heads they bring the document up to. Pass those
+   * heads back to {@link _confirmSync} once the host has acknowledged them.
+   *
+   * The heads are returned rather than stashed on the instance because two `_sendUpdates` passes can
+   * be in flight for the same handle (`UpdateScheduler.runBlocking` and a `trigger`-scheduled pass
+   * both clear the same barrier). With a single shared field, whichever pass acknowledged first
+   * advanced `_lastSentHeads` to the *other* pass's heads; if that other pass then failed, the
+   * changes between them were never resent — `saveSince` had nothing left to report. Scoping the
+   * heads to the send makes each acknowledgement mean only what that send actually delivered.
    * @internal
    */
-  _getPendingChanges(): Uint8Array | undefined {
+  _getPendingChanges(): { mutation: Uint8Array; heads: A.Heads } | undefined {
     invariant(this._doc, 'Doc is deleted, cannot get last write mutation');
     if (A.equals(A.getHeads(this._doc), this._lastSentHeads)) {
       return;
@@ -253,16 +256,23 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     if (mutation.length === 0) {
       return;
     }
-    this._currentlySendingHeads = A.getHeads(this._doc);
-    return mutation;
+    return { mutation, heads: A.getHeads(this._doc) };
   }
 
   /**
-   * Confirm that the last write was successful.
+   * Confirm that the write carrying `heads` was successful. Never moves `_lastSentHeads` backwards,
+   * so an out-of-order acknowledgement from a concurrent send cannot un-confirm delivered changes.
    * @internal
    */
-  _confirmSync(): void {
-    this._lastSentHeads = this._currentlySendingHeads;
+  _confirmSync(heads: A.Heads): void {
+    if (this._lastSentHeads.length > 0 && !A.equals(heads, this._lastSentHeads)) {
+      // Keep whichever set already includes the other; unrelated (concurrent) heads merge.
+      const merged = [...new Set([...this._lastSentHeads, ...heads])].sort();
+      const reachable = A.getMissingDeps(this._doc!, merged).length === 0;
+      this._lastSentHeads = reachable ? merged : heads;
+      return;
+    }
+    this._lastSentHeads = heads;
   }
 
   /**
