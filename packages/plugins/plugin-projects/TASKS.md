@@ -270,11 +270,18 @@ summaries), and the `stories-projects` storybook strategy.
       routine template (`spec: runnable` → `InboxOperation.AnalyzeMailbox`, timer trigger, mailbox
       ref baked into `trigger.input`) + brain/inbox skills for chats; `FactSummaries.stories.tsx`
       green (live loop = numbered manual steps on the story).
-- [ ] **Evals** — `sender-ledger.eval.ts` AUTHORED but NOT run live (no `DX_ANTHROPIC_API_KEY` in
-      the authoring session) — verify before trusting. `fact-summary.eval.ts` BLOCKED: the eval
-      harness has no fact-seeding path (seed() gets only `Database.Service`; FactStore is a
-      plugin LayerSpec) — needs either a PutFacts operation or FactStore in the harness
-      ServiceResolver.
+- [ ] **Evals** — `sender-ledger.eval.ts` RUN LIVE 2026-07-29 (key via `op inject` from the user's
+      `~/.env.tpl`; smoke 100% first) and it FAILED — a real finding, not eval noise: the agent's
+      own completeJob failure says "Cannot create the Sender Ledger table with available tools".
+      The table skill is instructions-only (`tools: []`); table creation in the app flows through
+      the old `defineArtifact`/`createTool` artifact-definition, which does NOT reach the
+      `RunInstructions` toolset. So UC-A's headless routine cannot create (or row-upsert) a Table
+      today, and `ARTIFACT_SKILL_KEYS`'s table/sheet entries bind toolless skills. DECISION OWED:
+      (a) real table operations in plugin-table's skill (create-table/upsert-row — the §2.7
+      channel-1 fix), (b) template pre-scaffolds the Table so the routine only upserts (still needs
+      a row-upsert tool), or (c) ledger as a Markdown table (markdown skill has real ops).
+      `fact-summary.eval.ts` still BLOCKED on a harness fact-seeding path (needs a PutFacts
+      operation or FactStore in the harness ServiceResolver).
 - [ ] **Operations-as-tools gaps (USE-CASES.md §2.7)** — authoring UI for operation-action routines
       (operation picker + input-mapping form; templates-only today); `{{project.*}}` trigger input
       substitution (scaffold-time ref literals bind a routine to one object forever); side-effect
