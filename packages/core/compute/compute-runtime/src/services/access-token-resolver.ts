@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 import { Credential } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
@@ -66,20 +67,25 @@ export const accessTokenResolverFromService = (service: EdgeFunctionEnv.AccessTo
 export const accessTokenResolverFromEdge = (getEdgeClient: () => EdgeHttpClient) =>
   Layer.sync(Credential.AccessTokenResolver, () => {
     const cache = new Map<string, CacheEntry>();
+    // Keyed by space as well as token, because this layer is application-scoped: a cache hit is
+    // served without EDGE re-checking membership, so a key that ignored the space would let one
+    // space's members read a token resolved for another.
+    const cacheKey = (spaceId: SpaceId, accessTokenId: string) => `${spaceId}:${accessTokenId}`;
 
     return {
       resolve: async ({ spaceId, accessTokenId, refresh }) => {
+        const key = cacheKey(spaceId, accessTokenId);
         if (refresh) {
-          cache.delete(accessTokenId);
+          cache.delete(key);
         }
 
-        const cached = cache.get(accessTokenId);
+        const cached = cache.get(key);
         if (cached && cached.expiresAtMillis - Date.now() > EXPIRY_SKEW_MS) {
           return cached.accessToken;
         }
 
         const response = await getEdgeClient().getAccessToken(DxContext.default(), { spaceId, accessTokenId });
-        cache.set(accessTokenId, response);
+        cache.set(key, response);
         log('resolved managed access token', { accessTokenId, expiresAtMillis: response.expiresAtMillis });
         return response.accessToken;
       },

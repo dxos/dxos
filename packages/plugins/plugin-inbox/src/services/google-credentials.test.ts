@@ -20,58 +20,6 @@ import { GoogleCredentials } from './google-credentials';
 
 const TYPES = [AccessToken.AccessToken, Connection.Connection];
 
-/** Records what EDGE was asked for, so tests can assert it was (or wasn't) consulted. */
-const trackingResolver = (liveToken: string) => {
-  const calls: { accessTokenId: string }[] = [];
-  const layer = Layer.succeed(Credential.AccessTokenResolver, {
-    resolve: async ({ accessTokenId }) => {
-      calls.push({ accessTokenId });
-      return liveToken;
-    },
-  });
-  return { calls, layer };
-};
-
-const seed = async (tokens: { token: string; account?: string }[]) => {
-  const builder = await new EchoTestBuilder().open();
-  const { db } = await builder.createDatabase({ types: TYPES });
-  const accessTokens = tokens.map(({ token, account }) =>
-    db.add(AccessToken.make({ source: GOOGLE_INTEGRATION_SOURCE, token, ...(account ? { account } : {}) })),
-  );
-  const connection = db.add(Connection.make({ connectorId: 'gmail', accessToken: Ref.make(accessTokens[0]) }));
-  await db.flush({ indexes: true });
-  return { builder, db, accessTokens, connection };
-};
-
-/** The real production shape: GoogleCredentials over CredentialsService over the database. */
-const runFromAccessToken = (
-  db: Database.Database,
-  resolverLayer: Layer.Layer<Credential.AccessTokenResolver>,
-  ref: Ref.Ref<AccessToken.AccessToken>,
-) =>
-  EffectEx.runPromise(
-    GoogleCredentials.get().pipe(
-      Effect.provide(GoogleCredentials.fromAccessToken(ref)),
-      Effect.provide(credentialsLayerFromDatabase()),
-      Effect.provide(Database.layer(db)),
-      Effect.provide(resolverLayer),
-    ),
-  );
-
-const runFromConnection = (
-  db: Database.Database,
-  resolverLayer: Layer.Layer<Credential.AccessTokenResolver>,
-  ref: Ref.Ref<Connection.Connection>,
-) =>
-  EffectEx.runPromise(
-    GoogleCredentials.get().pipe(
-      Effect.provide(GoogleCredentials.fromConnection(ref)),
-      Effect.provide(credentialsLayerFromDatabase()),
-      Effect.provide(Database.layer(db)),
-      Effect.provide(resolverLayer),
-    ),
-  );
-
 describe('GoogleCredentials', () => {
   test('returns a stored token without consulting EDGE', async ({ expect }) => {
     const { builder, db, accessTokens } = await seed([{ token: 'stored-token' }]);
@@ -137,3 +85,55 @@ describe('GoogleCredentials', () => {
     }
   });
 });
+
+/** Records what EDGE was asked for, so tests can assert it was (or wasn't) consulted. */
+const trackingResolver = (liveToken: string) => {
+  const calls: { accessTokenId: string }[] = [];
+  const layer = Layer.succeed(Credential.AccessTokenResolver, {
+    resolve: async ({ accessTokenId }) => {
+      calls.push({ accessTokenId });
+      return liveToken;
+    },
+  });
+  return { calls, layer };
+};
+
+const seed = async (tokens: { token: string; account?: string }[]) => {
+  const builder = await new EchoTestBuilder().open();
+  const { db } = await builder.createDatabase({ types: TYPES });
+  const accessTokens = tokens.map(({ token, account }) =>
+    db.add(AccessToken.make({ source: GOOGLE_INTEGRATION_SOURCE, token, ...(account ? { account } : {}) })),
+  );
+  const connection = db.add(Connection.make({ connectorId: 'gmail', accessToken: Ref.make(accessTokens[0]) }));
+  await db.flush({ indexes: true });
+  return { builder, db, accessTokens, connection };
+};
+
+/** The real production shape: GoogleCredentials over CredentialsService over the database. */
+const runFromAccessToken = (
+  db: Database.Database,
+  resolverLayer: Layer.Layer<Credential.AccessTokenResolver>,
+  ref: Ref.Ref<AccessToken.AccessToken>,
+) =>
+  EffectEx.runPromise(
+    GoogleCredentials.get().pipe(
+      Effect.provide(GoogleCredentials.fromAccessToken(ref)),
+      Effect.provide(credentialsLayerFromDatabase()),
+      Effect.provide(Database.layer(db)),
+      Effect.provide(resolverLayer),
+    ),
+  );
+
+const runFromConnection = (
+  db: Database.Database,
+  resolverLayer: Layer.Layer<Credential.AccessTokenResolver>,
+  ref: Ref.Ref<Connection.Connection>,
+) =>
+  EffectEx.runPromise(
+    GoogleCredentials.get().pipe(
+      Effect.provide(GoogleCredentials.fromConnection(ref)),
+      Effect.provide(credentialsLayerFromDatabase()),
+      Effect.provide(Database.layer(db)),
+      Effect.provide(resolverLayer),
+    ),
+  );

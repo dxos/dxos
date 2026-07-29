@@ -380,6 +380,7 @@ export type OAuthFlowResult =
  */
 export const MANAGED_ACCESS_TOKEN = 'dxos:managed-access-token';
 
+/** Whether a stored credential is a {@link MANAGED_ACCESS_TOKEN} placeholder rather than a usable token. */
 export const isManagedAccessToken = (token: string | undefined): boolean => token === MANAGED_ACCESS_TOKEN;
 
 /** Request for the live access token behind a {@link MANAGED_ACCESS_TOKEN} placeholder. */

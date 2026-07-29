@@ -6,30 +6,14 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { Credential } from '@dxos/compute';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
-import { accessTokenResolverFromService } from './access-token-resolver';
+import { accessTokenResolverFromEdge, accessTokenResolverFromService } from './access-token-resolver';
 
 const SPACE_ID = SpaceId.random();
-
-/** Stub binding recording the requests it received; the real one is bound to a single space. */
-const makeService = (results: EdgeFunctionEnv.GetAccessTokenResult[]) => {
-  const requests: string[] = [];
-  const service: EdgeFunctionEnv.AccessTokenService = {
-    getAccessToken: async (_ctx, { accessTokenId }) => {
-      requests.push(accessTokenId);
-      return (results.shift() ?? { success: false, reason: 'exhausted' }) as any;
-    },
-  };
-  return { requests, service };
-};
-
-const resolve = (service: EdgeFunctionEnv.AccessTokenService, options: { refresh?: boolean } = {}) =>
-  Credential.AccessTokenResolver.resolve({ spaceId: SPACE_ID, accessTokenId: 'token-1', ...options }).pipe(
-    Effect.provide(accessTokenResolverFromService(service)),
-  );
 
 describe('accessTokenResolverFromService', () => {
   test('resolves through the binding', async ({ expect }) => {
@@ -76,9 +60,52 @@ describe('accessTokenResolverFromService', () => {
     expect(requests).toEqual(['token-1', 'token-1']);
   });
 
+  test('does not serve one space a token cached for another', async ({ expect }) => {
+    // The EDGE-backed layer is application-scoped, so a cache hit skips EDGE's membership check —
+    // the key must include the space or the second read would return the first space's token.
+    const other = SpaceId.random();
+    const calls: { spaceId: string; accessTokenId: string }[] = [];
+    const edge = new EdgeHttpClient('https://edge.example.com');
+    edge.getAccessToken = async (_ctx, { spaceId, accessTokenId }) => {
+      calls.push({ spaceId, accessTokenId });
+      return { accessToken: `token-for-${spaceId}`, expiresAtMillis: Date.now() + 3_600_000 };
+    };
+
+    const resolved = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const first = yield* Credential.AccessTokenResolver.resolve({ spaceId: SPACE_ID, accessTokenId: 'shared-id' });
+        const second = yield* Credential.AccessTokenResolver.resolve({ spaceId: other, accessTokenId: 'shared-id' });
+        return { first, second };
+      }).pipe(Effect.provide(accessTokenResolverFromEdge(() => edge))),
+    );
+
+    expect(resolved.first).toEqual(`token-for-${SPACE_ID}`);
+    expect(resolved.second).toEqual(`token-for-${other}`);
+    expect(calls).toHaveLength(2);
+  });
+
   test('surfaces a failed resolution instead of returning a placeholder', async ({ expect }) => {
     const { service } = makeService([{ success: false, reason: 'not_found' }]);
 
     await expect(EffectEx.runPromise(resolve(service))).rejects.toThrow(/not_found/);
   });
 });
+
+/** Stub binding recording the requests it received; the real one is bound to a single space. */
+const makeService = (results: EdgeFunctionEnv.GetAccessTokenResult[]) => {
+  const requests: string[] = [];
+  const exhausted: EdgeFunctionEnv.GetAccessTokenResult = { success: false, reason: 'exhausted' };
+  const service: EdgeFunctionEnv.AccessTokenService = {
+    getAccessToken: async (_ctx, { accessTokenId }) => {
+      requests.push(accessTokenId);
+      // Workers RPC attaches a disposer to every returned object; the stub mirrors that shape.
+      return { ...(results.shift() ?? exhausted), [Symbol.dispose]: () => {} };
+    },
+  };
+  return { requests, service };
+};
+
+const resolve = (service: EdgeFunctionEnv.AccessTokenService, options: { refresh?: boolean } = {}) =>
+  Credential.AccessTokenResolver.resolve({ spaceId: SPACE_ID, accessTokenId: 'token-1', ...options }).pipe(
+    Effect.provide(accessTokenResolverFromService(service)),
+  );

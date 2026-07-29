@@ -108,6 +108,10 @@ export type UpdateCardInput = {
  * Fails with {@link InvalidTrelloAccessTokenError} when the stored token is not
  * exactly two non-empty segments.
  */
+/**
+ * Splits a stored Trello credential into its `<power-up key>:<user token>` halves.
+ * Fails with {@link InvalidTrelloAccessTokenError} when the value is not exactly two non-empty parts.
+ */
 export const credentialsFromToken = (
   token: string,
 ): Effect.Effect<TrelloCredentialsValue, InvalidTrelloAccessTokenError> => {

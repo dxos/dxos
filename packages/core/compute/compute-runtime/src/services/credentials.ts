@@ -74,6 +74,11 @@ export const credentialsLayerConfig = (
 /** An `AccessToken` object reduced to what a credential needs, before any managed value is resolved. */
 type TokenProjection = { accessTokenId: string; service: string; storedToken: string; account?: string };
 
+/**
+ * Credentials backed by the `AccessToken` objects in the current space, resolving server-custodied
+ * values through {@link Credential.AccessTokenResolver}. `caching` memoizes the object lookup — never
+ * the resolved token, which expires on the server's schedule.
+ */
 export const credentialsLayerFromDatabase = ({ caching = false }: { caching?: boolean } = {}) =>
   Layer.effect(
     Credential.CredentialsService,

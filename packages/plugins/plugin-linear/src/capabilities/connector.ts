@@ -29,8 +29,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
     if (accessToken.account) {
       return;
     }
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const viewer = yield* LinearApi.fetchViewer().pipe(
-      Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token: accessToken.token })),
+      Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token })),
     );
     Obj.update(accessToken, (accessToken) => {
       accessToken.account = viewer.email ?? viewer.name;

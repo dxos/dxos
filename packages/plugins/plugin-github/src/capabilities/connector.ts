@@ -29,8 +29,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
     if (accessToken.account) {
       return;
     }
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const user = yield* GitHubApi.fetchUser().pipe(
-      Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token: accessToken.token })),
+      Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })),
     );
     Obj.update(accessToken, (accessToken) => {
       accessToken.account = user.login ?? user.email;

@@ -1,7 +1,5 @@
 ---
 '@dxos/protocols': minor
-'@dxos/compute-runtime': minor
-'@dxos/functions-runtime-cloudflare': minor
 ---
 
 Functions can now resolve server-custodied access tokens. A function has no identity to authenticate

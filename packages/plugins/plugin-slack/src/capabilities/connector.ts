@@ -29,8 +29,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
     if (accessToken.account) {
       return;
     }
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const result = yield* SlackApi.fetchAuthTest().pipe(
-      Effect.provide(Layer.succeed(SlackApi.SlackCredentials, { token: accessToken.token })),
+      Effect.provide(Layer.succeed(SlackApi.SlackCredentials, { token })),
     );
     Obj.update(accessToken, (accessToken) => {
       // Prefer a `<user>@<team>` shape because it reads naturally in the

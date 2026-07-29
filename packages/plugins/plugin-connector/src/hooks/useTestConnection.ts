@@ -69,10 +69,12 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
       return;
     }
     // Wait for the token ref to resolve, and for a db to read its credential from, before probing.
-    // Both are checked ahead of `setStatus('testing')` so an unprobeable token stays idle rather
-    // than sticking on 'testing' forever.
     const db = accessToken && Obj.getDatabase(accessToken);
     if (!accessToken || !db) {
+      // Reset rather than just return: a probe may already have been running when the token or its
+      // database went away, which would otherwise leave the status on 'testing' indefinitely.
+      setStatus('idle');
+      setError(undefined);
       return;
     }
 

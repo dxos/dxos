@@ -1,15 +1,5 @@
 ---
 '@dxos/protocols': minor
-'@dxos/compute': minor
-'@dxos/compute-runtime': minor
-'@dxos/edge-client': minor
-'@dxos/plugin-connector': minor
-'@dxos/plugin-inbox': minor
-'@dxos/plugin-client': minor
-'@dxos/plugin-github': patch
-'@dxos/plugin-linear': patch
-'@dxos/plugin-slack': patch
-'@dxos/plugin-trello': patch
 ---
 
 Google OAuth access tokens are no longer replicated through ECHO. EDGE stores the granted token and
