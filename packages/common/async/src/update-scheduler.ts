@@ -70,6 +70,17 @@ export class UpdateScheduler {
         return;
       }
 
+      // Re-check after the delay, not just before it. The callback is not reentrant — it typically
+      // drains shared queued state — and the check above the delay can pass with nothing running only
+      // for a `runBlocking` to start a pass while this one sleeps. Both callbacks would then run at
+      // once, each claiming part of the queue, and `runBlocking`'s `await this._promise` would end up
+      // awaiting *this* pass rather than its own. Rejections are swallowed because another caller's
+      // failure is not this pass's business (`runBlocking` assigns the raw callback promise, which can
+      // reject); the caller that started it still observes it.
+      if (this._promise) {
+        await this._promise.catch(() => {});
+      }
+
       this._lastUpdateTime = performance.now();
 
       // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
