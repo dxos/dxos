@@ -8,6 +8,7 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { Instructions, Project } from '@dxos/compute';
 import { Collection, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { Text } from '@dxos/schema';
 
 /**
  * Deleting a project must take its owned graph with it. The navtree's ⋮ Delete resolves to
@@ -28,7 +29,7 @@ describe('deleting a project', () => {
 
   const setup = async () => {
     const { db } = await builder.createDatabase({
-      types: [Project.Project, Instructions.Instructions, Collection.Collection, Chat.Chat, Feed.Feed],
+      types: [Project.Project, Instructions.Instructions, Collection.Collection, Chat.Chat, Feed.Feed, Text.Text],
     });
 
     // Mirrors the create-object capability: owned instructions + owned artifacts collection.
@@ -51,8 +52,33 @@ describe('deleting a project', () => {
     return { db, project, instructions, artifacts, chat };
   };
 
-  const countOf = async (db: Awaited<ReturnType<typeof setup>>['db'], filter: Parameters<typeof Query.select>[0]) =>
+  type TestDatabase = Awaited<ReturnType<typeof setup>>['db'];
+
+  const countOf = async (db: TestDatabase, filter: Parameters<typeof Query.select>[0]) =>
     (await db.query(Query.select(filter)).run()).length;
+
+  /** Transitive owned descendants, walked the way `SpaceOperation.RemoveObjects` walks them. */
+  const collectDescendantIds = async (db: TestDatabase, root: Obj.Unknown) => {
+    const visited = new Set([root.id]);
+    const descendants: string[] = [];
+    let frontier = [root];
+    while (frontier.length > 0) {
+      const next: Obj.Unknown[] = [];
+      for (const object of frontier) {
+        const children = await db.query(Query.select(Filter.id(object.id)).children()).run();
+        for (const child of children) {
+          if (Obj.isObject(child) && !visited.has(child.id)) {
+            visited.add(child.id);
+            descendants.push(child.id);
+            next.push(child);
+          }
+        }
+      }
+      frontier = next;
+    }
+
+    return descendants;
+  };
 
   test('the owned instructions, artifacts collection and chats are removed with it', async ({ expect }) => {
     const { db, project } = await setup();
@@ -70,16 +96,22 @@ describe('deleting a project', () => {
     expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(0);
   });
 
-  test('the owned chat is reachable as a descendant before removal, so its plank can be closed', async ({ expect }) => {
+  test('owned descendants are reachable transitively before removal, so their planks can be closed', async ({
+    expect,
+  }) => {
     const { db, project, chat, instructions, artifacts } = await setup();
 
-    // What `RemoveObjects` walks to decide which planks to close. Passing only the project would
-    // leave the chat's plank open on a removed object.
-    const children = await db.query(Query.select(Filter.id(project.id)).children()).run();
-    const childIds = children.map((object) => object.id);
-    expect(childIds).toContain(chat.id);
-    expect(childIds).toContain(instructions.id);
-    expect(childIds).toContain(artifacts.id);
+    // Mirrors the walk `RemoveObjects` runs to decide which planks to close. Passing only the project
+    // would leave the chat's plank open on a removed object; stopping at one level would miss the
+    // Text body that `Instructions.make` parents to the instructions.
+    const descendantIds = await collectDescendantIds(db, project);
+    expect(descendantIds).toContain(chat.id);
+    expect(descendantIds).toContain(instructions.id);
+    expect(descendantIds).toContain(artifacts.id);
+
+    const textId = instructions.text.target?.id;
+    expect(textId).toBeTruthy();
+    expect(descendantIds).toContain(textId);
   });
 
   test('artifacts are NOT removed with it — they are referenced, not owned', async ({ expect }) => {

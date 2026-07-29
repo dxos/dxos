@@ -74,17 +74,19 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
 );
 export default handler;
 
-/** Depth cap for the ownership walk; owned graphs are shallow, this only guards bad data. */
-const OWNED_WALK_MAX_DEPTH = 8;
-
 /**
  * Ids of every object owned (transitively, by the ECHO parent edge) by one of `entities` — i.e. what
  * `db.remove` will cascade to. Must run before the removal, while the parent edges still resolve.
+ * Ownership nests arbitrarily deep, so the walk runs to exhaustion rather than to a depth cap; the
+ * visited set (seeded with the roots, so a parent edge looping back cannot re-enqueue one) is what
+ * bounds it on cyclic data.
  */
 const collectOwnedDescendantIds = Effect.fnUntraced(function* (entities: readonly unknown[]) {
-  const seen = new Set<string>();
-  let frontier: Obj.Unknown[] = entities.filter(Obj.isObject);
-  for (let depth = 0; depth < OWNED_WALK_MAX_DEPTH && frontier.length > 0; depth++) {
+  const roots: Obj.Unknown[] = entities.filter(Obj.isObject);
+  const visited = new Set(roots.map((object) => object.id));
+  const descendants = new Set<string>();
+  let frontier = roots;
+  while (frontier.length > 0) {
     const next: Obj.Unknown[] = [];
     for (const object of frontier) {
       const db = Obj.getDatabase(object);
@@ -94,8 +96,9 @@ const collectOwnedDescendantIds = Effect.fnUntraced(function* (entities: readonl
 
       const children = yield* Effect.promise(() => db.query(Query.select(Filter.id(object.id)).children()).run());
       for (const child of children) {
-        if (Obj.isObject(child) && !seen.has(child.id)) {
-          seen.add(child.id);
+        if (Obj.isObject(child) && !visited.has(child.id)) {
+          visited.add(child.id);
+          descendants.add(child.id);
           next.push(child);
         }
       }
@@ -103,5 +106,5 @@ const collectOwnedDescendantIds = Effect.fnUntraced(function* (entities: readonl
     frontier = next;
   }
 
-  return [...seen];
+  return [...descendants];
 });
