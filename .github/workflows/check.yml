@@ -36,8 +36,10 @@ env:
   TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
+# The event is part of the key because on a schedule `github.ref` is `refs/heads/main`: without it the
+# nightly shares a group with pushes to main and the next push cancels it mid-e2e.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 # https://moonrepo.dev/docs/guides/ci
@@ -408,7 +410,9 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 60
+    # Headroom over the 45m test cap plus ~10m of bundling: the step timeout fails the job cleanly with
+    # traces attached, whereas hitting this cap cancels it and proves nothing.
+    timeout-minutes: 75
     env:
       DX_ENVIRONMENT: ci
       DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
@@ -426,6 +430,7 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          persist-credentials: false
 
       - name: Extract branch
         id: extract_branch
@@ -437,18 +442,15 @@ jobs:
       - name: Install Playwright
         run: pnpm run install-playwright
 
+      # A manual `e2e` dispatch takes the "All" path on any branch: affected-scoping resolves to nothing
+      # when the diff touches no project (e.g. a CI-only change), which would bundle and test nothing.
       - name: Bundle Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
         run: moon run :bundle --affected remote
 
       - name: Bundle All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         run: moon run :bundle
-
-      # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed
-      # tarball rather than the source tree. This job already gates the Version Packages PR.
-      - name: Smoke test packed CLI
-        run: moon run cli:smoke
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
@@ -460,7 +462,7 @@ jobs:
         run: rm -rf test-results
 
       - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
         timeout-minutes: 45
         uses: trunk-io/analytics-uploader@v1
         env:
@@ -473,11 +475,14 @@ jobs:
           run: moon run :e2e --affected remote --concurrency=1
 
       - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         timeout-minutes: 45
         uses: trunk-io/analytics-uploader@v1
         env:
           PLAYWRIGHT_BROWSER: all
+          # A manual dispatch must execute the suite: re-running the same commit otherwise replays a remote
+          # cache hit in seconds, which reports green without running a test and emits no JUnit XML.
+          MOON_CACHE: ${{ inputs.e2e && 'off' || 'read-write' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -493,15 +498,90 @@ jobs:
           path: test-results/playwright
           retention-days: 7
 
-      - name: Send test report
-        if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
-        uses: ./.github/actions/test-report
+  # Builds, packs and smoke-tests the CLI on its own runner, in parallel with `e2e`. It used to ride along
+  # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
+  # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
+  cli:
+    if: >-
+      startsWith(github.ref, 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/heads/changeset-release/') ||
+      startsWith(github.head_ref, 'changeset-release/') ||
+      inputs.e2e
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
         with:
-          name: ${{ github.job }}
-          result: ${{ job.status }}
+          fetch-depth: 0
+          lfs: true
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
 
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
+      # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.
+      - name: Smoke test packed CLI
+        run: moon run cli:smoke
+
+      - name: Pack the CLI for the foreign-machine job
+        run: |
+          mkdir -p cli-verify
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli-linux-x64
+          cp packages/devtools/cli/scripts/verify-installed.mjs cli-verify/
+
+      # The verifier travels with the tarballs because the job that runs them has no checkout.
+      - name: Upload packed CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-verify
+          path: cli-verify/
+          retention-days: 1
+
+  # Runs the packed CLI where the tree that built it does not exist. Deliberately no checkout, no container
+  # and a different runner: a `--compile`d binary is meant to carry everything, and when a dependency
+  # resolves a path at bundle time instead — `@automerge/automerge`'s WASM, `classic-level`'s native addon —
+  # it works in the job that built it and nowhere else, which is how @dxos/cli@0.10.0 shipped unrunnable.
+  # `cli:smoke` cannot cover this in CI because the build container forbids mount namespaces.
+  cli-foreign:
+    needs: cli
+    if: ${{ !cancelled() && needs.cli.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download packed CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-verify
+          path: cli-verify
+
+      # `--omit=optional` so the launcher's optionalDependencies are not fetched from npm — those versions
+      # are published, so without it the released (and possibly broken) platform package could satisfy the
+      # dependency instead of the tarball built here.
+      # The `./` is load-bearing: npm reads a bare `dir/file.tgz` as the GitHub shorthand `owner/repo` and
+      # tries to clone it.
+      - name: Install from the tarballs
+        run: |
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund --omit=optional ./cli-verify/*.tgz
+
+      # The same verifier `cli:smoke` runs, so the two cannot check different things.
+      - name: Verify the install
+        run: node cli-verify/verify-installed.mjs .
+
+  # Reports every nightly job from one place. e2e is in `needs` so a cancelled e2e is still reported (its
+  # former in-job step used `success() || failure()`, which skips on cancellation) and so the other three
+  # reports can no longer go out green while e2e is still running.
   report:
-    needs: [test, storybook, workerd]
+    needs: [test, storybook, workerd, e2e]
     if: always() && github.event_name == 'schedule'
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -509,23 +589,40 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 10
     steps:
+      # This job only runs a repository-local action, so it never needs git auth; leaving the token in
+      # `.git/config` would expose it to anything in the checked-out tree.
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      # Each report is `always()` so an undelivered one cannot suppress the rest — without it a failing
+      # first report skips the e2e report, silencing the very signal this job exists to send. A failed
+      # step still fails the job.
       - name: Send test report
+        if: always()
         uses: ./.github/actions/test-report
         with:
           name: test-24.11.1
           result: ${{ needs.test.result }}
       - name: Send storybook report
+        if: always()
         uses: ./.github/actions/test-report
         with:
           name: storybook-24.11.1
           result: ${{ needs.storybook.result }}
       - name: Send workerd report
+        if: always()
         uses: ./.github/actions/test-report
         with:
           name: workerd-24.11.1
           result: ${{ needs.workerd.result }}
+      - name: Send e2e report
+        if: always()
+        uses: ./.github/actions/test-report
+        with:
+          name: e2e
+          result: ${{ needs.e2e.result }}
 
   # Advisory changeset reminder (NOT a gate): when a PR changes publishable source but has no
   # `.changeset/*.md`, post/update a single sticky comment; remove it once a changeset is added.

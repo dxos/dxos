@@ -1,6 +1,10 @@
 # https://moonrepo.dev/docs/proto/config
 
 proto = "0.58.2"
+# NOTE: Keep node and pnpm in sync with `.github/Dockerfile`, which installs them too.
+#  CI's setup action runs `pnpm install` before any moon task, so the image supplies them until moon's
+#  toolchain cache exists. Everything after that uses the versions here, which is why a mismatch stays
+#  invisible until a cache miss.
 node = "24.11.1"
 pnpm = "10.28.0"
 # 1.3.4 leaks `--smol` into `process.argv` of every `--compile`d binary, which makes the published
