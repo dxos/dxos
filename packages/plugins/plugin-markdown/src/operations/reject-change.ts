@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { getRangeFromCursor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { revertHunk } from '@dxos/ui-editor';
+import { revertHunk } from '@dxos/ui-editor/headless';
 import { Branch } from '@dxos/versioning';
 
 import { Markdown } from '../types';

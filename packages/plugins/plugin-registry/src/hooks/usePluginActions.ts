@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
-import { useNode } from '@dxos/plugin-graph';
+import { useNode } from '@dxos/plugin-graph/hooks';
 
 import { getPluginPath, getPluginSpecPath } from '#meta';
 

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import type * as Effect from 'effect/Effect';
 
 import { type OllamaAdmin } from '@dxos/ai/resolvers';

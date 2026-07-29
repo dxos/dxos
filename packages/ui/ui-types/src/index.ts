@@ -6,6 +6,7 @@ export * from './anchor';
 export * from './axis';
 export * from './density';
 export * from './elevation';
+export * from './icons';
 export * from './menu';
 export * from './message';
 export * from './palette';

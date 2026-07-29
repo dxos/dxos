@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useState } from 'react';
 

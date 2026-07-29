@@ -8,8 +8,9 @@ import React from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Node, useActionRunner } from '@dxos/plugin-graph';
-import { useActions, useNode } from '@dxos/plugin-graph';
+import { Node } from '@dxos/plugin-graph';
+import { useActions, useNode } from '@dxos/plugin-graph/hooks';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
   Icon,
   IconButton,

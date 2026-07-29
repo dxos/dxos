@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import React, { useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';

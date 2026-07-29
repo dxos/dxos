@@ -26,7 +26,7 @@ import React, {
 
 import { type Node } from '@dxos/app-graph';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
   Icon,
   IconButton,
