@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Preview } from '@storybook/react';
+import { type Preview } from '@storybook/react-vite';
 import React, { memo, useEffect } from 'react';
 import { STORY_CHANGED } from 'storybook/internal/core-events';
 import { addons } from 'storybook/preview-api';

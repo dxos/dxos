@@ -42,7 +42,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "buffer-alloc": "catalog:",
     "buffer-from": "catalog:",

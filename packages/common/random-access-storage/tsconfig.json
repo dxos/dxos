@@ -35,9 +35,6 @@
       "path": "../node-std"
     },
     {
-      "path": "../tracing"
-    },
-    {
       "path": "../util"
     }
   ]

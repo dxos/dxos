@@ -27,12 +27,12 @@
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "storybook": "10.2.0"
+    "storybook": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@types/lodash.defaultsdeep": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

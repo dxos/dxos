@@ -11,9 +11,6 @@
   ],
   "references": [
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../async"
     },
     {
@@ -21,9 +18,6 @@
     },
     {
       "path": "../invariant"
-    },
-    {
-      "path": "../log"
     },
     {
       "path": "../node-std"

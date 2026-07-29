@@ -3,7 +3,7 @@
 //
 
 import { Registry, RegistryContext } from '@effect-atom/atom-react';
-import { type Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/react-vite';
 import React, { memo, useMemo } from 'react';
 
 /**

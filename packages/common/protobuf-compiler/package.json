@@ -28,7 +28,6 @@
     "@dxos/node-std": "workspace:*",
     "argparse": "catalog:",
     "chalk": "catalog:",
-    "extensionless": "catalog:",
     "glob": "catalog:",
     "protobufjs": "catalog:",
     "read-pkg": "catalog:",
@@ -36,7 +35,6 @@
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/protobuf-test": "workspace:*",
     "@types/argparse": "catalog:",
     "@types/mocha": "catalog:",
     "expect": "catalog:",

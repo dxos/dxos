@@ -32,8 +32,6 @@
     "@effect-atom/atom": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo": "workspace:*",
-    "@dxos/random": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {
