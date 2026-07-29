@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import React, { memo, useCallback, useMemo } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
@@ -215,12 +215,7 @@ const ArtifactGallery = ({ refs, onOpen, onDelete }: ArtifactGalleryProps) => {
 };
 
 const ArtifactTile = memo(({ data }: { data: ArtifactTileData | undefined; index: number }) =>
-  data ? (
-    <ArtifactCard object={data.object} onClick={data.onClick} onDelete={data.onDelete}>
-      {/* The object's own card body, so a document previews as a document rather than a type label. */}
-      <Surface.Surface type={AppSurface.CardContent} data={{ subject: data.object }} limit={1} />
-    </ArtifactCard>
-  ) : null,
+  data ? <ArtifactCard object={data.object} onClick={data.onClick} onDelete={data.onDelete} /> : null,
 );
 
 ArtifactTile.displayName = 'ArtifactTile';
