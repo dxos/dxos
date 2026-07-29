@@ -83,8 +83,9 @@ export const createProjectChatsExtension = () =>
   });
 
 /**
- * Start a chat in project scope. Dispositioned for both surfaces so the one action serves the
- * project's navtree row and the `ProjectArticle` toolbar, which splices in graph actions.
+ * Start a chat in project scope, on the project's navtree row. The `ProjectArticle` toolbar owns its
+ * own create-chat button rather than sharing this one — the two surfaces are expected to diverge as
+ * the toolbar grows, and a shared `toolbar` disposition here would double up with it.
  */
 export const createProjectActionExtension = () =>
   GraphBuilder.createExtension({
@@ -106,7 +107,7 @@ export const createProjectActionExtension = () =>
           properties: {
             label: ['create-chat.label', { ns: meta.profile.key }],
             icon: 'ph--chat-text--regular',
-            disposition: ['toolbar', 'list-item-primary'],
+            disposition: 'list-item-primary',
             testId: 'projectsPlugin.createChat',
           },
         }),

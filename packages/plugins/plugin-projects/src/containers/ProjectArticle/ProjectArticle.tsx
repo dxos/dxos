@@ -75,7 +75,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     <Panel.Root role={role}>
       <Panel.Toolbar>
         <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar />
+          <Menu.Toolbar classNames='dx-document' />
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content>

@@ -39,7 +39,7 @@ const getSubjectActions = async (subject: unknown) => {
 };
 
 describe('project app graph builder', () => {
-  test('contributes create-chat to a project node, for both the toolbar and the navtree row', async ({ expect }) => {
+  test('contributes create-chat to a project node, for the navtree row', async ({ expect }) => {
     const project = Project.make({ name: 'Test' });
     Obj.update(project, (project) => {
       project.instructions = Ref.make(Instructions.make({ text: 'Steer.' }));
@@ -51,8 +51,9 @@ describe('project app graph builder', () => {
     expect(actions.map((action) => action.id)).toEqual([
       qualifyId(Node.RootId, SUBJECT_ID, ProjectOperation.CreateChat.meta.key),
     ]);
-    // One action serves both surfaces; dropping either disposition silently removes it from that one.
-    expect(actions[0].properties.disposition).toEqual(['toolbar', 'list-item-primary']);
+    // Navtree only: the toolbar builds its own create-chat, so a `toolbar` disposition here would
+    // render a second, identical button.
+    expect(actions[0].properties.disposition).toEqual('list-item-primary');
   });
 
   test('ignores nodes that are not projects', async ({ expect }) => {
