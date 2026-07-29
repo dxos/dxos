@@ -4,6 +4,7 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import { AtprotoPlugin } from '@dxos/plugin-atproto/plugin';
 import { BloggerPlugin } from '@dxos/plugin-blogger/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
@@ -36,6 +37,7 @@ import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
+import { LibraryPlugin } from '@dxos/plugin-library/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
 import { MagazinePlugin } from '@dxos/plugin-magazine/plugin';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
@@ -120,6 +122,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MeetingPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
+      LibraryPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
@@ -152,6 +155,7 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
   return [
     ...getCorePlugins(conf),
     AssistantPlugin(),
+    AtprotoPlugin(),
     BoardPlugin(),
     BookmarksPlugin(),
     BrainPlugin(),
@@ -176,6 +180,7 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     GamePlugin(),
     InboxPlugin(),
     KanbanPlugin(),
+    LibraryPlugin(),
     MapPlugin(),
     isLocal && MapPluginSolid(),
     MarkdownPlugin(),

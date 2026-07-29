@@ -223,6 +223,9 @@
       "path": "../../plugins/plugin-assistant"
     },
     {
+      "path": "../../plugins/plugin-atproto"
+    },
+    {
       "path": "../../plugins/plugin-attention"
     },
     {
@@ -329,6 +332,9 @@
     },
     {
       "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-library"
     },
     {
       "path": "../../plugins/plugin-linear"

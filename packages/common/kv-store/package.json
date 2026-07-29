@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./level": {
+      "source": "./src/create-level.ts",
+      "types": "./dist/types/src/create-level.d.ts",
+      "import": "./dist/lib/create-level.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
