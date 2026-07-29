@@ -5,17 +5,17 @@
 import { createTLSchema } from '@tldraw/tlschema';
 import { describe, test } from 'vitest';
 
-import { TldrawBuilder } from './TldrawBuilder';
+import { RecordBuilder } from './RecordBuilder';
 
-describe('TldrawBuilder', () => {
+describe('RecordBuilder', () => {
   test('builds an empty canvas with document and page', ({ expect }) => {
-    const content = new TldrawBuilder().build();
+    const content = new RecordBuilder().build();
     expect(content['document:document'].typeName).to.eq('document');
     expect(content['page:page'].typeName).to.eq('page');
   });
 
   test('chains shapes and connectors', ({ expect }) => {
-    const content = new TldrawBuilder()
+    const content = new RecordBuilder()
       .rectangle({ id: 'a', x: 0, y: 0, text: 'DXOS', color: 'blue' })
       .ellipse({ id: 'b', x: 320, y: 0, text: 'ECHO', color: 'green' })
       .text({ x: 0, y: 240, text: 'Hello', font: 'mono' })
@@ -30,7 +30,7 @@ describe('TldrawBuilder', () => {
   });
 
   test('connects via explicit points when shapes are not referenced', ({ expect }) => {
-    const content = new TldrawBuilder()
+    const content = new RecordBuilder()
       .arrow({ id: 'arrow', start: { x: 0, y: 0 }, end: { x: 200, y: 100 } })
       .line({ id: 'line', start: { x: 0, y: 0 }, end: { x: 100, y: 0 } })
       .build();
@@ -44,14 +44,14 @@ describe('TldrawBuilder', () => {
   });
 
   test('throws on unknown connector handles and duplicate shape ids', ({ expect }) => {
-    expect(() => new TldrawBuilder().rectangle({ id: 'a' }).arrow({ from: 'a', to: 'missing' })).to.throw(
+    expect(() => new RecordBuilder().rectangle({ id: 'a' }).arrow({ from: 'a', to: 'missing' })).to.throw(
       /unknown target shape/,
     );
-    expect(() => new TldrawBuilder().rectangle({ id: 'dup' }).ellipse({ id: 'dup' })).to.throw(/duplicate shape id/);
+    expect(() => new RecordBuilder().rectangle({ id: 'dup' }).ellipse({ id: 'dup' })).to.throw(/duplicate shape id/);
   });
 
   test('produces records that pass tldraw schema validation', ({ expect }) => {
-    const content = new TldrawBuilder()
+    const content = new RecordBuilder()
       .rectangle({ id: 'a', x: 0, y: 0, text: 'A' })
       .circle({ id: 'b', x: 320, y: 0, text: 'B' })
       .geo('star', { id: 'c', x: 160, y: 240, color: 'yellow' })

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { type Scene } from '@dxos/plugin-illustrator/model';
 
-import { applyCommands } from './apply';
+import { applyCommands } from './builder';
 import { readScene } from './read';
 
 /** A face made of every element category: boxes, circles, arc sugar, polyline, text. */

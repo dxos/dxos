@@ -4,5 +4,5 @@
 
 import { Capability } from '@dxos/app-framework';
 
-export const SketchVariant = Capability.lazy('SketchVariant', () => import('./sketch-variant'));
+export const DrawingVariant = Capability.lazy('DrawingVariant', () => import('./drawing-variant'));
 export const TldrawSettings = Capability.lazy('TldrawSettings', () => import('./settings'));

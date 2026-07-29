@@ -15,13 +15,13 @@ import { Database, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import {
+  Drawing,
+  DrawingOperation,
   IllustratorCapabilities,
   IllustratorOperationHandlerSet,
-  Sketch,
-  SketchOperation,
 } from '@dxos/plugin-illustrator';
 
-import { tldrawBuilder } from '#model';
+import { TldrawBuilder } from '#model';
 
 import { Tldraw } from './types';
 
@@ -30,21 +30,19 @@ EntityId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   operationHandlers: IllustratorOperationHandlerSet,
   extraServices: Layer.sync(Capability.Service, () => capabilityService()),
-  types: [Sketch.Sketch, Tldraw.Canvas],
+  types: [Drawing.Drawing, Drawing.Canvas],
   disableLlmMemoization: true,
 });
 
-/** Capability manager pre-loaded with the tldraw sketch variant, as the plugin would contribute it. */
+/** Capability manager pre-loaded with the tldraw drawing variant, as the plugin would contribute it. */
 const capabilityService = () => {
   const manager = CapabilityManager.make({ registry: Registry.make() });
   manager.contribute({
     interface: IllustratorCapabilities.VariantProvider,
     implementation: {
-      id: Type.getTypename(Tldraw.Canvas),
+      id: Tldraw.TLDRAW_SCHEMA,
       label: 'tldraw',
-      canvasType: Tldraw.Canvas,
-      createCanvas: () => Effect.sync(() => Tldraw.makeCanvas()),
-      builder: tldrawBuilder,
+      builder: TldrawBuilder,
     },
     module: 'test',
   });
@@ -56,19 +54,19 @@ const capabilityService = () => {
  * add a hat and edit the smile by id, and confirm the untouched face elements survive.
  * Exercises the illustrator operations end-to-end through the tldraw builder.
  */
-describe('tldraw sketch variant', () => {
+describe('tldraw drawing variant', () => {
   it.effect(
     'create → edit → read round-trip preserves untouched objects',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const { object: sketch } = yield* Operation.invoke(SketchOperation.Create, { name: 'Portrait' });
-        yield* Database.add(sketch);
+        const { object: drawing } = yield* Operation.invoke(DrawingOperation.Create, { name: 'Portrait' });
+        yield* Database.add(drawing);
         yield* Database.flush();
-        const ref = Ref.make(sketch);
+        const ref = Ref.make(drawing);
 
         // Draw a face.
-        const face = yield* Operation.invoke(SketchOperation.Edit, {
-          sketch: ref,
+        const face = yield* Operation.invoke(DrawingOperation.Edit, {
+          drawing: ref,
           commands: [
             {
               op: 'upsert-object',
@@ -90,14 +88,14 @@ describe('tldraw sketch variant', () => {
         expect(face.scene.objects).toHaveLength(1);
 
         // Read the scene (what the agent would do before a follow-up edit).
-        const read = yield* Operation.invoke(SketchOperation.Read, { sketch: ref });
+        const read = yield* Operation.invoke(DrawingOperation.Read, { drawing: ref });
         const readFace = read.scene.objects.find((object) => object.id === 'face');
         expect(readFace?.origin).toEqual({ x: 100, y: 100 });
         expect(readFace?.elements.map((element) => element.id)).toEqual(['head', 'left-eye', 'right-eye', 'smile']);
 
         // Add a hat above the face and turn the smile into a frown — by id, without resending the face.
-        const edit = yield* Operation.invoke(SketchOperation.Edit, {
-          sketch: ref,
+        const edit = yield* Operation.invoke(DrawingOperation.Edit, {
+          drawing: ref,
           commands: [
             {
               op: 'upsert-object',
@@ -128,8 +126,8 @@ describe('tldraw sketch variant', () => {
         );
 
         // Remove the hat again.
-        const removed = yield* Operation.invoke(SketchOperation.Edit, {
-          sketch: ref,
+        const removed = yield* Operation.invoke(DrawingOperation.Edit, {
+          drawing: ref,
           commands: [{ op: 'remove-object', objectId: 'hat' }],
         });
         expect(removed.scene.objects.map((object) => object.id)).toEqual(['face']);

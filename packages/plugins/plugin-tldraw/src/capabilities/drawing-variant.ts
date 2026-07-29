@@ -5,21 +5,20 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { IllustratorCapabilities, type SketchVariant } from '@dxos/plugin-illustrator/types';
+import { IllustratorCapabilities, type DrawingVariant } from '@dxos/plugin-illustrator/types';
 
 import { TldrawArticle, TldrawCard } from '#containers';
-import { tldrawBuilder } from '#model';
+import { TldrawBuilder } from '#model';
 
 import { Tldraw } from '../types';
 
-const variant: SketchVariant = {
-  id: Type.getTypename(Tldraw.Canvas),
+// No `canvasType`/`createCanvas`: tldraw stores its records in the base `Drawing.Canvas`,
+// discriminated by `schema`.
+const variant: DrawingVariant = {
+  id: Tldraw.TLDRAW_SCHEMA,
   label: 'tldraw',
   icon: 'ph--compass-tool--regular',
-  canvasType: Tldraw.Canvas,
-  createCanvas: () => Effect.sync(() => Tldraw.makeCanvas()),
-  builder: tldrawBuilder,
+  builder: TldrawBuilder,
   card: TldrawCard,
   article: TldrawArticle,
 };

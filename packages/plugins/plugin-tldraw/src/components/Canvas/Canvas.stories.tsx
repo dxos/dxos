@@ -6,32 +6,32 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-client';
+import { Drawing } from '@dxos/plugin-illustrator/types';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { TldrawBuilder } from '#model';
+import { RecordBuilder } from '#model';
 import { data } from '#testing';
-import { Tldraw } from '#types';
 
 import { migrateCanvas } from '../../migrations';
 import { CanvasComponent } from './Canvas';
 
 const DefaultStory = () => {
-  const [canvas, setCanvas] = useState(createObject(Tldraw.makeCanvas({ content: data.v2 })));
+  const [canvas, setCanvas] = useState(createObject(Drawing.makeCanvas({ content: data.v2 })));
 
   const handleClear = () => {
-    setCanvas(createObject(Tldraw.makeCanvas()));
+    setCanvas(createObject(Drawing.makeCanvas()));
   };
 
   const handleCreate = () => {
-    const canvas = createObject(Tldraw.makeCanvas({ content: data.v2 }));
+    const canvas = createObject(Drawing.makeCanvas({ content: data.v2 }));
     console.log(JSON.stringify(canvas, undefined, 2));
     setCanvas(canvas);
   };
 
   const handleMigrate = async () => {
     const content = await migrateCanvas(data.v1);
-    setCanvas(createObject(Tldraw.makeCanvas({ content })));
+    setCanvas(createObject(Drawing.makeCanvas({ content })));
   };
 
   return (
@@ -74,8 +74,8 @@ export const Default: Story = {};
 const BuilderStory = () => {
   const [canvas] = useState(() =>
     createObject(
-      Tldraw.makeCanvas({
-        content: new TldrawBuilder()
+      Drawing.makeCanvas({
+        content: new RecordBuilder()
           .rectangle({ id: 'a', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid' })
           .ellipse({ id: 'b', x: 360, y: 0, text: 'ECHO', color: 'green' })
           .geo('star', { id: 'c', x: 180, y: 280, text: 'EDGE', color: 'yellow' })

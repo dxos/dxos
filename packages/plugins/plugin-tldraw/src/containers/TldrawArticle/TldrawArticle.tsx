@@ -9,7 +9,8 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useActions } from '@dxos/plugin-graph/hooks';
-import { type SketchVariantSurfaceProps } from '@dxos/plugin-illustrator/types';
+import { type DrawingVariantSurfaceProps } from '@dxos/plugin-illustrator/types';
+import { Drawing } from '@dxos/plugin-illustrator/types';
 import { Flex, Panel } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -18,12 +19,12 @@ import { isTauri } from '@dxos/util';
 import { CanvasComponent } from '#components';
 import { Tldraw, TldrawCapabilities } from '#types';
 
-export type TldrawArticleProps = SketchVariantSurfaceProps;
+export type TldrawArticleProps = DrawingVariantSurfaceProps;
 
-export const TldrawArticle = ({ role, attendableId, sketch, canvas, extrinsic }: TldrawArticleProps) => {
-  invariant(Obj.instanceOf(Tldraw.Canvas, canvas));
+export const TldrawArticle = ({ role, attendableId, drawing, canvas, extrinsic }: TldrawArticleProps) => {
+  invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const settings = useAtomCapability(TldrawCapabilities.Settings);
-  const id = Obj.getURI(sketch as Obj.Any);
+  const id = Obj.getURI(drawing as Obj.Any);
   const { hasAttention } = useAttention(attendableId);
   const section = role === AppSurface.Section.role;
 

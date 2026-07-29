@@ -134,14 +134,14 @@ type Box = { id: string; x: number; y: number; w: number; h: number };
  *
  * @example
  * ```ts
- * const content = new TldrawBuilder()
+ * const content = new RecordBuilder()
  *   .rectangle({ id: 'a', x: 0, y: 0, text: 'DXOS', color: 'blue' })
  *   .ellipse({ id: 'b', x: 320, y: 0, text: 'ECHO', color: 'green' })
  *   .arrow({ from: 'a', to: 'b' })
  *   .build();
  * ```
  */
-export class TldrawBuilder {
+export class RecordBuilder {
   readonly #records: CanvasContent = {};
   readonly #boxes = new Map<string, Box>();
   readonly #metaFor?: (handle: string) => Record<string, any>;

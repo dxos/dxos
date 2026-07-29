@@ -13,6 +13,7 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Obj } from '@dxos/echo';
+import { Drawing } from '@dxos/plugin-illustrator/types';
 import { useMergeRefs } from '@dxos/react-hooks';
 import { composable, composableProps } from '@dxos/react-ui';
 
@@ -30,7 +31,7 @@ const gridComponents: Record<Settings.GridType, FC<TLGridProps>> = {
 };
 
 export type CanvasProps = {
-  canvas: Tldraw.Canvas;
+  canvas: Drawing.Canvas;
   readonly?: boolean;
   autoCenter?: boolean;
   hideUi?: boolean;

@@ -6,6 +6,7 @@ import type { TLRecord } from '@tldraw/tldraw';
 import { isShape } from '@tldraw/tlschema';
 
 import { Doc } from '@dxos/echo-doc';
+import { Drawing } from '@dxos/plugin-illustrator/types';
 import { getDeep } from '@dxos/util';
 
 import type { Tldraw } from '#types';
@@ -13,7 +14,7 @@ import type { Tldraw } from '#types';
 /**
  * Snap to grid.
  */
-export const handleSnap = async (canvas: Tldraw.Canvas) => {
+export const handleSnap = async (canvas: Drawing.Canvas) => {
   const snap = (value: number, tolerance = 40) => {
     return Math.round(value / tolerance) * tolerance;
   };

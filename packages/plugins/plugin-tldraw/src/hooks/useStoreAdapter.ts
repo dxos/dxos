@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
+import { Drawing } from '@dxos/plugin-illustrator/types';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Tldraw } from '#types';
@@ -19,7 +20,7 @@ import { TLDrawStoreAdapter } from './adapter';
  * @param canvas - Optional canvas whose content will be synced.
  * @returns The TLDrawStoreAdapter instance managing the tldraw store.
  */
-export const useStoreAdapter = (canvas?: Tldraw.Canvas) => {
+export const useStoreAdapter = (canvas?: Drawing.Canvas) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
   const [_, forceUpdate] = useState({});
   useAsyncEffect(

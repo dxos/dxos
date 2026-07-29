@@ -18,8 +18,8 @@ import {
   type PathProps,
   type Point,
   type ShapeProps,
-  TldrawBuilder,
-} from './TldrawBuilder';
+  RecordBuilder,
+} from './RecordBuilder';
 
 export const DEFAULT_SCALE = 1;
 
@@ -79,7 +79,7 @@ export const renderObject = (object: Scene.WorldObject, options: RenderOptions):
   const length = (units: number) => units * scale;
 
   const kinds = new Map<string, string>();
-  const builder = new TldrawBuilder({
+  const builder = new RecordBuilder({
     indexStart,
     metaFor: (handle) => {
       const [objectId, elementId] = splitHandle(handle);
