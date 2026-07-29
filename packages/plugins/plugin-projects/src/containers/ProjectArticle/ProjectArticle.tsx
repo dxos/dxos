@@ -44,9 +44,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const { actions, onAction } = useToolbarActions(subject, attendableId);
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
-  // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory, and a
-  // sync `.target` read would leave the section permanently missing. The sub-editor mutates the
-  // instructions in place, so unwrap the snapshot back to the live entity.
+  // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory,
+  // and a sync `.target` read would leave the section permanently missing.
+  // The sub-editor mutates the instructions in place, so unwrap the snapshot back to the live entity.
   const [instructionsSnapshot] = useObject(project.instructions);
   const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
   const [artifacts] = useObject(project.artifacts);
@@ -72,32 +72,35 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   }
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
+    // `Menu.Root` wraps the panel rather than sitting inside the toolbar: `ToolbarMenu` disables itself
+    // unless the menu scope's `attendableId` has attention, so the scope has to span the surface that
+    // receives attention, not just the toolbar row.
+    <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar>
           <Menu.Toolbar classNames='dx-document' />
-        </Menu.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
-        <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
-          <Form.Viewport scroll>
-            <Form.Content>
-              <Form.FieldSet />
+        </Panel.Toolbar>
+        <Panel.Content>
+          <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+            <Form.Viewport scroll>
+              <Form.Content>
+                <Form.FieldSet />
 
-              {instructions && <InstructionsEditor db={db} instructions={instructions} />}
+                {instructions && <InstructionsEditor db={db} instructions={instructions} />}
 
-              <Form.Section title={t('routines.label')}>
-                <ObjectList label={t('routines.label')} refs={project.routines} />
-              </Form.Section>
+                <Form.Section title={t('routines.label')}>
+                  <ObjectList label={t('routines.label')} refs={project.routines} />
+                </Form.Section>
 
-              <Form.Section title={t('artifacts.label')}>
-                <ObjectList label={t('artifacts.label')} refs={artifacts?.objects ?? []} />
-              </Form.Section>
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
-      </Panel.Content>
-    </Panel.Root>
+                <Form.Section title={t('artifacts.label')}>
+                  <ObjectList label={t('artifacts.label')} refs={artifacts?.objects ?? []} />
+                </Form.Section>
+              </Form.Content>
+            </Form.Viewport>
+          </Form.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Menu.Root>
   );
 };
 
