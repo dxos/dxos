@@ -34,6 +34,6 @@ export default Config2.make({
       on one board does not prevent other boards from syncing.
     `,
     icon: { key: 'ph--kanban--regular', hue: 'blue' },
-    tags: ['labs', 'integration'],
+    tags: ['labs', 'connector'],
   },
 });

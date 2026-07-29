@@ -17,7 +17,7 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-chess-com',
     icon: { key: 'ph--horse--regular', hue: 'green' },
     spec: 'PLUGIN.mdl',
-    tags: ['labs', 'game', 'integration'],
+    tags: ['labs', 'game', 'connector'],
     dependsOn: ['org.dxos.plugin.chess', 'org.dxos.plugin.game'],
   },
 });

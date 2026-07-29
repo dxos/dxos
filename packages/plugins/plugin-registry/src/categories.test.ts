@@ -25,8 +25,8 @@ describe('getCategoryPredicate', () => {
 
   test('recommended matches a tier tag in any position', ({ expect }) => {
     const predicate = getCategoryPredicate('recommended', context);
-    expect(predicate(makePlugin('alpha-integration', ['alpha', 'integration']))).toBe(true);
-    expect(predicate(makePlugin('labs-integration', ['labs', 'integration']))).toBe(false);
+    expect(predicate(makePlugin('alpha-connector', ['alpha', 'connector']))).toBe(true);
+    expect(predicate(makePlugin('labs-connector', ['labs', 'connector']))).toBe(false);
   });
 
   test('recommended excludes core and remote plugins', ({ expect }) => {
