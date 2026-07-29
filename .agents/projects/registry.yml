@@ -136,7 +136,7 @@ projects:
     tasks: .agents/projects/chat/TASKS.md
     design: .agents/projects/chat/DESIGN.md
     prs: []
-    resume: 'Project created 2026-07-29 out of the feeds/event-sourcing exploration (see feed-live-objects DESIGN.md Roadmap + companion workstreams). Reviewing plugin-thread/plugin-review architecture to decide the plugin shape (reuse Thread/Message + react-ui-thread vs new types); also owes a decision on the assistant Chat type relationship. NEXT: finish the architecture review, then define Channel/Message schema and channel-to-feed mapping.'
+    resume: "Architecture review DONE 2026-07-29: NO NEW PLUGIN — plugin-thread's Channel (org.dxos.type.channel v0.2.0) is already a feed-backed channel with pluggable ChannelBackendProvider (default feedChannelBackend: reactive feed-scoped query + Feed.append; readOnly via foreign keys); plugin-review is a separate AnchoredTo/Thread comments path sharing only @dxos/types schemas + react-ui-thread primitives (zero cross-imports). Message already has parentMessage/threadId. Backend pluggability at two layers: ChannelBackendProvider (plugin, shallow) vs FeedBackend (sync, deep — feed-live-objects companion). Work = gaps: message actions (edit/delete/react — reactions schema decision pending: properties map vs Reaction relation), threading UI, trigger notifications, ephemeral presence (EDGE messaging, cf. plugin-calls presence), channel management polish; assistant Chat convergence decision (leaning: keep parallel). NEXT: reactions schema decision, then message actions in MessageThread UI."
 
   - name: url-deck-redesign
     status: active

@@ -4,21 +4,27 @@ See DESIGN.md for scope and the feed-live-objects roadmap dependency.
 
 ## Status
 
-Project created 2026-07-29. Architecture review of plugin-thread /
-plugin-review in progress; plugin shape not yet decided.
+Project created 2026-07-29. Architecture review DONE (see DESIGN.md):
+**no new plugin — build on plugin-thread's feed-backed `Channel`** (message
+list + composer + optimistic send already work via `feedChannelBackend`).
+Work = the gaps below.
 
 ## Next
 
-- [ ] Review plugin-thread + plugin-review architecture and interaction;
-      decide reuse vs new types/components.
-- [ ] Decide relationship to the assistant Chat type.
-- [ ] Define Channel/Message schema and channel ⇄ feed mapping.
-- [ ] Plugin scaffold (manifest, capabilities, surfaces).
-- [ ] Message list + composer over `Feed.query`/`Feed.append` with
-      optimistic send.
-- [ ] Edit/delete/react via live feed objects.
-- [ ] Notifications via subscription triggers.
-- [ ] Ephemeral presence/typing channel (EDGE messaging, not feeds).
+- [x] Review plugin-thread + plugin-review architecture and interaction —
+      Channel is already feed-backed with pluggable providers; review's
+      comments are a separate AnchoredTo/Thread path sharing only types + UI
+      primitives.
+- [ ] Decide reactions schema (`Message.properties` map vs Reaction relation).
+- [ ] Message actions in UI: edit (Obj.update re-append), delete
+      (Feed.remove), reactions.
+- [ ] In-channel threading UI over existing `parentMessage`/`threadId`.
+- [ ] Notifications via subscription triggers on the channel feed.
+- [ ] Ephemeral presence/typing primitive (EDGE messaging, not feeds; cf.
+      plugin-calls swarm presence).
+- [ ] Channel management polish: sidebar organization, membership display,
+      rename/archive.
+- [ ] Decide assistant Chat / Channel convergence (leaning: keep parallel).
 
 ## Deferred (feed-roadmap-gated)
 
