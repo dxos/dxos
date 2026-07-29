@@ -13,8 +13,6 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
-    // Every `#*` subpath declared in package.json needs its own entry: the lib build leaves
-    // `#model` / `#skills` external, so a consumer resolving them against `dist/` finds nothing.
     model: 'src/model/index.ts',
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
