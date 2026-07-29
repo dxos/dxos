@@ -27,9 +27,18 @@ import { GRID, layout } from '../../model';
 import { type Node, type Overlay, type Point, type Projection, isGroup } from '../../types';
 import { DiagramGroup, DiagramNode } from './DiagramNode';
 
+/**
+ * Flow type keys, deliberately not `input`/`default`/`output`/`group`: React Flow styles those four
+ * built-in names with `border: var(--xy-node-border)`, which lands on the *wrapper*. A container
+ * registered as `group` therefore renders its own border 1px inset and 2px smaller than its declared
+ * size, putting the right and bottom edges off the grid while left and top stay on it.
+ */
+const NODE_TYPE = 'node';
+const CONTAINER_TYPE = 'container';
+
 const nodeTypes: NodeTypes = {
-  node: DiagramNode,
-  group: DiagramGroup,
+  [NODE_TYPE]: DiagramNode,
+  [CONTAINER_TYPE]: DiagramGroup,
 };
 
 //
@@ -70,7 +79,7 @@ const DiagramRoot = ({ children, diagram, overlay, grid = GRID, onNodeMove }: Di
         const group = isGroup(node);
         return {
           id: node.id,
-          type: group ? 'group' : 'node',
+          type: group ? CONTAINER_TYPE : NODE_TYPE,
           position: node.origin ?? { x: 0, y: 0 },
           data: { node },
           ...(node.parent ? { parentId: node.parent, extent: 'parent' as const } : {}),
