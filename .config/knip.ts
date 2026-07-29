@@ -26,8 +26,12 @@ const sourceTargets = (target: unknown): string[] => {
 const AUXILIARY_ENTRY = [
   'src/**/*.{test,spec}.{ts,tsx}',
   'src/**/*.stories.{ts,tsx}',
+  'src/**/*.eval.{ts,tsx}',
   'src/testing/**/*.{ts,tsx}',
   'src/playwright/**/*.{ts,tsx}',
+  'src/vitest-setup.{ts,tsx}',
+  // Spawned as their own process, so nothing imports them.
+  'src/**/*-subprocess.{ts,tsx}',
   '*.config.{ts,mts,cts,js,mjs,cjs}',
   '.storybook/*.{ts,tsx,mts,mjs}',
   'bin/*.{ts,mts,js,mjs}',
@@ -35,7 +39,7 @@ const AUXILIARY_ENTRY = [
 ];
 
 const PROJECT = [
-  'src/**/*.{ts,tsx}',
+  'src/**/*.{ts,tsx,js,jsx,mjs,cjs}',
   '*.{ts,mts,cts,js,mjs,cjs}',
   '.storybook/**/*.{ts,tsx,mts,mjs}',
   'bin/**/*.{ts,mts,js,mjs}',
@@ -53,6 +57,27 @@ const configuredDependencies = (dir: string, names: string[]): string[] => {
   );
   return sources.length ? names.filter((name) => sources.some((source) => source.includes(`'${name}'`))) : [];
 };
+
+/**
+ * Read a repeated `--flag=value` build argument out of a workspace's moon task definition. Packages
+ * with a browser build declare their entry points and the packages bundled into them there, and
+ * neither is visible in the import graph.
+ */
+const moonBuildArgs = (dir: string, flag: string): string[] => {
+  const manifest = globSync(`${dir}/moon.yml`).map((file) => readFileSync(file, 'utf8'))[0];
+  return [...(manifest ?? '').matchAll(new RegExp(`--${flag}=([^'"\\s]+)`, 'g'))].map(([, value]) => value);
+};
+
+/**
+ * A `--bundlePackage` is inlined into the workspace's own build, so esbuild resolves that package's
+ * requires against this workspace. Its dependencies therefore have to be declared here too, even
+ * though nothing in the workspace imports them.
+ */
+const bundledDependencies = (dir: string): string[] =>
+  moonBuildArgs(dir, 'bundlePackage').flatMap((name) => {
+    const manifest = globSync(`${dir}/node_modules/${name}/package.json`)[0];
+    return [name, ...(manifest ? Object.keys(JSON.parse(readFileSync(manifest, 'utf8')).dependencies ?? {}) : [])];
+  });
 
 const workspaces: KnipConfig['workspaces'] = {
   // The root holds no package of its own; its dependencies are consumed by the shared vitest/vite
@@ -90,11 +115,16 @@ for (const manifest of globSync(
   // `index.html` knip cannot see — so treat their whole source tree as reachable instead.
   const declared = [...new Set([...Object.values(exports), ...Object.values(imports)].flatMap(sourceTargets))];
 
+  const entry = [...declared, ...moonBuildArgs(dir, 'entryPoint')];
+
   workspaces[dir] = {
-    entry: [...(declared.length ? declared : ['src/**/*.{ts,tsx}']), ...AUXILIARY_ENTRY],
+    entry: [...(entry.length ? entry : ['src/**/*.{ts,tsx,js,jsx,mjs,cjs}']), ...AUXILIARY_ENTRY],
     project: PROJECT,
     paths,
-    ignoreDependencies: configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
+    ignoreDependencies: [
+      ...configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
+      ...bundledDependencies(dir),
+    ],
   };
 }
 
@@ -106,6 +136,9 @@ const config: KnipConfig = {
     '@bufbuild/buf',
     '@bufbuild/protoc-gen-es',
   ],
+  // `require.resolve`d at runtime from the emitted bundle, so the path is relative to `dist` rather
+  // than to the source file knip reads it from.
+  ignoreUnresolved: [/^\.\.\/\.\.\/polyfills\//],
   // These plugins execute the config files they discover, and those import workspace packages
   // through `exports` conditions that only resolve after a build. The config files are covered
   // as ordinary entry points above, so their imports are still counted.

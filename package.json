@@ -34,6 +34,7 @@
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
     "knip": "knip --config .config/knip.ts",
+    "knip-check": "knip --config .config/knip.ts --preprocessor .config/knip-gate.ts --dependencies --include files --no-config-hints",
     "lint": "pnpm exec moon run :lint-fix",
     "lint-changed": "pnpm exec moon run :lint-fix --affected remote",
     "lint-check": "pnpm exec moon run :lint",

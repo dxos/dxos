@@ -119,6 +119,30 @@ jobs:
       - name: Check for peer dependency issues
         run: pnpm install --resolution-only --no-frozen-lockfile
 
+  # Unused/undeclared dependencies and unreferenced files. Runs off the source tree — the knip config
+  # resolves workspace packages through their `source` export condition — so this needs no build and
+  # stays off the `check` job's critical path.
+  knip:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Check dependencies
+        run: pnpm run knip-check
+
   test:
     strategy:
       matrix:
