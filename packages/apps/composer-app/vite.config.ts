@@ -102,14 +102,20 @@ export default defineConfig((env) => ({
           }
         : undefined,
     watch: {
-      // Build output is not source. The dev server resolves `@dxos/*` from source, so its watch root
-      // spans the whole monorepo, and fsevents routes each event by scanning every watched root — so
-      // a single `moon run <pkg>:build`, which rewrites dist across many packages, pins the main
-      // thread in the watcher callback and the server stops responding (diagnosed via
-      // `moon run composer-app:diagnose-serve`: 1096 of 1100 non-idle samples in fse_dispatch_event).
-      // Vite already ignores .git, node_modules, test-results and its cache dir, and merges these in.
-      // Trade-off: rebuilding a package whose dist is consumed at runtime no longer triggers HMR, so
-      // that now needs a server restart — which is the honest behaviour for a prebuilt dependency.
+      // Use the fs.watch backend, not fsevents. chokidar's fsevents handler keeps ONE native stream per
+      // root with a Set of listeners — one per watched path — and routes every event by running
+      // `indexOf` against every listener (lib/fsevents-handler.js, `cont.listeners.forEach`). Resolving
+      // `@dxos/*` from source means a watch per transformed module, so that set runs to thousands and
+      // grows as more of the app is browsed; a write burst then pins the main thread and the server
+      // stops responding (diagnosed via `moon run composer-app:diagnose-serve`: 4062 of 4064 samples in
+      // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
+      // this routing, so the scan happens regardless.
+      useFsEvents: false,
+      // Build output is not source, and the watch root spans the monorepo, so a single
+      // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
+      // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
+      // these in. Trade-off: rebuilding a package whose dist is consumed at runtime no longer triggers
+      // HMR, so that needs a server restart — the honest behaviour for a prebuilt dependency.
       ignored: ['**/dist/**', '**/.moon/cache/**', '**/temp/**', '**/coverage/**', '**/*.tsbuildinfo'],
       // Coalesce write bursts (codemods, formatters, git checkout/rebase) into
       // a single HMR pass: chokidar holds add/change events until the file size
