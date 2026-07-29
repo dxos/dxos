@@ -60,11 +60,8 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/i18n": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
@@ -72,7 +69,6 @@
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

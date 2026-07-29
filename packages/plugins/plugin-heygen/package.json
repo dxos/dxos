@@ -70,7 +70,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-studio": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

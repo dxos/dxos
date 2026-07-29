@@ -22,12 +22,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/random"
     },
     {
@@ -43,25 +37,13 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-client"
-    },
-    {
-      "path": "../../core/echo/echo-query"
-    },
-    {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../devtools/devtools"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
@@ -94,19 +76,10 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-attention"
-    },
-    {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-inbox"
-    },
-    {
-      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-preview"
@@ -116,9 +89,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

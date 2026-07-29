@@ -55,8 +55,6 @@
     "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
@@ -64,9 +62,7 @@
     "mermaid": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

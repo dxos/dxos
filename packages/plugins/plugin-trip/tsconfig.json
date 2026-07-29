@@ -37,9 +37,6 @@
       "path": "../../common/markdown"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -106,9 +103,6 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-assistant"
-    },
-    {
       "path": "../plugin-attention"
     },
     {
@@ -134,9 +128,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

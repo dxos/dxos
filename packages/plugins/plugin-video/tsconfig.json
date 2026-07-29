@@ -22,13 +22,7 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -65,9 +59,6 @@
     },
     {
       "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -107,9 +98,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

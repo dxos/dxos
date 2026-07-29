@@ -19,22 +19,7 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute/operation"
-    },
-    {
-      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"
@@ -53,9 +38,6 @@
     },
     {
       "path": "../plugin-deck"
-    },
-    {
-      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-testing"

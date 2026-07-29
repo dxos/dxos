@@ -75,7 +75,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -90,7 +89,6 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "vite": "catalog:"
   },

@@ -65,8 +65,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-solid": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/solid-ui-geo": "workspace:*",

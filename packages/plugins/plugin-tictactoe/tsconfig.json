@@ -19,12 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -56,9 +50,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

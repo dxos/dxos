@@ -17,6 +17,7 @@ const GATED = [
   'packages/core/',
   'packages/sdk/',
   'packages/devtools/',
+  'packages/plugins/',
   'packages/ui/',
   'packages/stories/',
   'tools/',

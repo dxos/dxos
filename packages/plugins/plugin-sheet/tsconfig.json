@@ -43,9 +43,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/test-utils"
     },
     {
@@ -62,9 +59,6 @@
     },
     {
       "path": "../../core/echo/echo-doc"
-    },
-    {
-      "path": "../../core/echo/echo-generator"
     },
     {
       "path": "../../core/echo/echo-react"
@@ -124,13 +118,7 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../../ui/ui-types"
-    },
-    {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-markdown"

@@ -89,7 +89,6 @@
     "@dxos/plugin-file": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@ipld/car": "catalog:",
     "blockstore-core": "catalog:",
@@ -105,8 +104,6 @@
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

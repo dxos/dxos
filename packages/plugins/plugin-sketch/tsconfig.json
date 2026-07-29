@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -35,9 +32,6 @@
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -64,12 +58,6 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {
@@ -82,9 +70,6 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-form"
-    },
-    {
       "path": "../../ui/react-ui-mosaic"
     },
     {
@@ -95,9 +80,6 @@
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-testing"
     }
   ]
 }

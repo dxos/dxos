@@ -23,9 +23,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -41,16 +38,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute/agent-runtime"
-    },
-    {
-      "path": "../../core/compute/ai"
     },
     {
       "path": "../../core/compute/assistant"
@@ -153,9 +144,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

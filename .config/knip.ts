@@ -4,7 +4,7 @@
 
 import type { KnipConfig } from 'knip';
 import { globSync, readFileSync } from 'node:fs';
-import { basename, dirname } from 'node:path';
+import { basename, dirname, join, relative } from 'node:path';
 
 /**
  * Collect the in-repo targets of an `exports`/`imports` entry, preferring the `source`
@@ -142,6 +142,20 @@ const configuredEntry = (dir: string): string[] => {
 };
 
 /**
+ * Modules pulled in lazily as `() => import('./handler')`. Operation handler sets register their
+ * implementations this way, and knip does not follow a dynamic import in that position.
+ */
+const lazyImportedEntry = (dir: string): string[] => {
+  const targets = new Set<string>();
+  for (const file of globSync(`${dir}/src/**/*.{ts,tsx}`)) {
+    for (const [, specifier] of readFileSync(file, 'utf8').matchAll(/\bimport\('(\.[^']+)'\)/g)) {
+      targets.add(`${relative(dir, join(dirname(file), specifier))}.{ts,tsx}`);
+    }
+  }
+  return [...targets];
+};
+
+/**
  * Read a repeated `--flag=value` build argument out of a workspace's moon task definition. Packages
  * with a browser build declare their entry points and the packages bundled into them there, and
  * neither is visible in the import graph.
@@ -269,6 +283,7 @@ for (const manifest of globSync(
   // standing in for it.
   const supplemental = [
     ...configuredEntry(dir),
+    ...lazyImportedEntry(dir),
     ...ROOT_REFERENCED.filter((path) => path.startsWith(`${dir}/`)).map((path) => path.slice(dir.length + 1)),
   ];
 
@@ -321,6 +336,9 @@ const config: KnipConfig = {
     '@dxos-theme',
     // Supplied by the editor at runtime to extensions, never installed.
     'vscode',
+    // `dxos:` is a virtual scheme the function runtime resolves for user scripts; the script
+    // templates that import it are shipped as text, not compiled.
+    'dxos',
   ],
   // `require.resolve`d at runtime from the emitted bundle, so the path is relative to `dist` rather
   // than to the source file knip reads it from.

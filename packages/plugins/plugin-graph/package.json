@@ -63,13 +63,9 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/react-client": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@types/react": "catalog:",

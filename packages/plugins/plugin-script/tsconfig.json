@@ -38,9 +38,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -83,16 +80,7 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/halo/halo"
-    },
-    {
       "path": "../../core/halo/halo-react"
-    },
-    {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/mesh/rpc-tunnel"
     },
     {
       "path": "../../core/protocols"

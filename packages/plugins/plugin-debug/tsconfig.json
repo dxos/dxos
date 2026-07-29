@@ -40,9 +40,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/tracing"
     },
     {
@@ -137,9 +134,6 @@
     },
     {
       "path": "../plugin-status-bar"
-    },
-    {
-      "path": "../plugin-testing"
     }
   ]
 }

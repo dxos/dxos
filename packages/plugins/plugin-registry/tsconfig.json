@@ -37,9 +37,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -83,9 +80,6 @@
     },
     {
       "path": "../../ui/react-ui-markdown"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/ui-theme"

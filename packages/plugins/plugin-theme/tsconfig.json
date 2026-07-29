@@ -25,19 +25,7 @@
       "path": "../../common/i18n"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute/operation"
-    },
-    {
-      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"

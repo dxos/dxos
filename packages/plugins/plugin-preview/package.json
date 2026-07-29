@@ -86,7 +86,6 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*"
   },
@@ -94,8 +93,6 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",

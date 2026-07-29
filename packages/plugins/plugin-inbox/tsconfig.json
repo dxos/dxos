@@ -50,9 +50,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -131,9 +128,6 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/lit-ui"
-    },
-    {
       "path": "../../ui/react-primitives/react-hooks"
     },
     {
@@ -170,9 +164,6 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-rdf"
-    },
-    {
       "path": "../../ui/react-ui-search"
     },
     {
@@ -183,9 +174,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"
@@ -216,9 +204,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

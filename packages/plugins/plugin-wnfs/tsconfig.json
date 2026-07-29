@@ -35,12 +35,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -60,9 +54,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"

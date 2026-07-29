@@ -29,9 +29,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {

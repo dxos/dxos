@@ -22,16 +22,7 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -55,16 +46,10 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-form"
-    },
-    {
       "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-client"
     },
     {
       "path": "../plugin-deck"

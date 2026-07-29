@@ -130,7 +130,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/display-name": "workspace:*",
@@ -179,14 +178,10 @@
     "react-qr-rounded": "catalog:"
   },
   "devDependencies": {
-    "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
-    "@babel/core": "catalog:",
-    "@dxos/lit-ui": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",

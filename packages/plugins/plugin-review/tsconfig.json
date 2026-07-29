@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/display-name"
     },
     {
@@ -38,9 +35,6 @@
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -118,9 +112,6 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
       "path": "../../ui/react-ui-tabs"
     },
     {
@@ -152,9 +143,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }
