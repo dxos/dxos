@@ -87,11 +87,11 @@ describe('threads', () => {
       expect(foldThreads([root, ...replies]).get(root.id)?.participants).to.deep.eq([DID_ALICE]);
     });
 
-    test('picks up the root topic', ({ expect }) => {
+    test('picks up the thread name from its root', ({ expect }) => {
       const root = makeMessage({ text: 'root' });
-      ThreadAnnotation.setTopic(root, 'Q2 planning');
+      ThreadAnnotation.setThreadName(root, 'Q2 planning');
       const reply = makeMessage({ text: 'a', threadId: root.id });
-      expect(foldThreads([root, reply]).get(root.id)?.topic).to.eq('Q2 planning');
+      expect(foldThreads([root, reply]).get(root.id)?.name).to.eq('Q2 planning');
     });
 
     // A thread outlives the message it branched from: deleting the root must not strand its replies.

@@ -40,7 +40,7 @@ export const DEFAULT_REACTIONS = ['👍', '🎉', '❤️', '😄', '👀', '�
 export type MessageThreadSummary = {
   replyCount: number;
   /** Thread name, when one has been set. */
-  topic?: string;
+  name?: string;
   /** ISO date of the most recent reply. */
   lastActivity?: string;
 };

@@ -14,29 +14,33 @@ import { type Message } from '@dxos/types';
  * Per-service metadata on a `Message`, expressed as typed instance annotations rather than keys in
  * the untyped `properties` bag — `properties` carries provider-specific transport headers (email
  * subject/to/cc/messageId, the assistant's tool-call id) and giving each service its own typed
- * annotation keeps those concerns from colliding. Chat owns `topic`; review will own `resolved`.
+ * annotation keeps those concerns from colliding. Chat owns the thread name; review will own
+ * `resolved`.
  *
  * Keys are namespaced on the service (`org.dxos.chat.*`), not the plugin id, so the stage-2
  * `plugin-thread` → `plugin-chat` rename cannot orphan persisted values.
  */
 
-/** Thread name, Zulip-style. Set on a thread's root message only; editing is an author re-append. */
-export const Topic = Annotation.make({
-  id: 'org.dxos.chat.topic',
+/**
+ * Name of the thread branching from this message. Set on a thread's root message only, since the
+ * root's id is the thread's id; editing it is an author re-append. (Zulip calls this a topic.)
+ */
+export const ThreadName = Annotation.make({
+  id: 'org.dxos.chat.threadName',
   schema: Schema.String,
 });
 
-/** A message's topic, or undefined when it names no thread. */
-export const getTopic = (message: Message.Message): string | undefined =>
-  Option.getOrUndefined(Annotation.get(message, Topic));
+/** The name of the thread rooted at this message, or undefined when it has none. */
+export const getThreadName = (message: Message.Message): string | undefined =>
+  Option.getOrUndefined(Annotation.get(message, ThreadName));
 
-/** Sets (or clears) a message's topic. Re-appends the message to its feed. */
-export const setTopic = (message: Message.Message, topic: string | undefined): void => {
+/** Sets (or clears) the thread name. Re-appends the message to its feed. */
+export const setThreadName = (message: Message.Message, name: string | undefined): void => {
   Obj.update(message, (message) => {
-    if (topic === undefined || topic.length === 0) {
-      delete Obj.getMeta(message).annotations[Topic.key];
+    if (name === undefined || name.length === 0) {
+      delete Obj.getMeta(message).annotations[ThreadName.key];
     } else {
-      Annotation.set(message, Topic, topic);
+      Annotation.set(message, ThreadName, name);
     }
   });
 };

@@ -41,7 +41,7 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       addresses tracing-queue items, not feed messages.
 - [x] Evaluate replacing the `Message.properties` bag with strongly-typed ECHO
       annotations. DECIDED (josiah, 2026-07-29): **per-service typed instance
-      annotations** — chat owns `topic`, review will own `resolved`. The audit
+      annotations** — chat owns the thread name, review will own `resolved`. The audit
       found `properties` carrying transport headers no service should share
       (`subject`/`to`/`cc`/`messageId`/`inReplyTo`/`references`/
       `listUnsubscribe`/`snippet`/`mailbox`/`sentMessageId`, plus the
@@ -54,10 +54,11 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       plugin's schema module (all three entrypoints: browser/node/workerd).
       Fold and toggle helpers are deliberately deferred to the UI task that
       needs them, so they land with tests against real usage.
-- [x] Define `topic` (thread name, roots only): `ThreadAnnotation.Topic`
-      (`org.dxos.chat.topic`) in plugin-thread, with `getTopic`/`setTopic`.
-      Keyed on the service, not the plugin id, so the stage-2 rename cannot
-      orphan persisted values.
+- [x] Define the thread name (roots only): `ThreadAnnotation.ThreadName`
+      (`org.dxos.chat.threadName`) in plugin-thread, with
+      `getThreadName`/`setThreadName`. Named for the thing rather than Zulip's
+      "topic" jargon (josiah, 2026-07-29). Keyed on the service, not the plugin
+      id, so the stage-2 rename cannot orphan persisted values.
 - [x] Decide reaction identity/toggle mechanics: `findOwnReaction` matches
       `(senderKey, target, emoji)` and `ThreadOperation.ToggleReaction`
       appends or tombstones that one item. Idempotency comes from the fold
@@ -71,16 +72,16 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       absent-field query semantics entirely — revisit only if channel size
       makes client-side folding too costly.
 - [x] Thread summary fold: `foldThreads` yields reply count, participant set
-      (deduped, first-seen order), topic and last activity, with unit tests.
-      Rendered by `Message.ThreadLink` as topic · count · relative time.
+      (deduped, first-seen order), name and last activity, with unit tests.
+      Rendered by `Message.ThreadLink` as name · count · relative time.
       Remaining polish: participant avatars in the row.
 - [x] "Start thread" affordance on every root message; `ThreadPanel` renders
       beside the channel, filtered by `threadId`.
 - [x] Reply composer posts into the open thread (`AppendChannelMessage` gained
       `threadId`); the main composer still posts roots.
-- [x] Topic set/rename in the thread header, author-only, committed on
-      blur/Enter so a keystroke is not a feed re-append; the topic also renders
-      in the summary row.
+- [x] Thread rename in the panel header, author-only, committed on blur/Enter
+      so a keystroke is not a feed re-append; the name also renders in the
+      summary row.
 - [ ] Deep-link a thread. PARKED by josiah (2026-07-29) until the rest is
       working — thread selection is component state for now. Needs the url-deck
       pair-chain grammar, and plugin-projects has the same open need.

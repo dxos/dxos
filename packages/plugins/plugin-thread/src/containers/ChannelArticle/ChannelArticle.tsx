@@ -86,9 +86,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const getThreadSummary = useCallback(
     (message: MessageType.Message) => {
       const summary = threads.get(message.id);
-      return (
-        summary && { replyCount: summary.replies.length, topic: summary.topic, lastActivity: summary.lastActivity }
-      );
+      return summary && { replyCount: summary.replies.length, name: summary.name, lastActivity: summary.lastActivity };
     },
     [threads],
   );
@@ -142,16 +140,16 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
     [channel, identity, readOnly, openThreadId, invokePromise],
   );
 
-  // Only the root's author may rename a thread: a topic is an annotation on the root message, and
+  // Only the root's author may rename a thread: the name is an annotation on the root message, and
   // editing it re-appends that message, which under the feed's last-flush-wins rule would silently
   // overwrite a concurrent edit by its author.
   const canRenameThread =
     !readOnly && !!identity && !!openThreadRoot && senderKey(openThreadRoot.sender) === identity.did;
 
-  const handleTopicChange = useCallback(
-    (topic: string) => {
+  const handleRename = useCallback(
+    (name: string) => {
       if (openThreadRoot) {
-        ThreadAnnotation.setTopic(openThreadRoot, topic);
+        ThreadAnnotation.setThreadName(openThreadRoot, name);
       }
     },
     [openThreadRoot],
@@ -243,7 +241,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
               threadId={openThreadId}
               root={openThreadRoot}
               replies={openThread?.replies ?? []}
-              topic={openThread?.topic ?? (openThreadRoot && ThreadAnnotation.getTopic(openThreadRoot))}
+              name={openThread?.name ?? (openThreadRoot && ThreadAnnotation.getThreadName(openThreadRoot))}
               identity={identity ?? undefined}
               members={members}
               readOnly={readOnly}
@@ -252,7 +250,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
               canDelete={canDelete}
               onMessageReact={canReact ? handleReact : undefined}
               onMessageDelete={canRemove ? handleDelete : undefined}
-              onTopicChange={canRenameThread ? handleTopicChange : undefined}
+              onRename={canRenameThread ? handleRename : undefined}
               onClose={() => setOpenThreadId(undefined)}
               onSend={handleSendReply}
             />

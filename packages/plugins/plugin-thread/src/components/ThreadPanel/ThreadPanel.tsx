@@ -21,7 +21,8 @@ export type ThreadPanelProps = ThemedClassName<{
   threadId: string;
   /** Replies, ascending. */
   replies: readonly Message.Message[];
-  topic?: string;
+  /** Thread name, shown in the header and editable by the root's author. */
+  name?: string;
   identity?: Identity.Info;
   members: readonly Space.Member[];
   readOnly?: boolean;
@@ -31,7 +32,7 @@ export type ThreadPanelProps = ThemedClassName<{
   onMessageReact?: (messageId: string, emoji: string) => void;
   onMessageDelete?: (messageId: string) => void;
   /** Renames the thread; omit when the local identity may not (only the root's author may). */
-  onTopicChange?: (topic: string) => void;
+  onRename?: (name: string) => void;
   onClose: () => void;
   /** Posts a reply into this thread. */
   onSend: (text: string) => boolean;
@@ -45,7 +46,7 @@ export const ThreadPanel = ({
   root,
   threadId,
   replies,
-  topic,
+  name,
   identity,
   members,
   readOnly,
@@ -54,21 +55,21 @@ export const ThreadPanel = ({
   canDelete,
   onMessageReact,
   onMessageDelete,
-  onTopicChange,
+  onRename,
   onClose,
   onSend,
   classNames,
 }: ThreadPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   // Held locally while typing so each keystroke isn't a feed re-append; committed on blur/Enter.
-  const [draftTopic, setDraftTopic] = useState<string | undefined>(undefined);
+  const [draftName, setDraftName] = useState<string | undefined>(undefined);
 
-  const commitTopic = useCallback(() => {
-    if (draftTopic !== undefined && draftTopic !== (topic ?? '')) {
-      onTopicChange?.(draftTopic);
+  const commitName = useCallback(() => {
+    if (draftName !== undefined && draftName !== (name ?? '')) {
+      onRename?.(draftName);
     }
-    setDraftTopic(undefined);
-  }, [draftTopic, topic, onTopicChange]);
+    setDraftName(undefined);
+  }, [draftName, name, onRename]);
 
   // The root is rendered as the first message of the thread so the branch point stays visible.
   const messages = root ? [root, ...replies] : replies;
@@ -76,21 +77,21 @@ export const ThreadPanel = ({
   return (
     <div role='complementary' data-testid='thread.panel' className={mx('flex flex-col min-h-0', classNames)}>
       <div className='flex items-center gap-1 pis-2 pie-1 py-1 border-be border-separator'>
-        {onTopicChange ? (
+        {onRename ? (
           <Input.Root>
-            <Input.Label srOnly>{t('thread-topic.label')}</Input.Label>
+            <Input.Label srOnly>{t('thread-name.label')}</Input.Label>
             <Input.TextInput
-              data-testid='thread.panel.topic'
+              data-testid='thread.panel.name'
               variant='subdued'
-              placeholder={t('thread-topic.placeholder')}
-              value={draftTopic ?? topic ?? ''}
-              onChange={(event) => setDraftTopic(event.target.value)}
-              onBlur={commitTopic}
-              onKeyDown={(event) => event.key === 'Enter' && commitTopic()}
+              placeholder={t('thread-name.placeholder')}
+              value={draftName ?? name ?? ''}
+              onChange={(event) => setDraftName(event.target.value)}
+              onBlur={commitName}
+              onKeyDown={(event) => event.key === 'Enter' && commitName()}
             />
           </Input.Root>
         ) : (
-          <p className='grow truncate text-sm font-medium'>{topic ?? t('thread.heading')}</p>
+          <p className='grow truncate text-sm font-medium'>{name ?? t('thread.heading')}</p>
         )}
         <IconButton
           data-testid='thread.panel.close'

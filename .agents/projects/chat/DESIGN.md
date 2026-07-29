@@ -44,7 +44,7 @@ Channel {
   backend: { kind: string; config: Ref<Obj.Unknown> }   // default: Feed
 }
 
-// org.dxos.type.message v0.1.0 — sdk/types/src/types/Message.ts
+// org.dxos.type.message v0.2.0 — sdk/types/src/types/Message.ts
 Message {
   id; created: string; sender: Actor
   blocks: ContentBlock[]
@@ -63,7 +63,7 @@ Stage-1 schema fixes:
   is why replies point at messages and never at db objects.
 - **Per-service typed annotations replace new `properties` keys** (decided
   2026-07-29). Each service attaches its own typed instance annotation instead
-  of sharing one untyped bag: chat owns `topic`, review will own `resolved`.
+  of sharing one untyped bag: chat owns the thread name, review will own `resolved`.
   `properties` itself stays — the audit found it carrying transport headers
   (`subject`/`to`/`cc`/`messageId`/`inReplyTo`/`references`/`listUnsubscribe`/
   `snippet`/`mailbox`/`sentMessageId`) plus the assistant's tool-call id, none
@@ -72,7 +72,7 @@ Stage-1 schema fixes:
 
   ```ts
   // plugin-thread/types/ThreadAnnotation.ts
-  export const Topic = Annotation.make({ id: 'org.dxos.chat.topic', schema: Schema.String });
+  export const ThreadName = Annotation.make({ id: 'org.dxos.chat.threadName', schema: Schema.String });
   ```
 
   Values live in `Obj.getMeta(message).annotations`, so they travel with the
@@ -94,9 +94,10 @@ Reaction {
 
 Per-message thread metadata, set on root messages only and folded at read:
 
-- `topic` — thread name (Zulip topic), shipped as the `org.dxos.chat.topic`
-  annotation. Renaming is an author re-append, so only the root's author may
-  do it: under last-flush-wins a second editor would silently clobber them.
+- **thread name** — shipped as the `org.dxos.chat.threadName` annotation.
+  (Zulip calls this a topic; we name it for what it is.) Renaming is an author
+  re-append, so only the root's author may do it: under last-flush-wins a
+  second editor would silently clobber them.
 - `resolved` — comment-thread resolution state, to ship as review's own
   annotation in stage 3 (same mechanism, `org.dxos.review.*`).
 

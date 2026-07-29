@@ -20,8 +20,8 @@ export type ThreadSummary = {
   threadId: string;
   /** The root message, when it is present in the same list. */
   root?: Message.Message;
-  /** Thread name taken from the root message's topic annotation. */
-  topic?: string;
+  /** Thread name, taken from the root message's annotation. */
+  name?: string;
   /** Replies in the thread, ascending by `created`. */
   replies: readonly Message.Message[];
   /** Distinct reply senders, in first-seen order. */
@@ -92,7 +92,7 @@ export const foldThreads = (messages: readonly Message.Message[]): ReadonlyMap<s
     summaries.set(threadId, {
       threadId,
       root,
-      topic: root && ThreadAnnotation.getTopic(root),
+      name: root && ThreadAnnotation.getThreadName(root),
       replies,
       participants,
       lastActivity: replies.at(-1)?.created ?? root?.created,

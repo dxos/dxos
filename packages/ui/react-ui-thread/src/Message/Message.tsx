@@ -340,7 +340,7 @@ export type MessageThreadLinkProps = {
 
 /**
  * Thread affordance beneath a root message: "Start a thread" when none exists, otherwise the
- * thread's topic, its reply count, and when it was last active.
+ * thread's name, its reply count, and when it was last active.
  */
 const MessageThreadLink = ({ summary, onOpen }: MessageThreadLinkProps) => {
   const { t, dtLocale } = useTranslation(translationKey);
@@ -358,7 +358,7 @@ const MessageThreadLink = ({ summary, onOpen }: MessageThreadLinkProps) => {
       onClick={onOpen}
     >
       <Icon icon='ph--chats-circle--regular' size={4} />
-      {summary?.topic && <span className='truncate min-w-0 font-medium'>{summary.topic}</span>}
+      {summary?.name && <span className='truncate min-w-0 font-medium'>{summary.name}</span>}
       <span className='shrink-0'>
         {replyCount > 0 ? t('reply-count.label', { count: replyCount }) : t('start-thread.label')}
       </span>

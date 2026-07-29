@@ -95,8 +95,8 @@ export const translations = [
 
         'thread.heading': 'Thread',
         'thread-back.label': 'Close thread',
-        'thread-topic.label': 'Topic',
-        'thread-topic.placeholder': 'Add a topic',
+        'thread-name.label': 'Thread name',
+        'thread-name.placeholder': 'Name this thread',
         'thread-reply.placeholder': 'Reply in thread…',
       },
     },
