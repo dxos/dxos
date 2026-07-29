@@ -3,6 +3,10 @@
 proto = "0.58.2"
 node = "24.11.1"
 pnpm = "10.28.0"
+# NOTE: Keep bun version in sync with `.github/Dockerfile`, and rebuild the image after changing it.
+#  Unlike node and pnpm, bun is not declared in `.moon/toolchains.yml`, so moon never installs it and a
+#  bare `bun` in CI resolves to the image's copy rather than this pin — bumping only this file leaves CI
+#  compiling with the old version, silently.
 # 1.3.4 leaks `--smol` into `process.argv` of every `--compile`d binary, which makes the published
 # `dx` reject its own arguments ("Invalid subcommand for dx").
 bun = "1.3.11"
