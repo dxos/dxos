@@ -7,26 +7,17 @@ import React, { memo, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { useActionRunner } from '@dxos/plugin-graph';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
-import {
-  type ActionExecutor,
-  type ActionGraphProps,
-  Menu,
-  MenuBuilder,
-  graphActions,
-  isToolbarAction,
-  useMenuBuilder,
-} from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { ArtifactCard } from '#components';
 import { meta } from '#meta';
@@ -45,7 +36,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { actions, onAction } = useToolbarActions(subject, attendableId);
+  const actions = useToolbarActions(subject);
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
   // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory,
@@ -101,7 +92,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     // `Menu.Root` wraps the panel rather than sitting inside the toolbar: `ToolbarMenu` disables itself
     // unless the menu scope's `attendableId` has attention, so the scope has to span the surface that
     // receives attention, not just the toolbar row.
-    <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
+    <Menu.Root {...actions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
           <Menu.Toolbar classNames='dx-document' />
@@ -133,24 +124,18 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 ProjectArticle.displayName = 'ProjectArticle';
 
 /**
- * The toolbar owns its create-chat button rather than relying on the graph action of the same name:
- * graph actions are keyed by node id, so a toolbar built only from them is empty whenever the attended
- * id is not the node the action hangs off. The graph action stays for the navtree row, and the splice
- * below still picks up contributions from other plugins.
+ * The toolbar's own actions. Deliberately not spliced from the app graph: toolbar and navtree
+ * actions are expected to diverge as the toolbar grows, and the graph's create-chat action serves
+ * the navtree row.
  */
-const useToolbarActions = (
-  project: Project.Project,
-  attendableId: string,
-): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+const useToolbarActions = (project: Project.Project) => {
   const { invokePromise } = useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
   const spaceId = Obj.getDatabase(project)?.spaceId;
 
-  const actions = useMenuBuilder(
-    (get): ActionGraphProps =>
+  return useMenuBuilder(
+    (): ActionGraphProps =>
       MenuBuilder.make()
         .action(
           'create-chat',
@@ -162,13 +147,9 @@ const useToolbarActions = (
           },
           () => void invokePromise(ProjectOperation.CreateChat, { project }, { spaceId }),
         )
-        .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
         .build(),
-    [graph, attendableId, project, invokePromise, spaceId],
+    [project, invokePromise, spaceId],
   );
-
-  // `runAction` is the executor; wrapping it only to re-tag the action would need a cast.
-  return { actions, onAction: runAction };
 };
 
 type ArtifactTileData = { object: Obj.Unknown; onClick: () => void; onDelete: () => void };
