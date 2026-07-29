@@ -125,6 +125,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",

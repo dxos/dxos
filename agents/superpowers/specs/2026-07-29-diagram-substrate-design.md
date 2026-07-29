@@ -16,9 +16,9 @@ allows constrained editing that writes back to that DSL, and replaces
 - Neither renderer models ports, so links attach to shape centres.
 - Nothing ties a rendered node back to the source it came from, so edits cannot round-trip.
 
-Separately, `plugin-conductor` sits on ~11.8k LOC of hand-rolled canvas code
-(`react-ui-canvas` 2.4k, `react-ui-canvas-editor` 5.1k, `react-ui-canvas-compute` 4.3k)
-that has no group/hierarchy support.
+Separately, `plugin-conductor` sits on ~10.4k LOC of hand-rolled canvas code, excluding
+tests and stories (`react-ui-canvas` 2.0k, `react-ui-canvas-editor` 4.6k,
+`react-ui-canvas-compute` 3.8k) that has no group/hierarchy support.
 
 Both want the same thing: a renderer whose model is authoritative, driven by a declared
 ontology, over a source it does not own.
@@ -53,7 +53,7 @@ There is already a working in-repo spike —
 `@dxos/graph`, three source handles per side at 30/50/70%, `snapToGrid`, and reuse of the
 shape registry. `react-ui-board/src/components/Chain` is a second consumer.
 
-D3 was rejected: it is a toolkit, not a substrate — it is what the 11.8k hand-rolled LOC
+D3 was rejected: it is a toolkit, not a substrate — it is what the hand-rolled canvas code
 already is.
 
 ### Licensing
@@ -105,37 +105,70 @@ under our control. Provenance is opaque to the renderer (`unknown` at that bound
 source span for Mermaid, a node path for an AST, a DXN for ECHO. Only `dialect.apply`
 reads it.
 
-### Neutral representation: extend `@dxos/graph`
+### Neutral representation: rewrite `@dxos/graph`
 
-The neutral model is not a new package. `@dxos/graph` (928 LOC) is already generic —
-`Node { id, type?, data? }`, `Edge { id, type?, source, target, data? }` — and is the
-right home. Two additive changes:
+The neutral model is not a new package — `@dxos/graph` (663 LOC excluding tests) is the
+right home. But it should be **rewritten**, not extended. Two independent reasons.
+
+**1. Its persisted footprint is exactly what we are replacing.** `Graph` is an ambiguous
+name in this repo; three unrelated things carry it. Only two consumers persist the real
+`@dxos/graph`, and both are the types this work replaces:
+
+| Consumer                         | Uses                                                   | Persisted                |
+| -------------------------------- | ------------------------------------------------------ | ------------------------ |
+| `conductor`                      | `ComputeNode`/`ComputeEdge` extend `Graph.Node`/`Edge` | **yes** — `ComputeGraph` |
+| `react-ui-canvas-editor`         | `CanvasBoard.layout: Graph.Graph`                      | **yes** — `CanvasBoard`  |
+| `react-ui-graph` (13 projectors) | `type Graph` only — d3, in-memory                      | no                       |
+| `sdk/schema`                     | builds a `GraphModel` from ECHO at runtime             | no                       |
+| `plugin-explorer`                | `SelectionModel` + in-memory adapter                   | no                       |
+| `react-ui-canvas-compute`        | tests only                                             | no                       |
+
+`plugin-explorer`'s own `org.dxos.type.graph` (`{name, view, query}`) and
+`plugin-script`'s `Notebook.graph` reference _that_, not `@dxos/graph`;
+`react-ui-menu` and `plugin-graph` use `@dxos/app-graph`, a third unrelated `Graph`. So
+there is no external migration burden.
+
+**2. The current design is already fighting itself.**
+
+- `data: Schema.optional(Schema.Any)` is dead weight: both real consumers bypass it via
+  `Schema.extend`, so there are two competing extension mechanisms and the typed one needs
+  casts — `graph as Graph.Graph<S, Connection>` in `CanvasGraphModel`.
+- The author flagged this: `Shape` does `Graph.Node.pipe(Schema.omit('type'))` with
+  `// TODO(burdon): Breaks graph contract?`.
+- `createEdgeId`/`parseEdgeId` is buggy. Ids join on `_` and split on `_`, while
+  `KEY_REGEX = /\w+/` admits `_` and is unanchored, so
+  `createEdgeId({source: 'a_b', target: 'c'})` → `'a_b__c'` reads back as
+  `source: 'a', relation: 'b', target: ''`.
+- `GraphModel` is mutation-oriented (`ReadonlyGraphModel` → `GraphModel` →
+  `ReactiveGraphModel` + `Builder`), the wrong grain for a projection/intent architecture.
+
+**Rewrite, preserving structural compatibility.** Keep the field names
+(`id`/`type`/`nodes`/`edges`/`source`/`target`) so the 13 read-only projectors and
+`sdk/schema` need at most an import change. Changes:
 
 ```ts
-// Node: inline containment. Group is a node whose kind admits children.
+// Node: inline containment. A group is a node whose kind admits children.
 parent: Schema.optional(Schema.String),
 
-// Edge: named attachment points.
+// Edge: named attachment points — replaces ComputeEdge.input/output and Connection.input/output.
 sourcePort: Schema.optional(Schema.String),
 targetPort: Schema.optional(Schema.String),
 ```
 
-Both are justified by existing duplication rather than by this design's convenience:
-
-- **Ports exist twice, incompatibly.** `ComputeEdge` extends `Graph.Edge` with _required_
-  `input`/`output`; `Connection` extends it with _optional_ `input`/`output`.
-- **Hierarchy exists twice.** `plugin-explorer` has its own `TreeNodeType` with
-  `children: string[]`; `react-ui-graph`'s cluster projector bolts `parent` onto synthetic
-  nodes.
+- Drop `data: Any`; make the node/edge payload a **schema parameter** so extension is
+  first-class instead of `Schema.extend` plus a cast.
+- Drop `createEdgeId`/`parseEdgeId`; edge ids become opaque, with `relation` an explicit
+  field rather than something packed into the id.
+- Separate the immutable projection type from the mutable model: the diagram layer consumes
+  a plain immutable `Graph`; `GraphModel` survives for the existing mutation consumers and
+  gains `children(id)`, `ancestors(id)`, `roots()`.
 
 `parent` (child→parent) rather than `children[]` so multi-parent is structurally
 unrepresentable, and because React Flow's `parentId` and ELK's
 `hierarchyHandling: INCLUDE_CHILDREN` both want that direction.
 
-Both fields are optional, so all 12 consumers / 37 import sites are unaffected.
-`@dxos/graph` is published (v0.10.0, not private) → additive minor + changeset.
-
-`GraphModel` gains `children(id)`, `ancestors(id)`, `roots()`.
+At `0.10.0` the breaking change lands in a minor, so it does not cascade a major through
+the fixed publish group.
 
 What `project` returns is that graph plus the two things the renderer needs and the source
 cannot supply — resolved geometry and a provenance map:
@@ -243,17 +276,30 @@ Relevant options: `elk.layered.crossingMinimization.strategy`, `elk.edgeRouting`
 Edge sections (`startPoint`, `bendPoints[]`, `endPoint`) map onto React Flow edge paths.
 Load via dynamic import; EPL-2.0 and ~1.5MB, so it must not enter the base bundle.
 
-## Packages
+## Affected packages
 
-| Package                   | Change                                                                      |
-| ------------------------- | --------------------------------------------------------------------------- |
-| `@dxos/graph`             | extend: `Node.parent`, `Edge.sourcePort`/`targetPort`, `GraphModel` helpers |
-| `react-ui-canvas`         | keep — substrate-independent viewport/projection wrapper                    |
-| `react-ui-diagram`        | **new** — React Flow renderer, ontology-driven toolbar, intents             |
-| `react-ui-canvas-editor`  | **remove** once conductor migrates                                          |
-| `react-ui-canvas-compute` | port 25 shapes to node kinds; drop the canvas coupling                      |
-| `plugin-illustrator`      | owns the dialect contract + Mermaid dialect                                 |
-| `plugin-conductor`        | ComputeGraph dialect; renders via `react-ui-diagram`                        |
+LOC excludes tests and stories. "Impact" is the expected scale of change, not a promise.
+
+| Package                         | LOC  | Relationship                         | Impact                                                                                                       |
+| ------------------------------- | ---- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `@dxos/graph`                   | 663  | neutral representation               | **rewrite** — parameterised payload, `parent`, ports; drop `data: Any` + `createEdgeId`; keep field names    |
+| `react-ui-diagram`              | —    | **new**                              | React Flow renderer, ontology-driven toolbar, intent dispatch                                                |
+| `react-ui-canvas-editor`        | 4631 | current conductor substrate          | **delete** once conductor migrates; `CanvasBoard`/`Shape`/`Connection` superseded                            |
+| `react-ui-canvas-compute`       | 3767 | 25 compute shapes                    | **port** shapes to node kinds; drop the canvas coupling. Largest single migration                            |
+| `core/compute/conductor`        | 3114 | owns `ComputeGraph`                  | **moderate** — `ComputeEdge.input`/`output` become core ports; `subgraph` flattens to `parent` at projection |
+| `plugin-conductor`              | 307  | thin shell                           | **small** — renders via `react-ui-diagram`; add the ComputeGraph dialect                                     |
+| `plugin-illustrator`            | 1836 | dialect host                         | **moderate** — owns the dialect contract; Mermaid parser becomes span-aware                                  |
+| `react-ui-canvas`               | 1961 | viewport/projection                  | **keep** — substrate-independent                                                                             |
+| `react-ui-graph`                | 7106 | 13 d3 projectors, in-memory          | **low** — read-only structural use; import churn only, if field names hold                                   |
+| `sdk/schema`                    | 3398 | builds `GraphModel` from ECHO        | **low** — runtime projection, not persisted                                                                  |
+| `plugin-explorer`               | 2602 | `SelectionModel` + in-memory adapter | **low** — its own `org.dxos.type.graph` is unrelated                                                         |
+| `react-ui-board`                | 2131 | second React Flow consumer           | **none required** — candidate to converge later                                                              |
+| `plugin-script`                 | 6093 | `Notebook.graph`                     | **none** — refs plugin-explorer's type, not `@dxos/graph`                                                    |
+| `react-ui-menu`, `plugin-graph` | —    | `@dxos/app-graph`                    | **none** — unrelated `Graph`                                                                                 |
+
+Net: ~8.4k LOC deleted or ported (`react-ui-canvas-editor` + `react-ui-canvas-compute`)
+against one new renderer package, with the `react-ui-graph` / `sdk/schema` /
+`plugin-explorer` cluster insulated by keeping field names stable.
 
 Named `react-ui-diagram`, not `react-ui-flow`: naming the package after React Flow
 re-couples what the neutral model exists to decouple, and "flow" under-describes UML class

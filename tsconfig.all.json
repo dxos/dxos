@@ -709,6 +709,9 @@
       "path": "packages/ui/react-ui-debug/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-diagram/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-dnd/tsconfig.json"
     },
     {

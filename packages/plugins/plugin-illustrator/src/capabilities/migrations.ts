@@ -13,13 +13,13 @@ import { Drawing, LegacySketch } from '../types';
 // `org.dxos.type.sketch` -> `org.dxos.type.drawing`. The shape is unchanged (name + canvas ref)
 // and the canvas keeps its typename, so the transform is a field copy; the runtime swaps the
 // object's type and retires the old one.
-const migrations = [
-  Migration.define({
-    from: LegacySketch.Sketch,
-    to: Drawing.Drawing,
-    transform: async ({ name, canvas }) => ({ name, canvas }),
-  }),
-];
+export const sketchToDrawing = Migration.define({
+  from: LegacySketch.Sketch,
+  to: Drawing.Drawing,
+  transform: async ({ name, canvas }) => ({ name, canvas }),
+});
+
+const migrations = [sketchToDrawing];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
