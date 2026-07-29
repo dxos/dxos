@@ -36,14 +36,14 @@ continues from. An item with no explicit parent continues from _the previous
 item in append order_ — which is what every feed does today, so absence of the
 key reproduces current behaviour exactly.
 
-```
+```text
 append order:  M1  M2  M3  M4  M5(M3)
 resolved:      M1  M2  M3      M5
 ```
 
 Then appending `M6(M4)`:
 
-```
+```text
 append order:  M1  M2  M3  M4  M5(M3)  M6(M4)
 resolved:      M1  M2  M3  M4          M6
 ```
@@ -143,13 +143,22 @@ Pushing branch selection into the query plan (`Scope.feed(uri, { branch })`) so
 filtering happens _before_ `limit` stays available as a later optimization, once
 a feed is large enough that materializing the chain to resolve it hurts.
 
-### Absent parent → stop and truncate
+### Absent or unresolvable parent → stop and truncate
 
 A parent id may legitimately be missing: partial replication (feeds support
 `replicate(fromPosition)`), the item was `@deleted`, or the caller's filter
 excluded it. The walk stops there and reports `truncated: true`, so a UI can say
 "earlier history unavailable". Falling back to append order instead would
 present abandoned items as live, which is worse than showing less.
+
+The same applies to a **malformed** stored id — a key that is present but does
+not parse (a corrupted or future-format replicated block). The resolver reads
+lineage as a tri-state (absent / present-and-valid / present-but-malformed)
+rather than collapsing malformed to absent, because collapsing would resolve a
+fork as an implicit continuation and silently resurrect exactly the items that
+fork abandoned, while still reporting `truncated: false`. `Feed.getParent`
+returns `undefined` for both cases, since a caller cannot act on an id it cannot
+parse; only `resolveBranch` distinguishes them.
 
 ### Forward references terminate the walk
 
@@ -175,22 +184,27 @@ Added to [`Feed.ts`](../../../packages/core/echo/echo/src/Feed.ts):
 /** Foreign-key source for an item's explicit lineage parent. */
 export const PARENT_KEY = 'org.dxos.key.feed-parent';
 
-export const getParent: (item: Obj.Unknown | Obj.Snapshot) => EntityId.EntityId | undefined;
-export const setParent: (item: Obj.Unknown, parent: Obj.Unknown | EntityId.EntityId | undefined) => void;
+export const getParent: (item: Entity.Unknown | Entity.Snapshot) => EntityId | undefined;
+export const setParent: (item: Entity.Unknown, parent: Entity.Unknown | Entity.Snapshot | EntityId | undefined) => void;
+
+export interface AppendOptions {
+  /** Explicit lineage parent — the soft-fork point. Applies to the first item only. */
+  parent?: Entity.Unknown | Entity.Snapshot | EntityId;
+}
 
 export interface BranchOptions {
   /** Item to resolve from. Defaults to the last item in `items` (latest-wins). */
-  head?: Obj.Unknown | Obj.Snapshot | EntityId.EntityId;
+  head?: Entity.Unknown | Entity.Snapshot | EntityId;
 }
 
 export interface Branch<T> {
   /** The resolved chain, in append order. */
   items: T[];
-  /** A parent was referenced but not present in `items`, so the chain is incomplete. */
+  /** A parent was referenced but not resolvable in `items`, so the chain is incomplete. */
   truncated: boolean;
 }
 
-export const resolveBranch: <T extends Obj.Unknown | Obj.Snapshot>(
+export const resolveBranch: <T extends Entity.Unknown | Entity.Snapshot>(
   items: readonly T[],
   options?: BranchOptions,
 ) => Branch<T>;
@@ -199,7 +213,7 @@ export const resolveBranch: <T extends Obj.Unknown | Obj.Snapshot>(
 export const append: (
   feed: Feed,
   items: Entity.Unknown[],
-  options?: { parent?: Obj.Unknown | EntityId.EntityId },
+  options?: AppendOptions,
 ) => Effect.Effect<void, never, Database.Service>;
 ```
 
@@ -227,7 +241,8 @@ const { items, truncated } = Feed.resolveBranch(messages);
   unit tests, no database, matching the DB-free tests already in that package:
   `getParent`/`setParent` round-trip; the `M1..M5(M3)` and `M6(M4)` worked
   examples; no-lineage feeds resolve to the identity; `head` override; absent
-  parent truncates; forward reference / cycle terminates; empty input.
+  parent truncates; malformed parent truncates rather than falling through to the
+  predecessor; forward reference / cycle terminates; empty input.
 - A DB-backed round-trip in
   [`feed.test.ts`](../../../packages/core/echo/echo-client/src/feed/feed.test.ts)
   proving the parent key survives append → query → dedupe.

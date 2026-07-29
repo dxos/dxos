@@ -8,10 +8,6 @@ import * as Feed from './Feed';
 import * as Obj from './Obj';
 import { TestSchema } from './testing';
 
-const message = (title: string) => Obj.make(TestSchema.Task, { title });
-
-const titles = (branch: Feed.Branch<TestSchema.Task>) => branch.items.map((item) => item.title);
-
 describe('Feed', () => {
   describe('getParent / setParent', () => {
     test('an item has no explicit parent by default', ({ expect }) => {
@@ -161,6 +157,32 @@ describe('Feed', () => {
         expect(titles(branch)).toEqual(['m1']);
         expect(branch.truncated).toBe(true);
       });
+
+      // A malformed replicated id must not read as "no parent" — that would resolve the fork as an
+      // implicit continuation and resurrect the items it abandoned.
+      test('a malformed parent id truncates rather than falling through to the predecessor', ({ expect }) => {
+        const [m1, m2, m3] = [message('m1'), message('m2'), message('m3')];
+        corruptParent(m3);
+        const branch = Feed.resolveBranch([m1, m2, m3]);
+        expect(titles(branch)).toEqual(['m3']);
+        expect(branch.truncated).toBe(true);
+      });
+
+      test('getParent reports a malformed parent as undefined', ({ expect }) => {
+        const m1 = message('m1');
+        corruptParent(m1);
+        expect(Feed.getParent(m1)).toBeUndefined();
+      });
     });
   });
 });
+
+const message = (title: string) => Obj.make(TestSchema.Task, { title });
+
+const titles = (branch: Feed.Branch<TestSchema.Task>) => branch.items.map((item) => item.title);
+
+/** Writes an unparseable lineage id, standing in for a corrupted or future-format replicated block. */
+const corruptParent = (task: TestSchema.Task) =>
+  Obj.update(task, (task) => {
+    Obj.getMeta(task).keys.push({ source: Feed.PARENT_KEY, id: 'not-a-ulid' });
+  });

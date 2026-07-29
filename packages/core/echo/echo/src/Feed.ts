@@ -246,13 +246,26 @@ export const remove = (
 export const PARENT_KEY = 'org.dxos.key.feed-parent';
 
 /**
+ * Tri-state read of the lineage key, distinguishing an absent key from a present but malformed one.
+ * A replicated id that does not parse must not read as "no parent" — that would resolve a fork as
+ * an implicit continuation and silently expose the items it abandoned.
+ */
+const readParent = (item: Entity.Unknown | Entity.Snapshot): { present: boolean; id?: EntityId } => {
+  const id = internal.getKeys(item, PARENT_KEY).at(0)?.id;
+  if (id === undefined) {
+    return { present: false };
+  }
+  return EntityId.isValid(id) ? { present: true, id } : { present: true };
+};
+
+/**
  * Returns an item's explicit lineage parent, or `undefined` when it continues from the item that
  * precedes it in append order (the default for every feed).
+ *
+ * Also `undefined` for a malformed stored id; {@link resolveBranch} tells the two apart and reports
+ * a malformed parent as truncation.
  */
-export const getParent = (item: Entity.Unknown | Entity.Snapshot): EntityId | undefined => {
-  const id = internal.getKeys(item, PARENT_KEY).at(0)?.id;
-  return id !== undefined && EntityId.isValid(id) ? id : undefined;
-};
+export const getParent = (item: Entity.Unknown | Entity.Snapshot): EntityId | undefined => readParent(item).id;
 
 /**
  * Sets (or, with `undefined`, clears) an item's explicit lineage parent.
@@ -281,7 +294,7 @@ export const setParent = (
  * `items` must be in **append order** — the walk is positional, and pre-sorting by a wall-clock
  * field such as `created` would corrupt it. Lineage is resolved over exactly the list passed in, so
  * a parent excluded by the caller's filter counts as absent (`truncated`), same as one that has not
- * replicated yet.
+ * replicated yet or whose stored id does not parse.
  *
  * @example
  * ```ts
@@ -309,15 +322,21 @@ export const resolveBranch = <T extends Entity.Unknown | Entity.Snapshot>(
     const item = items[cursor];
     chain.push(item);
 
-    const parentId = getParent(item);
-    if (parentId === undefined) {
+    const parent = readParent(item);
+    if (!parent.present) {
       cursor -= 1;
       continue;
+    }
+    if (parent.id === undefined) {
+      // Key present but unparseable — a fork whose target cannot be identified, so stop rather than
+      // fall through to the predecessor and resurrect what this item abandoned.
+      truncated = true;
+      break;
     }
 
     // A parent at or after its child is a cycle or a forward reference (possible with arbitrary
     // multi-writer data); requiring the cursor to strictly decrease also guarantees termination.
-    const parentIndex = indexById.get(parentId);
+    const parentIndex = indexById.get(parent.id);
     if (parentIndex === undefined || parentIndex >= cursor) {
       truncated = true;
       break;
