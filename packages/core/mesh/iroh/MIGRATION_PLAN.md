@@ -277,6 +277,21 @@ browser fallback until relay+gateway latency/cost matches it.
    regions, auth via HTTP callout to EDGE-issued tokens; (b) n0 managed relays
    (~$0.27/relay/hour, less ops, version-locked); (c) n0 public relays — dev/test only,
    never production.
+   _Can the relay run **in** Cloudflare?_ Not on Workers/Durable Objects — `iroh-relay`
+   is a native Rust server (no listening sockets in workerd; reimplementing the relay
+   protocol on DOs would mean tracking n0's protocol by hand, and DO duration billing +
+   single-threaded throughput fit an always-on packet-forwarding data plane poorly). A
+   **CF Container** _can_ run the real binary: the client data plane is HTTPS→WebSocket,
+   which the fronting Worker proxies bidirectionally, with TLS at the CF edge. Caveats
+   that keep it out of the recommended production path: the optional QAD endpoint (UDP
+   7824, hole-punch address discovery for native peers) is lost — no inbound UDP in
+   Containers; a relay is one logical node, so one container instance per relay
+   hostname (scale by adding hostnames, capped at 4 vCPU/12 GB each); and every relayed
+   byte pays container vCPU + egress — relay traffic is exactly the always-on
+   bandwidth-heavy workload that pricing punishes. Verdict: fine as a dev/pilot relay
+   next to EDGE, wrong platform for the production fleet. Cloudflare's good iroh roles
+   are the control plane: pkarr discovery (n0 ships a CF Worker for this) and the relay
+   auth-callout endpoint served by the edge worker.
 3. **Scope of "primary for edge"** — (a) _recommended:_ p2p-primary first (Phases 1–3),
    EDGE gateway as Phase 4 behind its own flag; (b) run both tracks in parallel from the
    start (more risk, faster to the end-state); (c) p2p only — drop the edge-transport
