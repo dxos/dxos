@@ -50,7 +50,16 @@ Initial priority (user, 2026-07-24):
 - [x] **Chip labeling** — plugin-assistant Instructions typename translations were legacy "Routine"; now "Instructions"; create-object names the owned Instructions.
 - [x] **Minimal plugin set** — Projects/Routine/Outliner in plugin-defs.minimal.tsx + defaults + vite optimizeDeps glob.
 - [x] **Live-AI story** — stories/stories-assistant/Projects ("Voyage": AHOY marker + $track command; Default manual + InstructionsTest play, !test-tagged).
-- [ ] **P1 remaining: delete flow** — verify navtree ⋮ delete for projects; ALSO: intermittent "first click into empty deck attends but opens no plank" (repro needed).
+- [ ] **P1 remaining: delete flow** — navtree ⋮ delete DONE (#12386): Project rows do get Rename/Delete
+      (plugin-space's `objectActions` matches any node whose `data` is an ECHO object with
+      `typename === node.type`, which `AppNode.makeObject` satisfies), the cascade is covered by
+      `delete-project.test.ts`, and a real defect was fixed — `RemoveObjects` closed planks only for the
+      objects passed to it, so a deleted project left its chats' planks open on removed objects.
+      STILL OPEN: the intermittent "first click into empty deck attends but opens no plank" (repro needed).
+- [x] **Tool-call churn in project chats** — (#12386) the skill-manager prompt no longer mandates a
+      `query-skills` call before every `enable-skills` (the list is already rendered into the prompt), project
+      chats pre-bind the artifact-type skills, and `create-object` points at type-specific create tools.
+      Model-behavioral, so the real check is `assistant-evals` `projects.eval.ts` against a live model — NOT run.
 - [x] **PR strategy decision** — moot: the three MS2 commits shipped inside #12335's squash; verified present on main (ProjectArticle `getReactiveOrUndefined`, format.ts `## Instructions` + `<label>`, Projects.stories.tsx, minimal plugin set).
 - [ ] **PLUGIN.mdl for plugin-projects** — as-built record now that implementation settled.
 - [ ] **Commands-authoring UI** — InstructionsEditor edits text/skills only; `commands` currently data-only despite autocomplete shipping.
