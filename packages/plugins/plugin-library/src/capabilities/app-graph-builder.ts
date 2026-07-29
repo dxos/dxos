@@ -30,6 +30,7 @@ export default Capability.makeModule(
       // Book type section in the content group.
       TypeSection.createTypeSectionExtension(Book.Book, {
         urlKey: 'book',
+        sectionUrlKey: 'library',
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
         groupSegment: GraphPath.GroupSegments.content,
         createObject: (space) =>
