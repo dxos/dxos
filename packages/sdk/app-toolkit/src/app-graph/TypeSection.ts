@@ -157,23 +157,15 @@ export const createTypeSectionExtension = (
     return node.type === typename && space ? Option.some(space) : Option.none();
   };
 
+  // The section node itself. Addressable in its own right only when sectionUrlKey is declared —
+  // that makes it a singleton so selecting it opens a plank. Without it the node is a bare
+  // container and only its objects get a URL.
   const sectionExtension = GraphBuilder.createExtension({
     id: typename,
-    // Addressable in its own right only when a section key is declared; otherwise the section node is the
-    // container sitting at this binding's path and only its objects get a URL. A resolver (rather than
-    // static segments) because a singleton's static form requires the node's terminal segment to BE the
-    // key, and the section's terminal segment is its typename.
-    url: options.sectionUrlKey
-      ? {
-          key: options.sectionUrlKey,
-          kind: 'singleton',
-          path: ({ workspaceBaseId }) => Effect.succeed([workspaceBaseId, ...sectionSegments].join('/')),
-        }
-      : { key: options.urlKey, kind: 'item', path: sectionSegments },
+    url: options.sectionUrlKey ? { key: options.sectionUrlKey, kind: 'singleton', path: sectionSegments } : undefined,
     match: options.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
-      const orderedObjects = queryOrderedObjects(space, get);
-      if (orderedObjects.length === 0) {
+      if (queryOrderedObjects(space, get).length === 0) {
         return Effect.succeed([]);
       }
 
@@ -198,9 +190,8 @@ export const createTypeSectionExtension = (
         Node.make({
           id: typename,
           type: typename,
-          // An addressable section is a destination, so it has to carry a subject something can render:
-          // the registered type entity, which plugin-space's generic type-collection surface picks up.
-          // A bare container has no plank of its own, so the opaque marker is enough.
+          // An addressable section carries the registered type entity so plugin-space's generic
+          // type-collection surface can render it. A bare container carries an opaque marker.
           data: options.sectionUrlKey ? (typeEntity ?? `${typename}-root`) : `${typename}-root`,
           properties: {
             label,
@@ -213,27 +204,24 @@ export const createTypeSectionExtension = (
             testId,
             ...(options.position ? { position: options.position } : {}),
           },
-          // Split off to the objects extension when the section owns a singleton binding, since inline
-          // children are stamped from their parent's binding and would inherit the section's key.
-          nodes: options.sectionUrlKey ? undefined : buildObjectNodes(space, get, orderedObjects),
         }),
       ]);
     },
   });
 
-  // The section's objects, when the section node itself is addressable and so owns a different binding.
-  const objectsExtension = options.sectionUrlKey
-    ? GraphBuilder.createExtension({
-        id: `${typename}.sectionObjects`,
-        url: { key: options.urlKey, kind: 'item', path: sectionSegments },
-        match: whenSection,
-        connector: (space, get) => Effect.succeed(buildObjectNodes(space, get, queryOrderedObjects(space, get))),
-      })
-    : undefined;
+  // The section's objects — always a separate extension so each object gets its own item binding
+  // (keyed by urlKey) independent of how the section node itself is addressed.
+  const objectsExtension = GraphBuilder.createExtension({
+    id: `${typename}.sectionObjects`,
+    url: { key: options.urlKey, kind: 'item', path: sectionSegments },
+    match: whenSection,
+    connector: (space, get) => Effect.succeed(buildObjectNodes(space, get, queryOrderedObjects(space, get))),
+  });
 
-  const extensions = objectsExtension
-    ? Effect.map(Effect.all([sectionExtension, objectsExtension]), ([section, objects]) => [...section, ...objects])
-    : sectionExtension;
+  const extensions = Effect.map(Effect.all([sectionExtension, objectsExtension]), ([section, objects]) => [
+    ...section,
+    ...objects,
+  ]);
 
   if (!options.createObject) {
     return extensions;

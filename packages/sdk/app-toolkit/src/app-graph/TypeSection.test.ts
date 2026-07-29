@@ -68,17 +68,9 @@ describe('createTypeSectionExtension', () => {
       });
     });
 
-    test('resolves /library forward to the section node', ({ expect }) => {
+    test('resolves /library forward to the section node via static segments', ({ expect }) => {
       const { path } = bindingsByKey('library').library;
-      expect(typeof path).toBe('function');
-      const resolved = Effect.runSync(
-        (path as Extract<typeof path, Function>)({
-          id: 'library',
-          workspace: 'SPACE1',
-          workspaceBaseId: WORKSPACE_BASE,
-        }),
-      );
-      expect(resolved).toBe(SECTION_NODE_ID);
+      expect(path).toEqual([GraphPath.GroupSegments.content, TYPENAME]);
     });
 
     test('stamps /library on the section node and /book/<id> on its objects', ({ expect }) => {
