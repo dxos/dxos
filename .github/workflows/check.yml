@@ -529,7 +529,10 @@ jobs:
   # `cli:smoke` cannot cover this in CI because the build container forbids mount namespaces.
   cli-foreign:
     needs: e2e
-    if: ${{ !cancelled() && needs.e2e.result == 'success' }}
+    # Runs whenever `e2e` produced the artifact, not only when it passed: the tarballs are uploaded before
+    # the Playwright suite starts, so gating on success would let an unrelated browser failure — or that
+    # job's 60 minute timeout — withhold the CLI verification. A missing artifact fails the download step.
+    if: ${{ !cancelled() && needs.e2e.result != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
