@@ -197,18 +197,29 @@ const VARIANT: Record<NonNullable<DiagramBackgroundProps['variant']>, Background
   dots: BackgroundVariant.Dots,
 };
 
+/** Dot diameter in grid units. Passed explicitly so the offset below cannot drift from the default. */
+const DOT_SIZE = 1;
+
 /**
- * Grid overlay, drawn at the snap pitch so nodes visibly sit on the lines they snap to.
+ * Grid overlay, drawn at the snap pitch so nodes visibly sit on the gridlines they snap to.
  *
- * `offset` is the grid pitch rather than the default 0 to work around an operator-precedence bug in
- * React Flow's Background: it computes `offset * zoom || 1 + gap / 2`, so an offset of 0 is falsy and
- * the pattern is shifted by half a cell plus a pixel — leaving on-grid nodes visibly between dots.
- * A whole cell is indistinguishable from none once the pattern tiles, so this aligns it to the
- * flow origin. Not `composable`: Background is a memoized plain component with no ref to forward.
+ * Neither of React Flow's patterns is anchored to the cell corner, and each is wrong differently, so
+ * `offset` has to compensate per variant:
+ *
+ * - `DotPattern` renders `circle cx=r cy=r`, putting the dot's centre `size * zoom / 2` inside the
+ *   corner. The error scales with zoom, so it is invisible at 1 and obvious when zoomed in.
+ * - `LinePattern` renders `M w/2 0 V h M0 h/2 H w`, drawing at the half-cell — a full `grid / 2` out.
+ *
+ * The leading `grid` term is a whole cell, a no-op once the pattern tiles, and keeps `offset`
+ * non-zero: React Flow computes `offset * zoom || 1 + gap / 2`, so a zero offset is falsy and falls
+ * through to a half-cell-plus-a-pixel shift.
+ *
+ * Not `composable`: Background is a memoized plain component with no ref to forward.
  */
 const DiagramBackground: FC<DiagramBackgroundProps> = ({ variant = 'dots' }) => {
   const { grid } = useDiagramContext('Diagram.Background');
-  return <BackgroundPrimitive gap={grid} offset={grid} variant={VARIANT[variant]} />;
+  const offset = variant === 'dots' ? grid + DOT_SIZE / 2 : grid + grid / 2;
+  return <BackgroundPrimitive gap={grid} size={DOT_SIZE} offset={offset} variant={VARIANT[variant]} />;
 };
 
 DiagramBackground.displayName = 'Diagram.Background';
