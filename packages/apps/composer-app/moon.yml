@@ -33,6 +33,13 @@ tasks:
       - scripts/fetch-ollama.mjs
     outputs:
       - src-tauri/sidecar
+  # Diagnose a hung `serve`/`serve-min`: samples the busiest `vite dev` (writing the call graph to
+  # temp/) and, with `-- --kill`, force-kills it. Not cacheable — it inspects live process state.
+  diagnose-serve:
+    command: node scripts/diagnose-serve.mjs
+    options:
+      cache: false
+      outputStyle: stream
   prebuild:
     script: pnpm run --silent copy:assets
     deps:

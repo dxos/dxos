@@ -5,7 +5,7 @@
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, DebugSettings, ReactSurface, StatsPanel } from '#capabilities';
+import { AppGraphBuilder, DebugSettings, LogRecording, ReactSurface, StatsPanel } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { type DebugPluginOptions } from '#types';
@@ -21,6 +21,11 @@ export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
     activatesOn: ActivationEvents.SetupReactSurface,
     activate: () => ReactSurface({ logStore }),
   })),
+  Plugin.addModule({
+    id: 'log-recording',
+    activatesOn: ActivationEvents.Startup,
+    activate: LogRecording,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ persistStats }) => ({
     id: 'stats-panel',

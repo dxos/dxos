@@ -1,6 +1,17 @@
 # plugin-projects — Tasks
 
-_Resume: reconciliation A-D DONE, shipped as PR #12370 (OPEN). CI: import-cycle failure FIXED (Agent co-located with Chat in one module, Agent.\* namespace via re-export facade, commit 8c89461e49); storybook job failed on a react-ui dist-chunk resolve error (package untouched by this branch — suspected stale CI cache; fresh run in progress on the fixed tip, poll armed). Verified: projects.eval 100% live post-D; memoized agent suite regenerated + replay-deterministic (planning gated to planning.eval.ts); 298 unit tests green. NEXT: get #12370 green (storybook verdict), handle CodeRabbit, land; then Phase 3 UI (ProjectOperation.CreateChat, navtree chat children, Chats exclusion, toolbar). Uncommitted: user's project.drawio.svg edit (committed with next change)._
+_Resume: #12335, #12365, #12370 MERGED. PR #12383 OPEN, auto-merge ARMED (squash, 2026-07-29 04:01) at the user's explicit direction — the two issues below did NOT get resolved first and are now post-land follow-ups, not gates: (1) BLOCKING-as-recorded: the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`); (2) MAJOR, needs Josiah: the URL binding for project chats. Phase 3 items 1-4 plus in-article routine creation are done and verified live. Next: watch #12383 through the merge queue, then re-open the context/artifact decision before any further schema work. Uncommitted: none._
+
+PR #12383 carries: (1) `Chat.agent` removed and the chat↔agent linkage
+restored to the `CompanionTo` relation — that field was the edge closing the
+Agent↔Chat import cycle, so `agent-chat.ts` and both namespace facades are gone,
+the lifecycle folded back into `Agent`, `Agent.loadForChat` added as the inverse
+of `loadChat`; (2) the dead `LegacyCompanionTo` migration deleted; (3) an
+echo-client fix for nested records read off detached objects; (4) `Chat.test.ts`,
+`sync.test.ts`, and the delegation-strategy section in DESIGN.md; (5) Phase 3's
+project chats (toolbar create, navtree children, Chats-section exclusion);
+(6) in-article routine creation, the shared routines/artifacts card gallery, and
+the `RoutineCard` trigger summary.
 
 Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
@@ -42,8 +53,9 @@ Initial priority (user, 2026-07-24):
 - [ ] **P1 remaining: delete flow** — verify navtree ⋮ delete for projects; ALSO: intermittent "first click into empty deck attends but opens no plank" (repro needed).
 - [x] **PR strategy decision** — moot: the three MS2 commits shipped inside #12335's squash; verified present on main (ProjectArticle `getReactiveOrUndefined`, format.ts `## Instructions` + `<label>`, Projects.stories.tsx, minimal plugin set).
 - [ ] **PLUGIN.mdl for plugin-projects** — as-built record now that implementation settled.
-- [ ] **Commands-authoring UI** — InstructionsEditor edits text/skills/objects only; `commands` currently data-only despite autocomplete shipping.
-- [ ] **In-article routine creation** — (the project-scoped chat list moved to Phase 3).
+- [ ] **Commands-authoring UI** — InstructionsEditor edits text/skills only; `commands` currently data-only despite autocomplete shipping.
+- [x] **In-article routine creation** — `ProjectOperation.CreateRoutine` toolbar action scaffolds the blank template through `RoutineOperation.CreateRoutine`, links it into `project.routines`, and opens it. Routines and artifacts now share one `ObjectGallery` (masonry of `ObjectCard`, click to open, ⋮ delete).
+- [x] **Hide `instructions.objects` from the form** — interim step toward the BLOCKING decision below: the field is no longer rendered by `InstructionsEditor` (so it no longer reads as a second artifacts list) but the schema field and every runtime consumer are untouched. Affects the routine form and the Agent article too.
 - [ ] **App-graph Project node children: artifacts + routines** — Phase 3 adds the chat children and the branch-node plumbing; these two reuse it.
 - [ ] **ProjectOperation.Create + operation-handler/events** — extension point 2 (other plugins create/target projects).
 - [ ] **Project templates capability** — plugins contribute instructions+skills+routines presets (mirrors automation-templates).
@@ -82,16 +94,115 @@ repoint.
       `chat.instructions` from the project when unset; Projects story mirrors it.
 - [x] **Lazy backfill for pre-existing chats** — same effect: any project companion chat
       without the field picks it up on open.
-- [ ] **`ProjectOperation.CreateChat`** — invoke `AssistantOperation.CreateChat` with the
-      project's instructions ref (by reference, never a copy), `Obj.setParent(chat, project)`,
-      bind `instructions.skills`, `LayoutOperation.Open`. No `SpaceOperation.AddObject`
-      (would file it in the root collection).
-- [ ] **`projectChats` graph extension** — `children()` query → `AppNode.makeObject` per
-      chat; `url` reuses the `chat` key with a parent-resolving dynamic path.
-- [ ] **Exclude project chats from the top-level Chats section** — plugin-assistant's
-      section query, alongside the existing `CompanionTo` exclusion.
-- [ ] **`ProjectArticle` toolbar** — `Panel.Toolbar` + `IconButton`; same action on the
-      project's navtree node (`list-item-primary`).
+- [x] **Project chats bind `ProjectSkill` + the project object** — a default project's instructions
+      carry no skills, so `Project.contextBindings` was empty and the chat got neither the
+      artifact-filing tools nor the project itself. The model could create a document but had no way
+      to file it, and no way to name the project if it had. Both are now bound unconditionally at
+      chat creation, on top of whatever the instructions add.
+- [x] **`ProjectOperation.CreateChat`** — invokes `AssistantOperation.CreateChat` with the project's
+      instructions ref (by reference, never a copy), `Obj.setParent(chat, project)`, binds
+      `Project.contextBindings`, `LayoutOperation.Open`. No `SpaceOperation.AddObject`.
+      `AssistantOperation.CreateChat` gained an optional `instructions` input so steering is set at
+      construction. NOT yet exercised end-to-end (toolbar click → chat opens); see the test row.
+- [x] **`projectChats` graph extension** — `children()` query → `AppNode.makeObject` per chat.
+      The flagged re-emission risk does NOT materialize: `project-chats.test.ts` drives a real ECHO db
+      through `setupGraphBuilder` and the connector re-runs when a chat is newly parented, so the
+      `chats: Ref<Collection>` fallback (and its 0.3.0 bump) is not needed. The `url` binding is NOT
+      done — see the MAJOR issue below.
+
+### OPEN (was "resolve before landing") — context/artifact model across the core types
+
+> Status 2026-07-29: #12383 was landed with this unresolved, at the user's direction. The interim
+> step taken was UI-only — `InstructionsEditor` no longer renders `objects`, so it no longer reads as
+> a second artifacts list — while the schema field and every runtime consumer are untouched. That
+> buys time but decides nothing; the decision below is still owed before any schema change.
+
+`Project` carries both `instructions.objects` (inputs bound into a session) and `artifacts` (outputs
+the project owns), and they render as two near-identical ref lists in the article — which is the
+symptom, not the problem. Now that a project chat binds the project object itself, artifacts are
+reachable transitively, so the two overlap. Decide the model before landing; the shape of `Project`
+and `Instructions` is hard to change once spaces hold data.
+
+The two candidate directions (user, 2026-07-28):
+
+1. **Drop `Project.artifacts`, rely on `instructions.objects`.** One list, no duplication. Costs: the
+   artifacts Collection buys ordering, drag-rearrange and the existing collection UI, none of which a
+   ref array on `Instructions` has; and it conflates inputs with outputs — every artifact the project
+   ever produced would become standing context for every session, which is prompt bloat and the wrong
+   default. `ProjectSkill.artifact-add`/`artifact-list` would retarget.
+2. **Keep artifacts, give routines their own context mechanism.** `instructions.objects` is currently
+   the ONLY standing context a routine gets: `RunInstructions`
+   (`assistant-toolkit/src/operations/run-instructions.ts:70`) runs headless — no `Chat`, no
+   `Chat.instructions`, no project — so removing the field from the chat path is safe but removing it
+   outright silently strips context from every routine (`RoutineCompanion` demonstrates exactly this
+   wiring). A routine would need either its own context field or a project it inherits scope from.
+
+Review these together rather than piecemeal — each pair already has an unresolved edge:
+
+- **`Instructions`** — `text` (prompt) + `skills` (toolkit) + `objects` (context) + `commands`.
+  Is `objects` an instructions concern at all, or a session concern that landed here because routines
+  had nowhere else to put it?
+- **`Project`** — `instructions` (owned) + `routines` + `artifacts`, chats by ECHO parent edge. Is
+  `artifacts` an output collection or the project's context? Currently documented as the former,
+  wired as neither (the model files into it, nothing reads it back into a session).
+- **`Chat`** — `instructions` ref + `plan` + feed. Gets project + `ProjectSkill` bound at creation
+  (`plugin-projects/src/operations/create-chat.ts`). Bindings are written at creation, so a chat does
+  not follow later changes to the project's context — an accepted staleness that should be revisited
+  here.
+- **`Routine`** — instructions + trigger. The only consumer of `instructions.objects` that has no
+  alternative. Does a routine belong to a project (inheriting its scope), which is the same question
+  as the Agent convergence below?
+- **`Agent`** — 0.2.0 identity/preset holding an `instructions` ref, owning no conversation state.
+  DESIGN.md "Agent ↔ Project convergence" already asks where durable work products live; that answer
+  and this one have to agree.
+
+Related and already recorded: DESIGN.md "The delegation strategy, and why `Plan` is not an artifact"
+(the promote-a-completed-plan question is the same inputs/outputs boundary).
+
+### MAJOR — review with Josiah: URL binding for project chats
+
+A project chat has a navtree node but **no `UrlBinding`**, so it is not URL-addressable: clicking it
+opens the chat, but the URL does not reflect it and a refresh or shared link cannot restore it.
+Josiah owns this grammar (`url-deck-redesign`, `.agents/projects/url-deck-redesign/DESIGN.md`), so the
+approach should be agreed with him before implementing rather than decided here.
+
+The problem: a Chats-section chat has a fixed node shape and so uses a static `path`
+(`@dxos/app-graph` prefers this — "the preferred deterministic case"):
+
+```
+root/<workspace>/ai/org.dxos.type.assistant.chat/<chatId>     static path + id
+root/<workspace>/ai/org.dxos.type.project/<projectId>/<chatId>  a PROJECT chat
+```
+
+The project id sits mid-path and is not derivable from `/chat/<chatId>`, so a project chat needs a
+dynamic `GraphBuilder.PathResolver` (`{ id, workspace, workspaceBaseId } => Effect<string | null>`)
+that resolves the chat, reads its parent project, and returns the candidate id — the one-hop version of
+what plugin-space's `object` key does over collection ancestry
+(`plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts:169`).
+
+Points to settle with Josiah:
+
+1. **Key sharing.** The design says reuse the `chat` key across both extensions. `resolveKeyId`
+   (`@dxos/app-graph/src/path-resolution.ts:188`) tries every static path before any resolver, so
+   `/chat/<id>` would first attempt the Chats-section path, fail verification for a project chat, then
+   fall through to the resolver. Confirm that fall-through is intended and not merely incidental — it
+   is load-bearing for this design, and it costs a failed materialize on every project-chat resolve.
+2. **Reverse direction.** With a resolver-backed binding, `urlRepresentation` takes the last node-id
+   segment as the id, yielding `/chat/<chatId>`. A static path would instead produce
+   `<projectId>+<chatId>`. Worth confirming the resolver form is the intended way to express "same key,
+   different depth".
+3. **Whether project chats should be addressed under the project instead** (e.g. a `topic` pair
+   followed by a chat pair), which would sidestep the resolver entirely but changes the URL shape.
+4. **Cold deep link** — the Phase 3 test row calls for verifying navtree children survive one; that
+   test is meaningless until this is resolved.
+
+- [x] **Exclude project chats from the top-level Chats section** — plugin-assistant's section query
+      is now the exported `standaloneChatsQuery`: every chat minus `CompanionTo` sources minus
+      `Project` children. `standalone-chats-query.test.ts` seeds all three kinds against a real db and
+      asserts only the standalone one survives (verified to fail without the project exclusion).
+- [x] **`ProjectArticle` toolbar** — one graph action dispositioned
+      `['toolbar', 'list-item-primary']` serves both the toolbar (which splices graph actions) and the
+      navtree row, so they cannot drift. Covered by `app-graph-builder.test.ts`.
 - [ ] **Tests** — unit (`formatSystemPrompt` renders the explicit param and no longer
       inlines a bound Instructions object; enumeration; parenting + ref pass-through), story
       play test (toolbar creates a chat, appears in the list), live verify (instructions
@@ -119,7 +230,44 @@ repoint.
       is newly parented, fall back to a `chats: Ref<Collection>` field on Project
       (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.
 
+## Milestone 4 (scoping): what comes after this PR
+
+- [ ] **Write the post-PR milestone doc** — the through-line across `Chat`, `Plan`, the delegation
+      strategy, `Agent`, and the process manager, now that each has moved: `Chat` is thin and linked
+      to its agent by relation; `Plan` is the conversation's task ledger driving `reconcile`/`onComplete`
+      per feed; `Agent` is an identity/preset owning no conversation state; durable sessions live as
+      processes. Name what each still owes the others (e.g. no plan-level completion signal, no
+      arbitration between concurrent supervisors, agent identity DID unpopulated).
+- [ ] **Pick a demo we can build with what exists today**, using the planning project as the subject —
+      i.e. a project whose chats plan, delegate to sub-agents, and file artifacts back into the
+      collection. Establish what is genuinely working end-to-end versus what needs the Phase 3 UI.
+- [ ] **Reconcile with Magazine and CRM** — where those two overlap Projects (scope, artifacts,
+      instructions) and where they should stay distinct; whether either becomes a project template.
+
 ## Follow-ups / deferred (design reviews)
+
+- [x] **`Chat.agent` removed; linkage is the `CompanionTo` relation** — the field (phase B) was the
+      edge that closed the Agent↔Chat import cycle and forced both types into one module behind
+      namespace facades. `Agent` and `Chat` are now independent leaves; `Agent` owns the lifecycle, including `loadForChat`. No migration (the field shipped one day earlier at `chat@0.1.0`,
+      added without a bump). `check-cycles` green; the #12370 changeset amended in place.
+- [x] **Regenerate the agent-skill memoized recordings** — moot: #12357 (G2 → C) deleted
+      `skills/{agent,planning}/skill.test.ts` outright, taking the failing `expense tracking list`
+      with them. Merged in on this branch; the replacement deterministic tests were updated for the
+      lifecycle move.
+- [x] **`LegacyCompanionTo` migration deleted** — it held the kebab-case `companion-to` typename so
+      #10895 could migrate it to `companionTo`, but 266d56cbc5 swept that typename to camelCase too,
+      so both classes shared a DXN for ~10 weeks and the migration mapped a type onto itself.
+      Restoring it would mean an escape hatch past the camelCase validator in `@dxos/keys` (both the
+      compile-time `Name<T>` and the runtime regex reject a hyphenated final segment) for a migration
+      whose nine siblings from #10895 were all already deleted. Removed it and plugin-assistant's
+      migration capability.
+- [x] **echo-client: nested records from detached objects** — assigning one into a database-backed
+      object threw `Object references must be wrapped with Ref.make`, because the copy-on-assign path
+      (`isEchoObjectField`) only recognized `EchoReactiveHandler` proxies; a detached object's record
+      is an in-memory proxy and fell through to the root guard. Added `isDetachedObjectField` using
+      `Entity.isEntity` as the handler-agnostic root test. Retires the hand-spread workaround in
+      `assistant-toolkit`'s `syncObjects`, which had no tests and now has three. Tags were never
+      affected (refs take an earlier branch) — asserted so a reordering is caught.
 
 - [x] **plugin-markdown ops resolve LLM-provided refs via the db** — `ref.tryLoad is not a
 function` when a tool-call `doc` ref decodes without a resolver; the five doc-ref ops

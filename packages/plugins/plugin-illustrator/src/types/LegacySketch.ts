@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Ref, Type } from '@dxos/echo';
 
-import { Canvas } from './Drawing';
+import * as Drawing from './Drawing';
 
 /**
  * The pre-rename `Sketch` object, kept solely so `Migration.define` can read existing data and
@@ -20,6 +20,6 @@ import { Canvas } from './Drawing';
 export class Sketch extends Type.makeObject<Sketch>(DXN.make('org.dxos.type.sketch', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    canvas: Ref.Ref(Canvas),
+    canvas: Ref.Ref(Drawing.Canvas),
   }),
 ) {}
