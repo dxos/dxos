@@ -10,23 +10,16 @@ import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 
 //
-// Verifies the CLI the way a user gets it: packed with `npm pack`, installed from the tarballs, and run
-// with the workspace's `node_modules` replaced by an empty directory. Every defect that made
-// @dxos/cli@0.10.0 unrunnable was invisible to tests that exercise the source tree, and two of them were
-// invisible even to a packed-and-installed run, because a path resolved at bundle time still resolves on
-// the machine that built the binary — which is where both this test and CI run it.
+// Packs the CLI with `npm pack`, installs it from the tarballs, and hands the result to
+// verify-installed.mjs. Every defect that made @dxos/cli@0.10.0 unrunnable was invisible to tests that
+// exercise the source tree; this covers the tarball itself — file modes, the `files` array, the launcher's
+// platform mapping and its `require.resolve`.
 //
-// The two axes are separate and both required: packing and installing covers the tarball (file modes, the
-// `files` array, the launcher's platform mapping and its `require.resolve`), while hiding `node_modules`
-// covers self-containment (`@automerge/automerge` reading its WASM from a `__dirname`-derived path,
-// `classic-level` binding a native addon). The scratch install lives under the temp directory, so hiding
-// the workspace's `node_modules` leaves it intact.
+// What it cannot cover is a binary that resolves a path at bundle time, because that path still resolves on
+// the machine that built it — which is where both this test and CI run it. `--hide` approximates a foreign
+// machine via a mount namespace where the kernel permits it, and the `cli-foreign` CI job is the real
+// article. Both call the same verifier so the checks cannot drift apart.
 //
-
-/** `--help`-shaped so nothing touches the network or a real profile; these failures are all at import. */
-const COMMANDS = [['--version'], ['--help'], ['registry', '--help'], ['function', '--help'], ['space', '--help']];
-
-const NAMESPACE_SCRIPT = 'mount --bind "$1" "$2" || exit 42; shift 2; exec "$@"';
 
 const platformKey = `${process.platform}-${process.arch}`;
 const binaryName = process.platform === 'win32' ? 'dx.exe' : 'dx';
@@ -96,92 +89,13 @@ console.log('[Smoke] Installing tarballs...');
 writeFileSync(join(scratch, 'package.json'), JSON.stringify({ name: 'dx-smoke', private: true }, null, 2));
 run('npm', ['install', '--no-audit', '--no-fund', '--omit=optional', platformTarball, mainTarball], scratch);
 
-// `--map-root-user` so an unprivileged user can still create the namespace and bind-mount inside it.
-const isolationDir = mkdtempSync(join(tmpdir(), 'dx-empty-'));
-const wrap = (command: string, args: string[]): [string, string[]] => [
-  'unshare',
-  ['-m', '--map-root-user', 'bash', '-c', NAMESPACE_SCRIPT, '--', isolationDir, nodeModules, command, ...args],
-];
-
-// Any non-zero probe means isolation is unavailable, not just a failed bind: the CI container cannot
-// create a mount namespace at all (`unshare failed: Operation not permitted`), and testing only for the
-// bind-mount's own exit code let that through, so every invocation below inherited the failure.
-const probe = spawnSync(...wrap('true', []), { encoding: 'utf8', env: process.env });
-const isolated = process.platform === 'linux' && !probe.error && probe.status === 0;
-if (isolated) {
-  console.log(`[Smoke] Running with ${nodeModules} hidden.`);
-} else {
-  const reason = probe.error?.message ?? (`${probe.stderr ?? ''}`.trim() || `exit ${probe.status}`);
-  console.log(`[Smoke] Cannot hide ${nodeModules} (${reason}).`);
-  console.log('[Smoke] Packaging is still covered; self-containment is NOT verified in this environment.');
-}
-
-const invoke = (command: string, args: string[]) => {
-  const [resolved, resolvedArgs] = isolated ? wrap(command, args) : [command, args];
-  return spawnSync(resolved, resolvedArgs, { cwd: scratch, encoding: 'utf8', env: process.env });
-};
-
-// Both packages declare a `dx` bin and npm links only one of them, so each is invoked by path — going
-// through `node_modules/.bin/dx` would silently drop either the launcher (its platform mapping and
-// executable-bit recovery) or the standalone platform install from this test.
-const entryPoints = [
-  { label: 'launcher', command: 'node', prefix: [join(scratch, 'node_modules', '@dxos', 'cli', 'bin', 'dx.js')] },
-  {
-    label: 'platform binary',
-    command: join(scratch, 'node_modules', '@dxos', `cli-${platformKey}`, binaryName),
-    prefix: [] as string[],
-  },
-];
-
-const versions = new Set<string>();
-const failures: string[] = [];
-
-for (const { label, command, prefix } of entryPoints) {
-  for (const args of COMMANDS) {
-    const description = `${label}: dx ${args.join(' ')}`;
-    const result = invoke(command, [...prefix, ...args]);
-    if (result.status !== 0) {
-      failures.push(description);
-      console.error(`[Smoke]   ✗ ${description} (exit ${result.status ?? result.error})`);
-      const lines = `${result.stdout ?? ''}${result.stderr ?? ''}`.split('\n').filter((line) => line.trim());
-      // Prefer the lines that name a cause, but never swallow the output when none of them match — an
-      // unrecognised failure is exactly the one worth seeing.
-      const diagnostic = lines.filter((line) => /error|ENOENT|No native build|loaded from|Cannot find/i.test(line));
-      const shown = diagnostic.length > 0 ? diagnostic.slice(0, 4) : lines.slice(-8);
-      console.error(
-        shown.length > 0
-          ? shown.map((line) => `[Smoke]     ${line.trim()}`).join('\n')
-          : '[Smoke]     (no output on stdout or stderr)',
-      );
-      continue;
-    }
-
-    // Exiting zero is not enough: a silent success would otherwise pass without proving anything ran.
-    const output = result.stdout.trim();
-    if (!output) {
-      failures.push(description);
-      console.error(`[Smoke]   ✗ ${description} exited 0 but printed nothing.`);
-      continue;
-    }
-
-    if (args.length === 1 && args[0] === '--version') {
-      versions.add(output);
-    }
-    console.log(`[Smoke]   ✓ ${description}`);
-  }
-}
+// The checks themselves live in verify-installed.mjs, which the `cli-foreign` CI job also runs — on a
+// machine with no checkout, where the tree that built the binary is genuinely absent. One copy, two
+// environments; `--hide` approximates the second one here when the kernel permits it.
+const verify = spawnSync(process.execPath, [resolve('scripts/verify-installed.mjs'), scratch, '--hide', nodeModules], {
+  encoding: 'utf8',
+  stdio: 'inherit',
+});
 
 cleanup();
-rmSync(isolationDir, { recursive: true, force: true });
-
-if (failures.length > 0) {
-  console.error(`[Smoke] ${failures.length} invocation(s) failed: ${failures.join(', ')}`);
-  process.exit(1);
-}
-
-if (versions.size !== 1) {
-  console.error(`[Smoke] entry points disagree on the version: ${[...versions].join(' vs ')}`);
-  process.exit(1);
-}
-
-console.log(`[Smoke] ✓ ${[...versions][0]} — ${entryPoints.length * COMMANDS.length} invocations`);
+process.exit(verify.status ?? 1);

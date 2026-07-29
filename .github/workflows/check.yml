@@ -463,15 +463,17 @@ jobs:
       # still resolves in the job that built it.
       - name: Pack the CLI for the foreign-machine job
         run: |
-          mkdir -p cli-tarballs
-          npm pack --silent --pack-destination cli-tarballs ./packages/devtools/cli/dist/cli
-          npm pack --silent --pack-destination cli-tarballs ./packages/devtools/cli/dist/cli-linux-x64
+          mkdir -p cli-verify
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli-linux-x64
+          cp packages/devtools/cli/scripts/verify-installed.mjs cli-verify/
 
+      # The verifier travels with the tarballs because the job that runs them has no checkout.
       - name: Upload packed CLI
         uses: actions/upload-artifact@v4
         with:
-          name: cli-tarballs
-          path: cli-tarballs/*.tgz
+          name: cli-verify
+          path: cli-verify/
           retention-days: 1
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
@@ -534,8 +536,8 @@ jobs:
       - name: Download packed CLI
         uses: actions/download-artifact@v4
         with:
-          name: cli-tarballs
-          path: cli-tarballs
+          name: cli-verify
+          path: cli-verify
 
       # `--omit=optional` so the launcher's optionalDependencies are not fetched from npm — those versions
       # are published, so without it the released (and possibly broken) platform package could satisfy the
@@ -545,31 +547,11 @@ jobs:
       - name: Install from the tarballs
         run: |
           npm init -y > /dev/null
-          npm install --no-audit --no-fund --omit=optional ./cli-tarballs/*.tgz
+          npm install --no-audit --no-fund --omit=optional ./cli-verify/*.tgz
 
-      - name: Run every command through both entry points
-        run: |
-          set -euo pipefail
-          launcher="node node_modules/@dxos/cli/bin/dx.js"
-          binary="node_modules/@dxos/cli-linux-x64/dx"
-          while read -r command; do
-            for entry in "$launcher" "$binary"; do
-              if output=$($entry $command 2>&1); then
-                echo "  ok   $entry $command"
-              else
-                echo "  FAIL $entry $command"
-                echo "$output" | tail -12
-                exit 1
-              fi
-            done
-          done <<'COMMANDS'
-          --version
-          --help
-          registry --help
-          function --help
-          space --help
-          COMMANDS
-          echo "version: $($launcher --version)"
+      # The same verifier `cli:smoke` runs, so the two cannot check different things.
+      - name: Verify the install
+        run: node cli-verify/verify-installed.mjs .
 
   # Reports every nightly job from one place. e2e is in `needs` so a cancelled e2e is still reported (its
   # former in-job step used `success() || failure()`, which skips on cancellation) and so the other three
