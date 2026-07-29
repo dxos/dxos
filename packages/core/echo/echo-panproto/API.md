@@ -225,6 +225,8 @@ wholesale (§6).
 
 Mirrors `useObject`'s tuple and overload shape exactly.
 
+From `@dxos/echo-panproto/react`:
+
 ```ts
 export const useLens: {
   <S, T>(obj: S, lens: Lens<S, T>): [T, LensUpdateCallback<T>];
@@ -323,7 +325,10 @@ What is implemented, and what is not:
 - **PutGet is not checked.** `checkLaws` verifies GetPut (reading a view and putting it straight back
   changes nothing), which needs no mutation. Writing an arbitrary value and reading it back needs a
   clone or a sample generator; it is not implemented.
-- **No React hook yet.** `useLens` belongs in a react sibling, mirroring where `useObject` lives.
+- **`useLens` ships here, not in `@dxos/echo-react`.** It is on the `@dxos/echo-panproto/react`
+  subpath so the main entry stays React-free (the wire runner loads in workers). Mirroring
+  `useObject`, it belongs in a react sibling eventually — but keeping the whole lens surface in one
+  package until the API is internalized beats splitting it across two now.
 - **Automatic mapping does not recurse into structs.** Two same-named structs match on their property
   _names_ only, so a same-shaped struct with differently-typed leaves is a known false positive.
 - **`Lens.readOnly` is enforced at the write, not in the rendered schema.** A form built from the

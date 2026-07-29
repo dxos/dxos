@@ -6,7 +6,8 @@ import React, { type ReactNode } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Lens } from '@dxos/echo-panproto';
-import { useLens, useObject } from '@dxos/echo-react';
+import { useLens } from '@dxos/echo-panproto/react';
+import { useObject } from '@dxos/echo-react';
 import { type Task } from '@dxos/types';
 
 import { GTD_LENS_ID, GtdLens, type GtdTask } from './gtd';

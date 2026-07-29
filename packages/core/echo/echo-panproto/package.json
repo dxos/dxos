@@ -19,6 +19,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./react": {
+      "source": "./src/react.ts",
+      "types": "./dist/types/src/react.d.ts",
+      "browser": "./dist/lib/browser/react.mjs",
+      "node": "./dist/lib/node-esm/react.mjs"
+    },
     "./wasm": {
       "source": "./src/wasm.ts",
       "types": "./dist/types/src/wasm.d.ts",
@@ -35,10 +41,14 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "@panproto/core": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "react": "catalog:"
   },
   "devDependencies": {
+    "@types/react": "catalog:",
     "vite": "catalog:"
   },
   "publishConfig": {

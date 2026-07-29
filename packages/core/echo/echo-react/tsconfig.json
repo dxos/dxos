@@ -19,9 +19,6 @@
     },
     {
       "path": "../echo-client"
-    },
-    {
-      "path": "../echo-panproto"
     }
   ]
 }

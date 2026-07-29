@@ -117,7 +117,8 @@ Package split:
   `@dxos/echo` (including `@dxos/echo/internal`, a public subpath already used by ~20 packages).
 - **`@dxos/echo-panproto/wasm`** — the engine, unchanged; the object lens uses it the same way the
   runner does (lazily, optionally).
-- **React hooks** — `useLens`, in a react sibling mirroring `echo-react`.
+- **React hooks** — `useLens`, on the package's own `./react` subpath for now (so the whole lens
+  surface stays in one package), destined for a react sibling once the API is internalized.
 - **Coded lenses ship with their dependencies** — the rich-text lens owns remark.
 
 **Promotion into `@dxos/echo`** stays the long-term intent once the model is proven: move the
@@ -450,7 +451,7 @@ Demonstrated in both directions:
   - New: `Lens.ts` (interface + ECHO entity), `mapping.ts` (resolution + shorthands),
     `coverage.ts`, `codec.ts` (T1), `live.ts` (T2 proxy), `overlay.ts`, `registry.ts`, `laws.ts`,
     `lenses/task-gtd.ts`.
-- React hooks — `useLens`, in a react sibling mirroring `echo-react`.
+- React hooks — `useLens` on the `./react` subpath of the same package (see §2.1).
 - Rich-text lens package — the coded lens, owning the remark dependency.
 - `packages/stories/stories-lens` — four stories, two custom UIs, shared raw inspector.
 - No plugin until the stories prove the UI story is worth shipping.

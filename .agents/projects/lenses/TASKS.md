@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: PHASES 1-4 DONE for the Task lens. `useLens` ships in `@dxos/echo-react`; `@dxos/stories-lens` has two passing storybook demos including the multi-peer one (canonical UI on peer 0, lensed UI on peer 1, real invitation). Remaining: the Text→rich-text lens (Phase 3) and its two stories. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Next: React `useLens` in an `echo-react` sibling, then the storybook stories. Uncommitted: none._
+_Resume: PHASES 1-4 DONE for the Task lens. `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has two passing storybook demos including the multi-peer one (canonical UI on peer 0, lensed UI on peer 1, real invitation). Remaining: the Text→rich-text lens (Phase 3) and its two stories. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](../../../packages/core/echo/echo-panproto/API.md).
 This file is the ledger only.
@@ -63,7 +63,7 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
 - [x] **Extend `@dxos/echo-panproto` with a `Lens` namespace export** — new modules beside the
       existing `Panproto` wire lens (DESIGN.md §9); built against `@dxos/echo` and
       `@dxos/echo/internal`. The existing `Panproto`/`runner`/`wasm` surface stays untouched.
-      React hooks go in a react sibling. — `src/Lens.ts` + `src/lens/*`; the wire lens schema moved to `wire-lens.ts` so the public namespace name matches its filename (repo lint rule) without touching the `Panproto` surface.
+      React bindings sit on a `./react` subpath of the same package. — `src/Lens.ts` + `src/lens/*`; the wire lens schema moved to `wire-lens.ts` so the public namespace name matches its filename (repo lint rule) without touching the `Panproto` surface.
 - [x] **`Lens.make(id, Source, Target, mapping)`** (API.md §1) — the single authoring shape; both
       ends are declared types. Static (code) and persisted (space) definition paths, mirroring
       `Type` / `Type.Type`. An ordinary ECHO object, **not** a new `EntityKind` (API.md §0). — plus `Lens.coded` for opaque transforms.
@@ -157,9 +157,11 @@ keeps them honest.
 
 ### Tasks
 
-- [x] **`useLens` in `@dxos/echo-react`** — beside `useObject`, mirroring its tuple and overload shape,
+- [x] **`useLens` on `@dxos/echo-panproto/react`** — mirroring `useObject`'s tuple and overload shape,
       including the property overload that subscribes only through a mapping's `from`. Reactivity comes
-      from the base object's own atom; a lens holds no state.
+      from the base object's own atom; a lens holds no state. Deliberately in this package rather than
+      `@dxos/echo-react` — the whole lens surface stays together until the API is internalized — on a
+      separate subpath so the main entry stays React-free for worker contexts.
 - [x] **`GtdTask` + the `Task`→`GtdTask` lens** in the stories package (not in `echo-panproto`, per the
       layering correction in Phase 0).
 - [x] **Shared raw-inspector component** — live base-object JSON + the lens overlay from

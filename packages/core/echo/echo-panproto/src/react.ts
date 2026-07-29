@@ -7,12 +7,17 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Lens } from '@dxos/echo-panproto';
+
+import * as Lens from './Lens';
 
 //
-// Reading an object through a lens, mirroring `useObject`'s tuple and overload shape. There is one
-// object under the hood: the view is derived from it on every change, and the update callback writes
-// back through the lens, touching only the properties it assigns.
+// React bindings for the object lens, on the `@dxos/echo-panproto/react` entrypoint so the main surface
+// stays React-free (the wire runner loads in workers). Shaped like `@dxos/echo-react`'s `useObject`,
+// and destined to move there — or into core alongside `Obj` — once the lens API is internalized;
+// keeping it here means the whole lens surface lives in one package until then.
+//
+// There is one object under the hood: the view is derived from it on every change, and the update
+// callback writes back through the lens, touching only the properties it assigns.
 //
 
 export type LensUpdateCallback<T> = (update: (view: Obj.Mutable<T>) => void) => void;

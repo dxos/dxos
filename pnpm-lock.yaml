@@ -6539,13 +6539,25 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)(react@19.2.7)(scheduler@0.27.0)
       '@panproto/core':
         specifier: 'catalog:'
         version: 0.56.1
       effect:
         specifier: 3.21.4
         version: 3.21.4
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
     devDependencies:
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
       vite:
         specifier: '>=8.1.4'
         version: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -6622,9 +6634,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
-      '@dxos/echo-panproto':
-        specifier: workspace:*
-        version: link:../echo-panproto
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
