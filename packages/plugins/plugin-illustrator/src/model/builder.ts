@@ -13,7 +13,10 @@ import { type Obj } from '@dxos/echo';
 import type * as Scene from './scene';
 
 /** A world object as derived from the canvas: placement is always resolved. */
-export type ReadWorldObject = Scene.WorldObject & { origin: Scene.Point; scale: number };
+export type ReadWorldObject = Scene.WorldObject & {
+  origin: Scene.Point;
+  scale: number;
+};
 
 export type ReadResult = {
   scene: { objects: ReadWorldObject[] };
