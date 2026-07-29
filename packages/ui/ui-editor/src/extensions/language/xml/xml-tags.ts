@@ -223,21 +223,21 @@ const widgetContextStateField = StateField.define<any>({
 const widgetStateMapStateField = StateField.define<XmlWidgetStateMap>({
   create: () => ({}),
   update: (map, tr) => {
+    // Reduce over every effect: a transaction may carry several updates (or a reset followed by them),
+    // and returning on the first would silently drop the rest.
+    let next = map;
     for (const effect of tr.effects) {
       if (effect.is(xmlTagResetEffect)) {
-        return {};
-      }
-
-      if (effect.is(xmlTagUpdateEffect)) {
+        next = {};
+      } else if (effect.is(xmlTagUpdateEffect)) {
         // Update accumulated widget props by id.
         const { id, value } = effect.value;
         log('widget updated', { id, value });
-        const state = typeof value === 'function' ? value(map[id]) : value;
-        return { ...map, [id]: state };
+        next = { ...next, [id]: typeof value === 'function' ? value(next[id]) : value };
       }
     }
 
-    return map;
+    return next;
   },
 });
 
@@ -285,6 +285,21 @@ const createParseCompletionPlugin = () => {
 };
 
 /**
+ * Re-applies the accumulated widget state at mount time.
+ *
+ * A widget's props are baked when its decoration is built, but state can be dispatched before the
+ * widget mounts — rehydration after a document reset targets widgets that are still outside
+ * CodeMirror's viewport, and `xmlTagUpdateEffect` alone rebuilds no decorations. Such a widget would
+ * otherwise mount with the stale props it was built with, since `StubWidget.eq` (id equality) stops a
+ * later rebuild from replacing the instance.
+ */
+const withCurrentWidgetState = (state: XmlWidgetState): XmlWidgetState => {
+  const view: EditorView | undefined = state.props?.view;
+  const widgetState = view?.state.field(widgetStateMapStateField, false)?.[state.id];
+  return widgetState ? { ...state, props: { ...state.props, ...widgetState } } : state;
+};
+
+/**
  * Manages the collection of widgets.
  */
 const createWidgetMap = (setWidgets?: (widgets: XmlWidgetState[]) => void, debug = false): XmlWidgetNotifier => {
@@ -292,13 +307,23 @@ const createWidgetMap = (setWidgets?: (widgets: XmlWidgetState[]) => void, debug
 
   // TODO(burdon): Batch updates?
   const notifier = {
-    mounted: (state: XmlWidgetState) => {
+    mounted: (rawState: XmlWidgetState) => {
+      const state = withCurrentWidgetState(rawState);
       const isNew = !widgets.has(state.id);
       widgets.set(state.id, state);
       // Only a genuinely new id changes the portal set (blank-frame culprit); re-parents just re-notify.
       if (debug && isNew) {
         log.info('widget-map: mounted', { id: state.id, count: widgets.size });
       }
+      setWidgets?.([...widgets.values()]);
+    },
+    updated: (id: string, widgetState: any) => {
+      const current = widgets.get(id);
+      if (!current || !widgetState) {
+        return;
+      }
+
+      widgets.set(id, { ...current, props: { ...current.props, ...widgetState } });
       setWidgets?.([...widgets.values()]);
     },
     unmounted: (id: string) => {
@@ -447,22 +472,11 @@ const createWidgetUpdatePlugin = (
           notifier.reconcile(liveIds);
         }
 
-        // Check for widget update effects and re-render widgets.
+        // Re-render widgets whose state changed. Widgets not yet mounted pick their state up at mount
+        // time instead (see `withCurrentWidgetState`).
         for (const effect of update.transactions.flatMap((tr) => tr.effects)) {
           if (effect.is(xmlTagUpdateEffect)) {
-            const widgetState = widgetStateMap[effect.value.id];
-
-            // Find and render widget.
-            for (const range of decorationSetToArray(decorations)) {
-              const deco = range.value;
-              const widget = deco?.spec?.widget;
-
-              // NOTE: If the widget has not yet been mounted, then the root will be null.
-              if (widget && widget instanceof StubWidget && widget.id === effect.value.id && widget.root) {
-                const props = { ...widget.props, ...widgetState };
-                notifier.mounted({ id: widget.id, props, root: widget.root, Component: widget.Component });
-              }
-            }
+            notifier.updated(effect.value.id, widgetStateMap[effect.value.id]);
           }
         }
       }

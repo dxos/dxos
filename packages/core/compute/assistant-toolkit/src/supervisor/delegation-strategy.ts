@@ -40,26 +40,13 @@ const findChatForFeed = (feed: Feed.Feed): Effect.Effect<Chat.Chat | undefined, 
   });
 
 /**
- * Resolves the agent whose chat is backed by the given conversation feed, if any (via the chat's
- * `agent` ref). Plain (agentless) chats yield `undefined`.
+ * Resolves the agent whose chat is backed by the given conversation feed, if any.
+ * Plain (agentless) chats yield `undefined`.
  */
 const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefined, never, Database.Service> =>
   Effect.gen(function* () {
-    const chats = yield* Database.query(Filter.type(Chat.Chat)).run;
-    for (const chat of chats) {
-      if (!chat.agent) {
-        continue;
-      }
-      const matches = yield* Effect.gen(function* () {
-        const chatFeed = yield* Database.load(chat.feed);
-        return chatFeed.id === feed.id;
-      }).pipe(Effect.orElseSucceed(() => false));
-      if (matches) {
-        const agentRef = chat.agent;
-        return yield* Database.load(agentRef).pipe(Effect.orElseSucceed(() => undefined));
-      }
-    }
-    return undefined;
+    const chat = yield* findChatForFeed(feed);
+    return chat ? yield* Agent.loadForChat(chat) : undefined;
   });
 
 /**
@@ -183,7 +170,8 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
   onComplete: (feed, id, exit) =>
     Effect.gen(function* () {
       const chat = yield* findChatForFeed(feed);
-      const agent = yield* findAgentForFeed(feed);
+      // Reuse the chat just resolved rather than re-scanning every chat for the same feed.
+      const agent = chat ? yield* Agent.loadForChat(chat) : undefined;
       const plan =
         chat?.plan != null ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
 
