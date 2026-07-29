@@ -49,10 +49,22 @@ Message {
   id; created: string; sender: Actor
   blocks: ContentBlock[]
   attachments?; properties?: Record<string, any>
-  parentMessage?: Ref<Message>   // reply target within a thread
+  parentMessage?: Obj.ID         // reply target — stage 1 FIXES this to Ref<Message>
   threadId?: string              // partition key; anchor id in comment channels
 }
 ```
+
+Stage-1 schema fixes:
+
+- **`parentMessage` becomes `Ref<Message>`** (today a bare `Obj.ID`) — schema
+  bump; audit the other Message consumers (inbox, assistant) for reads of the
+  raw id.
+- **Evaluate replacing the untyped `properties` bag with strongly-typed ECHO
+  annotations.** If adopted, `topic`/`resolved` (below) ship as typed
+  annotations instead of bag conventions. Caution: `properties` has existing
+  structural consumers — the schema's `LabelAnnotation` reads
+  `properties.subject` (email), and inbox/assistant stuff other keys — so this
+  is an evaluation with a migration story, not a drop-in swap.
 
 New:
 
@@ -65,7 +77,9 @@ Reaction {
 }
 ```
 
-Conventions on `Message.properties` (folded at read, root messages only):
+Per-message thread metadata (typed annotations if the evaluation above
+adopts them; otherwise `properties` conventions), root messages only, folded
+at read:
 
 - `topic?: string` — thread name (Zulip topic; editable = author re-append).
 - `resolved?: boolean` — comment-thread resolution state (review channels;
@@ -85,12 +99,12 @@ pattern; exact relation type chosen in stage 3). No per-thread relations.
   unpositioned-block push with retry, `blocksToPush` as the pending-send
   indicator. Edit = author `Obj.update` (re-append). Delete = `Feed.remove`
   (tombstone). Un-react = tombstone your own `Reaction` item.
-- **Notifications**: subscription triggers on the channel feed
-  (`created`, filtered to not-own-message).
-- **Presence/typing**: ephemeral EDGE-messaging primitive — explicitly NOT
-  feed blocks (persisting typing events as immutable blocks would be wrong).
-  Nearest prior art: plugin-calls swarm presence, already integrated in
-  `ChannelArticle`.
+- **Notifications** (post-stage-3 follow-up): subscription triggers on the
+  channel feed (`created`, filtered to not-own-message).
+- **Presence/typing** (post-stage-3 follow-up): ephemeral EDGE-messaging
+  primitive — explicitly NOT feed blocks (persisting typing events as
+  immutable blocks would be wrong). Nearest prior art: plugin-calls swarm
+  presence, already integrated in `ChannelArticle`.
 
 ### Backend layers
 
@@ -114,8 +128,9 @@ pattern; exact relation type chosen in stage 3). No per-thread relations.
 ## Rollout
 
 1. **Stage 1 — prototype in `plugin-thread`** (Channel is already in
-   `@dxos/types`; nothing to lift): thread-first UX, message actions,
-   Reaction type, notifications, presence spike. Detail in TASKS.md.
+   `@dxos/types`; nothing to lift): schema fixes (`parentMessage` → Ref,
+   annotations evaluation), thread-first UX, message actions, Reaction type.
+   Detail in TASKS.md.
 2. **Stage 2 — rename `plugin-thread` → `plugin-chat`** once the model is
    proven. Mechanical, own PR, no compatibility shims; blast radius includes
    the plugin id and the shared `threadTranslations` imported by
@@ -124,6 +139,8 @@ pattern; exact relation type chosen in stage 3). No per-thread relations.
    `threadId = anchor`, delete the `Thread` type with a migration
    (ref-array messages → feed messages). **Sequence explicitly with
    `document-revisions` (burdon), which is active in plugin-review.**
+4. **Post-stage-3 follow-ups**: notifications (subscription triggers) and
+   presence/typing (ephemeral EDGE primitive).
 
 **Ship gate:** prototype freely on the landed #12235 surface, but feed
 phase 1 (version/order axis) must land before chat ships to real users — v1

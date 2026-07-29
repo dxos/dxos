@@ -27,11 +27,19 @@ NEXT: stage 1, schema + thread-first UX.
 
 ### Schema / types
 
+- [ ] Fix `Message.parentMessage`: bare `Obj.ID` → `Ref(Message.Message)`
+      (Message.ts:41); schema bump; audit other Message consumers (inbox,
+      assistant, transcription) for raw-id reads.
+- [ ] Evaluate replacing the `Message.properties` bag with strongly-typed
+      ECHO annotations (`topic`/`resolved` as typed annotations). Audit
+      existing `properties` consumers first — the schema's LabelAnnotation
+      reads `properties.subject`; inbox/assistant write other keys — so this
+      needs a migration story, not a swap.
 - [ ] Add `Reaction` (`org.dxos.type.reaction` v0.1.0: `target: Ref<Message>`,
       `emoji`, `sender: Actor`) to `@dxos/types`; register in the plugin's
       schema module.
-- [ ] Define `Message.properties` conventions: `topic` (thread name, roots
-      only), reserved key check against existing consumers of `properties`.
+- [ ] Define `topic` (thread name, roots only) via the mechanism chosen
+      above.
 - [ ] Decide reaction identity/toggle mechanics: locate own reaction by
       `(sender, target, emoji)` query → `Feed.remove` to un-react; confirm
       idempotency under offline retry.
@@ -61,14 +69,6 @@ NEXT: stage 1, schema + thread-first UX.
       own-state highlight; un-react on click.
 - [ ] Storybook coverage: message actions, reaction fold, thread summaries,
       thread panel (plays for send/edit/delete/react/start-thread).
-
-### Notifications + presence
-
-- [ ] Subscription trigger on the channel feed: `created` + not-own-message →
-      notification operation; verify trigger dedup behavior at 1s polling.
-- [ ] Presence spike: ephemeral EDGE-messaging channel (typing indicator +
-      online roster); document the primitive — candidate for extraction, cf.
-      plugin-calls swarm presence. Explicitly not feed-backed.
 
 ### Stage-1 verification
 
@@ -108,6 +108,15 @@ NEXT: stage 1, schema + thread-first UX.
 - [ ] Delete `ThreadArticle` and thread-object creation surfaces.
 - [ ] Coordinate: land AFTER document-revisions' in-flight plugin-review work
       (#12339 arc) or rebase theirs — agree sequencing with burdon first.
+
+## Stage 4 — post-unification follow-ups (after stage 3)
+
+- [ ] Notifications: subscription trigger on the channel feed (`created` +
+      not-own-message → notification operation); verify trigger dedup
+      behavior.
+- [ ] Presence/typing: ephemeral EDGE-messaging primitive (typing indicator +
+      online roster); document the primitive — candidate for extraction, cf.
+      plugin-calls swarm presence. Explicitly not feed-backed.
 
 ## Cross-cutting / deferred
 
