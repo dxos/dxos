@@ -58,9 +58,11 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
       existing `Panproto` wire lens (DESIGN.md §9); built against `@dxos/echo` and
       `@dxos/echo/internal`. The existing `Panproto`/`runner`/`wasm` surface stays untouched.
       React hooks go in a react sibling.
-- [ ] **`Lens.make(id, Source, Target, mapping)`** (API.md §1) — the single authoring shape; both
+- [ ] **`Lens.between(id, Source, Target, mapping)`** (API.md §1) — the single defining shape; both
       ends are declared types. Static (code) and persisted (space) definition paths, mirroring
       `Type` / `Type.Type`. An ordinary ECHO object, **not** a new `EntityKind` (API.md §0).
+- [ ] **`Lens.make(obj, lens)`** — apply a lens: the live lensed view. ECHO's constructor verb;
+      becomes `Obj.lens` sugar after core promotion.
 - [ ] **Mapping resolution + shorthands** (API.md §2) — automatic identity mapping for matching
       name/type; bare-string rename; `Lens.from(prop, codec)`; `Lens.readOnly(prop)`; full
       `Derived` form. Keep the vocabulary small and add convenience only where a real mapping is
