@@ -23,6 +23,11 @@ Inherited later, no plugin changes expected: read receipts / unread counts
 device-exceeding history (phases 3–4: retention + epoch chaining, sparse
 feeds with watermarked paging).
 
+**Ship gate:** prototype freely on the landed #12235 surface, but feed
+phase 1 (version/order axis) should land before chat ships to real users —
+v1 live objects lean on `KEY_QUEUE_POSITION`, which is null unless
+`assignQueuePositions` is on (default-off ordering guarantee).
+
 Out of scope: external chat backends (Matrix/Discord — `FeedBackend`
 workstream), E2EE beyond space security, cross-space/public channels.
 
