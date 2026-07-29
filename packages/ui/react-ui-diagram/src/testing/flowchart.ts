@@ -23,3 +23,22 @@ export const FLOWCHART = `flowchart TB
     C --> Y
     Y --> C
 `;
+
+/** Subgraph within a subgraph, to exercise the layout's recursion past one level. */
+export const NESTED_FLOWCHART = `flowchart TB
+    UI[Client]
+
+    subgraph SERVER[Server]
+        API[API]
+
+        subgraph CORE[Core]
+            Store[Store]
+            Index[Index]
+        end
+
+        API --> Store
+        API --> Index
+    end
+
+    UI --> API
+`;

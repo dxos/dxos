@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { FLOWCHART, projectMermaid } from '../testing';
 import { type Graph, type Node } from '../types';
-import { layout } from './layout';
+import { GRID, layout } from './layout';
 
 const resolve = (source = FLOWCHART): Map<string, Node> => {
   const { graph } = projectMermaid(source);
@@ -46,6 +46,31 @@ describe('layout', () => {
     const lowest = Math.max(...['A', 'B', 'C'].map((id) => nodes.get(id)!.origin!.y + nodes.get(id)!.size!.height));
     expect(core.size!.width).toBeGreaterThanOrEqual(widest);
     expect(core.size!.height).toBeGreaterThanOrEqual(lowest);
+  });
+
+  test('snaps computed origins and group sizes to the grid', ({ expect }) => {
+    // Centring a narrow lane inside a wider one is what produces off-grid values.
+    for (const node of resolve().values()) {
+      expect(node.origin!.x % GRID).toBe(0);
+      expect(node.origin!.y % GRID).toBe(0);
+      expect(node.size!.width % GRID).toBe(0);
+      expect(node.size!.height % GRID).toBe(0);
+    }
+  });
+
+  test('honours a custom grid pitch for both position and group size', ({ expect }) => {
+    const { graph } = projectMermaid(FLOWCHART);
+    const resolved = layout(graph, { grid: 25 });
+
+    for (const node of resolved.nodes) {
+      expect(node.origin!.x % 25).toBe(0);
+      expect(node.origin!.y % 25).toBe(0);
+    }
+
+    // Only a group is sized by layout; leaf sizes come from the model and are left alone.
+    const core = resolved.nodes.find((node) => node.id === 'CORE')!;
+    expect(core.size!.width % 25).toBe(0);
+    expect(core.size!.height % 25).toBe(0);
   });
 
   test('pinned positions from the overlay win over computed ones', ({ expect }) => {

@@ -4,8 +4,9 @@
 
 import '@xyflow/react/dist/base.css';
 
+import { createContext } from '@radix-ui/react-context';
 import {
-  Background,
+  Background as BackgroundPrimitive,
   BackgroundVariant,
   type Edge as FlowEdge,
   type Node as FlowNode,
@@ -13,43 +14,57 @@ import {
   type NodeTypes,
   ReactFlow,
   ReactFlowProvider,
+  useEdgesState,
+  useNodesState,
   useReactFlow,
 } from '@xyflow/react';
-import React, { useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { type ComposableProps } from '@dxos/ui-types';
 
-import { layout } from '../../model';
+import { GRID, layout } from '../../model';
 import { type Node, type Overlay, type Point, type Projection, isGroup } from '../../types';
 import { DiagramGroup, DiagramNode } from './DiagramNode';
-
-const SNAP = 8;
 
 const nodeTypes: NodeTypes = {
   node: DiagramNode,
   group: DiagramGroup,
 };
 
-export type DiagramProps = ThemedClassName<{
+//
+// Root
+//
+
+type DiagramContextValue = {
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+  grid: number;
+  onNodesChange: ReturnType<typeof useNodesState<FlowNode>>[2];
+  onEdgesChange: ReturnType<typeof useEdgesState<FlowEdge>>[2];
+  onNodeMove?: (id: string, origin: Point) => void;
+  /** Node count and edge count, so a refit is triggered by shape rather than by every keystroke. */
+  shape: string;
+};
+
+const [DiagramProvider, useDiagramContext] = createContext<DiagramContextValue>('Diagram.Root');
+
+export type DiagramRootProps = PropsWithChildren<{
   diagram: Projection;
   overlay?: Overlay;
-  grid?: 'lines' | 'dots' | false;
+  grid?: number;
   /** Emitted when a node is dragged; the caller decides whether it pins to the overlay. */
   onNodeMove?: (id: string, origin: Point) => void;
 }>;
 
 /**
- * Renders the neutral diagram model. Controlled: the model is authoritative and this is a
- * projection of it, so the canvas can never hold state the model does not describe.
+ * Resolves the projection into a laid-out flow graph and provides it. Renders no element of its own,
+ * so it can wrap whichever region of the surrounding layout owns the canvas.
  */
-const DiagramImpl = ({ classNames, diagram, overlay, grid = 'dots', onNodeMove }: DiagramProps) => {
-  const { themeMode } = useThemeContext();
-  const { fitView } = useReactFlow();
+const DiagramRoot = ({ children, diagram, overlay, grid = GRID, onNodeMove }: DiagramRootProps) => {
+  const resolved = useMemo(() => layout(diagram.graph, { overlay, grid }), [diagram, overlay, grid]);
 
-  const resolved = useMemo(() => layout(diagram.graph, { overlay }), [diagram, overlay]);
-
-  const nodes = useMemo<FlowNode[]>(
+  const projectedNodes = useMemo<FlowNode[]>(
     () =>
       resolved.nodes.map((node: Node) => {
         const group = isGroup(node);
@@ -67,7 +82,7 @@ const DiagramImpl = ({ classNames, diagram, overlay, grid = 'dots', onNodeMove }
     [resolved],
   );
 
-  const edges = useMemo<FlowEdge[]>(
+  const projectedEdges = useMemo<FlowEdge[]>(
     () =>
       resolved.edges.map((edge) => ({
         id: edge.id,
@@ -81,36 +96,108 @@ const DiagramImpl = ({ classNames, diagram, overlay, grid = 'dots', onNodeMove }
     [resolved],
   );
 
-  // Refit when the projection changes shape, otherwise editing the source scrolls the diagram
-  // out of view.
+  // Local mirror of the projection. React Flow owns the interim state of a gesture — a drag is a
+  // stream of position changes it expects to apply itself — so without this a dragged node stays
+  // frozen until the pointer is released. The model stays authoritative: the mirror is reset from
+  // the projection whenever that changes, and a finished drag is committed through `onNodeMove`.
+  const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
+
+  useEffect(() => setNodes(projectedNodes), [projectedNodes, setNodes]);
+  useEffect(() => setEdges(projectedEdges), [projectedEdges, setEdges]);
+
+  return (
+    <ReactFlowProvider>
+      <DiagramProvider
+        nodes={nodes}
+        edges={edges}
+        grid={grid}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeMove={onNodeMove}
+        shape={`${resolved.nodes.length}:${resolved.edges.length}`}
+      >
+        {children}
+      </DiagramProvider>
+    </ReactFlowProvider>
+  );
+};
+
+DiagramRoot.displayName = 'Diagram.Root';
+
+//
+// Canvas
+//
+
+export type DiagramCanvasProps = ComposableProps<PropsWithChildren>;
+
+/** The pannable, zoomable surface. Controlled — every node and edge comes from the projection. */
+const DiagramCanvas = composable<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
+  const { themeMode } = useThemeContext();
+  const { fitView } = useReactFlow();
+  const { nodes, edges, grid, onNodesChange, onEdgesChange, onNodeMove, shape } = useDiagramContext('Diagram.Canvas');
+
+  // Refit when the projection changes shape, otherwise editing the source scrolls the diagram out
+  // of view. Keyed on counts so a drag does not refit under the pointer.
   useEffect(() => {
     const handle = setTimeout(() => fitView({ maxZoom: 1, padding: 0.2 }), 0);
     return () => clearTimeout(handle);
-  }, [resolved.nodes.length, resolved.edges.length, fitView]);
+  }, [shape, fitView]);
+
+  const handleNodeDragStop = useCallback(
+    (_event: unknown, node: FlowNode) => onNodeMove?.(node.id, node.position),
+    [onNodeMove],
+  );
 
   return (
     <ReactFlow
-      className={mx('dx-expander', classNames)}
+      {...composableProps(props, { classNames: 'dx-expander' })}
+      ref={forwardedRef}
       colorMode={themeMode}
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
       snapToGrid={true}
-      snapGrid={[SNAP, SNAP]}
+      snapGrid={[grid, grid]}
       fitView={true}
       fitViewOptions={{ maxZoom: 1, padding: 0.2 }}
       nodesConnectable={false}
-      onNodeDragStop={(_event, node) => onNodeMove?.(node.id, node.position)}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onNodeDragStop={handleNodeDragStop}
     >
-      {grid && (
-        <Background gap={SNAP * 2} variant={grid === 'lines' ? BackgroundVariant.Lines : BackgroundVariant.Dots} />
-      )}
+      {children}
     </ReactFlow>
   );
+});
+
+DiagramCanvas.displayName = 'Diagram.Canvas';
+
+//
+// Background
+//
+
+export type DiagramBackgroundProps = { variant?: 'lines' | 'dots' };
+
+const VARIANT: Record<NonNullable<DiagramBackgroundProps['variant']>, BackgroundVariant> = {
+  lines: BackgroundVariant.Lines,
+  dots: BackgroundVariant.Dots,
 };
 
-export const Diagram = (props: DiagramProps) => (
-  <ReactFlowProvider>
-    <DiagramImpl {...props} />
-  </ReactFlowProvider>
-);
+/** Grid overlay, drawn at the snap pitch so nodes visibly sit on the lines they snap to. */
+const DiagramBackground = composable<HTMLDivElement, DiagramBackgroundProps>(({ variant = 'dots' }) => {
+  const { grid } = useDiagramContext('Diagram.Background');
+  return <BackgroundPrimitive gap={grid} variant={VARIANT[variant]} />;
+});
+
+DiagramBackground.displayName = 'Diagram.Background';
+
+//
+// Diagram
+//
+
+export const Diagram = {
+  Root: DiagramRoot,
+  Canvas: DiagramCanvas,
+  Background: DiagramBackground,
+};

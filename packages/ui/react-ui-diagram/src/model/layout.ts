@@ -11,17 +11,27 @@
 
 import { type Edge, type Graph, type Node, type Overlay, type Point, childrenOf, findNode, isGroup } from '../types';
 
+/**
+ * Grid pitch. One value drives layout quantisation, drag snapping and the rendered background, so a
+ * computed position always lands on a visible gridline. Node and gap constants are multiples of it.
+ */
+export const GRID = 16;
+
 export const NODE_WIDTH = 160;
 export const NODE_HEIGHT = 64;
-const GAP_RANK = 72;
-const GAP_CROSS = 40;
+const GAP_RANK = 80;
+const GAP_CROSS = 48;
 /** Inset children by this much, leaving room for the group's own label above them. */
 const GROUP_PAD = 32;
 
 export type LayoutOptions = {
   /** Pinned positions win over computed ones. */
   overlay?: Overlay;
+  /** Grid pitch to quantise to. Defaults to {@link GRID}. */
+  grid?: number;
 };
+
+const quantise = (value: number, grid: number) => Math.round(value / grid) * grid;
 
 /**
  * Edges that close a cycle, found by DFS: an edge into a node still on the stack points backwards.
@@ -129,6 +139,7 @@ const layoutLevel = (
   placed: Map<string, Placed>,
   overlay: Overlay | undefined,
   inset: number,
+  grid: number,
 ): Size => {
   const members = childrenOf(graph, parent);
   if (members.length === 0) {
@@ -139,8 +150,11 @@ const layoutLevel = (
   const sizes = new Map<string, Size>();
   for (const node of members) {
     if (isGroup(node)) {
-      const inner = layoutLevel(graph, node.id, placed, overlay, GROUP_PAD);
-      sizes.set(node.id, { width: inner.width + GROUP_PAD * 2, height: inner.height + GROUP_PAD * 1.5 });
+      const inner = layoutLevel(graph, node.id, placed, overlay, GROUP_PAD, grid);
+      sizes.set(node.id, {
+        width: quantise(inner.width + GROUP_PAD * 2, grid),
+        height: quantise(inner.height + GROUP_PAD * 1.5, grid),
+      });
     } else {
       sizes.set(node.id, {
         width: node.size?.width ?? NODE_WIDTH,
@@ -170,11 +184,15 @@ const layoutLevel = (
   for (const lane of [...lanes.keys()].sort((a, b) => a - b)) {
     const row = lanes.get(lane)!;
     const rowHeight = Math.max(...row.map((node) => sizes.get(node.id)?.height ?? NODE_HEIGHT));
-    let x = inset + (widest - laneWidth(row)) / 2;
+    // Centring is the one source of off-grid values, so quantise here rather than at the end.
+    let x = inset + quantise((widest - laneWidth(row)) / 2, grid);
     for (const node of row) {
       const size = sizes.get(node.id) ?? { width: NODE_WIDTH, height: NODE_HEIGHT };
       const pinned = overlay?.positions?.[node.id];
-      placed.set(node.id, { origin: pinned ?? { x, y }, size });
+      placed.set(node.id, {
+        origin: pinned ?? { x: quantise(x, grid), y: quantise(y, grid) },
+        size,
+      });
       x += size.width + GAP_CROSS;
     }
     y += rowHeight + GAP_RANK;
@@ -188,9 +206,9 @@ const layoutLevel = (
  * Resolve every node's `origin` and `size`. Coordinates are parent-relative, matching React Flow's
  * treatment of nodes that declare a `parentId`.
  */
-export const layout = (graph: Graph, { overlay }: LayoutOptions = {}): Graph => {
+export const layout = (graph: Graph, { overlay, grid = GRID }: LayoutOptions = {}): Graph => {
   const placed = new Map<string, Placed>();
-  layoutLevel(graph, undefined, placed, overlay, 0);
+  layoutLevel(graph, undefined, placed, overlay, 0, grid);
 
   return {
     ...graph,

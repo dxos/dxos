@@ -34,7 +34,10 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@radix-ui/react-compose-refs": "catalog:",
+    "@radix-ui/react-context": "catalog:",
     "@xyflow/react": "catalog:",
     "effect": "catalog:"
   },
@@ -44,6 +47,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "codemirror-lang-mermaid": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
