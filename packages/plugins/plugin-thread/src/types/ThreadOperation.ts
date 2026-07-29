@@ -70,6 +70,28 @@ export const RemoveChannelMessage = Operation.make({
 });
 
 /**
+ * Renames a thread by opening the shared rename popover anchored to the caller (its navtree row).
+ * The name is an annotation on the root message, so only its author may rename: committing
+ * re-appends that message, which under the feed's last-flush-wins rule would silently overwrite a
+ * concurrent edit by its author.
+ */
+export const RenameThread = Operation.make({
+  meta: {
+    key: makeKey('renameThread'),
+    name: 'Rename Thread',
+    icon: 'ph--pencil-simple--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    /** The thread's root message, which carries the name annotation. */
+    root: Type.getSchema(Message.Message),
+    /** Anchor for the popover; the navtree row that invoked the action. */
+    caller: Schema.optional(Schema.String),
+  }),
+  output: Schema.Void,
+});
+
+/**
  * Adds the sender's reaction to a message, or removes it when they have already reacted with the
  * same emoji. Reactions are per-author items, so a toggle appends or tombstones one item rather than
  * mutating shared state.

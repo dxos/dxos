@@ -11,7 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
-import { ChannelArticle, ThreadArticle } from '#containers';
+import { ChannelArticle, ChannelThreadArticle, ThreadArticle } from '#containers';
 import { isThreadSelection } from '#types';
 
 export default Capability.makeModule(() =>
@@ -32,13 +32,11 @@ export default Capability.makeModule(() =>
         ),
         component: ({ data: { companionTo: channel } }) => <ChannelArticle subject={channel} chatOnly />,
       }),
-      // A thread opened from its navtree node: the channel article with that thread already open.
+      // A thread opened from its navtree node, as its own plank beside the channel.
       Surface.create({
         id: 'channelThread',
         filter: AppSurface.subject(AppSurface.Article, isThreadSelection),
-        component: ({ data: { subject }, role }) => (
-          <ChannelArticle role={role} subject={subject.channel} threadId={subject.threadId} />
-        ),
+        component: ({ data: { subject }, role }) => <ChannelThreadArticle role={role} subject={subject} />,
       }),
       // TODO(burdon): Disambiguate with Channel.
       Surface.create({

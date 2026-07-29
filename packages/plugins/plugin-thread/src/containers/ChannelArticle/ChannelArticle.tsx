@@ -3,31 +3,21 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { useIdentity, useMembers } from '@dxos/halo-react';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
-import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Channel, type Message as MessageType } from '@dxos/types';
 
-import { MessageThread, ThreadPanel } from '#components';
-import { useCanReact, useCanRemove, useMessages, useReactions, useStatus } from '#hooks';
+import { MessageThread } from '#components';
+import { useChannelMessaging } from '#hooks';
 import { meta } from '#meta';
-import {
-  ThreadAnnotation,
-  ThreadCapabilities,
-  ThreadOperation,
-  foldReactions,
-  foldThreads,
-  resolveProvider,
-  selectRoots,
-  senderKey,
-} from '#types';
+import { ThreadOperation, foldThreads, getThreadNodeId, selectRoots } from '#types';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);
@@ -40,8 +30,6 @@ export type ChannelArticleProps = AppSurface.ObjectArticleProps<
     fullscreen?: boolean;
     /** Always render the chat, even while in this channel's call (used by the in-call chat companion). */
     chatOnly?: boolean;
-    /** Thread to open on mount — set when the article is reached via a thread's navtree node. */
-    threadId?: string;
   }
 >;
 
@@ -53,39 +41,17 @@ export type ChannelArticleProps = AppSurface.ObjectArticleProps<
  * carries foreign-key `Obj.Meta`" when the provider has none. When plugin-calls is present, a
  * "Start video call" action switches the article to the call surface and the chat moves to a companion.
  */
-export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly, threadId }: ChannelArticleProps) => {
-  const identity = useIdentity();
-  const space = channel ? getSpace(channel) : undefined;
-  const members = useMembers(space?.id);
+export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly }: ChannelArticleProps) => {
   const id = channel ? Obj.getURI(channel) : undefined;
-  const activity = useStatus(space, id);
   const { invokePromise } = useOperationInvoker();
+  const { space, identity, members, messages, activity, readOnly, getReactions, canDelete, onReact, onDelete } =
+    useChannelMessaging(channel);
 
-  const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
-  const provider = channel ? resolveProvider(providers, channel.backend.kind) : undefined;
-  const messages = useMessages(channel);
-  const reactions = useReactions(channel);
-  const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
-  const canReact = useCanReact(channel) && !readOnly;
-  const canRemove = useCanRemove(channel) && !readOnly;
-
-  // Thread-first: the main list renders roots only, each carrying a summary of the thread that
-  // branches from it; the open thread renders beside it.
-  const [openThreadId, setOpenThreadId] = useState<string | undefined>(threadId);
-  const [replyToId, setReplyToId] = useState<string | undefined>(undefined);
+  // Thread-first: this list renders roots only, each carrying a summary of the thread that branches
+  // from it; opening one adds the thread's own plank beside this one.
   const roots = useMemo(() => selectRoots(messages), [messages]);
   const threads = useMemo(() => foldThreads(messages), [messages]);
-  const foldedReactions = useMemo(() => foldReactions(reactions, identity?.did), [reactions, identity?.did]);
-  const openThread = openThreadId ? threads.get(openThreadId) : undefined;
-  const openThreadRoot = useMemo(
-    () => (openThreadId ? roots.find((message) => message.id === openThreadId) : undefined),
-    [roots, openThreadId],
-  );
 
-  const getReactions = useCallback(
-    (message: MessageType.Message) => foldedReactions.get(message.id) ?? [],
-    [foldedReactions],
-  );
   const getThreadSummary = useCallback(
     (message: MessageType.Message) => {
       const summary = threads.get(message.id);
@@ -93,84 +59,23 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly,
     },
     [threads],
   );
-  // Deleting tombstones a feed item, which every peer sees — so a participant may only remove their
-  // own messages. Moderation by others is a membership concern this plugin does not model yet.
-  const canDelete = useCallback(
-    (message: MessageType.Message) => !!identity && senderKey(message.sender) === identity.did,
-    [identity],
-  );
 
-  const handleReact = useCallback(
-    (messageId: string, emoji: string) => {
-      const message = messages.find((message) => message.id === messageId);
-      if (!channel || !identity || !message) {
-        return;
-      }
-      void invokePromise(ThreadOperation.ToggleReaction, {
-        channel,
-        message,
-        sender: { identityDid: identity.did },
-        emoji,
-      });
-    },
-    [channel, identity, messages, invokePromise],
-  );
-
-  const handleDelete = useCallback(
+  // A thread has its own navtree node under this channel, so it opens as a plank rather than in
+  // place — which is also what makes it addressable and keeps the channel view roots-only.
+  const handleOpenThread = useCallback(
     (messageId: string) => {
-      const message = messages.find((message) => message.id === messageId);
-      if (!channel || !message) {
+      const anchor = attendableId ?? id;
+      if (!anchor) {
         return;
       }
-      void invokePromise(ThreadOperation.RemoveChannelMessage, { channel, message });
-    },
-    [channel, messages, invokePromise],
-  );
-
-  // Replies are scoped to the open thread, so switching or closing threads drops a pending target.
-  const handleOpenThread = useCallback((messageId: string | undefined) => {
-    setOpenThreadId(messageId);
-    setReplyToId(undefined);
-  }, []);
-
-  const replyTo = useMemo(
-    () => (replyToId ? messages.find((message) => message.id === replyToId) : undefined),
-    [messages, replyToId],
-  );
-
-  const handleCancelReply = useCallback(() => setReplyToId(undefined), []);
-
-  const handleSendReply = useCallback(
-    (text: string) => {
-      if (!channel || !identity || readOnly || !openThreadId) {
-        return false;
-      }
-      void invokePromise(ThreadOperation.AppendChannelMessage, {
-        channel,
-        sender: { identityDid: identity.did },
-        text,
-        threadId: openThreadId,
-        ...(replyTo ? { parentMessage: replyTo } : {}),
+      void invokePromise(LayoutOperation.Open, {
+        subject: [`${anchor}/${getThreadNodeId(messageId)}`],
+        pivotId: anchor,
+        disposition: 'add',
+        navigation: 'immediate',
       });
-      setReplyToId(undefined);
-      return true;
     },
-    [channel, identity, readOnly, openThreadId, replyTo, invokePromise],
-  );
-
-  // Only the root's author may rename a thread: the name is an annotation on the root message, and
-  // editing it re-appends that message, which under the feed's last-flush-wins rule would silently
-  // overwrite a concurrent edit by its author.
-  const canRenameThread =
-    !readOnly && !!identity && !!openThreadRoot && senderKey(openThreadRoot.sender) === identity.did;
-
-  const handleRename = useCallback(
-    (name: string) => {
-      if (openThreadRoot) {
-        ThreadAnnotation.setName(openThreadRoot, name);
-      }
-    },
-    [openThreadRoot],
+    [attendableId, id, invokePromise],
   );
 
   const callProvider = useCapabilities(CallsCapabilities.CallTransportProvider)[0];
@@ -239,43 +144,20 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly,
           <MessageThread
             id={id}
             classNames='dx-document grow min-w-0'
-            identity={identity ?? undefined}
+            identity={identity}
             members={members}
             messages={roots}
             activity={activity}
             onSend={handleSend}
             readOnly={readOnly}
             editable={!readOnly}
-            getReactions={canReact ? getReactions : undefined}
+            getReactions={getReactions}
             getThreadSummary={getThreadSummary}
             canDelete={canDelete}
-            onMessageReact={canReact ? handleReact : undefined}
-            onMessageDelete={canRemove ? handleDelete : undefined}
+            onMessageReact={onReact}
+            onMessageDelete={onDelete}
             onThreadOpen={handleOpenThread}
           />
-          {openThreadId && (
-            <ThreadPanel
-              classNames='w-full max-w-sm border-is border-separator'
-              threadId={openThreadId}
-              root={openThreadRoot}
-              replies={openThread?.replies ?? []}
-              name={openThread?.name ?? (openThreadRoot && ThreadAnnotation.getName(openThreadRoot))}
-              identity={identity ?? undefined}
-              members={members}
-              readOnly={readOnly}
-              editable={!readOnly}
-              getReactions={canReact ? getReactions : undefined}
-              canDelete={canDelete}
-              onMessageReact={canReact ? handleReact : undefined}
-              onMessageDelete={canRemove ? handleDelete : undefined}
-              onMessageReply={readOnly ? undefined : setReplyToId}
-              replyTo={replyTo}
-              onCancelReply={handleCancelReply}
-              onRename={canRenameThread ? handleRename : undefined}
-              onClose={() => handleOpenThread(undefined)}
-              onSend={handleSendReply}
-            />
-          )}
         </Panel.Content>
       )}
     </Panel.Root>

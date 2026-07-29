@@ -71,7 +71,7 @@ export type MessageThreadProps = ThemedClassName<{
  * Pure message-thread UI: message list + composer textbox + activity
  * indicator, built on the `@dxos/react-ui-thread` primitives. Does not load
  * data or invoke operations — the caller passes messages and an `onSend`
- * callback. Used by `ChannelArticle` and `ThreadArticle`.
+ * callback. Used by `ChannelArticle`, `ChannelThreadArticle` and `ThreadArticle`.
  */
 export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
   (
@@ -137,12 +137,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
         onThreadOpen={onThreadOpen}
         onMessageReply={onMessageReply}
       >
-        <Thread.Content
-          id={id}
-          current={current}
-          classNames={['dx-container h-full border', classNames]}
-          ref={forwardedRef}
-        >
+        <Thread.Content id={id} current={current} classNames={['dx-container h-full', classNames]} ref={forwardedRef}>
           <Thread.Messages id={id} messages={messages} />
           {!readOnly && (
             <>

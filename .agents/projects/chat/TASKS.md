@@ -121,30 +121,73 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       items, asserted by the `DeleteOwnOnly` play.
 - [x] Reactions UI: folded chips with counts and own-state highlight; clicking
       an active chip un-reacts; picker in the hover toolbar.
-- [x] Storybook coverage: `Roots`, `OpenThread`, `DeleteOwnOnly`,
-      `ReplyInThread`, `ThreadAffordances` (the channel/thread asymmetry),
-      `QuoteReply` (banner → send → quote), `React`.
+- [x] Storybook coverage: channel side — `Roots`, `DeleteOwnOnly`,
+      `ThreadAffordances`, `React`; thread side — `Default`, `ReplyInThread`,
+      `ThreadAffordances`, `QuoteReply` (banner → send → quote). The shared
+      fixture (one channel, two roots, one seeded reply) lives in
+      `containers/testing.tsx` so both files exercise the same feed.
 
 ### Navtree
 
 - [x] Threads as children of the channel node (jdw round 2):
-      `channelThreads` graph extension folds the feed and emits one node per
-      thread, ordered by last activity, labelled by thread name falling back
-      to the root's first line. Nodes carry a `(channel, threadId)`
-      `ThreadSelection` — deliberately not a bare `Message`, since
-      plugin-inbox claims the article surface for every non-draft message —
-      and a `channelThread` surface opens `ChannelArticle` with that thread
-      already open.
+      `channelThreads` graph extension folds the feed and emits nodes carrying a
+      `(channel, threadId)` `ThreadSelection` — deliberately not a bare
+      `Message`, since plugin-inbox claims the article surface for every
+      non-draft message.
+- [x] FIXED (jdw round 3): those nodes never rendered. `getThreadNodeId`
+      returned `<channelURI>/thread/<id>`, and the graph builder
+      invariant-rejects any node id containing `/` (`validateSegmentId`), which
+      threw inside `Graph.expand` and killed the channel's whole `child`
+      relation — taking `channelChatCompanion` with it, permanently for that
+      node (expand marks the key expanded before invoking the connector). Ids
+      are segment-local; the builder qualifies them with the parent path itself.
+      Now `thread-<id>`, asserted slash-free in `ThreadSelection.test.ts`.
+- [x] One node per **root message**, not per replied-to thread (jdw round 3):
+      starting a thread opens its plank before any reply exists, and a plank
+      needs a node to resolve. Marking the root instead ("this message has a
+      thread") is not available — that would re-append someone else's message,
+      which the single-writer rule forbids. `foldThreads` still gates the _reply
+      summary row_ on ≥1 reply, so the channel view is unchanged.
+- [x] Threads open as their own plank (jdw round 3): `LayoutOperation.Open`
+      with `disposition: 'add'` + `pivotId` = the channel's attendable, so the
+      thread lands beside the channel instead of inside it. `ThreadPanel` is
+      deleted; the new `ChannelThreadArticle` renders the `channelThread`
+      surface, and `useChannelMessaging` holds the state both articles share.
+- [x] Rename moved out of the UI onto the node (jdw round 3): a `list-item`
+      action → `ThreadOperation.RenameThread` → plugin-space's shared rename
+      popover anchored to the navtree row (the `RenameCallback` variant, as
+      plugin-inbox does for mailbox filters). Author-gated in the connector, so
+      a non-author is offered nothing rather than a silently-inert menu item.
+      The in-panel "Name this thread" input and its translations are gone.
+- [ ] Channel rows only grow a disclosure twisty after first hover: children
+      materialize on `Graph.expand` (hover/toggle) and `role: 'branch'` is what
+      would show it up front — but that comes from `AppNode.makeObject` via
+      `TypeSection`, which has no pass-through, and setting it unconditionally
+      would give a thread-less channel a twisty that opens onto nothing. Needs
+      either a `branch` option on `makeObject`/`TypeSection` or a schema-level
+      `GraphPropsAnnotation` extension (blocked: `@dxos/types` cannot depend on
+      `@dxos/app-toolkit`).
+
+### Message view (jdw round 3)
+
+- [x] Dropped the stray `border` on the channel's `Thread.Content` — the white
+      box framing the message list.
+- [x] Messages seat at the foot of the viewport and stay pinned to the newest
+      one: `ScrollArea.Viewport` is a flex column and the virtual stack takes
+      `mt-auto`, so a short thread fills downward from the composer instead of
+      from the top. Pinning is observed on the content height (not on `items`)
+      because the virtualizer settles tile heights over several frames, and it
+      holds only while the reader is already at the foot.
 
 ### Stage-1 verification
 
 - [x] Unit: folds (threads, reactions, participants, orphaned root) and
       reaction toggle idempotency — 15 tests in `types/threads.test.ts`, plus
       6 in `@dxos/types` for the schema changes.
-- [x] Storybook plays: 9 green in a real browser, covering roots-only
-      rendering, thread open/close, threaded reply, author-gated delete, the
-      reaction round trip, the channel/thread affordance asymmetry, and the
-      quote-reply round trip (banner, `parentMessage`, rendered quote).
+- [x] Storybook plays: 10 green in a real browser (4 channel + 4 thread + 2
+      render-only), covering roots-only rendering, threaded reply, author-gated
+      delete, the reaction round trip, the channel/thread affordance asymmetry,
+      and the quote-reply round trip (banner, `parentMessage`, rendered quote).
 - [ ] Two-client storybook for optimistic send + cross-peer convergence — not
       attempted; needs a two-peer harness.
 - [ ] Manual: offline send (airplane-mode) → reconnect → `blocksToPush`

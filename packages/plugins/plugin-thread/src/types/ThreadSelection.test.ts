@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
 import { Channel, Message } from '@dxos/types';
 
 import { getThreadNodeId, isThreadSelection } from './ThreadSelection';
@@ -26,13 +25,13 @@ describe('ThreadSelection', () => {
     expect(isThreadSelection(null)).to.be.false;
   });
 
-  test('node ids are namespaced per channel and thread', ({ expect }) => {
-    const channel = Channel.make({ name: 'general' });
-    const other = Channel.make({ name: 'random' });
-    expect(getThreadNodeId(channel, 'a')).to.not.eq(getThreadNodeId(channel, 'b'));
-    expect(getThreadNodeId(channel, 'a')).to.not.eq(getThreadNodeId(other, 'a'));
-    // Namespaced so it cannot collide with the root message's own node id.
-    expect(getThreadNodeId(channel, 'a')).to.contain(Obj.getURI(channel));
-    expect(getThreadNodeId(channel, 'a')).to.not.eq('a');
+  // The graph builder qualifies a node id with its parent's path and rejects any id containing the
+  // separator, so a thread id must stay a single segment — uniqueness across channels comes from the
+  // channel's path, not from this id.
+  test('node ids are single path segments, distinct per thread', ({ expect }) => {
+    expect(getThreadNodeId('a')).to.not.eq(getThreadNodeId('b'));
+    expect(getThreadNodeId('a')).to.not.contain('/');
+    // Prefixed so it cannot collide with the root message's own node id.
+    expect(getThreadNodeId('a')).to.not.eq('a');
   });
 });

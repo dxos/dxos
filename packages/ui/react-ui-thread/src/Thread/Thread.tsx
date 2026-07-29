@@ -374,6 +374,9 @@ export type ThreadMessagesProps = ThemedClassName<{
 const DEFAULT_GROUP_WINDOW_MS = 60_000;
 const DEFAULT_GAP_DIVIDER_MS = 3 * 60 * 60 * 1000;
 
+/** Distance (px) from the foot within which the reader counts as "at the bottom" for auto-scroll. */
+const STICKY_THRESHOLD = 32;
+
 /** Virtualized stack of message tiles (via Mosaic), within an internal scroll area. */
 const ThreadMessages = ({
   messages,
@@ -387,10 +390,40 @@ const ThreadMessages = ({
 }: ThreadMessagesProps) => {
   const { dtLocale } = useTranslation(translationKey);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
+  const [content, setContent] = useState<HTMLDivElement | null>(null);
   const items = useMemo(
     () => groupMessages(messages.filter(Boolean), { groupWindowMs, dayDivider, gapDividerMs, dtLocale }),
     [messages, groupWindowMs, dayDivider, gapDividerMs, dtLocale],
   );
+
+  // Chat convention: the newest message stays in view, but only while the reader is already at the
+  // foot — scrolling up to read history must not be yanked back by an arriving message.
+  const sticky = useRef(true);
+  useEffect(() => {
+    if (!viewport) {
+      return;
+    }
+    const handleScroll = () => {
+      sticky.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <= STICKY_THRESHOLD;
+    };
+    viewport.addEventListener('scroll', handleScroll, { passive: true });
+    return () => viewport.removeEventListener('scroll', handleScroll);
+  }, [viewport]);
+
+  // Observing the content height (rather than reacting to `items`) re-pins across the virtualizer's
+  // post-mount measurement passes, which settle the height over several frames.
+  useEffect(() => {
+    if (!viewport || !content) {
+      return;
+    }
+    const observer = new ResizeObserver(() => {
+      if (sticky.current) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
+    });
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [viewport, content]);
   // Per-instance id keeps concurrent threads (incl. the same thread mounted twice) distinct in the DnD registry.
   const instanceId = useId();
   const eventHandler = useMemo<DndContainerHandler>(
@@ -407,14 +440,18 @@ const ThreadMessages = ({
       eventHandler={eventHandler}
     >
       <ScrollArea.Root classNames={mx('col-span-2 flex-1 min-h-0', classNames)} orientation='vertical'>
-        <ScrollArea.Viewport ref={setViewport}>
+        {/* `flex flex-col` + the stack's `mt-auto` seat a short thread at the foot of the viewport,
+            so a new channel fills downward from the composer rather than from the top. */}
+        <ScrollArea.Viewport classNames='flex flex-col' ref={setViewport}>
           <Mosaic.VirtualStack
+            classNames='mt-auto'
             Tile={ThreadItemAdapter}
             items={items}
             getId={getThreadItemId}
             draggable={false}
             getScrollElement={() => viewport}
             estimateSize={() => estimateSize}
+            ref={setContent}
           />
         </ScrollArea.Viewport>
       </ScrollArea.Root>

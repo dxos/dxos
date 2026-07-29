@@ -3,4 +3,3 @@
 //
 
 export * from './MessageThread';
-export * from './ThreadPanel';

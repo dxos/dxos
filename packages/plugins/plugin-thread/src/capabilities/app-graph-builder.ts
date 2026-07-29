@@ -9,7 +9,8 @@ import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Channel, Message } from '@dxos/types';
 import { Position } from '@dxos/util';
@@ -17,21 +18,28 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 
 import { getChannelsPath } from '../paths';
-import { type ThreadSelection, type ThreadSummary, foldThreads, getThreadNodeId } from '../types';
+import {
+  ThreadAnnotation,
+  ThreadOperation,
+  type ThreadSelection,
+  foldThreads,
+  getThreadNodeId,
+  selectRoots,
+  senderKey,
+} from '../types';
 
 const channelTypename = Type.getTypename(Channel.Channel);
 
 /** Graph node type for a thread; distinct from `Message` so it claims its own surface. */
 const THREAD_NODE_TYPE = `${meta.profile.key}/thread`;
 
-/** Label for an unnamed thread: the first line of its root message, else its first reply. */
-const getThreadFallbackLabel = (thread: ThreadSummary): string => {
-  const source = thread.root ?? thread.replies[0];
-  const text = source?.blocks
+/** Label for an unnamed thread: the text of its root message, else the bare thread id. */
+const getThreadFallbackLabel = (root: Message.Message): string => {
+  const text = root.blocks
     .flatMap((block) => (block._tag === 'text' ? [block.text] : []))
     .join(' ')
     .trim();
-  return text?.length ? text : thread.threadId;
+  return text.length ? text : root.id;
 };
 
 export default Capability.makeModule(
@@ -51,39 +59,73 @@ export default Capability.makeModule(
           }),
       }),
 
-      // Every thread in a channel's feed, as a child of the channel node. Threads have no object of
-      // their own — a thread is the `threadId` partition of the feed, keyed by its root message —
-      // so the node carries a `(channel, threadId)` selection and the channel article opens onto it.
+      // Every thread of a channel, as a child of the channel node. Threads have no object of their
+      // own — a thread is the `threadId` partition of the feed, keyed by its root message — so the
+      // node carries a `(channel, threadId)` selection and its own article renders onto it.
+      //
+      // One node per root message, not per thread that already has replies: starting a thread opens
+      // its plank before the first reply exists, and a plank needs a node to resolve. Marking the
+      // root instead ("this message has a thread") is not open to us — that would re-append someone
+      // else's message, which the feed's single-writer rule forbids.
       GraphBuilder.createTypeExtension({
         id: 'channelThreads',
         type: Channel.Channel,
-        connector: (channel, get) => {
-          const db = Obj.getDatabase(channel);
-          const feed = Channel.getFeed(channel);
-          if (!db || !feed) {
-            return Effect.succeed([]);
-          }
+        connector: (channel, get) =>
+          Effect.sync(() => {
+            const db = Obj.getDatabase(channel);
+            const feed = Channel.getFeed(channel);
+            if (!db || !feed) {
+              return [];
+            }
 
-          const messages = get(db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom);
-          const threads = foldThreads(messages);
+            const [client] = get(capabilities.atom(ClientCapabilities.Client));
+            const identity = client && get(CreateAtom.fromObservable(client.halo.identity));
+            const messages = get(db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom);
+            const threads = foldThreads(messages);
+            const lastActivity = (root: Message.Message): string => threads.get(root.id)?.lastActivity ?? root.created;
 
-          return Effect.succeed(
-            [...threads.values()]
-              // Ordered by most recent activity, so an active thread surfaces without hunting.
-              .sort((left, right) => (right.lastActivity ?? '').localeCompare(left.lastActivity ?? ''))
-              .map((thread) =>
-                Node.make({
-                  id: getThreadNodeId(channel, thread.threadId),
-                  type: THREAD_NODE_TYPE,
-                  data: { channel, threadId: thread.threadId } satisfies ThreadSelection,
-                  properties: {
-                    label: thread.name ?? getThreadFallbackLabel(thread),
-                    icon: 'ph--chats-circle--regular',
-                  },
-                }),
-              ),
-          );
-        },
+            return (
+              selectRoots(messages)
+                // Ordered by most recent activity, so an active thread surfaces without hunting.
+                .toSorted((left, right) => lastActivity(right).localeCompare(lastActivity(left)))
+                .map((root) => {
+                  // Renaming re-appends the root message, so it is offered to its author alone (see
+                  // `ThreadOperation.RenameThread`).
+                  const canRename = !!identity && senderKey(root.sender) === identity.did;
+
+                  return Node.make({
+                    id: getThreadNodeId(root.id),
+                    type: THREAD_NODE_TYPE,
+                    data: { channel, threadId: root.id } satisfies ThreadSelection,
+                    properties: {
+                      label:
+                        threads.get(root.id)?.name ?? ThreadAnnotation.getName(root) ?? getThreadFallbackLabel(root),
+                      icon: 'ph--chats-circle--regular',
+                      draggable: false,
+                      droppable: false,
+                      testId: 'threadPlugin.thread',
+                    },
+                    actions: canRename
+                      ? [
+                          Node.makeAction({
+                            id: 'rename-thread',
+                            data: (params?: Node.InvokeProps) =>
+                              Operation.invoke(ThreadOperation.RenameThread, {
+                                root,
+                                caller: `${params?.caller}:${params?.parent?.id}`,
+                              }),
+                            properties: {
+                              label: ['rename-thread.label', { ns: meta.profile.key }],
+                              icon: 'ph--pencil-simple--regular',
+                              disposition: 'list-item',
+                            },
+                          }),
+                        ]
+                      : undefined,
+                  });
+                })
+            );
+          }),
       }),
 
       GraphBuilder.createTypeExtension({

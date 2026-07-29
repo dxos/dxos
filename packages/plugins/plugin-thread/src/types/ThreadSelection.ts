@@ -23,6 +23,9 @@ export const isThreadSelection = (value: unknown): value is ThreadSelection =>
   typeof (value as ThreadSelection).threadId === 'string' &&
   Obj.instanceOf(Channel.Channel, (value as ThreadSelection).channel);
 
-/** Graph node id for a thread, namespaced so it cannot collide with the root message's own node. */
-export const getThreadNodeId = (channel: Channel.Channel, threadId: string): string =>
-  `${Obj.getURI(channel)}/thread/${threadId}`;
+/**
+ * Graph node id for a thread, prefixed so it cannot collide with the root message's own node. A
+ * single path segment (no `/`): the graph builder rejects separators in node ids and qualifies this
+ * with the channel's path itself, which is what makes it unique across channels.
+ */
+export const getThreadNodeId = (threadId: string): string => `thread-${threadId}`;
