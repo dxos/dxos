@@ -14,20 +14,29 @@ RED=16711680
 GH_BUILD_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
 if [ -z "${DISCORD_TEST_REPORT_WEBHOOK:-}" ]; then
-  echo "::warning title=Test report not sent::DISCORD_TEST_REPORT_WEBHOOK is unset ($NAME: $RESULT)"
-  exit 0
+  echo "::error title=Test report not sent::DISCORD_TEST_REPORT_WEBHOOK is unset ($NAME: $RESULT)"
+  exit 1
 fi
 
-# `--fail-with-body` turns a non-2xx webhook response into a non-zero exit so the step goes red.
+# Discord answers 204 with an empty body. Anything else — including a 3xx from a stale or proxied webhook
+# URL, which curl reports as success since redirects are not followed — means nobody was told.
 function notify() {
-  local message
+  local message response status body
   message=$(
     printf '{ "content": %s, "embeds": [{ "title": %s, "description": %s, "color": %s }] }' \
       "\"$1\"" "\"$2: $NAME\"" "\"$GH_BUILD_URL\"" "$3"
   )
   echo "$message"
-  curl --fail-with-body --silent --show-error -H "Content-Type: application/json" \
-    -d "$message" "$DISCORD_TEST_REPORT_WEBHOOK"
+  response=$(
+    curl --silent --show-error --write-out '\n%{http_code}' -H "Content-Type: application/json" \
+      -d "$message" "$DISCORD_TEST_REPORT_WEBHOOK"
+  )
+  status=${response##*$'\n'}
+  body=${response%$'\n'*}
+  if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+    echo "::error title=Test report not delivered::Discord webhook returned $status ($NAME: $RESULT) $body"
+    return 1
+  fi
 }
 
 case "$RESULT" in
