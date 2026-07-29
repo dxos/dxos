@@ -140,6 +140,21 @@ const platforms = [
   { target: 'bun-windows-x64', platform: 'win32', arch: 'x64', ext: '.exe' },
 ] as const;
 
+// The compiler version is part of the artifact — 1.3.4 leaked `--smol` into `process.argv` so the binary
+// rejected its own arguments — and CI resolved a bare `bun` from its image rather than the pin, because
+// `setup-toolchain` runs with `auto-install: false` and no bun shim existed. Fail here rather than ship a
+// binary built by an unpinned compiler.
+const pinnedBun = (await Bun.file('../../../.prototools').text()).match(/^bun\s*=\s*"([^"]+)"/m)?.[1];
+if (!pinnedBun) {
+  console.error('[Build] No `bun` pin found in .prototools.');
+  process.exit(1);
+}
+if (Bun.version !== pinnedBun) {
+  console.error(`[Build] Running bun ${Bun.version} but .prototools pins ${pinnedBun}.`);
+  console.error('[Build] Invoke through proto (`proto run bun -- ./scripts/build.ts`), as moon.yml does.');
+  process.exit(1);
+}
+
 // Read version from source package.json.
 const sourcePackage = await Bun.file('package.json').json();
 const version = sourcePackage.version;
