@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: lenses
+    status: active
+    user: josiah
+    host: remote
+    created: 2026-07-29
+    summary: ECHO lensing via panproto — declare a bidirectional lens over a base type and interact with objects through it; unmapped view fields persist in the entity annotation dictionary.
+    tasks: .agents/projects/lenses/TASKS.md
+    design: .agents/projects/lenses/DESIGN.md
+    prs: []
+    resume: 'Planning only, no code, no PR. Next: Phase 0 spike — load @panproto/core (WASM) in node/browser/workerd, verify the TS SDK surface against the book, round-trip DataType.Task JSON Schema, hand-author the Task→GTD lens and run checkLaws, and spike whether a complement can round-trip markdown formatting byte-identically. That decides engine-in-runtime vs author-time-only.'
+
   - name: email-sync-stability
     status: active
     user: mykola
