@@ -26,7 +26,6 @@ import { join, resolve } from 'path';
 /** `--help`-shaped so nothing touches the network or a real profile; these failures are all at import. */
 const COMMANDS = [['--version'], ['--help'], ['registry', '--help'], ['function', '--help'], ['space', '--help']];
 
-const BIND_FAILED = 42;
 const NAMESPACE_SCRIPT = 'mount --bind "$1" "$2" || exit 42; shift 2; exec "$@"';
 
 const platformKey = `${process.platform}-${process.arch}`;
@@ -104,12 +103,17 @@ const wrap = (command: string, args: string[]): [string, string[]] => [
   ['-m', '--map-root-user', 'bash', '-c', NAMESPACE_SCRIPT, '--', isolationDir, nodeModules, command, ...args],
 ];
 
+// Any non-zero probe means isolation is unavailable, not just a failed bind: the CI container cannot
+// create a mount namespace at all (`unshare failed: Operation not permitted`), and testing only for the
+// bind-mount's own exit code let that through, so every invocation below inherited the failure.
 const probe = spawnSync(...wrap('true', []), { encoding: 'utf8', env: process.env });
-const isolated = process.platform === 'linux' && !probe.error && probe.status !== BIND_FAILED;
+const isolated = process.platform === 'linux' && !probe.error && probe.status === 0;
 if (isolated) {
   console.log(`[Smoke] Running with ${nodeModules} hidden.`);
 } else {
-  console.log(`[Smoke] Mount namespaces unavailable — running without hiding ${nodeModules}.`);
+  const reason = probe.error?.message ?? (`${probe.stderr ?? ''}`.trim() || `exit ${probe.status}`);
+  console.log(`[Smoke] Cannot hide ${nodeModules} (${reason}).`);
+  console.log('[Smoke] Packaging is still covered; self-containment is NOT verified in this environment.');
 }
 
 const invoke = (command: string, args: string[]) => {
