@@ -31,6 +31,8 @@ export type LayoutOptions = {
   gapPx: number;
   /** Optional cap on column width (px); leftover width centers the columns. */
   maxColumnWidthPx?: number;
+  /** Centre capped columns in the container. Off aligns them to the start, leaving the slack at the end. */
+  centered?: boolean;
 };
 
 /**
@@ -42,8 +44,9 @@ export type LayoutOptions = {
  * Columns are separated by a single gap. They stretch to fill `containerWidth`
  * unless `maxColumnWidthPx` caps them narrower, in which case the leftover width
  * is split evenly so the grid stays centred (the outer margin grows beyond the
- * gap). The base left/right perimeter is owned by the scroll container (via its
- * `--gutter`); the layout adds the centring offset plus the top/bottom perimeter.
+ * gap) — or, with `centered` off, left entirely at the end so the columns align to
+ * the start. The base left/right perimeter is owned by the scroll container (via
+ * its `--gutter`); the layout adds any centring offset plus the top/bottom perimeter.
  */
 export const layout = ({
   heights,
@@ -51,15 +54,16 @@ export const layout = ({
   containerWidth,
   gapPx,
   maxColumnWidthPx,
+  centered = true,
 }: LayoutOptions): LayoutResult => {
   const columns = Math.max(1, Math.floor(columnCount));
   const fillColumnWidth = (containerWidth - (columns - 1) * gapPx) / columns;
   const columnWidth =
     maxColumnWidthPx && maxColumnWidthPx > 0 ? Math.min(fillColumnWidth, maxColumnWidthPx) : fillColumnWidth;
 
-  // Centre the (possibly capped) columns within the container.
+  // Centre the (possibly capped) columns within the container, unless start-aligned.
   const usedWidth = columns * columnWidth + (columns - 1) * gapPx;
-  const sideInset = Math.max(0, (containerWidth - usedWidth) / 2);
+  const sideInset = centered ? Math.max(0, (containerWidth - usedWidth) / 2) : 0;
 
   // Seed each column with the top gap so the first row clears the perimeter.
   const columnHeights = new Array<number>(columns).fill(gapPx);

@@ -13,57 +13,66 @@ Target model:
 - **Chat** = instance + history; `instructions` steers it; `agent?` attributes
   it. An agent is a _preset_, applied at chat creation.
 
-Each phase ships as its own PR and keeps main green. Phases that change
-persisted shapes (A, B) are revertible only within an explicit
-**dual-read/dual-write window**: A dual-reads the old shape and B dual-writes
-the old field until D's migration closes the window — reverting after D means
-restoring from the migration, not flipping a switch. Order matters: A unlocks
-the preset channel, B removes the wrong-direction dependency, C and D delete
-the duplicate machinery.
+Order matters: A unlocks the preset channel, B removes the wrong-direction
+dependency, C and D delete the duplicate machinery. As planned, A/B carried
+dual-read/dual-write windows toward a D migration; the final decision (user,
+2026-07-28) was **no data migration** — 0.1.0 agents are abandoned and
+recreated, and D removed the transitional shims outright.
 
 ## Phase A — `Agent.instructions: Ref<Text>` → `Ref<Instructions>`
 
 The typed object carries `skills`/`objects`/`commands`, which _is_ the preset
 payload; after this phase "apply agent to chat" is one assignment.
 
-- [ ] Schema: `instructions: Ref(Instructions.Instructions)`
-      (`types/Agent.ts`); keep `@0.1.0` — old data migrates in D's bump.
-- [ ] **Dual-read until D**: a shared resolve helper accepts both shapes
-      (target is `Text` → treat as instructions text; target is
-      `Instructions` → typed), used by every reader below — existing agents
-      keep working unmigrated, and reverting A cannot strand new-shape
-      records unread (old readers loaded the ref as Text, which a dual-read
-      helper subsumes).
-- [ ] `makeInitialized`: `Instructions.make({ text: props.instructions })`
-      (owned: `Obj.setParent(instructions, agent)`); move `props.skills` into
-      `instructions.skills` instead of raw binder args.
-- [ ] Call sites that load the ref as Text: `get-context.ts` (returns
-      `instructions.text` content), `qualifier.ts`, `skill.test.ts` helper.
-- [ ] Verify: assistant-toolkit unit + agent skill memoized tests.
+- [x] Schema: `instructions: Ref(Instructions.Instructions)`
+      (`types/Agent.ts`); kept `@0.1.0` through A-C; 0.1.0 records are NOT
+      migrated (decided in D).
+- [x] **Dual-read (A through C)** — `Agent.loadInstructions` accepted both
+      shapes (bare `Text` and typed `Instructions`) while 0.1.0 records could
+      still load; D's no-migration decision retired the `Text` branch — the
+      helper is typed-only now.
+- [x] `makeInitialized`: `Instructions.make({ text, skills })` (owned via
+      `Obj.setParent`); `props.skills` recorded in `instructions.skills` (still
+      bound to the feed binder — the delivery mechanism until C); bonus: the
+      agent chat now sets `chat.instructions`, steering it through the
+      milestone-3 channel.
+- [x] Call sites ported to `loadInstructions` (get-context, qualifier) or the
+      typed shape (skill.test helper, AgentProperties/AgentArticle stories).
+- [ ] Verify: assistant-toolkit/compute/agent-runtime/plugin-assistant unit
+      suites GREEN (234 tests); agent-skill memoized conversations need
+      regeneration (`makeInitialized` shifts the deterministic id stream, so
+      recorded tool-call refs dangle) — 4 conversations pending
+      `ALLOW_LLM_GENERATION=1`, blocked on 1Password re-auth.
 
 ## Phase B — invert `Agent.chat` → `Chat.agent?: Ref<Agent>`
 
 Whoever invokes a run already holds the Chat (see the call-site table in
 DESIGN.md); the agent should not own conversation state.
 
-- [ ] `Chat` gains `agent?: Ref<Agent>` — same file, no layering change (both
-      types live in assistant-toolkit).
-- [ ] `AgentWorker` (`skills/agent/operations/agent.ts`): input becomes
-      `{ chat }` (or `{ agent, chat }` during transition); resolve feed from
-      the chat, identity from `chat.agent`.
-- [ ] `qualifier.ts`: receives the chat in its trigger input rather than
-      `agent.chat`.
-- [ ] `resetChatHistory` → `Chat.resetHistory(chat)` (feed rebuild is
-      chat-shaped); agent variant delegates until D.
-- [ ] "The agent's chats" = query on `Chat.agent` (or the existing
+- [x] `Chat` gains `agent?: Ref<Agent>` — both directions of the Agent ↔ Chat
+      cycle are `Schema.suspend`ed (module-eval TDZ otherwise).
+- [x] `AgentWorker`: transitional `{ agent, chat? }` input — prefers the
+      invocation's chat, falls back to legacy `agent.chat`; the ephemeral
+      session now also receives `chat.instructions` as steering.
+- [x] `qualifier.ts`: same transitional `chat?` input with `agent.chat`
+      fallback; `sync-triggers` stamps `chat` into all three trigger inputs.
+- [~] `resetChatHistory`: rebuilt chat now carries `agent` + `instructions`
+  refs (phase-B shape); the full extraction to `Chat.resetHistory` is
+  deferred to D with the rest of the field's removal — the helper still
+  rewrites `agent.chat` (deliberately: that is B's dual-write).
+- [x] "The agent's chats" = query on `Chat.agent` (or the existing
       `CompanionTo`); removes the single-chat limitation
       (`TODO(dmaretskyi): Multiple chats`).
-- [ ] `makeInitialized`: still creates a first chat (UX unchanged), sets
-      `chat.agent` **and dual-writes `agent.chat`** until D — legacy readers
-      (hydrated processes, un-migrated call sites, a reverted B) keep working;
-      D's migration drops the field and ends the window.
-- [ ] Verify: planning / delegation / agent skill tests (they anchor on
-      `agent.chat` today — port to `chat.agent` or `CompanionTo`).
+- [x] `makeInitialized`: still creates a first chat (UX unchanged), sets
+      `chat.agent` **and dual-wrote `agent.chat`** through B/C — legacy readers
+      kept working; D dropped the field (no migration — 0.1.0 agents are
+      recreated).
+- [ ] Verify: unit suites GREEN post-B (assistant-toolkit 30, agent-runtime 22,
+      plugin-assistant 136); test anchors on `agent.chat` still work via the
+      dual-write (porting them lands with D). Memoized agent-skill
+      conversations pending regeneration (shared with A; blocked on 1Password).
+      NOTE: A + B shipped together in one PR per user sequencing — a recorded
+      deviation from one-PR-per-phase.
 
 ## Phase C — `cron` + `subscriptions` → Routines
 
@@ -99,7 +108,7 @@ but relays push as fast as triggers fire, so a hot feed grows the input queue
 unboundedly. Escape hatch if it bites: reintroduce an intermediary feed the
 process drains at its own pace (at the cost of the visible extra feed).
 
-- [ ] `RelayFunction` (assistant-toolkit): input `{ chat: Ref<Chat>, event }`
+- [x] `Relay` op (assistant-toolkit, skills/agent/operations/relay.ts): input `{ chat: Ref<Chat>, event }`
       — the concrete contract, mirroring `RunInstructions.chat`: the chat is
       what carries history (feed), bound context, and the typed
       `instructions: Ref<Instructions>` (set from the agent's per B). Qualify
@@ -107,43 +116,54 @@ process drains at its own pace (at the cost of the visible extra feed).
       session for `chat.feed` (passing `chat.instructions`) and submit the
       event as a prompt. Instructions reach the durable process via the
       existing spawn-annotation path — no separate ephemeral-path work needed.
-- [ ] Agent wizard: a subscription creates a Routine (feed trigger →
-      `RelayFunction` with the agent's chat ref); `cron` creates a Routine
-      (timer trigger) that submits a wake prompt through the same relay path
-      (same `chat` input, synthetic event).
-- [ ] `enabled`: routines gain an owner gate or the flag moves onto each
-      Routine; `sync-triggers` reduces to a migration shim (existing
-      cron/subscription fields → Routines on first open), then deletes.
-- [ ] Retire `AgentWorker` + `Qualifier` ops (the relay subsumes both);
-      `get-context`'s chat/plan reads move per B.
-- [ ] Verify: agent-wizard tests become routine-creation tests;
-      trigger-dispatch memoized tests; a subscription fixture proves filtering
-      (irrelevant event never reaches the process queue) and multiplexing (two
-      feeds, one process).
+- [x] Agent wizard (`sync-triggers`): a subscription compiles to a Routine
+      (feed trigger → `Relay` with the agent's chat ref; `filterEvents` maps to
+      the relay's `qualify` switch); `cron` compiles to a timer Routine with a
+      synthetic wake prompt. The two-stage `agent.feed` pipeline is gone; each
+      sync deletes and recreates Routines+Triggers, which migrates legacy
+      agents on their next sync.
+- [x] `enabled`: propagated onto each compiled Trigger, as before;
+      `sync-triggers` is now the compile-to-Routines shim (its deletion — and
+      moving cron/subscription authoring onto Routines directly — lands with D).
+- [~] `AgentWorker` + `Qualifier` deprecated and no longer compiled into
+  triggers; handlers stay registered so pre-relay triggers persisted in
+  user DBs keep firing until their next sync — both delete with D.
+- [x] Verify: cron/enabled tests ported to the Routine+Relay shape; new
+      control-plane relay test proves delivery onto the durable process
+      (AgentService registered in the test resolver via a late-bound capture,
+      like HarnessService). Remaining: a memoized filtering/multiplexing
+      fixture (queued with the pending conversation regeneration).
 
-## Phase D — remove `artifacts`; schema bump + migration
+## Phase D — remove `artifacts`; schema bump (no data migration)
 
-- [ ] Delete `Agent.artifacts`, `add-artifact` op, and the artifacts half of
-      `get-context`; the model files via `ProjectSkill.artifact-add`.
-- [ ] Bump `org.dxos.type.agent` → `0.2.0`; migration: inline `{name, data}`
-      entries → a Collection on a Project created per agent (named after it);
-      `agent.chat` (kept readable through B/C) reparented under that Project;
-      drop `feed` / `filterEvents` and the transitional `chat`. NOTE:
-      `feed`/`filterEvents` are deprecated in name only — they are the current
-      qualifier pipeline's staging queue and its switch — so dropping them is
-      **gated on C landing** (the relay dissolves the staging queue into the
-      process input queue); `AgentArticle.tsx` also backfills `agent.feed`
-      today.
-- [ ] `makeInitialized` slims to identity + instructions (+ optional first
-      chat via the chat factory).
-- [ ] Verify: Agent.test round-trip at 0.2.0; a migration test (0.1.0 fixture
-      → 0.2.0) asserting each inline artifact lands in the created project's
-      Collection **and** is returned by `ProjectSkill.artifact-list`, and that
-      the reparented chat still resolves its feed and instructions; full
-      assistant-toolkit + plugin-assistant suites; and a live pass of
-      `projects.eval.ts`, whose scorers already assert the replacement
-      workflow end-to-end (artifact created → filed into the project
-      Collection via `artifact-add` → bound into chat context).
+- [x] Deleted `Agent.artifacts`, the `add-artifact`/`AgentWorker`/`Qualifier`
+      ops (+ `sync-triggers`), and the artifacts half of `get-context`; the
+      model files via `ProjectSkill.artifact-add`. The agent skill's template
+      now points at project filing. `SyncTriggers` became `SyncAutomation`
+      (config on the invocation — the agent stores no automation fields) with
+      per-category reconcile, so a subscriptions-only update cannot drop the
+      schedule routine.
+- [x] `org.dxos.type.agent` → `0.2.0` (`name`/`did`/`enabled`/`instructions`
+      only). **No data migration** (decided by user 2026-07-28): 0.1.0 agents
+      are abandoned and recreated — the `LegacyAgent` schema and the registered
+      `agentMigration` were built, validated by test (including the gotcha that
+      migration snapshots deliver refs in ENCODED form `{'/':dxn}`, never live
+      Refs), then removed; recover from commit 11802071c1 if a migration is
+      ever needed.
+- [x] `makeInitialized` slims to identity + instructions + first chat
+      (with `agent`/`instructions` refs); `resetChatHistory` rebuilds via the
+      `CompanionTo` relation (new `Agent.loadChat` helper). UI ports:
+      `AgentArticle` = instructions editor + reset (artifacts/inputs tabs died
+      with their fields); `AgentProperties` derives subscription state from
+      compiled trigger foreign keys and toggles via `SyncAutomation`;
+      stories-assistant `ContextModule` reads the project collection.
+- [x] Verify: Agent.test 0.2.0 shape + migration test (0.1.0 fixture → typed
+      instructions, artifacts→Project Collection asserted via
+      `ProjectSkill.artifact-list`, chat inversion, cron→routine) GREEN; full
+      suites GREEN post-D (compute 46 / agent-runtime 22 / assistant 43 /
+      assistant-toolkit 30 / plugin-assistant 136). Outstanding: memoized
+      agent-skill conversations regeneration (queued on 1Password) and a live
+      `projects.eval.ts` pass — both blocked on `op` re-auth.
 
 ## Phase E (optional) — rename the session host
 

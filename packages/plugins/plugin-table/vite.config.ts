@@ -12,6 +12,7 @@ export default defineConfig({
     'TablePlugin.workerd': 'src/TablePlugin.workerd.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
+    'capabilities/node': 'src/capabilities/node.ts',
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',

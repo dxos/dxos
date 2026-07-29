@@ -33,7 +33,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "@effect/opentelemetry": "catalog:",
     "@opentelemetry/api": "catalog:",
     "jsonpath-plus": "catalog:"

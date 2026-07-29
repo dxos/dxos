@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
@@ -470,7 +470,8 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
 
         if (onChatCreated) {
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
-          const chat = yield* Effect.promise(() => agent.chat!.load());
+          const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
+          invariant(chat, 'Agent chat not found.');
           const feed = yield* Effect.promise(() => chat.feed.load());
           const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });

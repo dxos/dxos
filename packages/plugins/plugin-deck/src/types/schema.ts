@@ -38,6 +38,13 @@ export const DeckState = Schema.Struct({
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
+/**
+ * Deck key for the "no workspace resolved yet" sentinel — the initial `activeDeck` of a fresh profile,
+ * held until the plugin that owns spaces switches to a real workspace. Not a graph node id, so it is
+ * never serialized into the URL (see the deck's url-handler).
+ */
+export const DEFAULT_DECK_ID = 'default';
+
 export const defaultDeck: DeckState = {
   active: [],
   inactive: [],

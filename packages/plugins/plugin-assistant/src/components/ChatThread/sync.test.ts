@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 
 import { EditorView } from '@codemirror/view';
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
@@ -286,6 +286,46 @@ describe('reducers', () => {
       const closeTagCount = (doc.content.match(/<\/reasoning>/g) ?? []).length;
       expect(openTagCount).toBe(1);
       expect(closeTagCount).toBe(1);
+    }),
+  );
+});
+
+describe('MessageSyncer tool widget rehydration', () => {
+  it.effect(
+    'restores tool widget state after reset replaces the document',
+    Effect.fnUntraced(function* (_) {
+      const updates: { id: string; value: any }[] = [];
+      class RecordingDocument extends TestDocument {
+        override updateWidget(id: string, value: any) {
+          updates.push({ id, value });
+        }
+      }
+
+      const document = new RecordingDocument();
+      const syncer = new MessageSyncer(document, createBlockRenderer('thinking'));
+      const messages = [
+        createMessage('assistant', [
+          { _tag: 'toolCall', toolCallId: 'abc', name: 'search', input: '{}', providerExecuted: false },
+        ]),
+        createMessage('user', [
+          { _tag: 'toolResult', toolCallId: 'abc', name: 'search', result: 'ok', providerExecuted: false },
+        ]),
+      ] as Message.Message[];
+
+      syncer.reset(messages);
+      // `reset` rehydrates in a promise continuation after `setContent`.
+      yield* Effect.promise(() => Promise.resolve());
+      yield* Effect.promise(() => Promise.resolve());
+
+      // Reduce the dispatches the way the widget state store does: each is either a value or a
+      // function of the previous state, applied in arrival order.
+      const forTool = updates.filter((update) => update.id === 'abc');
+      expect(forTool.length).toBeGreaterThan(0);
+      const state = forTool.reduce<{ blocks: ContentBlock.Any[] }>(
+        (previous, { value }) => (typeof value === 'function' ? value(previous) : value),
+        { blocks: [] },
+      );
+      expect(state.blocks.map((block) => block._tag)).toEqual(['toolCall', 'toolResult']);
     }),
   );
 });

@@ -5,7 +5,7 @@
 import { Skill, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { AgentRules, CreateAgent, SyncTriggers } from './operations/definitions';
+import { AgentRules, CreateAgent, SyncAutomation } from './operations/definitions';
 
 const SKILL_KEY = 'org.dxos.skill.agentWizard';
 
@@ -17,7 +17,7 @@ const make = () =>
   Skill.make({
     key: SKILL_KEY,
     name: 'Agent Wizard',
-    description: 'Help the user create a new agent (subscriptions, optional cron timer, sync-triggers after edits).',
+    description: 'Help the user create a new agent (subscriptions and optional cron compile to routines).',
     agentCanEnable: true,
     instructions: Template.make({
       source: trim`
@@ -26,22 +26,21 @@ const make = () =>
         Agents are goal oriented and autonomously driven.
         Each agent has instructions - the goal of the agent.
         The instructions also typically describe what actions to perform in reaction to events (emails).
-        The agent has a number of associated artifacts to work with.
-        Agents can subscribe to emails.
+        Agents can subscribe to emails, and durable work products belong to a project's artifacts.
 
-        Agents have a \`cron\` field: when set, the agent runs on a timer on that schedule (standard cron syntax).
-        Use \`cron\` when the user wants the agent to run periodically (e.g. "every morning", "once a day", "every 5 minutes").
-        Examples: \`0 9 * * *\` for daily at 09:00, or \`*/5 * * * *\` for every 5 minutes.
-        Timer triggers bypass the qualifier and invoke the agent worker directly on the schedule.
+        Automation (subscriptions and an optional cron schedule) is compiled into routines, not stored
+        on the agent: pass subscriptions when creating the agent, and use the sync-automation tool with
+        the FULL desired config to change automation later (a cron expression schedules periodic wakes,
+        e.g. \`0 9 * * *\` for daily at 09:00; \`enabled\` on the agent is applied to every trigger).
 
         The agent itself is an ECHO object and can be edited like any other object using the database skill.
         You can edit the agent's instructions, name, and other properties directly.
-        If you edit the agent's \`enabled\` field, \`filterEvents\` field, subscriptions array, or \`cron\` field, you MUST call the sync-triggers function afterward to synchronize the triggers (\`enabled\` is applied to all triggers).
+        If you edit the agent's \`enabled\` field, you MUST call sync-automation afterward so triggers pick it up.
 
         IMPORTANT: Before attempting to create an agent call the [agent-rules] tool to get the rules for creating an agent.
       `,
     }),
-    tools: Skill.toolDefinitions({ operations: [AgentRules, CreateAgent, SyncTriggers] }),
+    tools: Skill.toolDefinitions({ operations: [AgentRules, CreateAgent, SyncAutomation] }),
   });
 
 const skill: Skill.Definition = {

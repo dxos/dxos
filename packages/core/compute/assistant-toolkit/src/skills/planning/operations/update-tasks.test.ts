@@ -35,14 +35,16 @@ describe('UpdateTasks', () => {
         const agent = yield* Agent.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningSkill.make());
         yield* Database.flush();
 
-        const chatFeed = agent.chat?.target?.feed?.target;
+        const agentChat = yield* Agent.loadChat(agent);
+        const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
         yield* Operation.invoke(UpdateTasks, {
           tasks: [{ id: Plan.TaskId.make('task-1'), title: 'Hello', status: 'todo' }],
         }).pipe(Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(chatFeed) })));
 
-        const chat = yield* Database.load(agent.chat!);
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
         expect(chat.plan).toBeDefined();
         const plan = yield* Database.load(chat.plan!);
         expect(plan.tasks).toHaveLength(1);

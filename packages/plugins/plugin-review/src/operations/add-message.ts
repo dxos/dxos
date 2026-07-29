@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref, Relation } from '@dxos/echo';
+import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -46,14 +47,29 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         // which the persisted relation was not yet queryable and the draft was gone — the comment
         // flashed out of the companion. (The render dedupes the brief draft/persisted overlap.)
         yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db });
-        yield* Operation.invoke(SpaceOperation.AddRelation, {
+        const { relation } = yield* Operation.invoke(SpaceOperation.AddRelation, {
           db,
           schema: AnchoredTo.AnchoredTo,
           source: thread,
           target: subject,
           fields: { anchor: draft.anchor, branch: draft.branch },
         });
+
+        // Persisting spans two awaits, during which a `Delete` for this comment can run. It sees the
+        // anchor still listed as a draft, drops that entry, and returns — so without this the thread
+        // persisted above survives a delete the user already issued. The draft entry doubles as the
+        // claim on this comment: finding it already gone means a concurrent delete consumed it, so
+        // undo the persist rather than clearing an entry that is no longer ours.
         const latest = registry.get(stateAtom);
+        const claimed = latest.drafts[subjectId]?.some((a: { id: string }) => a.id === anchor.id) ?? false;
+        if (!claimed) {
+          batchEvents(() => {
+            db.remove(relation as Obj.Unknown);
+            db.remove(thread);
+          });
+          return;
+        }
+
         registry.set(stateAtom, {
           ...latest,
           drafts: {
