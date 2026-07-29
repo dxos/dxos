@@ -160,17 +160,20 @@ export const Delayed: Story = {
 };
 
 /**
- * Tool rows must survive navigating away and back — they do not today, which this reproduces.
+ * Tool rows must survive navigating away and back — they do NOT today, which this reproduces.
  *
- * Tool rows render from out-of-band widget state, not from the document: `blockToMarkdown` emits a
- * `<toolCall id/>` placeholder and pushes the blocks via `updateWidget`. On remount `MessageSyncer.reset`
- * replaces the document, which fires `xmlTagResetEffect` and clears that state, then rehydrates it in a
- * `.then()`. Both halves are dropped when the syncer runs before CodeMirror's view exists
- * (`MarkdownStream.onReset` returns early without dispatching but still resolves; `updateWidget` is
- * `viewRef.current?.dispatch`, a no-op when null). The text survives — it is replayed from `contentRef`
- * once the view initializes — but the widget state is never re-applied, so the rows come back empty.
+ * They render from out-of-band widget state, not from the document: `blockToMarkdown` emits a
+ * `<toolCall id/>` placeholder and pushes the blocks via `updateWidget`; an empty state renders an
+ * empty row. On remount `MessageSyncer.reset` replaces the document, which fires `xmlTagResetEffect`
+ * and clears that state, then rehydrates it.
  *
- * TODO(burdon): Un-skip once the widget state is re-applied after view initialization.
+ * The syncer half is correct and unit-tested (`sync.test.ts`, "restores tool widget state after reset
+ * replaces the document"): it dispatches `toolCall` then `toolResult` for each id. The widgets also
+ * mount — 40 of them, with the document text intact — but render empty, so the state is lost between
+ * the syncer's dispatch and the widget's props. The remaining suspect is the editor-side application
+ * (`xmlTagUpdateEffect` vs the `xmlTagResetEffect` fired by the same `setContent`).
+ *
+ * TODO(burdon): Un-skip once the widget state survives the reset.
  */
 export const Remount: Story = {
   args: {
