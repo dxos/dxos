@@ -101,8 +101,10 @@ repoint.
       `chats: Ref<Collection>` fallback (and its 0.3.0 bump) is not needed. STILL OPEN on this item:
       the `url` binding — the node exists but a project chat has no parent-resolving path yet, so deep
       links to one will not resolve.
-- [ ] **Exclude project chats from the top-level Chats section** — plugin-assistant's
-      section query, alongside the existing `CompanionTo` exclusion.
+- [x] **Exclude project chats from the top-level Chats section** — plugin-assistant's section query
+      is now the exported `standaloneChatsQuery`: every chat minus `CompanionTo` sources minus
+      `Project` children. `standalone-chats-query.test.ts` seeds all three kinds against a real db and
+      asserts only the standalone one survives (verified to fail without the project exclusion).
 - [x] **`ProjectArticle` toolbar** — one graph action dispositioned
       `['toolbar', 'list-item-primary']` serves both the toolbar (which splices graph actions) and the
       navtree row, so they cannot drift. Covered by `app-graph-builder.test.ts`.
