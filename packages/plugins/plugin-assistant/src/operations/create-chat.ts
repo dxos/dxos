@@ -17,13 +17,13 @@ import { AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
+    Effect.fnUntraced(function* ({ db, name, instructions, addToSpace = true }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
       const feed = space.db.add(Feed.make());
-      const chat = Chat.make({ name, feed: Ref.make(feed) });
+      const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
       Obj.setParent(feed, chat);
       if (addToSpace) {
         space.db.add(chat);

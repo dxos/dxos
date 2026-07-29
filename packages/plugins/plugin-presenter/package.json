@@ -103,7 +103,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "hastscript": "catalog:",
     "highlight.js": "catalog:",
     "marked": "catalog:",

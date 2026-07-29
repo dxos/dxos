@@ -20,6 +20,13 @@ export const AgentDelegationStrategy = Capability.make<DelegationStrategy>(
 );
 
 /**
+ * Id of the built-in blank template. Declared here (rather than on the template itself) so callers that
+ * scaffold a routine without the picker — e.g. a project's toolbar — can name it without importing the
+ * template module.
+ */
+export const BlankTemplateId = 'org.dxos.routine.blank';
+
+/**
  * An automation template contributed by a plugin. The create dialog and the per-object "Automations"
  * companion list contributed templates (`Capability.getAll(RoutineCapabilities.Template)`) and run the
  * chosen template's `scaffold` to build the automation.

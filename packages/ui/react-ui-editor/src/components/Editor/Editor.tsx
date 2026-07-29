@@ -3,7 +3,7 @@
 //
 
 import { type EditorState, type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,

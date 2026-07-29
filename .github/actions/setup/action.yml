@@ -31,6 +31,14 @@ runs:
         moon-version: '2.4.5'
         proto-version: '0.58.2'
 
+    # Installs the toolchains `.moon/toolchains.yml` declares — node, pnpm, bun — at their `.prototools`
+    # versions, which the first moon task would do anyway. Deliberately not `auto-install` on
+    # setup-toolchain: that installs everything pinned, and rust is a 1.2 GB rustup toolchain that nothing
+    # in CI uses.
+    - name: Install moon toolchains
+      run: moon setup
+      shell: bash
+
     - name: Log out debug info
       run: |
         node --version

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, type Registry } from '@effect-atom/atom-react';
+import { type Atom, type Registry } from '@effect-atom/atom';
 import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import type * as Exit$ from 'effect/Exit';

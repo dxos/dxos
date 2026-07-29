@@ -55,7 +55,7 @@ CI stays deterministic because it uses committed fixtures, not live LLM calls.
    - **fish:** `eval (pnpm -ws 1p-credentials)`
    - **bash/zsh:** `eval "$(pnpm -ws 1p-credentials)"`
 
-   The script is the `1p-credentials` package script (runs `op inject` against `.config/.env.1password`).
+   The script is the `1p-credentials` package script (runs `op inject` over inlined `op://CI/…` references; the full env template lives in the dxos/edge repo as `.env.tpl`).
 
 2. **Run tests with generation:**
 

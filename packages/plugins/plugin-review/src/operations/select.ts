@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { CommentCapabilities } from '../types';
 import { CommentOperation } from '../types';

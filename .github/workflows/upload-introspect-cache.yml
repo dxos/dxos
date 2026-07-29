@@ -1,6 +1,6 @@
 # Builds the @dxos/introspect core.json (symbol cache) and plugins.json
 # (plugin metadata sidecar) and uploads both to R2 so the
-# @dxos/introspect-service edge worker can read them. Triggers on push to the
+# @dxos/mcp-introspect-service edge worker can read them. Triggers on push to the
 # `labs` branch; manual dispatch is also supported for ad-hoc reruns.
 #
 # Secrets required:

@@ -4,6 +4,27 @@ tags:
   - typecheck
   - ts-test
 tasks:
+  # Fail when the CLI entrypoint pulls in React. The binary runs under bun with no DOM, and
+  # React arrived here four separate ways before — a plugin's React surface, `@dxos/react-client`
+  # re-exports, `@effect-atom/atom-react` in headless packages, and a string helper that happened
+  # to live in a react-ui package. None of them were visible without tracing the graph.
+  check-module-structure:
+    command: >-
+      pnpm exec dx-trace-imports
+      --from src/bin.ts
+      --to "{react,react-dom}"
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - ^:build
+    inputs:
+      - src/**/*
+      - tsconfig.json
+      - package.json
+      - /pnpm-lock.yaml
+    options:
+      timeout: 120
   # Bundles the CLI into per-platform executables. This is the CLI's real build
   # artifact, but it is intentionally NOT named `build` and the project is not
   # tagged `ts-build`/`ts-vite-build` — that keeps `cli` out of the `^:build` /
@@ -23,6 +44,9 @@ tasks:
       - bunfig.toml
       - package.json
       - LICENSE
+      # The pinned bun version is part of the artifact — 1.3.4 produced binaries that leaked `--smol`
+      # into `process.argv`, so a bump has to invalidate the cache.
+      - /.prototools
     outputs:
       - dist/cli/
       - dist/cli-darwin-arm64/
@@ -34,12 +58,28 @@ tasks:
     # Runs the CLI directly from source (no build step) via ./bin/dx.
     command: ./bin/dx
     preset: server
+  # Packs the bundle for the host platform, installs it from the tarball, and runs `dx --version`.
+  # Guards the published artifact — every defect that made @dxos/cli@0.10.0 unrunnable was invisible
+  # to tests that exercise the source tree.
+  smoke:
+    command: bun
+    args:
+      - ./scripts/smoke.ts
+    deps:
+      - bundle
+    options:
+      cache: false
+      timeout: 300
+    inputs:
+      - scripts/smoke.ts
+      - dist/**/*
   publish:
     command: bun
     args:
       - ./scripts/publish.ts
     deps:
       - bundle
+      - smoke
     inputs:
       - scripts/publish.ts
       - dist/**/*

@@ -211,6 +211,45 @@ objects, so it is not the default.
 Creating artifacts of other types from a project chat (Outline, Sheet,
 Organization/Contact) builds on the same skill and is tracked separately.
 
+### The delegation strategy, and why `Plan` is not an artifact
+
+`Chat.plan` is the one piece of durable state that stays on the conversation
+rather than graduating to the project, because the supervisor loop is keyed on it.
+
+The loop lives in `assistant-toolkit/src/supervisor/delegation-strategy.ts` and
+runs after every turn:
+
+1. **Reconcile.** Resolve the chat backed by this conversation feed, read its
+   plan, and select tasks that are `delegated === true`, `in-progress`, and not
+   already running. Only explicitly delegated tasks spawn sub-agents — a task
+   created by ordinary planning (`update-tasks`) stays in the plan and is not
+   double-delegated.
+2. **Synthesize.** For each, build a minimal `Instructions` whose goal is the task
+   text, bound with the supervisor's own skills **minus the delegation skill** —
+   otherwise a sub-agent could recursively delegate.
+3. **Spawn.** Invoke `RunInstructions` as its own process, recording the pid on
+   the task record so a resumed session can reattach rather than re-spawn.
+4. **Complete.** On exit, update the task's status, extract any artifact ids the
+   sub-agent reported, and post a templated message back into the conversation.
+
+That shape is why the plan is conversation-scoped. The dispatcher's unit of work
+is a feed: `reconcile` and `onComplete` both receive one and resolve the chat from
+it. `activeIds` — the set of running delegations — is likewise per-feed. A plan
+shared by every chat in a project would put concurrent supervisors on one task
+list, and nothing in the model arbitrates two agents claiming the same task or
+reconciles their status writes.
+
+So the plan is correctly the conversation's task ledger, and the artifact question
+is really about **lifecycle, not schema**: should a _completed_ plan graduate into
+the project's artifacts collection as a record of what was done? That is worth
+doing — it is exactly the kind of durable work product the collection is for — but
+it is a promotion step at completion, not a relocation of the live field. Open
+until the completion signal is defined (there is no "plan is finished" state
+today; tasks complete individually).
+
+Note the field is a plain `Ref` with no relation: unlike the agent linkage, the
+plan is owned by exactly one chat, so a field is the right encoding.
+
 ## Project chats
 
 Goal: start a chat session from a project with the project already in scope, and
@@ -459,6 +498,9 @@ ECHO types for the harness client) to host it.
   `Routine` lives in `@dxos/compute`.
 - Project-scoped agent roster (relation or parenting), and artifact provenance
   (which routine or agent produced what).
+- Promote a completed `Plan` into the project's artifacts collection — needs a
+  plan-level completion signal, which does not exist today (see "The delegation
+  strategy, and why `Plan` is not an artifact").
 - Remove plugin-sidekick, which this plugin obviates.
 
 Task-level follow-ups live in `./TASKS.md`.

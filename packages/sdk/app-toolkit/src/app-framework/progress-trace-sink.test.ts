@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import { Registry } from '@effect-atom/atom';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trace } from '@dxos/compute';

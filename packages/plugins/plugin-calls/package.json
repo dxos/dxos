@@ -120,6 +120,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@peermetrics/webrtc-stats": "catalog:",
     "md5-hex": "catalog:",

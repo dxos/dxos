@@ -3,18 +3,24 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useObjects } from '@dxos/echo-react';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Listbox } from '@dxos/react-ui-list';
+import { Masonry } from '@dxos/react-ui-masonry';
+import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
+import { ObjectCard } from '#components';
 import { meta } from '#meta';
+import { ProjectOperation } from '#types';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them.
 const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));
@@ -24,16 +30,17 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
 
 /**
  * Article surface for a {@link Project}: one form-styled body (header fields, the owned instructions
- * sub-form, and sections listing linked routines and artifacts). `Form.Viewport` owns the scroll and
- * gutter so fields stay inset from the panel edges. Creating routines/artifacts here is milestone 2.
+ * sub-form, and card galleries of the linked routines and artifacts). `Form.Viewport` owns the scroll
+ * and gutter so fields stay inset from the panel edges.
  */
-export const ProjectArticle = ({ role, subject }: ProjectArticleProps) => {
+export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const actions = useToolbarActions(subject);
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
-  // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory, and a
-  // sync `.target` read would leave the section permanently missing. The sub-editor mutates the
-  // instructions in place, so unwrap the snapshot back to the live entity.
+  // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory,
+  // and a sync `.target` read would leave the section permanently missing.
+  // The sub-editor mutates the instructions in place, so unwrap the snapshot back to the live entity.
   const [instructionsSnapshot] = useObject(project.instructions);
   const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
   const [artifacts] = useObject(project.artifacts);
@@ -42,6 +49,40 @@ export const ProjectArticle = ({ role, subject }: ProjectArticleProps) => {
   const defaultValues = useMemo<Partial<HeaderValues>>(
     () => ({ name: project.name, description: project.description }),
     [subject],
+  );
+
+  const { invokePromise } = useOperationInvoker();
+  const handleOpen = useCallback(
+    (object: Obj.Unknown) => {
+      void invokePromise(LayoutOperation.Open, {
+        subject: [GraphPath.getObjectPathFromObject(object)],
+        pivotId: attendableId,
+        navigation: 'immediate',
+      });
+    },
+    [invokePromise, attendableId],
+  );
+
+  // Deletes the object and splices it out of the artifacts collection, closing any open plank —
+  // `RemoveObjects` does all three, given the collection as its target.
+  const artifactsCollection = Obj.getReactiveOrUndefined(artifacts);
+  const handleDeleteArtifact = useCallback(
+    (object: Obj.Unknown) => {
+      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object], target: artifactsCollection });
+    },
+    [invokePromise, artifactsCollection],
+  );
+
+  // Routines are linked, not owned: the ref is spliced here and `RemoveObjects` (no target) removes the
+  // object from the space's root collection, where the create flow filed it.
+  const handleDeleteRoutine = useCallback(
+    (object: Obj.Unknown) => {
+      updateProject((project) => {
+        project.routines = project.routines.filter((routineRef) => routineRef.target?.id !== object.id);
+      });
+      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object] });
+    },
+    [invokePromise, updateProject],
   );
 
   const handleValuesChanged = useCallback(
@@ -59,64 +100,121 @@ export const ProjectArticle = ({ role, subject }: ProjectArticleProps) => {
   }
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Content>
-        <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
-          <Form.Viewport scroll>
-            <Form.Content>
-              <Form.FieldSet />
+    // `Menu.Root` wraps the panel rather than sitting inside the toolbar: `ToolbarMenu` disables itself
+    // unless the menu scope's `attendableId` has attention, so the scope has to span the surface that
+    // receives attention, not just the toolbar row.
+    <Menu.Root {...actions} attendableId={attendableId}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar>
+          <Menu.Toolbar classNames='dx-document' />
+        </Panel.Toolbar>
+        <Panel.Content>
+          <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+            <Form.Viewport scroll>
+              <Form.Content>
+                <Form.FieldSet />
 
-              {instructions && <InstructionsEditor db={db} instructions={instructions} />}
+                {instructions && <InstructionsEditor db={db} instructions={instructions} />}
 
-              <Form.Section title={t('routines.label')}>
-                <ObjectList label={t('routines.label')} refs={project.routines} />
-              </Form.Section>
+                <Form.Section title={t('routines.label')}>
+                  <ObjectGallery refs={project.routines} onOpen={handleOpen} onDelete={handleDeleteRoutine} />
+                </Form.Section>
 
-              <Form.Section title={t('artifacts.label')}>
-                <ObjectList label={t('artifacts.label')} refs={artifacts?.objects ?? []} />
-              </Form.Section>
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
-      </Panel.Content>
-    </Panel.Root>
+                <Form.Section title={t('artifacts.label')}>
+                  <ObjectGallery refs={artifacts?.objects ?? []} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                </Form.Section>
+              </Form.Content>
+            </Form.Viewport>
+          </Form.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Menu.Root>
   );
 };
 
 ProjectArticle.displayName = 'ProjectArticle';
 
-type ObjectListProps = {
-  label: string;
+/**
+ * The toolbar's own actions. Deliberately not spliced from the app graph: toolbar and navtree
+ * actions are expected to diverge as the toolbar grows, and the graph's create-chat action serves
+ * the navtree row.
+ */
+const useToolbarActions = (project: Project.Project) => {
+  const { invokePromise } = useOperationInvoker();
+  // The handler resolves `Database.Service`, which only the space context supplies — without this
+  // the invocation fails with ServiceNotAvailable.
+  const spaceId = Obj.getDatabase(project)?.spaceId;
+
+  return useMenuBuilder(
+    (): ActionGraphProps =>
+      MenuBuilder.make()
+        .action(
+          'create-chat',
+          {
+            label: ['create-chat.label', { ns: meta.profile.key }],
+            icon: 'ph--chat-text--regular',
+            disposition: 'toolbar',
+            testId: 'projectsPlugin.createChat',
+          },
+          () => void invokePromise(ProjectOperation.CreateChat, { project }, { spaceId }),
+        )
+        .action(
+          'create-routine',
+          {
+            label: ['create-routine.label', { ns: meta.profile.key }],
+            icon: 'ph--lightning--regular',
+            disposition: 'toolbar',
+            testId: 'projectsPlugin.createRoutine',
+          },
+          () => void invokePromise(ProjectOperation.CreateRoutine, { project }, { spaceId }),
+        )
+        .build(),
+    [project, invokePromise, spaceId],
+  );
+};
+
+type ObjectTileData = { object: Obj.Unknown; onClick: () => void; onDelete: () => void };
+
+type ObjectGalleryProps = {
   refs: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
+  onOpen: (object: Obj.Unknown) => void;
+  onDelete: (object: Obj.Unknown) => void;
 };
 
-/** Read-only list of resolved object references. */
-const ObjectList = ({ label, refs }: ObjectListProps) => (
-  <Listbox.Root>
-    <Listbox.Viewport>
-      <Listbox.Content aria-label={label}>
-        {refs.map((objectRef) => (
-          <ObjectRow key={objectRef.uri} objectRef={objectRef} />
-        ))}
-      </Listbox.Content>
-    </Listbox.Viewport>
-  </Listbox.Root>
-);
+/**
+ * A project's linked objects (routines or artifacts) as clickable cards. Unresolved refs are omitted
+ * until their target loads.
+ */
+const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
+  // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`
+  // synchronously would leave the gallery permanently empty.
+  // `useObjects` is the resolution trigger; the live entities are re-read from `.target` because the
+  // card needs the object, not a snapshot.
+  const loaded = useObjects(refs);
+  const items = useMemo<ObjectTileData[]>(
+    () =>
+      refs
+        .map((ref) => ref.target)
+        .filter((object): object is Obj.Unknown => !!object)
+        .map((object) => ({ object, onClick: () => onOpen(object), onDelete: () => onDelete(object) })),
+    [refs, loaded, onOpen, onDelete],
+  );
 
-type ObjectRowProps = {
-  objectRef: Ref.Ref<Obj.Unknown>;
-};
-
-/** One object row; resolves the reference reactively for its label and is omitted while unresolved. */
-const ObjectRow = ({ objectRef }: ObjectRowProps) => {
-  const [object] = useObject(objectRef);
-  if (!object) {
+  if (items.length === 0) {
     return null;
   }
 
   return (
-    <Listbox.Item id={object.id}>
-      <span className='truncate'>{Obj.getLabel(object) ?? object.id}</span>
-    </Listbox.Item>
+    <Masonry.Root Tile={ObjectTile} centered={false}>
+      <Masonry.Content centered={false} padding={false}>
+        <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} />
+      </Masonry.Content>
+    </Masonry.Root>
   );
 };
+
+const ObjectTile = memo(({ data }: { data: ObjectTileData | undefined; index: number }) =>
+  data ? <ObjectCard object={data.object} onClick={data.onClick} onDelete={data.onDelete} /> : null,
+);
+
+ObjectTile.displayName = 'ObjectTile';
