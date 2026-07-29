@@ -279,6 +279,9 @@ summaries), and the `stories-projects` storybook strategy.
       (operation picker + input-mapping form; templates-only today); `{{project.*}}` trigger input
       substitution (scaffold-time ref literals bind a routine to one object forever); side-effect
       policy for model-invoked external operations (send/unsubscribe need a per-project allowance).
+- [ ] **Tagged scaffold errors** — `ProjectCapabilities.Template.scaffold` and
+      `RoutineCapabilities.Template.scaffold` both expose bare `Error`; convert BOTH to a tagged
+      Effect error in one change (review follow-up from #12389 — the contracts must stay parallel).
 
 ## Milestone 4 (scoping): what comes after this PR
 
