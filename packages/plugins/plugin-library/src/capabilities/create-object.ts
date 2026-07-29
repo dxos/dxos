@@ -15,6 +15,7 @@ import { Book } from '#types';
 
 import { lookupHiveBook, searchBooks } from '../operations/bookhive';
 import { browserCorsProxy } from '../operations/cors';
+import { getBooksPath } from '../paths';
 
 type CreateBookValues = {
   hiveId?: string;
@@ -95,7 +96,9 @@ export default Capability.makeModule(
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: options.target,
-            targetNodeId: options.targetNodeId,
+            // Only the section's own "+" supplies a target; fall back to the library section so a book
+            // created from anywhere else still lands there rather than under the database type node.
+            targetNodeId: options.targetNodeId ?? getBooksPath(options.db.spaceId),
           });
         }),
     });

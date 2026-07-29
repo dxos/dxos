@@ -198,7 +198,10 @@ export const createTypeSectionExtension = (
         Node.make({
           id: typename,
           type: typename,
-          data: `${typename}-root`,
+          // An addressable section is a destination, so it has to carry a subject something can render:
+          // the registered type entity, which plugin-space's generic type-collection surface picks up.
+          // A bare container has no plank of its own, so the opaque marker is enough.
+          data: options.sectionUrlKey ? (typeEntity ?? `${typename}-root`) : `${typename}-root`,
           properties: {
             label,
             icon,
