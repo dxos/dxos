@@ -94,7 +94,16 @@ const checkVersion = (label: string, command: string, args: string[]): string =>
     rmSync(scratch, { recursive: true, force: true });
     process.exit(1);
   }
-  return result.stdout.trim();
+
+  // Exiting zero is not enough: two silent successes compare equal below and pass without a version.
+  const version = result.stdout.trim();
+  if (!version) {
+    console.error(`[Smoke] ${label} exited 0 but printed no version.`);
+    console.error(result.stderr);
+    rmSync(scratch, { recursive: true, force: true });
+    process.exit(1);
+  }
+  return version;
 };
 
 // Both packages declare a `dx` bin and npm links only one of them, so each is invoked by path —
