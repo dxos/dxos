@@ -160,13 +160,13 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 
 ## Blocked / needs a separate fix
 
-- [ ] `moon run plugin-onboarding:build-exemplar` fails on `main`
-      (`Missing "#model" specifier in "@dxos/plugin-onboarding"` — vite-node
-      resolves plugin-sketch's `#model` subpath import against the importing
-      package). The exemplar's `parentMessage` values were therefore rewritten
-      in place in `exemplar-space.dx.json` rather than regenerated; re-run the
-      generator once the resolution bug is fixed. Not caused by this project —
-      reproduced on a clean checkout.
+- [x] `plugin-onboarding:build-exemplar` was failing on `main`
+      (`Missing "#model" specifier in "@dxos/plugin-onboarding"`), so the
+      exemplar's `parentMessage` values were rewritten in place. RESOLVED by
+      #12394 (plugin-sketch builds its `#model`/`#skills` entries); merging main
+      let the generator run for the first time, and `exemplar-space.dx.json` is
+      now genuinely regenerated — all 12 `parentMessage` values are encoded refs
+      emitted by the script rather than hand-patched.
 
 ## Cross-cutting / deferred
 
