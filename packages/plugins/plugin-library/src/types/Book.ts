@@ -160,7 +160,7 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
       .pipe(Schema.optional),
   }).pipe(
     LabelAnnotation.set(['catalog.title']),
-    Annotation.IconAnnotation.set({ icon: 'ph--book-open--regular', hue: 'indigo' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--book-bookmark--regular', hue: 'indigo' }),
     CardAnnotation.set(true),
     AtprotoRecordAnnotation.set({
       collection: 'buzz.bookhive.book',
