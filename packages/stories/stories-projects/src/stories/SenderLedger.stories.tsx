@@ -24,6 +24,7 @@ import { ProjectOperation } from '@dxos/plugin-projects/types';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
@@ -82,10 +83,12 @@ const meta = {
   title: 'stories/stories-projects/SenderLedger',
   render: Story,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
+      // SetupArtifactDefinition activates the plugins' skill-definition modules; without it the
+      // registry holds no skills, so the article's skill rows and picker render empty.
+      setupEvents: [AppActivationEvents.SetupSettings, AppActivationEvents.SetupArtifactDefinition],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -102,6 +105,9 @@ const meta = {
         StorybookPlugin({}),
         SpacePlugin({}),
         InboxPlugin(),
+        // Owns the `org.dxos.skill.table` definition the template references — without it the
+        // skill row cannot resolve a label (RegistrySync only syncs loaded plugins' definitions).
+        TablePlugin(),
         ProjectsPlugin(),
         RoutinePlugin(),
       ],

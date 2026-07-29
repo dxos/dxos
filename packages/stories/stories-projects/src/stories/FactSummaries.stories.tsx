@@ -86,7 +86,9 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
+      // SetupArtifactDefinition activates the plugins' skill-definition modules; without it the
+      // registry holds no skills, so the article's skill rows and picker render empty.
+      setupEvents: [AppActivationEvents.SetupSettings, AppActivationEvents.SetupArtifactDefinition],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
