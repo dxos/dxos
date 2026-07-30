@@ -10,6 +10,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
+import { mergeDuplicates, resolveMerged } from './merge-executor';
 
 describe('Merge', () => {
   let builder: EchoTestBuilder;
@@ -89,6 +90,83 @@ describe('Merge', () => {
       expect(result.losers).toEqual([second.id]);
       expect(result.data.title).toBe('from the first writer');
       expect(result.data.description).toBe('only here');
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
+  test('a merge pass collapses duplicates to one live object', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      const first = Obj.make(TestSchema.Task, { title: 'from the first writer' });
+      Merge.setNaturalKey(first, 'org.example.seed');
+      yield* Database.add(first);
+
+      const second = Obj.make(TestSchema.Task, { title: 'from the second writer', description: 'only here' });
+      Merge.setNaturalKey(second, 'org.example.seed');
+      yield* Database.add(second);
+      yield* Database.flush();
+
+      const before = yield* Database.query(Filter.type(TestSchema.Task)).run;
+      const result = mergeDuplicates(before);
+      expect(result.merged).toHaveLength(1);
+      expect(result.merged[0].winner).toBe(first.id);
+      yield* Database.flush();
+
+      // The loser is tombstoned, so a plain query sees exactly one object.
+      const after = yield* Database.query(Filter.type(TestSchema.Task)).run;
+      expect(after).toHaveLength(1);
+      expect(after[0].id).toBe(first.id);
+      // The winner absorbed the field only the loser defined.
+      expect(after[0].title).toBe('from the first writer');
+      expect(after[0].description).toBe('only here');
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
+  test('a second merge pass is a no-op', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      for (const title of ['first', 'second', 'third']) {
+        const task = Obj.make(TestSchema.Task, { title });
+        Merge.setNaturalKey(task, 'org.example.seed');
+        yield* Database.add(task);
+      }
+      yield* Database.flush();
+
+      const before = yield* Database.query(Filter.type(TestSchema.Task)).run;
+      expect(mergeDuplicates(before).merged).toHaveLength(1);
+      yield* Database.flush();
+
+      const after = yield* Database.query(Filter.type(TestSchema.Task)).run;
+      expect(after).toHaveLength(1);
+      // Nothing left to merge: the survivors no longer contain a duplicate group.
+      expect(mergeDuplicates(after).merged).toHaveLength(0);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
+  test('a merged-away object redirects to the winner instead of vanishing', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      const first = Obj.make(TestSchema.Task, { title: 'first' });
+      const second = Obj.make(TestSchema.Task, { title: 'second' });
+      for (const task of [first, second]) {
+        Merge.setNaturalKey(task, 'org.example.seed');
+        yield* Database.add(task);
+      }
+      yield* Database.flush();
+
+      const before = yield* Database.query(Filter.type(TestSchema.Task)).run;
+      mergeDuplicates(before);
+      yield* Database.flush();
+
+      // The loser is tombstoned but still resolvable, which is what makes a stale reference to it
+      // reach the winner rather than dangle.
+      expect(resolveMerged(second.id, before)).toBe(first.id);
+      expect(resolveMerged(first.id, before)).toBe(first.id);
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 

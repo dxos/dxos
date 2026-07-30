@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type ForeignKey } from '@dxos/echo-protocol';
+import { type ForeignKey, PROPERTY_ID } from '@dxos/echo-protocol';
 import { type EntityId } from '@dxos/keys';
 
 import type * as Entity from './Entity';
@@ -57,15 +57,30 @@ export type Candidate = {
   readonly keys?: readonly ForeignKey[];
 };
 
+// ECHO's brand keys (`KindId` and friends) are ordinary string properties rather than symbols, so
+// they show up in `Object.entries` of a snapshot. They are not user data, and writing one back to
+// an object throws, so they have to be excluded by prefix.
+const INTERNAL_KEY_PREFIX = '~@dxos/echo/';
+
+const isDataField = (field: string): boolean => field !== PROPERTY_ID && !field.startsWith(INTERNAL_KEY_PREFIX);
+
 /**
  * Build a {@link Candidate} from a live entity or snapshot.
  */
 export const candidateOf = (entity: Entity.Unknown | Entity.Snapshot): Candidate => {
   const meta = Obj.getMeta(entity as any);
+  const snapshot = Obj.getSnapshot(entity as any) as Record<string, unknown>;
+  const data: Record<string, unknown> = {};
+  for (const [field, value] of Object.entries(snapshot)) {
+    if (isDataField(field)) {
+      data[field] = value;
+    }
+  }
+
   return {
     id: (entity as { id: EntityId }).id,
     naturalKey: meta.naturalKey,
-    data: Obj.getSnapshot(entity as any) as Record<string, unknown>,
+    data,
     keys: meta.keys,
   };
 };

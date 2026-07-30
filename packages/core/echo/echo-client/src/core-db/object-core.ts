@@ -504,6 +504,38 @@ export class ObjectCore {
     }
   }
 
+  /**
+   * The entity this one was merged into, set on the loser of a natural-key merge.
+   * A bare id rather than an encoded reference, so reference-rewriting traversals do not mistake
+   * the redirect for a data ref.
+   */
+  getMergedInto(): EntityId | undefined {
+    const value = this._getRaw([SYSTEM_NAMESPACE, 'mergedInto']);
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  /**
+   * Redirect the entity at `id` and record the heads it carried at that moment, so a later pass
+   * can fold in edits made by a peer that was offline during the merge.
+   */
+  setMergedInto(id: EntityId, heads: readonly string[]): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'mergedInto'], id);
+    this._setRaw([SYSTEM_NAMESPACE, 'mergedAtHeads'], [...heads]);
+  }
+
+  getMergedAtHeads(): string[] | undefined {
+    const value = this._getRaw([SYSTEM_NAMESPACE, 'mergedAtHeads']);
+    return Array.isArray(value) ? value : undefined;
+  }
+
+  /**
+   * The document's current heads, recorded when the entity is merged away.
+   */
+  getHeads(): Heads {
+    const doc = this.doc ?? this.docHandle?.doc();
+    return doc ? A.getHeads(doc) : [];
+  }
+
   getType(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
