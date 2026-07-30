@@ -332,10 +332,14 @@ stages schedule its two phases.
 
 ### Risks / new pressure
 
-- **Feed budget** — the one genuinely new infrastructure pressure:
-  session-per-thread mints a feed per agent task against ~1000 feeds/space.
-  Session feeds need a retention/GC story (disposable once the task
-  concludes) or feed phases 3–4 headroom.
+- **Feed budget** — the one genuinely new infrastructure pressure: sessions
+  already live on feeds, but session-per-thread mints them at mention-cadence
+  — a feed per agent task against ~1000 feeds/space. Session feeds need a
+  retention/GC story (disposable once the task concludes); feed phase 3's
+  retention design is the natural home, extended to whole-feed GC/archival
+  rather than only within-feed compaction. Mirrored as constraints in
+  feed-live-objects DESIGN ("Agent sessions" workstream) + TASKS (phases
+  2–3).
 - **Thread deep-links** (stage-1 item, landed round 9) are a stage-7
   prerequisite: provenance links and "view session" need addressable threads
   and sessions (url-deck pair-chain grammar; plugin-projects shares the
