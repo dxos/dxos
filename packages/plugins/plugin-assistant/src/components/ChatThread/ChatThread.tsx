@@ -14,7 +14,7 @@ import { keyToFallback } from '@dxos/util';
 import { type Assistant } from '../../types';
 import { type ChatEvent } from '../Chat';
 import { componentRegistry, createBlockRenderer } from './registry';
-import { MessageSyncer } from './sync';
+import { type MessageSpan, MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
@@ -30,6 +30,8 @@ export type ChatThreadProps = ThemedClassName<
     error?: Error;
     viewType?: Assistant.ChatView;
     onEvent?: (event: ChatEvent) => void;
+    /** Publishes the syncer's per-message document spans after each update (minimap, prompt nav). */
+    onSpans?: (spans: MessageSpan[]) => void;
   } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;
 
@@ -46,6 +48,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       extensions,
       viewType,
       onEvent,
+      onSpans,
     },
     forwardedRef,
   ) => {
@@ -90,7 +93,9 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');
       }
-    }, [controller, syncer, messages]);
+      // Spans are valid synchronously after `update` (offsets are computed during the walk).
+      onSpans?.(syncer.getSpans());
+    }, [controller, syncer, messages, onSpans]);
 
     // Event adapter.
     const handleEvent = useCallback<NonNullable<MarkdownStreamProps['onEvent']>>(
