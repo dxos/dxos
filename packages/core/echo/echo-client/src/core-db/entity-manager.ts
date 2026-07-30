@@ -306,6 +306,8 @@ export class EntityManager implements IDatabaseBinding {
       const spaceRootDocHandle = this.getSpaceRootDocHandle();
       await this._handleSpaceRootDocumentChange(spaceRootDocHandle, objectIdsToLoad);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
+      // Flush update notifications that arrived during the swap window (see `_emitDbUpdateEvents`).
+      this._updateScheduler.trigger();
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return;
@@ -1668,6 +1670,12 @@ export class EntityManager implements IDatabaseBinding {
 
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   private _emitDbUpdateEvents(_ctx: Context): void {
+    // Mid root-document swap (`updateSpaceState` has cleared the handles and is reloading), there is
+    // nothing coherent to emit against — listeners resolve cores through the root and would throw
+    // `Database is not ready.`. Keep the pending ids; `updateSpaceState` re-triggers after the swap.
+    if (!this._spaceRootDocHandle) {
+      return;
+    }
     const fullUpdateIds = [...this._objectsForNextUpdate];
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);
     this._objectsForNextUpdate.clear();

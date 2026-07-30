@@ -269,7 +269,11 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
       // Keep whichever set already includes the other; unrelated (concurrent) heads merge.
       const merged = [...new Set([...this._lastSentHeads, ...heads])].sort();
       const reachable = A.getMissingDeps(this._doc!, merged).length === 0;
-      this._lastSentHeads = reachable ? merged : heads;
+      // When the union is not representable locally (an ack arrived before its deps did), keep the
+      // already-confirmed set rather than adopting `heads`: a smaller set would un-confirm delivered
+      // changes and `saveSince` would never report them again. Under-confirming only costs a
+      // redundant resend, which is idempotent.
+      this._lastSentHeads = reachable ? merged : this._lastSentHeads;
       return;
     }
     this._lastSentHeads = heads;

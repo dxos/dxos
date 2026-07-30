@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 
@@ -10,7 +10,7 @@ import { sleep } from './timeout';
 import { UpdateScheduler } from './update-scheduler';
 
 describe('update-scheduler', () => {
-  test('schedules updates', async () => {
+  test('schedules updates', async ({ expect }) => {
     let updates = 0;
 
     const ctx = new Context();
@@ -32,7 +32,7 @@ describe('update-scheduler', () => {
   // the claimed batch was still in flight — lost if the caller tore down (dxos/edge#758's orphaned
   // `updateSubscription` batches). The single-door design makes the flush wait for the run that
   // adopts its enqueued state, whoever starts it.
-  test('runBlocking does not resolve while a pass that claimed the queue is still in flight', async () => {
+  test('runBlocking does not resolve while a pass that claimed the queue is still in flight', async ({ expect }) => {
     const ctx = new Context();
     const queue: string[] = [];
     const processed: string[] = [];
@@ -77,7 +77,7 @@ describe('update-scheduler', () => {
   // triggered one slept, and both callbacks ran together (dxos/edge#758). Under the single-door
   // design the flush coalesces onto the sleeping runner instead, so the same scenario yields fewer
   // runs — the invariants are that no two callbacks ever overlap and the flush still completes.
-  test('the callback does not overlap itself when runBlocking races a throttled trigger', async () => {
+  test('the callback does not overlap itself when runBlocking races a throttled trigger', async ({ expect }) => {
     const ctx = new Context();
     let calls = 0;
     let active = 0;
@@ -112,7 +112,7 @@ describe('update-scheduler', () => {
   // `runBlocking` is a flush barrier: a caller must observe that its batch was NOT handed off. The
   // error belongs to the callers waiting on that run — and must not poison later barriers (a
   // retained rejected pass would make `join`/dispose throw someone else's stale error).
-  test('runBlocking rejects with its run error and later barriers stay clean', async () => {
+  test('runBlocking rejects with its run error and later barriers stay clean', async ({ expect }) => {
     const ctx = new Context();
     let fail = true;
     const scheduler = new UpdateScheduler(ctx, async () => {
@@ -132,7 +132,7 @@ describe('update-scheduler', () => {
   // Concurrent flushes coalesce onto one run that observes everything enqueued before either call —
   // they are all asking the same question ("has what I queued been handed off?"), so one drain
   // answers all of them.
-  test('concurrent runBlocking callers coalesce into a single run', async () => {
+  test('concurrent runBlocking callers coalesce into a single run', async ({ expect }) => {
     const ctx = new Context();
     const queue: string[] = [];
     const drained: string[][] = [];
@@ -151,7 +151,7 @@ describe('update-scheduler', () => {
 
   // Flush is urgent: it must not sit out the `maxFrequency` delay of a pass that was scheduled
   // before it (the delay exists to pace background triggers, not barriers).
-  test('runBlocking skips the throttle delay', async () => {
+  test('runBlocking skips the throttle delay', async ({ expect }) => {
     const ctx = new Context();
     let runs = 0;
     const scheduler = new UpdateScheduler(
@@ -177,7 +177,7 @@ describe('update-scheduler', () => {
 
   // A dispose must release a parked flush rather than strand it: the runner it was waiting on may
   // never reach its claim once the context is gone.
-  test('dispose releases a parked runBlocking', async () => {
+  test('dispose releases a parked runBlocking', async ({ expect }) => {
     const ctx = new Context();
     const scheduler = new UpdateScheduler(
       ctx,
