@@ -96,6 +96,14 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       () => controller && new MessageSyncer(controller, renderer, { onRewind: handleRewind }),
       [controller, renderer, handleRewind],
     );
+    // Publish the context to the editor: widget props read it from a CodeMirror state field, so without
+    // this a widget's `context` is undefined and its callbacks (e.g. rewind) silently no-op.
+    useEffect(() => {
+      if (controller && syncer) {
+        controller.setContext(syncer.context);
+      }
+    }, [controller, syncer]);
+
     useEffect(() => {
       if (!syncer) {
         return;

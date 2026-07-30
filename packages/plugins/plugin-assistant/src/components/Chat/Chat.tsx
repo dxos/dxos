@@ -14,6 +14,7 @@ import { getSpace } from '@dxos/client/echo';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import {
   Button,
   type ThemedClassName,
@@ -404,6 +405,11 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
         case 'error':
           setToastError(event.error);
           break;
+        case 'rewind':
+          console.log('rewind', event);
+          break;
+        default:
+          log.info('no handled', event);
       }
     });
   }, [event, navigateToPrompt]);

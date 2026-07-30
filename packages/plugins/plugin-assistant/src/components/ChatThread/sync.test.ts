@@ -330,6 +330,23 @@ describe('MessageSyncer tool widget rehydration', () => {
       expect(state.blocks.map((block) => block._tag)).toEqual(['toolCall', 'toolResult']);
     }),
   );
+
+  // Regression: widget callbacks reach the thread through the syncer's context, which the host has to
+  // publish to the editor via `setContext`. Nothing did, so a widget received `context: undefined` and
+  // the rewind button silently no-oped.
+  it.effect(
+    'exposes a context routing widget callbacks to the handlers',
+    Effect.fn(function* ({ expect }) {
+      const rewound: string[] = [];
+      const syncer = new MessageSyncer(new TestDocument(), createBlockRenderer('thinking'), {
+        onRewind: (id) => rewound.push(id),
+      });
+
+      expect(syncer.context).toBeDefined();
+      syncer.context.rewind('msg-1');
+      expect(rewound).toEqual(['msg-1']);
+    }),
+  );
 });
 
 /**
