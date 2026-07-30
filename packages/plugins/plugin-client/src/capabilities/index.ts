@@ -77,7 +77,9 @@ export const RemoteTraceMonitor = Capability.lazyModule(
 export const SpaceReplicationProgress = Capability.lazyModule(
   'SpaceReplicationProgress',
   {
-    requires: [ClientCapabilities.Client, AppCapabilities.ProgressRegistry, Capabilities.ProcessManagerRuntime],
+    // ProgressRegistry is read optionally in the body, not required: a host that omits
+    // plugin-progress should lose the meter, not fail to activate ClientPlugin.
+    requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [],
     // Runtime event: spaces become ready when the client observes them, not at startup.
     activatesOn: ClientEvents.SpacesReady,
@@ -87,12 +89,9 @@ export const SpaceReplicationProgress = Capability.lazyModule(
 export const TraceProgress = Capability.lazyModule(
   'TraceProgress',
   {
-    requires: [
-      AppCapabilities.ProgressRegistry,
-      Capabilities.ProcessMonitor,
-      Capabilities.ProcessManagerRuntime,
-      Capabilities.ServiceResolver,
-    ],
+    // ProgressRegistry is resolved lazily per trace message, so a host without it degrades to a
+    // no-op sink rather than failing to activate.
+    requires: [Capabilities.ProcessMonitor, Capabilities.ProcessManagerRuntime, Capabilities.ServiceResolver],
     provides: [],
     // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and
     // registry are all available by the time spaces are observed.

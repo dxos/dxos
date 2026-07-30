@@ -5,6 +5,7 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Schedule from 'effect/Schedule';
 import { registerSW } from 'virtual:pwa-register';
@@ -94,9 +95,15 @@ const RegisterPwa = Capability.inlineModule(
 // service worker — only the meter is lost, not the update flow itself.
 const UpdateProgress = Capability.inlineModule(
   'UpdateProgress',
-  { requires: [AppCapabilities.ProgressRegistry], provides: [] },
+  { provides: [] },
   Effect.fnUntraced(function* () {
-    const registry = yield* AppCapabilities.ProgressRegistry;
+    // Optional, so that the comment above holds: requiring it would fail the whole plugin — and with
+    // it the service-worker registration — on a host that omits plugin-progress.
+    const registryOption = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
+    if (Option.isNone(registryOption)) {
+      return [];
+    }
+    const registry = registryOption.value;
 
     let monitor: AppCapabilities.ProgressMonitor | undefined;
     const handleMessage = (event: MessageEvent) => {

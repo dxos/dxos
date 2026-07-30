@@ -11,8 +11,6 @@ import * as Layer from 'effect/Layer';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
 
 /**
  * To start LM Studio server:
@@ -26,9 +24,8 @@ import { AppCapabilities } from '@dxos/app-toolkit';
  * ```
  */
 const localModelResolver = Capability.makeModule(() =>
-  Effect.succeed([
-    Capability.contribute(
-      AppCapabilities.AiModelResolver,
+  Effect.succeed(
+    Capability.contributeAll(AppCapabilities.AiModelResolver, [
       LMStudioResolver.make().pipe(
         Layer.provide(
           OpenAiClient.layer({
@@ -37,14 +34,11 @@ const localModelResolver = Capability.makeModule(() =>
         ),
         Layer.provide(FetchHttpClient.layer),
       ),
-    ),
-    Capability.contribute(
-      AppCapabilities.AiModelResolver,
       OllamaResolver.make({
         transformClient: HttpClient.withTracerPropagation(false),
       }).pipe(Layer.provide(FetchHttpClient.layer)),
-    ),
-  ]),
+    ]),
+  ),
 );
 
 export default localModelResolver;

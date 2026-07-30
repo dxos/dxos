@@ -27,6 +27,13 @@ import { log } from '@dxos/log';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
+
+    // Optional: without a progress registry there is nowhere to project into, so subscribe to
+    // nothing rather than run a sink that resolves undefined on every message.
+    if (capabilityManager.getAll(AppCapabilities.ProgressRegistry).length === 0) {
+      return [];
+    }
+
     const monitor = yield* Capabilities.ProcessMonitor;
     const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
     const resolver = yield* Capabilities.ServiceResolver;
