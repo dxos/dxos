@@ -118,8 +118,7 @@ const flattenRequest = (prompt: Prompt.Prompt): ScriptedRequest => {
 };
 
 // A route script is distinguished structurally: every route has a `match` predicate, turns never do.
-const isRouteScript = (script: Script): script is readonly ScriptedRoute[] =>
-  script.length > 0 && 'match' in script[0];
+const isRouteScript = (script: Script): script is readonly ScriptedRoute[] => script.length > 0 && 'match' in script[0];
 
 const toRoutes = (script: Script): readonly ScriptedRoute[] =>
   isRouteScript(script) ? script : [{ match: () => true, turns: script }];

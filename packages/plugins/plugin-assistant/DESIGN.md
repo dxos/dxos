@@ -27,7 +27,7 @@ Related docs (not duplicated here):
 | 4   | Agent process       | `AgentService`, `AgentProcess` (input queue, alarms, delegation)      | [`@dxos/agent-runtime`](../../core/compute/agent-runtime/src/agent-service)                                                                         |
 | 5   | Session / request   | `AiSession.Session`, `AiRequest.Request`, `AiContext.Binder`          | [`@dxos/assistant`](../../core/compute/assistant/src)                                                                                               |
 | 6   | Model               | `AiService` → `LanguageModel.streamText` → `AiParser`                 | [`@dxos/ai`](../../core/compute/ai/src)                                                                                                             |
-| 7   | Document sync       | `MessageSyncer`, `BlockRenderer` (`blockToMarkdown`)                  | [`components/ChatThread/sync`](./src/components/ChatThread/sync/sync.ts), [`registry.tsx`](./src/components/ChatThread/registry.tsx)                  |
+| 7   | Document sync       | `MessageSyncer`, `BlockRenderer` (`blockToMarkdown`)                  | [`components/ChatThread/sync`](./src/components/ChatThread/sync/sync.ts), [`registry.tsx`](./src/components/ChatThread/registry.tsx)                |
 | 8   | Editor / widgets    | `MarkdownStream`, `xmlTags`, `XmlWidgetRegistry`, widget classes      | [`@dxos/react-ui-markdown`](../../ui/react-ui-markdown/src/MarkdownStream), [`@dxos/ui-editor` xml](../../ui/ui-editor/src/extensions/language/xml) |
 
 ### 1.2 Sequence
@@ -263,93 +263,83 @@ artifact references) appended to the conversation feed.
 | Piece                                        | Status                                                                                                                                                                                     |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `AssistantTestLayer` (agent-runtime/testing) | Full stack in node: `AgentService` + `ProcessManager` + `ServiceResolver` + ECHO test DB; accepts `agent.delegationStrategy`, `aiService`, `operationHandlers`, `skills`, `extraServices`. |
-| `ScriptedLanguageModel`                      | Deterministic model; sequential turn script; drives real tool execution.                                                                                                                   |
+| `ScriptedLanguageModel`                      | Deterministic model; sequential **and routed** scripts (see 4.2a); drives real tool execution.                                                                                             |
 | `DelegateTask` op unit test                  | det (`delegate-task.test.ts`).                                                                                                                                                             |
-| Delegation lifecycle test                    | Stub strategy only, **memo-gated** (`AgentService.test.ts`).                                                                                                                               |
-| `makeDelegationStrategy`                     | **No direct test.**                                                                                                                                                                        |
-| End-to-end                                   | Live-only storybook play (`WithSubAgentsTest`, `!test`).                                                                                                                                   |
+| Delegation lifecycle test                    | Stub strategy, **memo-gated** (`AgentService.test.ts`).                                                                                                                                    |
+| `makeDelegationStrategy`                     | det headless end-to-end test (`supervisor/delegation-strategy.test.ts`, see 4.3).                                                                                                          |
+| End-to-end UI                                | Live-only storybook play (`WithSubAgentsTest`, `!test`); scripted variant pending (4.4).                                                                                                   |
 
-So: the harness is **almost sufficient** — all the layers compose in node today, and
-`run-instructions.test.ts` already drives the sub-agent side (`RunInstructions` +
-`completeJob`) with a scripted model. What is missing is the ability to script **two
-cooperating sessions** (supervisor and sub-agent) deterministically, plus a few assertion
-helpers.
+`run-instructions.test.ts` drives the sub-agent side (`RunInstructions` + `completeJob`) with a
+scripted model; the pieces below complete the harness for **two cooperating sessions**
+(supervisor and sub-agent).
 
-### 4.2 Gaps and design
+### 4.2 Harness pieces (implemented)
 
-**(a) Script routing.** `scriptedAiService` has one global cursor; the supervisor turn and the
-sub-agent turn both call the same model, and while the happy path is sequential (the sub-agent
-spawns only after the supervisor turn settles), interleaving becomes ambiguous with multiple
-delegations or follow-up prompts. Extend `ScriptedLanguageModel` with routed scripts:
+**(a) Script routing**
+([`ScriptedLanguageModel.ts`](../../core/compute/ai/src/testing/ScriptedLanguageModel.ts)).
+A plain turn list has one global cursor, which cannot script a supervisor and its sub-agent
+independently. A routed script dispatches each model call to the first route whose `match`
+predicate accepts the flattened request (system prompt + message text); each route keeps its
+own cursor, and an unmatched call fails loudly (same philosophy as script exhaustion):
 
 ```ts
 scriptedAiService([
-  { match: promptIncludes('You delegate units of work'), turns: supervisorTurns },
-  { match: promptIncludes('Complete the following task'), turns: subAgentTurns },
+  { name: 'sub-agent', match: promptIncludes('non-interactive mode'), turns: subAgentTurns },
+  { name: 'supervisor', match: () => true, turns: supervisorTurns },
 ]);
 ```
 
-`match` is a predicate over the encoded request (system prompt + messages); each route keeps
-its own cursor; an unmatched call fails loudly (same philosophy as script exhaustion). This is
-a small, backwards-compatible addition to
-[`ScriptedLanguageModel.ts`](../../core/compute/ai/src/testing/ScriptedLanguageModel.ts)
-(the existing single-list form stays as the single-route case).
+`scriptedAiService` shares one cached model across `AiService.model()` calls, so sessions in
+separate processes consume the same routes. The single-list form is unchanged (a single
+match-all route).
 
-**(b) Idle/completion semantics.** `waitForCompletion` resolves only when the agent has no
-pending work — including live delegations — so for mid-flight assertions the test needs the
-stub-test's `expect.poll` pattern. Provide a `TestAgent` helper in `agent-runtime/testing`:
-`collectEphemeral(session)` (fork + buffer `PartialBlock`s for streaming assertions — the
-headless equivalent of what the UI renders) and `waitForIdle(session)`.
+**(b) Session helpers**
+([`agent-runtime/testing/test-agent.ts`](../../core/compute/agent-runtime/src/testing/test-agent.ts)).
+`collectEphemeral(session)` forks and buffers the `PartialBlock`/`CompleteBlock` stream — the
+headless equivalent of what the chat UI renders. `waitForMessage(feed, predicate)` (with
+`messageTextIncludes`) polls the conversation feed for out-of-band results:
+`waitForCompletion` settles when the *turn* completes, while the delegated child reports back
+later via `onComplete`.
 
-**(c) Assertion helpers.** Reuse/extend `@dxos/assistant-evals` assertions (`findObject`,
-`toolInvocations`) for: plan task state (`delegated`, `status`), feed messages (the immediate
-reply, then the fold-back "sub-agent completed" message + `reference` blocks), and spawned
-process keys (via the `feed` trace sink).
+**(c) Assertion helpers (open).** Reuse/extend `@dxos/assistant-evals` assertions
+(`findObject`, `toolInvocations`) for plan-task state, `reference` blocks, and spawned process
+keys (via the `feed` trace sink).
 
-### 4.3 The headless test (shape)
+### 4.3 The headless test
 
-`packages/core/compute/assistant-toolkit/src/supervisor/delegation-strategy.test.ts` (D-tier,
-det, PR-gating — the real strategy, not the stub):
+[`supervisor/delegation-strategy.test.ts`](../../core/compute/assistant-toolkit/src/supervisor/delegation-strategy.test.ts)
+(D-tier, det, PR-gating — the real strategy, not the stub). The sub-agent route is keyed on the
+`RunInstructions` system prompt ("non-interactive mode"); the supervisor is the fallback route:
 
 ```ts
 const TestLayer = AssistantTestLayer({
   agent: { delegationStrategy: makeDelegationStrategy() },
   aiService: scriptedAiService([
-    { match: supervisor, turns: [
-      { parts: [text('On it — delegating.'), toolCall('delegate-task', { title: 'Compute 10!' })] },
-      { parts: [text('Delegated; I will report back.')] },       // after tool result
-    ]},
-    { match: subAgent, turns: [
+    { name: 'sub-agent', match: promptIncludes('non-interactive mode'), turns: [
       { parts: [toolCall('completeJob', { success: '3628800' })] },
       { parts: [text('Done.')] },
     ]},
+    { name: 'supervisor', match: () => true, turns: [
+      { parts: [text('On it — delegating.'), toolCall('delegate-task', { title: 'Compute 10 factorial' })] },
+      { parts: [text('Delegated. I will report back when it completes.')] },
+    ]},
   ]),
-  operationHandlers: [DelegationHandlers, PlanningHandlers, RunInstructionsHandlers],
-  skills: [DelegationSkill.make(), PlanningSkill.make()],
-  types: [Agent.Agent, Chat.Chat, Plan.Plan, /* … */],
+  operationHandlers: [DelegationHandlers, AgentHandlers],
+  skills: [DelegationSkill.make()],
+  types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, AiContext.Binding, Text.Text, Message.Message],
 });
 
-it.scoped('delegates, runs the sub-agent, folds the result back', ... => {
-  const agent = yield* Agent.makeInitialized({ name: 'Supervisor', ... }, DelegationSkill.make());
-  const session = yield* AgentService.getSession(feed);
-  const ephemeral = yield* collectEphemeral(session);
-
-  yield* session.submitPrompt('Delegate a task to compute 10 factorial.');
-  yield* session.waitForCompletion();          // resolves after the child exits + fold-back
-
-  // Immediate reply streamed before the sub-agent ran.
-  expect(firstAssistantText(ephemeral)).toContain('On it');
-  // Plan task lifecycle.
-  expect(task(plan, 'Compute 10!')).toMatchObject({ delegated: true, status: 'done' });
-  // Fold-back message on the conversation feed.
-  expect(feedText(feed)).toContain('The sub-agent completed');
-});
+// Agent.makeInitialized(...) → getSession(chat feed) → collectEphemeral(session)
+// submitPrompt('Delegate a task…') → waitForCompletion()   // settles on the turn's reply
+// assert: streamed 'On it' · plan task { delegated: true } · then
+// waitForMessage(feed, messageTextIncludes('The sub-agent completed'))
+// assert: '3628800' in the fold-back · plan task status 'done'
 ```
 
-Everything except the routed script and the two helpers exists today; the test exercises the
-real `DelegateTask` handler, the real `AgentProcess` reconcile/child-event loop, the real
-`makeDelegationStrategy` (instructions synthesis, skill inheritance minus `DelegationSkill`,
-artifact refs), and the real `RunInstructions` sub-agent — with zero model calls.
+The test exercises the real `DelegateTask` handler, the real `AgentProcess`
+reconcile/child-event loop, the real `makeDelegationStrategy` (instructions synthesis, skill
+inheritance minus `DelegationSkill`, artifact refs), and the real `RunInstructions` sub-agent —
+with zero model calls, in ~0.5 s.
 
 ### 4.4 The storybook analog
 
@@ -363,10 +353,10 @@ live variant remains the only place a real model is consulted.
 
 ### 4.5 Sequencing
 
-1. Routed scripts in `ScriptedLanguageModel` (+ unit test).
-2. `collectEphemeral` / `waitForIdle` helpers in `agent-runtime/testing`.
-3. `delegation-strategy.test.ts` headless test (4.3); un-gate the stub lifecycle test by
-   porting it to the scripted model at the same time.
+1. ~~Routed scripts in `ScriptedLanguageModel` (+ unit test).~~ **Done.**
+2. ~~`collectEphemeral` / `waitForMessage` helpers in `agent-runtime/testing`.~~ **Done.**
+3. ~~`delegation-strategy.test.ts` headless test (4.3).~~ **Done.** Still open: un-gate the
+   stub lifecycle test in `AgentService.test.ts` by porting it to the scripted model.
 4. `config.scripted` decorator support in `stories-assistant`; `WithSubAgentsScripted` play
    story (4.4).
 5. Processor streaming harness (§3.3) — reuses the same fixtures.

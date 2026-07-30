@@ -27,7 +27,9 @@ export interface EphemeralCollector {
  * streaming path (partial → complete blocks) without a UI. The fork is scoped: use with
  * `it.scoped` (or an explicit scope) so the subscription is interrupted on test close.
  */
-export const collectEphemeral = (session: AgentService.Session): Effect.Effect<EphemeralCollector, never, Scope.Scope> =>
+export const collectEphemeral = (
+  session: AgentService.Session,
+): Effect.Effect<EphemeralCollector, never, Scope.Scope> =>
   Effect.gen(function* () {
     const partial: Trace.PayloadType<typeof PartialBlock>[] = [];
     const complete: Trace.PayloadType<typeof CompleteBlock>[] = [];

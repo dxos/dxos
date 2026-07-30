@@ -19,7 +19,7 @@ export type TextModel = Pick<MarkdownStreamController, 'length' | 'setContent' |
  * space as the CodeMirror document (i.e. what {@link MarkdownStreamController.scrollTo} and
  * {@link MarkdownStreamController.getVisibleRange} operate on).
  */
-export type MessageRange = {
+export type MessageSpan = {
   id: string;
   from: number;
   to: number;
@@ -84,7 +84,7 @@ export class MessageSyncer {
   private _completedOffset = 0;
 
   /** Per-message document offset ranges, keyed by message id in document order. */
-  private readonly _ranges = new Map<string, { from: number; to: number }>();
+  private readonly _spans = new Map<string, { from: number; to: number }>();
 
   private readonly _context: MessageThreadContext;
 
@@ -104,17 +104,17 @@ export class MessageSyncer {
    * {@link reset} or {@link update} (the offsets are derived from the same rendered buffer
    * that is dispatched to the document).
    */
-  getRanges(): MessageRange[] {
-    return Array.from(this._ranges, ([id, { from, to }]) => ({ id, from, to }));
+  getRanges(): MessageSpan[] {
+    return Array.from(this._spans, ([id, { from, to }]) => ({ id, from, to }));
   }
 
   /** Record (or extend) the offset range of a message. `from` is preserved across calls. */
   private _recordRange(id: string, from: number, to: number): void {
-    const existing = this._ranges.get(id);
+    const existing = this._spans.get(id);
     if (existing) {
       existing.to = to;
     } else {
-      this._ranges.set(id, { from, to });
+      this._spans.set(id, { from, to });
     }
   }
 
@@ -127,7 +127,7 @@ export class MessageSyncer {
     this._completed = 0;
     this._trailing = 0;
     this._completedOffset = 0;
-    this._ranges.clear();
+    this._spans.clear();
     const buffer = this._walk(messages);
     // Match the pre-rewrite behaviour: rendering from a steady state (initial mount with
     // non-empty messages, or thread switch) lands the entire content via `setContent` — which

@@ -14,7 +14,7 @@ import { keyToFallback } from '@dxos/util';
 import { type Assistant } from '../../types';
 import { type ChatEvent } from '../Chat';
 import { componentRegistry, createBlockRenderer } from './registry';
-import { type MessageRange, MessageSyncer } from './sync';
+import { type MessageSpan, MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
@@ -31,7 +31,8 @@ export type ChatThreadProps = ThemedClassName<
     viewType?: Assistant.ChatView;
     onEvent?: (event: ChatEvent) => void;
     /** Publishes the syncer's per-message document offset ranges after each update. */
-    onRanges?: (ranges: MessageRange[]) => void;
+    // TODO(burdon): Can this be removed?
+    onRanges?: (ranges: MessageSpan[]) => void;
   } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;
 
@@ -93,6 +94,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');
       }
+
       // Ranges are valid synchronously after `update` (offsets are computed during the walk).
       onRanges?.(syncer.getRanges());
     }, [controller, syncer, messages, onRanges]);

@@ -38,7 +38,7 @@ import {
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
 import {
-  type MessageRange,
+  type MessageSpan,
   ChatThread as NaturalChatThread,
   type ChatThreadProps as NaturalChatThreadProps,
 } from '../ChatThread';
@@ -94,7 +94,7 @@ const ChatRoot = ({
   // The editor controller and per-message ranges are produced by `Chat.Thread` and consumed by
   // `Chat.Minimap`; lifted here so both sub-components share the same instance.
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
-  const [messageRanges, setMessageRanges] = useState<MessageRange[]>([]);
+  const [messageRanges, setMessageRanges] = useState<MessageSpan[]>([]);
 
   const feedMessages = useQuery(
     db,
@@ -281,7 +281,7 @@ const replySnippet = (message: Message.Message): string | undefined => {
  * snippet of the following assistant reply, range = the turn's document span (prompt start →
  * next prompt start). Positions come from the syncer's per-message range table.
  */
-const buildMarkers = (messages: Message.Message[], ranges: MessageRange[]): MinimapMarker[] => {
+const buildMarkers = (messages: Message.Message[], ranges: MessageSpan[]): MinimapMarker[] => {
   const rangeById = new Map(ranges.map((range) => [range.id, range] as const));
   const markers: MinimapMarker[] = [];
   for (let index = 0; index < messages.length; index++) {
