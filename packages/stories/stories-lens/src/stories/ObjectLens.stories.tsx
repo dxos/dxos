@@ -13,8 +13,8 @@ import { useClientStory, withClientProvider, withMultiClientProvider } from '@dx
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
-import { CanonicalTaskPanel, LensedGtdPanel, RawInspector } from './components';
-import { makeDemoTask } from './gtd';
+import { CanonicalTaskPanel, LensedGtdPanel, RawInspector } from '../components';
+import { makeDemoTask } from '../gtd';
 
 //
 // One object, viewed through two interfaces.
@@ -72,7 +72,7 @@ const onCreateSpace = async ({ space }: { space: { db: { add: (obj: any) => any 
 };
 
 const meta: Meta = {
-  title: 'stories/lens/ObjectLens',
+  title: 'stories/stories-lens/ObjectLens',
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
 };
@@ -81,12 +81,46 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const singlePeer = withClientProvider({
+  createIdentity: true,
+  createSpace: true,
+  types: [Task.Task],
+  onCreateSpace,
+});
+
+const twoPeers = withMultiClientProvider({
+  numClients: 2,
+  createIdentity: true,
+  createSpace: true,
+  types: [Task.Task],
+  onCreateSpace,
+});
+
 /**
- * Both interfaces on one peer, next to the object they share.
+ * Both interfaces on one peer, next to the object they share. Edit either side and watch the third
+ * pane: every lensed change is an ordinary property write, and the target-only fields land in the
+ * object's annotations.
  */
 export const SideBySide: Story = {
   render: SideBySideStory,
-  decorators: [withClientProvider({ createIdentity: true, createSpace: true, types: [Task.Task], onCreateSpace })],
+  decorators: [singlePeer],
+};
+
+/**
+ * Two peers, one object: the canonical interface on one, the lensed interface on the other,
+ * replicating live over a real invitation.
+ */
+export const Collaboration: Story = {
+  render: CollaborationStory,
+  decorators: [twoPeers],
+};
+
+/**
+ * The assertions behind {@link SideBySide}.
+ */
+export const SideBySideTest: Story = {
+  render: SideBySideStory,
+  decorators: [singlePeer],
   play: async ({ canvasElement }) => {
     const find = <T extends HTMLElement>(testId: string) =>
       canvasElement.querySelector<T>(`[data-testid="${testId}"]`)!;
@@ -126,20 +160,12 @@ export const SideBySide: Story = {
 };
 
 /**
- * Two peers, one object: the canonical interface on one, the lensed interface on the other,
- * replicating live.
+ * The assertions behind {@link Collaboration} — including the one that fails if a lens write is not
+ * minimal.
  */
-export const Collaboration: Story = {
+export const CollaborationTest: Story = {
   render: CollaborationStory,
-  decorators: [
-    withMultiClientProvider({
-      numClients: 2,
-      createIdentity: true,
-      createSpace: true,
-      types: [Task.Task],
-      onCreateSpace,
-    }),
-  ],
+  decorators: [twoPeers],
   play: async ({ canvasElement }) => {
     const findAll = <T extends HTMLElement>(testId: string) =>
       Array.from(canvasElement.querySelectorAll<T>(`[data-testid="${testId}"]`));

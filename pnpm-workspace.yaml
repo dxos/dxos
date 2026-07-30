@@ -566,6 +566,11 @@ catalog:
   posthog-js: ^1.353.0
   preact: ^10.26.10
   prettier: ^3.6.2
+  prosemirror-commands: ^1.7.1
+  prosemirror-keymap: ^1.2.3
+  prosemirror-model: ^1.25.1
+  prosemirror-state: ^1.4.3
+  prosemirror-view: ^1.40.0
   protobufjs: ^8.0.0
   pwa-asset-generator: ^6.4.0
   quickjs-emscripten: 0.31.0

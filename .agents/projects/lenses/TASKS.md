@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: PHASES 1-4 DONE for the Task lens. `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has two passing storybook demos including the multi-peer one (canonical UI on peer 0, lensed UI on peer 1, real invitation). Remaining: the Text→rich-text lens (Phase 3) and its two stories. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
+_Resume: PHASES 1-4 DONE for BOTH lenses. `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 8 passing stories (4 interactive + 4 `*Test` play stories) across two demos: Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets, with 9 unit tests. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](../../../packages/core/echo/echo-panproto/API.md).
 This file is the ledger only.
@@ -45,9 +45,11 @@ Cheap, independent, architecture-deciding. Nothing else starts first.
     with the types it binds, in the consumer package.
   - Generator-driven instances (`createProps`) also live behind `@dxos/schema`, so the law check
     currently samples the object's own values; property-based sampling moves to the consumer too.
-- [ ] **mdast offset spike** (DESIGN.md §5.B) — parse a real document, confirm block nodes carry
-      usable `position.*.offset`, edit one block, splice it back, assert the rest is
-      byte-identical. Throwaway node script, no ECHO.
+- [x] **Source-offset spike** (DESIGN.md §5.B) — superseded by shipping it: the offsets come from
+      `@lezer/markdown`, already a catalog dependency via `@dxos/react-ui-markdown`, rather than from
+      mdast/remark (which would have needed new catalog entries for nothing). Confirmed by
+      `rich-text.test.ts`: ranges quote their source, a one-block edit is one splice, and an unedited
+      tree round-trips byte-identically.
 - [x] **Decision: where the engine runs for the object lens.** Nowhere, as it turns out. Mapping
       resolution, projection, inversion, overlay storage, and the law check are all plain TypeScript
       over `SchemaEx`/`Obj`, so the object lens has **no** dependency on the wasm engine — it shares
@@ -114,22 +116,37 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
 - [ ] **Lensed UI** — a `Form` rendered from `GtdTask`, importing no `DataType.Task`.
 - [ ] **Reactive read path** — composed `Obj.atom` + `Annotation.atom`, no over-firing.
 
-## Phase 3: Text → rich text lens
+## Phase 3: Text → rich text lens — DONE
 
-Gated on the Phase 0 mdast spike.
+A _coded_ lens (parsing is not a per-property mapping), on `Text` rather than a document type so it is
+reusable for every text-bearing type. Lives in `@dxos/stories-lens` for now, since it owns the parser
+dependency — the same reason the GTD lens lives there.
 
 ### Tasks
 
-- [ ] **`get`** — `Text.content` → remark/remark-gfm → mdast → normalized block tree, each node
-      carrying its source range.
-- [ ] **`put`** — serialize the edited block only, apply via `Text.splice` over that exact range;
-      never rewrite `content`.
-- [ ] **Complement holds the per-node source slice** so untouched blocks round-trip
-      byte-identically.
-- [ ] **Block list UI** — typed row per block (heading + level control, paragraph, list). Not a
-      WYSIWYG; scope guard in DESIGN.md §5.B.
-- [ ] **Tests** — round-trip fidelity on a document exercising both bullet styles, both heading
-      styles, and reference links; byte-identical assertion after a single-block edit.
+- [x] **`get`** — `Text.content` → blocks, each carrying its exact `[start, end)` source range.
+      **Parser: `@lezer/markdown`, not remark** — it was already a catalog dependency (via
+      `@dxos/react-ui-markdown`) and its nodes carry `from`/`to` offsets, which is precisely the anchor
+      the lens needs. Adding `remark-parse` would have bought nothing.
+- [x] **`put`** — diff the block trees and splice each changed block over its own range; walk backwards
+      so every splice is expressed in the coordinates the blocks were parsed with. Never rewrites
+      `content`.
+- [x] **Basic ProseMirror editor** over the block tree (`RichTextEditor.tsx`) — minimal schema
+      (paragraph / heading / bullet), reconciles incoming changes only when unfocused so a remote edit
+      never fights the local caret. New catalog entries: `prosemirror-{model,state,view,keymap,commands}`.
+- [x] **The core markdown editor** on the same object (`MarkdownEditor.tsx`) — `useTextEditor` +
+      `createDataExtensions` over `Doc.createAccessor(text, ['content'])`, i.e. the ordinary
+      automerge-backed editing surface, unaware any lens exists.
+- [x] **Unit tests (9)** — ranges quote their source, one block edit produces exactly one splice, two
+      independent edits splice independently, append/remove touch only their own span, and an unedited
+      tree round-trips **byte-identically**.
+
+### Known limits of the demo lens
+
+- Blocks carry plain text: no inline marks (bold/italic), so the ProseMirror editor is structural only.
+- Blocks are matched by position, so a reorder rewrites the affected span rather than moving it.
+- Block identity is per-parse, so ranges shift under a concurrent peer's edit to an _earlier_ block.
+  The durable fix is Automerge cursors (Phase 6), which is also what comment anchors would need.
 
 ## Phase 3b: Database verification — DONE
 
@@ -174,7 +191,14 @@ keeps them honest.
       canonical form on the other peer, the overlay replicating, a canonical rename reaching the lensed
       title, and — the point — that rename **not** reverting the earlier lensed edit.
 - [x] Both stories pass in the browser runner; package build and lint clean.
-- [ ] **Text → rich text stories** — blocked on the Phase 3 lens, which is not built yet.
+- [x] **Story: `RichTextLens/SideBySide`** — markdown editor | ProseMirror editor | block list with
+      ranges, one peer. Asserts the lens strips markdown syntax from the view, and that a block edit
+      leaves every other line verbatim.
+- [x] **Story: `RichTextLens/Collaboration`** — markdown editor on peer 0, ProseMirror on peer 1. A
+      block edit on one peer reaches the other's markdown editor and the rest of the document survives.
+- [x] **Interactive stories separated from the assertion stories** — `SideBySide`/`Collaboration` render
+      only (a human pokes at them); `*Test` carries the play function (CI enforces it). Titles are
+      `stories/stories-lens/*`, matching the sibling packages.
 
 ### Notes for whoever runs these
 
@@ -183,6 +207,11 @@ keeps them honest.
 - Drive controlled inputs with `userEvent`, never a raw `.value` assignment — React tracks its own
   value and never fires `onChange` for the latter. (Selects respond to a plain `change` event, which
   is why they appear to work; text inputs do not.)
+- `userEvent.keyboard('{End}')` goes through `setSelectionRange`, which contenteditable does not
+  implement — it throws in a ProseMirror editor. Click, then type; assert on what the edit did to the
+  _other_ blocks rather than on an exact caret position.
+- Don't hardcode source offsets in assertions; derive them from the fixture. The offsets are the
+  claim, so a wrong constant reads as a lens bug.
 
 ## Phase 5: Toward first-class
 
