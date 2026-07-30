@@ -16,18 +16,6 @@ import {
 
 const CHALLENGE = 'AQAAAZlqjGgAq83vEjRWeJCrze8SNFZ4kA==';
 
-const identity = (onChallenge?: (challenge: Uint8Array) => void): EdgeIdentity => ({
-  peerKey: 'peer-key',
-  identityDid: 'did:halo:test',
-  presentCredentials: async ({ challenge }): Promise<Presentation> => {
-    onChallenge?.(challenge);
-    return {};
-  },
-});
-
-const jsonResponse = (body: unknown, status = 200): Response =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
-
 describe('parseChallengeHeader', () => {
   test('reads a quoted challenge', ({ expect }) => {
     expect(parseChallengeHeader(`VerifiablePresentation challenge="${CHALLENGE}"`)).toBe(CHALLENGE);
@@ -106,7 +94,10 @@ describe('fetchAuthChallenge', () => {
   });
 
   test('GETs /auth relative to the base URL', async ({ expect }) => {
-    const fetchMock = vi.fn(async () => jsonResponse({ success: true, data: { challenge: CHALLENGE } }));
+    // Typed with the input parameter so `mock.calls[0][0]` is a tuple element rather than `never`.
+    const fetchMock = vi.fn(async (_input: URL | RequestInfo) =>
+      jsonResponse({ success: true, data: { challenge: CHALLENGE } }),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     expect(await fetchAuthChallenge('https://edge.example.com')).toBe(CHALLENGE);
@@ -162,3 +153,15 @@ describe('authenticateViaChallengeEndpoint', () => {
     expect(await authenticateViaChallengeEndpoint('https://edge.example.com', identity())).toBeUndefined();
   });
 });
+
+const identity = (onChallenge?: (challenge: Uint8Array) => void): EdgeIdentity => ({
+  peerKey: 'peer-key',
+  identityDid: 'did:halo:test',
+  presentCredentials: async ({ challenge }): Promise<Presentation> => {
+    onChallenge?.(challenge);
+    return {};
+  },
+});
+
+const jsonResponse = (body: unknown, status = 200): Response =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });

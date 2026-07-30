@@ -361,7 +361,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
 
     const response = await fetch(new URL(path, this._baseHttpUrl), { method: 'GET' });
-    if (response.status === 401) {
+    // The header check matters: a 401 forwarded from upstream carries no challenge, and signing a
+    // challenge that isn't there would throw instead of degrading to an unauthenticated attempt.
+    if (response.status === 401 && response.headers.get('WWW-Authenticate') !== null) {
       return encodePresentationWsAuthHeader(await handleAuthChallenge(response, this._identity));
     }
     log.warn('no auth challenge from edge', { status: response.status, statusText: response.statusText });
