@@ -35,7 +35,15 @@ export default Capability.makeModule(
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
     const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
-    const deckStateAtom = yield* DeckCapabilities.State;
+
+    // Optional: provisioning is keyed off deck planks, so a host without a deck has nothing to
+    // provision for.
+    const deckStateOption = yield* Capability.getOption(DeckCapabilities.State);
+    if (Option.isNone(deckStateOption)) {
+      return [];
+    }
+    const deckStateAtom = deckStateOption.value;
+
     const cacheAtom = yield* AssistantCapabilities.CompanionChatCache;
     const stateAtom = yield* AssistantCapabilities.State;
     // The selected companion variant moved off deck state into a global view-state aspect; read and

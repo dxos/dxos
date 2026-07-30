@@ -6,7 +6,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
-import { DeckCapabilities } from '@dxos/plugin-deck';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { RoutineCapabilities } from '@dxos/plugin-routine';
 import { SpaceCapability } from '@dxos/plugin-space';
@@ -54,7 +53,9 @@ export const CompanionChatProvisioner = Capability.lazyModule(
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
       Capabilities.AtomRegistry,
-      DeckCapabilities.State,
+      // DeckCapabilities.State is read optionally in the body: provisioning is driven by deck
+      // planks, so a host without a deck (e.g. a story) has nothing to provision for and should
+      // lose this module, not fail to activate AssistantPlugin.
       AssistantCapabilities.CompanionChatCache,
       AssistantCapabilities.State,
       AttentionCapabilities.ViewState,
