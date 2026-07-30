@@ -19,55 +19,57 @@ import { getCalendarsPath } from '../paths';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Mailbox.Mailbox),
-        inputSchema: Mailbox.CreateMailboxSchema,
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Mailbox.make(props);
-            return yield* Operation.invoke(InboxOperation.AddMailbox, {
-              object,
-              target: options.target,
-            });
-          }),
-      }),
-      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Message.Message),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Message.make({ sender: 'user' });
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Calendar.Calendar),
-        inputSchema: Calendar.CreateCalendarSchema,
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Calendar.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId ?? getCalendarsPath(options.db.spaceId),
-            });
-          }),
-      }),
-      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Event.Event),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Event.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
+      Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
+        {
+          id: Type.getTypename(Mailbox.Mailbox),
+          inputSchema: Mailbox.CreateMailboxSchema,
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Mailbox.make(props);
+              return yield* Operation.invoke(InboxOperation.AddMailbox, {
+                object,
+                target: options.target,
+              });
+            }),
+        },
+        {
+          id: Type.getTypename(Message.Message),
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Message.make({ sender: 'user' });
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+            }),
+        },
+        {
+          id: Type.getTypename(Calendar.Calendar),
+          inputSchema: Calendar.CreateCalendarSchema,
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Calendar.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId ?? getCalendarsPath(options.db.spaceId),
+              });
+            }),
+        },
+        {
+          id: Type.getTypename(Event.Event),
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Event.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+            }),
+        },
+      ]),
     ];
   }),
 );

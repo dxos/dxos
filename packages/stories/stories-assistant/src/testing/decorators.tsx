@@ -431,14 +431,14 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: () =>
       Effect.succeed([
         // TODO(burdon): Clean up.
-        Capability.contribute(AppCapabilities.SkillDefinition, MarkdownSkill),
-        Capability.contribute(AppCapabilities.SkillDefinition, PlanningSkill),
-        Capability.contribute(AppCapabilities.SkillDefinition, DelegationSkill),
-        Capability.contribute(Capabilities.OperationHandler, MarkdownOperationHandlerSet),
-        Capability.contribute(Capabilities.OperationHandler, PlanningHandlers),
-        Capability.contribute(Capabilities.OperationHandler, DelegationHandlers),
-        Capability.contribute(Capabilities.OperationHandler, AgentHandlers),
-        Capability.contribute(Capabilities.OperationHandler, ExampleHandlers),
+        Capability.contributeAll(AppCapabilities.SkillDefinition, [MarkdownSkill, PlanningSkill, DelegationSkill]),
+        Capability.contributeAll(Capabilities.OperationHandler, [
+          MarkdownOperationHandlerSet,
+          PlanningHandlers,
+          DelegationHandlers,
+          AgentHandlers,
+          ExampleHandlers,
+        ]),
       ]),
   }),
   Plugin.addModule(({ createAgent, onChatCreated, layoutAtom, layoutHolder }) => ({

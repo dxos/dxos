@@ -15,32 +15,34 @@ import { Notebook } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Script.Script),
-        inputSchema: ScriptOperation.ScriptProps,
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const { object } = yield* Operation.invoke(ScriptOperation.CreateScript, props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Notebook.Notebook),
-        inputSchema: ScriptOperation.NotebookProps,
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Notebook.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
+      Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
+        {
+          id: Type.getTypename(Script.Script),
+          inputSchema: ScriptOperation.ScriptProps,
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const { object } = yield* Operation.invoke(ScriptOperation.CreateScript, props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+            }),
+        },
+        {
+          id: Type.getTypename(Notebook.Notebook),
+          inputSchema: ScriptOperation.NotebookProps,
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Notebook.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+            }),
+        },
+      ]),
     ];
   }),
 );

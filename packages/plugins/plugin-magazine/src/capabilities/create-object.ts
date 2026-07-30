@@ -87,41 +87,43 @@ const CreateSubscriptionSchema = Schema.Union(StandardSiteCreate, RssCreate);
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Subscription.Subscription),
-        inputSchema: CreateSubscriptionSchema,
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = CreateSubscription.makeSubscriptionFromCreate(props);
-            const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-            // Auto-sync after creation if URL is provided.
-            if (object.url) {
-              yield* Operation.schedule(
-                FeedOperation.SyncFeed,
-                { feed: Ref.make(object) },
-                { spaceId: Obj.getDatabase(object)?.spaceId },
-              );
-            }
-            return result;
-          }),
-      }),
-      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Magazine.Magazine),
-        inputSchema: Magazine.CreateMagazineSchema,
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const magazine = Magazine.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object: magazine,
-              target: options.target,
-              targetNodeId: getMagazinesPath(options.db.spaceId),
-            });
-          }),
-      }),
+      Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
+        {
+          id: Type.getTypename(Subscription.Subscription),
+          inputSchema: CreateSubscriptionSchema,
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = CreateSubscription.makeSubscriptionFromCreate(props);
+              const result = yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+              // Auto-sync after creation if URL is provided.
+              if (object.url) {
+                yield* Operation.schedule(
+                  FeedOperation.SyncFeed,
+                  { feed: Ref.make(object) },
+                  { spaceId: Obj.getDatabase(object)?.spaceId },
+                );
+              }
+              return result;
+            }),
+        },
+        {
+          id: Type.getTypename(Magazine.Magazine),
+          inputSchema: Magazine.CreateMagazineSchema,
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const magazine = Magazine.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object: magazine,
+                target: options.target,
+                targetNodeId: getMagazinesPath(options.db.spaceId),
+              });
+            }),
+        },
+      ]),
     ];
   }),
 );

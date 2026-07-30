@@ -11,9 +11,7 @@ import { CalendarSkill, InboxSendSkill, InboxSkill } from '#skills';
 
 const skillDefinition = () =>
   Effect.succeed([
-    Capability.contribute(AppCapabilities.SkillDefinition, InboxSkill),
-    Capability.contribute(AppCapabilities.SkillDefinition, InboxSendSkill),
-    Capability.contribute(AppCapabilities.SkillDefinition, CalendarSkill),
+    Capability.contributeAll(AppCapabilities.SkillDefinition, [InboxSkill, InboxSendSkill, CalendarSkill]),
   ]);
 
 export default skillDefinition;
