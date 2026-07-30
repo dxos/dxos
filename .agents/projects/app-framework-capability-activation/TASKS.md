@@ -479,3 +479,63 @@ harness auto-appended contention/env-confounded rows to `BENCHMARKS.md` — reve
   run the cold startup spec with the 1194 browser pin, compare `profilerTotal` HEAD vs merge-base on the
   same box. By mechanism no regression is expected (renames + runtime-equivalent changes), but this is
   the empirical check still owed.
+
+## Seventh addendum (2026-07-28..30) — three main syncs, node-barrel parity, perf verdict, closure plan
+
+Session on branch `claude/resume-app-framework-activation-ycp7vv` (remote container). All work
+committed + pushed; still NO PR at session start (standing instruction — now planned, see below).
+
+- [x] **Merge 1** (`8ebb88a4`): merged origin/main `5585ec89` (62 commits, 80 conflicts + ~17
+      clean-merged old-API files). Structural: `AppCapabilities.NavigationPathResolver` and every
+      `navigation-resolver.ts` DROPPED (main replaced the mechanism with `NavigationTargetResolver` + graph-builder URL resolution, commit `5585ec89`); `AppPlugin` deletion upheld (main's only
+      change was itself a deletion); plugin-comments folded into plugin-review (versioning
+      inverted, `cec59a46`); NEW `plugin-projects` (old-API, `f7d77356`) migrated whole. Main's
+      features preserved in our API (deck pair-chain URLs, suggesting-mode markdown, inbox reworks,
+      companion variant-projection fix). Kebab NSIDs renamed camelCase; new tags curried.
+- [x] Merge-1 full suite triage: 19 red packages, ALL environmental, zero merge regressions —
+      contention timeouts (isolated runs pass), `AI_AGENT` env var makes the CLI print an NDJSON
+      banner that breaks `stdout === ''` asserts in cli tests, react-ui-form `findByText` 1s
+      default vs slow client init. Verified per-package in isolation, not assumed.
+- [x] **Merge 2** (`0c37a424`): merged `34f774ae` (39 commits, 37 conflicts + 46 clean-merged
+      old-API files). plugin-sketch SPLIT into plugin-tldraw + plugin-illustrator (`3502b3d5`);
+      deck/navtree consolidated to single entrypoints (`3f6ac610`); NEW node-only
+      `capabilities/node.ts` barrels across ~10 plugins migrated with index-parity audit; NEW
+      plugins atproto/library/terra migrated. Main fixed the simple-layout dep bug we flagged
+      (`d050775f`). Gates: build rc=0, app-framework 204 + app-toolkit 119, lint 308, fmt clean.
+- [x] **HAZARD recorded**: the `#capabilities` `types` condition resolves to the BROWSER barrel,
+      so tsc NEVER type-checks `node.ts` (or `*Plugin.node.ts` via `#plugin`). Barrel drift is
+      invisible until bundle/runtime — the historical cli:test failure mode. Verify emitted
+      `dist/lib/capabilities/node.mjs` content when touching node barrels.
+- [x] **Node-barrel parity** (`885257ef`, user-directed): SkillDefinition uniform across all node
+      barrels (file+sheet added and wired into node entrypoints; inbox+script normalized from
+      longhand lazyModule to the `AppCapability.skillDefinition` maker — verified same module id);
+      Edge+Inline file backends now available in node (nothing could resolve
+      `FileCapabilities.Backend` headless before). All four bodies verified React-free; bundles
+      verified structurally (see hazard above).
+- [x] **Merge 3** (`3c3b6bf5`): merged `c3625d39` (2 connector commits). Kept main's new
+      `AccessTokenResolverLayerSpec` on `contribute`; coordinator's new ServiceResolver read became
+      `yield*` + added to the Coordinator module's `requires` (node barrel re-exports the same
+      declaration — no drift). Gates green; plugin-connector 36 / plugin-client 14 in isolation.
+- [x] **Startup A/B CLOSED — perf-neutral.** User profiled branch vs main same-session on real
+      hardware: dev-cold −7%, cold +2%, warm-cold +8% (noise); modules 460 vs 459; bytes ~equal.
+      The real finding: BOTH are ~20–24% slower cold than the 2026-06-16 baseline from ~60 new
+      modules / ~2–3 MB on main — growth, not this branch. Green to land.
+- [x] **Follow-up scoped as its own project**: `startup-latency`
+      (`.agents/projects/startup-latency/DESIGN.md`, commits `7fab2ee9` + `40799b2a`). Map-first
+      two-phase plan; post-paint batching explicitly REJECTED (two tiers, no middle).
+
+### Closure plan
+
+This project CLOSES when this branch's PR lands (`$project end` + registry update with the PR
+number). Disposition of open items at close:
+
+- → `startup-latency`: the startup-deferral follow-up (AUDIT.md §12) — now that project's charter.
+- Decide at PR review: `urlKey: 'topic'` on the Project type section
+  (`plugin-projects/src/capabilities/app-graph-builder.ts:33`) — main's leftover from Topic;
+  changing it changes URL semantics.
+- Carry or drop: one `Plugin.addModule<void>` anchor (`MagazineCurate.stories.tsx:51`); node-barrel
+  scoping gaps preserved from main (chess-com/transcription AppGraphBuilder, sheet
+  ComputeGraphRegistry) — same class as the fixed skills gap, awaiting a ruling.
+- CLOSED since the sixth addendum: startup A/B (above); plugin-assistant memoized-instructions
+  failure (test replaced by ScriptedLanguageModel on main); simple-layout dep bug (fixed on main);
+  the ~24 unrelated TS2883/TS2742 imports (full-repo build now 0 errors).

@@ -258,3 +258,15 @@ none logic. `create document`/`re-order collections` pass in isolation; `comment
 even isolated but the trace shows comments fully working (only the hover-gated `thread.message.edit`
 missing; sibling test annotated Flaky in CI). No wiring regression evident. Browser pin needed to run:
 `executablePath: /opt/pw-browsers/chromium-1194/chrome-linux/chrome`, env `DX_PWA=false`.
+
+## RESUME (2026-07-30) — main syncs, perf verdict, PR opened, closure plan
+
+Branch `claude/resume-app-framework-activation-ycp7vv`. Three main merges (`8ebb88a4`, `0c37a424`,
+`3c3b6bf5`) bring the branch fully current with main `c3625d39`; every main-side old-API addition
+was migrated onto the new capability API in the merge commits themselves (details + structural
+decisions in the TASKS.md seventh addendum). Node-barrel parity commit `885257ef`. User-profiled
+startup A/B on real hardware: **perf-neutral vs main** — the owed measurement is CLOSED; the real
+regression is main's 6-week plugin growth, scoped as the new `startup-latency` project (registered;
+map-first plan, post-paint batching rejected). The no-PR standing instruction was LIFTED 2026-07-30:
+PR opened from this branch; **this project ends when it lands** — dispositions for the remaining
+open items are listed under "Closure plan" in TASKS.md.
