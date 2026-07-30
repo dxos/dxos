@@ -135,6 +135,26 @@ export const EditorMenuProvider = ({
 
   const menuGroups = groups?.filter((group) => group.items.length > 0) ?? [];
 
+  // Handing off from the slash menu refocuses the editor and reopens the popover a frame later, so
+  // neither `autoFocus` nor `onOpenAutoFocus` lands on the input. Claim focus a frame after the
+  // modal-state dispatch `handleOpenChange` schedules, which otherwise hands focus back to CodeMirror.
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!search || !open) {
+      return;
+    }
+
+    let inner: number;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => searchInputRef.current?.focus());
+    });
+
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, [search, open]);
+
   const handleSearchKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
       switch (event.key) {
@@ -184,7 +204,7 @@ export const EditorMenuProvider = ({
           {search && (
             <Input.Root>
               <Input.TextInput
-                autoFocus
+                ref={searchInputRef}
                 density='sm'
                 variant='subdued'
                 classNames='shrink-0 mbe-1'
