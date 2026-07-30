@@ -15,9 +15,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/random"
-    },
-    {
       "path": "../../common/util"
     },
     {

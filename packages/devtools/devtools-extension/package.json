@@ -31,7 +31,6 @@
     "webextension-polyfill": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "catalog:",
     "@crxjs/vite-plugin": "catalog:",
     "@dxos/config": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

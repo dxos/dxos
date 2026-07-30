@@ -44,7 +44,6 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

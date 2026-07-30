@@ -31,9 +31,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../lit-ui"
     },
     {

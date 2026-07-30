@@ -87,7 +87,6 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-client": "workspace:^",
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
     "@effect-atom/atom-react": "catalog:",

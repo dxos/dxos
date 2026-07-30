@@ -122,7 +122,6 @@
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/echo-client": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

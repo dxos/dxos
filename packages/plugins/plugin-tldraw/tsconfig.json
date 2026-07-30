@@ -31,9 +31,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
       "path": "../../common/util"
     },
     {

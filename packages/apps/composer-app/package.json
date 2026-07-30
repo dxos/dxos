@@ -183,7 +183,6 @@
     "xstate": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "catalog:",
     "@cloudflare/workers-types": "catalog:",
     "@dxos/client": "workspace:*",
     "@dxos/echo-solid": "workspace:*",
@@ -222,8 +221,5 @@
     "vite-plugin-solid": "catalog:",
     "vite-plugin-wasm": "catalog:",
     "workbox-window": "catalog:"
-  },
-  "peerDependencies": {
-    "@babel/core": "catalog:"
   }
 }

@@ -24,9 +24,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../react-ui"
     },
     {

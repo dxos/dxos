@@ -196,7 +196,6 @@
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",

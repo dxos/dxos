@@ -32,7 +32,6 @@
     "storybook-solidjs-vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom": "catalog:",
     "effect": "catalog:",
     "solid-js": "catalog:"
   },

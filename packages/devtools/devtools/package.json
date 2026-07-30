@@ -103,7 +103,6 @@
     "workbox-window": "catalog:"
   },
   "peerDependencies": {
-    "@babel/core": "catalog:",
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",

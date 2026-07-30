@@ -48,7 +48,6 @@
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

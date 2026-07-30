@@ -403,8 +403,9 @@ Unreferenced _files_ are excluded from the strict pass: some 74 components are r
 stories, and whether those are work in progress or genuinely dead is a judgement per component
 rather than a rule. `pnpm knip --production --strict` without the exclusion lists them.
 
-A `peerDependencies` entry states what a host must provide rather than what the package imports, so
-those are exempt from the unused check.
+A `peerDependencies` entry is a contract that the consumer must supply the package, so it belongs
+there only when the code a consumer runs needs it. Something only a storybook or a test imports is a
+`devDependency`, not a peer — the strict pass reports the difference rather than exempting it.
 
 **The repo root's own dependencies are not audited.** They are consumed by moon task commands and the
 shared vitest/vite bases rather than by the few files knip attributes to the root workspace, so
