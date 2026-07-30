@@ -45,7 +45,7 @@ export class UpdateScheduler {
 
     scheduleMicroTask(this._ctx, async () => {
       // The previous task might still be running, so we need to wait for it to finish.
-      await this._promise; // Can't be rejected.
+      await this._promise?.catch(() => {});
 
       // Check if the callback was called recently.
       if (this._params.maxFrequency) {
@@ -70,14 +70,14 @@ export class UpdateScheduler {
         return;
       }
 
-      // Re-check after the delay, not just before it. The callback is not reentrant — it typically
-      // drains shared queued state — and the check above the delay can pass with nothing running only
-      // for a `runBlocking` to start a pass while this one sleeps. Both callbacks would then run at
-      // once, each claiming part of the queue, and `runBlocking`'s `await this._promise` would end up
-      // awaiting *this* pass rather than its own. Rejections are swallowed because another caller's
-      // failure is not this pass's business (`runBlocking` assigns the raw callback promise, which can
-      // reject); the caller that started it still observes it.
-      if (this._promise) {
+      // The pre-claim barrier. The await above is only an optimization; correctness lives here: the
+      // callback is not reentrant (it typically drains shared queued state), so the claim below may
+      // only happen when no other pass is running — and that check must be re-evaluated with no
+      // suspension point before the claim, hence a loop. A single await is not enough twice over: the
+      // throttle sleep above opens one window, and resuming from any await opens another (a pass
+      // parked on the same promise may have claimed and installed itself in `_promise` in the gap).
+      // Rejections are another caller's business (`runBlocking`'s caller observes its own error).
+      while (this._promise) {
         await this._promise.catch(() => {});
       }
 
@@ -117,9 +117,35 @@ export class UpdateScheduler {
    * Force schedule the task to run and wait for it to finish.
    */
   async runBlocking(): Promise<void> {
-    // The previous task might still be running, so we need to wait for it to finish.
-    await this._promise; // Can't be rejected.
-    this._promise = this._callback();
-    await this._promise;
+    // Pre-claim barrier, same as the one in `trigger`: on resume from an await, a triggered pass
+    // that was parked on the same promise may have claimed the queue and installed itself in
+    // `_promise` — a single await would overwrite it and run against an empty queue, resolving while
+    // the claimed batch is still in flight. The caller treats this method as "everything queued so
+    // far has been handed off", so that batch dies with a short-lived caller (dxos/edge#758's
+    // orphaned `updateSubscription` batches). NOT a barrier over *scheduled* passes: a pass still in
+    // its throttle sleep has claimed nothing, and waiting for it here would trade the loss for
+    // stalls (and starvation under a self-retriggering callback).
+    while (this._promise) {
+      await this._promise.catch(() => {});
+    }
+    const callbackPromise = this._callback();
+    // Track a wrapper that clears `_promise` on completion (identity-guarded — a later pass may have
+    // replaced it) and absorbs the rejection for observers. Without the clear, `_promise` stays
+    // settled-but-non-null after every `runBlocking`, and the loops above spin on it forever. The
+    // caller still observes a rejection through `await callbackPromise` below.
+    const tracked: Promise<void> = callbackPromise.then(
+      () => {
+        if (this._promise === tracked) {
+          this._promise = null;
+        }
+      },
+      () => {
+        if (this._promise === tracked) {
+          this._promise = null;
+        }
+      },
+    );
+    this._promise = tracked;
+    await callbackPromise;
   }
 }

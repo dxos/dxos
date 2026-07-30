@@ -25,6 +25,52 @@ describe('update-scheduler', () => {
     expect(updates).to.eq(1);
   });
 
+  // The await-resume gap: a triggered pass and a `runBlocking` can park on the same in-flight pass.
+  // On resume the triggered one (queued first) claims the queue and installs itself in `_promise` —
+  // and `runBlocking`'s continuation, resumed from an await that saw the *old* pass, then overwrites
+  // `_promise` and runs against an empty queue. `runBlocking` resolves, its caller believes
+  // everything queued has been handed off, and the claimed batch is still in flight — lost if the
+  // caller tears down. Observed as dxos/edge#758's orphaned `updateSubscription` batches. The check
+  // must be re-evaluated synchronously before claiming, i.e. a loop, not a single await.
+  test('runBlocking does not resolve while a pass that claimed the queue is still in flight', async () => {
+    const ctx = new Context();
+    const queue: string[] = [];
+    const processed: string[] = [];
+    let inFlight = 0;
+    const gate = { resolve: () => {} };
+    const scheduler: UpdateScheduler = new UpdateScheduler(ctx, async () => {
+      const claimed = queue.splice(0, queue.length); // Claim synchronously, like _sendUpdates.
+      inFlight += claimed.length;
+      if (claimed.length > 0) {
+        await new Promise<void>((resolve) => {
+          gate.resolve = resolve;
+          setTimeout(resolve, 50); // The claimed batch takes real time to deliver.
+        });
+      }
+      processed.push(...claimed);
+      inFlight -= claimed.length;
+    });
+
+    // A long pass is running (claimed nothing of interest)...
+    queue.push('warmup');
+    scheduler.trigger();
+    await sleep(5);
+
+    // ...now the real work arrives; a trigger parks behind the running pass...
+    queue.push('document-data');
+    scheduler.trigger();
+    await sleep(0); // Let the trigger's task start and park on the running pass, as in production.
+
+    // ...and a flush arrives after it.
+    await scheduler.runBlocking();
+
+    // Everything that was queued when runBlocking was called must be fully processed — not claimed
+    // by a still-running pass the barrier failed to observe.
+    expect(inFlight, 'runBlocking resolved with a claimed batch still in flight').toEqual(0);
+    expect(processed).toContain('document-data');
+    await ctx.dispose();
+  });
+
   // The callback is not reentrant: it typically drains shared queued state, so two passes running at
   // once each claim part of the queue. A throttled `trigger` checks for a running pass *before* its
   // delay, so the check can pass with nothing running and a `runBlocking` can then start a pass while
