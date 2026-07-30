@@ -16,6 +16,7 @@ import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
 import { OnboardingPlugin } from '@dxos/plugin-onboarding/plugin';
+import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
@@ -94,6 +95,7 @@ export const getCorePlugins = ({
     }),
     OnboardingPlugin({ generateExemplarSpace: !isLocal }),
     ProcessManagerPlugin(),
+    ProgressPlugin(),
     RegistryPlugin(),
     RoutinePlugin(),
     SettingsPlugin(),

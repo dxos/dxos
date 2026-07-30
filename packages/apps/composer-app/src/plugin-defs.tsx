@@ -193,7 +193,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
-    ProgressPlugin(),
     ProjectsPlugin(),
     CommercePlugin(),
     CrmPlugin(),

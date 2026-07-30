@@ -4,22 +4,28 @@
 
 import React, { type JSX, type PropsWithChildren } from 'react';
 
-import { Icon, Panel as PanelPrimitive, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Accordion } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 export type PanelProps = ThemedClassName<{
   id: string;
   icon: string;
   title: string;
+  /** Static summary shown on the header row (counts, sizes); rendered inside the toggle. */
   info?: JSX.Element;
+  /** Interactive control shown on the header row; rendered beside the toggle, not inside it. */
+  action?: JSX.Element;
   padding?: boolean;
+  /** Clamp the body and let it scroll; `0` leaves the body unclamped. */
   maxHeight?: number;
-  open?: boolean;
-  onToggle?: (id: string, open: boolean) => void;
 }>;
 
-export type CustomPanelProps<T> = Pick<PanelProps, 'id' | 'open' | 'onToggle'> & T;
+export type CustomPanelProps<T> = Pick<PanelProps, 'id'> & T;
 
+/**
+ * A collapsible section of the stats stack. Open state is owned by the enclosing `Accordion.Root`.
+ */
 export const Panel = ({
   classNames,
   children,
@@ -27,52 +33,49 @@ export const Panel = ({
   icon,
   title,
   info,
+  action,
   padding = true,
   maxHeight = 240,
-  open = true,
-  onToggle,
 }: PropsWithChildren<PanelProps>) => {
+  const summary = (
+    <div className='flex items-center justify-between gap-2'>
+      <span className='truncate'>{title}</span>
+      {info}
+    </div>
+  );
+
+  // Panels with no body (Stats, Memory, Network) are summary rows, not disclosures — rendering them
+  // as accordion items would show a caret that expands nothing.
+  if (!children) {
+    return (
+      <div className='flex items-start gap-2 p-2 text-sm text-fine'>
+        <span className='flex items-center h-6 shrink-0'>
+          <Icon icon={icon} size={4} />
+        </span>
+        <div className='min-w-0 flex-1'>{summary}</div>
+        {action && <span className='flex items-center h-6 shrink-0'>{action}</span>}
+      </div>
+    );
+  }
+
   return (
-    // Collapsible section: auto-height rows so the content can animate closed (the primitive defaults to 1fr content).
-    <PanelPrimitive.Root style={{ gridTemplateRows: 'auto auto' }} classNames='shrink-0'>
-      {/* Panel.Toolbar's public type omits onClick even though it forwards DOM props at runtime, so the handler lives on an asChild div. */}
-      <PanelPrimitive.Toolbar asChild classNames='px-2 text-sm text-fine cursor-pointer'>
-        <div
-          role='button'
-          aria-expanded={open}
-          tabIndex={0}
-          className='flex items-center justify-between'
-          onClick={() => onToggle?.(id, !open)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              if (event.key === ' ') {
-                event.preventDefault();
-              }
-              onToggle?.(id, !open);
-            }
-          }}
-        >
-          <div className='flex items-center gap-2 py-1'>
-            <Icon icon={icon} />
-            <span className='truncate'>{title}</span>
-          </div>
-          {/* Stop info-control clicks (e.g. the Stats play/pause toggle) from also toggling the panel. */}
-          {info && <div onClick={(event) => event.stopPropagation()}>{info}</div>}
-        </div>
-      </PanelPrimitive.Toolbar>
+    <Accordion.Item item={{ id }}>
+      <Accordion.ItemHeader icon={icon} trailing={action} classNames='text-sm text-fine'>
+        {summary}
+      </Accordion.ItemHeader>
       {children && (
-        <PanelPrimitive.Content
-          style={{ maxHeight: open ? (maxHeight ? `${maxHeight}px` : undefined) : 0 }}
+        <Accordion.ItemBody
           classNames={mx(
-            'flex flex-col w-full transition-all duration-200 ease-in-out',
-            maxHeight ? 'overflow-y-auto' : 'h-full overflow-hidden',
-            padding && 'px-2',
+            'flex flex-col',
+            maxHeight ? 'overflow-y-auto' : 'overflow-hidden',
+            !padding && 'p-0',
             classNames,
           )}
+          style={maxHeight ? { maxHeight } : undefined}
         >
           {children}
-        </PanelPrimitive.Content>
+        </Accordion.ItemBody>
       )}
-    </PanelPrimitive.Root>
+    </Accordion.Item>
   );
 };
