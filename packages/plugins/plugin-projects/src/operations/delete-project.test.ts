@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Chat } from '@dxos/assistant-toolkit';
-import { Instructions, Project } from '@dxos/compute';
+import { Instructions, Project, Routine } from '@dxos/compute';
 import { Collection, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
@@ -29,7 +29,15 @@ describe('deleting a project', () => {
 
   const setup = async () => {
     const { db } = await builder.createDatabase({
-      types: [Project.Project, Instructions.Instructions, Collection.Collection, Chat.Chat, Feed.Feed, Text.Text],
+      types: [
+        Project.Project,
+        Instructions.Instructions,
+        Collection.Collection,
+        Chat.Chat,
+        Feed.Feed,
+        Text.Text,
+        Routine.Routine,
+      ],
     });
 
     // Mirrors the create-object capability: owned instructions + owned artifacts collection.
@@ -47,9 +55,16 @@ describe('deleting a project', () => {
     const feed = db.add(Feed.make());
     const chat = db.add(Chat.make({ name: 'Chat', feed: Ref.make(feed) }));
     Obj.setParent(chat, project);
+
+    // Mirrors ProjectOperation.CreateRoutine: owned by the parent edge AND linked for gallery order.
+    const routine = db.add(Routine.make({ name: 'Routine', triggers: [] }));
+    Obj.setParent(routine, project);
+    Obj.update(project, (project) => {
+      project.routines = [...project.routines, Ref.make(routine)];
+    });
     await db.flush();
 
-    return { db, project, instructions, artifacts, chat };
+    return { db, project, instructions, artifacts, chat, routine };
   };
 
   type TestDatabase = Awaited<ReturnType<typeof setup>>['db'];
@@ -80,12 +95,13 @@ describe('deleting a project', () => {
     return descendants;
   };
 
-  test('the owned instructions, artifacts collection and chats are removed with it', async ({ expect }) => {
+  test('the owned instructions, artifacts collection, chats and routines are removed with it', async ({ expect }) => {
     const { db, project } = await setup();
     expect(await countOf(db, Filter.type(Project.Project))).toEqual(1);
     expect(await countOf(db, Filter.type(Instructions.Instructions))).toEqual(1);
     expect(await countOf(db, Filter.type(Collection.Collection))).toEqual(1);
     expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(1);
+    expect(await countOf(db, Filter.type(Routine.Routine))).toEqual(1);
 
     db.remove(project);
     await db.flush();
@@ -94,12 +110,13 @@ describe('deleting a project', () => {
     expect(await countOf(db, Filter.type(Instructions.Instructions))).toEqual(0);
     expect(await countOf(db, Filter.type(Collection.Collection))).toEqual(0);
     expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(0);
+    expect(await countOf(db, Filter.type(Routine.Routine))).toEqual(0);
   });
 
   test('owned descendants are reachable transitively before removal, so their planks can be closed', async ({
     expect,
   }) => {
-    const { db, project, chat, instructions, artifacts } = await setup();
+    const { db, project, chat, instructions, artifacts, routine } = await setup();
 
     // Mirrors the walk `RemoveObjects` runs to decide which planks to close. Passing only the project
     // would leave the chat's plank open on a removed object; stopping at one level would miss the
@@ -108,6 +125,7 @@ describe('deleting a project', () => {
     expect(descendantIds).toContain(chat.id);
     expect(descendantIds).toContain(instructions.id);
     expect(descendantIds).toContain(artifacts.id);
+    expect(descendantIds).toContain(routine.id);
 
     const textId = instructions.text.target?.id;
     expect(textId).toBeTruthy();

@@ -76,8 +76,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, artifactsCollection],
   );
 
-  // Routines are linked, not owned: the ref is spliced here and `RemoveObjects` (no target) removes the
-  // object from the space's root collection, where the create flow filed it.
+  // Routines are owned by the project but filed in no collection, so `RemoveObjects` needs no target;
+  // the `routines` ref is spliced here since the cascade only follows parent edges.
   const handleDeleteRoutine = useCallback(
     (object: Obj.Unknown) => {
       updateProject((project) => {
