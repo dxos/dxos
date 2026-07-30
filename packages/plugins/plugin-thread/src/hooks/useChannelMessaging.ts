@@ -13,9 +13,9 @@ import { type ThreadRootProps } from '@dxos/react-ui-thread';
 import { type Channel, type Message } from '@dxos/types';
 
 import {
-  type ThreadSummary,
   ThreadCapabilities,
   ThreadOperation,
+  type ThreadSummary,
   foldReactions,
   foldThreads,
   resolveProvider,

@@ -19,7 +19,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 
 import { getChannelsPath } from '../paths';
-import { ThreadOperation, type ThreadSelection, foldThreads, getThreadNodeId, selectRoots, senderKey } from '../types';
+import { ThreadOperation, type ThreadSelection, foldThreads, getThreadNodeId, selectRoots } from '../types';
 
 const channelTypename = Type.getTypename(Channel.Channel);
 

@@ -17816,6 +17816,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/halo':
         specifier: workspace:*
         version: link:../../core/halo/halo

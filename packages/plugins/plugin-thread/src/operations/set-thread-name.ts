@@ -34,9 +34,9 @@ const handler: Operation.WithHandler<typeof ThreadOperation.SetThreadName> = Thr
       // Rewriting the caller's own declaration keeps the write single-writer; re-stamping it is what
       // makes this the newest name, and so the one the fold resolves to.
       if (own) {
-        Obj.update(own, (declaration) => {
-          declaration.name = next;
-          declaration.created = new Date().toISOString();
+        Obj.update(own, (own) => {
+          own.name = next;
+          own.created = new Date().toISOString();
         });
         return;
       }
