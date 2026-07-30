@@ -56,10 +56,8 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
             Effect.provide(Database.layer(db)),
             // `Process.fromOperation` promotes any handler failure to a defect (`Effect.orDie`), so
             // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.
-            // Only a directly-invoked sync surfaces its failure here; a run through the trigger is
-            // reported by the dispatcher's own process instead.
-            // TODO(wittjosiah): A 401 on the trigger path therefore shows a generic sync failure
-            //   rather than this reauthentication prompt.
+            // TODO(wittjosiah): Only reaches a directly-invoked sync; a triggered run reports through
+            //   the dispatcher's own process, so its 401s show a generic failure instead of this prompt.
             Effect.catchAllDefect((defect) =>
               RunAgainError.is(defect)
                 ? Effect.void

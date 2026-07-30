@@ -39,6 +39,8 @@ export const syncBinding = ({
 
     const trigger = yield* ensureSyncTrigger({ connector, cursor });
     if (!trigger) {
+      // TODO(wittjosiah): Invokes the sync once; nothing drives `Operation.runAgain()` continuation
+      //   without a trigger, so a capped run's remaining batches are not synced here.
       return yield* Operation.invoke(sync.operation, { binding: Ref.make(cursor) }, { spaceId }).pipe(Effect.asVoid);
     }
 

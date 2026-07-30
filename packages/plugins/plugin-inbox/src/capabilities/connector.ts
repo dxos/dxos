@@ -31,6 +31,9 @@ import { jmapCredentialForm } from './jmap-credential-form';
 /** How often a mailbox's sync Routine polls for new mail. */
 const MAIL_SYNC_CRON = '*/10 * * * *';
 
+/** Whether a newly bound mailbox syncs itself instead of waiting for the user to ask. */
+const MAIL_AUTO_SYNC = true;
+
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
 });
@@ -137,7 +140,7 @@ export default Capability.makeModule(
           // (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: InboxOperation.MaterializeGmailTarget,
           optionsSchema: SyncOptions,
-          auto: true,
+          auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
         },
         onTokenCreated,
@@ -156,7 +159,7 @@ export default Capability.makeModule(
           // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: InboxOperation.MaterializeJmapTarget,
           optionsSchema: SyncOptions,
-          auto: true,
+          auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
         },
       },
