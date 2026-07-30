@@ -20,7 +20,7 @@ export type UpdateSchedulerOptions = {
 const TIME_PERIOD = 1_000;
 
 /** A claimed run's error (or `undefined`). Resolves, never rejects — `runBlocking` re-throws it. */
-type RunResult = Promise<unknown>;
+type RunResult = Promise<Error | undefined>;
 
 /**
  * Runs a non-reentrant callback at most once at a time, coalescing triggers (optionally rate-limited
@@ -126,12 +126,14 @@ export class UpdateScheduler {
       this._lastUpdateTime = performance.now();
       const run: RunResult = this._callback().then(
         () => undefined,
-        (error): unknown => {
+        (error): Error => {
+          // A thrown non-Error is typed away here, matching `Context.raise`'s signature.
+          const failure = error as Error;
           // Unobserved failures go to the context, as trigger-path failures always have.
           if (this._observers === 0) {
-            this._ctx.raise(error as Error);
+            this._ctx.raise(failure);
           }
-          return error;
+          return failure;
         },
       );
       const task: Promise<void> = run.then(() => {
