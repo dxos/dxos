@@ -5155,6 +5155,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -8809,6 +8812,9 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.96.2(effect@3.21.4)
+      '@testing-library/react':
+        specifier: 'catalog:'
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@types/lodash.defaultsdeep':
         specifier: 'catalog:'
         version: 4.6.7

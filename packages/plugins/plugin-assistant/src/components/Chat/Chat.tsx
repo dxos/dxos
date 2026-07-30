@@ -392,6 +392,9 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
+        case 'rewind':
+          console.log('rewind', event);
+          break;
         case 'submit':
         case 'scroll-to-bottom':
           controllerRef.current?.scrollToBottom();
@@ -404,9 +407,6 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
           break;
         case 'error':
           setToastError(event.error);
-          break;
-        case 'rewind':
-          console.log('rewind', event);
           break;
         default:
           log.info('no handled', event);
