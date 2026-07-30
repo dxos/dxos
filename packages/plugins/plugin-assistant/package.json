@@ -24,7 +24,7 @@
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities/workerd.mjs",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {

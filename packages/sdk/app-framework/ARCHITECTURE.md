@@ -95,8 +95,8 @@ classDiagram
 
 ### The two-layer split
 
-The single most confusing pair is `Contribution` and `CapabilityEntry` (exported as
-`Capability.Any`). They are two layers, not two spellings:
+`Contribution` and `CapabilityEntry` (exported as `Capability.Any`) sit on either side of the
+registry boundary — the authoring layer and the storage layer:
 
 |              | `Contribution` (authoring)                                                                     | `Capability.Any` (registry)                  |
 | ------------ | ---------------------------------------------------------------------------------------------- | -------------------------------------------- |

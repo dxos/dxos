@@ -117,18 +117,29 @@ When the plugin takes options, `addModule` also accepts `(options) => module` an
 
 Three access paths, for three situations.
 
+**1. Inside a module body** — declared, type-checked, ordering-aware.
+
 ```ts
-// 1. Inside a module body — declared, type-checked, ordering-aware.
-const client = yield * ClientCapabilities.Client; // singleton → T
-const templates = yield * ProjectCapabilities.Template; // multi → Contributions<T>
+Effect.fnUntraced(function* () {
+  const client = yield* ClientCapabilities.Client; // singleton → T
+  const templates = yield* ProjectCapabilities.Template; // multi → Contributions<T>
+});
+```
 
-// 2. Outside a module (operations, callbacks, non-module code) — dynamic, string-keyed.
-const handlers = yield * Capability.getAll(Capabilities.OperationHandler);
-const maybe = yield * Capability.getOption(AppCapabilities.ProgressRegistry);
-const atom = yield * Capability.atom(Capabilities.ReactSurface); // reactive
-const later = yield * Capability.waitFor(ClientCapabilities.Client); // resolves when contributed
+**2. Outside a module** (operations, callbacks, non-module code) — dynamic, string-keyed.
 
-// 3. React.
+```ts
+Effect.gen(function* () {
+  const handlers = yield* Capability.getAll(Capabilities.OperationHandler);
+  const maybe = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
+  const surfaces = yield* Capability.atom(Capabilities.ReactSurface); // reactive
+  const client = yield* Capability.waitFor(ClientCapabilities.Client); // resolves when contributed
+});
+```
+
+**3. React.**
+
+```tsx
 const surfaces = useCapabilities(Capabilities.ReactSurface);
 const client = useCapability(ClientCapabilities.Client);
 ```
@@ -139,37 +150,53 @@ const client = useCapability(ClientCapabilities.Client);
 
 ---
 
-## The four `contribut*` names
+## Contributing values
 
-There is **no `Contributions` namespace**. There are four related names, and the overlap is the main
-source of confusion:
-
-| Name                                    | Kind     | What it is                                                                                                                                                                          |
-| --------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Capability.contribute(tag, value)`     | function | Produces **one** `Contribution` for one value.                                                                                                                                      |
-| `Capability.contributeAll(tag, values)` | function | Produces **one** `Contribution` carrying n values.                                                                                                                                  |
-| `Contribution`                          | type     | What `activate` returns: `{ capability, values, deactivate? }`, branded by capability identity so the completeness check can verify it covers `provides`.                           |
-| `Contributions<T>`                      | type     | The **live view** over everything contributed to a multi capability: `{ atom, get(), subscribe() }`. Obtained by `yield*`-ing a `MultiTag`, or via `Capability.contributions(tag)`. |
-
-So `Contribution` is what you **produce**; `Contributions` is what you **read**.
-
-### Why `Contributions` has to exist
-
-A multi capability has no single value, and its membership changes over time as plugins are enabled
-and disabled. So `yield*` on a `MultiTag` cannot hand you `T` — there isn't one — and must not hand
-you a plain `T[]`, because that snapshot silently goes stale the moment another plugin contributes.
-It hands you a live view instead:
+A module returns its contributions from `activate`. `contribute` carries one value, `contributeAll`
+carries several for the same capability; both produce a single `Contribution`.
 
 ```ts
-const templates = yield* ProjectCapabilities.Template; // Contributions<Template>
-templates.get(); // snapshot now
-templates.subscribe((values) => ...); // notified on change
-templates.atom; // for Atom-based composition
+return [
+  Capability.contribute(Capabilities.ReactSurface, surface),
+  Capability.contributeAll(Capabilities.LayerSpec, [clientSpec, databaseSpec]),
+];
 ```
 
-This is the framework's most common latent bug: taking a one-shot snapshot of a multi capability and
-never seeing later contributions. `Contributions` exists to make the live/stale distinction explicit
-at the type level rather than by convention.
+A module providing exactly one capability may return the `Contribution` directly, without the array.
+An optional third argument is a `deactivate` hook, run once when the module is deactivated.
+
+The return is checked against the module's declared `provides`: omitting a declared capability is a
+type error, and contributing an undeclared one fails at runtime.
+
+## Reading a multi capability
+
+A multi capability has no single value, and its membership changes as plugins are enabled and
+disabled. Reading one therefore gives a live `Contributions<T>` view rather than an array:
+
+```ts
+Effect.fnUntraced(function* () {
+  const templates = yield* ProjectCapabilities.Template; // Contributions<Template>
+
+  templates.get(); // readonly Template[] — snapshot as of now
+  templates.subscribe((values) => setTemplates(values)); // → unsubscribe
+  templates.atom; // Atom<Template[]> for Atom-based composition
+});
+```
+
+`get()` is a point-in-time snapshot: hold onto it and it will not reflect capabilities contributed
+later. Consume the collection reactively — via `subscribe`, `atom`, or the React hooks — unless the
+value is used immediately and discarded.
+
+### `Contribution` vs `Contributions`
+
+Two types one letter apart, on either side of the registry:
+
+|             | `Contribution`                            | `Contributions<T>`                                           |
+| ----------- | ----------------------------------------- | ------------------------------------------------------------ |
+| Direction   | what a module **produces**                | what a consumer **reads**                                    |
+| Produced by | `Capability.contribute` / `contributeAll` | `yield*` on a `MultiTag`, or `Capability.contributions(tag)` |
+| Shape       | `{ capability, values, deactivate? }`     | `{ atom, get(), subscribe() }`                               |
+| Scope       | one module's values for one capability    | every module's values for one capability                     |
 
 ---
 
