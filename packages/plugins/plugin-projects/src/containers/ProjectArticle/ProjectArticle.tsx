@@ -198,17 +198,17 @@ type ObjectGalleryProps = {
  */
 const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
   // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`
-  // synchronously would leave the gallery permanently empty.
-  // `useObjects` is the resolution trigger; the live entities are re-read from `.target` because the
-  // card needs the object, not a snapshot.
+  // synchronously would leave the gallery permanently empty. The card needs the live entity, so
+  // unwrap each loaded snapshot rather than re-reading `.target` — the refs come off a snapshot of
+  // the project, which carries no resolver, so `.target` is undefined there even once loaded.
   const loaded = useObjects(refs);
   const items = useMemo<ObjectTileData[]>(
     () =>
-      refs
-        .map((ref) => ref.target)
+      loaded
+        .map((snapshot) => Obj.getReactiveOrUndefined(snapshot))
         .filter((object): object is Obj.Unknown => !!object)
         .map((object) => ({ object, onClick: () => onOpen(object), onDelete: () => onDelete(object) })),
-    [refs, loaded, onOpen, onDelete],
+    [loaded, onOpen, onDelete],
   );
 
   if (items.length === 0) {

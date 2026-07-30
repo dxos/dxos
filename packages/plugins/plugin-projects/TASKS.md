@@ -270,18 +270,26 @@ summaries), and the `stories-projects` storybook strategy.
       routine template (`spec: runnable` → `InboxOperation.AnalyzeMailbox`, timer trigger, mailbox
       ref baked into `trigger.input`) + brain/inbox skills for chats; `FactSummaries.stories.tsx`
       green (live loop = numbered manual steps on the story).
-- [ ] **Stories do no processing** — the three `stories-projects` stories scaffold a project from a
-      template and render its article; nothing runs. No AiService in the harness (mock or ollama), no
-      messages seeded, every scaffolded trigger `enabled: false`. To exercise the loop: a mock
-      AiService + seeded messages + enabled trigger for a CI play test, and/or an ollama-backed
-      `*Live` variant (`tags: ['!test']`) — `AnalyzeMailbox` is the best candidate, being
-      deterministic apart from the extraction model. Blocked behind the table-tool decision below for
-      UC-A.
-- [ ] **Routines gallery empty in the story harness** — `ObjectGallery` renders nothing for
-      `project.routines` under `ModuleContainer`; it DID render pre-refactor (card + trigger summary +
-      ⋮ menu). The template links the routine (asserted by its unit test) and the Routines section
-      header renders, so it is the masonry/ref-resolution path inside the grid cell, not the data.
-      Story assertions skip the card until diagnosed.
+- [x] **Stories can process (UC-C)** — the harness gained `messages` (seeded into the mailbox feed
+      via the inbox `Builder`), `ai: 'mock' | 'ollama'` (an `AiService` LayerSpec on space affinity,
+      matching how the app provisions it), and the missing `Feed`/`Message`/`Person`/`Organization`
+      type registrations. `FactSummaries` now has a `Live` variant (`!test`) that puts the mailbox
+      article beside the project so plugin-brain's own `Analyze` action drives extraction.
+      VERIFIED LIVE against ollama 2026-07-29: 12 seeded messages → `analyze: extracted unit` ×N →
+      `analyze: committed page` → `analyze: pipeline done` → `mailbox action complete`. The CI
+      variants stay scaffold-only — seeding mail alone exceeds the 15s play-test budget.
+- [ ] **UC-A/UC-B still do not process** — both need a model to produce their artifacts, and UC-A is
+      additionally blocked by the table-tool gap below (the table skill has no tools). Once that is
+      resolved, give each a `Live` variant on the same harness options.
+- [ ] **Routines gallery renders no DOM (Masonry, not data)** — DIAGNOSED 2026-07-29 by probing
+      `ObjectGallery` in the browser: the data path is fine (`refs: 1, loaded: 1, items: 1`,
+      snapshots unwrap to live entities), yet no `.dx-card` and no masonry element reach the DOM.
+      The Routines `Form.Section` and its ancestors measure **width 0** inside the
+      `[grid-column:var(--dx-col,auto)]` form-content container (height 5006), so `Masonry`, which
+      lays out from measured width, emits nothing. Not a harness fault and not ref resolution —
+      it is `Masonry` inside `Form.Section`. Next: either give the gallery an explicit width/measure
+      fallback or drop Masonry for a plain grid in this surface. NOTE the same collapse would hit
+      the app in any narrow/zero-measure container. Story assertions skip the card meanwhile.
 - [ ] **Evals** — `sender-ledger.eval.ts` RUN LIVE 2026-07-29 (key via `op inject` from the user's
       `~/.env.tpl`; smoke 100% first) and it FAILED — a real finding, not eval noise: the agent's
       own completeJob failure says "Cannot create the Sender Ledger table with available tools".
