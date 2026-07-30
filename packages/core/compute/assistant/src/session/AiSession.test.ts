@@ -108,4 +108,47 @@ describe('AiSession.Session.getHistory', () => {
       expect(result.map((msg) => msg.id)).toEqual([forkMsg.id]);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  // Soft fork: the continuation names an earlier message as its lineage parent, so everything appended
+  // between the two is unreachable and must not reach the model.
+  it.effect('excludes turns a soft fork left unreachable', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const feed = db.add(Feed.make());
+
+      const prompt1 = makeMessage('first question');
+      const answer1 = makeMessage('first answer', 'assistant');
+      const prompt2 = makeMessage('abandoned question');
+      const answer2 = makeMessage('abandoned answer', 'assistant');
+      yield* Feed.append(feed, [prompt1, answer1, prompt2, answer2]);
+
+      // Continue from the first answer rather than the tip.
+      const retry = makeMessage('better question');
+      yield* Feed.append(feed, [retry], { parent: answer1 });
+
+      const runtime = yield* Effect.runtime<Database.Service>();
+      const session = new AiSession.Session({ feed, runtime });
+
+      const result = yield* Effect.promise(() => session.getHistory());
+
+      expect(result.map((msg) => msg.id)).toEqual([prompt1.id, answer1.id, retry.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('returns the whole feed when nothing has been forked', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const feed = db.add(Feed.make());
+
+      const messages = [makeMessage('one'), makeMessage('two', 'assistant'), makeMessage('three')];
+      yield* Feed.append(feed, messages);
+
+      const runtime = yield* Effect.runtime<Database.Service>();
+      const session = new AiSession.Session({ feed, runtime });
+
+      const result = yield* Effect.promise(() => session.getHistory());
+
+      expect(result.map((msg) => msg.id)).toEqual(messages.map((msg) => msg.id));
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });

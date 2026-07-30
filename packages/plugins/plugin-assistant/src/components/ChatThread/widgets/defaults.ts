@@ -9,6 +9,6 @@ export const styles = {
    * the error accumulates down the document until the turn-fold gutter markers are visibly misaligned.
    * Note padding does not collapse between adjacent siblings the way margins do
    */
-  padding: 'py-1.5',
+  padding: 'pt-2 pb-4',
   border: 'border border-subdued-separator rounded-sm',
 };

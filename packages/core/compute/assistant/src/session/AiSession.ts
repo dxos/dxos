@@ -10,6 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
@@ -20,6 +21,7 @@ import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
+import { FeedProtocol } from '@dxos/protocols';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
@@ -110,11 +112,19 @@ export class Session extends Resource {
     return this._binder;
   }
 
+  /**
+   * The conversation as the model should see it: only the messages reachable from the feed's current
+   * head, so a soft fork's abandoned turns are excluded.
+   */
   public async getHistory(): Promise<Message.Message[]> {
     const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
     const items = await queryResult.run();
     const messages = items.filter(Obj.instanceOf(Message.Message));
-    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, messages));
+
+    // `Feed.history` walks lineage positionally, so it needs append order — not `created`, which is a
+    // wall clock that peers do not agree on.
+    const { items: reachable } = Feed.history(Array.sort(messages, byFeedPosition));
+    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, reachable));
   }
 
   getTools(): Effect.Effect<
@@ -304,4 +314,20 @@ const connectMcpServers = (
     ),
     Effect.map(Array.filterMap((_) => Either.getRight(_))),
   );
+};
+
+/**
+ * Orders feed items by the position the server assigned them. Unpositioned blocks (written locally and
+ * not yet acknowledged) sort last, which is what we want: a message just written is the newest.
+ */
+const byFeedPosition = Order.make<Message.Message>((a, b) => {
+  const positionA = feedPosition(a);
+  const positionB = feedPosition(b);
+  return positionA === positionB ? 0 : positionA < positionB ? -1 : 1;
+});
+
+const feedPosition = (message: Message.Message): number => {
+  const key = Obj.getKeys(message, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
+  const position = key !== undefined ? Number(key) : Number.NaN;
+  return Number.isNaN(position) ? Number.POSITIVE_INFINITY : position;
 };
