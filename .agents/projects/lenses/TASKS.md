@@ -349,11 +349,17 @@ Only a genuine conflict (two peers writing incompatible values for the same fiel
 
 Each phase is measured against that bar, and each says honestly where it does not meet it yet.
 
-### Phase M0 — proof of concept: can a late old-schema write be folded forward?
+### Phase M0 — research: can late old-schema changes be folded forward?
 
-Standalone, no API changes, no integration. Answers the question the other two phases are betting on;
-if the answer is no, M2 changes shape and we find out for the price of a spike. DESIGN.md §10.3 has
-the mechanism; these are its falsifiable claims in kill order.
+Standalone, no API changes, no integration — and **the only phase startable today** (M1 gates on
+Phase 5; M2 gates on this). Honesty note from review: at twelve claims this is no longer "a spike"
+but a research phase, and it splits into two tracks with different costs. **Track A — fold-forward
+core** (claims 1-5, 12) needs only the harness below; run it first, in kill order **1, 2, 12, 5**,
+then 3-4 — claim 12 jumps ahead of the cheap ones because it is the likeliest bar-breaker, and
+claim 5's answer is already known to require app-level machinery (see its text). **Track B — entity
+lifecycle** (claims 6-11) needs scaffolding (a derived-id helper, a fan-out runner sketch) and can
+overlap M1. Claim numbers are referenced from M1/M2 — grouped, not renumbered. DESIGN.md §10.3 has
+the mechanism.
 
 - [ ] **Harness** — two peers, one object, a lens migration `A → B`. Peer 1 migrates while peer 2 is
       partitioned; peer 2 writes the old shape; reconnect. Extends the existing two-peer setup in
@@ -372,9 +378,13 @@ the mechanism; these are its falsifiable claims in kill order.
       assume it.
 - [ ] **Claim 4 · chains.** Object migrated `A → B → C`, late write arrives in shape `A`. Does lens
       composition fold it all the way, and is the composition still idempotent?
-- [ ] **Claim 5 · genuine conflicts surface as conflicts.** A folded-forward value and a
-      directly-written value both target the same property. The result must be an ordinary visible
-      CRDT conflict, not a silent overwrite in either direction.
+- [ ] **Claim 5 · genuine conflicts surface — but NOT as CRDT conflicts.** Premise corrected in
+      review: when the mapping renames, the late write and the direct write hit _different keys_
+      (`title` vs `name` — only the lens knows they correspond), and the fold is causally downstream
+      of the direct write it just merged, so Automerge sees plain sequential overwrites and its
+      conflict machinery never engages. The fold must detect the semantic conflict itself (target
+      property changed since the migration heads) and record it at the application level instead of
+      overwriting. Verify the detection, and that neither side is silently lost.
 - [ ] **Claim 6 · fan-out — is a derived id enough?** Split one object into two (or into an object
       plus a relation) on two peers independently. Derived ids (`hash(sourceId, role)`) should make
       them converge on one object and make re-running idempotent. `MigrationBuilder.addObject` mints a
@@ -414,7 +424,8 @@ the mechanism; these are its falsifiable claims in kill order.
 
 Small, shippable, and **does not meet the bar yet** — that is deliberate and must be documented, not
 glossed. Scope is the migrations we already support: one object, one type, in place. Gated on the
-lens landing in core (Phase 5).
+lens landing in core (Phase 5), **not on M0** — the two run in parallel; the one coupling is the
+heads format (below).
 
 - [ ] **`Migration.fromLens(L)`** — the migration's `transform` is `Lens.get`. `Migration.define`
       with a hand-written `transform` stays for what a mapping cannot express.
@@ -424,15 +435,26 @@ lens landing in core (Phase 5).
       in the phase: it stops a migration clobbering a concurrent edit to a property it never meant to
       touch, and it is the prerequisite for M2's fold-forward.
 - [ ] **Verify before running** — `checkLaws` over generated instances of the source type.
+- [ ] **Decide deletion here, not in M2: keep the source properties.** Found in review — minimal
+      writes force the choice M2 was assumed to own. `atomicReplaceObject` dropped old properties
+      implicitly; a minimal-write migration must either delete them explicitly or leave them. Leave
+      them: they are what fold-forward (M2) folds, and deleting forfeits the bar before the research
+      has run. Cost, owned knowingly: the object carries both shapes until compaction, and an old
+      client keeps writing the old property with nothing folding it yet — that drift joins the
+      residual-loss list below.
 - [ ] **Per-object version stamping.** `EntityMeta.version` already exists and `transform` can
       already patch it atomically with the data. Moving off the single space-level
       `MigrationVersionAnnotation` scalar makes migration incremental, resumable and convergent, and
       makes "what is left to migrate" a query rather than a guess.
 - [ ] **Record the migration's heads** on the object even though nothing reads them yet — M2 needs
-      them, and objects migrated before M2 ships would otherwise be permanently unrecoverable.
+      them, and objects migrated before M2 ships would otherwise be permanently unrecoverable. The
+      one real M0 coupling: if claim 2 finds epochs/compaction invalidate raw heads, record whatever
+      it finds durable instead (heads plus an epoch marker, or a snapshot of the source properties)
+      — recording heads that a later epoch turns into noise would only look like safety.
 - [ ] **Document the residual loss explicitly.** After this phase: a late write under the old schema
-      is still lost, and effectful `onMigration` still runs more than once. Say so in the API docs
-      rather than letting it be discovered.
+      is still lost; with source properties kept, old and new copies of a renamed field drift with no
+      authority rule until M2 folds; and effectful `onMigration` still runs more than once. Say so in
+      the API docs rather than letting it be discovered.
 
 ### Phase M2 — integrate the research: lossless, cross-object, fan-out, convergent
 
@@ -475,6 +497,10 @@ The full thing. Only starts once M0 has answered its claims; its shape depends o
 - [ ] **Strategy D** — epochs demoted to compaction; correctness never depends on one. Must preserve
       whatever fold-forward needs (M0 claim 2).
 - [ ] **Retire `onMigration`** for anything but declared effects.
+- [ ] **The fold-forward trigger and its cost** (§10.7 q6) — "re-applied whenever old-shaped data
+      appears" needs a concrete hook: a doc-change listener, the indexer, or query time. Each taxes a
+      different hot path on every change to every object of a migrated type. Price it before
+      committing to the standing-rule model.
 - [ ] **Fold-forward window policy** (§10.7 q2) — how long migration heads and un-deleted old
       properties are kept, given a peer could always have been offline longer.
 

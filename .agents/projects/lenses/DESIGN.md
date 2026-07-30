@@ -558,9 +558,12 @@ knows only the old type and writes it directly. Fold-forward is for that case.
 **Falsifiable claims for the proof of concept**, in the order they would kill the idea:
 
 1. **Does the late write survive at all?** If the migration deletes old properties, does a
-   concurrent/later write to a deleted key survive the merge, or does the delete win? If deletes win,
-   migrations must not delete — old properties stay until a separate, later compaction, and that is a
-   design constraint, not a detail.
+   concurrent/later write to a deleted key survive the merge, or does the delete win? Expected
+   answer: it survives — an Automerge delete supersedes only ops it causally saw, and the partitioned
+   peer's write is concurrent with it (a synced-but-old-code client's write is causally _after_ and
+   plainly re-adds the key). Verify rather than trust; if deletes win anywhere, migrations must not
+   delete — old properties stay until a separate, later compaction — and that is a design
+   constraint, not a detail.
 2. **Can late writes be distinguished from consumed ones?** Does `A.diff` from stored migration heads
    give a clean answer per property, through our document structure and across a doc that has since
    been compacted or re-rooted by an epoch? Epoch/compaction rewriting history is the likeliest way
@@ -571,8 +574,15 @@ knows only the old type and writes it directly. Fold-forward is for that case.
 4. **What happens on a chain?** Object migrated A→B→C; a late write arrives in shape A. Does
    composing lenses fold it all the way forward, and is the composition still idempotent?
 5. **Where does a genuine conflict surface?** A folded-forward value and a directly-written value
-   both target `name`. The result must be an ordinary CRDT conflict a user can see and resolve — not
-   a silent overwrite in either direction.
+   both end up in `name` — and, correction from review, **Automerge cannot surface this one**.
+   When the mapping renames, the two writes hit _different keys_ (`title` vs `name`; only the lens
+   knows they correspond), and the fold itself is causally downstream of the direct write it just
+   merged — so at the key level everything is a plain sequential overwrite, and the CRDT's conflict
+   machinery (which fires only for concurrent ops on one key) never engages. Only same-name mappings
+   degrade to an ordinary CRDT conflict. So the fold must detect the semantic conflict itself —
+   target property changed since the migration heads — and record it at the application level (an
+   annotation) instead of overwriting either side. The claim to verify is that detection, and that
+   neither side is silently lost.
 6. **Can a late _entity_ be folded forward, not just a late property?** An offline peer on the old
    schema creates a child object after a fan-in absorbed the last one (§10.5). Nothing else in this
    list requires the mechanism to notice a new entity rather than a changed property, and it is the
@@ -810,7 +820,10 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
    the event that moves it. These must be designed together.
 5. **Validation on the way through.** A `put` validates against the base type; during a migration the
    base type is what is changing.
-6. **Does branching subsume the overlay here?** `createBranch`/`mergeBranch` already gives same-id
+6. **What runs fold-forward, and what does it cost?** "Re-applied whenever old-shaped data
+   appears" needs a concrete hook — a doc-change listener, the indexer, or query time — and every
+   choice taxes a hot path on each change to each object of a migrated type. Unpriced so far.
+7. **Does branching subsume the overlay here?** `createBranch`/`mergeBranch` already gives same-id
    alternate timelines with CRDT merge-back — close to Jazz's per-schema-hash branches. Possibly a
    better home for in-flight migration state than the overlay.
 
