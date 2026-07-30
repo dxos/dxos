@@ -13,6 +13,7 @@ import { Path } from '@dxos/react-ui-list';
 
 import { NavTreeCapabilities } from '#types';
 
+import { activeIdentities, isPathCurrent } from './active-planks';
 import { navTreeOpenAspect } from './nav-tree-view-state';
 
 /** Default `open` value for new entries; `current` is derived from the layout when the entry is created. */
@@ -34,15 +35,17 @@ export default Capability.makeModule(
     // Persistence backend for per-path expansion (`open`); replaces the hand-rolled localStorage blob.
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
 
-    // Mirror of the layout's active planks. An item registers its path only on its first render, which
-    // can happen long after the layout change that made it current, so entries derive `current` from
-    // this at creation time rather than waiting for the next layout notification.
-    let activeIds: readonly string[] = registry.get(layoutAtom).active;
+    let activeKeys: ReadonlySet<string> = activeIdentities(registry.get(layoutAtom).active);
+    const isCurrent = (pathString: string): boolean => isPathCurrent(activeKeys, pathString);
 
-    /** Item state for a path not seen before: `current` follows the layout, `open` starts closed. */
+    /**
+     * Item state for a path not seen before: `current` follows the layout, `open` starts closed. An
+     * item registers its path only on its first render, which can happen long after the layout change
+     * that made it current, so it seeds from the mirror rather than awaiting the next notification.
+     */
     const initialItemState = (pathString: string): NavTreeCapabilities.NavTreeItemState => ({
       open: defaultOpen,
-      current: activeIds.includes(Path.last(pathString)),
+      current: isCurrent(pathString),
     });
 
     // Backing state (not reactive), seeded from the persisted `open` values; `current` is ephemeral.
@@ -55,7 +58,7 @@ export default Capability.makeModule(
               pathString,
               {
                 open: viewState.get(navTreeOpenAspect, pathString).open,
-                current: activeIds.includes(Path.last(pathString)),
+                current: isCurrent(pathString),
               },
             ]),
           );
@@ -98,30 +101,22 @@ export default Capability.makeModule(
 
     // Subscribe to layout changes to update current state.
     const unsubscribe = registry.subscribe(layoutAtom, (layout) => {
-      const removed = activeIds.filter((id) => !layout.active.includes(id));
-      activeIds = layout.active;
+      activeKeys = activeIdentities(layout.active);
 
       const handleUpdate = () => {
-        // Mark removed items as not current.
-        removed.forEach((id) => {
-          const keys = Array.from(backingState.keys()).filter((key) => Path.last(key) === id);
-          keys.forEach((key) => {
-            setItem(Path.parts(key), 'current', false);
-          });
-        });
-
-        // Mark active items as current.
-        layout.active.forEach((id: string) => {
-          const keys = Array.from(new Set([...backingState.keys(), id])).filter((key) => Path.last(key) === id);
-          keys.forEach((key) => {
-            setItem(Path.parts(key), 'current', true);
-          });
-        });
+        // Snapshot the paths first: `setItem` writes back into `backingState`.
+        for (const pathString of Array.from(backingState.keys())) {
+          const path = Path.parts(pathString);
+          const next = isCurrent(pathString);
+          if (getItem(path).current !== next) {
+            setItem(path, 'current', next);
+          }
+        }
       };
 
       // Deferred only far enough to leave the layout notification (writing item atoms synchronously here
       // would set state during the tree's render pass). Items whose path is not registered yet no longer
-      // need waiting out — they seed `current` from `activeIds` when they register.
+      // need waiting out — they seed `current` from the mirror when they register.
       queueMicrotask(handleUpdate);
     });
 

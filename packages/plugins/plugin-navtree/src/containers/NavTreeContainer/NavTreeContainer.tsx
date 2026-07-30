@@ -8,7 +8,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
@@ -149,10 +149,17 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
             disposition: 'solo',
             modifiers: { shift },
           });
-        } else if (option) {
-          void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {
-          void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id });
+          // An item reads as current whenever a plank addresses the same object, which need not be by
+          // this node's path (card navigation opens the hidden database path), so close/scroll target
+          // the plank that holds it.
+          const identity = GraphPath.getIdentityKey(node.id);
+          const activeId = layout.active.find((id) => GraphPath.getIdentityKey(id) === identity) ?? node.id;
+          if (option) {
+            void invokePromise(LayoutOperation.Close, { subject: [activeId] });
+          } else {
+            void invokePromise(LayoutOperation.ScrollIntoView, { subject: activeId });
+          }
         }
 
         const defaultAction = Graph.getActions(graph, node.id).find((action) => Node.hasDisposition(action, 'default'));
@@ -164,7 +171,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, getItem, runAction, isLg],
+      [graph, invokePromise, getItem, runAction, isLg, layout.active],
     );
 
     const handleBack = useCallback(() => void invokePromise(LayoutOperation.RevertWorkspace), [invokePromise]);

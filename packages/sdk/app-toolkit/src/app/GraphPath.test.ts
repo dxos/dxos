@@ -81,4 +81,28 @@ describe('GraphPath', () => {
       expect(Option.isNone(GraphPath.tryGetEid(graph, path))).toBe(true);
     });
   });
+
+  describe('getIdentityKey', () => {
+    const spaceId = Key.SpaceId.random();
+    const objectId = Key.EntityId.random();
+
+    test('paths reaching the same object through different subgraphs share a key', ({ expect }) => {
+      const databasePath = GraphPath.getObjectPath(spaceId, 'test.document', objectId);
+      const collectionPath = GraphPath.getCollectionsPath(spaceId, Key.EntityId.random(), objectId);
+      expect(GraphPath.getIdentityKey(databasePath)).toBe(EID.make({ spaceId, entityId: objectId }));
+      expect(GraphPath.getIdentityKey(collectionPath)).toBe(GraphPath.getIdentityKey(databasePath));
+    });
+
+    test('the same object id in another space does not', ({ expect }) => {
+      const path = GraphPath.getObjectPath(spaceId, 'test.document', objectId);
+      const other = GraphPath.getObjectPath(Key.SpaceId.random(), 'test.document', objectId);
+      expect(GraphPath.getIdentityKey(path)).not.toBe(GraphPath.getIdentityKey(other));
+    });
+
+    test('a path naming no object is its own key', ({ expect }) => {
+      expect(GraphPath.getIdentityKey(GraphPath.getSpacePath(spaceId))).toBe(`root/${spaceId}`);
+      expect(GraphPath.getIdentityKey('root')).toBe('root');
+      expect(GraphPath.getIdentityKey(GraphPath.getPinnedWorkspacePath('dxos:settings'))).toBe('root/!dxos:settings');
+    });
+  });
 });

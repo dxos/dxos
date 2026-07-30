@@ -160,23 +160,40 @@ export const getCollectionObjectPath = (collectionQualifiedId: string, objectId:
 /**
  * Structurally parse a qualified graph path into an ECHO EID: the SpaceId segment plus the trailing
  * EntityId-valid segment, regardless of what lies between them (a canonical database path, a
- * collection path, a custom type-section path, …). Lives in app-toolkit so this parsing has no plugin
- * dependency — used by `NotFound.validateNavigationTarget` and `plugin-deck`'s DXN dedup. `graph` gates
- * the result on the
- * path's workspace actually being a known node, so an arbitrary SpaceId-shaped substring in an
- * unrelated string can't be mistaken for a valid target.
+ * collection path, a custom type-section path, …). Ungated — see {@link tryGetEid} for the variant
+ * that also requires the path's workspace to be a known graph node.
  */
-export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Option.Option<EID.EID> => {
+export const tryGetEidFromPath = (qualifiedId: string): Option.Option<EID.EID> => {
   const spaceId = getSpaceIdFromPath(qualifiedId);
   const segments = qualifiedId.split('/');
   const objectId = segments[segments.length - 1];
   if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
     return Option.none();
   }
-  if (Option.isNone(Graph.getNode(graph, getSpacePath(spaceId)))) {
+  return Option.some(EID.make({ spaceId, entityId: objectId }));
+};
+
+/**
+ * Identity of whatever a qualified graph path addresses, for comparing paths that reach the same
+ * thing through different subgraphs — the same object is a child of a collection, of its type
+ * section, and of the hidden database subtree that card navigation opens. The object's EID when the
+ * path names one, else the path itself (structural nodes are their own identity).
+ */
+export const getIdentityKey = (qualifiedId: string): string =>
+  Option.getOrElse(tryGetEidFromPath(qualifiedId), () => qualifiedId);
+
+/**
+ * {@link tryGetEidFromPath} gated on the path's workspace actually being a known graph node, so an
+ * arbitrary SpaceId-shaped substring in an unrelated string can't be mistaken for a valid target.
+ * Lives in app-toolkit so this parsing has no plugin dependency — used by
+ * `NotFound.validateNavigationTarget` and `plugin-deck`'s DXN dedup.
+ */
+export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Option.Option<EID.EID> => {
+  const spaceId = getSpaceIdFromPath(qualifiedId);
+  if (!spaceId || Option.isNone(Graph.getNode(graph, getSpacePath(spaceId)))) {
     return Option.none();
   }
-  return Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId }));
+  return tryGetEidFromPath(qualifiedId);
 };
 
 /**
