@@ -210,6 +210,8 @@ export const EditorMenuProvider = ({
                 classNames='shrink-0 mbe-1'
                 value={query}
                 placeholder={searchPlaceholder}
+                // Placeholder text is not a persistent accessible name.
+                aria-label={searchPlaceholder}
                 onChange={(event) => onQueryChange?.(event.target.value)}
                 onKeyDown={handleSearchKeyDown}
               />

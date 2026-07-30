@@ -196,6 +196,11 @@ export const useEditorMenu = ({
         direction === 'up'
           ? getPreviousMenuItem(groupsRef.current, currentItem)
           : getNextMenuItem(groupsRef.current, currentItem);
+      // A query that matches nothing leaves an empty menu; arrow keys then have nowhere to go.
+      if (!next) {
+        return currentItem;
+      }
+
       currentRef.current = next;
       return next.id;
     });

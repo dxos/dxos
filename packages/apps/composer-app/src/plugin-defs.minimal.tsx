@@ -5,6 +5,7 @@
 import { type Plugin } from '@dxos/app-framework';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
+import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
@@ -13,6 +14,7 @@ import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
 import { ReviewPlugin } from '@dxos/plugin-review/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
+import { isTruthy } from '@dxos/util';
 
 import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
 
@@ -42,11 +44,16 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
 /**
  * Plugin keys enabled by default for new users of the minimal set.
  */
-export const getDefaults = (_: PluginConfig): string[] => [
-  AssistantPlugin.meta.profile.key,
-  MarkdownPlugin.meta.profile.key,
-  OutlinerPlugin.meta.profile.key,
-  ProjectsPlugin.meta.profile.key,
-  ReviewPlugin.meta.profile.key,
-  RoutinePlugin.meta.profile.key,
-];
+export const getDefaults = ({ isDev }: PluginConfig): string[] =>
+  [
+    isDev && [DebugPlugin.meta.profile.key, DevtoolsPlugin.meta.profile.key],
+
+    AssistantPlugin.meta.profile.key,
+    MarkdownPlugin.meta.profile.key,
+    OutlinerPlugin.meta.profile.key,
+    ProjectsPlugin.meta.profile.key,
+    ReviewPlugin.meta.profile.key,
+    RoutinePlugin.meta.profile.key,
+  ]
+    .filter(isTruthy)
+    .flat();

@@ -10,6 +10,7 @@ import { Graph } from '@dxos/plugin-graph';
 export type DebugGraphProps = { graph: Graph.Graph; root: string };
 
 export const DebugGraph = ({ graph, root }: DebugGraphProps) => {
+  console.log('!!!');
   return <Tree data={Graph.toJSON(graph, root)} />;
 };
 

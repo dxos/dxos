@@ -29,11 +29,15 @@ const getLabel = (object: Obj.Unknown): Label => {
   return Obj.getLabel(object) ?? placeholder;
 };
 
+// Object names are free text, so an unescaped "]" or newline would terminate the link syntax early
+// and persist a broken link into the document.
+const escapeLinkLabel = (label: string): string => label.replace(/[[\]]/g, '\\$&').replace(/\s*\r?\n\s*/g, ' ');
+
 /**
  * Insert a link to `object`; "@@" (block mode) puts a block embed on its own line.
  */
 const insertLink = (view: EditorView, head: number, label: string, uri: string, block: boolean): void => {
-  const link = `[${label}](${uri})`;
+  const link = `[${escapeLinkLabel(label)}](${uri})`;
   if (block) {
     insertAtLineStart(view, head, `!${link}\n`);
   } else {
