@@ -44,14 +44,7 @@ describe('Chat', () => {
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through CompanionTo, never a field —
         // that field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.Chat.fields).sort()).toEqual([
-          'feed',
-          'forkPoint',
-          'instructions',
-          'name',
-          'plan',
-          'viewType',
-        ]);
+        expect(Object.keys(Chat.Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'plan', 'viewType']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -166,26 +159,27 @@ describe('Chat', () => {
     );
 
     it.effect(
-      'a fork point round-trips on the chat',
+      'a fork point round-trips on the feed',
       Effect.fnUntraced(
         function* (_) {
           const chat = yield* makeChat;
-          expect(chat.forkPoint).toBeUndefined();
+          const feed = yield* Database.load(chat.feed);
+          expect(feed.forkPoint).toBeUndefined();
 
-          // Durable rather than UI state: the agent appends the continuation out-of-process, so the
-          // pending fork point has to outlive the component that recorded it.
+          // On the feed, not the chat: the agent appends the continuation out-of-process and resolves
+          // the feed, never the chat, so this is the only place both sides can see it.
           const messageId = EntityId.random();
-          Obj.update(chat, (chat) => {
-            chat.forkPoint = messageId;
+          Obj.update(feed, (feed) => {
+            feed.forkPoint = messageId;
           });
           yield* Database.flush();
-          expect(chat.forkPoint).toBe(messageId);
+          expect(feed.forkPoint).toBe(messageId);
 
-          Obj.update(chat, (chat) => {
-            chat.forkPoint = undefined;
+          Obj.update(feed, (feed) => {
+            feed.forkPoint = undefined;
           });
           yield* Database.flush();
-          expect(chat.forkPoint).toBeUndefined();
+          expect(feed.forkPoint).toBeUndefined();
         },
         Effect.provide(TestLayer),
         TestHelpers.provideTestContext,

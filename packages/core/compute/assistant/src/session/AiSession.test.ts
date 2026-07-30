@@ -152,3 +152,83 @@ describe('AiSession.Session.getHistory', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 });
+
+//
+// Fork point (soft fork write side).
+//
+// The rewind decision is made in the UI but the continuation is appended by the agent's process, which
+// resolves the feed and never sees the chat. The feed carries the pending intent; the session consumes it
+// on the turn's first message, turning the fork into lineage.
+//
+
+describe('AiSession.Session fork point', () => {
+  const TestLayer = TestDatabaseLayer({ types: [Feed.Feed, Message.Message, SessionLink.SessionLink] });
+
+  it.effect("applies the feed's fork point to the turn's first message", () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const feed = db.add(Feed.make());
+
+      const first = makeMessage('first');
+      const answer = makeMessage('answer', 'assistant');
+      const abandoned = makeMessage('abandoned');
+      yield* Feed.append(feed, [first, answer, abandoned]);
+
+      Obj.update(feed, (feed) => {
+        feed.forkPoint = answer.id;
+      });
+
+      const runtime = yield* Effect.runtime<Database.Service>();
+      const session = new AiSession.Session({ feed, runtime });
+
+      // Stand in for the request loop: `onOutput` is the single funnel every persisted message passes
+      // through, and the retry is this turn's first.
+      const retry = makeMessage('retry');
+      yield* Effect.promise(() => session.appendTurnMessage(retry));
+
+      expect(Feed.getParent(retry)).toBe(answer.id);
+      // Consumed: a second message in the same turn chains implicitly, not onto the fork point again.
+      expect(feed.forkPoint).toBeUndefined();
+
+      const followUp = makeMessage('follow up', 'assistant');
+      yield* Effect.promise(() => session.appendTurnMessage(followUp));
+      expect(Feed.getParent(followUp)).toBeUndefined();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('leaves messages unparented when no fork is pending', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const feed = db.add(Feed.make());
+      const runtime = yield* Effect.runtime<Database.Service>();
+      const session = new AiSession.Session({ feed, runtime });
+
+      const message = makeMessage('plain');
+      yield* Effect.promise(() => session.appendTurnMessage(message));
+      expect(Feed.getParent(message)).toBeUndefined();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('the resolved history follows the fork once the continuation lands', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const feed = db.add(Feed.make());
+
+      const first = makeMessage('first');
+      const answer = makeMessage('answer', 'assistant');
+      const abandoned = makeMessage('abandoned');
+      yield* Feed.append(feed, [first, answer, abandoned]);
+      Obj.update(feed, (feed) => {
+        feed.forkPoint = answer.id;
+      });
+
+      const runtime = yield* Effect.runtime<Database.Service>();
+      const session = new AiSession.Session({ feed, runtime });
+      const retry = makeMessage('retry');
+      yield* Effect.promise(() => session.appendTurnMessage(retry));
+
+      const history = yield* Effect.promise(() => session.getHistory());
+      expect(history.map((message) => message.id)).toEqual([first.id, answer.id, retry.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});

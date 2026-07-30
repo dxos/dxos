@@ -49,6 +49,16 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * - `trace`: Trace feed.
      */
     namespace: Schema.optional(Schema.Literal('data', 'trace')),
+
+    /**
+     * Pending lineage parent for the next append — a soft fork that has been decided but not yet
+     * expressed, because the writer may be a different process than the one that decided it.
+     *
+     * Transient intent, consumed and cleared by the next append; never a source of truth for history.
+     * The fork itself lives in item lineage (see {@link PARENT_KEY}), which is what {@link history}
+     * walks and what replicates with the blocks in a defined order relative to them.
+     */
+    forkPoint: Schema.optional(Obj.ID.pipe(internal.FormInputAnnotation.set(false))),
   }).pipe(
     internal.HiddenAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),

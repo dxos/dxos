@@ -152,6 +152,29 @@ export class Session extends Resource {
   }
 
   /**
+   * Appends one of this turn's messages to the feed, consuming a pending fork point if there is one.
+   *
+   * The rewind decision is made in the UI, but the continuation is appended by the agent's process,
+   * which resolves the feed and never sees the chat — so the feed carries the intent and this is where
+   * it becomes lineage. Only the first message of a turn finds it set: the append clears it, so the
+   * rest of the turn chains implicitly. Clearing after the append (rather than before) leaves the fork
+   * pending if the turn fails, instead of silently discarding it.
+   */
+  public appendTurnMessage(message: Message.Message): Promise<void> {
+    const parent = this._feed.forkPoint;
+    return Runtime.runPromise(this._runtime)(
+      Effect.gen(this, function* () {
+        yield* Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined);
+        if (parent !== undefined) {
+          Obj.update(this._feed, (feed) => {
+            feed.forkPoint = undefined;
+          });
+        }
+      }),
+    );
+  }
+
+  /**
    * Creates a new cancelable request effect.
    */
   public createRequest<R = never>(
@@ -172,8 +195,7 @@ export class Session extends Resource {
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
         persist: params.persist,
-        onOutput: (message) =>
-          Effect.promise(() => Runtime.runPromise(this._runtime)(Feed.append(this._feed, [message]))),
+        onOutput: (message) => Effect.promise(() => this.appendTurnMessage(message)),
       });
 
       yield* request.begin({

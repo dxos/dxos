@@ -11,7 +11,7 @@ import { Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { getSpace } from '@dxos/client/echo';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
-import { useObject, useObjectValue, useQuery } from '@dxos/echo-react';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import {
@@ -87,9 +87,6 @@ const ChatRoot = ({
 
   // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
   const [feedSnapshot] = useObject(chat?.feed);
-  // Likewise for the chat itself: `forkPoint` is mutated in place, and without a subscription the
-  // rendered branch would not recompute when a rewind sets it.
-  const chatSnapshot = useObjectValue(chat);
   const feed = Obj.getReactiveOrUndefined(feedSnapshot);
 
   // Event sink.
@@ -106,18 +103,18 @@ const ChatRoot = ({
   );
   const pendingMessages = useAtomValue(processor.messages);
   const { messages, forkPointSuperseded } = useMemo(
-    () => projectThread({ feedMessages, pendingMessages, forkPoint: chatSnapshot?.forkPoint }),
-    [feedMessages, pendingMessages, chatSnapshot?.forkPoint],
+    () => projectThread({ feedMessages, pendingMessages, forkPoint: feedSnapshot?.forkPoint }),
+    [feedMessages, pendingMessages, feedSnapshot?.forkPoint],
   );
 
   // Drop a fork point the feed now expresses through lineage, so it cannot pin the view behind its branch.
   useEffect(() => {
-    if (chat && forkPointSuperseded) {
-      Obj.update(chat, (chat) => {
-        chat.forkPoint = undefined;
+    if (feed && forkPointSuperseded) {
+      Obj.update(feed, (feed) => {
+        feed.forkPoint = undefined;
       });
     }
-  }, [chat, forkPointSuperseded]);
+  }, [feed, forkPointSuperseded]);
 
   const dump = useDebug({ processor });
 
@@ -157,11 +154,12 @@ const ChatRoot = ({
         }
 
         case 'rewind': {
-          // Records the fork point durably; the thread reads back to it immediately, and the next
-          // prompt continues from it.
-          if (chat) {
-            Obj.update(chat, (chat) => {
-              chat.forkPoint = ev.id;
+          // Recorded on the feed, not the chat: the thread reads back to it immediately, and the next
+          // prompt continues from it — appended by the agent's process, which resolves the feed and
+          // never sees the chat.
+          if (feed) {
+            Obj.update(feed, (feed) => {
+              feed.forkPoint = ev.id;
             });
           }
           break;
@@ -187,9 +185,9 @@ const ChatRoot = ({
 
       onEvent?.(ev);
     });
-    // `chat` is a dependency because the rewind branch writes to it: without it the handler would keep
-    // recording fork points on whichever chat was mounted first.
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, chat]);
+    // `feed` is a dependency because the rewind branch writes to it: without it the handler would keep
+    // recording fork points on whichever feed resolved first.
+  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed]);
 
   return (
     <ChatContextProvider
