@@ -45,7 +45,7 @@ import {
 import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
-import { projectThread } from './thread';
+import { projectThread, resolveRewind } from './thread';
 
 //
 // Root
@@ -102,19 +102,10 @@ const ChatRoot = ({
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
   const pendingMessages = useAtomValue(processor.messages);
-  const { messages, forkPointSuperseded } = useMemo(
-    () => projectThread({ feedMessages, pendingMessages, forkPoint: feedSnapshot?.forkPoint }),
-    [feedMessages, pendingMessages, feedSnapshot?.forkPoint],
+  const { messages } = useMemo(
+    () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
+    [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
   );
-
-  // Drop a fork point the feed now expresses through lineage, so it cannot pin the view behind its branch.
-  useEffect(() => {
-    if (feed && forkPointSuperseded) {
-      Obj.update(feed, (feed) => {
-        feed.forkPoint = undefined;
-      });
-    }
-  }, [feed, forkPointSuperseded]);
 
   const dump = useDebug({ processor });
 
@@ -154,13 +145,16 @@ const ChatRoot = ({
         }
 
         case 'rewind': {
-          // Recorded on the feed, not the chat: the thread reads back to it immediately, and the next
-          // prompt continues from it — appended by the agent's process, which resolves the feed and
-          // never sees the chat.
-          if (feed) {
+          // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
+          // composer so it can be revised. Recorded on the feed rather than the chat because the
+          // continuation is appended by the agent's process, which resolves the feed and never sees the
+          // chat. A stale click (message already gone) resolves to nothing and is a no-op.
+          const rewind = feed && resolveRewind(messages, ev.id);
+          if (rewind) {
             Obj.update(feed, (feed) => {
-              feed.forkPoint = ev.id;
+              feed.rewindFrom = rewind.rewindFrom;
             });
+            event.emit({ type: 'update-prompt', text: rewind.text });
           }
           break;
         }
@@ -185,9 +179,9 @@ const ChatRoot = ({
 
       onEvent?.(ev);
     });
-    // `feed` is a dependency because the rewind branch writes to it: without it the handler would keep
-    // recording fork points on whichever feed resolved first.
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed]);
+    // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
+    // them the handler would keep resolving rewinds against whatever was mounted first.
+  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages]);
 
   return (
     <ChatContextProvider

@@ -159,27 +159,28 @@ describe('Chat', () => {
     );
 
     it.effect(
-      'a fork point round-trips on the feed',
+      'a pending rewind round-trips on the feed',
       Effect.fnUntraced(
         function* (_) {
           const chat = yield* makeChat;
           const feed = yield* Database.load(chat.feed);
-          expect(feed.forkPoint).toBeUndefined();
+          expect(feed.rewindFrom).toBeUndefined();
 
           // On the feed, not the chat: the agent appends the continuation out-of-process and resolves
-          // the feed, never the chat, so this is the only place both sides can see it.
+          // the feed, never the chat, so this is the only place both sides can see it. Stores the first
+          // *discarded* message, so rewinding to the very first turn needs no sentinel.
           const messageId = EntityId.random();
           Obj.update(feed, (feed) => {
-            feed.forkPoint = messageId;
+            feed.rewindFrom = messageId;
           });
           yield* Database.flush();
-          expect(feed.forkPoint).toBe(messageId);
+          expect(feed.rewindFrom).toBe(messageId);
 
           Obj.update(feed, (feed) => {
-            feed.forkPoint = undefined;
+            feed.rewindFrom = undefined;
           });
           yield* Database.flush();
-          expect(feed.forkPoint).toBeUndefined();
+          expect(feed.rewindFrom).toBeUndefined();
         },
         Effect.provide(TestLayer),
         TestHelpers.provideTestContext,

@@ -161,10 +161,10 @@ describe('AiSession.Session.getHistory', () => {
 // on the turn's first message, turning the fork into lineage.
 //
 
-describe('AiSession.Session fork point', () => {
+describe('AiSession.Session rewind', () => {
   const TestLayer = TestDatabaseLayer({ types: [Feed.Feed, Message.Message, SessionLink.SessionLink] });
 
-  it.effect("applies the feed's fork point to the turn's first message", () =>
+  it.effect("parents the turn's first message to what precedes the rewind", () =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
       const feed = db.add(Feed.make());
@@ -175,20 +175,21 @@ describe('AiSession.Session fork point', () => {
       yield* Feed.append(feed, [first, answer, abandoned]);
 
       Obj.update(feed, (feed) => {
-        feed.forkPoint = answer.id;
+        feed.rewindFrom = abandoned.id;
       });
 
       const runtime = yield* Effect.runtime<Database.Service>();
       const session = new AiSession.Session({ feed, runtime });
 
-      // Stand in for the request loop: `onOutput` is the single funnel every persisted message passes
-      // through, and the retry is this turn's first.
+      // `rewindFrom` names the earliest discarded message, so the continuation parents to the one
+      // before it. Stands in for the request loop: `onOutput` is the single funnel every persisted
+      // message passes through, and the retry is this turn's first.
       const retry = makeMessage('retry');
       yield* Effect.promise(() => session.appendTurnMessage(retry));
 
       expect(Feed.getParent(retry)).toBe(answer.id);
-      // Consumed: a second message in the same turn chains implicitly, not onto the fork point again.
-      expect(feed.forkPoint).toBeUndefined();
+      // Consumed: a second message in the same turn chains implicitly, not onto the parent again.
+      expect(feed.rewindFrom).toBeUndefined();
 
       const followUp = makeMessage('follow up', 'assistant');
       yield* Effect.promise(() => session.appendTurnMessage(followUp));
@@ -196,7 +197,7 @@ describe('AiSession.Session fork point', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('leaves messages unparented when no fork is pending', () =>
+  it.effect('leaves messages unparented when no rewind is pending', () =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
       const feed = db.add(Feed.make());
@@ -219,7 +220,7 @@ describe('AiSession.Session fork point', () => {
       const abandoned = makeMessage('abandoned');
       yield* Feed.append(feed, [first, answer, abandoned]);
       Obj.update(feed, (feed) => {
-        feed.forkPoint = answer.id;
+        feed.rewindFrom = abandoned.id;
       });
 
       const runtime = yield* Effect.runtime<Database.Service>();

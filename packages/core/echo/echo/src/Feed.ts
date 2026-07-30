@@ -51,14 +51,18 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
     namespace: Schema.optional(Schema.Literal('data', 'trace')),
 
     /**
-     * Pending lineage parent for the next append — a soft fork that has been decided but not yet
-     * expressed, because the writer may be a different process than the one that decided it.
+     * Earliest item a pending rewind discards — set when a soft fork is decided but not yet expressed,
+     * because the writer may be a different process than the one that decided it.
      *
-     * Transient intent, consumed and cleared by the next append; never a source of truth for history.
-     * The fork itself lives in item lineage (see {@link PARENT_KEY}), which is what {@link history}
-     * walks and what replicates with the blocks in a defined order relative to them.
+     * Stored as the first *discarded* item rather than the new parent so that rewinding to the very
+     * first item needs no sentinel: nothing precedes it, so the continuation simply starts a new line.
+     * Readers show what precedes it; the next append parents to that and clears this.
+     *
+     * Transient intent, never a source of truth for history. The fork itself lives in item lineage
+     * (see {@link PARENT_KEY}), which is what {@link history} walks and what replicates in a defined
+     * order relative to the blocks.
      */
-    forkPoint: Schema.optional(Obj.ID.pipe(internal.FormInputAnnotation.set(false))),
+    rewindFrom: Schema.optional(Obj.ID.pipe(internal.FormInputAnnotation.set(false))),
   }).pipe(
     internal.HiddenAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),

@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from '@effect/ai/LanguageModel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import React from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
@@ -33,16 +35,23 @@ import { ChatArticle } from './ChatArticle';
  * Replaces the AI service the plugin would build with a scripted model, so a story can drive the real
  * request loop offline and deterministically.
  *
- * Inert until something submits — the model is only consulted on a request, so stories that never submit
+ * The model is built **once** and shared across requests. Constructing it per request — the obvious
+ * shape, since `model()` returns a layer — gives each request its own cursor, so every turn replays the
+ * first reply and a multi-turn story silently answers itself wrongly.
+ *
+ * Inert until something submits: the model is only consulted on a request, so stories that never submit
  * are unaffected. The script is exhausted rather than looped, so submitting more often than there are
  * replies fails loudly instead of hanging.
  */
-const scriptedAiServiceMiddleware = (replies: readonly string[]) => (_upstream: AiService.Service) => ({
-  model: () =>
-    ScriptedLanguageModel.scriptedLanguageModelLayer(
+const scriptedAiServiceMiddleware = (replies: readonly string[]) => {
+  const model = Effect.runSync(
+    ScriptedLanguageModel.makeScriptedLanguageModel(
       replies.map((reply) => ({ parts: [ScriptedLanguageModel.text(reply)] })),
     ),
-});
+  );
+  const layer = Layer.succeed(LanguageModel.LanguageModel, model);
+  return (_upstream: AiService.Service) => ({ model: () => layer });
+};
 
 /**
  * Types into the chat prompt and submits.
@@ -153,32 +162,87 @@ export const Scripted: Story = {
 };
 
 /**
- * Soft fork ("rewind") driven entirely through the UI: submits a turn against the scripted model, then
- * presses the branch toolbar under the prompt. The prompt becomes the head, so its reply is no longer
- * reachable and stops rendering — while staying in the feed.
+ * Soft fork ("rewind") driven entirely through the UI, over a realistic conversation: a greeting, then a
+ * question, then a rewind of that question, then the same question asked differently.
+ *
+ * Rewinding is edit-and-resend: the prompt and its answer both leave the thread and the prompt text comes
+ * back in the composer. The greeting survives, because it precedes the rewind point. The resend then
+ * continues from the greeting, so the abandoned pair never rejoins the conversation.
  */
 export const Rewind: Story = {
   args: {
     messages: [
-      {
-        prompt: 'What is a feed?',
-        reply: 'A feed is an append-only log.',
-      },
+      { prompt: 'Hello', reply: 'Hi — how can I help?' },
+      { prompt: 'What is a feed?', reply: 'A feed is an append-only log.' },
+      { prompt: 'What is a feed, in one sentence?', reply: 'An append-only log of immutable blocks.' },
     ],
   },
   play: async ({ canvasElement, args: { messages = [] } }) => {
-    const { prompt, reply } = messages[0];
-    const text = () => canvasElement.textContent ?? '';
+    const [greeting, asked, revised] = messages;
+    const toolbars = () => canvasElement.querySelectorAll<HTMLElement>('[data-testid="chat.rewind"]');
 
-    await submitPrompt(canvasElement, prompt);
-    await waitFor(() => void expect(text()).toContain(reply), { timeout: 8_000, interval: 200 });
+    // Greeting, then the question.
+    await submitPrompt(canvasElement, greeting.prompt);
+    await waitFor(() => void expect(threadText(canvasElement)).toContain(greeting.reply), {
+      timeout: 8_000,
+      interval: 200,
+    });
+    await submitPrompt(canvasElement, asked.prompt);
+    await waitFor(() => void expect(threadText(canvasElement)).toContain(asked.reply), {
+      timeout: 8_000,
+      interval: 200,
+    });
 
-    const toolbar = canvasElement.querySelector<HTMLElement>('[data-testid="chat.rewind"]');
-    await expect(toolbar).not.toBeNull();
-    toolbar!.click();
+    // Let the reply finish streaming, so the rewind forks a settled turn.
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await waitFor(() => void expect(toolbars()).toHaveLength(2), { timeout: 5_000, interval: 200 });
 
-    // The reply is downstream of the prompt we rewound to, so it drops out of the rendered branch.
-    await waitFor(() => void expect(text()).not.toContain(reply), { timeout: 5_000, interval: 200 });
-    await expect(text()).toContain(prompt);
+    // Rewind the question — the second prompt's toolbar.
+    toolbars()[1].click();
+
+    // The question and its answer leave the thread, and the greeting is untouched.
+    await waitFor(() => void expect(threadText(canvasElement)).not.toContain(asked.reply), {
+      timeout: 5_000,
+      interval: 200,
+    });
+    await expect(threadText(canvasElement)).not.toContain(asked.prompt);
+    await expect(threadText(canvasElement)).toContain(greeting.prompt);
+    await expect(threadText(canvasElement)).toContain(greeting.reply);
+
+    // Edit-and-resend: the question comes back in the composer, ready to be revised.
+    await expect(composerText(canvasElement)).toContain(asked.prompt);
+
+    // Ask it differently. The answer continues from the greeting, so the abandoned pair stays gone.
+    await clearPrompt(canvasElement);
+    await submitPrompt(canvasElement, revised.prompt);
+    await waitFor(() => void expect(threadText(canvasElement)).toContain(revised.reply), {
+      timeout: 8_000,
+      interval: 200,
+    });
+    await expect(threadText(canvasElement)).toContain(revised.prompt);
+    await expect(threadText(canvasElement)).not.toContain(asked.reply);
   },
+};
+
+/**
+ * The rendered conversation, excluding the composer — both are CodeMirror instances, and the composer
+ * holds the restored prompt after a rewind, so an unscoped read cannot tell "still in the thread" from
+ * "waiting to be resent".
+ */
+const threadText = (canvasElement: HTMLElement) =>
+  Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-content'))
+    .filter((element) => !element.closest('[role="group"]'))
+    .map((element) => element.textContent ?? '')
+    .join('\n');
+
+const composerText = (canvasElement: HTMLElement) =>
+  canvasElement.querySelector<HTMLElement>('[role="group"] .cm-content')?.textContent ?? '';
+
+/** Empties the composer, so a restored prompt can be replaced rather than appended to. */
+const clearPrompt = async (canvasElement: HTMLElement) => {
+  const content = canvasElement.querySelector<HTMLElement>('[role="group"] .cm-content');
+  if (content) {
+    await userEvent.click(content);
+    await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
+  }
 };

@@ -117,14 +117,18 @@ export class Session extends Resource {
    * head, so a soft fork's abandoned turns are excluded.
    */
   public async getHistory(): Promise<Message.Message[]> {
+    const { items: reachable } = Feed.history(await this.#messagesInAppendOrder());
+    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, reachable));
+  }
+
+  /**
+   * Every message in the feed, in append order — what `Feed.history` needs, since it walks lineage
+   * positionally rather than by `created`, a wall clock peers do not agree on.
+   */
+  async #messagesInAppendOrder(): Promise<Message.Message[]> {
     const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
     const items = await queryResult.run();
-    const messages = items.filter(Obj.instanceOf(Message.Message));
-
-    // `Feed.history` walks lineage positionally, so it needs append order — not `created`, which is a
-    // wall clock that peers do not agree on.
-    const { items: reachable } = Feed.history(Array.sort(messages, byFeedPosition));
-    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, reachable));
+    return Array.sort(items.filter(Obj.instanceOf(Message.Message)), byFeedPosition);
   }
 
   getTools(): Effect.Effect<
@@ -152,26 +156,36 @@ export class Session extends Resource {
   }
 
   /**
-   * Appends one of this turn's messages to the feed, consuming a pending fork point if there is one.
+   * Appends one of this turn's messages to the feed, consuming a pending rewind if there is one.
    *
    * The rewind decision is made in the UI, but the continuation is appended by the agent's process,
    * which resolves the feed and never sees the chat — so the feed carries the intent and this is where
-   * it becomes lineage. Only the first message of a turn finds it set: the append clears it, so the
-   * rest of the turn chains implicitly. Clearing after the append (rather than before) leaves the fork
-   * pending if the turn fails, instead of silently discarding it.
+   * it becomes lineage. `rewindFrom` names the earliest discarded message, so the new parent is whatever
+   * precedes it; nothing preceding means the continuation starts a fresh line. Only the first message of
+   * a turn finds it set, since the append clears it, so the rest of the turn chains implicitly. Clearing
+   * after the append (rather than before) leaves the rewind pending if the turn fails.
    */
-  public appendTurnMessage(message: Message.Message): Promise<void> {
-    const parent = this._feed.forkPoint;
+  public async appendTurnMessage(message: Message.Message): Promise<void> {
+    const rewindFrom = this._feed.rewindFrom;
+    const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
+
     return Runtime.runPromise(this._runtime)(
       Effect.gen(this, function* () {
         yield* Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined);
-        if (parent !== undefined) {
+        if (rewindFrom !== undefined) {
           Obj.update(this._feed, (feed) => {
-            feed.forkPoint = undefined;
+            feed.rewindFrom = undefined;
           });
         }
       }),
     );
+  }
+
+  /** The message preceding `rewindFrom` in append order, which the continuation parents to. */
+  async #parentForRewind(rewindFrom: string): Promise<string | undefined> {
+    const messages = await this.#messagesInAppendOrder();
+    const index = messages.findIndex((message) => message.id === rewindFrom);
+    return index > 0 ? messages[index - 1].id : undefined;
   }
 
   /**

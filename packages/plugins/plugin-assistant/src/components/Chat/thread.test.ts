@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Feed, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { byAppendOrder, projectThread } from './thread';
+import { byAppendOrder, projectThread, resolveRewind } from './thread';
 
 describe('byAppendOrder', () => {
   test('orders by feed position when it discriminates', ({ expect }) => {
@@ -35,9 +35,7 @@ describe('byAppendOrder', () => {
 describe('projectThread', () => {
   test('a feed with no lineage projects to itself', ({ expect }) => {
     const messages = [message('one'), message('two'), message('three')];
-    const { messages: projected, forkPointSuperseded } = projectThread({ feedMessages: messages });
-    expect(text(projected)).toEqual(['one', 'two', 'three']);
-    expect(forkPointSuperseded).toBe(false);
+    expect(text(projectThread({ feedMessages: messages }).messages)).toEqual(['one', 'two', 'three']);
   });
 
   test('pending messages are appended and deduped against the feed', ({ expect }) => {
@@ -61,47 +59,52 @@ describe('projectThread', () => {
     expect(text(messages)).toEqual(['first', 'answer', 'retry']);
   });
 
-  // The button records a fork point before any continuation exists, so the pointer is the only thing
-  // expressing the fork — the thread has to read back to it immediately.
-  test('a pending fork point reads as the head', ({ expect }) => {
+  // Edit-and-resend: rewinding to a prompt discards the prompt and everything after it, so the user can
+  // revise the question rather than stare at it unanswered.
+  test('a pending rewind truncates to what precedes it', ({ expect }) => {
     const first = message('first');
     const answer = message('answer');
-    const later = message('later');
+    const asked = message('asked');
+    const replied = message('replied');
 
-    const { messages, forkPointSuperseded } = projectThread({
-      feedMessages: [first, answer, later],
-      forkPoint: answer.id,
+    const { messages } = projectThread({
+      feedMessages: [first, answer, asked, replied],
+      rewindFrom: asked.id,
     });
     expect(text(messages)).toEqual(['first', 'answer']);
-    expect(forkPointSuperseded).toBe(false);
   });
 
-  test('a fork point is superseded once a message continues from it', ({ expect }) => {
+  test('rewinding to the first turn empties the thread', ({ expect }) => {
     const first = message('first');
     const answer = message('answer');
-    const abandoned = message('abandoned');
-    const retry = message('retry');
-    Feed.setParent(retry, answer);
-
-    const { messages, forkPointSuperseded } = projectThread({
-      feedMessages: [first, answer, abandoned, retry],
-      forkPoint: answer.id,
-    });
-
-    // Lineage now expresses the fork, so the pointer must not pin the view behind the branch it made.
-    expect(forkPointSuperseded).toBe(true);
-    expect(text(messages)).toEqual(['first', 'answer', 'retry']);
+    const { messages } = projectThread({ feedMessages: [first, answer], rewindFrom: first.id });
+    expect(messages).toEqual([]);
   });
 
-  test('a fork point naming an absent message projects nothing', ({ expect }) => {
-    const { messages } = projectThread({ feedMessages: [message('one')], forkPoint: message('absent').id });
-    expect(messages).toEqual([]);
+  test('a stale rewind pointer falls back to the feed lineage', ({ expect }) => {
+    const first = message('first');
+    const answer = message('answer');
+    const { messages } = projectThread({
+      feedMessages: [first, answer],
+      rewindFrom: message('never replicated').id,
+    });
+    expect(text(messages)).toEqual(['first', 'answer']);
   });
 
   test('an empty feed projects nothing', ({ expect }) => {
-    const { messages, forkPointSuperseded } = projectThread({ feedMessages: [] });
-    expect(messages).toEqual([]);
-    expect(forkPointSuperseded).toBe(false);
+    expect(projectThread({ feedMessages: [] }).messages).toEqual([]);
+  });
+});
+
+describe('resolveRewind', () => {
+  test('returns the discard point and the prompt text to restore', ({ expect }) => {
+    const prompt = message('what is a feed?');
+    const resolved = resolveRewind([message('earlier'), prompt], prompt.id);
+    expect(resolved).toEqual({ rewindFrom: prompt.id, text: 'what is a feed?' });
+  });
+
+  test('an absent message resolves to nothing, so a stale click is a no-op', ({ expect }) => {
+    expect(resolveRewind([message('only')], message('absent').id)).toBeUndefined();
   });
 });
 
