@@ -22,9 +22,10 @@ the phased rollout this ledger mirrors).
   - Scope: **all entity kinds** (object, relation, type), phased — relations are
     merge subjects eventually, not just endpoints.
   - Merge-policy pluggability: left open, non-blocking; fixed semantics first.
-- [ ] **Name + shape the identity field** (§4.4, §7 Q6) — `naturalKey` /
-      `singletonKey` / `mergeKey` / `canonicalKey`; struct `{ key, version }` vs a
-      single composed string. Blocks Phase 1's schema change, not Phase 0.
+- [x] **Shape the identity field** — a **single opaque string**, not a
+      `{ key, version }` struct; callers encode generations in the string.
+- [ ] **Name the identity field** (§4.4, §7 Q6) — `naturalKey` / `singletonKey` /
+      `mergeKey` / `canonicalKey`. Blocks Phase 1's schema change, not Phase 0.
 
 ## Phase 0: Spike (throwaway, tests only)
 
@@ -41,8 +42,8 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0
 
 ## Phase 1: Foundations (no merge engine)
 
-- [ ] Dedicated identity field on `EntityMeta` (name/shape per §4.4) + exact-match
-      grouping helper.
+- [ ] Dedicated identity field on `EntityMeta` — a single optional string (name per
+      §4.4) + exact-match grouping helper.
 - [ ] `system.mergedInto` schema field + resolver redirect-following (inert) +
       proto-guard snapshot.
 - [ ] Internal relation-endpoint mutation (plumb `ObjectCore.setSource/setTarget`).

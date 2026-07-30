@@ -28,8 +28,10 @@
     `meta.version` and not a designated `ForeignKey`. Rationale: `meta.key`/`version`
     mean "the registry entry this instance was created from", which is a provenance
     claim, not an identity assertion — overloading it would make every
-    registry-stamped object a merge candidate. The field's name and shape are
-    recorded in §4.4 once ratified.
+    registry-stamped object a merge candidate. The field is **a single opaque
+    string**, not a `{ key, version }` struct — exact matching makes the two
+    equivalent for matching, and derived keys mean a `version` component could not
+    be validated anyway (§4.4). Its name is recorded in §4.4 once ratified.
   - **Version matching**: **exact**. A different version is a different entity,
     which is what allows generational evolution of seeded state. Semver ranges are
     rejected: range membership is not symmetric, which breaks the §4.2 convergence
@@ -41,7 +43,7 @@
     `EntityKind.Object`, `.Relation`, and `.Type` (`echo/src/internal/common/types/entity.ts:124-128`)
     — delivered in phases, not restricted to objects. Relations are therefore merge
     _subjects_ eventually, not merely endpoints to be rewritten; the phasing is in §6.
-- **Open**: the identity field's name and shape (§4.4).
+- **Open**: the identity field's name (§4.4).
 
 ---
 
@@ -277,12 +279,30 @@ candidates were both rejected as the identity carrier:
    which retroactively merges entities that were previously distinct. Defer, then
    map onto the dedicated field.
 
-The dedicated field carries its own version rather than reading `meta.version`, so
-that identity and provenance can disagree — an entity may be seeded from registry
-entry `1.2.0` while its identity generation is still `1`. Equality is exact on both
-components, per the version decision.
+**Shape: a single opaque string** (decided 2026-07-30), not a `{ key, version }`
+struct. The version is encoded by the caller inside the string if it wants
+generations (`com.example.seed@2`), and gets distinct-entity semantics for free
+because the strings differ. Rationale:
 
-**Name and shape: pending ratification.** Candidates, all currently unused in-tree
+- Since matching is exact, struct equality is **identical** to string equality on a
+  composed key — the split buys the engine nothing.
+- Derived, non-registry keys are admissible (see below), so a `version` component
+  could not be validated as semver either. A struct whose second component is an
+  arbitrary optional string is a two-part string with extra ceremony.
+- It keeps the engine un-opinionated about the key's internal structure, which is
+  the property that lets unrelated consumers (seeding, migrations) share one field.
+- Phase 3 indexing is cheaper: one column and a plain equality lookup, rather than a
+  composite key.
+
+The consequence accepted: nothing can group by "the same key across versions"
+generically — e.g. a diagnostic that wants to find a previous generation to migrate
+from. That requires a convention the caller owns, not engine machinery.
+
+The field is independent of `meta.version`, so identity and provenance may disagree:
+an entity can be seeded from registry entry `1.2.0` while its identity string names
+generation `2`, or names no generation at all.
+
+**Name: pending ratification.** Candidates, all currently unused in-tree
 (`identity`/`identityKey` are excluded — `IdentityKey` is the HALO identity public
 key across 17 files, and the collision would be actively misleading):
 
@@ -476,9 +496,9 @@ settled, and the derived-key sub-question dissolved with them.
 
 ### Newly open, from the review
 
-6. **Identity field name and shape** (§4.4) — `naturalKey` / `singletonKey` /
-   `mergeKey` / `canonicalKey`; and struct `{ key, version }` vs a single composed
-   string. Blocks Phase 1's schema change, not the Phase 0 spike.
+6. **Identity field name** (§4.4) — `naturalKey` / `singletonKey` / `mergeKey` /
+   `canonicalKey`. The shape question is settled: a single opaque string. Blocks
+   Phase 1's schema change, not the Phase 0 spike.
 7. **Merging `EntityKind.Type`** — types are entities and are now in scope, but a
    duplicate _type_ is not just a data merge: schema identity feeds the type
    registry and object `system.type` refs. Needs its own phase and probably its own
