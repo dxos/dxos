@@ -46,6 +46,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crm',
     spec: 'PLUGIN.mdl',
     dependsOn: ['org.dxos.plugin.inbox'],
-    tags: ['labs'],
+    tags: ['alpha'],
   },
 });

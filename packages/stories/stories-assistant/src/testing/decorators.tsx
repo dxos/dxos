@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { SERVICES_CONFIG } from '@dxos/ai/testing';
+import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
   ActivationEvent,
   ActivationEvents,
@@ -107,6 +107,13 @@ type DecoratorsProps = {
   onInit?: (props: { client: Client; space: Space }) => Promise<ModuleLayout | void>;
   /** Skill-definition keys to clone into the space and bind into the latest chat's context. */
   skills?: string[];
+  /**
+   * Replace the AI service with a scripted (offline, deterministic) model — see
+   * `ScriptedLanguageModel`. Makes the full-stack story runnable without a network AI service,
+   * e.g. from a `play` function in CI; routed scripts can drive cooperating sessions
+   * (supervisor + sub-agents).
+   */
+  scripted?: ScriptedLanguageModel.Script;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent'>);
 
@@ -122,6 +129,7 @@ const buildPluginManagerOptions = ({
   onChatCreated,
   createAgent,
   config,
+  scripted,
   ...props
 }: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => {
   // The `persistent` config preset (see `config.persistent` below) flags itself via
@@ -211,7 +219,9 @@ const buildPluginManagerOptions = ({
       // User plugins.
       PreviewPlugin(),
       RoutinePlugin(),
-      AssistantPlugin(),
+      AssistantPlugin(
+        scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
+      ),
       TranscriptionPlugin(),
 
       // Test-specific.

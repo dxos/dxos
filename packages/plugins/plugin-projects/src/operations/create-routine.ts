@@ -52,8 +52,10 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateRoutine> = Pr
         seedProjectScope(yield* Database.load(instructionsRef));
       }
 
-      // A link, not ownership: the routine is a space object (it appears under Routines and may be
-      // triggered independently), and the project records that it was created in its scope.
+      // Owned AND linked, like template starter routines: the parent edge makes the routine (and its
+      // owned trigger) cascade-delete with the project, while the ref keeps gallery order — the
+      // Routines section lists by type query, so ownership does not hide it there.
+      Obj.setParent(object, project);
       Obj.update(project, (project) => {
         project.routines = [...project.routines, Ref.make(object)];
       });

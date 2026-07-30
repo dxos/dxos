@@ -36,6 +36,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-slack',
     spec: 'PLUGIN.mdl',
     icon: { key: 'ph--slack-logo--regular', hue: 'purple' },
-    tags: ['labs', 'integration'],
+    tags: ['labs', 'connector'],
   },
 });

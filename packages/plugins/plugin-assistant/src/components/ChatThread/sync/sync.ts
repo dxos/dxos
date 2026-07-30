@@ -19,7 +19,11 @@ export type TextModel = Pick<MarkdownStreamController, 'length' | 'setContent' |
  * space as the CodeMirror document (i.e. what {@link MarkdownStreamController.scrollTo} and
  * {@link MarkdownStreamController.getVisibleRange} operate on).
  */
-export type MessageRange = { id: string; from: number; to: number };
+export type MessageSpan = {
+  id: string;
+  from: number;
+  to: number;
+};
 
 /**
  * Renders a block to markdown.
@@ -37,11 +41,25 @@ export type BlockRenderer = (
 ) => string | undefined;
 
 /**
+ * Callbacks a widget can invoke through {@link MessageThreadContext}.
+ *
+ * React widgets are portaled by `MarkdownStream` without its `onEvent`, so interactive widgets reach
+ * the thread through the context they already receive in their props.
+ */
+export type MessageThreadHandlers = {
+  /** Soft-fork the thread from the given message. */
+  onRewind?: (messageId: string) => void;
+};
+
+/**
  * Thread context passed to renderer.
  * This enables the renderer to "stream" content into the widget state.
  */
 export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
-  constructor(private readonly _widgetState?: XmlWidgetStateManager) {}
+  constructor(
+    private readonly _widgetState?: XmlWidgetStateManager,
+    private readonly _handlers: MessageThreadHandlers = {},
+  ) {}
 
   updateWidget<T>(id: string, value: StateDispatch<T>) {
     this._widgetState?.updateWidget(id, value);
@@ -50,6 +68,10 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
   // TODO(burdon): Resolve name from hypergraph.
   getObjectLabel(_id: URI.URI) {
     return 'Object';
+  }
+
+  rewind(messageId: string) {
+    this._handlers.onRewind?.(messageId);
   }
 }
 
@@ -70,6 +92,13 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
 export class MessageSyncer {
   private _threadId?: string;
 
+  /**
+   * Ids of the messages rendered so far, in document order. `update` streams a suffix, so it needs to
+   * know when the incoming list no longer extends what is on screen — a rewind drops turns, and an
+   * append-only path would leave them rendered.
+   */
+  private _renderedIds: string[] = [];
+
   /** Cumulative block index (across all completed blocks in all messages). */
   private _completed = 0;
 
@@ -80,15 +109,16 @@ export class MessageSyncer {
   private _completedOffset = 0;
 
   /** Per-message document offset ranges, keyed by message id in document order. */
-  private readonly _ranges = new Map<string, { from: number; to: number }>();
+  private readonly _spans = new Map<string, { from: number; to: number }>();
 
   private readonly _context: MessageThreadContext;
 
   constructor(
     private readonly _document: TextModel,
     private readonly _renderer: BlockRenderer,
+    handlers: MessageThreadHandlers = {},
   ) {
-    this._context = new MessageThreadContext(this._document);
+    this._context = new MessageThreadContext(this._document, handlers);
   }
 
   get context() {
@@ -96,22 +126,12 @@ export class MessageSyncer {
   }
 
   /**
-   * Per-message document offset ranges, in document order. Valid synchronously after
+   * Per-message document offset spans, in document order. Valid synchronously after
    * {@link reset} or {@link update} (the offsets are derived from the same rendered buffer
    * that is dispatched to the document).
    */
-  getRanges(): MessageRange[] {
-    return Array.from(this._ranges, ([id, { from, to }]) => ({ id, from, to }));
-  }
-
-  /** Record (or extend) the offset range of a message. `from` is preserved across calls. */
-  private _recordRange(id: string, from: number, to: number): void {
-    const existing = this._ranges.get(id);
-    if (existing) {
-      existing.to = to;
-    } else {
-      this._ranges.set(id, { from, to });
-    }
+  getSpans(): MessageSpan[] {
+    return Array.from(this._spans, ([id, { from, to }]) => ({ id, from, to }));
   }
 
   /**
@@ -120,10 +140,11 @@ export class MessageSyncer {
    */
   reset(messages: Message.Message[] = []): void {
     this._threadId = messages[0]?.id;
+    this._renderedIds = messages.map((message) => message.id);
     this._completed = 0;
     this._trailing = 0;
     this._completedOffset = 0;
-    this._ranges.clear();
+    this._spans.clear();
     const buffer = this._walk(messages);
     // Match the pre-rewrite behaviour: rendering from a steady state (initial mount with
     // non-empty messages, or thread switch) lands the entire content via `setContent` — which
@@ -137,15 +158,29 @@ export class MessageSyncer {
   }
 
   /**
+   * Whether `messages` still begins with everything already rendered, making this an append.
+   *
+   * A rewind removes turns from the middle or end of the thread, and the streaming path can only add
+   * text — so anything other than an extension has to go through {@link reset}.
+   */
+  #extendsRendered(messages: Message.Message[]): boolean {
+    if (messages.length < this._renderedIds.length) {
+      return false;
+    }
+    return this._renderedIds.every((id, index) => messages[index]?.id === id);
+  }
+
+  /**
    * Stream the suffix of the rendered messages into the document.
    * Returns `true` if the document was replaced (initial mount or thread switch), `false`
    * if the call was a streaming append (or a no-op).
    */
   update(messages: Message.Message[]): boolean {
-    if (messages[0]?.id !== this._threadId) {
+    if (messages[0]?.id !== this._threadId || !this.#extendsRendered(messages)) {
       this.reset(messages);
       return true;
     }
+    this._renderedIds = messages.map((message) => message.id);
     const buffer = this._walk(messages);
     if (buffer.length > 0) {
       void this._document.append(buffer);
@@ -174,8 +209,11 @@ export class MessageSyncer {
         if (rendered.length > this._trailing) {
           buffer += rendered.slice(this._trailing);
         }
-        // The block occupies `[offset, offset + rendered.length)`; extend the message's range.
-        this._recordRange(message.id, offset, offset + rendered.length);
+        // The document never shrinks (see the `_trailing` guard below), so span/offset accounting
+        // must track the document, not a renderer output that regressed below what was appended.
+        const renderedLength = Math.max(rendered.length, this._trailing);
+        // The block occupies `[offset, offset + renderedLength)`; extend the message's range.
+        this._saveRange(message.id, offset, offset + renderedLength);
         if (block.pending) {
           // Stay on this block; record how far we've appended so the next call can resume.
           // `Math.max`-style guard against a non-monotonic renderer output without shrinking the doc.
@@ -186,11 +224,21 @@ export class MessageSyncer {
         }
         this._completed = index + 1;
         this._trailing = 0;
-        offset += rendered.length;
+        offset += renderedLength;
         this._completedOffset = offset;
         index++;
       }
     }
     return buffer;
+  }
+
+  /** Record (or extend) the offset range of a message. `from` is preserved; `to` never regresses. */
+  private _saveRange(id: string, from: number, to: number): void {
+    const existing = this._spans.get(id);
+    if (existing) {
+      existing.to = Math.max(existing.to, to);
+    } else {
+      this._spans.set(id, { from, to });
+    }
   }
 }
