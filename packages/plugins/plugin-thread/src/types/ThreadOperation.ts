@@ -16,8 +16,6 @@ import { Actor, Channel, Message, type Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import * as Thread from './Thread';
-
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const CreateChannel = Operation.make({
@@ -93,41 +91,6 @@ export const CreateThread = Operation.make({
     /** Id of the thread rooted at that message, whether this call created it or found it. */
     threadId: Schema.String,
   }),
-});
-
-/** Names a thread, or clears its name. Any participant may name one; it is not the creator's alone. */
-export const SetThreadName = Operation.make({
-  meta: {
-    key: makeKey('setThreadName'),
-    name: 'Set Thread Name',
-    icon: 'ph--pencil-simple--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    thread: Type.getSchema(Thread.Thread),
-    /** New name; empty clears it. */
-    name: Schema.optional(Schema.String),
-  }),
-  output: Schema.Void,
-});
-
-/**
- * Opens the shared rename popover for a thread, anchored to the caller (its navtree row). Committing
- * invokes {@link SetThreadName}.
- */
-export const RenameThread = Operation.make({
-  meta: {
-    key: makeKey('renameThread'),
-    name: 'Rename Thread',
-    icon: 'ph--pencil-simple--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    thread: Type.getSchema(Thread.Thread),
-    /** Anchor for the popover; the navtree row that invoked the action. */
-    caller: Schema.optional(Schema.String),
-  }),
-  output: Schema.Void,
 });
 
 /**

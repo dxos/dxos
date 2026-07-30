@@ -104,7 +104,6 @@ export const translations = [
         'start-video-call.menu': 'Start video call',
 
         'thread.heading': 'Thread',
-        'rename-thread.label': 'Rename thread',
         'thread-reply.placeholder': 'Reply in thread…',
       },
     },

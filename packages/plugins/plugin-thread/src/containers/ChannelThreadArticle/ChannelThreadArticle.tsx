@@ -24,7 +24,7 @@ export type ChannelThreadArticleProps = {
  * One thread of a channel as its own plank: the root message followed by its replies, with a
  * composer that posts back into the same thread. Quote-reply is offered here and nowhere else —
  * the channel view only starts threads, which is what keeps conversation out of the main feed.
- * The thread's name is renamed from its navtree node (`ThreadOperation.RenameThread`), not here.
+ * The thread is renamed from its navtree node, through the rename action every object node carries.
  */
 export const ChannelThreadArticle = ({ role, subject: thread, channel }: ChannelThreadArticleProps) => {
   const threadId = thread.id;

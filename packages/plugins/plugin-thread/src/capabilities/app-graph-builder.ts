@@ -100,21 +100,6 @@ export const createChannelThreadsExtension = Effect.fnUntraced(function* () {
                     ...(thread.name?.length || !root ? {} : { label: getThreadFallbackLabel(root) }),
                     testId: 'threadPlugin.thread',
                   },
-                  actions: [
-                    Node.makeAction({
-                      id: 'rename-thread',
-                      data: (params?: Node.InvokeProps) =>
-                        Operation.invoke(ThreadOperation.RenameThread, {
-                          thread,
-                          caller: `${params?.caller}:${params?.parent?.id}`,
-                        }),
-                      properties: {
-                        label: ['rename-thread.label', { ns: meta.profile.key }],
-                        icon: 'ph--pencil-simple--regular',
-                        disposition: 'list-item',
-                      },
-                    }),
-                  ],
                 },
               ];
             })

@@ -13,17 +13,21 @@ dependencies live in `.agents/projects/feed-live-objects/DESIGN.md` "Roadmap".
 - A **channel** is a `Channel` object in the space db plus a feed holding all
   of its messages (and reactions). Capacity today: ~10k blocks/feed,
   ~1000 feeds/space — team/community scale; feed phases 3–4 raise this.
-- A **thread** is a `threadId` partition of the channel feed (Zulip's
-  `(channel, topic)`): the main view renders roots (`threadId == null`) with
-  thread summaries; a thread view filters by `threadId`. Thread-first UX:
-  any message can start a thread; root messages are primarily branching-off
-  points — guided, not forced (the main composer remains).
+- A **thread** is a `Thread` object in the channel feed, and the `threadId`
+  partition of that feed which carries its id (Zulip's `(channel, topic)`): the
+  main view renders roots (`threadId == null`) with thread summaries; a thread
+  view filters by `threadId`. Thread-first UX: any message can start a thread;
+  root messages are primarily branching-off points — guided, not forced (the
+  main composer remains). Creating a thread is deliberate — a message nobody
+  threaded is not a thread — and the object is what makes it one.
 - **Comments are a channel.** A document's comments live in a per-document
   comments Channel, related to the document and hidden from the navtree via
   the companion-chat pattern (channel-with-relation-to-object ⇒ not shown in
   the custom section). In comment channels **`threadId = anchor id`** (the
   stable cursor range): no per-thread `AnchoredTo` relations; sidebar
-  placement and ordering derive from anchor position in the document.
+  placement and ordering derive from anchor position in the document. OPEN for
+  stage 3: with a thread now being an object, the anchor most likely belongs on
+  the `Thread` rather than in its id.
 
 ### Single-writer principle
 
@@ -62,34 +66,23 @@ Stage-1 schema fixes:
   carries feed context; the feed→database direction does not yet resolve, which
   is why replies point at messages and never at db objects.
 - **Per-service typed annotations replace new `properties` keys** (decided
-  2026-07-29). Each service attaches its own typed instance annotation instead
-  of sharing one untyped bag: chat owns the thread name, review will own `resolved`.
-  `properties` itself stays — the audit found it carrying transport headers
-  (`subject`/`to`/`cc`/`messageId`/`inReplyTo`/`references`/`listUnsubscribe`/
-  `snippet`/`mailbox`/`sentMessageId`) plus the assistant's tool-call id, none
-  of which chat should inherit; the email set may move to its own annotation
-  once this prototype proves out.
+  2026-07-29) for metadata that genuinely belongs _on a message_; review's
+  `resolved` will be one. `properties` itself stays — the audit found it carrying
+  transport headers (`subject`/`to`/`cc`/`messageId`/`inReplyTo`/`references`/
+  `listUnsubscribe`/`snippet`/`mailbox`/`sentMessageId`) plus the assistant's
+  tool-call id, none of which chat should inherit; the email set may move to its
+  own annotation once this prototype proves out. Keys are namespaced on the
+  **service** (`org.dxos.chat.*`), never the plugin id, so the stage-2 rename
+  cannot orphan persisted data.
 
-  ```ts
-  // plugin-thread/types/ThreadAnnotation.ts
-  export const Thread = Annotation.make({
-    id: 'org.dxos.chat.thread',
-    schema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-  });
-  ```
-
-  **One annotation per concern, not per field.** Further thread state joins this
-  struct rather than minting `org.dxos.chat.threadResolved` and friends.
-
-  Values live in `Obj.getMeta(message).annotations`, so they travel with the
-  object through the feed codec. Keys are namespaced on the **service**
-  (`org.dxos.chat.*`), never the plugin id, so the stage-2 rename cannot
-  orphan persisted data.
+  Thread state was briefly such an annotation and is **not** one any more (see
+  below): marking someone else's message re-appends it, and a thread that is an
+  object can be a graph node's datum.
 
 New (shipped):
 
 ```ts
-// org.dxos.type.reaction v0.1.0 — appended to the SAME feed as its target.
+// org.dxos.type.reaction v0.1.0 — plugin-thread owns it; appended to the SAME feed as its target.
 Reaction {
   target: Ref<Message>
   emoji: string
@@ -98,20 +91,41 @@ Reaction {
 }
 ```
 
-Per-message thread metadata, set on root messages only and folded at read:
+```ts
+// org.dxos.chat.thread v0.1.0 — appended to the SAME feed as its messages.
+Thread {
+  target: Ref<Message>           // the message it branches from; hidden from forms
+  name?: string                  // the type's label annotation (Zulip: topic)
+  created: string                // ISO date, hidden from forms
+}
+```
 
-- **thread name** — the `name` field of the `org.dxos.chat.thread` annotation.
-  (Zulip calls this a topic; we name it for what it is.) Renaming is an author
-  re-append, so only the root's author may do it: under last-flush-wins a
-  second editor would silently clobber them. Clearing the last populated field
-  drops the annotation instead of leaving an empty struct behind.
+**A thread's id is the `Thread` object's id**, which its replies carry as
+`threadId`. Three things follow:
+
+- The thread is the datum of its own graph node — built by the canonical
+  `AppNode.makeObject`, so its label, icon, hue, rename and companions all come
+  from the type rather than from anything the plugin passes by hand.
+- Creating or naming a thread writes the thread, never another participant's
+  message; renaming is open to any participant, and only the name is at stake
+  under last-flush-wins.
+- It carries no channel reference — it lives in that channel's feed — so a
+  thread's article resolves its channel from the node it opened under (the way
+  plugin-inbox resolves a message's mailbox).
+
+**One thread per message**, enforced at creation. Duplicates are reachable only
+across a network partition, where neither peer can see the other's; the fold
+elects the first in feed order, which every peer converges on. Reconciling the
+losers' replies is a TODO, not something stage 1 handles.
+
+`foldThreads` also keeps a partition keyed by a _root message_ — threads seeded
+or imported without an object stay readable, they just have no node — and
+tolerates a missing root, since deleting the branch point must not strand its
+replies.
+
 - `resolved` — comment-thread resolution state, to ship as review's own
-  annotation in stage 3 (same mechanism, `org.dxos.review.*`).
-
-A thread's id **is its root message's id**, so a thread needs no object of its
-own and comment channels inherit the same rule with the anchor as the id.
-`foldThreads` tolerates a missing root: deleting the branch point must not
-strand its replies.
+  annotation in stage 3 (`org.dxos.review.*`), on the message or the thread as
+  that design lands.
 
 Relations: one relation per comments channel — Channel → document (companion
 pattern; exact relation type chosen in stage 3). No per-thread relations.

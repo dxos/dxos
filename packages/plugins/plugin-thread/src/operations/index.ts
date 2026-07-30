@@ -9,7 +9,5 @@ export const ThreadOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create-channel'),
   () => import('./create-thread'),
   () => import('./remove-channel-message'),
-  () => import('./rename-thread'),
-  () => import('./set-thread-name'),
   () => import('./toggle-reaction'),
 );
