@@ -120,4 +120,25 @@ describe('createSyncRoutine', () => {
     // The second call returns the same, pre-existing trigger rather than creating another.
     expect(second?.id).toBe(first?.id);
   });
+
+  test('two calls racing on one binding create a single routine', async ({ expect }) => {
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    const db = await initSpace(harness);
+
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
+    const cursor = makeCursor(db, target);
+    // The existence check is an index query, so it cannot see a routine added moments earlier: without
+    // a guard both callers observe none and each persists a schedule, syncing the binding twice a period.
+    const [first, second] = await Effect.all(
+      [
+        createSyncRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }),
+        createSyncRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }),
+      ],
+      { concurrency: 'unbounded' },
+    ).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
+    await db.flush();
+
+    expect(second?.id).toBe(first?.id);
+    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
+  });
 });

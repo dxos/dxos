@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as FiberId from 'effect/FiberId';
 
 import { Operation, Trigger } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -21,7 +23,43 @@ import { findSyncTriggerForBinding } from './sync-trigger';
  * so no target ref is smuggled into the operation input. Returns the existing trigger instead when a
  * sync routine is already connected to `target`.
  */
+/**
+ * Creation in flight, keyed by binding. The existence check below is an index query, so it cannot see
+ * a Routine added moments earlier — without this, callers racing on one binding each observe none and
+ * persist a schedule, syncing it twice a period. Process-local: a second peer racing needs the
+ * one-routine-per-binding invariant at the data layer.
+ */
+const creating = new Map<string, Deferred.Deferred<Trigger.Trigger>>();
+
 export const createSyncRoutine = ({
+  target,
+  cursor,
+  operation,
+  spec,
+}: {
+  target: Obj.Unknown;
+  cursor: Cursor.ExternalCursor;
+  operation: Operation.Definition<SyncInput, SyncOutput>;
+  spec: Trigger.Spec;
+}): Effect.Effect<Trigger.Trigger, never, Database.Service> =>
+  // Claimed synchronously, before the first yield point, so no caller can interleave between the
+  // lookup and the claim.
+  Effect.suspend(() => {
+    const inFlight = creating.get(cursor.id);
+    if (inFlight) {
+      return Deferred.await(inFlight);
+    }
+
+    const deferred = Deferred.unsafeMake<Trigger.Trigger>(FiberId.none);
+    creating.set(cursor.id, deferred);
+    return createRoutine({ target, cursor, operation, spec }).pipe(
+      // Waiters see the same outcome, including a defect, rather than hanging on the deferred.
+      Effect.onExit((exit) => Deferred.done(deferred, exit)),
+      Effect.ensuring(Effect.sync(() => creating.delete(cursor.id))),
+    );
+  });
+
+const createRoutine = ({
   target,
   cursor,
   operation,
