@@ -114,15 +114,26 @@ That is not a test artifact — it broke three existing tests that assert lazy l
 on update only if they were loaded before"; `query-api-stall.test.ts`), and at scale
 it is the working-set explosion this codebase has been fighting elsewhere.
 
-The fix is Phase 3 brought forward, and it is a **feature, not a patch**:
+The fix is Phase 3 brought forward. It is a **feature, not a patch** — but it needs
+**no new RPC**: `execQuery` already carries a `QueryAST`, so this rides the existing
+service surface. Concretely, five pieces:
 
-- `meta.naturalKey` needs a column on the `objectMeta` index
-  (`index-core/src/indexes/entity-meta-index.ts` — migration, populate, query).
-- A `Filter` cannot express the query detection needs ("has _any_ natural key",
-  grouped), so this is a dedicated index query plus a service method, not
-  query-planner pushdown. Note `metaKey` is post-filter only today
-  (`echo-host/src/filter/filter-match.ts`) — nothing pushes meta fields to the index,
-  so this would be the first.
+1. `index-core/src/indexes/entity-meta-index.ts` — a `naturalKey TEXT` column, the
+   `ALTER TABLE` migration (same pattern as `parent`/`createdAt`), populate from
+   `castData[ATTR_META]?.naturalKey` in both the INSERT and UPDATE branches, and a
+   query for rows where it is non-null.
+2. `echo-protocol/src/query/ast.ts` — a filter field alongside the existing
+   `metaKey`, expressing "declares a natural key" (and optionally "equals _k_").
+3. `echo/src/Filter.ts` — `Filter.naturalKey(...)`, mirroring `Filter.key`.
+4. `echo-host/src/filter/filter-match.ts` — the post-filter branch, so the filter is
+   correct even when the fast path is not taken.
+5. `echo-host/src/query/query-planner.ts` — a new `QueryPlan.Selector` and the index
+   fast path that emits it. This is the notable part: `metaKey` is post-filter only
+   today, so nothing currently pushes a meta field to the index, and this would be
+   the first. A new selector also has to be handled wherever selectors are executed.
+
+Sequenced as its own PR: a new query-plan selector plus an index migration is its own
+review surface, and it would swamp the merge work if bolted on.
 
 Until then `db.mergeDuplicates()` is an explicit call: the caller opts into the scan.
 
