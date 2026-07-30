@@ -3,6 +3,7 @@
 //
 
 import { Merge, Obj, Ref } from '@dxos/echo';
+import { PROPERTY_ID } from '@dxos/echo-protocol';
 import { EID, type EntityId } from '@dxos/keys';
 
 import { getObjectCore } from '../echo-handler';
@@ -122,6 +123,57 @@ export const rewriteReferences = (referrers: readonly Obj.Unknown[], entities: r
     });
   }
   return rewritten;
+};
+
+/**
+ * Fold edits made to a merged-away entity *after* it was merged into the entity that survives.
+ *
+ * A peer that was offline during the merge keeps editing its own copy; those edits arrive later
+ * and would otherwise be stranded on a tombstone. Re-running the field-wise merge would not
+ * rescue them — it prefers the smallest-id candidate, which is the winner, so the late value
+ * would lose. Instead this diffs the loser against the heads recorded at merge time and carries
+ * across exactly the fields that changed since, then re-records the heads so the same edit is
+ * never folded twice.
+ *
+ * @returns The number of fields folded.
+ */
+export const foldLateEdits = (entities: readonly Obj.Unknown[]): number => {
+  const byId = new Map<EntityId, Obj.Unknown>();
+  for (const entity of entities) {
+    byId.set(entity.id, entity);
+  }
+
+  let folded = 0;
+  for (const entity of entities) {
+    const core = getObjectCore(entity);
+    const mergedInto = core.getMergedInto();
+    const mergedAtHeads = core.getMergedAtHeads();
+    if (!mergedInto || !mergedAtHeads) {
+      continue;
+    }
+
+    const winner = byId.get(resolveMerged(entity.id, entities));
+    if (!winner || winner.id === entity.id) {
+      continue;
+    }
+
+    const late = core.getChangedDataFieldsSince(mergedAtHeads).filter((field) => field !== PROPERTY_ID);
+    if (late.length === 0) {
+      continue;
+    }
+
+    Obj.update(winner, (winner) => {
+      for (const field of late) {
+        (winner as Record<string, unknown>)[field] = Obj.getValue(entity, [field]);
+        folded++;
+      }
+    });
+
+    // Advance the watermark, so a later pass does not re-apply what was just folded.
+    core.setMergedInto(mergedInto, core.getHeads());
+  }
+
+  return folded;
 };
 
 /**

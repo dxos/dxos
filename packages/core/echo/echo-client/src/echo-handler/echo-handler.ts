@@ -27,6 +27,7 @@ import {
   Ref,
   RelationSourceId,
   RelationTargetId,
+  SCALAR_META_FIELDS,
   SchemaId,
   SchemaValidator,
   SelfURIId,
@@ -940,13 +941,16 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
   }
 };
 
-const metaNotEmpty = (meta: EntityMeta) =>
-  meta.keys.length > 0 ||
-  meta.tags.length > 0 ||
-  (meta.annotations != null && Object.keys(meta.annotations).length > 0) ||
-  meta.key !== undefined ||
-  meta.version !== undefined ||
-  meta.naturalKey !== undefined;
+const metaNotEmpty = (meta: EntityMeta) => {
+  const fields: Record<string, unknown> = meta;
+  return (
+    meta.keys.length > 0 ||
+    meta.tags.length > 0 ||
+    (meta.annotations != null && Object.keys(meta.annotations).length > 0) ||
+    // Enumerated from the schema, so a newly added meta field cannot be silently left unpersisted.
+    SCALAR_META_FIELDS.some((field) => fields[field] !== undefined)
+  );
+};
 
 /**
  * @internal

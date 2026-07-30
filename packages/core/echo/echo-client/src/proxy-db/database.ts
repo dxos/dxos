@@ -64,6 +64,7 @@ import {
 } from '../echo-handler';
 import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
+import { type MergePassResult, mergeDuplicates, rewriteReferences } from '../merge';
 import { type ObjectMigration } from './object-migration';
 
 export interface EchoDatabase extends Database.Database {
@@ -386,6 +387,36 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         await this._entityManager.updateSpaceState(this._ctx, { rootUrl });
       }
     }
+  }
+
+  /**
+   * Collapse entities that declare the same natural key into one, and repoint references at the
+   * survivor.
+   *
+   * Being a pure function of the entities it sees, every peer computes the same winner, so peers
+   * merging concurrently — or the same peer merging twice — converge rather than fight; a pass
+   * with nothing to merge writes nothing. Entities that declare no natural key are never
+   * candidates, so this is inert for data that has not opted in.
+   *
+   * NOT yet run automatically on space open, which is the intended trigger. Detection currently
+   * scans every entity, which hydrates the whole space into the working set — acceptable for an
+   * explicit call, but not on every open. Making it automatic needs `meta.naturalKey` indexed so
+   * detection asks the index for entities carrying one, and hydrates only actual duplicates.
+   * A filter cannot express that lookup ("has any natural key", grouped), so it needs a dedicated
+   * index query rather than query-planner pushdown.
+   */
+  async mergeDuplicates(): Promise<MergePassResult> {
+    const entities = await this.query(Filter.everything()).run();
+    const result = mergeDuplicates(entities);
+    if (result.merged.length > 0) {
+      // `entities` still holds the losers as live proxies, so they are available as redirect hops
+      // even though the merge has just tombstoned them.
+      rewriteReferences(entities, entities);
+      await this.flush();
+      log('merged duplicates', { spaceId: this.spaceId, groups: result.merged.length });
+    }
+
+    return result;
   }
 
   // ── User-facing Database API ─────────────────────────────────────────────

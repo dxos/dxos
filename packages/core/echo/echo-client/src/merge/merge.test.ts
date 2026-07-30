@@ -204,6 +204,44 @@ describe('Merge', () => {
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 
+  // The database-level entry point: detection, merge, and reference rewriting in one pass.
+  test('db.mergeDuplicates collapses duplicates and repoints references', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const first = db.add(Obj.make(TestSchema.Task, { title: 'first' }));
+    const second = db.add(Obj.make(TestSchema.Task, { title: 'second', description: 'only here' }));
+    for (const task of [first, second]) {
+      Merge.setNaturalKey(task, 'org.example.seed');
+    }
+    const referrer = db.add(Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) }));
+    await db.flush();
+
+    const result = await db.mergeDuplicates();
+    expect(result.merged).toHaveLength(1);
+    expect(result.merged[0].winner).toBe(first.id);
+
+    const survivors = await db.query(Filter.type(TestSchema.Task)).run();
+    expect(survivors.map((task) => task.id).sort()).toEqual([first.id, referrer.id].sort());
+    expect(first.description).toBe('only here');
+    expect(referrer.previous!.uri).toContain(first.id);
+
+    // Idempotent: running again finds nothing and writes nothing.
+    expect((await db.mergeDuplicates()).merged).toHaveLength(0);
+  });
+
+  test('db.mergeDuplicates leaves a space with no natural keys untouched', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    db.add(Obj.make(TestSchema.Task, { title: 'first' }));
+    db.add(Obj.make(TestSchema.Task, { title: 'second' }));
+    await db.flush();
+
+    expect((await db.mergeDuplicates()).merged).toHaveLength(0);
+    expect(await db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(2);
+  });
+
   test('objects with distinct natural keys are not duplicates', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });
     const db = await peer.createDatabase();

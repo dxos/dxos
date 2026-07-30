@@ -17,6 +17,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { type Entity, type Type } from '@dxos/echo';
 import {
+  DATA_NAMESPACE,
   type DatabaseDirectory,
   EncodedReference,
   type EntityStructure,
@@ -434,6 +435,29 @@ export class ObjectCore {
   getDecoded(path: Doc.KeyPath): DecodedAutomergePrimaryValue {
     const decoded = this.decode(this._getRaw(path));
     return upgradeMeta(path, decoded) as DecodedAutomergePrimaryValue;
+  }
+
+  /**
+   * Names of the data fields that changed between `heads` and the current frontier.
+   *
+   * Asks automerge which fields moved rather than comparing values, so it stays exact for nested
+   * structures without needing a deep-equality rule of its own.
+   */
+  getChangedDataFieldsSince(heads: Heads): string[] {
+    const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
+    if (!doc) {
+      return [];
+    }
+
+    const prefix = [...this.mountPath, DATA_NAMESPACE];
+    const changed = new Set<string>();
+    for (const patch of A.diff(doc, heads, A.getHeads(doc))) {
+      if (patch.path.length > prefix.length && prefix.every((key, index) => patch.path[index] === key)) {
+        changed.add(String(patch.path[prefix.length]));
+      }
+    }
+
+    return [...changed];
   }
 
   // TODO(dmaretskyi): Rename to `set`.

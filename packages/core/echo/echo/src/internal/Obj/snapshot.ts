@@ -20,6 +20,7 @@ import {
   TypeEntityId,
   TypeId,
 } from '../common/types';
+import { SCALAR_META_FIELDS } from '../common/types/meta';
 import { MetaId } from '../common/types/model-symbols';
 
 /**
@@ -96,14 +97,20 @@ export const getSnapshot = <T extends object>(obj: T): T => {
   copySymbolProperty(source, snapshot, ParentId);
 
   // Metadata symbol. Copy arrays/objects so the snapshot is not affected by mutations to the live meta.
-  copySymbolProperty(source, snapshot, MetaId, (meta: any) => ({
-    keys: [...(meta?.keys ?? [])],
-    tags: [...(meta?.tags ?? [])],
-    ...(meta?.key != null ? { key: meta.key } : {}),
-    ...(meta?.version != null ? { version: meta.version } : {}),
-    ...(meta?.naturalKey != null ? { naturalKey: meta.naturalKey } : {}),
-    ...(meta?.annotations ? { annotations: { ...meta.annotations } } : {}),
-  }));
+  copySymbolProperty(source, snapshot, MetaId, (meta: any) => {
+    const copy: Record<string, unknown> = {
+      keys: [...(meta?.keys ?? [])],
+      tags: [...(meta?.tags ?? [])],
+      ...(meta?.annotations ? { annotations: { ...meta.annotations } } : {}),
+    };
+    // Enumerated from the schema so a newly added meta field is carried without touching this.
+    for (const field of SCALAR_META_FIELDS) {
+      if (meta?.[field] != null) {
+        copy[field] = meta[field];
+      }
+    }
+    return copy;
+  });
 
   // Relation endpoint symbols.
   copySymbolProperty(source, snapshot, RelationSourceDXNId);

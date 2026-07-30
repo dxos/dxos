@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: wire the merge pass to run on space open behind a flag, then the straggler fold. Uncommitted: none. Last: `meta.naturalKey` + the merge core + executor + multi-peer convergence tests, all green._
+_Resume: index `meta.naturalKey` so detection stops scanning — that is what blocks automatic merge on space open (see Blocker below). Uncommitted: none. Last: `db.mergeDuplicates()`, the straggler fold, and the derived `SCALAR_META_FIELDS` fix; 4 convergence + 10 executor tests green over 3 clean repeats._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -28,18 +28,17 @@ the phased rollout this ledger mirrors).
       assertion rather than the mechanism, so it stays true in Phase 1 where the
       field is inert and in Phase 3 where the indexer triggers the merge.
 
-## Phase 0: Spike (throwaway, tests only)
+## Phase 0: Spike — SUBSUMED
 
-Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0.
+Planned as throwaway code to prove convergence. Skipped: the design review settled
+the questions the spike existed to answer, so the work went straight into shippable
+form under Phases 1–2. Convergence is demonstrated by `convergence.test.ts` rather
+than by a spike.
 
-- [ ] **Minimal end-to-end merge** — 3 `EchoTestPeer`s, duplicate keyed objects,
-      min-id winner, `mergedInto` redirect, resolver hook, ref rewrite via
-      `Query.referencedBy`; convergence under randomized sync orders incl. the
-      partial-view chain case.
-- [ ] **Merge-function shape** — prototype field-wise winner-preference on 2–3
-      real types (Collection, Feed, Expando); check semantics are acceptable.
-- [ ] **Decision memo** — confirm identity field, merge-run location, and
-      merge-function semantics; go/no-go.
+- [x] **Minimal end-to-end merge** — two peers, duplicate keyed objects, min-id
+      winner, `mergedInto` redirect, ref rewrite, and the partial-view chain case.
+- [ ] **Merge-function shape on real types** — still only exercised on `TestSchema`;
+      run it against `Collection` / `Feed` / an Expando before Phase 4 adoption.
 
 ## Phase 1: Foundations (no merge engine)
 
@@ -54,9 +53,8 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0
       redirect-following and the proto-guard snapshot still to do.
 - [ ] Internal relation-endpoint mutation (plumb `ObjectCore.setSource/setTarget`).
 - [ ] Creation-side API for declaring an identity key (+ `db.ensure`-style helper).
-- [ ] Feature flag, default off outside tests.
 
-## Phase 2: Merge engine (flagged)
+## Phase 2: Merge engine
 
 - [x] Duplicate detection (query post-filter), deterministic merge executor,
       tombstone+redirect, opportunistic ref rewrite — `echo-client/src/merge/`.
@@ -66,19 +64,21 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0
       `TestReplicationNetwork`: two peers seeding the same state converge; both
       peers merging independently agree on the winner; a partial-view merge builds
       a chain that still resolves to the global minimum.
-- [ ] Wire the pass to run on space open behind a flag; measure the cost.
-- [ ] Straggler fold — diff a loser from `mergedAtHeads` and fold late edits in
-      (fields are recorded, the fold is not implemented).
-- [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action.
-- [ ] Property-based determinism over randomized op schedules (§5.3).
-- [ ] `EntityKind.Object` as merge subject; relation endpoints rewritten when an
-      endpoint is merged away (needs `ObjectCore.setSource/setTarget` plumbed).
+- [x] `db.mergeDuplicates()` — detection, merge, and reference rewriting in one call.
+- [x] Straggler fold (`foldLateEdits`) — asks automerge which data fields moved since
+      `mergedAtHeads` and carries exactly those to the winner, then advances the
+      watermark so the same edit is never folded twice.
+- [ ] **Run it automatically on space open — BLOCKED, see below.**
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
-- [ ] Multi-peer convergence + property test suite (DESIGN.md §5.2–5.4).
+- [ ] Property-based determinism over randomized op schedules (§5.3).
+- [ ] Relation endpoints rewritten when an endpoint is merged away (needs
+      `ObjectCore.setSource/setTarget` plumbed).
 
 ## Phase 3: Indexing & automation
 
+- [ ] **`meta.naturalKey` index column** — unblocks automatic merge on space open
+      (see Blocker). Migration, populate, and a duplicate-groups query.
 - [ ] Meta-key columns + planner pushdown for `Filter.key` / `Filter.foreignKeys`.
 - [ ] Indexer key-collision events trigger the merge automatically.
 
@@ -104,6 +104,28 @@ Scope decision 2026-07-30: every entity kind that can be stored is in scope, pha
 
 - [ ] Epoch-based compaction of merged-away tombstones.
 
+### Blocker: automatic merge on space open needs the index first
+
+Wiring `mergeDuplicates()` into `DatabaseImpl._open` / `setSpaceRoot` was tried and
+**reverted**. Detection has no way to ask "which entities declare a natural key", so
+it scans `Filter.everything()`, which hydrates the entire space into the working set.
+That is not a test artifact — it broke three existing tests that assert lazy loading
+(`entity-manager.test.ts` "pending links are loaded" and "linked objects are loaded
+on update only if they were loaded before"; `query-api-stall.test.ts`), and at scale
+it is the working-set explosion this codebase has been fighting elsewhere.
+
+The fix is Phase 3 brought forward, and it is a **feature, not a patch**:
+
+- `meta.naturalKey` needs a column on the `objectMeta` index
+  (`index-core/src/indexes/entity-meta-index.ts` — migration, populate, query).
+- A `Filter` cannot express the query detection needs ("has _any_ natural key",
+  grouped), so this is a dedicated index query plus a service method, not
+  query-planner pushdown. Note `metaKey` is post-filter only today
+  (`echo-host/src/filter/filter-match.ts`) — nothing pushes meta fields to the index,
+  so this would be the first.
+
+Until then `db.mergeDuplicates()` is an explicit call: the caller opts into the scan.
+
 ### Gotchas found while implementing
 
 - **Adding a field to `EntityMeta` is not one change.** Two hand-maintained field
@@ -112,7 +134,15 @@ Scope decision 2026-07-30: every entity kind that can be stored is in scope, pha
   allowlist, so the field vanished from every snapshot; and `metaNotEmpty`
   (`echo-client/src/echo-handler/echo-handler.ts`) decides whether meta is persisted
   at all, so an object whose _only_ meta was a natural key never wrote its meta
-  section. Both are now updated. Worth collapsing into one derived list.
+  section. **Fixed at the root**: both now enumerate `SCALAR_META_FIELDS`, derived
+  from `EntityMetaSchema.fields`, so the next meta field needs one change.
+- **ECHO brand keys are strings, not symbols** (`~@dxos/echo/Kind` and friends), so
+  `Object.entries` on a snapshot sweeps them into what looks like user data.
+  `Merge.candidateOf` filters them by prefix.
+- **`waitUntilHeadsReplicated` is not a query barrier.** It covers document
+  replication, but queries read through the index, which settles a tick later — a
+  merge run immediately after it can see one object short. The convergence tests wait
+  on the observable result instead.
 
 ### References
 

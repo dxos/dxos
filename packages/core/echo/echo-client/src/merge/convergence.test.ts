@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, Merge, Obj, Query } from '@dxos/echo';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
@@ -11,7 +12,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
-import { mergeDuplicates, resolveMerged } from './merge-executor';
+import { foldLateEdits, mergeDuplicates, resolveMerged } from './merge-executor';
 
 // The scenario the whole design exists for: peers initialize the same application state without
 // coordinating, so each mints its own object and replication surfaces the duplicates.
@@ -38,6 +39,15 @@ describe('merge convergence', () => {
   const allTasks = (db: any) =>
     db.query(Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'include' })).run();
 
+  // `waitUntilHeadsReplicated` covers document replication, but queries read through the index,
+  // which settles a tick later. Waiting on the observable result rather than on sync keeps these
+  // tests deterministic — without this the merge can run against a view that is one object short.
+  const waitForLiveTasks = (db: any, count: number) =>
+    waitForCondition({
+      condition: async () => (await liveTasks(db)).length === count,
+      timeout: 5_000,
+    });
+
   test('two peers seeding the same state converge on one object', async ({ expect }) => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
@@ -56,7 +66,7 @@ describe('merge convergence', () => {
 
     // Both duplicates are now visible to peer 1.
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
-    expect(await liveTasks(db1)).toHaveLength(2);
+    await waitForLiveTasks(db1, 2);
 
     // Either peer may run the merge; the winner is a pure function of the id set, so it does not
     // matter which one does.
@@ -73,6 +83,7 @@ describe('merge convergence', () => {
 
     // Peer 2 sees the same single object once the merge replicates.
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await waitForLiveTasks(db2, 1);
     const survivorsOnPeer2 = await liveTasks(db2);
     expect(survivorsOnPeer2).toHaveLength(1);
     expect(survivorsOnPeer2[0].id).toBe(winner);
@@ -98,6 +109,8 @@ describe('merge convergence', () => {
     // client-on-space-open decision accepts as safe because the result is deterministic.
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await waitForLiveTasks(db1, 2);
+    await waitForLiveTasks(db2, 2);
 
     const merged1 = mergeDuplicates(await liveTasks(db1));
     const merged2 = mergeDuplicates(await liveTasks(db2));
@@ -110,10 +123,68 @@ describe('merge convergence', () => {
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
     for (const db of [db1, db2]) {
+      await waitForLiveTasks(db, 1);
       const survivors = await liveTasks(db);
       expect(survivors).toHaveLength(1);
       expect(survivors[0].id).toBe(winner);
     }
+  });
+
+  test('edits made to a loser after the merge are folded into the winner', async ({ expect }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+    await using peer1 = await builder.createPeer({ types: [TestSchema.Task] });
+    await using peer2 = await builder.createPeer({ types: [TestSchema.Task] });
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    const first = seed(db1, 'from peer 1');
+    await db1.flush();
+
+    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    const second = seed(db2, 'from peer 2');
+    await db2.flush();
+    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    await waitForLiveTasks(db1, 2);
+
+    // Peer 1 merges; peer 2 is a straggler that has not seen the merge and keeps editing its own
+    // copy, which is about to become the loser.
+    const merged = mergeDuplicates(await liveTasks(db1));
+    await db1.flush();
+    const winner = merged.merged[0].winner;
+    expect(winner).toBe(first.id < second.id ? first.id : second.id);
+
+    const loserId = merged.merged[0].losers[0];
+    await waitForCondition({
+      condition: async () => (await allTasks(db2)).some((task: any) => task.id === loserId),
+      timeout: 5_000,
+    });
+    const loser = (await allTasks(db2)).find((task: any) => task.id === loserId);
+    Obj.update(loser, (loser: any) => {
+      loser.description = 'written after the merge';
+    });
+    await db2.flush();
+    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+
+    await waitForCondition({
+      condition: async () => (await allTasks(db1)).some((task: any) => task.id === loserId && task.description),
+      timeout: 5_000,
+    });
+
+    // Re-running the field-wise merge would not rescue this: it prefers the smallest id, which is
+    // the winner. The fold carries exactly the late edit across.
+    const all = await allTasks(db1);
+    expect(foldLateEdits(all)).toBe(1);
+    await db1.flush();
+
+    const survivors = await liveTasks(db1);
+    expect(survivors).toHaveLength(1);
+    expect(survivors[0].id).toBe(winner);
+    expect(survivors[0].description).toBe('written after the merge');
+
+    // The watermark advanced, so the same edit is not folded twice.
+    expect(foldLateEdits(await allTasks(db1))).toBe(0);
   });
 
   test('a partial view merges into a chain that still resolves to the global minimum', async ({ expect }) => {
@@ -137,6 +208,7 @@ describe('merge convergence', () => {
     const third = seed(db2, 'third');
     await db2.flush();
 
+    await waitForLiveTasks(db2, 3);
     const partialView = (await liveTasks(db2)).filter((task: any) => task.id === second.id || task.id === third.id);
     const partial = mergeDuplicates(partialView);
     await db2.flush();
@@ -144,6 +216,7 @@ describe('merge convergence', () => {
 
     // Now a peer with the full view merges everything.
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    await waitForLiveTasks(db1, 2);
     const full = mergeDuplicates(await liveTasks(db1));
     await db1.flush();
 
