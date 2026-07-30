@@ -31,7 +31,7 @@ export const syncBinding = ({
   connector: ConnectorEntry;
   cursor: Cursor.ExternalCursor;
   spaceId: Key.SpaceId;
-}): Effect.Effect<void, Error, Database.Service | Operation.Service | Capability.Service> =>
+}): Effect.Effect<void, ConnectionSyncError, Database.Service | Operation.Service | Capability.Service> =>
   Effect.gen(function* () {
     const sync = connector.sync;
     if (!sync) {
