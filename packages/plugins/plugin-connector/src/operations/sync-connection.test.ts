@@ -60,20 +60,6 @@ describe('SyncConnection', () => {
     invokeTrigger: ({ trigger }) => Effect.sync(() => void fired.push(trigger.id)),
   };
 
-  /**
-   * A connector that keeps its bindings in sync on a schedule (`scheduled`) syncs by force-running
-   * the Routine's trigger; one without a spec is invoked directly, which is the distinction under test.
-   */
-  const makeConnector = ({ scheduled, auto }: { scheduled: boolean; auto?: boolean }): ConnectorEntry => ({
-    id: 'example',
-    source: 'example.com',
-    sync: {
-      operation: TestSync,
-      ...(auto ? { auto: true } : {}),
-      ...(scheduled ? { trigger: Trigger.specTimer('*/10 * * * *') } : {}),
-    },
-  });
-
   test('invokes the sync operation directly for a connector with no trigger spec', async ({ expect }) => {
     const { db, connection, cursor } = await setup();
     // Even with a trigger in the space, a connector that declares no schedule syncs on demand only.
@@ -153,6 +139,20 @@ describe('SyncConnection', () => {
 
     expect(synced).toEqual([]);
     expect(fired).toEqual([]);
+  });
+
+  /**
+   * A connector that keeps its bindings in sync on a schedule (`scheduled`) syncs by force-running
+   * the Routine's trigger; one without a spec is invoked directly, which is the distinction under test.
+   */
+  const makeConnector = ({ scheduled, auto }: { scheduled: boolean; auto?: boolean }): ConnectorEntry => ({
+    id: 'example',
+    source: 'example.com',
+    sync: {
+      operation: TestSync,
+      ...(auto ? { auto: true } : {}),
+      ...(scheduled ? { trigger: Trigger.specTimer('*/10 * * * *') } : {}),
+    },
   });
 
   /**
