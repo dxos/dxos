@@ -58,9 +58,9 @@ describe('Capability tags', () => {
     it('creates branded contributions', () => {
       const single = Capability.makeSingleton<Example>()('org.dxos.test.single');
       const contribution = Capability.contribute(single, { example: 'value' });
-      expect(Capability.isContribution(contribution)).toBe(true);
+      expect(CapabilityManager.isContribution(contribution)).toBe(true);
       // A raw capability entry (what `expandContributions` yields for the manager) is not a Contribution.
-      expect(Capability.isContribution({ interface: single, implementation: { example: 'value' } })).toBe(false);
+      expect(CapabilityManager.isContribution({ interface: single, implementation: { example: 'value' } })).toBe(false);
       expect(contribution.capability).toBe(single);
       expect(contribution.values).toEqual([{ example: 'value' }]);
     });
@@ -70,9 +70,9 @@ describe('Capability tags', () => {
       const contribution = Capability.contribute(single, { example: 'value' });
 
       // A single (non-array) return is wrapped; an array passes through flattened.
-      expect(Capability.normalizeActivateResult(contribution)).toEqual([contribution]);
-      expect(Capability.normalizeActivateResult([contribution])).toEqual([contribution]);
-      expect(Capability.normalizeActivateResult(undefined)).toEqual([]);
+      expect(CapabilityManager.normalizeActivateResult(contribution)).toEqual([contribution]);
+      expect(CapabilityManager.normalizeActivateResult([contribution])).toEqual([contribution]);
+      expect(CapabilityManager.normalizeActivateResult(undefined)).toEqual([]);
     });
 
     it('provideAll carries multiple values for a multi capability', () => {

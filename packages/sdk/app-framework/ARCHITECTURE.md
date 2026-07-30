@@ -98,12 +98,12 @@ classDiagram
 `Contribution` and `CapabilityEntry` (exported as `Capability.Any`) sit on either side of the
 registry boundary — the authoring layer and the storage layer:
 
-|              | `Contribution` (authoring)                                                                     | `Capability.Any` (registry)                  |
-| ------------ | ---------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Produced by  | `Capability.contribute` / `contributeAll`                                                      | `expandContributions`, from a `Contribution` |
-| Holds        | **n** values for one capability                                                                | exactly **one** implementation               |
-| Identity     | branded by capability identity (NSID + arity) — powers the `EnsureProvides` completeness check | the `InterfaceDef` only                      |
-| Service type | erased to `AnyTag`, so a body's service type never leaks into `.d.ts` emit                     | names `T` directly                           |
+|              | `Contribution` (authoring)                                                                     | `Capability.Any` (registry)             |
+| ------------ | ---------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Produced by  | `Capability.contribute` / `contributeAll`                                                      | `CapabilityManager.expandContributions` |
+| Holds        | **n** values for one capability                                                                | exactly **one** implementation          |
+| Identity     | branded by capability identity (NSID + arity) — powers the `EnsureProvides` completeness check | the `InterfaceDef` only                 |
+| Service type | erased to `AnyTag`, so a body's service type never leaks into `.d.ts` emit                     | names `T` directly                      |
 
 `expandContributions` is the one-way bridge: a `contributeAll(tag, [a, b, c])` is one `Contribution`
 that becomes three registry entries, with the `deactivate` hook pinned to the first so it runs

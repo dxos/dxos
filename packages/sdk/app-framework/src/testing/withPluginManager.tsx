@@ -13,7 +13,7 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
 import { ActivationEvents, Capabilities } from '../common';
-import { type ActivationEvent, Capability, type CapabilityManager, Plugin, PluginManager } from '../core';
+import { type ActivationEvent, Capability, CapabilityManager, Plugin, PluginManager } from '../core';
 import { type UseAppOptions, useApp } from '../ui';
 import { StorybookErrorFallback } from './StorybookErrorFallback';
 
@@ -40,13 +40,15 @@ export const setupPluginManager = ({
   if (capabilities) {
     // Fixtures hand us `Contribution`s (from `Capability.contribute`); expand them to the raw
     // interface/implementation entries the manager ingests — the same path module activation uses.
-    Capability.expandContributions(getProviderValue(capabilities, pluginManager.capabilities)).forEach((capability) => {
-      pluginManager.capabilities.contribute({
-        interface: capability.interface,
-        implementation: capability.implementation,
-        module: 'story',
-      });
-    });
+    CapabilityManager.expandContributions(getProviderValue(capabilities, pluginManager.capabilities)).forEach(
+      (capability) => {
+        pluginManager.capabilities.contribute({
+          interface: capability.interface,
+          implementation: capability.implementation,
+          module: 'story',
+        });
+      },
+    );
   }
 
   return pluginManager;
@@ -84,7 +86,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
     // Storybook replaces the full context object often, so key manager ownership by story id.
     useEffect(() => {
       const pluginManager = setupPluginManager(options);
-      const [capability] = Capability.expandContributions([
+      const [capability] = CapabilityManager.expandContributions([
         Capability.contribute(Capabilities.ReactRoot, {
           id: storyId,
           root: () => <Story />,

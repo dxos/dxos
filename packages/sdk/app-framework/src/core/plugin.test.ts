@@ -10,6 +10,7 @@ import { DXN } from '@dxos/keys';
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
+import * as CapabilityManager from './capability-manager';
 import * as Plugin from './plugin';
 import * as PluginManager from './plugin-manager';
 
@@ -84,7 +85,7 @@ describe('Plugin module authoring', () => {
             Effect.scoped,
           );
         assert(Array.isArray(result));
-        const entries = Capability.expandContributions(result);
+        const entries = CapabilityManager.expandContributions(result);
         expect(entries).toHaveLength(1);
         expect(entries[0].interface).toBe(Total);
         expect(entries[0].implementation).toEqual({ total: 5 });
@@ -212,14 +213,14 @@ describe('Plugin module authoring', () => {
           Effect.scoped,
         );
         assert(Array.isArray(result));
-        const entries = Capability.expandContributions(result);
+        const entries = CapabilityManager.expandContributions(result);
         expect(entries[0].implementation).toEqual({ total: 7 });
       }),
     );
 
     it('provideAll expands into one entry per value', () => {
       const contribution = Capability.contributeAll(Multi, [{ entry: 'a' }, { entry: 'b' }]);
-      const entries = Capability.expandContributions([contribution]);
+      const entries = CapabilityManager.expandContributions([contribution]);
       expect(entries).toHaveLength(2);
       expect(entries.map((entry) => entry.implementation)).toEqual([{ entry: 'a' }, { entry: 'b' }]);
       expect(entries[0].deactivate).toBeUndefined();
@@ -311,7 +312,7 @@ describe('Plugin module authoring', () => {
             Effect.scoped,
           );
         assert(Array.isArray(result));
-        const entries = Capability.expandContributions(result);
+        const entries = CapabilityManager.expandContributions(result);
         expect(entries[0].implementation).toEqual({ total: 42 });
       }),
     );

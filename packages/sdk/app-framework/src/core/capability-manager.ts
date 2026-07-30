@@ -9,12 +9,59 @@ import * as Effect from 'effect/Effect';
 import { log } from '@dxos/log';
 
 import type * as Capability from './capability';
+import { ContributionTypeId } from './capability';
 import { CapabilityNotFoundError } from './errors';
 
 type CapabilityEntry<T> = {
   moduleId: string;
   implementation: T;
 };
+
+//
+// Contribution ingestion — manager-side machinery for a module's activate result. Lives here
+// rather than in `capability` so the authoring namespace exposes only the plugin-author API.
+//
+
+/**
+ * Type guard to check if a value is a {@link Capability.Contribution}.
+ */
+export const isContribution = (value: unknown): value is Capability.AnyContribution => {
+  return typeof value === 'object' && value !== null && ContributionTypeId in value;
+};
+
+/**
+ * Normalizes a module activate result into a flat list of items (legacy capabilities and
+ * typed contributions).
+ */
+export const normalizeActivateResult = (
+  result: Capability.ModuleReturn | Capability.AnyContribution | readonly Capability.AnyContribution[],
+): Array<Capability.Any | Capability.AnyContribution> => {
+  if (result == null) {
+    return [];
+  }
+  // Cast: Array.isArray does not narrow the ReadonlyArray members of ModuleReturn.
+  return (Array.isArray(result) ? [...result] : [result]) as Array<Capability.Any | Capability.AnyContribution>;
+};
+
+/**
+ * Expands typed contributions into per-value capability entries; legacy capability entries
+ * pass through. A multi-value contribution's deactivate hook is attached to its first entry
+ * so deactivation runs it exactly once.
+ */
+export const expandContributions = (
+  items: ReadonlyArray<Capability.Any | Capability.AnyContribution>,
+): Capability.Any[] =>
+  items.flatMap((item) =>
+    isContribution(item)
+      ? item.values.map(
+          (value, index): Capability.Any => ({
+            interface: item.capability,
+            implementation: value,
+            deactivate: index === 0 ? item.deactivate : undefined,
+          }),
+        )
+      : [item],
+  );
 
 /**
  * Options for creating a capability manager.

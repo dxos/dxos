@@ -271,4 +271,5 @@ withPluginManager({
 | `Plugin.ActivationSpec`       | `dependency \| event` discriminated union                      |
 
 `Contribution` → `Capability.Any` is a 1-to-n expansion performed by the manager
-(`expandContributions`); see [ARCHITECTURE.md](./ARCHITECTURE.md#the-two-layer-split).
+(`CapabilityManager.expandContributions`); see
+[ARCHITECTURE.md](./ARCHITECTURE.md#the-two-layer-split).

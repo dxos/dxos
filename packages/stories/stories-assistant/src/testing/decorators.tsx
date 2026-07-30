@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
-import { Capabilities, Capability, Plugin, PluginManager } from '@dxos/app-framework';
+import { Capabilities, Capability, CapabilityManager, Plugin, PluginManager } from '@dxos/app-framework';
 import { type WithPluginManagerOptions } from '@dxos/app-framework/testing';
 import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities, AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
@@ -247,7 +247,7 @@ const PluginManagerHost = ({
   }, [options]);
 
   useEffect(() => {
-    const [capability] = Capability.expandContributions([
+    const [capability] = CapabilityManager.expandContributions([
       Capability.contribute(Capabilities.ReactRoot, {
         id: contextId,
         root: () => <>{children}</>,

@@ -2145,7 +2145,7 @@ class ManagerImpl implements PluginManager {
             }),
             Effect.timed,
           );
-          const normalized = Capability.normalizeActivateResult(capabilities);
+          const normalized = CapabilityManager.normalizeActivateResult(capabilities);
 
           // Runtime provides validation (the authoritative check; the type-level one is
           // best-effort). Validated on the raw items so an empty provideAll still counts
@@ -2156,7 +2156,7 @@ class ManagerImpl implements PluginManager {
           const declared = new Set(module.activation.provides.map((capability) => capability.identifier));
           const returned = new Set(
             normalized.map((item) =>
-              Capability.isContribution(item) ? item.capability.identifier : item.interface.identifier,
+              CapabilityManager.isContribution(item) ? item.capability.identifier : item.interface.identifier,
             ),
           );
           const missing = [...declared].filter((identifier) => !returned.has(identifier));
@@ -2179,7 +2179,7 @@ class ManagerImpl implements PluginManager {
             elapsed,
             failed: false,
           });
-          return Capability.expandContributions(normalized);
+          return CapabilityManager.expandContributions(normalized);
         }).pipe(
           Effect.tapErrorCause(() => Scope.close(scope, Exit.void)),
           Effect.withSpan('PluginManager._loadModule'),

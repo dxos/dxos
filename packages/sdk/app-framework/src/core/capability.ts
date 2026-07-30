@@ -313,6 +313,12 @@ export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]]
 // Contributions (typed activate returns)
 //
 
+/**
+ * Brand symbol carried by every {@link Contribution}. Exported only so the manager layer
+ * ({@link CapabilityManager.isContribution}) can detect contributions at runtime — not part of
+ * the plugin-authoring API.
+ * @internal
+ */
 export const ContributionTypeId: unique symbol = Symbol.for('@dxos/app-framework/Contribution');
 export type ContributionTypeId = typeof ContributionTypeId;
 
@@ -353,45 +359,6 @@ export type IdentifierOf<C> =
       : never;
 
 /**
- * Type guard to check if a value is a {@link Contribution}.
- */
-export const isContribution = (value: unknown): value is AnyContribution => {
-  return typeof value === 'object' && value !== null && ContributionTypeId in value;
-};
-
-/**
- * Normalizes a module activate result into a flat list of items (legacy capabilities and
- * typed contributions).
- */
-export const normalizeActivateResult = (
-  result: ModuleReturn | AnyContribution | readonly AnyContribution[],
-): Array<Any | AnyContribution> => {
-  if (result == null) {
-    return [];
-  }
-  // Cast: Array.isArray does not narrow the ReadonlyArray members of ModuleReturn.
-  return (Array.isArray(result) ? [...result] : [result]) as Array<Any | AnyContribution>;
-};
-
-/**
- * Expands typed contributions into per-value capability entries; legacy capability entries
- * pass through. A multi-value contribution's deactivate hook is attached to its first entry
- * so deactivation runs it exactly once.
- */
-export const expandContributions = (items: ReadonlyArray<Any | AnyContribution>): Any[] =>
-  items.flatMap((item) =>
-    isContribution(item)
-      ? item.values.map(
-          (value, index): Any => ({
-            interface: item.capability,
-            implementation: value,
-            deactivate: index === 0 ? item.deactivate : undefined,
-          }),
-        )
-      : [item],
-  );
-
-/**
  * Contributes an implementation for a declared capability.
  * Arity-aware: passing a multi capability where a singleton is expected (or vice versa)
  * is rejected by the value parameter type.
@@ -413,7 +380,7 @@ export const contribute: {
   deactivate?: () => Effect.Effect<void, Error>,
 ): Contribution<IdentifierOf<C>> => ({
   // Controlled brand cast: `[ContributionTypeId]` is a type-only identifier brand; at runtime it
-  // holds the tag (isContribution checks presence only).
+  // holds the tag ({@link CapabilityManager.isContribution} checks presence only).
   [ContributionTypeId]: capability as unknown as IdentifierOf<C>,
   capability,
   values: [implementation],
@@ -441,7 +408,8 @@ export const contributeAll = <C extends MultiTag<any, any>>(
  * contribution is the ergonomic form when a module provides exactly one capability; a module that
  * declares several `provides` must return the array (else {@link EnsureProvides} reports the
  * uncovered ones). Completeness is checked by {@link EnsureProvides}; the plugin manager's runtime
- * validation is authoritative for both (it normalizes a single return via {@link normalizeActivateResult}).
+ * validation is authoritative for both (it normalizes a single return via
+ * {@link CapabilityManager.normalizeActivateResult}).
  */
 export type ProvidesReturn<Provides extends readonly AnyTag[]> = Provides extends readonly []
   ? void | ReadonlyArray<never>
