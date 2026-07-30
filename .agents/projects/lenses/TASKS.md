@@ -352,12 +352,16 @@ Each phase is measured against that bar, and each says honestly where it does no
 ### Phase M0 — research: can late old-schema changes be folded forward?
 
 Standalone, no API changes, no integration — and **the only phase startable today** (M1 gates on
-Phase 5; M2 gates on this). Honesty note from review: at twelve claims this is no longer "a spike"
-but a research phase, and it splits into two tracks with different costs. **Track A — fold-forward
+Phase 5; M2 gates on this). This is **the research phase** — M2 "integrates the research", and this
+is the research it integrates. Each claim is roughly one spike, they share one harness, and the
+deliverable is answers plus the §10.3 writeup that fixes M2's shape — no shippable code. Not
+labelled "a spike": a spike is one time-boxed question with one go/no-go, and this has twelve
+independent kill-points in two tracks with different costs. **Track A — fold-forward
 core** (claims 1-5, 12) needs only the harness below; run it first, in kill order **1, 2, 12, 5**,
 then 3-4 — claim 12 jumps ahead of the cheap ones because it is the likeliest bar-breaker, and
 claim 5's answer is already known to require app-level machinery (see its text). **Track B — entity
-lifecycle** (claims 6-11) needs scaffolding (a derived-id helper, a fan-out runner sketch) and can
+lifecycle** (claims 6-11) needs scaffolding (an identity-key helper, a fan-out runner sketch — and claim 6's venue is
+largely object-merging's own Phase 0 spike, adopted rather than duplicated) and can
 overlap M1. Claim numbers are referenced from M1/M2 — grouped, not renumbered. DESIGN.md §10.3 has
 the mechanism.
 
