@@ -12,4 +12,5 @@ import { SpaceCapability } from '@dxos/plugin-space';
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'));

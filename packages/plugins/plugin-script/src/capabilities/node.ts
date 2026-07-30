@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 export const AppGraphBuilder = Capability.lazyModule(
@@ -11,11 +11,7 @@ export const AppGraphBuilder = Capability.lazyModule(
   { provides: [AppCapabilities.AppGraphBuilder] },
   () => import('./app-graph-builder'),
 );
-export const SkillDefinition = Capability.lazyModule(
-  'SkillDefinition',
-  { provides: [AppCapabilities.SkillDefinition] },
-  () => import('./skill-definition'),
-);
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = Capability.lazyModule(
   'CreateObject',
   { provides: [SpaceCapabilities.CreateObjectEntry] },
