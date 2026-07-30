@@ -8,7 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Annotation, Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Annotation, Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { invariant } from '@dxos/invariant';
 
 import * as AppNode from '../app-graph/AppNode';
@@ -26,8 +27,27 @@ type AddProps = {
 export const containing = (object: Obj.Unknown): Query.Query<Collection.Collection> =>
   Query.select(Filter.id(object.id)).referencedBy(Collection.Collection, 'objects');
 
+/**
+ * Whether the object's type is annotated hidden. Unregistered types (e.g. a snapshot whose type
+ * entity isn't wired up) read as visible — the same default the navtree's type branches use.
+ */
+const isHidden = (object: Obj.Unknown): boolean => {
+  const type = Obj.getType(object);
+  return type ? HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)) : false;
+};
+
 export const add = Effect.fn(function* ({ object, target }: AddProps) {
   const objectRef = Ref.make(object);
+  // Hidden objects are implementation details reached through a ref on their owner (e.g. a
+  // sketch's canvas, a game's variant state). Collection membership is what the navtree renders,
+  // so filing one would surface it as a sibling of the object that owns it.
+  if (isHidden(object)) {
+    if (!Obj.getDatabase(object)) {
+      yield* Database.add(object);
+    }
+    return;
+  }
+
   if (Collection.isCollection(target)) {
     Obj.update(target, (target) => {
       target.objects.push(objectRef);

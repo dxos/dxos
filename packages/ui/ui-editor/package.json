@@ -53,12 +53,14 @@
     "@codemirror/view": "catalog:",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/nlp": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -74,6 +76,7 @@
     "@replit/codemirror-vscode-keymap": "catalog:",
     "@uiw/codemirror-theme-vscode": "catalog:",
     "ajv": "catalog:",
+    "codemirror-lang-mermaid": "catalog:",
     "diff": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "lodash.sortby": "catalog:"
@@ -87,7 +90,10 @@
     "@types/lodash.sortby": "catalog:",
     "effect": "catalog:",
     "happy-dom": "catalog:",
-    "vite": "catalog:"
+    "jsdom": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-top-level-await": "catalog:",
+    "vite-plugin-wasm": "catalog:"
   },
   "peerDependencies": {
     "@dxos/ui-theme": "workspace:^",

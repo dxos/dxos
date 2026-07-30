@@ -118,6 +118,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-illustrator"
+    },
+    {
       "path": "../plugin-inbox"
     },
     {
@@ -127,13 +130,13 @@
       "path": "../plugin-sheet"
     },
     {
-      "path": "../plugin-sketch"
-    },
-    {
       "path": "../plugin-space"
     },
     {
       "path": "../plugin-status-bar"
+    },
+    {
+      "path": "../plugin-tldraw"
     }
   ]
 }

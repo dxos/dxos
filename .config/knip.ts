@@ -370,6 +370,9 @@ const config: KnipConfig = {
     // System tools, not npm packages.
     'jq',
     'sips',
+    'printf',
+    // 1Password CLI, installed on the machines that run the credential scripts.
+    'op',
     // Invoked in CI from the runner image rather than from the workspace.
     'nx',
     // Provided by the tauri toolchain a tagged task pulls in.

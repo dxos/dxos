@@ -107,29 +107,82 @@ previously mutated in memory silently.
       all of them go through `Obj.update` or `useObject`'s updater. So the
       opt-out-free change reaches no existing mutation path.
 
-## Roadmap phases (post-merge; see DESIGN.md "Roadmap (post-#12235)")
+## Roadmap phases (see DESIGN.md "Roadmap"; revised 2026-07-29)
 
-The former deferred follow-ups, ordered as a dependency chain (1 → 2 → 3 → 4,
-one PR each; 5 exploratory).
+Sequenced by product pull: email drives scale-out (phases 3–4), first-party
+chat channels inherit it. Dependency chain 1 → 2 → 3 → 4, one PR each; 5 and 6
+demand-gated.
 
-- [ ] **Phase 1 — version/order axis.** Wire `insertionId` through the codec +
-      index path so the version axis is always present (today
-      `KEY_QUEUE_POSITION`, null unless `assignQueuePositions` is on — Dmytro
-      asked for `insertionId`; CodeRabbit flagged the default-off ordering
-      guarantee). Correctness-shaped, not an optimisation. Document
-      reorder-on-position-arrival semantics.
-- [ ] **Phase 2 — consumer cursors + subscriptions.** Implement stubbed
-      `Feed.cursor`/`Feed.next`; durable high-water cursor per subscription
-      replaces the unbounded `processedVersions` map (and eventually
-      content-signature diffing); add `SubscriptionSpec.options.mutationTypes`
-      filter.
-- [ ] **Phase 3 — delta blocks.** Partial-object update blocks + field-level
-      LWW merge at the index; per-object fold rollback/replay on position
-      reorder.
-- [ ] **Phase 4 — retention + compaction.** Implement `Feed.setRetention`
-      (`Feed.RetentionOptions`); compact superseded blocks by rewriting a
-      prefix into a snapshot block.
-- [ ] **Phase 5 — app-defined projections (exploratory).** Deterministic folds
-      over feeds with rematerialization; demand-gated.
-- [ ] **Cross-cutting.** Explicit policy for schema-invalid feed items
-      (replacing silent drop); surface `getSyncState` in devtools.
+### Phase 1 — version/order axis (NEXT)
+
+Correctness-shaped: v1 live objects lean on `KEY_QUEUE_POSITION`, null unless
+`assignQueuePositions` is on (Dmytro asked for `insertionId`; CodeRabbit
+flagged the default-off guarantee). Also the chat ship gate.
+
+- [ ] Wire `insertionId` through `EchoFeedCodec` and the index path so every
+      hydrated feed object carries a version axis.
+- [ ] `FeedObjectCore` baseline: `position` when present, else Lamport
+      `(sequence, actorId)`, else `insertionId` — never null.
+- [ ] Document reorder-on-position-arrival semantics (positions re-sort only;
+      per-object latest unaffected).
+- [ ] Tests: offline appends order stably pre-position; order converges on
+      position assignment; cross-tab concurrent `Obj.update` baseline check.
+
+### Phase 2 — consumer cursors, read state, push
+
+- [ ] Implement stubbed `Feed.cursor`/`Feed.next`/`nextOption` as Effect
+      streams over the phase-1 axis.
+- [ ] Durable per-consumer high-water cursor: decide storage home (consumer's
+      own object vs feed metadata) and API (`Feed.getCursor`/`advance`).
+- [ ] Rebase the trigger dispatcher onto cursors; delete the unbounded
+      `processedVersions` map.
+- [ ] `SubscriptionSpec.options.mutationTypes` filter checked before
+      `fire(...)`.
+- [ ] EDGE push: use the sync protocol's existing Subscribe/subscription
+      mechanism to replace `FeedHandle`'s 1s polling; keep polling fallback.
+- [ ] Constraint from chat: do NOT design out per-`threadId` high-water marks
+      (per-thread unread); cursor model should permit keyed sub-cursors later.
+
+### Phase 3 — retention + epoch chaining
+
+- [ ] Implement `Feed.setRetention` (`RetentionOptions`), building on
+      `FeedStore.deleteOldestBlocks`.
+- [ ] Compaction: rewrite a prefix into a snapshot block; define block
+      identity rules for the rewritten range (idempotency tuple preservation).
+- [ ] Epoch-chaining convention + helper: logical stream = chain of per-era
+      feeds, only head live; era index object; document for mailbox + channel
+      use.
+- [ ] Interaction check: retention vs tombstones (a tombstone must not be
+      compacted away while any replica could still hold the live object).
+
+### Phase 4 — sparse feeds (email-scale partial history)
+
+- [ ] Range-map bookkeeping: local block set = replicated tail + evictable
+      cached dense ranges; loose (ref-resolved) blocks never enter the map.
+- [ ] Remote range queries against non-replicated history (protocol fields
+      exist: `before`/`after`/`begin_position`/`end_position`/`reverse`).
+- [ ] `patchUp` contract: a range response includes the latest block for any
+      id whose head lies outside the range (keeps latest-per-id sound).
+- [ ] Watermarked domain-order paging: backend domain-key index (EDGE);
+      cursor = `(domainKey, id, positionWatermark)`; live tail patches
+      rendered pages.
+- [ ] Eviction: LRU under a per-feed/space budget; pinned ranges (tail
+      always); define ref-into-evicted-range behavior (deref goes remote).
+- [ ] Define against the `FeedBackend` interface shape, not EDGE specifics
+      (companion workstream — keeps external backends a swap).
+
+### Demand-gated
+
+- [ ] **Phase 5 — delta blocks.** Partial-object updates + field-level LWW +
+      per-object fold replay on reorder; self-containedness rule so patches
+      never strand a sparse replica without a base snapshot.
+- [ ] **Phase 6 — app-defined projections.** Deterministic folds with
+      rematerialization keyed on a reducer/schema hash.
+
+### Cross-cutting
+
+- [ ] Explicit policy for schema-invalid feed items (`warn`/`ignore`/`fail`/
+      callback) replacing today's silent `log.verbose` drop.
+- [ ] Surface `getSyncState` (`blocksToPull`/`blocksToPush`) in devtools.
+- [ ] Standing principle: product code consumes only the Feed API; sync keeps
+      its injected-transport seam (`SyncClient` `sendMessage`).

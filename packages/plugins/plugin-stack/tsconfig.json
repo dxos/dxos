@@ -64,16 +64,19 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-markdown"
+      "path": "../plugin-illustrator"
     },
     {
-      "path": "../plugin-sketch"
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-tldraw"
     }
   ]
 }

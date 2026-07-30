@@ -97,6 +97,12 @@ jobs:
       - name: Check package.json paths
         run: pnpm run pkg-lint
 
+      # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
+      # config resolves workspace packages through their `source` export condition — so it needs no
+      # build and runs before the expensive `moon run :lint :build` step below.
+      - name: Check dependencies
+        run: pnpm run knip
+
       - name: Check formatting
         run: pnpm run format-check
 
@@ -118,30 +124,6 @@ jobs:
 
       - name: Check for peer dependency issues
         run: pnpm install --resolution-only --no-frozen-lockfile
-
-  # Unused/undeclared dependencies and unreferenced files. Runs off the source tree — the knip config
-  # resolves workspace packages through their `source` export condition — so this needs no build and
-  # stays off the `check` job's critical path.
-  knip:
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 15
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          persist-credentials: false
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Check dependencies
-        run: pnpm run knip
 
   test:
     strategy:
@@ -476,11 +458,6 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         run: moon run :bundle
 
-      # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed
-      # tarball rather than the source tree. This job already gates the Version Packages PR.
-      - name: Smoke test packed CLI
-        run: moon run cli:smoke
-
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
       # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
@@ -526,6 +503,85 @@ jobs:
           name: playwright-report
           path: test-results/playwright
           retention-days: 7
+
+  # Builds, packs and smoke-tests the CLI on its own runner, in parallel with `e2e`. It used to ride along
+  # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
+  # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
+  cli:
+    if: >-
+      startsWith(github.ref, 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/heads/changeset-release/') ||
+      startsWith(github.head_ref, 'changeset-release/') ||
+      inputs.e2e
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
+      # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.
+      - name: Smoke test packed CLI
+        run: moon run cli:smoke
+
+      - name: Pack the CLI for the foreign-machine job
+        run: |
+          mkdir -p cli-verify
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli-linux-x64
+          cp packages/devtools/cli/scripts/verify-installed.mjs cli-verify/
+
+      # The verifier travels with the tarballs because the job that runs them has no checkout.
+      - name: Upload packed CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-verify
+          path: cli-verify/
+          retention-days: 1
+
+  # Runs the packed CLI where the tree that built it does not exist. Deliberately no checkout, no container
+  # and a different runner: a `--compile`d binary is meant to carry everything, and when a dependency
+  # resolves a path at bundle time instead — `@automerge/automerge`'s WASM, `classic-level`'s native addon —
+  # it works in the job that built it and nowhere else, which is how @dxos/cli@0.10.0 shipped unrunnable.
+  # `cli:smoke` cannot cover this in CI because the build container forbids mount namespaces.
+  cli-foreign:
+    needs: cli
+    if: ${{ !cancelled() && needs.cli.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download packed CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-verify
+          path: cli-verify
+
+      # `--omit=optional` so the launcher's optionalDependencies are not fetched from npm — those versions
+      # are published, so without it the released (and possibly broken) platform package could satisfy the
+      # dependency instead of the tarball built here.
+      # The `./` is load-bearing: npm reads a bare `dir/file.tgz` as the GitHub shorthand `owner/repo` and
+      # tries to clone it.
+      - name: Install from the tarballs
+        run: |
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund --omit=optional ./cli-verify/*.tgz
+
+      # The same verifier `cli:smoke` runs, so the two cannot check different things.
+      - name: Verify the install
+        run: node cli-verify/verify-installed.mjs .
 
   # Reports every nightly job from one place. e2e is in `needs` so a cancelled e2e is still reported (its
   # former in-job step used `success() || failure()`, which skips on cancellation) and so the other three

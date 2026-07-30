@@ -26,6 +26,9 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -48,6 +51,9 @@
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../ui"

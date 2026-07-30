@@ -91,9 +91,10 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/plugin-tldraw": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
