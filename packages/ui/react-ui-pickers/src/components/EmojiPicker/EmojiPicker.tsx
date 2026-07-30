@@ -24,6 +24,35 @@ import {
 } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
+export type EmojiPickerContentProps = {
+  /** Invoked with the picked emoji's native character. */
+  onSelect: (emoji: string) => void;
+};
+
+/**
+ * The emoji grid itself, without any trigger or surface of its own. Exported so a caller that owns its
+ * own popover (a message's reaction picker) shows the same picker as the components below rather than
+ * wiring emoji-mart a second time.
+ */
+export const EmojiPickerContent = ({ onSelect }: EmojiPickerContentProps) => {
+  const { themeMode } = useThemeContext();
+  return (
+    // https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props
+    <EmojiMart
+      data={emojiData}
+      onEmojiSelect={({ native }: { native?: string }) => {
+        if (native) {
+          onSelect(native);
+        }
+      }}
+      autoFocus={true}
+      maxFrequentRows={0}
+      noCountryFlags={true}
+      theme={themeMode}
+    />
+  );
+};
+
 export type EmojiPickerProps = ThemedClassName<{
   disabled?: boolean;
   defaultEmoji?: string;
@@ -80,19 +109,11 @@ export const EmojiPickerToolbarButton = ({
             }
           }}
         >
-          {/* https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props */}
-          <EmojiMart
-            data={emojiData}
-            onEmojiSelect={({ native }: { native?: string }) => {
-              if (native) {
-                setEmojiValue(native);
-                setEmojiPickerOpen(false);
-              }
+          <EmojiPickerContent
+            onSelect={(emoji) => {
+              setEmojiValue(emoji);
+              setEmojiPickerOpen(false);
             }}
-            autoFocus={true}
-            maxFrequentRows={0}
-            noCountryFlags={true}
-            theme={themeMode}
           />
           <Popover.Arrow />
         </Popover.Content>
@@ -144,17 +165,11 @@ export const EmojiPickerBlock = ({
             }
           }}
         >
-          <EmojiMart
-            data={emojiData}
-            onEmojiSelect={({ native }: { native?: string }) => {
-              if (native) {
-                setEmojiValue(native);
-                setEmojiPickerOpen(false);
-              }
+          <EmojiPickerContent
+            onSelect={(emoji) => {
+              setEmojiValue(emoji);
+              setEmojiPickerOpen(false);
             }}
-            autoFocus={true}
-            maxFrequentRows={0}
-            noCountryFlags={true}
           />
           <Popover.Arrow />
         </Popover.Content>

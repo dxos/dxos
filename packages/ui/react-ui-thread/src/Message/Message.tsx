@@ -23,6 +23,7 @@ import { useObject } from '@dxos/echo-react';
 import {
   Avatar,
   Icon,
+  Popover,
   Tag,
   type ThemedClassName,
   useOnTransition,
@@ -31,6 +32,7 @@ import {
 } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { type ActionGroupBuilder, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { EmojiPickerContent } from '@dxos/react-ui-pickers';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -376,12 +378,16 @@ export type MessageControlsProps = {
   onCancelEdit: () => void;
 };
 
+/** Quick reactions rendered inline in the toolbar; the rest of the set lives behind the picker. */
+const INLINE_REACTIONS = 3;
+
 /**
  * Hover toolbar for a message, built from a menu action graph (`MenuBuilder` + `Menu.Toolbar`) rather
  * than hand-placed buttons, so item rendering, dropdowns, sizing and keyboard behaviour come from the
- * menu system. Frequent actions (react, reply or start-a-thread, accept/reject) sit in the toolbar;
- * edit and delete are buried in the overflow (⋯) menu, since they are destructive or rare. While
- * editing, the toolbar collapses to save/cancel — the only two moves that apply.
+ * menu system. A few reactions sit inline with a button opening the full emoji picker beside them;
+ * reply or start-a-thread and accept/reject follow; edit and delete are buried in the overflow (⋯)
+ * menu, since they are destructive or rare. While editing, the toolbar collapses to save/cancel — the
+ * only two moves that apply.
  */
 const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }: MessageControlsProps) => {
   const {
@@ -402,11 +408,14 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
     onRejectChange,
   } = useThreadContext('Message.Controls');
 
+  const [picking, setPicking] = useState(false);
+
   const metadata = getMetadata(message);
   const isAuthor = !!identityDid && identityDid === metadata.authorId;
   const hasProposal = message.blocks.some((block) => block._tag === 'proposal');
   const hasChange = message.blocks.some((block) => block._tag === 'change');
   const threadSummary = getThreadSummary?.(message);
+  const inlineReactions = quickReactions.slice(0, INLINE_REACTIONS);
 
   const showEdit = isAuthor && !!editable;
   const showDelete = !!onMessageDelete && (canDelete?.(message) ?? true);
@@ -453,23 +462,22 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
     }
 
     if (onMessageReact) {
-      builder.group(
-        'reactions',
+      // A few reactions inline, then the whole set behind the picker: the common ones are one click
+      // away without a menu, and everything else is still reachable.
+      for (const emoji of inlineReactions) {
+        builder.action(`react-${emoji}`, { label: emoji, testId: 'thread.message.reaction-option' }, () =>
+          onMessageReact(message.id, emoji),
+        );
+      }
+      builder.action(
+        'more-reactions',
         {
           label: ['add-reaction.label', { ns: translationKey }],
           icon: 'ph--smiley--regular',
           iconOnly: true,
-          caretDown: false,
-          variant: 'dropdownMenu',
           testId: 'thread.message.react',
         },
-        (group: ActionGroupBuilder) => {
-          for (const emoji of quickReactions) {
-            group.action(`react-${emoji}`, { label: emoji, testId: 'thread.message.reaction-option' }, () =>
-              onMessageReact(message.id, emoji),
-            );
-          }
-        },
+        () => setPicking(true),
       );
     }
 
@@ -573,7 +581,7 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
   }, [
     message,
     editing,
-    quickReactions,
+    inlineReactions,
     showEdit,
     showDelete,
     showStartThread,
@@ -599,7 +607,37 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
     // `alwaysActive`: a message toolbar belongs to the hovered row, not to whichever plank holds
     // attention, so it must not disable itself when the thread is unattended.
     <Menu.Root {...menuActions} alwaysActive iconSize={4}>
-      <Menu.Toolbar classNames={mx('pe-2 border-none bg-transparent', !editing && hoverableControlItem)} density='sm' />
+      <Popover.Root open={picking} onOpenChange={setPicking}>
+        {/* The picker opens from a toolbar action rather than its own trigger — that keeps every
+            affordance in the action graph, and so in one running order — so the toolbar is the anchor. */}
+        <Popover.Anchor asChild>
+          <Menu.Toolbar
+            classNames={mx('pe-2 border-none bg-transparent', !editing && hoverableControlItem)}
+            density='sm'
+          />
+        </Popover.Anchor>
+        <Popover.Portal>
+          <Popover.Content
+            side='bottom'
+            align='end'
+            data-testid='thread.message.reaction-picker'
+            onKeyDownCapture={(event) => {
+              if (event.key === 'Escape') {
+                event.stopPropagation();
+                setPicking(false);
+              }
+            }}
+          >
+            <EmojiPickerContent
+              onSelect={(emoji) => {
+                setPicking(false);
+                onMessageReact?.(message.id, emoji);
+              }}
+            />
+            <Popover.Arrow />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
     </Menu.Root>
   );
 };

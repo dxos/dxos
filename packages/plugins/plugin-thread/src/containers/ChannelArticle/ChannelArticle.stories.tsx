@@ -282,7 +282,7 @@ export const CancelEdit: Story = {
   },
 };
 
-/** Reacting to a message adds a chip showing the emoji and its count. */
+/** The first few reactions sit inline in the toolbar; clicking one adds a pill with its count. */
 export const React_: Story = {
   name: 'React',
   args: {
@@ -298,13 +298,52 @@ export const React_: Story = {
       await expect(await canvas.findByText(SEEDED.own)).toBeVisible();
     }, STORY_TIMEOUT);
 
-    await userEvent.click((await canvas.findAllByTestId('thread.message.react'))[0]);
-    await userEvent.click((await screen.findAllByTestId('thread.message.reaction-option'))[0]);
+    // Three inline options on the message itself, no menu to open first. Scoped to one tile because
+    // the composer is a message tile too, and it carries no controls.
+    const tile = (await canvas.findByText(SEEDED.own)).closest('[data-testid="thread.message"]');
+    if (!(tile instanceof HTMLElement)) {
+      throw new Error('Message tile not found.');
+    }
+    const options = await within(tile).findAllByTestId('thread.message.reaction-option');
+    await expect(options).toHaveLength(3);
+    await userEvent.click(options[0]);
 
     await waitFor(async () => {
-      const chip = (await canvas.findAllByTestId('thread.message.reaction'))[0];
-      await expect(chip).toBeVisible();
-      await expect(chip).toHaveAttribute('aria-pressed', 'true');
+      const pill = (await canvas.findAllByTestId('thread.message.reaction'))[0];
+      await expect(pill).toBeVisible();
+      await expect(pill).toHaveAttribute('aria-pressed', 'true');
+    }, STORY_TIMEOUT);
+  },
+};
+
+/**
+ * Anything outside the inline set comes from the full emoji picker, opened in a popover from the
+ * toolbar. Only the popover is asserted here: emoji-mart renders its grid inside a shadow root, so a
+ * play cannot reach an emoji to click — picking one is covered by the inline options above.
+ */
+export const ReactFromPicker: Story = {
+  args: {
+    subject: undefined,
+    attendableId: 'story',
+    role: AppSurface.Article.role,
+    roomId: '04a1d1911703b8e929d0649021a965',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(async () => {
+      await expect(await canvas.findByText(SEEDED.own)).toBeVisible();
+    }, STORY_TIMEOUT);
+
+    await userEvent.click((await canvas.findAllByTestId('thread.message.react'))[0]);
+    const picker = await screen.findByTestId('thread.message.reaction-picker', {}, STORY_TIMEOUT);
+    await expect(picker).toBeVisible();
+    // The grid is emoji-mart's own element, mounted inside the popover.
+    await expect(picker.querySelector('em-emoji-picker')).not.toBeNull();
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () => {
+      await expect(screen.queryByTestId('thread.message.reaction-picker')).toBeNull();
     }, STORY_TIMEOUT);
   },
 };

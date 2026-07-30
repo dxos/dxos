@@ -54,6 +54,9 @@
       "path": "../react-ui-mosaic"
     },
     {
+      "path": "../react-ui-pickers"
+    },
+    {
       "path": "../ui-editor"
     },
     {

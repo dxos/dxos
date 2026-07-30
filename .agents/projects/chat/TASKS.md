@@ -11,7 +11,7 @@ DONE: no new plugin — all work lands in `plugin-thread` (stage 1), renamed to
 `plugin-chat` when proven (stage 2), review unification last (stage 3).
 **Stage 1 is COMPLETE** except for two items parked by decision (thread
 deep-linking, awaiting the url-deck grammar) and two that need a human or a
-two-peer harness (manual offline/propagation, two-client storybook). Rounds 2–4
+two-peer harness (manual offline/propagation, two-client storybook). Rounds 2–5
 of jdw's review are folded in below, each marked with the round that asked for
 it; where a round revised an earlier decision the superseded entry says so.
 NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
@@ -124,11 +124,12 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       No tombstone stub is needed: the feed query already excludes tombstoned
       items, asserted by the `DeleteOwnOnly` play.
 - [x] Reactions UI: folded pills (the `Tag` primitive) with counts and an
-      own-state accent ring; clicking an active pill un-reacts; the picker is a
-      dropdown group in the hover toolbar.
+      own-state accent ring; clicking an active pill un-reacts. Adding one is
+      three inline options plus the full emoji picker (see "Message controls").
 - [x] Storybook coverage: channel side — `Roots`, `ThreadsAreCreated`,
       `CreateThread`, `DeleteOwnOnly`, `ThreadAffordances`, `EditMessage`,
-      `CancelEdit`, `React`; thread side — `Default`, `ReplyInThread`,
+      `CancelEdit`, `React`, `ReactFromPicker`; thread side — `Default`,
+      `ReplyInThread`,
       `ThreadAffordances`, `QuoteReply` (banner → send → quote). The shared
       fixture (one channel; one declared thread with a reply, one plain message)
       lives in `containers/testing.tsx` so both files exercise the same feed.
@@ -213,9 +214,17 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       the two duplicated ~90-line control blocks (tile and group) into one
       `Message.Controls`.
 - [x] Edit and delete moved into the overflow (⋯) menu — destructive or rare,
-      so deliberately buried. React / reply / start-thread / accept-reject stay
-      in the toolbar. Quick reactions are now a dropdown group rather than a
-      bespoke inline row.
+      so deliberately buried. Reply / start-thread / accept-reject stay in the
+      toolbar.
+- [x] Reaction picker (jdw round 5, Discord's arrangement): the first three
+      quick reactions are inline toolbar actions and a fourth button opens the
+      full emoji picker in a popover. The picker is `react-ui-pickers`'
+      emoji-mart grid, extracted there as `EmojiPickerContent` so the message
+      toolbar and the existing avatar pickers show the same thing rather than
+      wiring emoji-mart twice. It opens from a toolbar _action_ (anchored with
+      `Popover.Anchor` on the toolbar) rather than its own trigger, which keeps
+      every affordance in the action graph and so in one running order. An
+      intermediate dropdown-list version was replaced by this.
 - [x] Reaction pills use the `Tag` primitive for shape and sizing; the accent
       ring (not a palette hue) marks "you reacted", since the palette hues are
       categorical rather than stateful.
@@ -250,12 +259,15 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       participants, orphaned root) and reaction toggle idempotency — 20 tests in
       `types/threads.test.ts`, plus 9 in `@dxos/types` for the schema changes
       (`Message.parentMessage`, `Reaction`, `ThreadRoot`).
-- [x] Storybook plays: 14 green in a real browser (9 channel + 4 thread + 1
+- [x] Storybook plays: 15 green in a real browser (10 channel + 4 thread + 1
       legacy), covering roots-only rendering, deliberate thread creation, the
       threaded reply, author-gated delete via the overflow menu, the reaction
       round trip, the channel/thread affordance asymmetry, the edit/cancel round
-      trip, and the quote-reply round trip. Verified downstream: plugin-review
-      39 plays + 60 unit, react-ui-thread 6 plays.
+      trip, and the quote-reply round trip. `ReactFromPicker` asserts the popover
+      only: emoji-mart renders its grid in a shadow root, so a play cannot click
+      an emoji inside it — picking is covered by the inline options. Verified
+      downstream: plugin-review 39 plays + 60 unit, react-ui-thread 6 plays,
+      react-ui-pickers 4 plays.
 - [ ] Two-client storybook for optimistic send + cross-peer convergence — not
       attempted; needs a two-peer harness.
 - [ ] Manual: offline send (airplane-mode) → reconnect → `blocksToPush`
