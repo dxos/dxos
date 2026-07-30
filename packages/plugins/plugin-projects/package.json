@@ -71,6 +71,11 @@
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
     },
+    "./templates": {
+      "source": "./src/templates/index.ts",
+      "types": "./dist/types/src/templates/index.d.ts",
+      "import": "./dist/lib/templates.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -96,6 +101,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -103,6 +109,7 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-search": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
