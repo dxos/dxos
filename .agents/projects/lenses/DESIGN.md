@@ -442,6 +442,9 @@ Demonstrated in both directions:
    migrates out from under it — and, with D1, whether the target re-derives automatically.
 8. **Overlay sprawl.** Invisible to queries and indexes; without a promotion path it becomes a
    shadow schema.
+9. **Losslessness under late writes** (§10.1) — the bar migration sets itself, and the one claim in
+   this document that is not yet proven anywhere. §10.3 states it falsifiably so a spike can kill it
+   early.
 
 ## 9. Proposed layout
 
@@ -458,7 +461,212 @@ Demonstrated in both directions:
 - `packages/stories/stories-lens` — four stories, two custom UIs, shared raw inspector.
 - No plugin until the stories prove the UI story is worth shipping.
 
-## 10. References
+## 10. Migration
+
+Not scheduled. Recorded because the lens changes what is _possible_ here: it turns a migration from a
+one-shot script into a rule that can be re-applied, and that is what makes the goal in §10.1
+plausible rather than hopeless.
+
+### 10.1 The bar: lossless except for genuine conflicts
+
+**No unconflicted change may be lost, regardless of when it was made.**
+
+The case that defines the requirement: a migration runs while a peer is offline. That peer's app
+still has the old schema, so it keeps editing the object under the old shape — for a day, a week. It
+comes back. Those edits conflict with nothing; they were simply made late and in the wrong shape.
+They must end up in the new schema.
+
+What may be lost: only a change that _genuinely_ conflicts — two peers writing incompatible values
+for the same field, where some resolution has to pick one. That is a CRDT's ordinary business.
+
+What must not be lost, and is lost today:
+
+- A late edit under the old schema, because the migration already rewrote that property (§10.2).
+- Any concurrent edit to an object being migrated, because `atomicReplaceObject` writes the whole
+  object.
+- Anything a peer wrote that is not in the new root when a space migration publishes an epoch.
+
+This may not be fully achievable, and §10.3 states the falsifiable version so we can find out early
+rather than discover it in the third phase. But it is the goal we set, and it should be the thing
+each phase is measured against.
+
+### 10.2 What exists today
+
+Two independent layers, neither aware of the other.
+
+**Object-level** — `Migration.define({ from, to, transform })` in `@dxos/echo/Migration.ts`, run by
+`db.runMigrations()` (`echo-client/src/proxy-db/database.ts`). Per type: query every object of
+`fromType`, `await transform(object)`, then `atomicReplaceObject(object.id, { data, type, meta })`.
+Three properties worth naming:
+
+- **It migrates in place.** Same object id, no new object. That is the right default and it is
+  already what we do.
+- **`transform` is an opaque async function.** Nothing can be said about it before it runs — not
+  what it drops, not whether it is reversible, not whether it is deterministic, and it cannot be
+  re-applied to a late write because it consumes a whole object and returns a whole object.
+- **It writes the whole object.** A concurrent edit by another peer to a property the migration
+  never meant to touch is lost.
+
+`onMigration` is the escape hatch for effects, and its own docstring records the problem: _"Database
+mutations performed in this callback are not guaranteed to be idempotent. If multiple peers run the
+migration separately, the effects may be applied multiple times."_
+
+**Space-level** — `Migrations` + `MigrationBuilder` in `@dxos/migrations`. A versioned list; the
+current version is a single `MigrationVersionAnnotation` on `space.properties`; `_commit()` builds a
+whole new root document and publishes it via `createEpoch({ migration: REPLACE_AUTOMERGE_ROOT })`.
+One peer rebuilds the world and everyone else adopts it, so anything another peer wrote that is not
+in the new root is gone. The version marker is a single scalar — two peers advancing it race, and it
+says nothing about _which_ objects actually migrated.
+
+Also present and directly relevant: `EntityMeta` carries `key` + `version` **per object** and a
+migration's `transform` may patch it atomically with the data swap; `Database` has real branching
+(`createBranch` / `switchBranch` / `mergeBranch` / `syncBranch`, same object ids, CRDT merge-back);
+and `A.getHeads` / `A.diff(doc, before, after)` are already used in `echo-client`
+(`echo-handler/edit-history.ts`), which is the machinery §10.3 needs.
+
+### 10.3 Fold-forward — the research question
+
+The hypothesis that makes §10.1 reachable:
+
+> A migration expressed as a lens is a **total, idempotent rule**, not an event. So it can be
+> re-applied whenever old-shaped data appears — including data that appears long after the migration
+> "ran" — and the late write lands in the new schema instead of being lost.
+
+**Why the data is still there to recover.** Automerge merges per property. A late write to
+`firstName` by an offline peer is a change to that key; it does not vanish because another peer
+wrote `name`. After merge the object carries new-shape properties _and_ an orphan old-shape property.
+The information is present; the problem is purely one of noticing it and folding it forward.
+
+**How to notice it.** Record the automerge heads at which the migration was applied, on the object
+(`EntityMeta`). On merge, `A.diff(doc, migrationHeads, currentHeads)` restricted to source-schema
+properties yields exactly the writes made to the old shape at-or-after the migration. Anything in
+that set is a late write. Feed it through `Lens.get` and apply the result as minimal writes. The
+heads comparison is what distinguishes a late write from pre-migration residue the migration already
+consumed — without it you cannot tell them apart, and you would re-apply stale data forever.
+
+**Why only a lens can do this.** A `transform` takes a whole old object and returns a whole new one;
+given one late property it has nothing to work with, and re-running it would clobber everything that
+happened since. A lens maps _per property_ and emits minimal writes, so folding one late property
+forward touches exactly that property's target. Idempotence is what makes it safe to run on every
+merge; `checkLaws` is what makes idempotence checkable.
+
+**Two cases, only one of which is hard.** A _lens-aware_ old client is easy — it writes through
+`Lens.put` and the data is in the right shape already; this is the same bidirectionality that lets
+old clients keep working (§10.6 B). The hard case is a _schema-unaware_ client: shipped code that
+knows only the old type and writes it directly. Fold-forward is for that case.
+
+**Falsifiable claims for the proof of concept**, in the order they would kill the idea:
+
+1. **Does the late write survive at all?** If the migration deletes old properties, does a
+   concurrent/later write to a deleted key survive the merge, or does the delete win? If deletes win,
+   migrations must not delete — old properties stay until a separate, later compaction, and that is a
+   design constraint, not a detail.
+2. **Can late writes be distinguished from consumed ones?** Does `A.diff` from stored migration heads
+   give a clean answer per property, through our document structure and across a doc that has since
+   been compacted or re-rooted by an epoch? Epoch/compaction rewriting history is the likeliest way
+   this breaks.
+3. **Does folding forward converge?** Two peers both notice the same late write and both fold it.
+   With deterministic minimal writes they should produce identical changes and merge to one state —
+   but this needs proving, not assuming.
+4. **What happens on a chain?** Object migrated A→B→C; a late write arrives in shape A. Does
+   composing lenses fold it all the way forward, and is the composition still idempotent?
+5. **Where does a genuine conflict surface?** A folded-forward value and a directly-written value
+   both target `name`. The result must be an ordinary CRDT conflict a user can see and resolve — not
+   a silent overwrite in either direction.
+
+### 10.4 A migration is a lens
+
+`Migration.fromLens(L)` — the migration's `transform` is `Lens.get`. Small change, and every
+consequence is something a `transform` function cannot offer:
+
+1. **Loss becomes visible before the migration runs.** `Lens.coverage` grades every property
+   `explicit` / `automatic` / `overlaid` / `dropped` / `suspicious`. A `transform` that forgets a
+   property drops it silently; a lens reports it as `dropped` at define time. A migration that loses
+   data should be a diff you review, not an omission.
+2. **It is reversible.** `put` as well as `get`, so the migration runs backwards — rollback, and old
+   clients that read through the reverse lens.
+3. **It is checkable.** `checkLaws` over generated instances, before touching real data.
+4. **It writes only what changed.** The `Write` vocabulary cannot express a whole-object replace —
+   the opposite of `atomicReplaceObject`, and the prerequisite for both concurrent migration and
+   fold-forward.
+
+`Migration.define` with a hand-written `transform` stays for what a mapping cannot express. The lens
+form is what you reach for first, and only the lens form gets fold-forward.
+
+### 10.5 Cross-object, built for atomicity we do not have yet
+
+ECHO transacts within one object, not across objects; Automerge has cross-object dependencies on its
+roadmap. The rule that lets us write the API now and get atomicity later for free:
+
+> **Make the effects data, not callbacks.**
+
+A cross-object migration declares a match — a tuple of objects — and _returns_ a write set addressed
+to them rather than performing it. `Write` extends with an object address; nothing else changes.
+
+- **Today** the runner applies the set per object, non-atomically, but because the writes are data it
+  can order them deterministically, make them idempotent, and resume after a crash.
+- **Later** it hands the same set to a cross-object transaction. No call site moves.
+
+The hard part is **identity**: splitting one object into two means minting an id, and two peers
+minting independently produce two objects. Require **derived ids** — a new object's id is a hash of
+the source id plus a role name, so two peers independently minting "the `Person` for `Task` X"
+derive the same id and Automerge merges them into one. Reject non-derived ids outright.
+
+### 10.6 Convergence between peers
+
+A preference order, not a menu.
+
+**A. Deterministic, idempotent, in place — no coordination.** If a migration is (i) a pure function
+of the object's own state, (ii) applied as minimal property writes, and (iii) mints new ids
+deterministically, two peers running it concurrently emit the _same_ writes and Automerge merges them
+to the same state. No leader, no epoch, works offline. §10.4 and §10.5 are what make this reachable,
+so the API should make determinism the default and force an explicit opt-out.
+
+**B. Do not migrate — read through the lens.** Jazz's answer: schemas are hashed, lenses are
+bidirectional, data stays in the branch of the schema that wrote it, and lenses translate on read and
+write. We are well placed for it — our lens is already bidirectional and the **overlay already stores
+target-only fields on the base object**, so an object can live indefinitely as "old shape + overlay"
+driven entirely through the new type. Migration becomes optional compaction. The cost is the risk
+already recorded in §8.8: the overlay is invisible to queries and indexes, so a new field cannot be
+filtered on until promoted. That is the real trade — availability without coordination, paid for in
+queryability — and `Lens.promote` is what settles it, per object, whenever convenient. Jazz reaches
+this with a server and a schema registry; we would reach it with the overlay or with derived
+branches, which is a difference worth keeping in view rather than porting their design whole.
+
+**C. Coordination — leader election or a swarm lease.** Only for what A and B cannot cover:
+non-deterministic transforms, external effects, anything that must happen exactly once. A migration
+marks itself `effectful`, requires being online, and claims a lease. It cannot run offline and a
+partition either blocks it or risks two leaders, so it must be the exception a migration asks for.
+
+**D. Epochs become compaction only, never the migration mechanism.** An epoch is a storage
+optimization, run when convenient; correctness never depends on one. This retires the current failure
+mode directly. Note the interaction with §10.3 claim 2 — compaction rewrites history, so it must not
+destroy the heads fold-forward relies on.
+
+**And version state moves onto the object.** A space-level scalar cannot say which objects migrated
+and races between peers. `EntityMeta.version` already exists per object and `transform` can already
+patch it atomically with the data, so per-object stamping makes migration incremental, resumable and
+convergent — and makes "what is left to migrate" a query instead of a guess.
+
+### 10.7 Open questions
+
+1. **Does promotion need coordination?** Draining an overlay into a real property is idempotent and
+   deterministic, so probably not — but it changes what queries return, so peers disagree until it
+   propagates. Is a half-promoted space acceptable, and for how long?
+2. **How long is the fold-forward window?** Keeping migration heads and un-deleted old properties
+   forever is a storage cost. When is it safe to compact, given a peer could always have been offline
+   longer?
+3. **Reverse compatibility window.** How long do we keep old lenses, and what happens when a chain
+   grows to several hops?
+4. **Lens versioning** (§8.7) — a lens pins `source` to `typename@version`, and migration is exactly
+   the event that moves it. These must be designed together.
+5. **Validation on the way through.** A `put` validates against the base type; during a migration the
+   base type is what is changing.
+6. **Does branching subsume the overlay here?** `createBranch`/`mergeBranch` already gives same-id
+   alternate timelines with CRDT merge-back — close to Jazz's per-schema-hash branches. Possibly a
+   better home for in-flight migration state than the overlay.
+
+## 11. References
 
 - panproto — https://github.com/panproto/panproto · book https://panproto.dev/book/ ·
   `panproto-lens` https://docs.rs/panproto-lens/latest/panproto_lens/ ·

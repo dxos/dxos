@@ -6,8 +6,9 @@ Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [A
 This file is the ledger only.
 
 **Scope: proof of concept.** The payoff being chased is _multiple interfaces, each written against
-its own schema, driving the same object_. Migration support (`Lens.promote`) and lens generation
-are long-term, recorded in the backlog, and not built here.
+its own schema, driving the same object_. Migration and lens generation are long-term and not built
+here — both now have plans of their own below ("Migration — phased plan", "`Lens.generate` — decision
+note").
 
 **The bar for "done" on both lenses:** a custom UI drives the object entirely through the target
 type, all data persists in the base object under its own schema plus annotations, and a second peer
@@ -307,9 +308,9 @@ not by being planned.
       connector mappers.
 - [ ] **Foreign-type adaptation** — a third lens mapping an external type onto `DataType.Task`,
       proving existing `Task` surfaces render it unchanged.
-- [ ] **Migration support** — `Lens.promote(obj, lens)` draining overlay values into base properties
-      that now exist, plus a policy for the window where a field is queryable for some objects and
-      not others, plus retiring a lens whose mapping has collapsed to identity. Long-term.
+- [ ] **Migration** — phased plan below (["Migration — phased plan"](#migration--phased-plan)):
+      M0 proof of concept, M1 lens-backed single-object, M2 lossless + cross-object. Rationale and
+      the losslessness bar in DESIGN.md §10. Not scheduled; M1 is gated on the lens landing in core.
 - [ ] **`Lens.generate(source, target)`** — see [the decision note](#lensgenerate--decision-note)
       below. **Recommendation: don't take it on yet**; do "Richer source annotations" (Phase 5) first.
 - [ ] Querying _through_ a structural lens (rewrite `Filter` on lensed property names).
@@ -317,6 +318,99 @@ not by being planned.
 - [ ] Lens versioning when the base type migrates — including whether the target re-derives
       automatically (DESIGN.md §8.7).
 - [ ] Dropped from scope: Organization → schema.org lens.
+
+## Migration — phased plan
+
+Not scheduled. Rationale and the survey of what exists today: DESIGN.md §10 — read that first, this
+is the ledger.
+
+**The bar (DESIGN.md §10.1): no unconflicted change may be lost, regardless of when it was made.**
+The case that defines it — a peer is offline when the migration runs, keeps editing under the old
+schema for a week, and comes back. Those edits conflict with nothing. They must reach the new schema.
+Only a genuine conflict (two peers writing incompatible values for the same field) may lose a side.
+
+Each phase is measured against that bar, and each says honestly where it does not meet it yet.
+
+### Phase M0 — proof of concept: can a late old-schema write be folded forward?
+
+Standalone, no API changes, no integration. Answers the question the other two phases are betting on;
+if the answer is no, M2 changes shape and we find out for the price of a spike. DESIGN.md §10.3 has
+the mechanism; these are its falsifiable claims in kill order.
+
+- [ ] **Harness** — two peers, one object, a lens migration `A → B`. Peer 1 migrates while peer 2 is
+      partitioned; peer 2 writes the old shape; reconnect. Extends the existing two-peer setup in
+      `echo-client-e2e/src/lens.test.ts`.
+- [ ] **Claim 1 · does the late write survive the merge at all?** If the migration deletes old
+      properties, does a later write to a deleted key survive, or does the delete win? **If deletes
+      win, migrations must not delete** — old properties stay until a separate compaction. Answer this
+      first; it constrains everything downstream.
+- [ ] **Claim 2 · can late writes be told apart from consumed ones?** Store the migration's automerge
+      heads in `EntityMeta`; `A.diff(doc, migrationHeads, current)` restricted to source-schema
+      properties should name exactly the late writes. `A.getHeads`/`A.diff` are already used in
+      `echo-client/src/echo-handler/edit-history.ts`. **Test it across an epoch/compaction** — history
+      rewriting is the likeliest way this breaks.
+- [ ] **Claim 3 · does folding forward converge?** Two peers both notice the same late write and both
+      fold it. Deterministic minimal writes should produce identical changes; prove it rather than
+      assume it.
+- [ ] **Claim 4 · chains.** Object migrated `A → B → C`, late write arrives in shape `A`. Does lens
+      composition fold it all the way, and is the composition still idempotent?
+- [ ] **Claim 5 · genuine conflicts surface as conflicts.** A folded-forward value and a
+      directly-written value both target the same property. The result must be an ordinary visible
+      CRDT conflict, not a silent overwrite in either direction.
+- [ ] **Write up what survives** in DESIGN.md §10.3 — including, if it comes to it, the honest
+      finding that the bar is unreachable and why.
+
+### Phase M1 — integrate with the existing API: single-object, lens-backed
+
+Small, shippable, and **does not meet the bar yet** — that is deliberate and must be documented, not
+glossed. Scope is the migrations we already support: one object, one type, in place. Gated on the
+lens landing in core (Phase 5).
+
+- [ ] **`Migration.fromLens(L)`** — the migration's `transform` is `Lens.get`. `Migration.define`
+      with a hand-written `transform` stays for what a mapping cannot express.
+- [ ] **Coverage reported at define time** — surface `dropped` as a reviewable diff before the
+      migration runs. Today a `transform` that forgets a property drops it silently.
+- [ ] **Apply as minimal writes**, not `atomicReplaceObject`. This is the single highest-value change
+      in the phase: it stops a migration clobbering a concurrent edit to a property it never meant to
+      touch, and it is the prerequisite for M2's fold-forward.
+- [ ] **Verify before running** — `checkLaws` over generated instances of the source type.
+- [ ] **Per-object version stamping.** `EntityMeta.version` already exists and `transform` can
+      already patch it atomically with the data. Moving off the single space-level
+      `MigrationVersionAnnotation` scalar makes migration incremental, resumable and convergent, and
+      makes "what is left to migrate" a query rather than a guess.
+- [ ] **Record the migration's heads** on the object even though nothing reads them yet — M2 needs
+      them, and objects migrated before M2 ships would otherwise be permanently unrecoverable.
+- [ ] **Document the residual loss explicitly.** After this phase: a late write under the old schema
+      is still lost, and effectful `onMigration` still runs more than once. Say so in the API docs
+      rather than letting it be discovered.
+
+### Phase M2 — integrate the research: lossless, cross-object, convergent
+
+The full thing. Only starts once M0 has answered its claims; its shape depends on those answers.
+
+- [ ] **Fold-forward on merge** (DESIGN.md §10.3) — the migration becomes a standing rule rather than
+      an event, re-applied whenever old-shaped data appears. This is what meets the bar.
+- [ ] **Deletion policy.** Old properties are retired by a separate later compaction, never by the
+      migration itself — assuming M0 claim 1 says deletes lose to concurrent writes.
+- [ ] **Cross-object migrations with effects as data** (DESIGN.md §10.5) — a migration declares a
+      match (a tuple of objects) and _returns_ a write set addressed to them. Applied per object and
+      non-atomically today; handed to a cross-object transaction when Automerge ships one, with no
+      call site moving.
+- [ ] **Derived ids required** — a new object's id is a hash of the source id plus a role, so two
+      peers minting "the `Person` for `Task` X" derive the same id and merge into one. Reject
+      non-derived ids outright.
+- [ ] **Convergence strategy A as the default** (DESIGN.md §10.6): deterministic, idempotent, in
+      place, no coordination. Force an explicit opt-out for anything effectful.
+- [ ] **Strategy B where it fits** — don't migrate, read through the lens; the overlay already holds
+      target-only fields. `Lens.promote(obj, lens)` drains the overlay into real properties when
+      queryability is wanted. Needs the half-promoted-space policy (§10.7 q1).
+- [ ] **Strategy C only on request** — leader election / swarm lease for effectful migrations, marked
+      as such, requiring online.
+- [ ] **Strategy D** — epochs demoted to compaction; correctness never depends on one. Must preserve
+      whatever fold-forward needs (M0 claim 2).
+- [ ] **Retire `onMigration`** for anything but declared effects.
+- [ ] **Fold-forward window policy** (§10.7 q2) — how long migration heads and un-deleted old
+      properties are kept, given a peer could always have been offline longer.
 
 ## `Lens.generate` — decision note
 
