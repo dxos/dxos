@@ -13,6 +13,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { ProgressPlugin } from '@dxos/plugin-progress/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -89,6 +90,8 @@ const meta = {
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
+        // ClientPlugin's SpacesReady modules require AppCapabilities.ProgressRegistry.
+        ProgressPlugin(),
         StorybookPlugin({}),
         ClientPlugin({
           types: [Message.Message],

@@ -117,6 +117,7 @@
   },
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-progress": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

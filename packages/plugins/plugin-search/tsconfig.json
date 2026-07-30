@@ -101,6 +101,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-progress"
+    },
+    {
       "path": "../plugin-testing"
     }
   ]
