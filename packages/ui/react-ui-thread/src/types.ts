@@ -70,10 +70,16 @@ export type MessageCallbacks = {
   /** Toggle the local identity's reaction with `emoji` (omit to hide reactions entirely). */
   onMessageReact?: (messageId: string, emoji: string) => void;
   /**
-   * Start (or open) the thread branching from a message. Offered in a channel's main view only —
-   * threads do not nest, and withholding it inside a thread is what pushes conversation into threads.
+   * Open the thread branching from a message. Offered only where {@link getThreadSummary} reports one
+   * — an undeclared message has no thread to open.
    */
   onThreadOpen?: (messageId: string) => void;
+  /**
+   * Declare a message the root of a new thread and open it. Offered in a channel's main view only,
+   * and only on messages that have no thread yet — threads do not nest, and withholding this inside a
+   * thread is what pushes conversation into threads rather than the channel.
+   */
+  onThreadCreate?: (messageId: string) => void;
   /**
    * Quote-reply to a message, targeting it by `parentMessage`. Offered inside a thread only — the
    * main view offers "start a thread" instead, so replies land in a thread rather than the channel.

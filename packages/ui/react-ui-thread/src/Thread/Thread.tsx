@@ -71,6 +71,7 @@ const ThreadRoot = ({
   onMessageDelete,
   onMessageReact,
   onThreadOpen,
+  onThreadCreate,
   onMessageReply,
   onAcceptProposal,
   onAcceptChange,
@@ -102,6 +103,7 @@ const ThreadRoot = ({
       onMessageDelete={onMessageDelete}
       onMessageReact={onMessageReact}
       onThreadOpen={onThreadOpen}
+      onThreadCreate={onThreadCreate}
       onMessageReply={onMessageReply}
       onAcceptProposal={onAcceptProposal}
       onAcceptChange={onAcceptChange}

@@ -3,32 +3,28 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, Type } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Channel, Message } from '@dxos/types';
+import { Channel, Message, ThreadRoot } from '@dxos/types';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
 import { getChannelsPath } from '../paths';
-import {
-  ThreadAnnotation,
-  ThreadOperation,
-  type ThreadSelection,
-  foldThreads,
-  getThreadNodeId,
-  selectRoots,
-  senderKey,
-} from '../types';
+import { ThreadOperation, type ThreadSelection, foldThreads, getThreadNodeId, selectRoots, senderKey } from '../types';
 
 const channelTypename = Type.getTypename(Channel.Channel);
+
+/** Hue of the Channel type's icon, so a thread's icon matches the channel it belongs to. */
+const channelHue = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(Channel.Channel)))?.hue;
 
 /** Graph node type for a thread; distinct from `Message` so it claims its own surface. */
 const THREAD_NODE_TYPE = `${meta.profile.key}/thread`;
@@ -63,10 +59,9 @@ export default Capability.makeModule(
       // own — a thread is the `threadId` partition of the feed, keyed by its root message — so the
       // node carries a `(channel, threadId)` selection and its own article renders onto it.
       //
-      // One node per root message, not per thread that already has replies: starting a thread opens
-      // its plank before the first reply exists, and a plank needs a node to resolve. Marking the
-      // root instead ("this message has a thread") is not open to us — that would re-append someone
-      // else's message, which the feed's single-writer rule forbids.
+      // Only threads that exist: one someone declared (a `ThreadRoot` item) or one that already holds
+      // replies. Every root message is a *potential* thread, but treating it as one would list the
+      // whole channel here — creating a thread is a deliberate act.
       GraphBuilder.createTypeExtension({
         id: 'channelThreads',
         type: Channel.Channel,
@@ -81,47 +76,52 @@ export default Capability.makeModule(
             const [client] = get(capabilities.atom(ClientCapabilities.Client));
             const identity = client && get(CreateAtom.fromObservable(client.halo.identity));
             const messages = get(db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom);
-            const threads = foldThreads(messages);
-            const lastActivity = (root: Message.Message): string => threads.get(root.id)?.lastActivity ?? root.created;
+            const declarations = get(db.query(Query.select(Filter.type(ThreadRoot.ThreadRoot)).from(feed)).atom);
+            const rootsById = new Map(selectRoots(messages).map((message) => [message.id, message]));
 
             return (
-              selectRoots(messages)
+              [...foldThreads(messages, declarations).values()]
                 // Ordered by most recent activity, so an active thread surfaces without hunting.
-                .toSorted((left, right) => lastActivity(right).localeCompare(lastActivity(left)))
-                .map((root) => {
-                  // Renaming re-appends the root message, so it is offered to its author alone (see
-                  // `ThreadOperation.RenameThread`).
-                  const canRename = !!identity && senderKey(root.sender) === identity.did;
+                .toSorted((left, right) => (right.lastActivity ?? '').localeCompare(left.lastActivity ?? ''))
+                .map((thread) => {
+                  // Naming writes the caller's own declaration, so anyone may rename — but the write
+                  // needs an identity to attribute it to and the root message to target.
+                  const root = thread.root ?? rootsById.get(thread.threadId);
 
                   return Node.make({
-                    id: getThreadNodeId(root.id),
+                    id: getThreadNodeId(thread.threadId),
                     type: THREAD_NODE_TYPE,
-                    data: { channel, threadId: root.id } satisfies ThreadSelection,
+                    data: { channel, threadId: thread.threadId } satisfies ThreadSelection,
                     properties: {
-                      label:
-                        threads.get(root.id)?.name ?? ThreadAnnotation.getName(root) ?? getThreadFallbackLabel(root),
+                      label: thread.name ?? (root ? getThreadFallbackLabel(root) : thread.threadId),
                       icon: 'ph--chats-circle--regular',
+                      // A thread reads as part of its channel, so it takes the Channel type's hue rather
+                      // than one of its own.
+                      ...(channelHue ? { iconHue: channelHue } : {}),
                       draggable: false,
                       droppable: false,
                       testId: 'threadPlugin.thread',
                     },
-                    actions: canRename
-                      ? [
-                          Node.makeAction({
-                            id: 'rename-thread',
-                            data: (params?: Node.InvokeProps) =>
-                              Operation.invoke(ThreadOperation.RenameThread, {
-                                root,
-                                caller: `${params?.caller}:${params?.parent?.id}`,
-                              }),
-                            properties: {
-                              label: ['rename-thread.label', { ns: meta.profile.key }],
-                              icon: 'ph--pencil-simple--regular',
-                              disposition: 'list-item',
-                            },
-                          }),
-                        ]
-                      : undefined,
+                    actions:
+                      root && identity
+                        ? [
+                            Node.makeAction({
+                              id: 'rename-thread',
+                              data: (params?: Node.InvokeProps) =>
+                                Operation.invoke(ThreadOperation.RenameThread, {
+                                  channel,
+                                  message: root,
+                                  creator: { identityDid: identity.did },
+                                  caller: `${params?.caller}:${params?.parent?.id}`,
+                                }),
+                              properties: {
+                                label: ['rename-thread.label', { ns: meta.profile.key }],
+                                icon: 'ph--pencil-simple--regular',
+                                disposition: 'list-item',
+                              },
+                            }),
+                          ]
+                        : undefined,
                   });
                 })
             );

@@ -12,10 +12,19 @@ import { type Space as ClientSpace, getSpace } from '@dxos/react-client/echo';
 import { type ThreadRootProps } from '@dxos/react-ui-thread';
 import { type Channel, type Message } from '@dxos/types';
 
-import { ThreadCapabilities, ThreadOperation, foldReactions, resolveProvider, senderKey } from '../types';
+import {
+  type ThreadSummary,
+  ThreadCapabilities,
+  ThreadOperation,
+  foldReactions,
+  foldThreads,
+  resolveProvider,
+  senderKey,
+} from '../types';
 import { useMessages } from './useMessages';
 import { useCanReact, useCanRemove, useReactions } from './useReactions';
 import { useStatus } from './useStatus';
+import { useCanCreateThread, useThreadRoots } from './useThreadRoots';
 
 export type ChannelMessaging = {
   space?: ClientSpace;
@@ -23,8 +32,12 @@ export type ChannelMessaging = {
   members: readonly Space.Member[];
   /** Every message in the channel's feed, ascending; callers partition it into threads. */
   messages: readonly Message.Message[];
+  /** Every thread of the channel, keyed by thread id — only those actually declared or replied to. */
+  threads: ReadonlyMap<string, ThreadSummary>;
   activity?: boolean;
   readOnly: boolean;
+  /** Whether the backend can record thread declarations, and so start threads at all. */
+  canCreateThread: boolean;
   getReactions?: ThreadRootProps['getReactions'];
   canDelete: NonNullable<ThreadRootProps['canDelete']>;
   onReact?: (messageId: string, emoji: string) => void;
@@ -46,10 +59,14 @@ export const useChannelMessaging = (channel: Channel.Channel | undefined): Chann
   const provider = channel ? resolveProvider(providers, channel.backend.kind) : undefined;
   const messages = useMessages(channel);
   const reactions = useReactions(channel);
+  const declarations = useThreadRoots(channel);
   const activity = useStatus(space, channel ? Obj.getURI(channel) : undefined);
   const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
   const canReact = useCanReact(channel) && !readOnly;
   const canRemove = useCanRemove(channel) && !readOnly;
+  const canCreateThread = useCanCreateThread(channel) && !readOnly;
+
+  const threads = useMemo(() => foldThreads(messages, declarations), [messages, declarations]);
 
   const foldedReactions = useMemo(() => foldReactions(reactions, identity?.did), [reactions, identity?.did]);
   const getReactions = useCallback(
@@ -96,8 +113,10 @@ export const useChannelMessaging = (channel: Channel.Channel | undefined): Chann
     identity: identity ?? undefined,
     members,
     messages,
+    threads,
     activity,
     readOnly,
+    canCreateThread,
     getReactions: canReact ? getReactions : undefined,
     canDelete,
     onReact: canReact ? onReact : undefined,

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Database, Feed } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -16,20 +16,20 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Channel, Message, Reaction, Thread } from '@dxos/types';
+import { Channel, Message, Reaction, Thread, ThreadRoot } from '@dxos/types';
 
 import { ThreadPlugin } from '../ThreadPlugin';
 
-const types = [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message, Reaction.Reaction];
+const types = [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message, Reaction.Reaction, ThreadRoot.ThreadRoot];
 
 /** Identity creation and space initialization run well past testing-library's 1s default. */
 export const STORY_TIMEOUT = { timeout: 15_000 };
 
 /** Text of the seeded messages, so plays and the seed cannot drift apart. */
 export const SEEDED = {
-  /** Root authored by the local identity — what the author-gated affordances assert on. */
+  /** Root authored by the local identity, with no thread — what "start a thread" acts on. */
   own: 'Hello, channel.',
-  /** Root authored by someone else, carrying the seeded thread. */
+  /** Root authored by someone else, declared a thread root and carrying the seeded reply. */
   other: 'Messages are stored in the feed.',
   /** The seeded thread's only reply. */
   reply: 'And replies live in a thread.',
@@ -37,8 +37,9 @@ export const SEEDED = {
 
 /**
  * Storybook harness shared by the channel article and the article of one of its threads: a personal
- * space holding one feed-backed channel seeded with two roots, the second of which already has a
- * reply. Both views read that same feed, so they must be exercised against the same fixture.
+ * space holding one feed-backed channel seeded with two roots — the second declared a thread root and
+ * carrying one reply, the first left plain so the create-a-thread path has something to act on. Both
+ * views read that same feed, so they must be exercised against the same fixture.
  */
 export const channelStoryDecorators = [
   withMosaic(),
@@ -78,7 +79,15 @@ export const channelStoryDecorators = [
               blocks: [{ _tag: 'text', text: SEEDED.reply }],
               threadId: other.id,
             });
-            yield* Feed.append(feed, [own, other, reply]).pipe(Effect.provide(Database.layer(personalSpace.db)));
+            // The reply's thread exists because it was declared, exactly as creating one in the UI
+            // records it — seeding replies alone would exercise a path users cannot reach.
+            const declaration = ThreadRoot.make({
+              target: Ref.make(other),
+              creator: { identityDid: client.halo.identity.get()?.did },
+            });
+            yield* Feed.append(feed, [own, other, reply, declaration]).pipe(
+              Effect.provide(Database.layer(personalSpace.db)),
+            );
           }),
       }),
       SpacePlugin({}),

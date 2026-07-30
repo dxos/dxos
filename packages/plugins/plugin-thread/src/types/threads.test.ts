@@ -5,10 +5,17 @@
 import { describe, test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
-import { Message, Reaction } from '@dxos/types';
+import { Message, Reaction, ThreadRoot } from '@dxos/types';
 
-import * as ThreadAnnotation from './ThreadAnnotation';
-import { findOwnReaction, foldReactions, foldThreads, selectRoots, selectThread, senderKey } from './threads';
+import {
+  findOwnDeclaration,
+  findOwnReaction,
+  foldReactions,
+  foldThreads,
+  selectRoots,
+  selectThread,
+  senderKey,
+} from './threads';
 
 const DID_ALICE = 'did:key:alice';
 const DID_BOB = 'did:key:bob';
@@ -28,6 +35,15 @@ const makeMessage = ({
 
 const makeReaction = (target: Message.Message, emoji: string, did: string) =>
   Reaction.make({ target: Ref.make(target), emoji, sender: { identityDid: did } });
+
+const makeDeclaration = (
+  target: Message.Message,
+  {
+    did = DID_ALICE,
+    name,
+    created = '2026-01-01T00:00:00.000Z',
+  }: { did?: string; name?: string; created?: string } = {},
+) => ThreadRoot.make({ target: Ref.make(target), creator: { identityDid: did }, created, ...(name ? { name } : {}) });
 
 describe('threads', () => {
   describe('selectRoots', () => {
@@ -56,9 +72,26 @@ describe('threads', () => {
   });
 
   describe('foldThreads', () => {
-    test('a root with no replies produces no thread', ({ expect }) => {
+    test('an undeclared root is not a thread, however many messages sit beside it', ({ expect }) => {
       const root = makeMessage({ text: 'root' });
-      expect(foldThreads([root]).size).to.eq(0);
+      const other = makeMessage({ text: 'other' });
+      expect(foldThreads([root, other]).size).to.eq(0);
+    });
+
+    // Creating a thread is the deliberate act; it exists from that moment, before anyone replies.
+    test('a declared root is a thread with no replies', ({ expect }) => {
+      const root = makeMessage({ text: 'root' });
+      const summary = foldThreads([root], [makeDeclaration(root)]).get(root.id);
+      expect(summary?.root?.id).to.eq(root.id);
+      expect(summary?.replies).to.have.length(0);
+      expect(summary?.lastActivity).to.eq(root.created);
+    });
+
+    // Threads seeded or imported without declarations (the onboarding exemplar) stay addressable.
+    test('replies alone still fold as a thread', ({ expect }) => {
+      const root = makeMessage({ text: 'root' });
+      const reply = makeMessage({ text: 'a', threadId: root.id });
+      expect(foldThreads([root, reply]).get(root.id)?.replies).to.have.length(1);
     });
 
     test('folds replies, participants and last activity', ({ expect }) => {
@@ -87,11 +120,31 @@ describe('threads', () => {
       expect(foldThreads([root, ...replies]).get(root.id)?.participants).to.deep.eq([DID_ALICE]);
     });
 
-    test('picks up the thread name from its root', ({ expect }) => {
+    test('takes the name from the declaration', ({ expect }) => {
       const root = makeMessage({ text: 'root' });
-      ThreadAnnotation.setName(root, 'Q2 planning');
-      const reply = makeMessage({ text: 'a', threadId: root.id });
-      expect(foldThreads([root, reply]).get(root.id)?.name).to.eq('Q2 planning');
+      const declaration = makeDeclaration(root, { name: 'Q2 planning' });
+      expect(foldThreads([root], [declaration]).get(root.id)?.name).to.eq('Q2 planning');
+    });
+
+    // Declarations are per author, so naming resolves across them by recency — which is what lets a
+    // participant rename a thread without writing anyone else's feed item.
+    test('the most recently written name wins', ({ expect }) => {
+      const root = makeMessage({ text: 'root' });
+      const declarations = [
+        makeDeclaration(root, { name: 'First', created: '2026-01-01T00:00:00.000Z' }),
+        makeDeclaration(root, { did: DID_BOB, name: 'Second', created: '2026-01-01T00:05:00.000Z' }),
+      ];
+      expect(foldThreads([root], declarations).get(root.id)?.name).to.eq('Second');
+      expect(foldThreads([root], [...declarations].reverse()).get(root.id)?.name).to.eq('Second');
+    });
+
+    test('an unnamed declaration does not blank an existing name', ({ expect }) => {
+      const root = makeMessage({ text: 'root' });
+      const declarations = [
+        makeDeclaration(root, { name: 'Q2 planning', created: '2026-01-01T00:00:00.000Z' }),
+        makeDeclaration(root, { did: DID_BOB, created: '2026-01-01T00:05:00.000Z' }),
+      ];
+      expect(foldThreads([root], declarations).get(root.id)?.name).to.eq('Q2 planning');
     });
 
     // A thread outlives the message it branched from: deleting the root must not strand its replies.
@@ -101,6 +154,21 @@ describe('threads', () => {
       expect(summary?.root).to.be.undefined;
       expect(summary?.replies).to.have.length(1);
       expect(summary?.lastActivity).to.eq(reply.created);
+    });
+  });
+
+  describe('findOwnDeclaration', () => {
+    test('finds the local identity declaration and ignores others', ({ expect }) => {
+      const root = makeMessage({ text: 'root' });
+      const other = makeMessage({ text: 'other' });
+      const declarations = [
+        makeDeclaration(root, { did: DID_BOB }),
+        makeDeclaration(root, { did: DID_ALICE }),
+        makeDeclaration(other, { did: DID_ALICE }),
+      ];
+      const own = findOwnDeclaration(declarations, { threadId: root.id, identityDid: DID_ALICE });
+      expect(own).to.eq(declarations[1]);
+      expect(findOwnDeclaration(declarations, { threadId: root.id, identityDid: 'did:key:carol' })).to.be.undefined;
     });
   });
 

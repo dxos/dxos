@@ -70,10 +70,52 @@ export const RemoveChannelMessage = Operation.make({
 });
 
 /**
- * Renames a thread by opening the shared rename popover anchored to the caller (its navtree row).
- * The name is an annotation on the root message, so only its author may rename: committing
- * re-appends that message, which under the feed's last-flush-wins rule would silently overwrite a
- * concurrent edit by its author.
+ * Declares a message the root of a thread, so the thread exists before anyone has replied. Creating a
+ * thread is a deliberate act — without a declaration an undeclared message is not a thread — and the
+ * declaration is a per-author feed item, never a mark on the target message (see `ThreadRoot`).
+ * Idempotent: a message already declared a thread root is left alone.
+ */
+export const CreateThread = Operation.make({
+  meta: {
+    key: makeKey('createThread'),
+    name: 'Create Thread',
+    icon: 'ph--chats-circle--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    channel: Type.getSchema(Channel.Channel),
+    /** Message the thread branches from; its id becomes the thread's id. */
+    message: Type.getSchema(Message.Message),
+    creator: Actor.Actor,
+  }),
+  output: Schema.Void,
+});
+
+/**
+ * Names a thread (or clears its name) by writing the caller's own declaration — the newest declared
+ * name wins, so anyone may name a thread without writing another participant's feed item.
+ */
+export const SetThreadName = Operation.make({
+  meta: {
+    key: makeKey('setThreadName'),
+    name: 'Set Thread Name',
+    icon: 'ph--pencil-simple--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    channel: Type.getSchema(Channel.Channel),
+    /** The thread's root message; its id is the thread's id. */
+    message: Type.getSchema(Message.Message),
+    creator: Actor.Actor,
+    /** New name; empty clears it. */
+    name: Schema.optional(Schema.String),
+  }),
+  output: Schema.Void,
+});
+
+/**
+ * Opens the shared rename popover for a thread, anchored to the caller (its navtree row). Committing
+ * invokes {@link SetThreadName}.
  */
 export const RenameThread = Operation.make({
   meta: {
@@ -83,8 +125,10 @@ export const RenameThread = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    /** The thread's root message, which carries the name annotation. */
-    root: Type.getSchema(Message.Message),
+    channel: Type.getSchema(Channel.Channel),
+    /** The thread's root message; its id is the thread's id. */
+    message: Type.getSchema(Message.Message),
+    creator: Actor.Actor,
     /** Anchor for the popover; the navtree row that invoked the action. */
     caller: Schema.optional(Schema.String),
   }),

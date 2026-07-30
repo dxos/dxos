@@ -59,6 +59,8 @@ export type MessageThreadProps = ThemedClassName<{
   onMessageDelete?: (messageId: string) => void;
   /** Open the thread branching from a message (omit to hide the affordance). */
   onThreadOpen?: (messageId: string) => void;
+  /** Declare a message a thread root and open it (omit to hide the affordance). */
+  onThreadCreate?: (messageId: string) => void;
   /** Quote-reply to a message (omit to hide the affordance). */
   onMessageReply?: (messageId: string) => void;
   /** Message the composer currently targets; renders the reply banner above it. */
@@ -93,6 +95,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
       onMessageReact,
       onMessageDelete,
       onThreadOpen,
+      onThreadCreate,
       onMessageReply,
       replyTo,
       onCancelReply,
@@ -135,6 +138,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
         onMessageReact={onMessageReact}
         onMessageDelete={onMessageDelete}
         onThreadOpen={onThreadOpen}
+        onThreadCreate={onThreadCreate}
         onMessageReply={onMessageReply}
       >
         <Thread.Content id={id} current={current} classNames={['dx-container h-full', classNames]} ref={forwardedRef}>

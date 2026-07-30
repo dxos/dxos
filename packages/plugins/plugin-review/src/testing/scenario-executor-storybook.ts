@@ -17,13 +17,13 @@ import { type ReviewScenario, type ScenarioStep } from './scenarios';
  */
 export const selectViewMode = async (canvasElement: HTMLElement, label: string): Promise<void> => {
   const body = within(canvasElement.ownerDocument.body);
-  // Both the trigger's accessible name AND its icon track the active item (applyActive), so locate
-  // it structurally: the view-mode dropdown is the last menu-popup button in the editor toolbar.
+  // Both the trigger's accessible name AND its icon track the active item (applyActive), so locate it
+  // by testId — any other dropdown on the page (a message's hover toolbar) would otherwise be picked
+  // up by a structural "last menu-popup button" query.
   const trigger = await waitFor(
     () => {
-      const buttons = canvasElement.querySelectorAll('button[aria-haspopup="menu"]');
-      const found = buttons[buttons.length - 1];
-      invariant(found instanceof HTMLElement);
+      const found = canvasElement.querySelector('[data-testid="editor.toolbar.viewMode"]');
+      invariant(found instanceof HTMLElement, 'view-mode dropdown not found');
       return found;
     },
     { timeout: 15_000 },

@@ -9,7 +9,7 @@ import type * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type Obj } from '@dxos/echo';
-import { type Channel, type Message, type Reaction } from '@dxos/types';
+import { type Channel, type Message, type Reaction, type ThreadRoot } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -61,6 +61,19 @@ export interface ChannelBackendProvider {
   removeReaction?: (
     channel: Channel.Channel,
     reaction: Reaction.Reaction,
+  ) => Effect.Effect<void, Error, Capability.Service>;
+  /**
+   * Subscribes to the channel's thread declarations, same contract as {@link subscribe}. Omitted by
+   * backends that cannot record them; threads there are inferred from replies alone.
+   */
+  subscribeThreadRoots?: (
+    channel: Channel.Channel,
+    onThreadRoots: (declarations: readonly ThreadRoot.ThreadRoot[]) => void,
+  ) => () => void;
+  /** Appends a thread declaration. Required for the start-a-thread affordance to appear. */
+  appendThreadRoot?: (
+    channel: Channel.Channel,
+    declaration: ThreadRoot.ThreadRoot,
   ) => Effect.Effect<void, Error, Capability.Service>;
   /** Whether the channel is read-only. Defaults to "channel has foreign-key Obj.Meta". */
   readOnly?: (channel: Channel.Channel) => boolean;

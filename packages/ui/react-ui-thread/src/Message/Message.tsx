@@ -23,13 +23,14 @@ import { useObject } from '@dxos/echo-react';
 import {
   Avatar,
   Icon,
-  IconButton,
+  Tag,
   type ThemedClassName,
   useOnTransition,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import { type ActionGroupBuilder, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -160,13 +161,17 @@ export type MessageBodyProps = {
   editing?: boolean;
   /** Persist an edited text block. */
   onSave?: (text: string) => void;
+  /** Ends edit mode, committing whatever the editor holds. */
+  onCommitEdit?: () => void;
+  /** Ends edit mode without committing. */
+  onCancelEdit?: () => void;
 };
 
 /**
  * Renders a message's content blocks: text (via editor), proposal, and
  * object/reference tiles (delegated to the injected `Object` component).
  */
-const MessageBody = ({ message, isAuthor, editing, onSave }: MessageBodyProps) => {
+const MessageBody = ({ message, isAuthor, editing, onSave, onCommitEdit, onCancelEdit }: MessageBodyProps) => {
   const { components } = useThreadContext('Message.Body');
   const textBlockIndex = message.blocks.findIndex((block) => block._tag === 'text');
   const textBlock = textBlockIndex !== -1 ? (message.blocks[textBlockIndex] as ContentBlock.Text) : undefined;
@@ -179,7 +184,16 @@ const MessageBody = ({ message, isAuthor, editing, onSave }: MessageBodyProps) =
 
   return (
     <>
-      {textBlock && <TextBlock block={textBlock} isAuthor={isAuthor} editing={editing} onSave={onSave} />}
+      {textBlock && (
+        <TextBlock
+          block={textBlock}
+          isAuthor={isAuthor}
+          editing={editing}
+          onSave={onSave}
+          onCommitEdit={onCommitEdit}
+          onCancelEdit={onCancelEdit}
+        />
+      )}
       {proposalBlock && <div className='me-4 italic'>{proposalBlock.text}</div>}
       {changeBlock && (
         <p className='me-4 text-sm break-words'>
@@ -203,12 +217,19 @@ const TextBlock = ({
   isAuthor,
   editing,
   onSave,
+  onCommitEdit,
+  onCancelEdit,
 }: {
   block: ContentBlock.Text;
   isAuthor?: boolean;
   editing?: boolean;
   onSave?: (text: string) => void;
+  /** Ends edit mode, committing whatever the editor holds. */
+  onCommitEdit?: () => void;
+  /** Ends edit mode without committing. */
+  onCancelEdit?: () => void;
 }) => {
+  const { t } = useTranslation(translationKey);
   const { themeMode } = useThemeContext();
   const inMemoryContentRef = useRef(block.text);
 
@@ -216,16 +237,48 @@ const TextBlock = ({
     inMemoryContentRef.current = next;
   }, []);
 
+  // Leaving edit mode is the single commit path, whichever affordance ended it — and an unchanged
+  // body is not written back, so cancelling (which restores the original text first) costs no
+  // re-append of the message to its feed.
   const saveDocumentChange = useCallback(() => {
-    onSave?.(inMemoryContentRef.current);
-  }, [onSave]);
+    if (inMemoryContentRef.current !== block.text) {
+      onSave?.(inMemoryContentRef.current);
+    }
+  }, [onSave, block.text]);
 
   useOnTransition(editing, true, false, saveDocumentChange);
+
+  // The keymap is captured when the editor is built, so it reads the current callbacks through refs
+  // rather than closing over them (see `Thread.Textbox` for the same hazard on send).
+  const onCommitEditRef = useRef(onCommitEdit);
+  onCommitEditRef.current = onCommitEdit;
+  const onCancelEditRef = useRef(onCancelEdit);
+  onCancelEditRef.current = onCancelEdit;
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
       initialValue: block.text,
       extensions: [
+        // Enter commits and Shift+Enter (falling through to the default binding) breaks the line, the
+        // same contract as composing a message — an edit is submitted, not toggled off.
+        editing &&
+          keymap.of([
+            {
+              key: 'Enter',
+              run: () => {
+                onCommitEditRef.current?.();
+                return true;
+              },
+            },
+            {
+              key: 'Escape',
+              run: () => {
+                inMemoryContentRef.current = block.text;
+                onCancelEditRef.current?.();
+                return true;
+              },
+            },
+          ]),
         createBasicExtensions({ readOnly: !isAuthor || !editing }),
         createThemeExtensions({ themeMode }),
         command,
@@ -234,7 +287,7 @@ const TextBlock = ({
             handleDocumentChange(update.state.doc.toString());
           }
         }),
-      ],
+      ].filter(isTruthy),
     }),
     [block.text, editing, isAuthor, themeMode, handleDocumentChange],
   );
@@ -245,7 +298,18 @@ const TextBlock = ({
     }
   }, [editing, view]);
 
-  return <div ref={parentRef} className='me-4' {...focusAttributes} />;
+  // While editing, the body reads as an input rather than as text with a different button beside it:
+  // it takes an accented frame and states how to commit, so the mode is legible without hovering.
+  return (
+    <div className={mx('me-4', editing && 'rounded-sm ring-1 ring-accent-bg bg-attention-surface px-1.5 py-0.5')}>
+      <div ref={parentRef} {...focusAttributes} />
+      {editing && (
+        <p data-testid='thread.message.edit-hint' className='pt-0.5 text-xs text-description'>
+          {t('editing.message')}
+        </p>
+      )}
+    </div>
+  );
 };
 
 //
@@ -262,10 +326,10 @@ export type MessageReactionsProps = {
 };
 
 /**
- * Folded reaction chips, rendered beneath a message's body. A chip shows the emoji and its count and
- * is active while the local identity is among the reactors; clicking it un-reacts. Counts and active
+ * Folded reaction pills, rendered beneath a message's body. A pill shows the emoji and its count and
+ * is accented while the local identity is among the reactors; clicking it un-reacts. Counts and active
  * state are computed by the host — see `getReactions`. Adding a reaction lives in the hover controls
- * ({@link MessageReactionPicker}) so an un-reacted message carries no persistent chrome.
+ * ({@link MessageControls}) so an un-reacted message carries no persistent chrome.
  */
 const MessageReactions = ({ reactions, onReact }: Omit<MessageReactionsProps, 'quickReactions'>) => {
   if (reactions.length === 0) {
@@ -275,21 +339,22 @@ const MessageReactions = ({ reactions, onReact }: Omit<MessageReactionsProps, 'q
   return (
     <div className='flex flex-wrap items-center gap-1 me-4 mt-1' data-testid='thread.message.reactions'>
       {reactions.map(({ emoji, count, self }) => (
-        <button
-          key={emoji}
-          type='button'
-          data-testid='thread.message.reaction'
-          data-emoji={emoji}
-          aria-pressed={self}
-          className={mx(
-            'flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-xs dx-focus-ring',
-            self ? 'border-accentSurface bg-accentSurface text-accent-text' : 'border-separator text-description',
-          )}
-          onClick={() => onReact(emoji)}
-        >
-          <span aria-hidden>{emoji}</span>
-          <span>{count}</span>
-        </button>
+        // `Tag` carries the pill shape and sizing from the theme; the button is the interactive host so
+        // the pill keeps a focus ring and pressed state. The hue stays neutral and the accent ring
+        // alone marks "you reacted" — the palette hues are categorical, not stateful.
+        <Tag key={emoji} asChild>
+          <button
+            type='button'
+            data-testid='thread.message.reaction'
+            data-emoji={emoji}
+            aria-pressed={self}
+            className={mx('flex items-center gap-1 dx-focus-ring', self && 'ring-1 ring-accent-bg')}
+            onClick={() => onReact(emoji)}
+          >
+            <span aria-hidden>{emoji}</span>
+            <span>{count}</span>
+          </button>
+        </Tag>
       ))}
     </div>
   );
@@ -297,57 +362,249 @@ const MessageReactions = ({ reactions, onReact }: Omit<MessageReactionsProps, 'q
 
 MessageReactions.displayName = 'Message.Reactions';
 
-export type MessageReactionPickerProps = {
-  quickReactions?: readonly string[];
-  onReact: (emoji: string) => void;
+//
+// Controls
+//
+
+export type MessageControlsProps = {
+  /** Message the controls act on. */
+  message: MessageType.Message;
+  /** Whether that message is currently being edited. */
+  editing: boolean;
+  onEdit: () => void;
+  onSaveEdit: () => void;
+  onCancelEdit: () => void;
 };
 
-/** Add-reaction control for the hover toolbar: a button that reveals a row of quick reactions. */
-const MessageReactionPicker = ({ quickReactions = DEFAULT_REACTIONS, onReact }: MessageReactionPickerProps) => {
-  const { t } = useTranslation(translationKey);
-  const [picking, setPicking] = useState(false);
+/**
+ * Hover toolbar for a message, built from a menu action graph (`MenuBuilder` + `Menu.Toolbar`) rather
+ * than hand-placed buttons, so item rendering, dropdowns, sizing and keyboard behaviour come from the
+ * menu system. Frequent actions (react, reply or start-a-thread, accept/reject) sit in the toolbar;
+ * edit and delete are buried in the overflow (⋯) menu, since they are destructive or rare. While
+ * editing, the toolbar collapses to save/cancel — the only two moves that apply.
+ */
+const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }: MessageControlsProps) => {
+  const {
+    getReactions,
+    getThreadSummary,
+    canDelete,
+    quickReactions = DEFAULT_REACTIONS,
+    getMetadata,
+    identityDid,
+    editable,
+    onMessageDelete,
+    onMessageReact,
+    onThreadOpen,
+    onThreadCreate,
+    onMessageReply,
+    onAcceptProposal,
+    onAcceptChange,
+    onRejectChange,
+  } = useThreadContext('Message.Controls');
 
-  const handlePick = useCallback(
-    (emoji: string) => {
-      setPicking(false);
-      onReact(emoji);
-    },
-    [onReact],
-  );
+  const metadata = getMetadata(message);
+  const isAuthor = !!identityDid && identityDid === metadata.authorId;
+  const hasProposal = message.blocks.some((block) => block._tag === 'proposal');
+  const hasChange = message.blocks.some((block) => block._tag === 'change');
+  const threadSummary = getThreadSummary?.(message);
+
+  const showEdit = isAuthor && !!editable;
+  const showDelete = !!onMessageDelete && (canDelete?.(message) ?? true);
+  // Reply and start-thread are mutually exclusive by design: the host offers start-thread in a
+  // channel's main view and reply inside a thread, so answering a message pulls the conversation into
+  // a thread rather than growing the channel. Starting one is offered only where none exists yet.
+  const showStartThread = !!onThreadCreate && !threadSummary;
+
+  const hasControls =
+    editing ||
+    !!onMessageReact ||
+    !!onMessageReply ||
+    showStartThread ||
+    (hasProposal && !!onAcceptProposal) ||
+    (hasChange && (!!onAcceptChange || !!onRejectChange)) ||
+    showEdit ||
+    showDelete;
+
+  const menuActions = useMenuBuilder(() => {
+    const builder = MenuBuilder.make().root({ label: ['message-controls.title', { ns: translationKey }] });
+
+    if (editing) {
+      builder.action(
+        'save',
+        {
+          label: ['save-message.label', { ns: translationKey }],
+          icon: 'ph--check--regular',
+          iconOnly: true,
+          testId: 'thread.message.save',
+        },
+        onSaveEdit,
+      );
+      builder.action(
+        'cancel',
+        {
+          label: ['cancel-edit.label', { ns: translationKey }],
+          icon: 'ph--x--regular',
+          iconOnly: true,
+          testId: 'thread.message.cancel-edit',
+        },
+        onCancelEdit,
+      );
+      return builder.build();
+    }
+
+    if (onMessageReact) {
+      builder.group(
+        'reactions',
+        {
+          label: ['add-reaction.label', { ns: translationKey }],
+          icon: 'ph--smiley--regular',
+          iconOnly: true,
+          caretDown: false,
+          variant: 'dropdownMenu',
+          testId: 'thread.message.react',
+        },
+        (group: ActionGroupBuilder) => {
+          for (const emoji of quickReactions) {
+            group.action(`react-${emoji}`, { label: emoji, testId: 'thread.message.reaction-option' }, () =>
+              onMessageReact(message.id, emoji),
+            );
+          }
+        },
+      );
+    }
+
+    if (onMessageReply) {
+      builder.action(
+        'reply',
+        {
+          label: ['reply-message.label', { ns: translationKey }],
+          icon: 'ph--arrow-bend-up-left--regular',
+          iconOnly: true,
+          testId: 'thread.message.reply',
+        },
+        () => onMessageReply(message.id),
+      );
+    }
+
+    if (showStartThread && onThreadCreate) {
+      builder.action(
+        'start-thread',
+        {
+          label: ['start-thread.label', { ns: translationKey }],
+          icon: 'ph--chats-circle--regular',
+          iconOnly: true,
+          testId: 'thread.message.start-thread',
+        },
+        () => onThreadCreate(message.id),
+      );
+    }
+
+    if (hasProposal && onAcceptProposal) {
+      builder.action(
+        'accept-proposal',
+        {
+          label: ['accept-proposal.label', { ns: translationKey }],
+          icon: 'ph--check--regular',
+          iconOnly: true,
+          testId: 'thread.message.accept',
+        },
+        () => onAcceptProposal(message.id),
+      );
+    }
+
+    if (hasChange && onAcceptChange) {
+      builder.action(
+        'accept-change',
+        {
+          label: ['accept-change.label', { ns: translationKey }],
+          icon: 'ph--check--regular',
+          iconOnly: true,
+          testId: 'thread.message.accept-change',
+        },
+        () => onAcceptChange(message.id),
+      );
+    }
+
+    if (hasChange && onRejectChange) {
+      builder.action(
+        'reject-change',
+        {
+          label: ['reject-change.label', { ns: translationKey }],
+          icon: 'ph--x--regular',
+          iconOnly: true,
+          testId: 'thread.message.reject-change',
+        },
+        () => onRejectChange(message.id),
+      );
+    }
+
+    if (showEdit || showDelete) {
+      builder.menu(
+        'more',
+        (group: ActionGroupBuilder) => {
+          if (showEdit) {
+            group.action(
+              'edit',
+              {
+                label: ['edit-message.label', { ns: translationKey }],
+                icon: 'ph--pencil-simple--regular',
+                testId: 'thread.message.edit',
+              },
+              onEdit,
+            );
+          }
+          if (showDelete && onMessageDelete) {
+            group.action(
+              'delete',
+              {
+                label: ['delete-message.label', { ns: translationKey }],
+                icon: 'ph--trash--regular',
+                testId: 'thread.message.delete',
+              },
+              () => onMessageDelete(message.id),
+            );
+          }
+        },
+        'thread.message.more',
+      );
+    }
+
+    return builder.build();
+  }, [
+    message,
+    editing,
+    quickReactions,
+    showEdit,
+    showDelete,
+    showStartThread,
+    hasProposal,
+    hasChange,
+    onMessageReact,
+    onMessageReply,
+    onThreadCreate,
+    onMessageDelete,
+    onAcceptProposal,
+    onAcceptChange,
+    onRejectChange,
+    onEdit,
+    onSaveEdit,
+    onCancelEdit,
+  ]);
+
+  if (!hasControls) {
+    return null;
+  }
 
   return (
-    <>
-      {picking && (
-        <div role='group' aria-label={t('add-reaction.label')} className='flex items-center gap-0.5'>
-          {quickReactions.map((emoji) => (
-            <button
-              key={emoji}
-              type='button'
-              data-testid='thread.message.reaction-option'
-              data-emoji={emoji}
-              className='px-1 py-0.5 rounded-sm text-sm hover:bg-hoverSurface dx-focus-ring'
-              onClick={() => handlePick(emoji)}
-            >
-              <span aria-hidden>{emoji}</span>
-              <span className='sr-only'>{emoji}</span>
-            </button>
-          ))}
-        </div>
-      )}
-      <IconButton
-        data-testid='thread.message.react'
-        variant='ghost'
-        icon='ph--smiley--regular'
-        iconOnly
-        label={t('add-reaction.label')}
-        classNames={[buttonClassNames, hoverableControlItem]}
-        onClick={() => setPicking((value) => !value)}
-      />
-    </>
+    // `alwaysActive`: a message toolbar belongs to the hovered row, not to whichever plank holds
+    // attention, so it must not disable itself when the thread is unattended.
+    <Menu.Root {...menuActions} alwaysActive iconSize={4}>
+      <Menu.Toolbar classNames={mx('pe-2 border-none bg-transparent', !editing && hoverableControlItem)} density='sm' />
+    </Menu.Root>
   );
 };
 
-MessageReactionPicker.displayName = 'Message.ReactionPicker';
+MessageControls.displayName = 'Message.Controls';
 
 //
 // Quoted parent
@@ -553,6 +810,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     onMessageDelete,
     onMessageReact,
     onThreadOpen,
+    onThreadCreate,
     onMessageReply,
     onAcceptProposal,
     onAcceptChange,
@@ -564,18 +822,12 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
 
   const metadata = getMetadata(message);
   const isAuthor = !!identityDid && identityDid === metadata.authorId;
-  const hasProposal = message.blocks.some((block) => block._tag === 'proposal');
-  const hasChange = message.blocks.some((block) => block._tag === 'change');
 
-  const handleEdit = useCallback(() => setEditing((value) => !value), []);
-  const handleDelete = useCallback(() => onMessageDelete?.(message.id), [onMessageDelete, message.id]);
-  const handleAcceptProposal = useCallback(() => onAcceptProposal?.(message.id), [onAcceptProposal, message.id]);
-  const handleAcceptChange = useCallback(() => onAcceptChange?.(message.id), [onAcceptChange, message.id]);
-  const handleRejectChange = useCallback(() => onRejectChange?.(message.id), [onRejectChange, message.id]);
+  const handleEdit = useCallback(() => setEditing(true), []);
+  const handleCancelEdit = useCallback(() => setEditing(false), []);
   const handleSelect = useCallback(() => onMessageSelect?.(message.id), [onMessageSelect, message.id]);
   const handleReact = useCallback((emoji: string) => onMessageReact?.(message.id, emoji), [onMessageReact, message.id]);
   const handleOpenThread = useCallback(() => onThreadOpen?.(message.id), [onThreadOpen, message.id]);
-  const handleReply = useCallback(() => onMessageReply?.(message.id), [onMessageReply, message.id]);
   const handleSave = useCallback(
     (text: string) => {
       Obj.update(message, (message) => {
@@ -584,114 +836,22 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           block.text = text;
         }
       });
+      setEditing(false);
     },
     [message],
   );
-
   const reactions = getReactions?.(message) ?? [];
   const threadSummary = getThreadSummary?.(message);
 
-  const showEdit = isAuthor && editable;
-  const showAccept = hasProposal && !!onAcceptProposal;
-  const showAcceptChange = hasChange && !!onAcceptChange;
-  const showRejectChange = hasChange && !!onRejectChange;
-  const showDelete = !!onMessageDelete && (canDelete?.(message) ?? true);
-  // Reply and start-thread are mutually exclusive by design: the host offers start-thread in a
-  // channel's main view and reply inside a thread, so answering a message pulls the conversation
-  // into a thread rather than growing the channel.
-  const showReact = !!onMessageReact;
-  const showReply = !!onMessageReply;
-  const showStartThread = !!onThreadOpen;
-  const controls =
-    showReact ||
-    showReply ||
-    showStartThread ||
-    showEdit ||
-    showAccept ||
-    showAcceptChange ||
-    showRejectChange ||
-    showDelete ? (
-      <div className={buttonGroupClassNames}>
-        {showReact && <MessageReactionPicker quickReactions={quickReactions} onReact={handleReact} />}
-        {showReply && (
-          <IconButton
-            data-testid='thread.message.reply'
-            variant='ghost'
-            icon='ph--arrow-bend-up-left--regular'
-            iconOnly
-            label={t('reply-message.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={handleReply}
-          />
-        )}
-        {showStartThread && (
-          <IconButton
-            data-testid='thread.message.start-thread'
-            variant='ghost'
-            icon='ph--chats-circle--regular'
-            iconOnly
-            label={t('start-thread.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={handleOpenThread}
-          />
-        )}
-        {showEdit && (
-          <IconButton
-            data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
-            variant='ghost'
-            icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
-            iconOnly
-            label={t(editing ? 'save-message.label' : 'edit-message.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={handleEdit}
-          />
-        )}
-        {showAccept && (
-          <IconButton
-            data-testid='thread.message.accept'
-            variant='ghost'
-            icon='ph--check--regular'
-            iconOnly
-            label={t('accept-proposal.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={handleAcceptProposal}
-          />
-        )}
-        {showAcceptChange && (
-          <IconButton
-            data-testid='thread.message.accept-change'
-            variant='ghost'
-            icon='ph--check--regular'
-            iconOnly
-            label={t('accept-change.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={handleAcceptChange}
-          />
-        )}
-        {showRejectChange && (
-          <IconButton
-            data-testid='thread.message.reject-change'
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('reject-change.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={handleRejectChange}
-          />
-        )}
-        {showDelete && (
-          <IconButton
-            data-testid='thread.message.delete'
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('delete-message.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={handleDelete}
-          />
-        )}
-      </div>
-    ) : undefined;
+  const controls = (
+    <MessageControls
+      message={message}
+      editing={editing}
+      onEdit={handleEdit}
+      onSaveEdit={handleCancelEdit}
+      onCancelEdit={handleCancelEdit}
+    />
+  );
 
   return (
     <MessageRoot
@@ -712,10 +872,17 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     >
       <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
       <MessageQuote message={message} />
-      <MessageBody message={message} isAuthor={isAuthor} editing={editing} onSave={handleSave} />
-      {showReact && <MessageReactions reactions={reactions} onReact={handleReact} />}
+      <MessageBody
+        message={message}
+        isAuthor={isAuthor}
+        editing={editing}
+        onSave={handleSave}
+        onCommitEdit={handleCancelEdit}
+        onCancelEdit={handleCancelEdit}
+      />
+      {onMessageReact && <MessageReactions reactions={reactions} onReact={handleReact} />}
       {/* The summary row appears only once a thread exists; starting one is a hover control. */}
-      {showStartThread && threadSummary && <MessageThreadLink summary={threadSummary} onOpen={handleOpenThread} />}
+      {threadSummary && onThreadOpen && <MessageThreadLink summary={threadSummary} onOpen={handleOpenThread} />}
     </MessageRoot>
   );
 };
@@ -743,31 +910,16 @@ export type MessageGroupProps = {
  * to a single message.
  */
 const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupProps) => {
-  const { t } = useTranslation(translationKey);
-  const {
-    getMetadata,
-    getReactions,
-    getThreadSummary,
-    canDelete,
-    quickReactions,
-    identityDid,
-    editable,
-    onMessageDelete,
-    onMessageReact,
-    onThreadOpen,
-    onMessageReply,
-    onAcceptProposal,
-  } = useThreadContext('Message.Group');
+  const { getMetadata, getReactions, getThreadSummary, identityDid, onMessageReact, onThreadOpen } =
+    useThreadContext('Message.Group');
   const [editing, setEditing] = useState(false);
 
   const first = messages[0];
   const metadata = getMetadata(first);
   const isAuthor = !!identityDid && identityDid === metadata.authorId;
-  const hasProposal = first.blocks.some((block) => block._tag === 'proposal');
 
-  const handleEdit = useCallback(() => setEditing((value) => !value), []);
-  const handleDelete = useCallback(() => onMessageDelete?.(first.id), [onMessageDelete, first.id]);
-  const handleAcceptProposal = useCallback(() => onAcceptProposal?.(first.id), [onAcceptProposal, first.id]);
+  const handleEdit = useCallback(() => setEditing(true), []);
+  const handleCancelEdit = useCallback(() => setEditing(false), []);
   const handleSave = useCallback(
     (text: string) => {
       Obj.update(first, (first) => {
@@ -776,88 +928,24 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           block.text = text;
         }
       });
+      setEditing(false);
     },
     [first],
   );
-
-  const showEdit = isAuthor && editable;
-  const showAccept = hasProposal && !!onAcceptProposal;
-  const showDelete = !!onMessageDelete && (canDelete?.(first) ?? true);
-  const showReact = !!onMessageReact;
-  const showReply = !!onMessageReply;
-  const showStartThread = !!onThreadOpen;
-  const controls =
-    showReact || showReply || showStartThread || showEdit || showAccept || showDelete ? (
-      <div className={buttonGroupClassNames}>
-        {showReact && (
-          <MessageReactionPicker
-            quickReactions={quickReactions}
-            onReact={(emoji) => onMessageReact?.(first.id, emoji)}
-          />
-        )}
-        {showReply && (
-          <IconButton
-            data-testid='thread.message.reply'
-            variant='ghost'
-            icon='ph--arrow-bend-up-left--regular'
-            iconOnly
-            label={t('reply-message.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={() => onMessageReply?.(first.id)}
-          />
-        )}
-        {showStartThread && (
-          <IconButton
-            data-testid='thread.message.start-thread'
-            variant='ghost'
-            icon='ph--chats-circle--regular'
-            iconOnly
-            label={t('start-thread.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={() => onThreadOpen?.(first.id)}
-          />
-        )}
-        {showEdit && (
-          <IconButton
-            data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
-            variant='ghost'
-            icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
-            iconOnly
-            label={t(editing ? 'save-message.label' : 'edit-message.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={handleEdit}
-          />
-        )}
-        {showAccept && (
-          <IconButton
-            data-testid='thread.message.accept'
-            variant='ghost'
-            icon='ph--check--regular'
-            iconOnly
-            label={t('accept-proposal.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={handleAcceptProposal}
-          />
-        )}
-        {showDelete && (
-          <IconButton
-            data-testid='thread.message.delete'
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('delete-message.label')}
-            classNames={[buttonClassNames, hoverableControlItem]}
-            onClick={handleDelete}
-          />
-        )}
-      </div>
-    ) : undefined;
 
   return (
     <MessageRoot
       {...metadata}
       continues={continues}
-      controls={controls}
+      controls={
+        <MessageControls
+          message={first}
+          editing={editing}
+          onEdit={handleEdit}
+          onSaveEdit={handleCancelEdit}
+          onCancelEdit={handleCancelEdit}
+        />
+      }
       classNames={[hoverableControls, hoverableFocusedWithinControls, classNames]}
     >
       <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
@@ -869,6 +957,8 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
             isAuthor={isAuthor}
             editing={editing && message === first}
             onSave={handleSave}
+            onCommitEdit={handleCancelEdit}
+            onCancelEdit={handleCancelEdit}
           />
           {/* Reactions and threads are per-message, unlike the group's edit/delete controls. */}
           {onMessageReact && (
@@ -899,7 +989,7 @@ export const Message = {
   Time: MessageTime,
   Body: MessageBody,
   Reactions: MessageReactions,
-  ReactionPicker: MessageReactionPicker,
+  Controls: MessageControls,
   Quote: MessageQuote,
   ThreadLink: MessageThreadLink,
   Textbox: MessageTextbox,

@@ -47,5 +47,16 @@ export const Thread = {
     await input.press('Enter');
   },
 
-  deleteMessage: (message: Locator) => message.getByTestId('thread.message.delete').click(),
+  /** Opens the message's overflow menu, whose items are portaled to the page root. */
+  openMessageMenu: (message: Locator) => message.getByTestId('thread.message.more').click(),
+
+  deleteMessage: async (message: Locator, page: Page) => {
+    await Thread.openMessageMenu(message);
+    await page.getByTestId('thread.message.delete').click();
+  },
+
+  editMessage: async (message: Locator, page: Page) => {
+    await Thread.openMessageMenu(message);
+    await page.getByTestId('thread.message.edit').click();
+  },
 };

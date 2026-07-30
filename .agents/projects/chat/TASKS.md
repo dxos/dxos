@@ -11,7 +11,9 @@ DONE: no new plugin — all work lands in `plugin-thread` (stage 1), renamed to
 `plugin-chat` when proven (stage 2), review unification last (stage 3).
 **Stage 1 is COMPLETE** except for two items parked by decision (thread
 deep-linking, awaiting the url-deck grammar) and two that need a human or a
-two-peer harness (manual offline/propagation, two-client storybook).
+two-peer harness (manual offline/propagation, two-client storybook). Rounds 2–4
+of jdw's review are folded in below, each marked with the round that asked for
+it; where a round revised an earlier decision the superseded entry says so.
 NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 
 ## Decisions log
@@ -54,12 +56,12 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       plugin's schema module (all three entrypoints: browser/node/workerd).
       Fold and toggle helpers are deliberately deferred to the UI task that
       needs them, so they land with tests against real usage.
-- [x] Define the thread name (roots only): the `name` field of a single
-      `ThreadAnnotation.Thread` annotation (`org.dxos.chat.thread`), with
-      `getThread`/`getName`/`setName`. Shape set by josiah (2026-07-29): one
-      annotation per _concern_, so later thread state becomes another field in
-      this struct rather than another annotation. Keyed on the service, not the
-      plugin id, so the stage-2 rename cannot orphan persisted values.
+- [x] Define the thread name — SUPERSEDED in round 4. Originally the `name`
+      field of an `org.dxos.chat.thread` annotation on the root message (shape
+      set by josiah 2026-07-29: one annotation per _concern_). Once threads
+      became explicitly created, the name moved onto the `ThreadRoot`
+      declaration and the annotation was deleted; see "Thread creation" below
+      for why (naming must not be author-only).
 - [x] Decide reaction identity/toggle mechanics: `findOwnReaction` matches
       `(senderKey, target, emoji)` and `ThreadOperation.ToggleReaction`
       appends or tombstones that one item. Idempotency comes from the fold
@@ -76,13 +78,15 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       (deduped, first-seen order), name and last activity, with unit tests.
       Rendered by `Message.ThreadLink` as name · count · relative time.
       Remaining polish: participant avatars in the row.
-- [x] "Start thread" affordance on every root message; `ThreadPanel` renders
-      beside the channel, filtered by `threadId`.
+- [x] "Start thread" affordance on root messages — since round 4 only on those
+      with no thread yet, and it declares the thread before opening it. The
+      round-1 `ThreadPanel` (rendered inside the channel article) was replaced in
+      round 3 by a plank of its own.
 - [x] Reply composer posts into the open thread (`AppendChannelMessage` gained
       `threadId`); the main composer still posts roots.
-- [x] Thread rename in the panel header, author-only, committed on blur/Enter
-      so a keystroke is not a feed re-append; the name also renders in the
-      summary row.
+- [x] Thread rename — SUPERSEDED twice: the round-1 in-panel header input became
+      a navtree node action in round 3, and stopped being author-only in round 4
+      once the name moved to the per-author declaration.
 - [ ] Deep-link a thread. PARKED by josiah (2026-07-29) until the rest is
       working — thread selection is component state for now (the navtree
       thread nodes open via surface data, not URL). Needs the url-deck
@@ -119,13 +123,15 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       `Thread.Root` (previously any participant could delete anyone's message).
       No tombstone stub is needed: the feed query already excludes tombstoned
       items, asserted by the `DeleteOwnOnly` play.
-- [x] Reactions UI: folded chips with counts and own-state highlight; clicking
-      an active chip un-reacts; picker in the hover toolbar.
-- [x] Storybook coverage: channel side — `Roots`, `DeleteOwnOnly`,
-      `ThreadAffordances`, `React`; thread side — `Default`, `ReplyInThread`,
+- [x] Reactions UI: folded pills (the `Tag` primitive) with counts and an
+      own-state accent ring; clicking an active pill un-reacts; the picker is a
+      dropdown group in the hover toolbar.
+- [x] Storybook coverage: channel side — `Roots`, `ThreadsAreCreated`,
+      `CreateThread`, `DeleteOwnOnly`, `ThreadAffordances`, `EditMessage`,
+      `CancelEdit`, `React`; thread side — `Default`, `ReplyInThread`,
       `ThreadAffordances`, `QuoteReply` (banner → send → quote). The shared
-      fixture (one channel, two roots, one seeded reply) lives in
-      `containers/testing.tsx` so both files exercise the same feed.
+      fixture (one channel; one declared thread with a reply, one plain message)
+      lives in `containers/testing.tsx` so both files exercise the same feed.
 
 ### Navtree
 
@@ -168,6 +174,65 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       `GraphPropsAnnotation` extension (blocked: `@dxos/types` cannot depend on
       `@dxos/app-toolkit`).
 
+### Thread creation (jdw round 4)
+
+- [x] Threads are created, not assumed. A new `ThreadRoot` feed item
+      (`org.dxos.type.threadRoot`) declares "this message starts a thread";
+      `foldThreads` treats a thread as existing when it has a declaration **or**
+      already holds replies (which keeps threads seeded/imported without one —
+      the onboarding exemplar — addressable). An undeclared message is not a
+      thread, however many messages sit beside it.
+- [x] Why a per-author feed item rather than a mark on the target message: the
+      declaration must be writable by whoever creates the thread, and marking
+      someone else's message would re-append their item under last-flush-wins.
+      Same single-writer shape as `Reaction`, folded at read.
+- [x] The thread name moved from the `org.dxos.chat.thread` annotation onto the
+      declaration, and `ThreadAnnotation` is deleted. REVISES the round-1
+      decision (jdw: name as an annotation field) — that shape predated any
+      per-thread item, and it made naming author-only, so a participant who
+      created a thread on someone else's message could not name it. Naming now
+      writes the caller's _own_ declaration and the newest declared name wins,
+      so anyone may rename without touching another participant's item.
+      (The typed-annotation pattern itself still gets its outing in stage 3,
+      where review owns `resolved`.)
+- [x] `ThreadOperation.CreateThread` (idempotent — skips when any declaration
+      exists), `SetThreadName` (rewrites the caller's own declaration, or adds
+      one), and `RenameThread` (opens the shared popover, commits through
+      `SetThreadName` via the imperative `Capabilities.OperationInvoker` since
+      the popover commits from a plain callback).
+- [x] Hover "start a thread" appears only on messages with no thread and now
+      declares before opening; the summary row appears the moment a thread
+      exists, at zero replies.
+- [x] Thread node icons take the Channel type's hue (read from its
+      `IconAnnotation`, not hardcoded) so a thread reads as part of its channel.
+
+### Message controls (jdw round 4)
+
+- [x] The hover controls are a menu action graph (`MenuBuilder` +
+      `Menu.Toolbar`) instead of hand-placed `IconButton`s, which also collapsed
+      the two duplicated ~90-line control blocks (tile and group) into one
+      `Message.Controls`.
+- [x] Edit and delete moved into the overflow (⋯) menu — destructive or rare,
+      so deliberately buried. React / reply / start-thread / accept-reject stay
+      in the toolbar. Quick reactions are now a dropdown group rather than a
+      bespoke inline row.
+- [x] Reaction pills use the `Tag` primitive for shape and sizing; the accent
+      ring (not a palette hue) marks "you reacted", since the palette hues are
+      categorical rather than stateful.
+- [x] Editing is a legible mode: the body takes an accented frame and states its
+      keys, Enter commits, Shift+Enter breaks the line (matching the composer),
+      Escape restores the original. Leaving edit mode is the single commit path
+      and an unchanged body is not written back, so cancelling costs no
+      re-append. Keymap reads callbacks through refs (the `useTextEditor`
+      stale-closure hazard fixed in round 2).
+- [x] FIXED a helper this exposed: plugin-review's `selectViewMode` located the
+      editor's view-mode dropdown as "the last `aria-haspopup=menu` button in the
+      canvas", which silently became a message's hover dropdown. The group now
+      carries `testId: 'editor.toolbar.viewMode'` and the helper targets it.
+- [x] Composer e2e updated for the buried actions: `Thread.editMessage` /
+      `Thread.deleteMessage` open the overflow menu first (its items are portaled
+      to the page root).
+
 ### Message view (jdw round 3)
 
 - [x] Dropped the stray `border` on the channel's `Thread.Content` — the white
@@ -181,13 +246,16 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 
 ### Stage-1 verification
 
-- [x] Unit: folds (threads, reactions, participants, orphaned root) and
-      reaction toggle idempotency — 15 tests in `types/threads.test.ts`, plus
-      6 in `@dxos/types` for the schema changes.
-- [x] Storybook plays: 10 green in a real browser (4 channel + 4 thread + 2
-      render-only), covering roots-only rendering, threaded reply, author-gated
-      delete, the reaction round trip, the channel/thread affordance asymmetry,
-      and the quote-reply round trip (banner, `parentMessage`, rendered quote).
+- [x] Unit: folds (thread existence by declaration, name-by-recency, reactions,
+      participants, orphaned root) and reaction toggle idempotency — 20 tests in
+      `types/threads.test.ts`, plus 9 in `@dxos/types` for the schema changes
+      (`Message.parentMessage`, `Reaction`, `ThreadRoot`).
+- [x] Storybook plays: 14 green in a real browser (9 channel + 4 thread + 1
+      legacy), covering roots-only rendering, deliberate thread creation, the
+      threaded reply, author-gated delete via the overflow menu, the reaction
+      round trip, the channel/thread affordance asymmetry, the edit/cancel round
+      trip, and the quote-reply round trip. Verified downstream: plugin-review
+      39 plays + 60 unit, react-ui-thread 6 plays.
 - [ ] Two-client storybook for optimistic send + cross-peer convergence — not
       attempted; needs a two-peer harness.
 - [ ] Manual: offline send (airplane-mode) → reconnect → `blocksToPush`

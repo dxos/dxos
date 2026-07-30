@@ -48,6 +48,9 @@
       "path": "../react-ui-editor"
     },
     {
+      "path": "../react-ui-menu"
+    },
+    {
       "path": "../react-ui-mosaic"
     },
     {

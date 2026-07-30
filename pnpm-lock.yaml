@@ -24766,6 +24766,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../react-ui-menu
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic

@@ -40,6 +40,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
