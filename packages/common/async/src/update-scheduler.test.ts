@@ -27,11 +27,6 @@ describe('update-scheduler', () => {
 
   // The flush-barrier contract: when `runBlocking` resolves, everything that was queued at call time
   // has been fully processed — not claimed by a still-running pass the barrier failed to observe.
-  // Historically a triggered pass and a `runBlocking` could park on the same in-flight pass; on
-  // resume the triggered one claimed the queue and the flush ran against nothing, resolving while
-  // the claimed batch was still in flight — lost if the caller tore down (dxos/edge#758's orphaned
-  // `updateSubscription` batches). The single-door design makes the flush wait for the run that
-  // adopts its enqueued state, whoever starts it.
   test('runBlocking does not resolve while a pass that claimed the queue is still in flight', async ({ expect }) => {
     const ctx = new Context();
     const queue: string[] = [];
@@ -73,10 +68,6 @@ describe('update-scheduler', () => {
 
   // The callback is not reentrant: it typically drains shared queued state, so two passes running at
   // once each claim part of the queue. Historically a throttled `trigger` checked for a running pass
-  // *before* its delay while `runBlocking` claimed directly — so a flush could start a pass while the
-  // triggered one slept, and both callbacks ran together (dxos/edge#758). Under the single-door
-  // design the flush coalesces onto the sleeping runner instead, so the same scenario yields fewer
-  // runs — the invariants are that no two callbacks ever overlap and the flush still completes.
   test('the callback does not overlap itself when runBlocking races a throttled trigger', async ({ expect }) => {
     const ctx = new Context();
     let calls = 0;

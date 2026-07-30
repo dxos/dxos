@@ -20,50 +20,34 @@ export type UpdateSchedulerOptions = {
 const TIME_PERIOD = 1_000;
 
 /**
- * A claimed run, delivered to waiters via {@link UpdateScheduler._claimed} the moment the runner
- * starts the callback. `error` resolves when the run finishes — with its error, or `undefined` on
- * success — and never rejects, so an unobserved run cannot become an unhandled promise rejection;
- * `runBlocking` inspects and re-throws. `observed` marks that a `runBlocking` caller will consume
- * the result, so a failure is theirs to throw rather than the context's to raise.
+ * A claimed run. `error` resolves with the run's error (or `undefined`) and never rejects;
+ * `observed` means a `runBlocking` caller will throw it, so the context should not raise it.
  */
 type RunResult = { error: Promise<unknown>; observed: boolean };
 
 /**
- * Runs a non-reentrant callback at most once at a time, coalescing any number of triggers
- * (optionally rate-limited via {@link UpdateSchedulerOptions.maxFrequency}).
+ * Runs a non-reentrant callback at most once at a time, coalescing triggers (optionally rate-limited
+ * via {@link UpdateSchedulerOptions.maxFrequency}).
  *
- * Single-door design (same shape as {@link DeferredTask}): the scheduled runner inside
- * {@link trigger} is the ONLY place the callback is started. `runBlocking`/`forceTrigger` never run
- * the callback themselves — they funnel into that runner. With exactly one claim site and the
- * `_scheduled` flag collapsing concurrent triggers into one pending runner, at most one waiter ever
- * waits for the running pass — so it cannot lose a wake-up race, and mutual exclusion holds by
- * construction. (A previous design let `runBlocking` claim directly; two claim sites with single
- * checks is the check/claim race behind dxos/edge#758.)
+ * The runner inside {@link trigger} is the only place the callback starts; `runBlocking` and
+ * `forceTrigger` funnel into it. That, plus `_scheduled` collapsing triggers into one pending
+ * runner, is what makes mutual exclusion hold by construction (dxos/edge#758).
  */
 export class UpdateScheduler {
-  /**
-   * The running pass. Never rejects, and is non-null exactly while a run is executing.
-   * Consulted by {@link join}, the dispose hook, and the runner's own wait.
-   */
+  /** The running pass; never rejects, non-null exactly while a run is executing. */
   private _currentTask: Promise<void> | null = null;
   private _scheduled = false;
 
   /**
-   * Claim signal for the pending run: armed (reset) by the `trigger` call that schedules a runner,
-   * woken by that runner the moment it claims, carrying the run's result. This is what lets
-   * `runBlocking` bridge the scheduled→claimed gap — after `trigger()`, the run it asked for does
-   * not exist in `_currentTask` yet, so there is nothing else it could await.
+   * Armed by the `trigger` that schedules a runner, woken by that runner when it claims. Lets
+   * `runBlocking` await a run that does not exist in `_currentTask` yet.
    *
-   * `Trigger.reset()` abandons the previous promise (parked waiters would hang), which is safe here
-   * ONLY because the arm lives in `trigger`'s non-coalesced branch: waiters can park solely while
-   * `_scheduled` is true, and that branch requires it to be false.
+   * `reset()` abandons parked waiters, so it may only be armed in `trigger`'s non-coalesced branch:
+   * waiters park only while `_scheduled` is true, and that branch requires it false.
    */
   private _claimed = new Trigger<RunResult>();
 
-  /**
-   * Woken to make the pending (or next) runner skip its throttle delay — urgency without a second
-   * claim site. Replaced at claim time so each runner races only its own generation's signal.
-   */
+  /** Woken to make the pending runner skip its throttle delay. Replaced at claim time. */
   private _skipDelay = new Trigger();
 
   private _lastUpdateTime = -TIME_PERIOD;
@@ -75,8 +59,7 @@ export class UpdateScheduler {
   ) {
     _ctx.onDispose(async () => {
       await this._currentTask; // Context waits for callback to finish.
-      // A runner that never reached its claim (disposed mid-delay, or never started) leaves the
-      // claim signal unwoken; release any `runBlocking` callers parked on it. NOOP if already woken.
+      // Release `runBlocking` callers parked on a runner that never claimed. NOOP if already woken.
       this._claimed.wake({ error: Promise.resolve(undefined), observed: true });
     });
   }
@@ -86,26 +69,21 @@ export class UpdateScheduler {
   }
 
   /**
-   * Schedule the callback to run asynchronously. Triggers issued while a run is pending or in
-   * flight coalesce into the next run.
+   * Schedule the callback to run asynchronously. Triggers issued while a run is pending or in flight
+   * coalesce into the next run.
    */
   trigger(): void {
     if (this._scheduled) {
       return;
     }
     this._scheduled = true;
-    // Arm the claim signal for the run being created — only ever here, never on a coalesced
-    // trigger (see `_claimed`).
-    this._claimed.reset();
+    this._claimed.reset(); // Only here — never on a coalesced trigger (see `_claimed`).
 
-    // The ONLY claim site.
+    // The only claim site. A single await suffices: nothing else claims, so this is the only waiter.
     scheduleMicroTask(this._ctx, async () => {
-      // A single await suffices — no re-check loop: `_scheduled` collapses triggers into one
-      // pending runner and nothing else claims, so this is the only waiter for the running pass.
       await this._currentTask; // Never rejects.
 
-      // Rate limiting. Sleeping between the wait above and the claim below is safe only because
-      // no other claimant exists.
+      // Rate limiting. Suspending before the claim is safe only because no other claimant exists.
       if (this._params.maxFrequency) {
         const now = performance.now();
         const delay = this._lastUpdateTime + TIME_PERIOD / this._params.maxFrequency - now;
@@ -122,7 +100,7 @@ export class UpdateScheduler {
               resolve();
             });
 
-            // `runBlocking`/`forceTrigger` cut the delay short; the run stays mutually excluded.
+            // `runBlocking`/`forceTrigger` cut the delay short.
             void skipDelay.wait().then(() => {
               clearTimeout(timeoutId);
               clearContext();
@@ -133,13 +111,11 @@ export class UpdateScheduler {
       }
 
       if (this._ctx.disposed) {
-        // Free parked waiters; nothing waits on the data any more.
         this._claimed.wake({ error: Promise.resolve(undefined), observed: true });
         return;
       }
 
-      // The claim — one synchronous slice from here to the `wake` below, so nothing can interleave
-      // between the checks above and the run starting.
+      // The claim: one synchronous slice from here to the `wake` below.
       this._scheduled = false;
       this._skipDelay = new Trigger();
       this._lastUpdateTime = performance.now();
@@ -147,9 +123,8 @@ export class UpdateScheduler {
       run.error = this._callback().then(
         () => undefined,
         async (error) => {
-          // One microtask hop before deciding where the failure goes: waiters were woken at claim
-          // time and mark `observed` on resume, but a synchronously-rejecting callback queues this
-          // handler ahead of them — without the hop it would double-report to the context.
+          // Let woken waiters set `observed` first; a synchronous rejection queues this handler ahead
+          // of them, and without the hop the context would double-report.
           await undefined;
           if (!run.observed) {
             this._ctx.raise(error as Error);
@@ -169,7 +144,7 @@ export class UpdateScheduler {
 
   /**
    * Run as soon as possible: schedules (coalescing with any pending run) and skips the throttle
-   * delay. Does NOT start a concurrent callback — urgency never suspends mutual exclusion.
+   * delay. Does not start a concurrent callback.
    */
   forceTrigger(): void {
     this.trigger();
@@ -185,13 +160,10 @@ export class UpdateScheduler {
   }
 
   /**
-   * Ensure a run that observes everything enqueued so far, and wait for it to finish.
-   *
-   * Waits in two steps: first for the pending run to claim (via the signal armed by `trigger`),
-   * then for that run's result. The run that wakes the signal necessarily claims after this call,
-   * so its drain includes everything enqueued before it. Concurrent callers coalesce onto the same
-   * run. Rejects with that run's error — a caller using this as a flush barrier must be able to see
-   * that its batch was NOT handed off (dxos/edge#758). No-op once the context is disposed.
+   * Ensure a run that observes everything enqueued so far, and wait for it to finish. Waits for the
+   * pending run to claim, then for its result; that run necessarily claims after this call, so its
+   * drain includes everything enqueued before it. Rejects with the run's error so a flush barrier can
+   * see its batch was not handed off. No-op once disposed.
    */
   async runBlocking(): Promise<void> {
     if (this._ctx.disposed) {

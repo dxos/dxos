@@ -41,15 +41,9 @@ export class DeferredTask {
     scheduleTask(this._ctx, async () => {
       // The previous task might still be running, so we need to wait for it to finish.
       //
-      // NOTE: A single await is sufficient ONLY because this class has one claim site and the
-      // `_scheduled` flag collapses concurrent schedules into one pending waiter — a lone waiter
-      // cannot lose the wake-up race. Both properties are load-bearing: adding a second path that
-      // claims `_currentTask` directly (an urgent run that bypasses this one, say) breaks the
-      // argument and lets two callbacks run at once. `UpdateScheduler` had exactly that second door
-      // and exactly that bug (dxos/edge#758); it now uses this same single-door shape, expressing
-      // urgency by waking the pending runner rather than starting its own. Throttling is safe to add
-      // here (see the TODO above) for the same reason — with one claimant, sleeping between this
-      // await and the claim below cannot let anyone in.
+      // A single await suffices only because this is the one claim site and `_scheduled` collapses
+      // schedules into one waiter. A second path claiming `_currentTask` directly would let two
+      // callbacks run at once — see dxos/edge#758.
       await this._currentTask; // Can't be rejected.
 
       // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.

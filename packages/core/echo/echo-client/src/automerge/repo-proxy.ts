@@ -64,16 +64,9 @@ export class RepoProxy extends Resource {
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
   /**
-   * Error from the most recent failed `_sendUpdates` pass, with a counter that increments on every
-   * failure. `_sendUpdates` cannot throw (it is a scheduler callback, and a rejection there would
-   * surface as an unhandled context error rather than reaching the writer), so this is how a failed
-   * batch becomes visible to {@link flush}.
-   *
-   * The counter is what makes concurrent `flush()` calls safe: each reads it before its attempt and
-   * compares afterwards, so a failure is attributed to whichever attempts were in flight when it
-   * happened. A single field that each `flush` cleared would let one caller wipe a failure the other
-   * had not yet observed, and both would report success over a batch that is back on the pending
-   * list.
+   * How a failed batch becomes visible to {@link flush} — `_sendUpdates` cannot throw. Each flush
+   * attempt compares the counter before and after, so concurrent flushes cannot mask each other's
+   * failure (a single cleared field would).
    */
   private _sendFailureCount = 0;
   private _lastSendError: Error | undefined = undefined;
@@ -129,14 +122,9 @@ export class RepoProxy extends Resource {
   /**
    * Waits until every pending document creation and update has been handed to the host.
    *
-   * Throws if a batch could not be sent. This matters most for a short-lived writer — a server-side
-   * ECHO client inside a worker invocation, say — because `_sendUpdates` responds to a failure by
-   * re-queueing the batch for the next scheduler pass, and for such a writer there is no next pass:
-   * the isolate is disposed as soon as the caller sees `flush()` resolve. Resolving over a re-queued
-   * batch therefore loses the write permanently and silently, which is dxos/edge#758 — an object
-   * whose data never lands while the space-root link that makes it resolvable does, so it reads back
-   * as an empty object and no peer ever sees it. Reporting the failure lets the caller fail its
-   * operation instead of returning an id that points at nothing.
+   * Throws if a batch could not be sent. `_sendUpdates` re-queues a failed batch for the next pass,
+   * but a short-lived writer (a server-side ECHO client in a worker invocation) is disposed as soon
+   * as `flush()` resolves — so resolving over a re-queued batch loses the write silently.
    */
   async flush(): Promise<void> {
     // Wait for all creations to be completed.
@@ -148,7 +136,7 @@ export class RepoProxy extends Resource {
       if (this._sendFailureCount === failuresBefore) {
         return;
       }
-      // Closing makes the remaining work moot: nothing is waiting on this data any more.
+      // Closing makes the remaining work moot.
       if (this._lifecycleState === LifecycleState.CLOSED) {
         return;
       }
@@ -457,8 +445,7 @@ export class RepoProxy extends Resource {
     } catch (err) {
       // Don't restore pending updates if generation changed - this task is abandoned.
       const isAbandoned = generation !== this._generation;
-      // Recorded even when the error is deliberately not raised below: `flush` needs to know the
-      // batch did not land regardless of whether anyone else wants to hear about it.
+      // Recorded even when the error is not raised below: `flush` still needs to know.
       if (!isAbandoned) {
         this._lastSendError = err as Error;
         this._sendFailureCount++;
