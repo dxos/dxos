@@ -7,7 +7,6 @@ import React from 'react';
 import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { AnchorWidget, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
-import { trim } from '@dxos/util';
 
 import { type Assistant } from '../../types';
 import { type BlockRenderer, type MessageThreadContext } from './sync';
@@ -223,12 +222,11 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
         if (block.disposition === 'synthetic') {
           return renderXMLBlock('synthetic', { content: block.text, pending: block.pending });
         } else {
-          const prompt = trim`
-            <prompt>${block.text}</prompt>
-            <branch messageId="${escapeXmlAttribute(message.id)}" created="${escapeXmlAttribute(message.created)}" />
-          `;
-
-          return '\n' + prompt + '\n';
+          // Built by explicit concatenation, not an indented template: `trim` dedents by the minimum
+          // indent across all lines, and a multi-line prompt contributes lines at zero indent — so the
+          // source file's indentation survived into the document, where 4+ spaces is an indented code
+          // block and neither the prompt nor the toolbar parsed as an element any more.
+          return `\n<prompt>${block.text}</prompt>\n${renderBranchToolbar(message)}\n`;
         }
       } else {
         const text = block.text.trim();
@@ -310,6 +308,13 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
     }
   }
 };
+
+/**
+ * Mini toolbar below a user prompt: branch (soft fork) plus when the prompt was sent.
+ * `messageId` rather than `id` because a tag's `id` attribute would shadow the widget's own id.
+ */
+const renderBranchToolbar = (message: Message.Message) =>
+  `<branch messageId="${escapeXmlAttribute(message.id)}" created="${escapeXmlAttribute(message.created)}" />`;
 
 /**
  * Escape text embedded in generated XML so the mixed XML parser does not treat `&`, `<`, `>` as markup.

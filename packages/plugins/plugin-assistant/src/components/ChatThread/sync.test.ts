@@ -331,6 +331,25 @@ describe('MessageSyncer tool widget rehydration', () => {
     }),
   );
 
+  // Regression: the prompt was built with an indented `trim` template, which dedents by the minimum
+  // indent across all lines — so a multi-line prompt, contributing lines at zero indent, left the source
+  // file's indentation in the document. At 4+ spaces CommonMark reads an indented code block, so neither
+  // the prompt nor the toolbar parsed as an element and the turn rendered as raw text.
+  it.effect(
+    'a multi-line prompt emits unindented markup',
+    Effect.fn(function* ({ expect }) {
+      const doc = new TestDocument();
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
+
+      const prompt = createMessage('user', [{ _tag: 'text', text: 'this is a list:\n- foo\n- bar' }]);
+      syncer.update([prompt]);
+
+      const indented = doc.content.split('\n').filter((line) => /^\s+\S/.test(line));
+      expect(indented).toEqual([]);
+      expect(normalize(doc.content)).toContain('<prompt>this is a list:\n- foo\n- bar</prompt>\n<branch />');
+    }),
+  );
+
   // Regression: `update` streams a suffix, so an append-only path leaves removed turns on screen. A
   // rewind shrinks the thread, which has to fall back to a full reset.
   it.effect(
