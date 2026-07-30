@@ -14,5 +14,6 @@ export default Config2.make({
     icon: { key: 'ph--pen-nib--regular', hue: 'amber' },
     spec: 'PLUGIN.mdl',
     dependsOn: ['org.dxos.plugin.markdown'],
+    tags: ['labs'],
   },
 });

@@ -5,7 +5,7 @@
 import type * as Tool from '@effect/ai/Tool';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Icon, useTranslation } from '@dxos/react-ui';
+import { Icon, IconBlock, useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type Message } from '@dxos/types';
@@ -143,9 +143,19 @@ const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   return (
     <TogglePanel.Root open={open} onChangeOpen={setOpen}>
       <TogglePanel.Content>
-        <TogglePanel.Header classNames='flex items-center gap-2 text-sm text-placeholder'>
-          <Icon icon={headerIcon} size={4} classNames='shrink-0 opacity-70' />
-          <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
+        <TogglePanel.Header classNames='flex items-center gap-2 text-sm'>
+          <div className='w-full grid grid-cols-[1fr_auto] items-center gap-2'>
+            <TextCrawl
+              key='status-roll'
+              classNames='text-description'
+              lines={items.map((item) => item.title)}
+              autoAdvance
+              greedy
+            />
+            <IconBlock>
+              <Icon icon={headerIcon} size={4} />
+            </IconBlock>
+          </div>
         </TogglePanel.Header>
         <TogglePanel.Body>
           <TogglePanel.Viewport classNames='grid grid-cols-[32px_1fr]'>

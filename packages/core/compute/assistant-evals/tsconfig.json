@@ -36,6 +36,9 @@
       "path": "../../../plugins/plugin-routine"
     },
     {
+      "path": "../../../plugins/plugin-table"
+    },
+    {
       "path": "../../../plugins/plugin-testing"
     },
     {
@@ -46,6 +49,9 @@
     },
     {
       "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../../ui/react-ui-table"
     },
     {
       "path": "../../echo/echo"

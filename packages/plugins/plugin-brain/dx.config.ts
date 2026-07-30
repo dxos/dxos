@@ -17,6 +17,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-brain',
     icon: { key: 'ph--brain--regular', hue: 'purple' },
     spec: 'PLUGIN.mdl',
-    tags: ['assistant'],
+    tags: ['assistant', 'labs'],
   },
 });
