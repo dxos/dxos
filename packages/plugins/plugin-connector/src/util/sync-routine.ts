@@ -76,8 +76,8 @@ export const ensureSyncTrigger = ({
     if (existing) {
       return existing;
     }
-    // A binding whose target ref no longer resolves is broken beyond what routine setup can fix;
-    // callers treat this whole step as best-effort and fall back to a direct sync.
+    // A binding whose target ref no longer resolves is broken beyond what routine setup can fix, and
+    // a scheduled connector has no direct-sync path to fall back to.
     const target = yield* Database.load(cursor.spec.target).pipe(Effect.orDie);
     return yield* createSyncRoutine({ target, cursor, operation: sync.operation, spec: sync.trigger });
   });

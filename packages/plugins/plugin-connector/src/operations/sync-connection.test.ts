@@ -72,6 +72,67 @@ describe('SyncConnection', () => {
     },
   });
 
+  test('invokes the sync operation directly for a connector with no trigger spec', async ({ expect }) => {
+    const { db, connection, cursor } = await setup();
+    // Even with a trigger in the space, a connector that declares no schedule syncs on demand only.
+    await addSyncTrigger(db, cursor);
+
+    const result = await invokeSync(makeInvoker({ scheduled: false }), connection);
+
+    expect(result.synced).toBe(1);
+    expect(synced).toEqual([Ref.make(cursor).uri]);
+    expect(fired).toEqual([]);
+  });
+
+  test('force-runs the binding’s trigger for a connector with a trigger spec', async ({ expect }) => {
+    const { db, connection, cursor } = await setup();
+    const trigger = await addSyncTrigger(db, cursor);
+
+    const result = await invokeSync(makeInvoker({ scheduled: true }), connection);
+
+    expect(result.synced).toBe(1);
+    // The trigger dispatcher runs the sync, so the operation is not invoked here.
+    expect(fired).toEqual([trigger.id]);
+    expect(synced).toEqual([]);
+  });
+
+  test('creates the sync routine when a scheduled binding has none yet', async ({ expect }) => {
+    const { connection } = await setup();
+
+    const result = await invokeSync(makeInvoker({ scheduled: true }), connection);
+
+    expect(result.synced).toBe(1);
+    // The routine was created from the declared spec and its trigger force-run.
+    expect(fired).toHaveLength(1);
+    expect(synced).toEqual([]);
+  });
+
+  test('does not sync directly when a scheduled binding’s trigger cannot be run', async ({ expect }) => {
+    const { db, connection, cursor } = await setup();
+    await addSyncTrigger(db, cursor);
+
+    // The trigger is the sync path for a scheduled connector, so with no monitor to run it the sync
+    // fails rather than quietly running outside the dispatcher (and losing its durable execution).
+    await expect(invokeSync(makeInvoker({ scheduled: true, withMonitor: false }), connection)).rejects.toThrow();
+
+    expect(synced).toEqual([]);
+    expect(fired).toEqual([]);
+  });
+
+  test('does nothing when no connector is registered for the connection', async ({ expect }) => {
+    const { connection } = await setup();
+    // An unregistered connector id resolves to no entry, so there is no sync to run.
+    Obj.update(connection, (connection) => {
+      connection.connectorId = 'unregistered';
+    });
+
+    const result = await invokeSync(makeInvoker({ scheduled: true }), connection);
+
+    expect(result.synced).toBe(0);
+    expect(synced).toEqual([]);
+    expect(fired).toEqual([]);
+  });
+
   /**
    * Capabilities the handler reads: the connector registry, plus — unless `withMonitor` is false — a
    * `ServiceResolver` that resolves the space's trigger monitor. Omitting it is the CLI/workerd shape,
@@ -139,65 +200,4 @@ describe('SyncConnection', () => {
 
   const invokeSync = (invoker: ReturnType<typeof makeInvoker>, connection: Connection.Connection) =>
     EffectEx.runPromise(invoker.invoke(ConnectorOperation.SyncConnection, { connection: Ref.make(connection) }));
-
-  test('invokes the sync operation directly for a connector with no trigger spec', async ({ expect }) => {
-    const { db, connection, cursor } = await setup();
-    // Even with a trigger in the space, a connector that declares no schedule syncs on demand only.
-    await addSyncTrigger(db, cursor);
-
-    const result = await invokeSync(makeInvoker({ scheduled: false }), connection);
-
-    expect(result.synced).toBe(1);
-    expect(synced).toEqual([Ref.make(cursor).uri]);
-    expect(fired).toEqual([]);
-  });
-
-  test('force-runs the binding’s trigger for a connector with a trigger spec', async ({ expect }) => {
-    const { db, connection, cursor } = await setup();
-    const trigger = await addSyncTrigger(db, cursor);
-
-    const result = await invokeSync(makeInvoker({ scheduled: true }), connection);
-
-    expect(result.synced).toBe(1);
-    // The trigger dispatcher runs the sync, so the operation is not invoked here.
-    expect(fired).toEqual([trigger.id]);
-    expect(synced).toEqual([]);
-  });
-
-  test('creates the sync routine when a scheduled binding has none yet', async ({ expect }) => {
-    const { connection } = await setup();
-
-    const result = await invokeSync(makeInvoker({ scheduled: true }), connection);
-
-    expect(result.synced).toBe(1);
-    // The routine was created from the declared spec and its trigger force-run.
-    expect(fired).toHaveLength(1);
-    expect(synced).toEqual([]);
-  });
-
-  test('does not sync directly when a scheduled binding’s trigger cannot be run', async ({ expect }) => {
-    const { db, connection, cursor } = await setup();
-    await addSyncTrigger(db, cursor);
-
-    // The trigger is the sync path for a scheduled connector, so with no monitor to run it the sync
-    // fails rather than quietly running outside the dispatcher (and losing its durable execution).
-    await expect(invokeSync(makeInvoker({ scheduled: true, withMonitor: false }), connection)).rejects.toThrow();
-
-    expect(synced).toEqual([]);
-    expect(fired).toEqual([]);
-  });
-
-  test('does nothing when no connector is registered for the connection', async ({ expect }) => {
-    const { connection } = await setup();
-    // An unregistered connector id resolves to no entry, so there is no sync to run.
-    Obj.update(connection, (connection) => {
-      connection.connectorId = 'unregistered';
-    });
-
-    const result = await invokeSync(makeInvoker({ scheduled: true }), connection);
-
-    expect(result.synced).toBe(0);
-    expect(synced).toEqual([]);
-    expect(fired).toEqual([]);
-  });
 });

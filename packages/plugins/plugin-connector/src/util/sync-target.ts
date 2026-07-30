@@ -8,6 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { type Operation } from '@dxos/compute';
 import { Database, Filter, Obj } from '@dxos/echo';
 
+import { ConnectionSyncError } from '../errors';
 import { Connection, Connector } from '../types';
 import { findBindingForTarget } from './find-binding';
 import { syncBinding } from './sync-binding';
@@ -17,7 +18,9 @@ import { syncBinding } from './sync-binding';
  * than a registered Operation, since it only resolves which binding and connector the target belongs
  * to and hands off to {@link syncBinding}. No-op for an object that is not bound to a connection.
  */
-export const syncTarget = (target: Obj.Unknown): Effect.Effect<void, Error, Capability.Service | Operation.Service> =>
+export const syncTarget = (
+  target: Obj.Unknown,
+): Effect.Effect<void, ConnectionSyncError, Capability.Service | Operation.Service> =>
   Effect.gen(function* () {
     const db = Obj.getDatabase(target);
     if (!db) {
@@ -40,5 +43,12 @@ export const syncTarget = (target: Obj.Unknown): Effect.Effect<void, Error, Capa
       }
 
       yield* syncBinding({ connector, cursor, spaceId: db.spaceId });
-    }).pipe(Effect.provide(Database.layer(db)));
+    }).pipe(
+      Effect.provide(Database.layer(db)),
+      // Resolving the binding and its connector can fail the same way the sync itself can, so the
+      // caller sees one error type either way.
+      Effect.mapError((error) =>
+        error instanceof ConnectionSyncError ? error : new ConnectionSyncError({ cause: error }),
+      ),
+    );
   });

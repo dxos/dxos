@@ -54,6 +54,24 @@ describe('syncTarget', () => {
     invokeTrigger: ({ trigger }) => Effect.sync(() => void fired.push(trigger.id)),
   };
 
+  test('force-runs the sync trigger of the target’s binding', async ({ expect }) => {
+    const { target, trigger } = await setup();
+
+    await run(target);
+
+    expect(fired).toEqual([trigger.id]);
+  });
+
+  test('does nothing for an object with no binding', async ({ expect }) => {
+    const { db } = await setup();
+    const unbound = db.add(Obj.make(Expando.Expando, { name: 'unbound' }));
+    await db.flush({ indexes: true });
+
+    await run(unbound);
+
+    expect(fired).toEqual([]);
+  });
+
   const capabilities = () => {
     const manager = CapabilityManager.make({ registry: Registry.make() });
     manager.contribute({ module: 'test', interface: Connector, implementation: [connector] });
@@ -94,22 +112,4 @@ describe('syncTarget', () => {
       Effect.provide(operationServiceLayerNoop),
       EffectEx.runPromise,
     );
-
-  test('force-runs the sync trigger of the target’s binding', async ({ expect }) => {
-    const { target, trigger } = await setup();
-
-    await run(target);
-
-    expect(fired).toEqual([trigger.id]);
-  });
-
-  test('does nothing for an object with no binding', async ({ expect }) => {
-    const { db } = await setup();
-    const unbound = db.add(Obj.make(Expando.Expando, { name: 'unbound' }));
-    await db.flush({ indexes: true });
-
-    await run(unbound);
-
-    expect(fired).toEqual([]);
-  });
 });

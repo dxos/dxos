@@ -9,6 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Database, type Key, Ref } from '@dxos/echo';
 import { type Cursor } from '@dxos/link';
 
+import { ConnectionSyncError } from '../errors';
 import { type ConnectorEntry } from '../types';
 import { ensureSyncTrigger } from './sync-routine';
 import { fireSyncTrigger, syncTriggerMonitorLayer } from './sync-trigger';
@@ -45,4 +46,8 @@ export const syncBinding = ({
     }
 
     yield* fireSyncTrigger(trigger).pipe(Effect.provide(syncTriggerMonitorLayer(spaceId)));
-  });
+  }).pipe(
+    // A missing sync handler or an unresolvable trigger monitor both mean the sync never started;
+    // the connector is the only context a caller can act on.
+    Effect.mapError((cause) => new ConnectionSyncError({ connectorId: connector.id, cause })),
+  );
