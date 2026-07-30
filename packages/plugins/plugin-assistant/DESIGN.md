@@ -12,7 +12,7 @@ Related docs (not duplicated here):
   and the memoization-retirement plan this document builds on.
 - [`agent-service/README.md`](../../core/compute/agent-runtime/src/agent-service/README.md) —
   supervisor/delegation layering and lifecycle diagrams.
-- [`ChatThread/DEBUG.md`](./src/components/ChatThread/DEBUG.md) — the AI→CodeMirror dataflow in
+- [`DEBUG.md`](./DEBUG.md) — the AI→CodeMirror dataflow in
   detail.
 
 ## 1. Call stack: prompt → response → document → widgets
@@ -27,7 +27,7 @@ Related docs (not duplicated here):
 | 4   | Agent process       | `AgentService`, `AgentProcess` (input queue, alarms, delegation)      | [`@dxos/agent-runtime`](../../core/compute/agent-runtime/src/agent-service)                                                                         |
 | 5   | Session / request   | `AiSession.Session`, `AiRequest.Request`, `AiContext.Binder`          | [`@dxos/assistant`](../../core/compute/assistant/src)                                                                                               |
 | 6   | Model               | `AiService` → `LanguageModel.streamText` → `AiParser`                 | [`@dxos/ai`](../../core/compute/ai/src)                                                                                                             |
-| 7   | Document sync       | `MessageSyncer`, `BlockRenderer` (`blockToMarkdown`)                  | [`components/ChatThread/sync.ts`](./src/components/ChatThread/sync.ts), [`registry.tsx`](./src/components/ChatThread/registry.tsx)                  |
+| 7   | Document sync       | `MessageSyncer`, `BlockRenderer` (`blockToMarkdown`)                  | [`components/ChatThread/sync`](./src/components/ChatThread/sync/sync.ts), [`registry.tsx`](./src/components/ChatThread/registry.tsx)                  |
 | 8   | Editor / widgets    | `MarkdownStream`, `xmlTags`, `XmlWidgetRegistry`, widget classes      | [`@dxos/react-ui-markdown`](../../ui/react-ui-markdown/src/MarkdownStream), [`@dxos/ui-editor` xml](../../ui/ui-editor/src/extensions/language/xml) |
 
 ### 1.2 Sequence
