@@ -305,11 +305,21 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 - [x] Message UI state (editing, picking) lives in a per-tile atom that the
       control menu reads through `get`, so entering edit mode recomputes the
       action graph instead of tearing it down and mounting a new one.
-- [x] Thread nodes carry the channel as node `data` with the thread id in
-      `properties`, the shape plugin-inbox uses for a mailbox filter/tag — so a
-      node's data stays an object and the selection is metadata beside it. The
-      two Channel article surfaces are told apart by that property alone, and
-      `ThreadSelection` is gone.
+- [x] Thread nodes carry the thread object as node `data`, so its label, actions
+      and companions hang off the thread rather than off the channel. The article
+      surface is a plain `AppSurface.object(Article, Thread)`, and the pair-shaped
+      `ThreadSelection` (and the `thread-node` addressing helpers that replaced it)
+      are gone.
+- [x] Threads are URL-addressable: `thread/<channelId>+<threadId>` under the
+      channels section path, the fixed-depth pair shape a mailbox message uses.
+      This closes the deep-linking item parked in stage 1 — the grammar it was
+      waiting for (a static-path `UrlBinding`) already existed.
+- [x] Reaction pills are buttons: `Tag` gained a `button` variant in `react-ui`
+      (pointer, hover, `aria-pressed` ring) rather than the pills pasting styles
+      on at the call site, and a message that carries reactions ends its row with
+      an add-reaction pill that opens the full picker anchored to itself.
+- [x] The hover toolbar overlays the message instead of taking a column, and the
+      quote above a reply gained the reply arrow.
 
 ### Threads stopped loading into the app graph (jdw round 6)
 

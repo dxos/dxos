@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Database, type Entity, Feed } from '@dxos/echo';
+import { Database, type Entity, Feed, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -16,12 +16,12 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Channel, Message, Thread } from '@dxos/types';
+import { Channel, Thread as LegacyThread, Message } from '@dxos/types';
 
 import { ThreadPlugin } from '../ThreadPlugin';
-import { Reaction, ThreadAnnotation } from '../types';
+import { Reaction, Thread } from '../types';
 
-const types = [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message, Reaction.Reaction];
+const types = [Channel.Channel, Feed.Feed, LegacyThread.Thread, Message.Message, Reaction.Reaction, Thread.Thread];
 
 /** Identity creation and space initialization run well past testing-library's 1s default. */
 export const STORY_TIMEOUT = { timeout: 15_000 };
@@ -87,15 +87,15 @@ const seedChannel: ChannelSeed = ({ identityDid }) => {
   const own = Message.make({ sender: { identityDid }, blocks: [{ _tag: 'text', text: SEEDED.own }] });
   const ownFollowUp = Message.make({ sender: { identityDid }, blocks: [{ _tag: 'text', text: SEEDED.ownFollowUp }] });
   const other = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: SEEDED.other }] });
+  // The thread exists because it was created, exactly as the UI records it — seeding replies alone
+  // would exercise a path users cannot reach. Its replies carry the thread's id, not the message's.
+  const thread = Thread.make({ target: Ref.make(other) });
   const reply = Message.make({
     sender: { role: 'user' },
     blocks: [{ _tag: 'text', text: SEEDED.reply }],
-    threadId: other.id,
+    threadId: thread.id,
   });
-  // The thread exists because it was created, exactly as the UI records it — seeding replies alone
-  // would exercise a path users cannot reach.
-  ThreadAnnotation.create(other);
-  return [own, ownFollowUp, other, reply];
+  return [own, ownFollowUp, other, thread, reply];
 };
 
 /** Harness shared by the channel article and the article of one of its threads: both read one feed. */

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Query } from '@dxos/echo';
@@ -12,9 +12,8 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading } from '@dxos/react-ui/testing';
 import { Channel } from '@dxos/types';
 
-import { useMessages } from '#hooks';
+import { useThreads } from '#hooks';
 import { translations } from '#translations';
-import { foldThreads } from '#types';
 
 import { SEEDED, STORY_TIMEOUT, channelStoryDecorators } from '../testing';
 import { ChannelThreadArticle } from './ChannelThreadArticle';
@@ -23,13 +22,12 @@ import { ChannelThreadArticle } from './ChannelThreadArticle';
 const DefaultStory = () => {
   const [space] = useSpaces();
   const [channel] = useQuery(space?.db, Query.type(Channel.Channel));
-  const messages = useMessages(channel);
-  const threadId = useMemo(() => [...foldThreads(messages).keys()][0], [messages]);
-  if (!channel || !threadId) {
-    return <Loading data={{ channel, threadId }} />;
+  const [thread] = useThreads(channel);
+  if (!channel || !thread) {
+    return <Loading data={{ channel, thread }} />;
   }
 
-  return <ChannelThreadArticle subject={channel} threadId={threadId} role='article' />;
+  return <ChannelThreadArticle subject={thread} channel={channel} role='article' />;
 };
 
 const meta = {

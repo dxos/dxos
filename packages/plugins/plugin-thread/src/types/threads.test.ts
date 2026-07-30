@@ -8,8 +8,16 @@ import { Ref } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import * as Reaction from './Reaction';
-import * as ThreadAnnotation from './ThreadAnnotation';
-import { findOwnReaction, foldReactions, foldThreads, selectRoots, selectThread, senderKey } from './threads';
+import * as Thread from './Thread';
+import {
+  findOwnReaction,
+  foldReactions,
+  foldThreads,
+  selectRoots,
+  selectThread,
+  selectThreadByTarget,
+  senderKey,
+} from './threads';
 
 const DID_ALICE = 'did:key:alice';
 const DID_BOB = 'did:key:bob';
@@ -30,14 +38,9 @@ const makeMessage = ({
 const makeReaction = (target: Message.Message, emoji: string, did: string) =>
   Reaction.make({ target: Ref.make(target), emoji, sender: { identityDid: did } });
 
-/** Creates the thread rooted at `message`, as the create-thread operation does. */
-const createThread = (message: Message.Message, name?: string): Message.Message => {
-  ThreadAnnotation.create(message);
-  if (name) {
-    ThreadAnnotation.setName(message, name);
-  }
-  return message;
-};
+/** The thread rooted at `message`, as the create-thread operation appends it. */
+const createThread = (message: Message.Message, name?: string) =>
+  Thread.make({ target: Ref.make(message), ...(name ? { name } : {}) });
 
 describe('threads', () => {
   describe('selectRoots', () => {
@@ -74,14 +77,26 @@ describe('threads', () => {
 
     // Creating a thread is the deliberate act; it exists from that moment, before anyone replies.
     test('a created thread has its root and no replies', ({ expect }) => {
-      const root = createThread(makeMessage({ text: 'root' }));
-      const summary = foldThreads([root]).get(root.id);
+      const root = makeMessage({ text: 'root' });
+      const thread = createThread(root);
+      const summary = foldThreads([root], [thread]).get(thread.id);
       expect(summary?.root?.id).to.eq(root.id);
       expect(summary?.replies).to.have.length(0);
       expect(summary?.lastActivity).to.eq(root.created);
     });
 
-    // Threads seeded or imported without the mark (the onboarding exemplar) stay addressable.
+    // A thread's id is its own, not its root's: replies partition on the thread.
+    test('replies carry the thread id, and the message resolves to its thread', ({ expect }) => {
+      const root = makeMessage({ text: 'root' });
+      const thread = createThread(root);
+      const reply = makeMessage({ text: 'a', threadId: thread.id });
+      const summaries = foldThreads([root, reply], [thread]);
+      expect(summaries.get(thread.id)?.replies).to.have.length(1);
+      expect(selectThreadByTarget(summaries, root.id)?.threadId).to.eq(thread.id);
+    });
+
+    // Threads seeded or imported without a thread object (the onboarding exemplar) stay addressable,
+    // keyed by the root message their replies name.
     test('replies alone still fold as a thread', ({ expect }) => {
       const root = makeMessage({ text: 'root' });
       const reply = makeMessage({ text: 'a', threadId: root.id });
@@ -114,23 +129,24 @@ describe('threads', () => {
       expect(foldThreads([root, ...replies]).get(root.id)?.participants).to.deep.eq([DID_ALICE]);
     });
 
-    test('takes the name from the root message', ({ expect }) => {
-      const root = createThread(makeMessage({ text: 'root' }), 'Q2 planning');
-      expect(foldThreads([root]).get(root.id)?.name).to.eq('Q2 planning');
+    test('takes the name from the thread', ({ expect }) => {
+      const root = makeMessage({ text: 'root' });
+      const thread = createThread(root, 'Q2 planning');
+      expect(foldThreads([root], [thread]).get(thread.id)?.name).to.eq('Q2 planning');
     });
 
-    // Renaming keeps the thread; the name is one field of the mark, not the mark itself.
-    test('renaming replaces the name and clearing it keeps the thread', ({ expect }) => {
-      const root = createThread(makeMessage({ text: 'root' }), 'First');
-      ThreadAnnotation.setName(root, 'Second');
-      expect(foldThreads([root]).get(root.id)?.name).to.eq('Second');
-      ThreadAnnotation.setName(root, '');
-      expect(foldThreads([root]).get(root.id)?.name).to.be.undefined;
-      expect(foldThreads([root]).size).to.eq(1);
+    // One thread per message: duplicates only arise across a network partition, and every peer has to
+    // elect the same one — feed order, which is the order the fold reads them in.
+    test('duplicate threads on one message fold to the first in feed order', ({ expect }) => {
+      const root = makeMessage({ text: 'root' });
+      const first = createThread(root, 'First');
+      const second = createThread(root, 'Second');
+      const summaries = foldThreads([root], [first, second]);
+      expect(summaries.size).to.eq(1);
+      expect(summaries.get(first.id)?.name).to.eq('First');
     });
 
-    // A message the local identity replied to but never created a thread from folds by its replies,
-    // so the summary carries no name.
+    // A partition with no thread object folds by its replies, so the summary carries no name.
     test('a thread known only by its replies has no name', ({ expect }) => {
       const root = makeMessage({ text: 'root' });
       const reply = makeMessage({ text: 'a', threadId: root.id });

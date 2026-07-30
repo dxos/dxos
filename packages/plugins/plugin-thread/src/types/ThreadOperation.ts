@@ -16,6 +16,8 @@ import { Actor, Channel, Message, type Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import * as Thread from './Thread';
+
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const CreateChannel = Operation.make({
@@ -71,8 +73,9 @@ export const RemoveChannelMessage = Operation.make({
 
 /**
  * Creates the thread rooted at a message, so it exists before anyone has replied. Creating a thread
- * is a deliberate act — an unmarked message is not a thread — and the mark is an annotation on that
- * message (see `ThreadAnnotation`). Idempotent: a message that already roots a thread is left alone.
+ * is a deliberate act — a message nobody threaded is not a thread — and the thread is an object of
+ * its own in the channel's feed. Idempotent: a message that already roots a thread is left alone,
+ * which is what holds one thread per message short of a network partition.
  */
 export const CreateThread = Operation.make({
   meta: {
@@ -82,13 +85,17 @@ export const CreateThread = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    /** Message the thread branches from; its id becomes the thread's id. */
+    channel: Type.getSchema(Channel.Channel),
+    /** Message the thread branches from. */
     message: Type.getSchema(Message.Message),
   }),
-  output: Schema.Void,
+  output: Schema.Struct({
+    /** Id of the thread rooted at that message, whether this call created it or found it. */
+    threadId: Schema.String,
+  }),
 });
 
-/** Names a thread, or clears its name. Any participant may name one; it is not the author's alone. */
+/** Names a thread, or clears its name. Any participant may name one; it is not the creator's alone. */
 export const SetThreadName = Operation.make({
   meta: {
     key: makeKey('setThreadName'),
@@ -97,8 +104,7 @@ export const SetThreadName = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    /** The thread's root message; its id is the thread's id. */
-    message: Type.getSchema(Message.Message),
+    thread: Type.getSchema(Thread.Thread),
     /** New name; empty clears it. */
     name: Schema.optional(Schema.String),
   }),
@@ -117,8 +123,7 @@ export const RenameThread = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    /** The thread's root message; its id is the thread's id. */
-    message: Type.getSchema(Message.Message),
+    thread: Type.getSchema(Thread.Thread),
     /** Anchor for the popover; the navtree row that invoked the action. */
     caller: Schema.optional(Schema.String),
   }),

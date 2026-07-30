@@ -11,15 +11,13 @@ import { type Channel } from '@dxos/types';
 import { MessageThread } from '#components';
 import { useChannelMessaging } from '#hooks';
 import { meta } from '#meta';
-import { ThreadOperation, selectThread } from '#types';
+import { type Thread, ThreadOperation, selectThread } from '#types';
 
-// The subject is the channel, as it is for the channel view; the thread is metadata scoping it —
-// the same shape as a mailbox and one of its filters (see plugin-inbox's `MailboxArticle`).
 export type ChannelThreadArticleProps = {
   role?: string;
-  subject: Channel.Channel;
-  /** Root message id of the thread this plank is scoped to. */
-  threadId: string;
+  subject: Thread.Thread;
+  /** The channel whose feed the thread lives in; the thread holds no reference to it. */
+  channel?: Channel.Channel;
 };
 
 /**
@@ -28,16 +26,16 @@ export type ChannelThreadArticleProps = {
  * the channel view only starts threads, which is what keeps conversation out of the main feed.
  * The thread's name is renamed from its navtree node (`ThreadOperation.RenameThread`), not here.
  */
-export const ChannelThreadArticle = ({ role, subject: channel, threadId }: ChannelThreadArticleProps) => {
+export const ChannelThreadArticle = ({ role, subject: thread, channel }: ChannelThreadArticleProps) => {
+  const threadId = thread.id;
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const { space, identity, members, messages, activity, readOnly, getReactions, canDelete, onReact, onDelete } =
     useChannelMessaging(channel);
 
   const [replyToId, setReplyToId] = useState<string | undefined>(undefined);
-  // Folded per-thread rather than via `foldThreads`, which skips a thread until it has a reply — a
-  // thread opened from the channel is empty until its first one.
-  const root = useMemo(() => messages.find((message) => message.id === threadId), [messages, threadId]);
+  // The thread names its root; its replies are the feed's partition on the thread's id.
+  const root = useMemo(() => thread.target.target, [thread]);
   const replies = useMemo(() => selectThread(messages, threadId), [messages, threadId]);
   // The root is rendered as the first message of the thread so the branch point stays visible.
   const threadMessages = useMemo(() => (root ? [root, ...replies] : replies), [root, replies]);

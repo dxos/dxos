@@ -14,6 +14,7 @@ import { type Channel, type Message } from '@dxos/types';
 import { meta } from '#meta';
 
 import type * as Reaction from './Reaction';
+import type * as Thread from './Thread';
 
 /**
  * A pluggable message backend for a `Channel`. Providers are contributed by
@@ -64,6 +65,13 @@ export interface ChannelBackendProvider {
     channel: Channel.Channel,
     reaction: Reaction.Reaction,
   ) => Effect.Effect<void, Error, Capability.Service>;
+  /**
+   * Subscribes to the channel's threads, same contract as {@link subscribe}. Omitted by backends that
+   * carry no threads; the UI then infers them from replies alone.
+   */
+  subscribeThreads?: (channel: Channel.Channel, onThreads: (threads: readonly Thread.Thread[]) => void) => () => void;
+  /** Appends a thread. Required for the start-a-thread affordance to appear. */
+  appendThread?: (channel: Channel.Channel, thread: Thread.Thread) => Effect.Effect<void, Error, Capability.Service>;
   /** Whether the channel is read-only. Defaults to "channel has foreign-key Obj.Meta". */
   readOnly?: (channel: Channel.Channel) => boolean;
 }

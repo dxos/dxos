@@ -17,7 +17,7 @@ import { type Channel, type Message as MessageType } from '@dxos/types';
 import { MessageThread } from '#components';
 import { useChannelMessaging } from '#hooks';
 import { meta } from '#meta';
-import { ThreadAnnotation, ThreadOperation, getThreadNodeId, selectRoots } from '#types';
+import { ThreadOperation, selectRoots, selectThreadByTarget } from '#types';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);
@@ -63,22 +63,10 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   // from it; opening one adds the thread's own plank beside this one.
   const roots = useMemo(() => selectRoots(messages), [messages]);
 
-  // The mark and the name are read from the message itself rather than from the folded map: creating
-  // or renaming a thread mutates that message in place, which changes no query result — the folded
-  // map is recomputed only when the message *list* changes. Tiles re-render on their own message's
-  // mutations, so reading it here is what makes a new thread show up without another message.
   const getThreadSummary = useCallback(
     (message: MessageType.Message) => {
-      const summary = threads.get(message.id);
-      const thread = ThreadAnnotation.get(message);
-      if (!summary && !thread) {
-        return undefined;
-      }
-      return {
-        replyCount: summary?.replies.length ?? 0,
-        name: thread?.name,
-        lastActivity: summary?.lastActivity ?? message.created,
-      };
+      const summary = selectThreadByTarget(threads, message.id);
+      return summary && { replyCount: summary.replies.length, name: summary.name, lastActivity: summary.lastActivity };
     },
     [threads],
   );
@@ -86,13 +74,13 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   // A thread has its own navtree node under this channel, so it opens as a plank rather than in
   // place — which is also what makes it addressable and keeps the channel view roots-only.
   const openThread = useCallback(
-    (messageId: string) => {
+    (threadId: string) => {
       const anchor = attendableId ?? id;
       if (!anchor) {
         return;
       }
       void invokePromise(LayoutOperation.Open, {
-        subject: [`${anchor}/${getThreadNodeId(messageId)}`],
+        subject: [`${anchor}/${threadId}`],
         pivotId: anchor,
         disposition: 'add',
         navigation: 'immediate',
@@ -101,18 +89,32 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
     [attendableId, id, invokePromise],
   );
 
-  // Starting a thread marks the message its root before opening it: a thread nobody created is not a
-  // thread, so without this the plank would open onto something the channel does not list.
+  /** A message's thread is opened by the thread's own id, which the fold resolves from the message. */
+  const handleOpenThread = useCallback(
+    (messageId: string) => {
+      const summary = selectThreadByTarget(threads, messageId);
+      if (summary) {
+        openThread(summary.threadId);
+      }
+    },
+    [threads, openThread],
+  );
+
+  // Starting a thread creates it before opening it: a thread nobody created is not a thread, so
+  // without this the plank would open onto something the channel does not list. The operation
+  // returns the thread rooted at that message, whether it created one or found one already there.
   const handleStartThread = useCallback(
     async (messageId: string) => {
       const message = messages.find((message) => message.id === messageId);
-      if (!message) {
+      if (!channel || !message) {
         return;
       }
-      await invokePromise(ThreadOperation.CreateThread, { message });
-      openThread(messageId);
+      const { data } = await invokePromise(ThreadOperation.CreateThread, { channel, message });
+      if (data) {
+        openThread(data.threadId);
+      }
     },
-    [messages, invokePromise, openThread],
+    [channel, messages, invokePromise, openThread],
   );
 
   const callProvider = useCapabilities(CallsCapabilities.CallTransportProvider)[0];
@@ -193,7 +195,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
             canDelete={canDelete}
             onMessageReact={onReact}
             onMessageDelete={onDelete}
-            onThreadOpen={openThread}
+            onThreadOpen={handleOpenThread}
             onThreadCreate={canCreateThread ? handleStartThread : undefined}
           />
         </Panel.Content>

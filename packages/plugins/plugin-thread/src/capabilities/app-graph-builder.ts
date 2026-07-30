@@ -18,23 +18,16 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 
 import { getChannelsPath } from '../paths';
-import { THREAD_ID_PROPERTY, ThreadOperation, foldThreads, getThreadNodeId, selectRoots } from '../types';
+import { Thread, ThreadOperation, foldThreads } from '../types';
 
 const channelTypename = Type.getTypename(Channel.Channel);
 
 /** Hue of the Channel type's icon, so a thread's icon matches the channel it belongs to. */
 const channelHue = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(Channel.Channel)))?.hue;
 
-/** Graph node type for a thread; distinct from `Message` so it claims its own surface. */
-const THREAD_NODE_TYPE = `${meta.profile.key}/thread`;
-
-/**
- * A channel's *own* node, not any node that carries a channel: a thread node carries the channel it
- * belongs to (the thread id is metadata beside it), so matching on the data type alone would hang
- * every thread of a channel under each of its threads, without end.
- */
-const whenChannelNode: NodeMatcher.NodeMatcher<Channel.Channel> = (node, get) =>
-  node.type === THREAD_NODE_TYPE ? Option.none() : NodeMatcher.whenEchoType(Channel.Channel)(node, get);
+/** The channel node, typed for the connector: `createExtension` infers its subject from the matcher. */
+const whenChannel: NodeMatcher.NodeMatcher<Channel.Channel> = (node, get) =>
+  NodeMatcher.whenEchoType(Channel.Channel)(node, get);
 
 /** Label for an unnamed thread: the text of its root message, else the bare thread id. */
 const getThreadFallbackLabel = (root: Message.Message): string => {
@@ -47,12 +40,12 @@ const getThreadFallbackLabel = (root: Message.Message): string => {
 
 /**
  * Every thread of a channel, as a child of the channel node. Threads have no object of their own — a
- * thread is the `threadId` partition of the feed, keyed by its root message — so the node carries the
- * channel as its object and the thread id as metadata beside it, and its own article renders onto it.
+ * thread is an object in the channel's feed that its replies partition on, so the node carries that
+ * object and its own article renders onto it.
  *
- * Only threads that exist: one someone created (which marks its root message) or one that already
- * holds replies. Every root message is a *potential* thread, but treating it as one would list the
- * whole channel here — creating a thread is a deliberate act.
+ * Only threads that exist: one someone created, or a partition that already holds replies. Every root
+ * message is a *potential* thread, but treating it as one would list the whole channel here —
+ * creating a thread is a deliberate act.
  *
  * Exported so a test can expand the relation for real: a connector that throws takes the channel's
  * entire `child` relation with it, which has emptied the navtree of threads twice without a failure.
@@ -60,11 +53,11 @@ const getThreadFallbackLabel = (root: Message.Message): string => {
 export const createChannelThreadsExtension = Effect.fnUntraced(function* () {
   return yield* GraphBuilder.createExtension({
     id: 'channelThreads',
-    // A thread's node id is `<channel node>/thread-<rootId>`, so under the channels section path the
-    // pair encodes as `thread/<channelId>+thread-<rootId>` — the same fixed-depth shape a mailbox
+    // A thread's node id is its object's id under the channel node, so beneath the channels section
+    // path the pair encodes as `thread/<channelId>+<threadId>` — the same fixed-depth shape a mailbox
     // message uses, which is what lets a thread plank be linked to and restored.
     url: { key: 'thread', kind: 'item', path: [GraphPath.GroupSegments.communications, channelTypename] },
-    match: whenChannelNode,
+    match: whenChannel,
     connector: (channel, get) =>
       Effect.sync(() => {
         const db = Obj.getDatabase(channel);
@@ -79,30 +72,27 @@ export const createChannelThreadsExtension = Effect.fnUntraced(function* () {
         }
 
         const messages = get(db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom);
-        // A query reports its result set, so creating or renaming a thread — which marks a message
-        // already in that set — moves nothing it would report. Each message's own atom is what
-        // notices, and `Obj.atom` is keyed by the object, so re-reading them costs no subscription.
-        messages.forEach((message) => get(Obj.atom(message)));
-        const rootsById = new Map(selectRoots(messages).map((message) => [message.id, message]));
+        const threads = get(db.query(Query.select(Filter.type(Thread.Thread)).from(feed)).atom);
+        // A query reports its result set, so renaming a thread — a mutation of an object already in
+        // it — moves nothing it would report. Each thread's own atom is what notices, and `Obj.atom`
+        // is keyed by the object, so re-reading them costs no subscription.
+        threads.forEach((thread) => get(Obj.atom(thread)));
 
         return (
-          [...foldThreads(messages).values()]
+          [...foldThreads(messages, threads).values()]
+            // A node's datum is the thread itself, so a partition known only by its replies — seeded
+            // or imported without a thread object — is readable in the channel but has no node here.
+            // TODO(wittjosiah): Regenerate the onboarding exemplar with thread objects.
+            .flatMap((summary) => (summary.thread ? [{ ...summary, thread: summary.thread }] : []))
             // Ordered by most recent activity, so an active thread surfaces without hunting.
             .toSorted((left, right) => (right.lastActivity ?? '').localeCompare(left.lastActivity ?? ''))
-            .map((thread) => {
-              // Naming writes the root message's own annotation, so it needs that message — a thread
-              // whose root has been deleted keeps its replies but cannot be renamed.
-              const root = thread.root ?? rootsById.get(thread.threadId);
-
+            .map(({ thread, root, lastActivity: _lastActivity }) => {
               return Node.make({
-                id: getThreadNodeId(thread.threadId),
-                type: THREAD_NODE_TYPE,
-                // The channel is the node's object and the thread scopes it, as a mailbox filter
-                // node carries the mailbox and its filter.
-                data: channel,
+                id: thread.id,
+                type: Type.getTypename(Thread.Thread),
+                data: thread,
                 properties: {
-                  [THREAD_ID_PROPERTY]: thread.threadId,
-                  label: thread.name ?? (root ? getThreadFallbackLabel(root) : thread.threadId),
+                  label: thread.name ?? (root ? getThreadFallbackLabel(root) : thread.id),
                   icon: 'ph--chats-circle--regular',
                   // A thread reads as part of its channel, so it takes the Channel type's hue rather
                   // than one of its own.
@@ -111,23 +101,21 @@ export const createChannelThreadsExtension = Effect.fnUntraced(function* () {
                   droppable: false,
                   testId: 'threadPlugin.thread',
                 },
-                actions: root
-                  ? [
-                      Node.makeAction({
-                        id: 'rename-thread',
-                        data: (params?: Node.InvokeProps) =>
-                          Operation.invoke(ThreadOperation.RenameThread, {
-                            message: root,
-                            caller: `${params?.caller}:${params?.parent?.id}`,
-                          }),
-                        properties: {
-                          label: ['rename-thread.label', { ns: meta.profile.key }],
-                          icon: 'ph--pencil-simple--regular',
-                          disposition: 'list-item',
-                        },
+                actions: [
+                  Node.makeAction({
+                    id: 'rename-thread',
+                    data: (params?: Node.InvokeProps) =>
+                      Operation.invoke(ThreadOperation.RenameThread, {
+                        thread,
+                        caller: `${params?.caller}:${params?.parent?.id}`,
                       }),
-                    ]
-                  : undefined,
+                    properties: {
+                      label: ['rename-thread.label', { ns: meta.profile.key }],
+                      icon: 'ph--pencil-simple--regular',
+                      disposition: 'list-item',
+                    },
+                  }),
+                ],
               });
             })
         );
@@ -154,9 +142,9 @@ export default Capability.makeModule(
 
       createChannelThreadsExtension(),
 
-      GraphBuilder.createExtension({
+      GraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',
-        match: whenChannelNode,
+        type: Channel.Channel,
         connector: (channel, get) => {
           const [callManager] = get(capabilities.atom(CallsCapabilities.Manager));
           if (!callManager) {

@@ -24,6 +24,7 @@ import {
 import { useMessages } from './useMessages';
 import { useCanReact, useCanRemove, useReactions } from './useReactions';
 import { useStatus } from './useStatus';
+import { useCanCreateThread, useThreads } from './useThreads';
 
 export type ChannelMessaging = {
   space?: ClientSpace;
@@ -62,11 +63,10 @@ export const useChannelMessaging = (channel: Channel.Channel | undefined): Chann
   const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
   const canReact = useCanReact(channel) && !readOnly;
   const canRemove = useCanRemove(channel) && !readOnly;
-  // Creating a thread annotates its root message, the same write an edit makes — so anywhere a
-  // message can be written, a thread can be created.
-  const canCreateThread = !readOnly;
+  const canCreateThread = useCanCreateThread(channel) && !readOnly;
 
-  const threads = useMemo(() => foldThreads(messages), [messages]);
+  const threadObjects = useThreads(channel);
+  const threads = useMemo(() => foldThreads(messages, threadObjects), [messages, threadObjects]);
 
   const foldedReactions = useMemo(() => foldReactions(reactions, identity?.did), [reactions, identity?.did]);
   const getReactions = useCallback(

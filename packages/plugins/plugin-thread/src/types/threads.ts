@@ -6,7 +6,7 @@ import { EID } from '@dxos/keys';
 import { type Message } from '@dxos/types';
 
 import * as Reaction from './Reaction';
-import * as ThreadAnnotation from './ThreadAnnotation';
+import * as Thread from './Thread';
 
 /**
  * Thread-first channel model. A channel's feed holds every message; a *thread* is the subset
@@ -17,11 +17,13 @@ import * as ThreadAnnotation from './ThreadAnnotation';
 
 /** Aggregate view of one thread, folded from the messages carrying its `threadId`. */
 export type ThreadSummary = {
-  /** Id of the root message this thread branches from. */
+  /** The thread's id: its object's id, or the root message's for a thread known only by its replies. */
   threadId: string;
+  /** The thread object, absent for a thread seeded or imported without one. */
+  thread?: Thread.Thread;
   /** The root message, when it is present in the same list. */
   root?: Message.Message;
-  /** Thread name, taken from the root message's thread annotation. */
+  /** Thread name, from the thread object. */
   name?: string;
   /** Replies in the thread, ascending by `created`. */
   replies: readonly Message.Message[];
@@ -63,14 +65,17 @@ export const selectThread = (messages: readonly Message.Message[], threadId: str
   messages.filter((message) => message.threadId === threadId).sort(byCreated);
 
 /**
- * Folds every thread of a channel, keyed by `threadId`.
+ * Folds every thread of a channel, keyed by thread id.
  *
- * A thread exists because someone created it, which marks its root message (see `ThreadAnnotation`)
- * — creating one is a deliberate act, so an unmarked message is not a thread however many messages
- * sit beside it in the channel. A partition that already holds replies also counts, which keeps
- * threads imported or seeded without the mark (the onboarding exemplar) addressable.
+ * A thread exists because someone created it — a `Thread` object in the same feed, whose id its
+ * replies carry — so a message nobody threaded is not a thread, however many messages sit beside it.
+ * A partition keyed by a *root message* also counts, which keeps threads seeded or imported without
+ * an object (the onboarding exemplar) addressable.
  */
-export const foldThreads = (messages: readonly Message.Message[]): ReadonlyMap<string, ThreadSummary> => {
+export const foldThreads = (
+  messages: readonly Message.Message[],
+  threads: readonly Thread.Thread[] = [],
+): ReadonlyMap<string, ThreadSummary> => {
   const rootsById = new Map(selectRoots(messages).map((message) => [message.id, message]));
   const byThread = new Map<string, Message.Message[]>();
   for (const message of messages) {
@@ -82,13 +87,17 @@ export const foldThreads = (messages: readonly Message.Message[]): ReadonlyMap<s
     byThread.set(message.threadId, replies);
   }
 
-  const created = [...rootsById.values()].filter((root) => ThreadAnnotation.exists(root));
-  const threadIds = new Set([...byThread.keys(), ...created.map((root) => root.id)]);
+  const canonical = selectCanonicalThreads(threads);
+  const byId = new Map(canonical.map((thread) => [thread.id, thread]));
+  const threadIds = new Set([...byThread.keys(), ...byId.keys()]);
 
   const summaries = new Map<string, ThreadSummary>();
   for (const threadId of threadIds) {
+    const thread = byId.get(threadId);
+    // Either the thread's target, or — for a partition known only by its replies — the message its
+    // id names.
+    const root = thread ? rootsById.get(targetMessageId(thread) ?? '') : rootsById.get(threadId);
     const replies = [...(byThread.get(threadId) ?? [])].sort(byCreated);
-    const root = rootsById.get(threadId);
     const participants: string[] = [];
     for (const reply of replies) {
       const key = senderKey(reply.sender);
@@ -98,8 +107,9 @@ export const foldThreads = (messages: readonly Message.Message[]): ReadonlyMap<s
     }
     summaries.set(threadId, {
       threadId,
+      thread,
       root,
-      name: root && ThreadAnnotation.get(root)?.name,
+      name: thread?.name,
       replies,
       participants,
       lastActivity: replies.at(-1)?.created ?? root?.created,
@@ -107,6 +117,40 @@ export const foldThreads = (messages: readonly Message.Message[]): ReadonlyMap<s
   }
 
   return summaries;
+};
+
+/**
+ * One thread per message: the first thread targeting a message wins, and the rest are dropped.
+ *
+ * Creating a thread checks for an existing one, so duplicates only arise across a network partition,
+ * where neither peer could see the other's. Feed order is the tie-break because every peer converges
+ * on it, so all of them elect the same thread.
+ *
+ * TODO(wittjosiah): Reconcile duplicates rather than hiding them — the replies of a dropped thread
+ * are not folded into the surviving one, so a partition can strand a branch of the conversation.
+ */
+const selectCanonicalThreads = (threads: readonly Thread.Thread[]): readonly Thread.Thread[] => {
+  const byTarget = new Map<string, Thread.Thread>();
+  for (const thread of threads) {
+    const targetId = targetMessageId(thread);
+    if (targetId && !byTarget.has(targetId)) {
+      byTarget.set(targetId, thread);
+    }
+  }
+  return [...byTarget.values()];
+};
+
+/** The thread branching from a message, by the message's id. */
+export const selectThreadByTarget = (
+  summaries: ReadonlyMap<string, ThreadSummary>,
+  messageId: string,
+): ThreadSummary | undefined => {
+  for (const summary of summaries.values()) {
+    if (summary.root?.id === messageId || summary.threadId === messageId) {
+      return summary;
+    }
+  }
+  return undefined;
 };
 
 /**

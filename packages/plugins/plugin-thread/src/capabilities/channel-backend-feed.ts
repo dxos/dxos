@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, Message } from '@dxos/types';
 
-import { Reaction, ThreadCapabilities } from '../types';
+import { Reaction, Thread, ThreadCapabilities } from '../types';
 
 /**
  * Default local ECHO-feed-backed channel provider. Stores messages and reactions in one `Feed`
@@ -26,8 +26,10 @@ export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
   makeConfig: () => Feed.make(),
   subscribe: (channel, onMessages) => subscribeType(channel, Message.Message, onMessages),
   subscribeReactions: (channel, onReactions) => subscribeType(channel, Reaction.Reaction, onReactions),
+  subscribeThreads: (channel, onThreads) => subscribeType(channel, Thread.Thread, onThreads),
   send: (channel, message) => appendToFeed(channel, [message]),
   appendReaction: (channel, reaction) => appendToFeed(channel, [reaction]),
+  appendThread: (channel, thread) => appendToFeed(channel, [thread]),
   remove: (channel, message) => removeFromFeed(channel, [message]),
   removeReaction: (channel, reaction) => removeFromFeed(channel, [reaction]),
   readOnly: (channel) => Obj.getMeta(channel).keys.length > 0,

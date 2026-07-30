@@ -4,16 +4,18 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Channel, Message, Thread } from '@dxos/types';
+// The legacy pre-Channel thread object (plugin-review's comments); this plugin's own `Thread` is
+// a thread of a channel feed.
+import { Channel, Thread as LegacyThread, Message } from '@dxos/types';
 
 import { ChannelBackendFeed, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Reaction } from '#types';
+import { Reaction, Thread } from '#types';
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Channel.Channel, Message.Message, Reaction.Reaction, Thread.Thread],
+    schema: [Channel.Channel, Message.Message, Reaction.Reaction, Thread.Thread, LegacyThread.Thread],
   }),
   Plugin.addModule({
     id: 'channel-backend-feed',
