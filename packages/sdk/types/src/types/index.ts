@@ -21,10 +21,8 @@ import * as Organization from './Organization';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
 import * as Provider from './Provider';
-import * as Reaction from './Reaction';
 import * as Task from './Task';
 import * as Thread from './Thread';
-import * as ThreadRoot from './ThreadRoot';
 import * as Transcript from './Transcript';
 
 /**
@@ -64,10 +62,8 @@ export {
   Person,
   Pipeline,
   Provider,
-  Reaction,
   Task,
   Thread,
-  ThreadRoot,
   Transcript,
 };
 

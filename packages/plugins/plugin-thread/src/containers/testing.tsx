@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Database, type Entity, Feed, Ref } from '@dxos/echo';
+import { Database, type Entity, Feed } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -16,11 +16,12 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Channel, Message, Reaction, Thread, ThreadRoot } from '@dxos/types';
+import { Channel, Message, Thread } from '@dxos/types';
 
 import { ThreadPlugin } from '../ThreadPlugin';
+import { Reaction, ThreadAnnotation } from '../types';
 
-const types = [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message, Reaction.Reaction, ThreadRoot.ThreadRoot];
+const types = [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message, Reaction.Reaction];
 
 /** Identity creation and space initialization run well past testing-library's 1s default. */
 export const STORY_TIMEOUT = { timeout: 15_000 };
@@ -71,7 +72,7 @@ export const SEEDED = {
   own: 'Hello, channel.',
   /** A second root from the same identity, so the two group under one avatar. */
   ownFollowUp: 'One more thing.',
-  /** Root authored by someone else, declared a thread root and carrying the seeded reply. */
+  /** Root authored by someone else, rooting a thread and carrying the seeded reply. */
   other: 'Messages are stored in the feed.',
   /** The seeded thread's only reply. */
   reply: 'And replies live in a thread.',
@@ -80,7 +81,7 @@ export const SEEDED = {
 /**
  * Fixture behind the plays: three roots — two from the local identity (which group under one avatar,
  * and are left plain so the create-a-thread path has something to act on) and one from another sender,
- * declared a thread root and carrying one reply.
+ * rooting a thread and carrying one reply.
  */
 const seedChannel: ChannelSeed = ({ identityDid }) => {
   const own = Message.make({ sender: { identityDid }, blocks: [{ _tag: 'text', text: SEEDED.own }] });
@@ -91,10 +92,10 @@ const seedChannel: ChannelSeed = ({ identityDid }) => {
     blocks: [{ _tag: 'text', text: SEEDED.reply }],
     threadId: other.id,
   });
-  // The reply's thread exists because it was declared, exactly as creating one in the UI records it —
-  // seeding replies alone would exercise a path users cannot reach.
-  const declaration = ThreadRoot.make({ target: Ref.make(other), creator: { identityDid } });
-  return [own, ownFollowUp, other, reply, declaration];
+  // The thread exists because it was created, exactly as the UI records it — seeding replies alone
+  // would exercise a path users cannot reach.
+  ThreadAnnotation.create(other);
+  return [own, ownFollowUp, other, reply];
 };
 
 /** Harness shared by the channel article and the article of one of its threads: both read one feed. */

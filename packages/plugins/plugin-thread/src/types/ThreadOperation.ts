@@ -70,10 +70,9 @@ export const RemoveChannelMessage = Operation.make({
 });
 
 /**
- * Declares a message the root of a thread, so the thread exists before anyone has replied. Creating a
- * thread is a deliberate act — without a declaration an undeclared message is not a thread — and the
- * declaration is a per-author feed item, never a mark on the target message (see `ThreadRoot`).
- * Idempotent: a message already declared a thread root is left alone.
+ * Creates the thread rooted at a message, so it exists before anyone has replied. Creating a thread
+ * is a deliberate act — an unmarked message is not a thread — and the mark is an annotation on that
+ * message (see `ThreadAnnotation`). Idempotent: a message that already roots a thread is left alone.
  */
 export const CreateThread = Operation.make({
   meta: {
@@ -83,18 +82,13 @@ export const CreateThread = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    channel: Type.getSchema(Channel.Channel),
     /** Message the thread branches from; its id becomes the thread's id. */
     message: Type.getSchema(Message.Message),
-    creator: Actor.Actor,
   }),
   output: Schema.Void,
 });
 
-/**
- * Names a thread (or clears its name) by writing the caller's own declaration — the newest declared
- * name wins, so anyone may name a thread without writing another participant's feed item.
- */
+/** Names a thread, or clears its name. Any participant may name one; it is not the author's alone. */
 export const SetThreadName = Operation.make({
   meta: {
     key: makeKey('setThreadName'),
@@ -103,10 +97,8 @@ export const SetThreadName = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    channel: Type.getSchema(Channel.Channel),
     /** The thread's root message; its id is the thread's id. */
     message: Type.getSchema(Message.Message),
-    creator: Actor.Actor,
     /** New name; empty clears it. */
     name: Schema.optional(Schema.String),
   }),
@@ -125,10 +117,8 @@ export const RenameThread = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    channel: Type.getSchema(Channel.Channel),
     /** The thread's root message; its id is the thread's id. */
     message: Type.getSchema(Message.Message),
-    creator: Actor.Actor,
     /** Anchor for the popover; the navtree row that invoked the action. */
     caller: Schema.optional(Schema.String),
   }),

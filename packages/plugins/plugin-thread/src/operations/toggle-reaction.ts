@@ -8,9 +8,8 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Reaction } from '@dxos/types';
 
-import { ThreadCapabilities, ThreadOperation, findOwnReaction, resolveProvider, senderKey } from '../types';
+import { Reaction, ThreadCapabilities, ThreadOperation, findOwnReaction, resolveProvider, senderKey } from '../types';
 import { readOnce } from './read-once';
 
 const handler: Operation.WithHandler<typeof ThreadOperation.ToggleReaction> = ThreadOperation.ToggleReaction.pipe(

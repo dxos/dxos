@@ -3,7 +3,10 @@
 //
 
 import { EID } from '@dxos/keys';
-import { type Message, type Reaction, type ThreadRoot } from '@dxos/types';
+import { type Message } from '@dxos/types';
+
+import * as Reaction from './Reaction';
+import * as ThreadAnnotation from './ThreadAnnotation';
 
 /**
  * Thread-first channel model. A channel's feed holds every message; a *thread* is the subset
@@ -18,7 +21,7 @@ export type ThreadSummary = {
   threadId: string;
   /** The root message, when it is present in the same list. */
   root?: Message.Message;
-  /** Thread name, taken from the most recently written declaration that carries one. */
+  /** Thread name, taken from the root message's thread annotation. */
   name?: string;
   /** Replies in the thread, ascending by `created`. */
   replies: readonly Message.Message[];
@@ -62,15 +65,12 @@ export const selectThread = (messages: readonly Message.Message[], threadId: str
 /**
  * Folds every thread of a channel, keyed by `threadId`.
  *
- * A thread exists because someone declared it (a `ThreadRoot` item) — creating one is a deliberate
- * act, so an undeclared message is not a thread, however many messages sit beside it in the channel.
- * A partition that already holds replies also counts, which keeps threads imported or seeded without
- * declarations (the onboarding exemplar) addressable.
+ * A thread exists because someone created it, which marks its root message (see `ThreadAnnotation`)
+ * — creating one is a deliberate act, so an unmarked message is not a thread however many messages
+ * sit beside it in the channel. A partition that already holds replies also counts, which keeps
+ * threads imported or seeded without the mark (the onboarding exemplar) addressable.
  */
-export const foldThreads = (
-  messages: readonly Message.Message[],
-  declarations: readonly ThreadRoot.ThreadRoot[] = [],
-): ReadonlyMap<string, ThreadSummary> => {
+export const foldThreads = (messages: readonly Message.Message[]): ReadonlyMap<string, ThreadSummary> => {
   const rootsById = new Map(selectRoots(messages).map((message) => [message.id, message]));
   const byThread = new Map<string, Message.Message[]>();
   for (const message of messages) {
@@ -82,8 +82,8 @@ export const foldThreads = (
     byThread.set(message.threadId, replies);
   }
 
-  const names = foldThreadNames(declarations);
-  const threadIds = new Set([...byThread.keys(), ...declaredThreadIds(declarations)]);
+  const created = [...rootsById.values()].filter((root) => ThreadAnnotation.exists(root));
+  const threadIds = new Set([...byThread.keys(), ...created.map((root) => root.id)]);
 
   const summaries = new Map<string, ThreadSummary>();
   for (const threadId of threadIds) {
@@ -99,7 +99,7 @@ export const foldThreads = (
     summaries.set(threadId, {
       threadId,
       root,
-      name: names.get(threadId),
+      name: root && ThreadAnnotation.get(root)?.name,
       replies,
       participants,
       lastActivity: replies.at(-1)?.created ?? root?.created,
@@ -108,40 +108,6 @@ export const foldThreads = (
 
   return summaries;
 };
-
-/** Thread ids that carry a declaration, whether or not the target message is present. */
-const declaredThreadIds = (declarations: readonly ThreadRoot.ThreadRoot[]): readonly string[] =>
-  declarations.map((declaration) => targetMessageId(declaration)).filter((id): id is string => id !== undefined);
-
-/**
- * Thread names by thread id: the most recently written declaration that carries one. Declarations are
- * per author (nobody writes another participant's item), so naming resolves across them by recency —
- * renaming re-stamps the author's own declaration, which is what lets the newest name win.
- */
-const foldThreadNames = (declarations: readonly ThreadRoot.ThreadRoot[]): ReadonlyMap<string, string> => {
-  const named = new Map<string, ThreadRoot.ThreadRoot>();
-  for (const declaration of declarations) {
-    const threadId = targetMessageId(declaration);
-    if (!threadId || !declaration.name?.length) {
-      continue;
-    }
-    const current = named.get(threadId);
-    if (!current || time(declaration) >= time(current)) {
-      named.set(threadId, declaration);
-    }
-  }
-
-  return new Map([...named].map(([threadId, declaration]) => [threadId, declaration.name ?? '']));
-};
-
-/** The local identity's own declaration for a thread, which is the only one they may rewrite. */
-export const findOwnDeclaration = (
-  declarations: readonly ThreadRoot.ThreadRoot[],
-  { threadId, identityDid }: { threadId: string; identityDid: string },
-): ThreadRoot.ThreadRoot | undefined =>
-  declarations.find(
-    (declaration) => senderKey(declaration.creator) === identityDid && targetMessageId(declaration) === threadId,
-  );
 
 /**
  * Folds reactions by target message, then by emoji. Reaction items are per-author (the single-writer

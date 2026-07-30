@@ -5,22 +5,31 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Capability, CapabilityManager } from '@dxos/app-framework';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Channel, Message, ThreadRoot } from '@dxos/types';
+import { Channel, Message } from '@dxos/types';
 
-import { getThreadNodeId } from '../types';
+import { ThreadAnnotation, getThreadNodeId } from '../types';
 import { createChannelThreadsExtension } from './app-graph-builder';
 
 const CHANNEL_ID = 'channel';
 
-const types = [Channel.Channel, Feed.Feed, Message.Message, ThreadRoot.ThreadRoot];
+const types = [Channel.Channel, Feed.Feed, Message.Message];
+
+/** A message the create-thread operation has marked, which is what makes its thread exist. */
+const threadRoot = (text: string, name?: string): Message.Message => {
+  const message = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] });
+  ThreadAnnotation.create(message);
+  if (name) {
+    ThreadAnnotation.setName(message, name);
+  }
+  return message;
+};
 
 /** The channel as a second client reads it: a live object whose refs start out unresolved. */
 const readChannel = async (peer: EchoTestPeer, spaceKey: PublicKey): Promise<Channel.Channel> => {
@@ -68,13 +77,7 @@ describe('channel threads graph extension', () => {
       }),
     );
     const context = setupGraphBuilder({ extensions: rootExtensions });
-    // No client capability is contributed: an absent identity must still list threads (it only gates
-    // the rename action), which is also the state the connector runs in before HALO resolves.
-    const capabilities = CapabilityManager.make({ registry: context.registry });
-    const threadExtensions = await EffectEx.runPromise(
-      createChannelThreadsExtension().pipe(Effect.provideService(Capability.Service, capabilities)),
-    );
-    context.addExtensions(threadExtensions);
+    context.addExtensions(await EffectEx.runPromise(createChannelThreadsExtension()));
 
     await context.expand(Node.RootId);
     await context.expand(qualifyId(Node.RootId, CHANNEL_ID));
@@ -88,6 +91,8 @@ describe('channel threads graph extension', () => {
         await db.flush();
         await context.flush();
       },
+      /** The channel's messages as the app holds them: live objects read back out of the feed. */
+      messages: () => db.query(Query.select(Filter.type(Message.Message)).from(feed)).run(),
       getThreadNodes: () =>
         context.getConnections(qualifyId(Node.RootId, CHANNEL_ID)).filter((node) => node.type.endsWith('/thread')),
     };
@@ -98,34 +103,39 @@ describe('channel threads graph extension', () => {
     expect(getThreadNodes()).toEqual([]);
   });
 
-  test('a declared thread becomes a child of its channel', async ({ expect }) => {
-    const { append, getThreadNodes } = await setupTestContext();
+  test('a created thread becomes a child of its channel, carrying the channel and its id', async ({ expect }) => {
+    const { channel, append, getThreadNodes } = await setupTestContext();
 
-    const root = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Release the plan' }] });
-    await append([root]);
-    // Undeclared and unreplied, the message is only a *potential* thread.
+    const plain = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Just a message' }] });
+    await append([plain]);
+    // With no thread created from it and no replies, the message is only a *potential* thread.
     expect(getThreadNodes()).toEqual([]);
 
-    await append([ThreadRoot.make({ target: Ref.make(root), creator: { role: 'user' } })]);
+    const root = threadRoot('Release the plan');
+    await append([root]);
     // Unnamed, so the node falls back to the text of the message it branches from.
     await expect.poll(() => getThreadNodes().map((node) => node.properties.label)).toEqual(['Release the plan']);
-    expect(getThreadNodes()[0]?.id).toEqual(qualifyId(Node.RootId, CHANNEL_ID, getThreadNodeId(root.id)));
+
+    const [node] = getThreadNodes();
+    expect(node?.id).toEqual(qualifyId(Node.RootId, CHANNEL_ID, getThreadNodeId(root.id)));
+    // The node's data is the channel; the thread is metadata beside it, as a mailbox filter node is.
+    expect(node?.data).toEqual(channel);
+    expect(node?.properties.threadId).toEqual(root.id);
   });
 
-  test('a declared name labels the thread', async ({ expect }) => {
+  test('a named thread takes its name from the root message', async ({ expect }) => {
     const { append, getThreadNodes } = await setupTestContext();
 
-    const root = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Release the plan' }] });
-    await append([root, ThreadRoot.make({ target: Ref.make(root), creator: { role: 'user' }, name: 'Release plan' })]);
+    await append([threadRoot('Release the plan', 'Release plan')]);
 
     await expect.poll(() => getThreadNodes().map((node) => node.properties.label)).toEqual(['Release plan']);
   });
 
-  test('a thread holding replies is listed without a declaration', async ({ expect }) => {
+  test('a thread holding replies is listed even though none was created', async ({ expect }) => {
     const { append, getThreadNodes } = await setupTestContext();
 
-    // Seeded and imported threads (the onboarding exemplar) carry no declaration; their replies alone
-    // have to keep them addressable.
+    // Seeded and imported threads (the onboarding exemplar) carry no mark; their replies alone have
+    // to keep them addressable.
     const root = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Root' }] });
     const reply = Message.make({
       sender: { role: 'user' },
@@ -137,11 +147,25 @@ describe('channel threads graph extension', () => {
     await expect.poll(() => getThreadNodes().length).toEqual(1);
   });
 
+  // Creating a thread marks a message the connector has already listed, which moves nothing in the
+  // feed — so a connector reading only the query would never notice, and the navtree would stay empty
+  // until the next message arrived.
+  test('a thread created on a message already in the channel is listed', async ({ expect }) => {
+    const { append, messages, getThreadNodes } = await setupTestContext();
+
+    await append([Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Release the plan' }] })]);
+    expect(getThreadNodes()).toEqual([]);
+
+    const [live] = await messages();
+    ThreadAnnotation.create(live);
+
+    await expect.poll(() => getThreadNodes().map((node) => node.properties.label)).toEqual(['Release the plan']);
+  });
+
   test('a thread is listed even though the feed ref resolves after the channel expands', async ({ expect }) => {
     const { append, getThreadNodes } = await setupTestContext({ unresolvedFeedRef: true });
 
-    const root = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Release the plan' }] });
-    await append([root, ThreadRoot.make({ target: Ref.make(root), creator: { role: 'user' }, name: 'Release plan' })]);
+    await append([threadRoot('Release the plan', 'Release plan')]);
 
     await expect.poll(() => getThreadNodes().map((node) => node.properties.label)).toEqual(['Release plan']);
   });

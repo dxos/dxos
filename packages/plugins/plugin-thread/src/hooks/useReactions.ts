@@ -5,9 +5,9 @@
 import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { type Channel, type Reaction } from '@dxos/types';
+import { type Channel } from '@dxos/types';
 
-import { ThreadCapabilities, resolveProvider } from '../types';
+import { type Reaction, ThreadCapabilities, resolveProvider } from '../types';
 
 const EMPTY: readonly Reaction.Reaction[] = [];
 

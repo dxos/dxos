@@ -302,12 +302,14 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       exactly that. In exchange the whole declaration channel disappears:
       `subscribeThreadRoots`/`appendThreadRoot`, `useThreadRoots`, the
       name-by-recency fold, and the identity gating on rename.
-- [ ] Message UI state (editing, picking) moves into an atom the control menu
-      reads, so the action graph reacts to it rather than being rebuilt through
-      React deps.
-- [ ] Thread nodes carry the channel as node `data` with the thread id in
+- [x] Message UI state (editing, picking) lives in a per-tile atom that the
+      control menu reads through `get`, so entering edit mode recomputes the
+      action graph instead of tearing it down and mounting a new one.
+- [x] Thread nodes carry the channel as node `data` with the thread id in
       `properties`, the shape plugin-inbox uses for a mailbox filter/tag — so a
-      node's data stays an object and the selection is metadata beside it.
+      node's data stays an object and the selection is metadata beside it. The
+      two Channel article surfaces are told apart by that property alone, and
+      `ThreadSelection` is gone.
 
 ### Threads stopped loading into the app graph (jdw round 6)
 

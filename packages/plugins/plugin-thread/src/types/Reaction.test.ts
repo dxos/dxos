@@ -5,8 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
+import { Message } from '@dxos/types';
 
-import * as Message from './Message';
 import * as Reaction from './Reaction';
 
 describe('Reaction', () => {

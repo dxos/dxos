@@ -17,7 +17,7 @@ import { type Channel, type Message as MessageType } from '@dxos/types';
 import { MessageThread } from '#components';
 import { useChannelMessaging } from '#hooks';
 import { meta } from '#meta';
-import { ThreadOperation, getThreadNodeId, selectRoots } from '#types';
+import { ThreadAnnotation, ThreadOperation, getThreadNodeId, selectRoots } from '#types';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);
@@ -63,10 +63,22 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   // from it; opening one adds the thread's own plank beside this one.
   const roots = useMemo(() => selectRoots(messages), [messages]);
 
+  // The mark and the name are read from the message itself rather than from the folded map: creating
+  // or renaming a thread mutates that message in place, which changes no query result — the folded
+  // map is recomputed only when the message *list* changes. Tiles re-render on their own message's
+  // mutations, so reading it here is what makes a new thread show up without another message.
   const getThreadSummary = useCallback(
     (message: MessageType.Message) => {
       const summary = threads.get(message.id);
-      return summary && { replyCount: summary.replies.length, name: summary.name, lastActivity: summary.lastActivity };
+      const thread = ThreadAnnotation.get(message);
+      if (!summary && !thread) {
+        return undefined;
+      }
+      return {
+        replyCount: summary?.replies.length ?? 0,
+        name: thread?.name,
+        lastActivity: summary?.lastActivity ?? message.created,
+      };
     },
     [threads],
   );
@@ -89,22 +101,18 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
     [attendableId, id, invokePromise],
   );
 
-  // Starting a thread declares the message its root before opening it: a thread nobody declared is
-  // not a thread, so without this the plank would open onto something the channel does not list.
+  // Starting a thread marks the message its root before opening it: a thread nobody created is not a
+  // thread, so without this the plank would open onto something the channel does not list.
   const handleStartThread = useCallback(
     async (messageId: string) => {
       const message = messages.find((message) => message.id === messageId);
-      if (!channel || !identity || !message) {
+      if (!message) {
         return;
       }
-      await invokePromise(ThreadOperation.CreateThread, {
-        channel,
-        message,
-        creator: { identityDid: identity.did },
-      });
+      await invokePromise(ThreadOperation.CreateThread, { message });
       openThread(messageId);
     },
-    [channel, identity, messages, invokePromise, openThread],
+    [messages, invokePromise, openThread],
   );
 
   const callProvider = useCapabilities(CallsCapabilities.CallTransportProvider)[0];

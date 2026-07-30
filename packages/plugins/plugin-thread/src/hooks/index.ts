@@ -6,4 +6,3 @@ export * from './useChannelMessaging';
 export * from './useMessages';
 export * from './useReactions';
 export * from './useStatus';
-export * from './useThreadRoots';

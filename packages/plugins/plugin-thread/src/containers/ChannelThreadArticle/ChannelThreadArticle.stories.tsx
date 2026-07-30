@@ -29,7 +29,7 @@ const DefaultStory = () => {
     return <Loading data={{ channel, threadId }} />;
   }
 
-  return <ChannelThreadArticle subject={{ channel, threadId }} role='article' />;
+  return <ChannelThreadArticle subject={channel} threadId={threadId} role='article' />;
 };
 
 const meta = {

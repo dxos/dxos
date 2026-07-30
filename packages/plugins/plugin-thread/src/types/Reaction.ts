@@ -7,10 +7,11 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+// Person is referenced in Actor.Actor's inferred type; importing it lets TypeScript name it in the
+// emitted .d.ts for `make`.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Actor, Message, type Person } from '@dxos/types';
 import { type MakeOptional } from '@dxos/util';
-
-import * as Actor from './Actor';
-import * as Message from './Message';
 
 /**
  * An emoji reaction to a message, appended to the same feed as its target.

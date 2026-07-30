@@ -4,25 +4,16 @@
 
 import { describe, test } from 'vitest';
 
-import { Channel, Message } from '@dxos/types';
-
-import { getThreadNodeId, isThreadSelection } from './ThreadSelection';
+import { getThreadId, getThreadNodeId } from './ThreadSelection';
 
 describe('ThreadSelection', () => {
-  test('recognises a channel/threadId pair', ({ expect }) => {
-    const channel = Channel.make({ name: 'general' });
-    expect(isThreadSelection({ channel, threadId: '01ABC' })).to.be.true;
-  });
-
-  // The article surface is chosen by this predicate, so a bare message must not match it —
-  // plugin-inbox already claims the article surface for every non-draft message.
-  test('rejects a bare message and other shapes', ({ expect }) => {
-    const message = Message.make({ sender: { role: 'user' }, blocks: [] });
-    expect(isThreadSelection(message)).to.be.false;
-    expect(isThreadSelection({ threadId: '01ABC' })).to.be.false;
-    expect(isThreadSelection({ channel: Channel.make(), threadId: 7 })).to.be.false;
-    expect(isThreadSelection(undefined)).to.be.false;
-    expect(isThreadSelection(null)).to.be.false;
+  // The channel article and a thread's article both take a channel as their subject and are told
+  // apart by this property alone, so anything that is not a thread id has to read as absent.
+  test('reads the thread id off node properties', ({ expect }) => {
+    expect(getThreadId({ threadId: '01ABC' })).to.eq('01ABC');
+    expect(getThreadId({ threadId: 7 })).to.be.undefined;
+    expect(getThreadId({})).to.be.undefined;
+    expect(getThreadId()).to.be.undefined;
   });
 
   // The graph builder qualifies a node id with its parent's path and rejects any id containing the

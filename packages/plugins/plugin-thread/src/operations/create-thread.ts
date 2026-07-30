@@ -4,37 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
-import { ThreadRoot } from '@dxos/types';
 
-import { ThreadCapabilities, ThreadOperation, resolveProvider, targetMessageId } from '../types';
-import { readOnce } from './read-once';
+import { ThreadAnnotation, ThreadOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof ThreadOperation.CreateThread> = ThreadOperation.CreateThread.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ channel, message, creator }) {
-      const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
-      const provider = resolveProvider(providers, channel.backend.kind);
-      invariant(provider, `No channel backend for kind: ${channel.backend.kind}`);
-      const { subscribeThreadRoots, appendThreadRoot } = provider;
-      invariant(appendThreadRoot, `Channel backend cannot create threads: ${channel.backend.kind}`);
-
-      // Any existing declaration already makes the thread exist, whoever wrote it — a second one
-      // would only add an item nothing reads.
-      // Passed through as `undefined` when the backend has no such subscription: a callback that
-      // subscribes to nothing would return an unsubscribe without ever emitting, and `readOnce` would
-      // wait for an emission that never comes.
-      const declarations = yield* readOnce<ThreadRoot.ThreadRoot>(
-        subscribeThreadRoots && ((onItems) => subscribeThreadRoots(channel, onItems)),
-      );
-      if (declarations.some((declaration) => targetMessageId(declaration) === message.id)) {
-        return;
-      }
-
-      yield* appendThreadRoot(channel, ThreadRoot.make({ target: Ref.make(message), creator }));
+    Effect.fnUntraced(function* ({ message }) {
+      // Marking the message is the whole write: the annotation travels with it through the feed
+      // codec, so a thread needs no item of its own and no round trip through the backend provider.
+      ThreadAnnotation.create(message);
     }),
   ),
 );

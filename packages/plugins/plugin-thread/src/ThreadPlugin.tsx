@@ -5,11 +5,12 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
-import { Channel, Message, Reaction, Thread, ThreadRoot } from '@dxos/types';
+import { Channel, Message, Thread } from '@dxos/types';
 
 import { AppGraphBuilder, ChannelBackendFeed, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { Reaction } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -21,7 +22,7 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Channel.Channel, Message.Message, Reaction.Reaction, Thread.Thread, ThreadRoot.ThreadRoot],
+    schema: [Channel.Channel, Message.Message, Reaction.Reaction, Thread.Thread],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),

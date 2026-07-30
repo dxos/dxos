@@ -9,9 +9,9 @@ import { Capability } from '@dxos/app-framework';
 import { Database, type Entity, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Channel, Message, Reaction, ThreadRoot } from '@dxos/types';
+import { Channel, Message } from '@dxos/types';
 
-import { ThreadCapabilities } from '../types';
+import { Reaction, ThreadCapabilities } from '../types';
 
 /**
  * Default local ECHO-feed-backed channel provider. Stores messages and reactions in one `Feed`
@@ -26,10 +26,8 @@ export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
   makeConfig: () => Feed.make(),
   subscribe: (channel, onMessages) => subscribeType(channel, Message.Message, onMessages),
   subscribeReactions: (channel, onReactions) => subscribeType(channel, Reaction.Reaction, onReactions),
-  subscribeThreadRoots: (channel, onThreadRoots) => subscribeType(channel, ThreadRoot.ThreadRoot, onThreadRoots),
   send: (channel, message) => appendToFeed(channel, [message]),
   appendReaction: (channel, reaction) => appendToFeed(channel, [reaction]),
-  appendThreadRoot: (channel, declaration) => appendToFeed(channel, [declaration]),
   remove: (channel, message) => removeFromFeed(channel, [message]),
   removeReaction: (channel, reaction) => removeFromFeed(channel, [reaction]),
   readOnly: (channel) => Obj.getMeta(channel).keys.length > 0,

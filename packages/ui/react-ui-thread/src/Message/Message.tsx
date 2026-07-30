@@ -3,6 +3,7 @@
 //
 
 import { EditorView } from '@codemirror/view';
+import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import { format } from 'date-fns/format';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, {
@@ -13,12 +14,12 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
-  useState,
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useObjectValue } from '@dxos/echo-react';
 import {
   Avatar,
   Icon,
@@ -352,10 +353,21 @@ export type MessageReactionsProps = {
 /**
  * Folded reaction pills, rendered beneath a message's body. A pill shows the emoji and its count and
  * is accented while the local identity is among the reactors; clicking it un-reacts. Counts and active
- * state are computed by the host — see `getReactions`. Adding a reaction lives in the hover controls
- * ({@link MessageControls}) so an un-reacted message carries no persistent chrome.
+ * state are computed by the host — see `getReactions`.
+ *
+ * A message that carries reactions ends the row with an add-reaction pill: reacting alongside others
+ * is the common move once a row exists, and it should not cost a trip back to the hover toolbar. A
+ * message with none carries no pills at all, so adding the first one stays a hover control.
  */
-const MessageReactions = ({ reactions, onReact }: Omit<MessageReactionsProps, 'quickReactions'>) => {
+const MessageReactions = ({
+  reactions,
+  onReact,
+  state,
+}: Omit<MessageReactionsProps, 'quickReactions'> & { state: Atom.Writable<MessageState> }) => {
+  const { t } = useTranslation(translationKey);
+  const { picking } = useAtomValue(state);
+  const setState = useAtomSet(state);
+
   if (reactions.length === 0) {
     return null;
   }
@@ -380,9 +392,66 @@ const MessageReactions = ({ reactions, onReact }: Omit<MessageReactionsProps, 'q
           </button>
         </Tag>
       ))}
+      <ReactionPicker
+        open={picking === 'reactions'}
+        onOpenChange={(open) => setState((current) => ({ ...current, picking: open ? 'reactions' : undefined }))}
+        onSelect={onReact}
+      >
+        {/* A trigger rather than an anchor: opened from here the picker belongs to this pill. */}
+        <Popover.Trigger asChild>
+          <Tag asChild>
+            <button type='button' data-testid='thread.message.add-reaction' className='dx-focus-ring'>
+              <Icon icon='ph--smiley--regular' size={4} classNames='text-subdued' />
+              <span className='sr-only'>{t('add-reaction.label')}</span>
+            </button>
+          </Tag>
+        </Popover.Trigger>
+      </ReactionPicker>
     </div>
   );
 };
+
+/**
+ * The full emoji picker in a popover, positioned against whatever the caller passes as its anchor or
+ * trigger — the hover toolbar or a message's reaction row. Escape closes it here rather than falling
+ * through to the thread, which would move attention out of the message.
+ */
+const ReactionPicker = ({
+  open,
+  onOpenChange,
+  onSelect,
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelect: (emoji: string) => void;
+  children: ReactNode;
+}) => (
+  <Popover.Root open={open} onOpenChange={onOpenChange}>
+    {children}
+    <Popover.Portal>
+      <Popover.Content
+        side='bottom'
+        align='end'
+        data-testid='thread.message.reaction-picker'
+        onKeyDownCapture={(event) => {
+          if (event.key === 'Escape') {
+            event.stopPropagation();
+            onOpenChange(false);
+          }
+        }}
+      >
+        <EmojiPickerContent
+          onSelect={(emoji) => {
+            onOpenChange(false);
+            onSelect(emoji);
+          }}
+        />
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Portal>
+  </Popover.Root>
+);
 
 MessageReactions.displayName = 'Message.Reactions';
 
@@ -390,14 +459,27 @@ MessageReactions.displayName = 'Message.Reactions';
 // Controls
 //
 
+/**
+ * One message tile's own UI state.
+ *
+ * Held in an atom rather than React state because the controls' action graph *reads* it — the menu
+ * builder takes it through `get`, so entering edit mode recomputes the graph instead of the tile
+ * rebuilding it through a dependency list, which would tear the whole menu down and mount it again.
+ */
+export type MessageState = {
+  /** Whether the body is in edit mode. */
+  editing: boolean;
+  /** Which affordance the full emoji picker is open from, if any — each anchors it to itself. */
+  picking?: 'toolbar' | 'reactions';
+};
+
+const makeMessageState = () => Atom.make<MessageState>({ editing: false });
+
 export type MessageControlsProps = {
   /** Message the controls act on. */
   message: MessageType.Message;
-  /** Whether that message is currently being edited. */
-  editing: boolean;
-  onEdit: () => void;
-  onSaveEdit: () => void;
-  onCancelEdit: () => void;
+  /** That message's UI state, which the controls both read and drive. */
+  state: Atom.Writable<MessageState>;
 };
 
 /** Quick reactions rendered inline in the toolbar; the rest of the set lives behind the picker. */
@@ -411,7 +493,7 @@ const INLINE_REACTIONS = 3;
  * menu, since they are destructive or rare. While editing, the toolbar collapses to save/cancel — the
  * only two moves that apply.
  */
-const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }: MessageControlsProps) => {
+const MessageControls = ({ message, state }: MessageControlsProps) => {
   const {
     getReactions,
     getThreadSummary,
@@ -430,7 +512,13 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
     onRejectChange,
   } = useThreadContext('Message.Controls');
 
-  const [picking, setPicking] = useState(false);
+  const { editing, picking } = useAtomValue(state);
+  const setState = useAtomSet(state);
+  const setEditing = useCallback((editing: boolean) => setState((current) => ({ ...current, editing })), [setState]);
+  const setPicking = useCallback(
+    (open: boolean) => setState((current) => ({ ...current, picking: open ? 'toolbar' : undefined })),
+    [setState],
+  );
 
   const metadata = getMetadata(message);
   const isAuthor = !!identityDid && identityDid === metadata.authorId;
@@ -457,186 +545,190 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
     showEdit ||
     showDelete;
 
-  const menuActions = useMenuBuilder(() => {
-    const builder = MenuBuilder.make().root({ label: ['message-controls.title', { ns: translationKey }] });
+  const menuActions = useMenuBuilder(
+    (get) => {
+      const builder = MenuBuilder.make().root({ label: ['message-controls.title', { ns: translationKey }] });
 
-    if (editing) {
-      builder.action(
-        'save',
-        {
-          label: ['save-message.label', { ns: translationKey }],
-          icon: 'ph--check--regular',
-          iconOnly: true,
-          testId: 'thread.message.save',
-        },
-        onSaveEdit,
-      );
-      builder.action(
-        'cancel',
-        {
-          label: ['cancel-edit.label', { ns: translationKey }],
-          icon: 'ph--x--regular',
-          iconOnly: true,
-          testId: 'thread.message.cancel-edit',
-        },
-        onCancelEdit,
-      );
-      return builder.build();
-    }
+      // Read through `get`, not from the closure: edit mode swaps the whole item set, and reading it
+      // reactively is what keeps that swap inside the graph rather than remounting the menu.
+      if (get(state).editing) {
+        builder.action(
+          'save',
+          {
+            label: ['save-message.label', { ns: translationKey }],
+            icon: 'ph--check--regular',
+            iconOnly: true,
+            testId: 'thread.message.save',
+          },
+          () => setEditing(false),
+        );
+        builder.action(
+          'cancel',
+          {
+            label: ['cancel-edit.label', { ns: translationKey }],
+            icon: 'ph--x--regular',
+            iconOnly: true,
+            testId: 'thread.message.cancel-edit',
+          },
+          () => setEditing(false),
+        );
+        return builder.build();
+      }
 
-    if (onMessageReact) {
-      // The quick reactions form their own group — one tap each, separated from the actions that do
-      // something to the message rather than respond to it.
-      for (const emoji of inlineReactions) {
-        builder.action(`react-${emoji}`, { label: emoji, testId: 'thread.message.reaction-option' }, () =>
-          onMessageReact(message.id, emoji),
+      if (onMessageReact) {
+        // The quick reactions form their own group — one tap each, separated from the actions that do
+        // something to the message rather than respond to it.
+        for (const emoji of inlineReactions) {
+          builder.action(`react-${emoji}`, { label: emoji, testId: 'thread.message.reaction-option' }, () =>
+            onMessageReact(message.id, emoji),
+          );
+        }
+        builder.separator('line');
+        builder.action(
+          'more-reactions',
+          {
+            label: ['add-reaction.label', { ns: translationKey }],
+            icon: 'ph--smiley--regular',
+            iconOnly: true,
+            testId: 'thread.message.react',
+          },
+          () => setPicking(true),
         );
       }
-      builder.separator('line');
-      builder.action(
-        'more-reactions',
-        {
-          label: ['add-reaction.label', { ns: translationKey }],
-          icon: 'ph--smiley--regular',
-          iconOnly: true,
-          testId: 'thread.message.react',
-        },
-        () => setPicking(true),
-      );
-    }
 
-    if (onMessageReply) {
-      builder.action(
-        'reply',
-        {
-          label: ['reply-message.label', { ns: translationKey }],
-          icon: 'ph--arrow-bend-up-left--regular',
-          iconOnly: true,
-          testId: 'thread.message.reply',
-        },
-        () => onMessageReply(message.id),
-      );
-    }
+      if (onMessageReply) {
+        builder.action(
+          'reply',
+          {
+            label: ['reply-message.label', { ns: translationKey }],
+            icon: 'ph--arrow-bend-up-left--regular',
+            iconOnly: true,
+            testId: 'thread.message.reply',
+          },
+          () => onMessageReply(message.id),
+        );
+      }
 
-    // One slot for the message's thread, whichever state it is in: the affordance becomes "view" once
-    // a thread exists rather than disappearing, so the control does not move under the cursor.
-    if (threadSummary && onThreadOpen) {
-      builder.action(
-        'view-thread',
-        {
-          label: ['view-thread.label', { ns: translationKey }],
-          icon: 'ph--chats-circle--regular',
-          iconOnly: true,
-          testId: 'thread.message.view-thread',
-        },
-        () => onThreadOpen(message.id),
-      );
-    } else if (showStartThread && onThreadCreate) {
-      builder.action(
-        'start-thread',
-        {
-          label: ['start-thread.label', { ns: translationKey }],
-          icon: 'ph--chats-circle--regular',
-          iconOnly: true,
-          testId: 'thread.message.start-thread',
-        },
-        () => onThreadCreate(message.id),
-      );
-    }
+      // One slot for the message's thread, whichever state it is in: the affordance becomes "view" once
+      // a thread exists rather than disappearing, so the control does not move under the cursor.
+      if (threadSummary && onThreadOpen) {
+        builder.action(
+          'view-thread',
+          {
+            label: ['view-thread.label', { ns: translationKey }],
+            icon: 'ph--chats-circle--regular',
+            iconOnly: true,
+            testId: 'thread.message.view-thread',
+          },
+          () => onThreadOpen(message.id),
+        );
+      } else if (showStartThread && onThreadCreate) {
+        builder.action(
+          'start-thread',
+          {
+            label: ['start-thread.label', { ns: translationKey }],
+            icon: 'ph--chats-circle--regular',
+            iconOnly: true,
+            testId: 'thread.message.start-thread',
+          },
+          () => onThreadCreate(message.id),
+        );
+      }
 
-    if (hasProposal && onAcceptProposal) {
-      builder.action(
-        'accept-proposal',
-        {
-          label: ['accept-proposal.label', { ns: translationKey }],
-          icon: 'ph--check--regular',
-          iconOnly: true,
-          testId: 'thread.message.accept',
-        },
-        () => onAcceptProposal(message.id),
-      );
-    }
+      if (hasProposal && onAcceptProposal) {
+        builder.action(
+          'accept-proposal',
+          {
+            label: ['accept-proposal.label', { ns: translationKey }],
+            icon: 'ph--check--regular',
+            iconOnly: true,
+            testId: 'thread.message.accept',
+          },
+          () => onAcceptProposal(message.id),
+        );
+      }
 
-    if (hasChange && onAcceptChange) {
-      builder.action(
-        'accept-change',
-        {
-          label: ['accept-change.label', { ns: translationKey }],
-          icon: 'ph--check--regular',
-          iconOnly: true,
-          testId: 'thread.message.accept-change',
-        },
-        () => onAcceptChange(message.id),
-      );
-    }
+      if (hasChange && onAcceptChange) {
+        builder.action(
+          'accept-change',
+          {
+            label: ['accept-change.label', { ns: translationKey }],
+            icon: 'ph--check--regular',
+            iconOnly: true,
+            testId: 'thread.message.accept-change',
+          },
+          () => onAcceptChange(message.id),
+        );
+      }
 
-    if (hasChange && onRejectChange) {
-      builder.action(
-        'reject-change',
-        {
-          label: ['reject-change.label', { ns: translationKey }],
-          icon: 'ph--x--regular',
-          iconOnly: true,
-          testId: 'thread.message.reject-change',
-        },
-        () => onRejectChange(message.id),
-      );
-    }
+      if (hasChange && onRejectChange) {
+        builder.action(
+          'reject-change',
+          {
+            label: ['reject-change.label', { ns: translationKey }],
+            icon: 'ph--x--regular',
+            iconOnly: true,
+            testId: 'thread.message.reject-change',
+          },
+          () => onRejectChange(message.id),
+        );
+      }
 
-    if (showEdit || showDelete) {
-      builder.menu(
-        'more',
-        (group: ActionGroupBuilder) => {
-          if (showEdit) {
-            group.action(
-              'edit',
-              {
-                label: ['edit-message.label', { ns: translationKey }],
-                icon: 'ph--pencil-simple--regular',
-                testId: 'thread.message.edit',
-              },
-              onEdit,
-            );
-          }
-          if (showDelete && onMessageDelete) {
-            group.action(
-              'delete',
-              {
-                label: ['delete-message.label', { ns: translationKey }],
-                icon: 'ph--trash--regular',
-                testId: 'thread.message.delete',
-              },
-              () => onMessageDelete(message.id),
-            );
-          }
-        },
-        'thread.message.more',
-      );
-    }
+      if (showEdit || showDelete) {
+        builder.menu(
+          'more',
+          (group: ActionGroupBuilder) => {
+            if (showEdit) {
+              group.action(
+                'edit',
+                {
+                  label: ['edit-message.label', { ns: translationKey }],
+                  icon: 'ph--pencil-simple--regular',
+                  testId: 'thread.message.edit',
+                },
+                () => setEditing(true),
+              );
+            }
+            if (showDelete && onMessageDelete) {
+              group.action(
+                'delete',
+                {
+                  label: ['delete-message.label', { ns: translationKey }],
+                  icon: 'ph--trash--regular',
+                  testId: 'thread.message.delete',
+                },
+                () => onMessageDelete(message.id),
+              );
+            }
+          },
+          'thread.message.more',
+        );
+      }
 
-    return builder.build();
-  }, [
-    message,
-    editing,
-    inlineReactions,
-    showEdit,
-    showDelete,
-    showStartThread,
-    hasProposal,
-    hasChange,
-    threadSummary,
-    onMessageReact,
-    onMessageReply,
-    onThreadOpen,
-    onThreadCreate,
-    onMessageDelete,
-    onAcceptProposal,
-    onAcceptChange,
-    onRejectChange,
-    onEdit,
-    onSaveEdit,
-    onCancelEdit,
-  ]);
+      return builder.build();
+    },
+    [
+      message,
+      state,
+      inlineReactions,
+      showEdit,
+      showDelete,
+      showStartThread,
+      hasProposal,
+      hasChange,
+      threadSummary,
+      onMessageReact,
+      onMessageReply,
+      onThreadOpen,
+      onThreadCreate,
+      onMessageDelete,
+      onAcceptProposal,
+      onAcceptChange,
+      onRejectChange,
+      setEditing,
+      setPicking,
+    ],
+  );
 
   if (!hasControls) {
     return null;
@@ -646,7 +738,11 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
     // `alwaysActive`: a message toolbar belongs to the hovered row, not to whichever plank holds
     // attention, so it must not disable itself when the thread is unattended.
     <Menu.Root {...menuActions} alwaysActive iconSize={4}>
-      <Popover.Root open={picking} onOpenChange={setPicking}>
+      <ReactionPicker
+        open={picking === 'toolbar'}
+        onOpenChange={setPicking}
+        onSelect={(emoji) => onMessageReact?.(message.id, emoji)}
+      >
         {/* The picker opens from a toolbar action rather than its own trigger — that keeps every
             affordance in the action graph, and so in one running order — so the toolbar is the anchor. */}
         <Popover.Anchor asChild>
@@ -665,28 +761,7 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
             density='sm'
           />
         </Popover.Anchor>
-        <Popover.Portal>
-          <Popover.Content
-            side='bottom'
-            align='end'
-            data-testid='thread.message.reaction-picker'
-            onKeyDownCapture={(event) => {
-              if (event.key === 'Escape') {
-                event.stopPropagation();
-                setPicking(false);
-              }
-            }}
-          >
-            <EmojiPickerContent
-              onSelect={(emoji) => {
-                setPicking(false);
-                onMessageReact?.(message.id, emoji);
-              }}
-            />
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
+      </ReactionPicker>
     </Menu.Root>
   );
 };
@@ -724,8 +799,10 @@ const MessageQuote = ({ message }: MessageQuoteProps) => {
   return (
     <div
       data-testid='thread.message.quote'
-      className='flex items-baseline gap-1.5 me-4 mb-0.5 ps-2 border-is-2 border-separator text-xs text-description min-w-0'
+      className='flex items-center gap-1.5 me-4 mb-0.5 text-xs text-description min-w-0'
     >
+      {/* The arrow says "this answers that" on its own, which a bare quotation rule does not. */}
+      <Icon icon='ph--arrow-bend-up-left--regular' size={3} classNames='shrink-0 text-subdued' />
       <span className='shrink-0 font-medium'>{authorName}</span>
       <span className='truncate min-w-0'>{text}</span>
     </div>
@@ -910,13 +987,21 @@ const MessageTile = ({ message, classNames, continues = true, continuation = fal
     onMessageSelect,
     currentMessageId,
   } = useThreadContext('Message.Tile');
-  const [editing, setEditing] = useState(false);
+  // Subscribed for the re-render, not the value: a query reports its result set, not a mutation
+  // within one — so an edit, or the mark that creates a message's thread, would otherwise leave this
+  // row showing what it rendered before.
+  useObjectValue(message);
+
+  // One state atom per tile, shared with its controls: the toolbar drives edit mode and the body
+  // renders it, and neither rebuilds the other's menu to say so.
+  const state = useMemo(makeMessageState, []);
+  const { editing } = useAtomValue(state);
+  const setState = useAtomSet(state);
 
   const metadata = getMetadata(message);
   const isAuthor = !!identityDid && identityDid === metadata.authorId;
 
-  const handleEdit = useCallback(() => setEditing(true), []);
-  const handleCancelEdit = useCallback(() => setEditing(false), []);
+  const handleExitEdit = useCallback(() => setState((current) => ({ ...current, editing: false })), [setState]);
   const handleSelect = useCallback(() => onMessageSelect?.(message.id), [onMessageSelect, message.id]);
   const handleReact = useCallback((emoji: string) => onMessageReact?.(message.id, emoji), [onMessageReact, message.id]);
   const handleOpenThread = useCallback(() => onThreadOpen?.(message.id), [onThreadOpen, message.id]);
@@ -928,22 +1013,14 @@ const MessageTile = ({ message, classNames, continues = true, continuation = fal
           block.text = text;
         }
       });
-      setEditing(false);
+      handleExitEdit();
     },
-    [message],
+    [message, handleExitEdit],
   );
   const reactions = getReactions?.(message) ?? [];
   const threadSummary = getThreadSummary?.(message);
 
-  const controls = (
-    <MessageControls
-      message={message}
-      editing={editing}
-      onEdit={handleEdit}
-      onSaveEdit={handleCancelEdit}
-      onCancelEdit={handleCancelEdit}
-    />
-  );
+  const controls = <MessageControls message={message} state={state} />;
 
   return (
     <MessageRoot
@@ -970,10 +1047,10 @@ const MessageTile = ({ message, classNames, continues = true, continuation = fal
         isAuthor={isAuthor}
         editing={editing}
         onSave={handleSave}
-        onCommitEdit={handleCancelEdit}
-        onCancelEdit={handleCancelEdit}
+        onCommitEdit={handleExitEdit}
+        onCancelEdit={handleExitEdit}
       />
-      {onMessageReact && <MessageReactions reactions={reactions} onReact={handleReact} />}
+      {onMessageReact && <MessageReactions reactions={reactions} onReact={handleReact} state={state} />}
       {/* The summary row appears only once a thread exists; starting one is a hover control. */}
       {threadSummary && onThreadOpen && <MessageThreadLink summary={threadSummary} onOpen={handleOpenThread} />}
     </MessageRoot>

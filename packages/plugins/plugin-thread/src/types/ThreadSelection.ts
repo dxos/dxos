@@ -2,26 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Obj } from '@dxos/echo';
-import { Channel } from '@dxos/types';
-
 /**
- * A thread addressed as `(channel, threadId)`. Threads have no object of their own — the id is the
- * root message's — so navtree nodes and surfaces carry this pair instead. Deliberately not a bare
- * `Message`: `plugin-inbox` already claims the article surface for every non-draft message.
+ * A thread is addressed the way a mailbox filter is: the *channel* is the subject — the object the
+ * node and its surface carry — and the thread id is metadata scoping it. Threads have no object of
+ * their own (the id is the root message's), and making the selection the subject instead would leave
+ * every node carrying a synthetic pair no other consumer of the graph can read.
  */
-export type ThreadSelection = {
-  channel: Channel.Channel;
-  /** Root message id, which is also the `threadId` its replies carry. */
-  threadId: string;
-};
 
-export const isThreadSelection = (value: unknown): value is ThreadSelection =>
-  typeof value === 'object' &&
-  value !== null &&
-  'threadId' in value &&
-  typeof (value as ThreadSelection).threadId === 'string' &&
-  Obj.instanceOf(Channel.Channel, (value as ThreadSelection).channel);
+/** Node property naming the thread a channel node is scoped to. */
+export const THREAD_ID_PROPERTY = 'threadId';
+
+/** The thread a node's (or a surface's) properties scope it to, if any. */
+export const getThreadId = (properties?: Record<string, any>): string | undefined => {
+  const threadId = properties?.[THREAD_ID_PROPERTY];
+  return typeof threadId === 'string' ? threadId : undefined;
+};
 
 /**
  * Graph node id for a thread, prefixed so it cannot collide with the root message's own node. A

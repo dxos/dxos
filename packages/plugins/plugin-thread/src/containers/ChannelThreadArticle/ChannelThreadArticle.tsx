@@ -6,17 +6,20 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Panel, useTranslation } from '@dxos/react-ui';
+import { type Channel } from '@dxos/types';
 
 import { MessageThread } from '#components';
 import { useChannelMessaging } from '#hooks';
 import { meta } from '#meta';
-import { ThreadOperation, type ThreadSelection, selectThread } from '#types';
+import { ThreadOperation, selectThread } from '#types';
 
-// Not `AppSurface.ObjectArticleProps`: a thread has no object of its own, so the subject is a
-// `(channel, threadId)` selection rather than an ECHO object.
+// The subject is the channel, as it is for the channel view; the thread is metadata scoping it —
+// the same shape as a mailbox and one of its filters (see plugin-inbox's `MailboxArticle`).
 export type ChannelThreadArticleProps = {
   role?: string;
-  subject: ThreadSelection;
+  subject: Channel.Channel;
+  /** Root message id of the thread this plank is scoped to. */
+  threadId: string;
 };
 
 /**
@@ -25,8 +28,7 @@ export type ChannelThreadArticleProps = {
  * the channel view only starts threads, which is what keeps conversation out of the main feed.
  * The thread's name is renamed from its navtree node (`ThreadOperation.RenameThread`), not here.
  */
-export const ChannelThreadArticle = ({ role, subject }: ChannelThreadArticleProps) => {
-  const { channel, threadId } = subject;
+export const ChannelThreadArticle = ({ role, subject: channel, threadId }: ChannelThreadArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const { space, identity, members, messages, activity, readOnly, getReactions, canDelete, onReact, onDelete } =
