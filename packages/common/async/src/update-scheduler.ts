@@ -19,11 +19,8 @@ export type UpdateSchedulerOptions = {
  */
 const TIME_PERIOD = 1_000;
 
-/**
- * A claimed run. `error` resolves with the run's error (or `undefined`) and never rejects;
- * `observed` means a `runBlocking` caller will throw it, so the context should not raise it.
- */
-type RunResult = { error: Promise<unknown>; observed: boolean };
+/** A claimed run's error (or `undefined`). Resolves, never rejects — `runBlocking` re-throws it. */
+type RunResult = Promise<unknown>;
 
 /**
  * Runs a non-reentrant callback at most once at a time, coalescing triggers (optionally rate-limited
@@ -50,6 +47,13 @@ export class UpdateScheduler {
   /** Woken to make the pending runner skip its throttle delay. Replaced at claim time. */
   private _skipDelay = new Trigger();
 
+  /**
+   * `runBlocking` callers in flight, incremented synchronously before triggering. A failing run uses
+   * it to tell whether someone will throw the error; counting microtask hops to a waiter's resume
+   * would be a race.
+   */
+  private _observers = 0;
+
   private _lastUpdateTime = -TIME_PERIOD;
 
   constructor(
@@ -60,7 +64,7 @@ export class UpdateScheduler {
     _ctx.onDispose(async () => {
       await this._currentTask; // Context waits for callback to finish.
       // Release `runBlocking` callers parked on a runner that never claimed. NOOP if already woken.
-      this._claimed.wake({ error: Promise.resolve(undefined), observed: true });
+      this._claimed.wake(Promise.resolve(undefined));
     });
   }
 
@@ -111,7 +115,7 @@ export class UpdateScheduler {
       }
 
       if (this._ctx.disposed) {
-        this._claimed.wake({ error: Promise.resolve(undefined), observed: true });
+        this._claimed.wake(Promise.resolve(undefined));
         return;
       }
 
@@ -119,20 +123,17 @@ export class UpdateScheduler {
       this._scheduled = false;
       this._skipDelay = new Trigger();
       this._lastUpdateTime = performance.now();
-      const run: RunResult = { observed: false, error: undefined as never };
-      run.error = this._callback().then(
+      const run: RunResult = this._callback().then(
         () => undefined,
-        async (error) => {
-          // Let woken waiters set `observed` first; a synchronous rejection queues this handler ahead
-          // of them, and without the hop the context would double-report.
-          await undefined;
-          if (!run.observed) {
+        (error): unknown => {
+          // Unobserved failures go to the context, as trigger-path failures always have.
+          if (this._observers === 0) {
             this._ctx.raise(error as Error);
           }
-          return error as unknown;
+          return error;
         },
       );
-      const task: Promise<void> = run.error.then(() => {
+      const task: Promise<void> = run.then(() => {
         if (this._currentTask === task) {
           this._currentTask = null;
         }
@@ -169,13 +170,16 @@ export class UpdateScheduler {
     if (this._ctx.disposed) {
       return;
     }
-    this.trigger();
-    this._skipDelay.wake();
-    const run = await this._claimed.wait();
-    run.observed = true;
-    const error = await run.error;
-    if (error !== undefined) {
-      throw error;
+    this._observers++;
+    try {
+      this.trigger();
+      this._skipDelay.wake();
+      const error = await await this._claimed.wait();
+      if (error !== undefined) {
+        throw error;
+      }
+    } finally {
+      this._observers--;
     }
   }
 }
