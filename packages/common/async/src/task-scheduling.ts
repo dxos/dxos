@@ -43,11 +43,13 @@ export class DeferredTask {
       //
       // NOTE: A single await is sufficient ONLY because this class has one claim site and the
       // `_scheduled` flag collapses concurrent schedules into one pending waiter — a lone waiter
-      // cannot lose the wake-up race. Both properties are load-bearing: a second path that claims
-      // `_currentTask` directly reintroduces the check/claim race that made two callbacks run
-      // concurrently in `UpdateScheduler` (dxos/edge#758). Note that throttling (see the TODO above)
-      // is safe to add *because* of the single door — `UpdateScheduler` sleeps between this await and
-      // its claim for exactly that reason.
+      // cannot lose the wake-up race. Both properties are load-bearing: adding a second path that
+      // claims `_currentTask` directly (an urgent run that bypasses this one, say) breaks the
+      // argument and lets two callbacks run at once. `UpdateScheduler` had exactly that second door
+      // and exactly that bug (dxos/edge#758); it now uses this same single-door shape, expressing
+      // urgency by waking the pending runner rather than starting its own. Throttling is safe to add
+      // here (see the TODO above) for the same reason — with one claimant, sleeping between this
+      // await and the claim below cannot let anyone in.
       await this._currentTask; // Can't be rejected.
 
       // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
