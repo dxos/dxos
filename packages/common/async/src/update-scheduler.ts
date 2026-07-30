@@ -5,6 +5,7 @@
 import { type Context } from '@dxos/context';
 
 import { scheduleMicroTask } from './task-scheduling';
+import { Trigger } from './trigger';
 
 export type UpdateSchedulerOptions = {
   /**
@@ -18,13 +19,60 @@ export type UpdateSchedulerOptions = {
  */
 const TIME_PERIOD = 1_000;
 
+/**
+ * Outcome of one run, delivered to the `runBlocking` callers that were waiting on it.
+ * Always resolved, never rejected — waiters inspect and re-throw, so an unobserved run
+ * cannot become an unhandled rejection.
+ */
+type RunOutcome = { error?: unknown };
+
+type RunCompletion = {
+  promise: Promise<RunOutcome>;
+  resolve: (outcome: RunOutcome) => void;
+  /** `runBlocking` callers awaiting this run. A failure with waiters belongs to them, not the context. */
+  waiters: number;
+};
+
+const createCompletion = (): RunCompletion => {
+  let resolve!: (outcome: RunOutcome) => void;
+  const promise = new Promise<RunOutcome>((res) => {
+    resolve = res;
+  });
+  return { promise, resolve, waiters: 0 };
+};
+
+/**
+ * Runs a non-reentrant callback at most once at a time, coalescing any number of triggers
+ * (optionally rate-limited via {@link UpdateSchedulerOptions.maxFrequency}).
+ *
+ * Single-door design (same shape as {@link DeferredTask}): the scheduled runner inside
+ * {@link trigger} is the ONLY place the callback is started. `runBlocking`/`forceTrigger` never run
+ * the callback themselves — they funnel into that runner and, for `runBlocking`, await its
+ * completion. With exactly one claim site and the `_scheduled` flag collapsing concurrent triggers
+ * into one pending runner, at most one waiter ever waits for the running pass — so it cannot lose a
+ * wake-up race, and mutual exclusion holds by construction rather than by re-checking. (The
+ * previous design let `runBlocking` claim directly; two claim sites with single checks is the
+ * check/claim race behind dxos/edge#758.)
+ */
 export class UpdateScheduler {
   /**
-   * Promise that resolves when the callback is done.
-   * Never rejects.
+   * The running pass. Never rejects, and is non-null exactly while the callback is executing.
    */
-  private _promise: Promise<any> | null = null;
+  private _currentTask: Promise<void> | null = null;
   private _scheduled = false;
+
+  /**
+   * Completion of the next run to start. The runner adopts it (and installs a fresh one) at claim
+   * time, so a `runBlocking` caller that captures it before triggering is guaranteed a run that
+   * starts after the capture — i.e. one that observes everything enqueued so far.
+   */
+  private _nextCompletion = createCompletion();
+
+  /**
+   * Woken to make the pending (or next) runner skip its throttle delay — urgency without a second
+   * door. Replaced at claim time so each runner races only the signal of its own generation.
+   */
+  private _skipDelay = new Trigger();
 
   private _lastUpdateTime = -TIME_PERIOD;
 
@@ -34,24 +82,41 @@ export class UpdateScheduler {
     private readonly _params: UpdateSchedulerOptions = {},
   ) {
     _ctx.onDispose(async () => {
-      await this._promise; // Context waits for callback to finish.
+      await this._currentTask; // Context waits for callback to finish.
+      // A runner that never reached its claim (disposed mid-delay, or never started) leaves its
+      // completion unresolved; release any `runBlocking` callers parked on it.
+      this._nextCompletion.resolve({});
     });
   }
 
+  get scheduled() {
+    return this._scheduled;
+  }
+
+  /**
+   * Schedule the callback to run asynchronously. Triggers issued while a run is pending or in
+   * flight coalesce into the next run.
+   */
   trigger(): void {
     if (this._scheduled) {
       return;
     }
+    this._scheduled = true;
 
+    // The ONLY claim site.
     scheduleMicroTask(this._ctx, async () => {
-      // The previous task might still be running, so we need to wait for it to finish.
-      await this._promise?.catch(() => {});
+      // A single await suffices — no re-check loop: `_scheduled` collapses triggers into one
+      // pending runner and nothing else claims, so this is the only waiter for the running pass.
+      // Both properties are load-bearing; adding another claim path reintroduces dxos/edge#758.
+      await this._currentTask; // Never rejects.
 
-      // Check if the callback was called recently.
+      // Rate limiting. Sleeping between the wait above and the claim below is safe only because
+      // no other claimant exists.
       if (this._params.maxFrequency) {
         const now = performance.now();
         const delay = this._lastUpdateTime + TIME_PERIOD / this._params.maxFrequency - now;
         if (delay > 0) {
+          const skipDelay = this._skipDelay;
           await new Promise<void>((resolve) => {
             const timeoutId = setTimeout(() => {
               clearContext();
@@ -62,90 +127,90 @@ export class UpdateScheduler {
               clearTimeout(timeoutId);
               resolve();
             });
+
+            // `runBlocking`/`forceTrigger` cut the delay short; the run stays mutually excluded.
+            void skipDelay.wait().then(() => {
+              clearTimeout(timeoutId);
+              clearContext();
+              resolve();
+            });
           });
         }
       }
 
       if (this._ctx.disposed) {
-        return;
+        return; // The dispose hook resolves `_nextCompletion` for any parked waiters.
       }
 
-      // The pre-claim barrier. The await above is only an optimization; correctness lives here: the
-      // callback is not reentrant (it typically drains shared queued state), so the claim below may
-      // only happen when no other pass is running — and that check must be re-evaluated with no
-      // suspension point before the claim, hence a loop. A single await is not enough twice over: the
-      // throttle sleep above opens one window, and resuming from any await opens another (a pass
-      // parked on the same promise may have claimed and installed itself in `_promise` in the gap).
-      // Rejections are another caller's business (`runBlocking`'s caller observes its own error).
-      while (this._promise) {
-        await this._promise.catch(() => {});
-      }
-
-      this._lastUpdateTime = performance.now();
-
-      // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
+      // The claim — one synchronous slice from here to the `_currentTask` assignment, so nothing
+      // can interleave between the checks above and the run below.
       this._scheduled = false;
-      this._promise = this._callback().then(
+      const completion = this._nextCompletion;
+      this._nextCompletion = createCompletion();
+      this._skipDelay = new Trigger();
+      this._lastUpdateTime = performance.now();
+      const task = this._callback().then(
         () => {
-          this._promise = null;
+          if (this._currentTask === task) {
+            this._currentTask = null;
+          }
+          completion.resolve({});
         },
         (error) => {
-          this._promise = null;
-          this._ctx.raise(error);
+          if (this._currentTask === task) {
+            this._currentTask = null;
+          }
+          completion.resolve({ error });
+          // A failure someone is waiting for is theirs to handle; an unobserved one goes to the
+          // context, as trigger-path failures always have.
+          if (completion.waiters === 0) {
+            this._ctx.raise(error as Error);
+          }
         },
       );
+      this._currentTask = task;
     });
-
-    this._scheduled = true;
   }
 
+  /**
+   * Run as soon as possible: schedules (coalescing with any pending run) and skips the throttle
+   * delay. Unlike the previous implementation this does NOT start a concurrent callback — urgency
+   * never suspends mutual exclusion.
+   */
   forceTrigger(): void {
-    scheduleMicroTask(this._ctx, async () => {
-      this._callback().catch((err) => this._ctx.raise(err));
-    });
+    this.trigger();
+    this._skipDelay.wake();
   }
 
   /**
    * Waits for the current task to finish if it is running.
-   * Does not schedule a new task.
+   * Does not schedule a new task, and does not wait for one that is merely scheduled.
    */
   async join(): Promise<void> {
-    await this._promise;
+    await this._currentTask;
   }
 
   /**
-   * Force schedule the task to run and wait for it to finish.
+   * Ensure a run that observes everything enqueued so far, and wait for it to finish.
+   *
+   * Funnels into the single runner (skipping the throttle delay) rather than running the callback
+   * itself; concurrent callers coalesce onto the same run. Rejects with that run's error — a caller
+   * using this as a flush barrier must be able to see that its batch was NOT handed off
+   * (dxos/edge#758). No-op once the context is disposed: nothing waits on the data any more.
    */
   async runBlocking(): Promise<void> {
-    // Pre-claim barrier, same as the one in `trigger`: on resume from an await, a triggered pass
-    // that was parked on the same promise may have claimed the queue and installed itself in
-    // `_promise` — a single await would overwrite it and run against an empty queue, resolving while
-    // the claimed batch is still in flight. The caller treats this method as "everything queued so
-    // far has been handed off", so that batch dies with a short-lived caller (dxos/edge#758's
-    // orphaned `updateSubscription` batches). NOT a barrier over *scheduled* passes: a pass still in
-    // its throttle sleep has claimed nothing, and waiting for it here would trade the loss for
-    // stalls (and starvation under a self-retriggering callback).
-    while (this._promise) {
-      await this._promise.catch(() => {});
+    if (this._ctx.disposed) {
+      return;
     }
-    const callbackPromise = this._callback();
-    // Track a wrapper that clears `_promise` on completion (identity-guarded — a later pass may have
-    // replaced it) and absorbs the rejection for observers. Without the clear, `_promise` stays
-    // settled-but-non-null after every `runBlocking`, and the loops above spin on it forever. The
-    // caller still observes a rejection through `await callbackPromise` below.
-    const tracked: Promise<void> = callbackPromise.then(
-      () => {
-        if (this._promise === tracked) {
-          this._promise = null;
-        }
-      },
-      () => {
-        if (this._promise === tracked) {
-          this._promise = null;
-        }
-      },
-    );
-    this._promise = tracked;
-    await callbackPromise;
+    // Capture before triggering: this is the completion the next-starting run will adopt, and that
+    // run necessarily begins after the capture, so it drains everything enqueued up to now.
+    const completion = this._nextCompletion;
+    completion.waiters++;
+    this.trigger();
+    this._skipDelay.wake();
+    const { error } = await completion.promise;
+    if (error !== undefined) {
+      throw error;
+    }
   }
 }

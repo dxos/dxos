@@ -41,13 +41,13 @@ export class DeferredTask {
     scheduleTask(this._ctx, async () => {
       // The previous task might still be running, so we need to wait for it to finish.
       //
-      // NOTE: A single await (rather than `UpdateScheduler`'s pre-claim loop) is sufficient ONLY
-      // because this class has one claim site and the `_scheduled` flag collapses concurrent
-      // schedules into one pending waiter — a lone waiter cannot lose the wake-up race — and
-      // because nothing suspends between this await and the claim below. Both preconditions are
-      // load-bearing: adding throttling here (see the TODO above) by sleeping after this await, or
-      // adding a second path that claims `_currentTask` directly, reintroduces the check/claim race
-      // that made two callbacks run concurrently in `UpdateScheduler` (dxos/edge#758).
+      // NOTE: A single await is sufficient ONLY because this class has one claim site and the
+      // `_scheduled` flag collapses concurrent schedules into one pending waiter — a lone waiter
+      // cannot lose the wake-up race. Both properties are load-bearing: a second path that claims
+      // `_currentTask` directly reintroduces the check/claim race that made two callbacks run
+      // concurrently in `UpdateScheduler` (dxos/edge#758). Note that throttling (see the TODO above)
+      // is safe to add *because* of the single door — `UpdateScheduler` sleeps between this await and
+      // its claim for exactly that reason.
       await this._currentTask; // Can't be rejected.
 
       // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
