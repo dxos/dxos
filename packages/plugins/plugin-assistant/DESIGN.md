@@ -236,11 +236,14 @@ to add more live tests.
    `AssistantTestLayer` provides in node. For pipeline work (streaming, tool loop, delegation),
    prefer a vitest + scripted-model test at this seam and open storybook only for the visual
    layers. §4 supplies the missing harness pieces.
-3. **Processor streaming harness.** Add a det unit test (and optionally a story) that feeds a
-   scripted sequence of `PartialBlock`/`CompleteBlock` trace messages through a real
-   `AiChatProcessor` (stub `AgentService.Session` whose `subscribeEphemeral` replays a fixture)
-   and asserts the atom transitions — closing the §2.3 gap and giving a place to reproduce
-   streaming/dedupe bugs without any backend.
+3. **Processor streaming harness.** **Done** —
+   [`processor/streaming.node.test.ts`](./src/processor/streaming.node.test.ts) feeds a scripted
+   `PartialBlock` trace sequence through a real `AiChatProcessor` (stub `AgentService.Session`
+   replaying the fixture) and asserts the atom transitions: in-place partial upserts,
+   finalization, stale-partial drop after finalize, and end-of-request flush. Two learnings for
+   harness authors: atoms hold state only while mounted, so subscribe with `immediate: true`
+   before the request; and finalize/flush are two-phase updates whose transient artifacts the UI
+   masks via `Chat.Root`'s dedupe-by-id merge.
 4. **Record/replay fixtures from live sessions.** `stories-assistant/testing/snapshot.ts` and
    the `tracing: 'feed'` sink already capture durable state; add a "dump conversation" debug
    action (the `Chat` debug event exists) that exports feed messages + trace events as a
@@ -298,7 +301,7 @@ match-all route).
 `collectEphemeral(session)` forks and buffers the `PartialBlock`/`CompleteBlock` stream — the
 headless equivalent of what the chat UI renders. `waitForMessage(feed, predicate)` (with
 `messageTextIncludes`) polls the conversation feed for out-of-band results:
-`waitForCompletion` settles when the *turn* completes, while the delegated child reports back
+`waitForCompletion` settles when the _turn_ completes, while the delegated child reports back
 later via `onComplete`.
 
 **(c) Assertion helpers (open).** Reuse/extend `@dxos/assistant-evals` assertions
@@ -315,14 +318,19 @@ keys (via the `feed` trace sink).
 const TestLayer = AssistantTestLayer({
   agent: { delegationStrategy: makeDelegationStrategy() },
   aiService: scriptedAiService([
-    { name: 'sub-agent', match: promptIncludes('non-interactive mode'), turns: [
-      { parts: [toolCall('completeJob', { success: '3628800' })] },
-      { parts: [text('Done.')] },
-    ]},
-    { name: 'supervisor', match: () => true, turns: [
-      { parts: [text('On it — delegating.'), toolCall('delegate-task', { title: 'Compute 10 factorial' })] },
-      { parts: [text('Delegated. I will report back when it completes.')] },
-    ]},
+    {
+      name: 'sub-agent',
+      match: promptIncludes('non-interactive mode'),
+      turns: [{ parts: [toolCall('completeJob', { success: '3628800' })] }, { parts: [text('Done.')] }],
+    },
+    {
+      name: 'supervisor',
+      match: () => true,
+      turns: [
+        { parts: [text('On it — delegating.'), toolCall('delegate-task', { title: 'Compute 10 factorial' })] },
+        { parts: [text('Delegated. I will report back when it completes.')] },
+      ],
+    },
   ]),
   operationHandlers: [DelegationHandlers, AgentHandlers],
   skills: [DelegationSkill.make()],
@@ -355,8 +363,10 @@ live variant remains the only place a real model is consulted.
 
 1. ~~Routed scripts in `ScriptedLanguageModel` (+ unit test).~~ **Done.**
 2. ~~`collectEphemeral` / `waitForMessage` helpers in `agent-runtime/testing`.~~ **Done.**
-3. ~~`delegation-strategy.test.ts` headless test (4.3).~~ **Done.** Still open: un-gate the
-   stub lifecycle test in `AgentService.test.ts` by porting it to the scripted model.
+3. ~~`delegation-strategy.test.ts` headless test (4.3).~~ **Done**, including an ungated
+   scripted port of the stub lifecycle test (`agent-service/delegation-scripted.test.ts`); the
+   memo-gated original stays until its file's fixtures are next regenerated (removing it would
+   shift the shared deterministic ID stream).
 4. `config.scripted` decorator support in `stories-assistant`; `WithSubAgentsScripted` play
    story (4.4).
-5. Processor streaming harness (§3.3) — reuses the same fixtures.
+5. ~~Processor streaming harness (§3.3).~~ **Done** (`processor/streaming.node.test.ts`).
