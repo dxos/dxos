@@ -126,23 +126,15 @@ type Story = StoryObj<typeof meta>;
 /**
  * Type in either editor and watch the other follow, with the block ranges updating in the third pane.
  */
-export const SideBySide: Story = {
+export const Default: Story = {
   render: SideBySideStory,
   decorators: [singlePeer],
 };
 
 /**
- * Two peers: markdown on one, rich text on the other, replicating live.
+ * The assertions behind {@link Default}.
  */
-export const Collaboration: Story = {
-  render: CollaborationStory,
-  decorators: [twoPeers],
-};
-
-/**
- * The assertions behind {@link SideBySide}.
- */
-export const SideBySideTest: Story = {
+export const DefaultTest: Story = {
   render: SideBySideStory,
   decorators: [singlePeer],
   play: async ({ canvasElement }) => {
@@ -162,8 +154,13 @@ export const SideBySideTest: Story = {
     const editor = find('pm-editor');
     await expect(editor.querySelector('h1')?.textContent).toBe('One object, two editors');
     await expect(editor.querySelector('h2')?.textContent).toBe('Why it merges');
-    // The `#` markers belong to the stored string, not to this view.
+    // The `#` and `**` markers belong to the stored string, not to this view...
     await expect(editor.textContent).not.toContain('#');
+    await expect(editor.textContent).not.toContain('**');
+    // ...they render as actual rich text instead.
+    await expect(editor.querySelector('strong')?.textContent).toBe('what is stored');
+    await expect(editor.querySelector('em')?.textContent).toBe('a view of it');
+    await expect(editor.querySelector('code')?.textContent).toBe('source range');
 
     // Editing a heading in the rich-text editor splices only that heading's range: the markdown
     // editor shows the new title and every other line is untouched.
@@ -179,7 +176,7 @@ export const SideBySideTest: Story = {
         // ...and every other block survived verbatim. A whole-document rewrite — or a lens that
         // re-serialized the tree — would show up right here.
         await expect(find('markdown-editor')).toHaveTextContent('## Why it merges');
-        await expect(find('markdown-editor')).toHaveTextContent('- Each block remembers its source range');
+        await expect(find('markdown-editor')).toHaveTextContent('Each block remembers its');
         await expect(find('markdown-editor')).toHaveTextContent('- So an edit splices that range alone');
       },
       { timeout: 10_000 },
@@ -188,10 +185,10 @@ export const SideBySideTest: Story = {
 };
 
 /**
- * The assertions behind {@link Collaboration}: a block edit on one peer reaches the other peer's
- * markdown editor, and the untouched text survives.
+ * Two peers: markdown on one, rich text on the other, replicating live. Carries its own assertions — a
+ * block edit on one peer reaches the other peer's markdown editor, and the untouched text survives.
  */
-export const CollaborationTest: Story = {
+export const Collaboration: Story = {
   render: CollaborationStory,
   decorators: [twoPeers],
   play: async ({ canvasElement }) => {
@@ -223,7 +220,7 @@ export const CollaborationTest: Story = {
         // ...and the rest of the document is intact on the peer that did not make the edit — the
         // splice touched one block's range and nothing else crossed the wire.
         await expect(findAll('markdown-editor')[0]).toHaveTextContent('# One object, two editors');
-        await expect(findAll('markdown-editor')[0]).toHaveTextContent('- Each block remembers its source range');
+        await expect(findAll('markdown-editor')[0]).toHaveTextContent('Each block remembers its');
       },
       { timeout: 15_000 },
     );

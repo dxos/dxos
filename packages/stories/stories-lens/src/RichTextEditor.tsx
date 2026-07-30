@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { baseKeymap } from 'prosemirror-commands';
+import { baseKeymap, toggleMark } from 'prosemirror-commands';
 import { keymap } from 'prosemirror-keymap';
 import { type Node as PmNode, Schema as PmSchema } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
@@ -13,7 +13,15 @@ import { type Obj } from '@dxos/echo';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 
-import { type Block, RICH_TEXT_LENS_ID, type RichText, RichTextLens } from './rich-text';
+import {
+  type Block,
+  type Inline,
+  type Mark,
+  RICH_TEXT_LENS_ID,
+  type RichText,
+  RichTextLens,
+  blockText,
+} from './rich-text';
 
 //
 // A basic ProseMirror editor driven entirely by the lens. It never sees markdown: it reads a block
@@ -21,8 +29,13 @@ import { type Block, RICH_TEXT_LENS_ID, type RichText, RichTextLens } from './ri
 // own source range.
 //
 
-/** Minimal schema: the block kinds the lens projects, with plain text inside. */
+/** Minimal schema: the block kinds the lens projects, and the inline marks it carries. */
 const schema = new PmSchema({
+  marks: {
+    strong: { parseDOM: [{ tag: 'strong' }], toDOM: () => ['strong', 0] },
+    em: { parseDOM: [{ tag: 'em' }], toDOM: () => ['em', 0] },
+    code: { parseDOM: [{ tag: 'code' }], toDOM: () => ['code', { class: 'px-1 rounded bg-hover-surface' }, 0] },
+  },
   nodes: {
     doc: { content: 'block+' },
     paragraph: { content: 'text*', group: 'block', parseDOM: [{ tag: 'p' }], toDOM: () => ['p', 0] },
@@ -44,17 +57,27 @@ const schema = new PmSchema({
   },
 });
 
+/** Marked runs become text nodes carrying ProseMirror marks — this is what renders as rich text. */
+const toInline = (runs: readonly Inline[]) =>
+  runs
+    .filter((run) => run.text.length > 0)
+    .map((run) =>
+      schema.text(
+        run.text,
+        (run.marks ?? []).map((mark) => schema.marks[mark].create()),
+      ),
+    );
+
+const EMPTY_BLOCK: Block = { type: 'paragraph', content: [], range: [0, 0] };
+
 const toDoc = (blocks: readonly Block[]) =>
   schema.node(
     'doc',
     null,
-    (blocks.length > 0 ? blocks : [{ type: 'paragraph' as const, text: '', range: [0, 0] as [number, number] }]).map(
-      (block) => {
-        const content = block.text.length > 0 ? [schema.text(block.text)] : [];
-        return block.type === 'heading'
-          ? schema.node('heading', { level: block.level ?? 1 }, content)
-          : schema.node(block.type, null, content);
-      },
+    (blocks.length > 0 ? blocks : [EMPTY_BLOCK]).map((block) =>
+      block.type === 'heading'
+        ? schema.node('heading', { level: block.level ?? 1 }, toInline(block.content))
+        : schema.node(block.type, null, toInline(block.content)),
     ),
   );
 
@@ -63,21 +86,45 @@ const fromDoc = (doc: PmNode): Block[] => {
   const blocks: Block[] = [];
   doc.forEach((node: PmNode) => {
     const type = node.type.name === 'heading' ? 'heading' : node.type.name === 'bullet' ? 'bullet' : 'paragraph';
+    const content: Inline[] = [];
+    node.forEach((child: PmNode) => {
+      if (!child.isText) {
+        return;
+      }
+      const marks = child.marks.map((mark) => mark.type.name as Mark);
+      content.push(marks.length > 0 ? { text: child.text ?? '', marks } : { text: child.text ?? '' });
+    });
     blocks.push({
       type,
       level: type === 'heading' ? node.attrs.level : undefined,
-      text: node.textContent,
+      content,
       range: [0, 0],
     });
   });
   return blocks;
 };
 
+/** Mod-b / Mod-i / Mod-e toggle marks, so the editor writes rich text rather than only showing it. */
+const plugins = [
+  keymap({
+    'Mod-b': toggleMark(schema.marks.strong),
+    'Mod-i': toggleMark(schema.marks.em),
+    'Mod-e': toggleMark(schema.marks.code),
+  }),
+  keymap(baseKeymap),
+];
+
+const sameContent = (a: readonly Inline[], b: readonly Inline[]): boolean =>
+  a.length === b.length &&
+  a.every((run, index) => run.text === b[index].text && (run.marks ?? []).join() === (b[index].marks ?? []).join());
+
 const sameBlocks = (a: readonly Block[], b: readonly Block[]): boolean =>
   a.length === b.length &&
   a.every(
     (block, index) =>
-      block.type === b[index].type && block.text === b[index].text && (block.level ?? 0) === (b[index].level ?? 0),
+      block.type === b[index].type &&
+      (block.level ?? 0) === (b[index].level ?? 0) &&
+      sameContent(block.content, b[index].content),
   );
 
 export const RichTextEditor = ({ text }: { text: Obj.Unknown }) => {
@@ -93,7 +140,7 @@ export const RichTextEditor = ({ text }: { text: Obj.Unknown }) => {
     }
 
     const editor = new EditorView(parentRef.current, {
-      state: EditorState.create({ doc: toDoc(blocks), plugins: [keymap(baseKeymap)] }),
+      state: EditorState.create({ doc: toDoc(blocks), plugins }),
       dispatchTransaction: (transaction) => {
         const next = editor.state.apply(transaction);
         editor.updateState(next);
@@ -124,7 +171,7 @@ export const RichTextEditor = ({ text }: { text: Obj.Unknown }) => {
     if (sameBlocks(fromDoc(editor.state.doc), blocks)) {
       return;
     }
-    editor.updateState(EditorState.create({ doc: toDoc(blocks), plugins: [keymap(baseKeymap)] }));
+    editor.updateState(EditorState.create({ doc: toDoc(blocks), plugins }));
   }, [blocks]);
 
   return <div ref={parentRef} className='min-h-0 overflow-auto' data-testid='rich-text-editor' />;
@@ -139,7 +186,7 @@ export const BlockList = ({ text }: { text: Obj.Unknown }) => {
       {(view?.blocks ?? [])
         .map(
           (block) =>
-            `${block.type}${block.level ? block.level : ''} [${block.range[0]},${block.range[1]}) ${block.text}`,
+            `${block.type}${block.level ? block.level : ''} [${block.range[0]},${block.range[1]}) ${blockText(block)}`,
         )
         .join('\n')}
     </pre>

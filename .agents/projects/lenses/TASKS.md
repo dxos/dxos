@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: PHASES 1-4 DONE for BOTH lenses. `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 8 passing stories (4 interactive + 4 `*Test` play stories) across two demos: Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets, with 9 unit tests. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
+_Resume: PHASES 1-4 DONE for BOTH lenses. `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 6 passing stories across two demos (`Default` renders only; `DefaultTest` and `Collaboration` carry assertions): Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets **and inline marks**, with 11 unit tests; the ProseMirror editor renders real `<strong>`/`<em>`/`<code>` and toggles them with Mod-b/i/e. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](../../../packages/core/echo/echo-panproto/API.md).
 This file is the ledger only.
@@ -131,12 +131,19 @@ dependency — the same reason the GTD lens lives there.
 - [x] **`put`** — diff the block trees and splice each changed block over its own range; walk backwards
       so every splice is expressed in the coordinates the blocks were parsed with. Never rewrites
       `content`.
-- [x] **Basic ProseMirror editor** over the block tree (`RichTextEditor.tsx`) — minimal schema
-      (paragraph / heading / bullet), reconciles incoming changes only when unfocused so a remote edit
-      never fights the local caret. New catalog entries: `prosemirror-{model,state,view,keymap,commands}`.
-- [x] **The core markdown editor** on the same object (`MarkdownEditor.tsx`) — `useTextEditor` +
-      `createDataExtensions` over `Doc.createAccessor(text, ['content'])`, i.e. the ordinary
-      automerge-backed editing surface, unaware any lens exists.
+- [x] **Inline marks in the block model** — blocks carry `content: Inline[]` (runs with
+      `em`/`strong`/`code`), parsed from the mark nodes lezer already identifies, with the delimiters
+      dropped: the `**` belongs to the stored string, not to the view. Round-trips to the same
+      delimiters.
+- [x] **Basic ProseMirror editor** over the block tree (`RichTextEditor.tsx`) — schema with the three
+      block kinds **and the three marks**, so it renders real rich text (`<strong>`/`<em>`/`<code>`) and
+      toggles marks with Mod-b/i/e. Reconciles incoming changes only when unfocused, so a remote edit
+      never fights the local caret. New catalog entries:
+      `prosemirror-{model,state,view,keymap,commands}`.
+- [x] **The actual markdown editor** on the same object (`MarkdownEditor.tsx`) — the same extension set
+      Composer's `MarkdownEditorContent` uses (`createBasicExtensions` + `createThemeExtensions` with
+      `syntaxHighlighting` + **`createMarkdownExtensions`**) over
+      `Doc.createAccessor(text, ['content'])`, unaware any lens exists.
 - [x] **Unit tests (9)** — ranges quote their source, one block edit produces exactly one splice, two
       independent edits splice independently, append/remove touch only their own span, and an unedited
       tree round-trips **byte-identically**.
@@ -191,14 +198,14 @@ keeps them honest.
       canonical form on the other peer, the overlay replicating, a canonical rename reaching the lensed
       title, and — the point — that rename **not** reverting the earlier lensed edit.
 - [x] Both stories pass in the browser runner; package build and lint clean.
-- [x] **Story: `RichTextLens/SideBySide`** — markdown editor | ProseMirror editor | block list with
-      ranges, one peer. Asserts the lens strips markdown syntax from the view, and that a block edit
-      leaves every other line verbatim.
+- [x] **Story: `RichTextLens/Default`** — markdown editor | ProseMirror editor | block list with ranges,
+      one peer. Asserts the view carries no `#`/`**` but does render `<strong>`/`<em>`/`<code>`, and that
+      a block edit leaves every other line verbatim.
 - [x] **Story: `RichTextLens/Collaboration`** — markdown editor on peer 0, ProseMirror on peer 1. A
       block edit on one peer reaches the other's markdown editor and the rest of the document survives.
-- [x] **Interactive stories separated from the assertion stories** — `SideBySide`/`Collaboration` render
-      only (a human pokes at them); `*Test` carries the play function (CI enforces it). Titles are
-      `stories/stories-lens/*`, matching the sibling packages.
+- [x] **Story shape** — `Default` is the side-by-side story and renders only, for a human to poke at;
+      `DefaultTest` carries its assertions; `Collaboration` carries its own inline (no separate twin).
+      Titles are `stories/stories-lens/*`, matching the sibling packages.
 
 ### Notes for whoever runs these
 

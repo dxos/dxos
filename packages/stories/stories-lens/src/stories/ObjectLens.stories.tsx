@@ -101,24 +101,15 @@ const twoPeers = withMultiClientProvider({
  * pane: every lensed change is an ordinary property write, and the target-only fields land in the
  * object's annotations.
  */
-export const SideBySide: Story = {
+export const Default: Story = {
   render: SideBySideStory,
   decorators: [singlePeer],
 };
 
 /**
- * Two peers, one object: the canonical interface on one, the lensed interface on the other,
- * replicating live over a real invitation.
+ * The assertions behind {@link Default}.
  */
-export const Collaboration: Story = {
-  render: CollaborationStory,
-  decorators: [twoPeers],
-};
-
-/**
- * The assertions behind {@link SideBySide}.
- */
-export const SideBySideTest: Story = {
+export const DefaultTest: Story = {
   render: SideBySideStory,
   decorators: [singlePeer],
   play: async ({ canvasElement }) => {
@@ -160,10 +151,11 @@ export const SideBySideTest: Story = {
 };
 
 /**
- * The assertions behind {@link Collaboration} — including the one that fails if a lens write is not
- * minimal.
+ * Two peers, one object: the canonical interface on one, the lensed interface on the other, replicating
+ * live over a real invitation. Carries its own assertions — including the one that fails if a lens write
+ * is not minimal.
  */
-export const CollaborationTest: Story = {
+export const Collaboration: Story = {
   render: CollaborationStory,
   decorators: [twoPeers],
   play: async ({ canvasElement }) => {

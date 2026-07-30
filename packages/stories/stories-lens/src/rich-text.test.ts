@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Lens } from '@dxos/echo-panproto';
 import { Text } from '@dxos/schema';
 
-import { DEMO_MARKDOWN, RichTextLens, diffBlocks, parseBlocks } from './rich-text';
+import { DEMO_MARKDOWN, RichTextLens, blockText, diffBlocks, parseBlocks, plain } from './rich-text';
 
 //
 // The lens's own logic, without a browser. The property that matters is that editing one block
@@ -39,9 +39,9 @@ describe('parseBlocks', () => {
       'bullet',
       'bullet',
     ]);
-    expect(blocks[0].text).to.eq('One object, two editors');
-    expect(blocks[2].text).to.eq('Why it merges');
-    expect(blocks[3].text).to.eq('Each block remembers its source range');
+    expect(blockText(blocks[0])).to.eq('One object, two editors');
+    expect(blockText(blocks[2])).to.eq('Why it merges');
+    expect(blockText(blocks[3])).to.eq('Each block remembers its source range');
 
     // Every range must quote the source it came from — that is the whole basis of the splice.
     for (const block of blocks) {
@@ -53,16 +53,44 @@ describe('parseBlocks', () => {
 
   test('markdown syntax belongs to the source, not to the view', ({ expect }) => {
     for (const block of parseBlocks(DEMO_MARKDOWN)) {
-      expect(block.text.startsWith('#')).to.be.false;
-      expect(block.text.startsWith('- ')).to.be.false;
+      const text = blockText(block);
+      expect(text.startsWith('#')).to.be.false;
+      expect(text.startsWith('- ')).to.be.false;
+      // Mark delimiters are syntax too — the view carries the mark, not the asterisks.
+      expect(text).not.to.contain('**');
+      expect(text).not.to.contain('`');
     }
+  });
+
+  test('inline marks become runs, and the delimiters do not', ({ expect }) => {
+    const [, paragraph, , bullet] = parseBlocks(DEMO_MARKDOWN);
+
+    // `**what is stored**` and `*a view of it*` are marked runs inside one paragraph.
+    expect(paragraph.content.find((run) => run.text === 'what is stored')?.marks).to.deep.eq(['strong']);
+    expect(paragraph.content.find((run) => run.text === 'a view of it')?.marks).to.deep.eq(['em']);
+    // Unmarked text in the same block stays unmarked.
+    expect(paragraph.content[0].marks).to.be.undefined;
+    expect(blockText(paragraph)).to.eq(
+      'The markdown on the left is what is stored. The blocks on the right are a view of it.',
+    );
+
+    expect(bullet.content.find((run) => run.text === 'source range')?.marks).to.deep.eq(['code']);
+  });
+
+  test('marks round-trip back to their delimiters', ({ expect }) => {
+    const text = Obj.make(Text.Text, { content: DEMO_MARKDOWN });
+    const view = Lens.get(text, RichTextLens);
+    Lens.put(text, RichTextLens, { blocks: view.blocks });
+    expect(text.content).to.eq(DEMO_MARKDOWN);
   });
 });
 
 describe('diffBlocks', () => {
   test('an edit to one block splices only that block', ({ expect }) => {
     const blocks = parseBlocks(DEMO_MARKDOWN);
-    const next = blocks.map((block, index) => (index === 2 ? { ...block, text: 'Why it merges now' } : block));
+    const next = blocks.map((block, index) =>
+      index === 2 ? { ...block, content: plain('Why it merges now') } : block,
+    );
 
     const writes = diffBlocks(blocks, next);
     expect(writes).to.have.length(1);
@@ -77,7 +105,7 @@ describe('diffBlocks', () => {
     const updated = applyToString(DEMO_MARKDOWN, writes);
     expect(updated).to.contain('## Why it merges now');
     expect(updated).to.contain('# One object, two editors');
-    expect(updated).to.contain('- Each block remembers its source range');
+    expect(updated).to.contain('- Each block remembers its `source range`');
   });
 
   test('an unchanged tree produces no writes', ({ expect }) => {
@@ -88,7 +116,11 @@ describe('diffBlocks', () => {
   test('two independent block edits splice independently', ({ expect }) => {
     const blocks = parseBlocks(DEMO_MARKDOWN);
     const next = blocks.map((block, index) =>
-      index === 0 ? { ...block, text: 'Retitled' } : index === 4 ? { ...block, text: 'And a shorter one' } : block,
+      index === 0
+        ? { ...block, content: plain('Retitled') }
+        : index === 4
+          ? { ...block, content: plain('And a shorter one') }
+          : block,
     );
 
     const writes = diffBlocks(blocks, next);
@@ -98,14 +130,14 @@ describe('diffBlocks', () => {
     expect(updated).to.contain('- And a shorter one');
     // The blocks between them survived untouched.
     expect(updated).to.contain('## Why it merges');
-    expect(updated).to.contain('- Each block remembers its source range');
+    expect(updated).to.contain('- Each block remembers its `source range`');
   });
 
   test('an appended block inserts without touching the rest', ({ expect }) => {
     const blocks = parseBlocks(DEMO_MARKDOWN);
     const next = [
       ...blocks,
-      { type: 'paragraph' as const, text: 'A new closing note.', range: [0, 0] as [number, number] },
+      { type: 'paragraph' as const, content: plain('A new closing note.'), range: [0, 0] as [number, number] },
     ];
 
     const updated = applyToString(DEMO_MARKDOWN, diffBlocks(blocks, next));
@@ -116,7 +148,7 @@ describe('diffBlocks', () => {
   test('a removed block deletes its own span', ({ expect }) => {
     const blocks = parseBlocks(DEMO_MARKDOWN);
     const updated = applyToString(DEMO_MARKDOWN, diffBlocks(blocks, blocks.slice(0, -1)));
-    expect(updated).to.contain('- Each block remembers its source range');
+    expect(updated).to.contain('- Each block remembers its `source range`');
     expect(updated).not.to.contain('- So an edit splices that range alone');
   });
 });
@@ -128,14 +160,14 @@ describe('the lens over a Text object', () => {
     const view = Lens.get(text, RichTextLens);
     expect(view.blocks).to.have.length(5);
 
-    const edited = view.blocks.map((block, index) => (index === 0 ? { ...block, text: 'Renamed' } : block));
+    const edited = view.blocks.map((block, index) => (index === 0 ? { ...block, content: plain('Renamed') } : block));
     Lens.put(text, RichTextLens, { blocks: edited });
 
     expect(text.content).to.contain('# Renamed');
     // Re-reading through the lens reflects the new source, with ranges recomputed.
     const reread = Lens.get(text, RichTextLens);
-    expect(reread.blocks[0].text).to.eq('Renamed');
-    expect(reread.blocks[2].text).to.eq('Why it merges');
+    expect(blockText(reread.blocks[0])).to.eq('Renamed');
+    expect(blockText(reread.blocks[2])).to.eq('Why it merges');
   });
 
   test('round-trips an unedited document byte-identically', ({ expect }) => {
