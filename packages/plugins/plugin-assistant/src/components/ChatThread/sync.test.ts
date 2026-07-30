@@ -56,15 +56,13 @@ describe('reducers', () => {
       ];
 
       syncer.update(messages);
-      expect(normalize(doc.content)).toEqual('\n\n\n<prompt>Hello</prompt>\n<branch />\n\nHi there!\n');
+      expect(normalize(doc.content)).toEqual('\n<prompt>Hello</prompt>\n<branch />\n\nHi there!\n');
 
       Obj.update(messages[1], (obj) => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.update(messages);
-      expect(normalize(doc.content)).toEqual(
-        '\n\n\n<prompt>Hello</prompt>\n<branch />\n\nHi there!\nHow can I help?\n',
-      );
+      expect(normalize(doc.content)).toEqual('\n<prompt>Hello</prompt>\n<branch />\n\nHi there!\nHow can I help?\n');
     }),
   );
 
@@ -80,7 +78,7 @@ describe('reducers', () => {
       ];
 
       syncer.update(messages);
-      expect(normalize(doc.content)).toEqual('\n\n\n<prompt>Hello</prompt>\n<branch />\n\nHi there!');
+      expect(normalize(doc.content)).toEqual('\n<prompt>Hello</prompt>\n<branch />\n\nHi there!');
 
       Obj.update(messages[1], (obj) => {
         const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
@@ -94,7 +92,7 @@ describe('reducers', () => {
       });
       syncer.update(messages);
       expect(normalize(doc.content)).toEqual(
-        '\n\n\n<prompt>Hello</prompt>\n<branch />\n\nHi there! How are you?\nHow can I help?\n',
+        '\n<prompt>Hello</prompt>\n<branch />\n\nHi there! How are you?\nHow can I help?\n',
       );
     }),
   );
@@ -335,7 +333,10 @@ describe('MessageSyncer tool widget rehydration', () => {
 });
 
 /**
- * Strips the branch toolbar's attributes: `messageId` is a fresh ULID and `created` a wall-clock
- * timestamp, so neither is stable across runs.
+ * Canonicalizes the rendered document for comparison:
+ * - the branch toolbar's attributes, since `messageId` is a fresh ULID and `created` a wall-clock
+ *   timestamp, so neither is stable across runs;
+ * - the run of leading newlines, which is presentational padding above the first block and is tuned
+ *   independently — these tests are about the block sequence and the incremental append path.
  */
-const normalize = (content: string) => content.replace(/<branch\b[^>]*\/>/g, '<branch />');
+const normalize = (content: string) => content.replace(/<branch\b[^>]*\/>/g, '<branch />').replace(/^\n+/, '\n');

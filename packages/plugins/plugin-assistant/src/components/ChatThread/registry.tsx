@@ -90,8 +90,9 @@ export const componentRegistry: XmlWidgetRegistry = {
       return options?.length ? new SelectWidget(options) : null;
     },
   },
+  // Inline so a run of suggestions flows onto one wrapped line instead of one block per line.
   'suggestion': {
-    block: true,
+    block: false,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new SuggestionWidget(text) : null;
@@ -177,6 +178,13 @@ export function createBlockRenderer(viewType: Assistant.ChatView | undefined): B
 
     let str = blockToMarkdownImpl(context, message, block);
     if (str && !block.pending) {
+      // Suggestions are inline widgets meant to flow: keeping them on one line lets a run of them wrap
+      // as chips instead of stacking one per line. A trailing space separates adjacent tags so the
+      // inline parser sees them as distinct.
+      if (block._tag === 'suggestion') {
+        return (str += ' ');
+      }
+
       // Use a blank line as the block separator so each rendered block parses as its own
       // markdown block. A single newline lets CommonMark absorb a following `<prompt>` (an
       // HTML type-7 tag, which can't interrupt an open paragraph) into the previous
@@ -220,7 +228,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
             <branch messageId="${escapeXmlAttribute(message.id)}" created="${escapeXmlAttribute(message.created)}" />
           `;
 
-          return '\n\n\n' + prompt + '\n';
+          return '\n' + prompt + '\n';
         }
       } else {
         const text = block.text.trim();
@@ -302,8 +310,6 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
     }
   }
 };
-
-const renderPrompt = (text: string) => `<prompt>${text}</prompt>`;
 
 /**
  * Escape text embedded in generated XML so the mixed XML parser does not treat `&`, `<`, `>` as markup.
