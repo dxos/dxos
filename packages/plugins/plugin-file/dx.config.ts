@@ -34,5 +34,6 @@ export default Config2.make({
     icon: { key: 'ph--file--regular', hue: 'indigo' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-file',
     spec: 'PLUGIN.mdl',
+    tags: ['alpha'],
   },
 });

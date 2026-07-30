@@ -35,5 +35,6 @@ export default Config2.make({
     icon: { key: 'ph--graph--regular', hue: 'green' },
     spec: 'PLUGIN.mdl',
     screenshots: [{ dark: 'https://dxos.network/plugin-details-explorer-dark.png' }],
+    tags: ['alpha'],
   },
 });
