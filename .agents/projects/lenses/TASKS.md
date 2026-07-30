@@ -395,6 +395,18 @@ the mechanism; these are its falsifiable claims in kill order.
       object's id, find-or-create, and write there — convergently, from two peers at once. Also
       settles what happens when the split's transform is partial (an unparseable value should leave
       the source in place and report, not create a half-populated object).
+- [ ] **Claim 10 · fan-in collides; what resolves it?** Many sources converging on one target
+      property contend by construction, where fan-out never does — two relations both supplying
+      `assigneeName`. Confirm there is no defensible default and that the migration must declare the
+      resolution.
+- [ ] **Claim 11 · can a shared child be absorbed at all?** One `Address` referenced by three
+      `Person`s fans in to three copies that then diverge and never reconverge. Fan-in needs referrer
+      cardinality _before_ it runs — the same back-reference scan merge needs, which is the second
+      independent reason to want that index. Decide whether a shared child blocks or duplicates.
+- [ ] **Claim 12 · late entity _creation_, not just late writes.** An offline peer on the old schema
+      adds an `Address` to a `Person` after the fan-in ran. Fold-forward must absorb an entity that
+      did not exist at migration time. **Fan-out never surfaces this, and it is the most likely thing
+      to break the bar — look at it before the cheaper claims give false confidence.**
 - [ ] **Write up what survives** in DESIGN.md §10.3 — including, if it comes to it, the honest
       finding that the bar is unreachable and why.
 
@@ -434,12 +446,16 @@ The full thing. Only starts once M0 has answered its claims; its shape depends o
       match (a tuple of objects) and _returns_ a write set addressed to them. Applied per object and
       non-atomically today; handed to a cross-object transaction when Automerge ships one, with no
       call site moving.
-- [ ] **Fan-out, merge and relations** (DESIGN.md §10.5) — splitting one object into several,
-      extracting a field into an object plus a relation, and merging several into one. This class
-      creates and destroys entities, so `Write` grows a create/delete verb alongside the object
-      address. **Creation stays out of `Lens.get`** — the migration creates and rewires, the lens then
-      reads the resulting graph by composition (§11.2); putting creation in `get` would cost the
-      purity the law check and the render path depend on.
+- [ ] **Fan-out, fan-in, merge and relations** (DESIGN.md §10.5) — the classes that create or destroy
+      entities: 1 → N (split, extract-to-relation), N → 1 across types (absorb), N → 1 same type
+      (dedup). `Write` grows a create/delete verb alongside the object address. **Creation stays out
+      of `Lens.get`** — the migration creates and rewires, the lens then reads the resulting graph by
+      composition (§11.2); putting creation in `get` would cost the purity the law check and the
+      render path depend on.
+- [ ] **Fan-in derived from fan-out, not authored twice** — a fan-out lens is bidirectional, so its
+      `put` _is_ the fan-in and rollback is the same operation. It inherits `checkLaws` for free.
+      Needs: a declared collision resolution (many sources, one target property), referrer
+      cardinality before absorbing a shared child, and absorb-before-delete.
 - [ ] **Derived ids required** — a new object's id is a hash of the source id plus a role, so two
       peers minting "the `Person` for `Task` X" derive the same id and merge into one. This is also
       what makes a split idempotent. Reject non-derived ids outright, and expose the id parameter

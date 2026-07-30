@@ -573,6 +573,10 @@ knows only the old type and writes it directly. Fold-forward is for that case.
 5. **Where does a genuine conflict surface?** A folded-forward value and a directly-written value
    both target `name`. The result must be an ordinary CRDT conflict a user can see and resolve — not
    a silent overwrite in either direction.
+6. **Can a late _entity_ be folded forward, not just a late property?** An offline peer on the old
+   schema creates a child object after a fan-in absorbed the last one (§10.5). Nothing else in this
+   list requires the mechanism to notice a new entity rather than a changed property, and it is the
+   most likely reason the bar in §10.1 turns out to be unreachable.
 
 ### 10.4 A migration is a lens
 
@@ -595,11 +599,19 @@ form is what you reach for first, and only the lens form gets fold-forward.
 
 ### 10.5 Cross-object: fan-out, merge, and effects as data
 
-Everything above assumes one object in, one object out. A whole class of migration does not: splitting
-one object into several, extracting a field into its own object plus a **relation**, or merging
-several objects into one. This class **creates and destroys entities**, which is different in kind
-from rewriting properties, and it is the part of the research most likely to change the shape of the
-API.
+Everything above assumes one object in, one object out. Several classes do not, and they are worth
+naming separately because their failure modes differ:
+
+|             | Shape               | Example                                                                  |
+| ----------- | ------------------- | ------------------------------------------------------------------------ |
+| **Rewrite** | 1 → 1               | rename a property, split `status` into `done`/`stage` (M1)               |
+| **Fan-out** | 1 → N               | extract `address` into its own object, or into an object plus a relation |
+| **Fan-in**  | N → 1, across types | absorb `Address` back into `Person.address`                              |
+| **Merge**   | N → 1, same type    | two `Person` records that are the same person                            |
+| **Compose** | graph → graph       | every node lensed, no entity created or destroyed (§11.2)                |
+
+Everything but rewrite and compose **creates or destroys entities**, which is different in kind from
+rewriting properties, and it is the part of the research most likely to change the shape of the API.
 
 #### The rule that shapes it: creation cannot happen in `get`
 
@@ -668,9 +680,56 @@ and per `internal/Ref/strong-deps.ts` both endpoints are strong dependencies.
   errors or blocks the subtree, then write ordering becomes a hard requirement rather than a
   nicety, and the runner has to guarantee it.
 
-#### Merge (N → 1)
+#### Fan-in (N → 1 across types): absorbing a child back into its parent
 
-The inverse, and asymmetric in a way splitting is not.
+The structural inverse of fan-out: `Person` + its `Address` object collapse back into `Person` with
+an embedded `address`; a `Task`, its `assignedTo` relation and the `Person` collapse into
+`Task { assigneeName }`. Denormalization. **Distinct from merge above** — merge is same-type dedup
+where the question is "which of these two is real"; fan-in is cross-type absorption where the
+absorbed entity stops existing as an entity and becomes fields.
+
+**It should be derived, not authored.** A fan-out lens is bidirectional by construction (§10.4): its
+`get` spreads one object into many, so its `put` _is_ the fan-in. Rolling back a split is the same
+operation. Authoring the pair once and running it in either direction is the same argument
+reversibility already makes — and it means fan-in inherits `checkLaws`.
+
+Where fan-in is genuinely harder than fan-out, and not symmetric with it:
+
+1. **Fan-out distributes without collision; fan-in collides by construction.** One source spreading
+   into many targets never contends. Many sources converging on one target property do: two relations
+   both supplying `assigneeName`, two children both absorbing into the same field. The migration must
+   _declare_ the resolution — by relation kind, by an ordering, or by rejecting — because there is no
+   defensible default.
+2. **A shared child cannot be absorbed silently.** If one `Address` is referenced by three `Person`s,
+   fan-in produces three copies that then diverge independently and never reconverge. So fan-in needs
+   the **referrer cardinality** before it runs: a shared child either blocks the migration or is
+   duplicated as an explicit, declared choice. This needs the same back-reference scan merge needs,
+   which is the second independent reason to want that index.
+3. **Cardinality mismatch is lossy by construction.** N children absorbing into a single scalar
+   property loses N−1 of them unless the target is a collection. `coverage` should be able to say so
+   at define time (§10.4), which is exactly the kind of loss that should be a reviewable diff rather
+   than a discovery.
+4. **Deleting the child is the dangerous half.** Without a cross-object transaction there is a window
+   where the child is gone and the parent has not absorbed it — data temporarily invisible, which is
+   worse than fan-out's dangling relation (that merely fails to surface). **Absorb first, delete
+   later**, as a separate step. That is the third time the "do not delete during migration" rule has
+   arrived from an independent direction.
+
+**Fan-in is the hardest case for the losslessness bar (§10.1)**, and it surfaces a requirement
+nothing else does:
+
+- A late write to an _absorbed child_ must fold forward into the parent's property — but the child
+  may already be tombstoned, and two children with late writes collide in the parent exactly as in
+  point 1.
+- Worse, an offline peer on the old schema may **create a new child object** after the fan-in ran —
+  adding an `Address` to a `Person` that no longer has one. So **fold-forward has to handle late
+  entity _creation_, not only late property writes.** Fan-out never surfaces this. It is the single
+  most likely thing to break the bar, and M0 should look at it before the cheaper claims give false
+  confidence.
+
+#### Merge (N → 1, same type): deduplication
+
+Different from fan-in: both sides are the same type and one survives as itself.
 
 - **Which id survives?** It must be deterministic, and it should be _declared_ by the migration (a
   primary side), not inferred by a rule like "lowest id" that is arbitrary and surprising when you
@@ -680,7 +739,7 @@ The inverse, and asymmetric in a way splitting is not.
   open question, and if we do not, merge may have to be scoped to cases where the caller supplies the
   referrers.
 
-#### Fan-out and the losslessness bar
+#### Fan-out, fan-in and the losslessness bar
 
 This is where §10.1 bites hardest. `Person.address: string` splits into an `Address` object; an
 offline peer writes `person.address = '10 Main St'` a week later. Fold-forward (§10.3) must derive the
@@ -695,6 +754,11 @@ Two consequences:
   `{ street, city, zip }` may fail. A fan-out migration therefore needs an explicit answer for
   unparseable input — most likely: leave the source property in place, do not create the object, and
   report it, rather than creating a half-populated object.
+
+Fan-in raises the bar further, because a late change there can be an entity that did not exist when
+the migration ran (see above). **Fold-forward must therefore handle late entity creation, not only
+late property writes** — which is a requirement on the mechanism in §10.3, not a detail of this
+section, and the most likely reason the bar turns out to be unreachable.
 
 ### 10.6 Convergence between peers
 
