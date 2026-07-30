@@ -74,6 +74,10 @@ than by a spike.
 - [ ] **Merge on entity load** (DESIGN.md §4.7) — for entities reached by id/ref.
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
+- [ ] **Decide the collaborative-text policy before adoption widens** (§4.6 risk).
+      Min-id-wins discards the loser's entire text, and unrelated automerge documents
+      cannot have changes applied across them, so there is no cheap fix. Academic for
+      init-state objects; serious the moment documents are in scope.
 - [ ] Property-based determinism over randomized op schedules (§5.3).
 - [ ] Relation endpoints rewritten when an endpoint is merged away (needs
       `ObjectCore.setSource/setTarget` plumbed).
@@ -84,6 +88,9 @@ than by a spike.
       for the load path only; the query pipeline needs no index. Point lookup.
 - [ ] Meta-key columns + planner pushdown for `Filter.key` / `Filter.foreignKeys`.
 - [ ] Indexer key-collision events trigger the merge automatically.
+- [ ] Optional: a background/worker merge pass (§4.9). Composes with the lazy path —
+      the merge is idempotent, so a worker racing a querying client converges. Buys a
+      smaller divergence window, not throughput.
 
 ## Phase 3b: Relations and types as merge subjects
 

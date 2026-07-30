@@ -425,17 +425,36 @@ Risk to weigh in review: this **writes during query evaluation**. The write is b
 and idempotent (a second pass finds nothing), but it invalidates queries, so the
 reactive path must not loop.
 
+### 4.9 Proactive merging composes with the lazy path
+
+Nothing here forecloses a background process (worker-side, or an indexer hook per §6
+Phase 3) that merges duplicates before anyone asks for them. Because the merge is a
+pure function of the candidate set and idempotent, it does not matter _who_ runs it
+or _when_: a worker and a querying client racing on the same duplicates converge, and
+whichever runs second finds nothing to do.
+
+The reason to want one is not throughput but **divergence exposure**. Duplicates that
+stay unmerged accumulate independent edits, and the merge function is lossy at field
+granularity (§4.1 step 3) — for a field both copies define, the smaller-id value wins
+and the other is dropped. The straggler fold (§4.2) cannot help, because it diffs from
+`mergedAtHeads`, which only exists once a merge has happened; divergence _predating_
+the merge has no watermark to recover from.
+
+So the sequencing is lazy-first for correctness, proactive-later to shrink the window
+in which divergence can accumulate — not either/or.
+
 ### 4.6 Principal risks
 
-| Risk                                                                         | Severity     | Mitigation                                                                                                                                                                      |
-| ---------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Redirect-following in the resolver adds a hop to every unresolved load       | Low          | Only consulted on miss/tombstone; measured in spike.                                                                                                                            |
-| Ref-rewrite misses (markdown, feeds, side maps)                              | Medium       | Redirects make misses non-fatal; doctor diagnostic extended to report them; opportunistic rewrite passes.                                                                       |
-| Concurrent merge + user edit on the loser loses the edit (field granularity) | Medium       | Heads-diff straggler fold (§4.2) preserves late edits per-property; per-field writes (§4.1 step 3) protect untouched winner fields; scope early adoption to init-state objects. |
-| Proxy identity: live proxies holding the loser                               | Medium       | Loser stays resolvable (tombstone+redirect); optionally rebind cores (`_rebindObjects` precedent) in a later phase.                                                             |
-| Merge function semantics disputed per type (arrays: union vs winner)         | Medium       | Ship fixed field-wise semantics first; revisit pluggability (open question 3) only with evidence.                                                                               |
-| Mixed client versions: old clients can't follow `mergedInto` redirects       | Medium       | Ref rewriting is the compat path; flag stays off until a min-client-version gate; mixed-version tests (§5.7).                                                                   |
-| Feed-backed objects                                                          | Out of scope | Feeds already collapse by id at the index (`echo-feed-codec.ts:20-24`); feed-object dedup rides on the same identity-key mechanism if needed later.                             |
+| Risk                                                                                                                                                                                            | Severity                       | Mitigation                                                                                                                                                                                                                                                                                                          |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Redirect-following in the resolver adds a hop to every unresolved load                                                                                                                          | Low                            | Only consulted on miss/tombstone; measured in spike.                                                                                                                                                                                                                                                                |
+| Ref-rewrite misses (markdown, feeds, side maps)                                                                                                                                                 | Medium                         | Redirects make misses non-fatal; doctor diagnostic extended to report them; opportunistic rewrite passes.                                                                                                                                                                                                           |
+| Concurrent merge + user edit on the loser loses the edit (field granularity)                                                                                                                    | Medium                         | Heads-diff straggler fold (§4.2) preserves late edits per-property; per-field writes (§4.1 step 3) protect untouched winner fields; scope early adoption to init-state objects.                                                                                                                                     |
+| Proxy identity: live proxies holding the loser                                                                                                                                                  | Medium                         | Loser stays resolvable (tombstone+redirect); optionally rebind cores (`_rebindObjects` precedent) in a later phase.                                                                                                                                                                                                 |
+| Merge function semantics disputed per type (arrays: union vs winner)                                                                                                                            | Medium                         | Ship fixed field-wise semantics first; revisit pluggability (open question 3) only with evidence.                                                                                                                                                                                                                   |
+| **Collaborative text fields are discarded wholesale** — min-id-wins drops the loser's entire text, not just a conflicting edit, and unrelated documents cannot have changes applied across them | **High, once past init-state** | Academic while adoption is limited to seeded init-state objects (§6 Phase 4). Before generalizing to documents, choose: keep the loser's text reachable rather than dropping it; refuse to merge entities whose text diverged and surface them via the doctor diagnostic; or an explicit text-merge policy (§7 Q3). |
+| Mixed client versions: old clients can't follow `mergedInto` redirects                                                                                                                          | Medium                         | Ref rewriting is the compat path; flag stays off until a min-client-version gate; mixed-version tests (§5.7).                                                                                                                                                                                                       |
+| Feed-backed objects                                                                                                                                                                             | Out of scope                   | Feeds already collapse by id at the index (`echo-feed-codec.ts:20-24`); feed-object dedup rides on the same identity-key mechanism if needed later.                                                                                                                                                                 |
 
 ---
 
