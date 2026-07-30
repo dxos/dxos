@@ -11,7 +11,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Trigger } from '@dxos/compute';
+import { Credential, Trigger } from '@dxos/compute';
 import { withAuthorization } from '@dxos/compute-runtime';
 import { Obj } from '@dxos/echo';
 import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
@@ -42,13 +42,13 @@ const GoogleUserInfo = Schema.Struct({
  * Google `/oauth2/v3/userinfo` email, or `undefined` if missing token, `account` already set, or no email.
  * Callers persist via e.g. `Obj.update`. Tracer disabled on the request (Effect + CORS: https://github.com/Effect-TS/effect/issues/4568).
  */
-const getAccountEmail = (accessToken: { token: string; account?: string }) =>
+const getAccountEmail = (token: string, account: string | undefined) =>
   Effect.gen(function* () {
-    if (!accessToken.token || accessToken.account) {
+    if (!token || account) {
       return undefined;
     }
 
-    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(accessToken.token, 'Bearer')));
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
 
     const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
@@ -76,7 +76,8 @@ const isGoogleAuthRejection = (error: unknown): boolean =>
  */
 const testGoogleConnection: TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
-    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(accessToken.token, 'Bearer')));
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(
       HttpClient.withTracerDisabledWhen(() => true),
       HttpClient.filterStatusOk,
@@ -109,7 +110,10 @@ const testGoogleConnection: TestConnection = ({ accessToken }) =>
  */
 const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
-    const email = yield* getAccountEmail(accessToken);
+    const email = yield* getAccountEmail(
+      yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id }),
+      accessToken.account,
+    );
     if (email) {
       Obj.update(accessToken, (accessToken) => {
         accessToken.account = email;

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
+import { Credential } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
@@ -28,8 +29,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
     if (accessToken.account) {
       return;
     }
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const viewer = yield* LinearApi.fetchViewer().pipe(
-      Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token: accessToken.token })),
+      Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token })),
     );
     Obj.update(accessToken, (accessToken) => {
       accessToken.account = viewer.email ?? viewer.name;
@@ -42,8 +44,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * connection UI can offer to reauthenticate.
  */
 const testConnection: TestConnection = ({ accessToken }) =>
-  LinearApi.fetchViewer().pipe(
-    Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token: accessToken.token })),
+  Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
+    LinearApi.fetchViewer().pipe(Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token }))),
+  ).pipe(
     Effect.asVoid,
     Effect.mapError(
       () => new ConnectionTestError({ message: 'Linear rejected the credential. Reauthenticate to continue syncing.' }),

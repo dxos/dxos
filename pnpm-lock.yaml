@@ -5341,6 +5341,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../echo/echo-client
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -10395,6 +10398,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/compute-runtime
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
