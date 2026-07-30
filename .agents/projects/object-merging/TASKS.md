@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: design review of DESIGN.md §7 open questions, then Phase 0 spike. Uncommitted: none. Last: research reworked per decision (no deterministic ids; merge engine only)._
+_Resume: ratify the identity field's name + shape (DESIGN.md §4.4 / §7 Q6), then start the Phase 0 spike. Uncommitted: none. Last: design review settled 4 of the 5 §7 questions._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -14,13 +14,17 @@ the phased rollout this ledger mirrors).
       same-id-two-docs stays an error; no deterministic object ids (DESIGN.md §4.5).
 - [x] **Decision: merge direction** — deterministic ordering; winner = minimum
       `EntityId` (keys are equal among duplicates, so ids are the tiebreaker).
-- [ ] **Design review** — settle the 5 open questions in DESIGN.md §7:
-  - Identity field: `meta.key` + `meta.version` (recommended) vs designated
-    `ForeignKey` source vs new field.
-  - Version matching: exact (recommended) vs semver-range.
-  - Merge-policy pluggability vs fixed field-wise semantics.
-  - Where the merge runs: client on space open vs host job vs indexer-triggered.
-  - Scope: objects only first; relations as merge subjects deferred?
+- [x] **Design review** — 4 of the 5 questions in DESIGN.md §7 settled:
+  - Identity field: **a new dedicated `EntityMeta` field** (not `meta.key`/`version`,
+    not a `ForeignKey`); the derived-key namespacing sub-question is moot as a result.
+  - Version matching: **exact**.
+  - Where the merge runs: **every client, on space open**; Phase 0 measures cost.
+  - Scope: **all entity kinds** (object, relation, type), phased — relations are
+    merge subjects eventually, not just endpoints.
+  - Merge-policy pluggability: left open, non-blocking; fixed semantics first.
+- [ ] **Name + shape the identity field** (§4.4, §7 Q6) — `naturalKey` /
+      `singletonKey` / `mergeKey` / `canonicalKey`; struct `{ key, version }` vs a
+      single composed string. Blocks Phase 1's schema change, not Phase 0.
 
 ## Phase 0: Spike (throwaway, tests only)
 
@@ -37,6 +41,8 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0
 
 ## Phase 1: Foundations (no merge engine)
 
+- [ ] Dedicated identity field on `EntityMeta` (name/shape per §4.4) + exact-match
+      grouping helper.
 - [ ] `system.mergedInto` schema field + resolver redirect-following (inert) +
       proto-guard snapshot.
 - [ ] Internal relation-endpoint mutation (plumb `ObjectCore.setSource/setTarget`).
@@ -46,7 +52,10 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0
 ## Phase 2: Merge engine (flagged)
 
 - [ ] Duplicate detection (query post-filter), deterministic merge executor,
-      tombstone+redirect, opportunistic ref rewrite.
+      tombstone+redirect, opportunistic ref rewrite. Runs on every client at space
+      open (decision 2026-07-30); measure against the Phase 0 numbers.
+- [ ] `EntityKind.Object` as merge subject; relation endpoints rewritten when an
+      endpoint is merged away.
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
 - [ ] Multi-peer convergence + property test suite (DESIGN.md §5.2–5.4).
@@ -55,6 +64,16 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0
 
 - [ ] Meta-key columns + planner pushdown for `Filter.key` / `Filter.foreignKeys`.
 - [ ] Indexer key-collision events trigger the merge automatically.
+
+## Phase 3b: Relations and types as merge subjects
+
+Scope decision 2026-07-30: every entity kind that can be stored is in scope, phased.
+
+- [ ] `EntityKind.Relation` as a merge subject — duplicate relations sharing an
+      identity key merge; reconcile endpoints that may themselves be mid-merge.
+- [ ] `EntityKind.Type` as a merge subject (§7 Q7) — needs its own convergence
+      argument: schema identity feeds the type registry and object `system.type`
+      refs, so a type merge is not just a data merge.
 
 ## Phase 4: Adoption & generalization
 

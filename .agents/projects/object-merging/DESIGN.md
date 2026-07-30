@@ -21,6 +21,27 @@
   identity key: same-id-different-document collisions ("collision class 1") remain
   an error condition, as today. Consequences are folded into §4 and §6 below; the
   rejected alternative is recorded in §4.5.
+- **2026-07-30 (Josiah)** — Merge direction is deterministic ordering; the winner is
+  the minimum `EntityId` among the candidate set (§4.1).
+- **2026-07-30 (Josiah)** — Design review of §7. Four of the five questions settled:
+  - **Identity field**: a **new dedicated field** on `EntityMeta`, not `meta.key` +
+    `meta.version` and not a designated `ForeignKey`. Rationale: `meta.key`/`version`
+    mean "the registry entry this instance was created from", which is a provenance
+    claim, not an identity assertion — overloading it would make every
+    registry-stamped object a merge candidate. The field's name and shape are
+    recorded in §4.4 once ratified.
+  - **Version matching**: **exact**. A different version is a different entity,
+    which is what allows generational evolution of seeded state. Semver ranges are
+    rejected: range membership is not symmetric, which breaks the §4.2 convergence
+    argument.
+  - **Where the merge runs**: **every client, on space open**. Determinism makes
+    redundant execution across peers safe by construction; Phase 0 measures the
+    cost and the indexer-triggered variant (§6 Phase 3) remains the end state.
+  - **Scope**: **every entity kind that can be stored in the database** —
+    `EntityKind.Object`, `.Relation`, and `.Type` (`echo/src/internal/common/types/entity.ts:124-128`)
+    — delivered in phases, not restricted to objects. Relations are therefore merge
+    _subjects_ eventually, not merely endpoints to be rewritten; the phasing is in §6.
+- **Open**: the identity field's name and shape (§4.4).
 
 ---
 
@@ -237,22 +258,40 @@ Merged-away tombstones accumulate. An epoch-based compaction
 (`compactDocumentsEpochMigration` precedent) can eventually drop loser documents
 and inline redirect stubs into the root doc. Not needed for correctness.
 
-### 4.4 Which "meta key" is the identity?
+### 4.4 The identity field
 
-Two candidates already exist; recommendation is to support the semantics on **one**
-and map the other onto it later:
+**Decided (2026-07-30): a new dedicated field on `EntityMeta`.** The two existing
+candidates were both rejected as the identity carrier:
 
-1. **`meta.key` + `meta.version`** (FQN + semver) — matches the user-stated model
-   ("meta key and version") literally; already paired; already has a semver-aware
-   filter (`Filter.key`); already stamped on persisted schemas. **Recommended for
-   the app-state-initialization use case.** Semantics: same `(key, version)` in the
-   same space ⇒ same object. Different `version` ⇒ different object (allows
-   generational evolution of seeded state).
-2. **`meta.keys: ForeignKey[]`** — the sync-pipeline identity (multi-alias,
-   source-scoped, no version). Merging on foreign keys is the Phase-4+
-   generalization (it subsumes `syncObjects`, `getOrCreate`, plugin-ibkr's alias
-   folding), but multi-key alias identity makes winner selection and key-union
-   semantics subtler (key sets can _become_ overlapping later). Defer.
+1. **`meta.key` + `meta.version`** (FQN + semver, `meta.ts:55-65`) — the closest fit,
+   and it already has a semver-aware filter (`Filter.key`). Rejected because its
+   documented meaning is provenance ("the canonical registry entry the object
+   instance was created from"), not identity. Overloading it would silently make
+   every registry-stamped object in a space a merge candidate, and would couple the
+   merge engine to registry semantics that evolve for unrelated reasons.
+2. **`meta.keys: ForeignKey[]`** (`foreign-key.ts:8-28`) — the sync-pipeline
+   identity: multi-alias, source-scoped, **no version field**. Merging on foreign
+   keys is the Phase-4+ generalization (it subsumes `syncObjects`, `getOrCreate`,
+   plugin-ibkr's alias folding), but multi-key alias identity makes winner selection
+   and key-union semantics subtler — alias sets can _become_ overlapping later,
+   which retroactively merges entities that were previously distinct. Defer, then
+   map onto the dedicated field.
+
+The dedicated field carries its own version rather than reading `meta.version`, so
+that identity and provenance can disagree — an entity may be seeded from registry
+entry `1.2.0` while its identity generation is still `1`. Equality is exact on both
+components, per the version decision.
+
+**Name and shape: pending ratification.** Candidates, all currently unused in-tree
+(`identity`/`identityKey` are excluded — `IdentityKey` is the HALO identity public
+key across 17 files, and the collision would be actively misleading):
+
+| Candidate      | Reads as                                                                                                     | Against                                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `naturalKey`   | Standard relational term: the natural key beside the surrogate key (`EntityId`). Precise about what it _is_. | Assumes DB vocabulary; understates the merge consequence.                                   |
+| `singletonKey` | States the invariant exactly: at most one live entity per `(space, key)`.                                    | "Singleton" carries OO baggage.                                                             |
+| `mergeKey`     | Most obvious at the call site: same `mergeKey` ⇒ merged.                                                     | Names the mechanism, not the property; reads oddly on an entity that never has a duplicate. |
+| `canonicalKey` | Pairs with the winner/redirect vocabulary (`mergedInto`).                                                    | "Canonical" describes the winning entity, not the key.                                      |
 
 ### 4.5 Rejected alternative: deterministic object ids
 
@@ -411,22 +450,36 @@ Exit criteria: convergence demonstrated in tests; go/no-go with chosen shape.
 - Epoch-based compaction of merged-away tombstones; redirect stubs inlined into the
   root doc; storage reclamation.
 
-## 7. Open questions (for design review before the spike)
+## 7. Open questions
 
-1. **Identity field**: confirm `meta.key` + `meta.version` (recommended) vs a
-   designated `ForeignKey` source vs a new dedicated field. Sub-question from the
-   migrations consumer: are **derived, non-registry strings** (e.g.
-   `<migrationId>:<sourceId>:<role>`) admissible in `meta.key`, or does the key
-   need a namespacing convention to keep registry FQNs and derived keys apart?
-2. **Version matching**: exact-match identity (recommended) or semver-range
-   (e.g. merge `1.0.1` into `1.0.0` state)? Exact is simpler and deterministic;
-   ranges reintroduce ambiguity about the winner.
-3. **Merge policy pluggability**: is field-wise winner-preference enough, or do
-   types need to declare a merge annotation (e.g. arrays: union vs winner)?
-   Recommend shipping fixed semantics first. If/when pluggability is wanted, the
-   lens mapping vocabulary (typed, bidirectional, law-checked — lenses project)
-   is a candidate merge-policy surface rather than inventing a new one.
-4. **Where the merge runs**: every client on space open (deterministic ⇒ safe, but
-   redundant work) vs host-side maintenance vs indexer-triggered. Spike measures.
-5. **Scope**: objects only in Phases 1–3; relations as merge _subjects_ (not just
-   endpoints) deferred?
+Design review held 2026-07-30; see the decision log. Four of the original five are
+settled, and the derived-key sub-question dissolved with them.
+
+1. ~~**Identity field**~~ — **settled**: a new dedicated field on `EntityMeta`
+   (§4.4). The sub-question about **derived, non-registry strings** (e.g.
+   `<migrationId>:<sourceId>:<role>`) and whether they need namespacing to stay
+   clear of registry FQNs is **moot**: the dedicated field is not the registry
+   namespace, so derived keys and registry FQNs cannot collide by construction.
+   The migrations consumer stamps whatever string it likes.
+2. ~~**Version matching**~~ — **settled**: exact.
+3. **Merge policy pluggability** — **still open**, but not blocking: is field-wise
+   winner-preference enough, or do types need to declare a merge annotation (e.g.
+   arrays: union vs winner)? Ship fixed semantics first; Phase 0's second task
+   tests the semantics against real types and is where evidence for pluggability
+   would surface. If/when pluggability is wanted, the lens mapping vocabulary
+   (typed, bidirectional, law-checked — lenses project) is a candidate merge-policy
+   surface rather than inventing a new one.
+4. ~~**Where the merge runs**~~ — **settled**: every client on space open;
+   Phase 0 measures the cost.
+5. ~~**Scope**~~ — **settled**: all three entity kinds (object, relation, type),
+   phased.
+
+### Newly open, from the review
+
+6. **Identity field name and shape** (§4.4) — `naturalKey` / `singletonKey` /
+   `mergeKey` / `canonicalKey`; and struct `{ key, version }` vs a single composed
+   string. Blocks Phase 1's schema change, not the Phase 0 spike.
+7. **Merging `EntityKind.Type`** — types are entities and are now in scope, but a
+   duplicate _type_ is not just a data merge: schema identity feeds the type
+   registry and object `system.type` refs. Needs its own phase and probably its own
+   convergence argument. Sequenced after object and relation merging.
