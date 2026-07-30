@@ -107,23 +107,23 @@ describe('reducers', () => {
       ];
 
       syncer.update(messages);
-      const ranges = syncer.getRanges();
-      expect(ranges.map((range) => range.id)).toEqual([messages[0].id, messages[1].id]);
+      const spans = syncer.getSpans();
+      expect(spans.map((range) => range.id)).toEqual([messages[0].id, messages[1].id]);
       // Ranges tile the document contiguously and slice back to each message's rendered content.
-      expect(ranges[0].from).toEqual(0);
-      expect(ranges[1].from).toEqual(ranges[0].to);
-      expect(ranges[1].to).toEqual(doc.length);
-      expect(doc.content.slice(ranges[0].from, ranges[0].to)).toContain('<prompt>Hello</prompt>');
-      expect(doc.content.slice(ranges[1].from, ranges[1].to)).toContain('Hi there!');
+      expect(spans[0].from).toEqual(0);
+      expect(spans[1].from).toEqual(spans[0].to);
+      expect(spans[1].to).toEqual(doc.length);
+      expect(doc.content.slice(spans[0].from, spans[0].to)).toContain('<prompt>Hello</prompt>');
+      expect(doc.content.slice(spans[1].from, spans[1].to)).toContain('Hi there!');
 
       // Appending to the last message extends its range through the append path.
       Obj.update(messages[1], (obj) => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.update(messages);
-      const extended = syncer.getRanges();
+      const extended = syncer.getSpans();
       expect(extended).toHaveLength(2);
-      expect(extended[0].to).toEqual(ranges[0].to);
+      expect(extended[0].to).toEqual(spans[0].to);
       expect(extended[1].to).toEqual(doc.length);
       expect(doc.content.slice(extended[1].from, extended[1].to)).toContain('How can I help?');
     }),

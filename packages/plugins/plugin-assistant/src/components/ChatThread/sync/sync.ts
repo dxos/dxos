@@ -100,22 +100,12 @@ export class MessageSyncer {
   }
 
   /**
-   * Per-message document offset ranges, in document order. Valid synchronously after
+   * Per-message document offset spans, in document order. Valid synchronously after
    * {@link reset} or {@link update} (the offsets are derived from the same rendered buffer
    * that is dispatched to the document).
    */
-  getRanges(): MessageSpan[] {
+  getSpans(): MessageSpan[] {
     return Array.from(this._spans, ([id, { from, to }]) => ({ id, from, to }));
-  }
-
-  /** Record (or extend) the offset range of a message. `from` is preserved across calls. */
-  private _recordRange(id: string, from: number, to: number): void {
-    const existing = this._spans.get(id);
-    if (existing) {
-      existing.to = to;
-    } else {
-      this._spans.set(id, { from, to });
-    }
   }
 
   /**
@@ -179,7 +169,7 @@ export class MessageSyncer {
           buffer += rendered.slice(this._trailing);
         }
         // The block occupies `[offset, offset + rendered.length)`; extend the message's range.
-        this._recordRange(message.id, offset, offset + rendered.length);
+        this._saveRange(message.id, offset, offset + rendered.length);
         if (block.pending) {
           // Stay on this block; record how far we've appended so the next call can resume.
           // `Math.max`-style guard against a non-monotonic renderer output without shrinking the doc.
@@ -196,5 +186,15 @@ export class MessageSyncer {
       }
     }
     return buffer;
+  }
+
+  /** Record (or extend) the offset range of a message. `from` is preserved across calls. */
+  private _saveRange(id: string, from: number, to: number): void {
+    const existing = this._spans.get(id);
+    if (existing) {
+      existing.to = to;
+    } else {
+      this._spans.set(id, { from, to });
+    }
   }
 }

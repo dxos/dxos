@@ -67,7 +67,7 @@ hover to show the wave + popover. Follows the react-ui-components story conventi
 1. `MessageSyncer` (`plugin-assistant/.../ChatThread/sync.ts`) records the document offset
    range `[from, to)` of each message as it walks/appends (it already tracks the completed
    block cursor and trailing chars; extend to accumulate a per-message offset table keyed
-   by message id). Exposes `getRanges(): { id: string; from: number; to: number }[]`.
+   by message id). Exposes `getSpans(): { id: string; from: number; to: number }[]`.
    The ranges reflect the same monotonic-append contract the syncer already relies on.
 2. `MarkdownStreamController` (`react-ui-markdown/.../MarkdownStream.tsx`) gains:
    - `scrollTo(pos: number, opts?: { behavior?: ScrollBehavior; y?: 'start' | 'center' })`
@@ -86,7 +86,7 @@ hover to show the wave + popover. Follows the react-ui-components story conventi
   - `description` = a snippet (first few lines) of the following assistant reply,
     text content blocks only (tool calls, reasoning/thoughts, status excluded).
   - `range` = the turn's CM range (user message start → next user message start),
-    resolved from the syncer's `getRanges()` by message id.
+    resolved from the syncer's `getSpans()` by message id.
 - `visibleRange` comes from `controller.getVisibleRange()`, refreshed via
   `onVisibleRangeChange`.
 - `onSelect` → `controller.scrollTo(range.from, { y: 'start', behavior: 'smooth' })`.
@@ -100,7 +100,7 @@ hover to show the wave + popover. Follows the react-ui-components story conventi
 
 - `Minimap`: storybook (manual/visual) + a unit test for the active-intersection and
   wave-falloff pure helpers if extracted.
-- `sync.ts`: extend existing syncer tests to assert `getRanges()` offsets for a
+- `sync.ts`: extend existing syncer tests to assert `getSpans()` offsets for a
   multi-message thread (append + reset paths).
 - Build/lint/format green for all touched packages; storybook renders.
 

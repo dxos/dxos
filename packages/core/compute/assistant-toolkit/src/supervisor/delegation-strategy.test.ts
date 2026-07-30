@@ -44,8 +44,12 @@ const TestLayer = AssistantTestLayer({
       match: () => true,
       turns: [
         // Immediate reply + delegation in one turn: the user sees the reply while the work runs.
-        { parts: [text('On it — delegating.'), toolCall('delegate-task', { title: TASK_TITLE })] },
-        { parts: [text('Delegated. I will report back when it completes.')] },
+        {
+          parts: [text('On it — delegating.'), toolCall('delegate-task', { title: TASK_TITLE })],
+        },
+        {
+          parts: [text('Delegated. I will report back when it completes.')],
+        },
       ],
     },
   ]),
@@ -60,7 +64,10 @@ describe('makeDelegationStrategy', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const agent = yield* Agent.makeInitialized(
-          { name: 'Supervisor', instructions: 'You delegate units of work to sub-agents using the available tools.' },
+          {
+            name: 'Supervisor',
+            instructions: 'You delegate units of work to sub-agents using the available tools.',
+          },
           DelegationSkill.make(),
         );
         yield* Database.flush();
