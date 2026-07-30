@@ -430,7 +430,6 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
         viewType={viewType}
         extensions={extensions}
         onEvent={handleEvent}
-        onRanges={setMessageRanges}
         ref={handleControllerRef}
       />
 

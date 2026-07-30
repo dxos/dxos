@@ -222,13 +222,15 @@ The theme of §2: every deterministic layer already has a fast harness; the pain
 _composition_ is only exercisable live. The fix is to make the scripted model reach the UI, not
 to add more live tests.
 
-1. **Scripted AI in storybook (highest leverage).** `ScriptedLanguageModel.scriptedAiService`
-   is a plain `AiService` layer; `Assistant.Settings` already exposes an `aiServiceMiddleware`
-   seam ([`types/index.ts`](./src/types/index.ts)). Add a `config.scripted(turns)` option to
-   the `stories-assistant` decorators (next to `config.remote`) that injects the scripted
-   service into the plugin stack. Then each scenario gets two variants:
+1. **Scripted AI in storybook (highest leverage).** **Done** — the `stories-assistant`
+   decorators accept `scripted: Script`, which wires
+   `ScriptedLanguageModel.scriptedAiServiceMiddleware` through the plugin's `aiServiceMiddleware`
+   seam ([`types/index.ts`](./src/types/index.ts)), replacing the AI service with the offline
+   scripted model for the whole plugin stack (all agent and sub-agent processes). Each scenario
+   gets two variants:
    - `Foo` — live, `tags: ['!test']`, for model-behavior work;
-   - `FooScripted` — same story + a play script, deterministic, runs in `test-storybook` CI.
+   - `FooScripted` — same story + a play script, deterministic, runs in `test-storybook` CI
+     (first instance: `WithSubAgentsScripted`, §4.4).
      This turns the storybook from "manual demo against the network" into a regression suite for
      everything except comprehension/tool-selection (which belong to the evals tier anyway).
 2. **Headless-first iteration at the `AgentService` seam.** The processor's entry point
@@ -270,7 +272,7 @@ artifact references) appended to the conversation feed.
 | `DelegateTask` op unit test                  | det (`delegate-task.test.ts`).                                                                                                                                                             |
 | Delegation lifecycle test                    | Stub strategy, **memo-gated** (`AgentService.test.ts`).                                                                                                                                    |
 | `makeDelegationStrategy`                     | det headless end-to-end test (`supervisor/delegation-strategy.test.ts`, see 4.3).                                                                                                          |
-| End-to-end UI                                | Live-only storybook play (`WithSubAgentsTest`, `!test`); scripted variant pending (4.4).                                                                                                   |
+| End-to-end UI                                | Live (`WithSubAgentsTest`, `!test`) + scripted CI play story (`WithSubAgentsScripted`, 4.4).                                                                                               |
 
 `run-instructions.test.ts` drives the sub-agent side (`RunInstructions` + `completeJob`) with a
 scripted model; the pieces below complete the harness for **two cooperating sessions**
@@ -351,13 +353,15 @@ with zero model calls, in ~0.5 s.
 
 ### 4.4 The storybook analog
 
-Keep `WithSubAgentsTest` (live) as the model-behavior check, and add `WithSubAgentsScripted`:
-the same `WithSubAgents` story wired to `config.scripted(...)` (§3.1) with the **same routed
-turn script** as the headless test, and a play function that types the prompt, asserts the
-immediate reply and the task-list chip render mid-flight, then waits for the "sub-agent
-completed" message and the reference widget. Because the script is shared, the storybook
-demonstrates end-to-end what the headless test asserts — deterministically, in CI — and the
-live variant remains the only place a real model is consulted.
+**Done** — `WithSubAgentsTest` (live) stays as the model-behavior check;
+`WithSubAgentsScripted` is the same `WithSubAgents` story wired to the decorators' `scripted`
+option (§3.1) with the **same routed turn script** as the headless test, plus a `chat-name`
+route for the first-message rename turn (`UpdateChatName` also consumes the model — an
+unrouted script would lose turns to it). Its play function types the prompt, asserts the
+immediate "On it — delegating." reply, then waits for the "sub-agent completed" fold-back and
+the `3628800` result. Because the script is shared, the storybook demonstrates end-to-end what
+the headless test asserts — deterministically, in CI (~4 s in chromium) — and the live variant
+remains the only place a real model is consulted.
 
 ### 4.5 Sequencing
 
@@ -367,6 +371,6 @@ live variant remains the only place a real model is consulted.
    scripted port of the stub lifecycle test (`agent-service/delegation-scripted.test.ts`); the
    memo-gated original stays until its file's fixtures are next regenerated (removing it would
    shift the shared deterministic ID stream).
-4. `config.scripted` decorator support in `stories-assistant`; `WithSubAgentsScripted` play
-   story (4.4).
+4. ~~`scripted` decorator support in `stories-assistant`; `WithSubAgentsScripted` play
+   story (4.4).~~ **Done.**
 5. ~~Processor streaming harness (§3.3).~~ **Done** (`processor/streaming.node.test.ts`).

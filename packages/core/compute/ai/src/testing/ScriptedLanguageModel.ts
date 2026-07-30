@@ -272,17 +272,31 @@ export const __testing = {
 export const scriptedLanguageModelLayer = (script: Script): Layer.Layer<LanguageModel.LanguageModel> =>
   Layer.effect(LanguageModel.LanguageModel, makeScriptedLanguageModel(script));
 
+// A single shared model memo per script: sessions in separate processes each call `model()`, and
+// separate model instances would each start their script from turn zero.
+const sharedModel = (script: Script): AiService.Service => {
+  const model = Effect.runSync(Effect.cached(makeScriptedLanguageModel(script)));
+  return {
+    model: () => Layer.effect(LanguageModel.LanguageModel, model),
+  };
+};
+
 /**
  * An {@link AiService.AiService} layer whose model, regardless of the requested name, is the
  * scripted model. Pass to `AssistantTestLayer({ aiService })` to drive the agent loop deterministically.
  * With a routed script, every session resolved through the service shares the routes (and their
  * cursors) — the seam that lets one script drive a supervisor and its sub-agents.
  */
-export const scriptedAiService = (script: Script): Layer.Layer<AiService.AiService> => {
-  // A single shared model memo: sessions in separate processes each call `model()`, and separate
-  // model instances would each start their script from turn zero.
-  const model = Effect.runSync(Effect.cached(makeScriptedLanguageModel(script)));
-  return Layer.succeed(AiService.AiService, {
-    model: () => Layer.effect(LanguageModel.LanguageModel, model),
-  });
+export const scriptedAiService = (script: Script): Layer.Layer<AiService.AiService> =>
+  Layer.succeed(AiService.AiService, sharedModel(script));
+
+/**
+ * Middleware form of {@link scriptedAiService} for `AssistantPlugin({ aiServiceMiddleware })`:
+ * replaces the AI service the plugin would construct with the scripted model, so full plugin-stack
+ * tests and storybooks run offline. Shares one script cursor across `model()` calls, like
+ * {@link scriptedAiService}.
+ */
+export const scriptedAiServiceMiddleware = (script: Script): ((upstream: AiService.Service) => AiService.Service) => {
+  const service = sharedModel(script);
+  return () => service;
 };
