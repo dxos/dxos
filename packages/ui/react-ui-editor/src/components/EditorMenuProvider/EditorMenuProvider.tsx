@@ -168,7 +168,8 @@ export const EditorMenuProvider = ({
           align='start'
           classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']}
           style={{
-            maxBlockSize: 36 * numItems + 10,
+            // The search input shares the box, so `numItems` keeps meaning "items visible".
+            maxBlockSize: 36 * numItems + 10 + (search ? 36 : 0),
           }}
           // NOTE: We keep the focus in the editor, but Radix routes escape key.
           onEscapeKeyDown={() => {
@@ -280,7 +281,9 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   const listRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
     if (current && listRef.current) {
-      listRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // Instant, not smooth: held arrow keys retarget faster than a smooth scroll can settle, and each
+      // new animation supersedes the last, so the list stalls then jumps.
+      listRef.current.scrollIntoView({ behavior: 'instant', block: 'nearest' });
     }
   }, [current]);
 
