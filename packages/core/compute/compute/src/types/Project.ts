@@ -34,7 +34,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
   }).pipe(
     Schema.annotations({ title: 'Project' }),
     LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'rose' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
   ),
 ) {}
 
@@ -52,9 +52,11 @@ export type ContextBindings = {
 };
 
 /**
- * Bindings a chat session should receive when running in this project's context:
- * the instructions object itself (so its text/commands are visible), its skills, and its context objects.
- * Requires the instructions ref to be resolved (`.target`); unresolved refs contribute nothing.
+ * Bindings a chat session should receive when running in this project's context: the instructions'
+ * skills and context objects. The instructions object itself is NOT bound — its text/commands reach
+ * the system prompt through the chat's `instructions` ref, and a bound Instructions object would
+ * render as an inert context stub. Requires the instructions ref to be resolved (`.target`);
+ * unresolved refs contribute nothing.
  */
 export const contextBindings = (project: Project): ContextBindings => {
   const instructionsRef = project.instructions;
@@ -73,6 +75,6 @@ export const contextBindings = (project: Project): ContextBindings => {
   // and re-wrapping would drop the registry DXN of skills that have no space-DB identity.
   return {
     skills: [...instructions.skills],
-    objects: [instructionsRef, ...(instructions.objects ?? [])],
+    objects: [...(instructions.objects ?? [])],
   };
 };

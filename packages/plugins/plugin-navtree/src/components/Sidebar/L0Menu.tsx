@@ -26,7 +26,7 @@ import React, {
 
 import { type Node } from '@dxos/app-graph';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
   Icon,
   IconButton,
@@ -99,7 +99,13 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
         case 'tab':
           return onTabChange?.(item);
         case 'link':
-          return onSelect?.({ item, path, current: !getItem(path).current, option: event.altKey });
+          return onSelect?.({
+            item,
+            path,
+            current: !getItem(path).current,
+            option: event.altKey,
+            shift: event.shiftKey,
+          });
       }
     },
     [item, parent, type, getItem, onSelect, onTabChange, isLg, runAction],

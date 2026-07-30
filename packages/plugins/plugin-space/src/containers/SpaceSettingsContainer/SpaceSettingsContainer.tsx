@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -163,7 +163,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       setDeleteConfirmOpen(false);
       const personalSpace = AppSpace.getPersonalSpace(client);
       if (personalSpace) {
-        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(personalSpace.id) });
+        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(personalSpace.id) });
       }
     } catch (err) {
       log.catch(err, { stage: 'delete: invocation rejected', spaceId: space.id });

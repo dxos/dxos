@@ -28,7 +28,7 @@
 
 ## File Structure
 
-```
+```text
 packages/common/log/
   src/registry.ts                           # NEW: LogFileRegistry singleton
   src/registry.test.ts                      # NEW
@@ -1825,7 +1825,3 @@ git add -A && git commit -m "react-ui-debug: format and lint fixups for Logger c
 **Placeholder scan:** No TBD/TODO; every code step shows full code. The "confirm the random helper name" note in Task 10 carries a concrete fallback.
 
 **Type consistency:** `LevelName`, `LogRow`, `LoggerContextValue`, `composeFilter`, `setFileLevel(file, level|undefined)`, `logFileRegistry.{register,getFiles,subscribe,clear}`, `registerFiles` option, and `Logger.{Root,Toolbar,Content,List,Levels}` are used consistently across tasks. `useLoggerContext('<part>')` strings match each part's `displayName`.
-
-```
-
-```

@@ -70,11 +70,12 @@ pnpm watch
 ## Run commands
 
 Examples of ways to start up different workloads in dev mode:
-| Command | Description |
-| :-- | :-- |
-| `moon run tasks-app:serve` | Runs the `tasks-app` in dev mode |
-| `moon run composer-app:serve` | Runs the `composer-app` in dev mode |
-| `moon run docs:serve` | Runs the `docs` astro app in dev mode |
+
+| Command                       | Description                           |
+| :---------------------------- | :------------------------------------ |
+| `moon run tasks-app:serve`    | Runs the `tasks-app` in dev mode      |
+| `moon run composer-app:serve` | Runs the `composer-app` in dev mode   |
+| `moon run docs:serve`         | Runs the `docs` astro app in dev mode |
 
 Use `--quiet` to suppress progress output (recommended for LLMs to keep context fresh).
 Use `--on-failure=continue` to continue running other unrelated tasks even if some fail.
@@ -82,12 +83,13 @@ Use `--on-failure=continue` to continue running other unrelated tasks even if so
 ## Test commands
 
 Examples of ways to run different test workloads:
-| Command | Description |
-| :-- | :-- |
-| `moon run client-services:test` | Runs the unit tests for `client-services` |
-| `moon run echo-db:test-watch` | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
-| `moon run todomvc:e2e` | Runs the playwright tests for `halo-app` |
-| `moon run todomvc --debug` | Runs tests with playwright inspector |
+
+| Command                         | Description                                                                              |
+| :------------------------------ | :--------------------------------------------------------------------------------------- |
+| `moon run client-services:test` | Runs the unit tests for `client-services`                                                |
+| `moon run echo-db:test-watch`   | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
+| `moon run todomvc:e2e`          | Runs the playwright tests for `halo-app`                                                 |
+| `moon run todomvc --debug`      | Runs tests with playwright inspector                                                     |
 
 ## Storybooks
 

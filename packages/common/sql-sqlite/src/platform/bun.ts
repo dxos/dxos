@@ -38,7 +38,7 @@ export const layerMemory: Layer.Layer<
 /**
  * Creates a file-based SQLite layer for Bun.
  * Unlike layerMemory, this persists data across runtime restarts.
- * Creates the parent directory if it does not already exist, since bun:sqlite
+ * Creates the parent directory if it does not already exist, since `bun:sqlite`
  * requires it to be present before opening the database file.
  */
 export const layerFile = (

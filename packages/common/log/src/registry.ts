@@ -19,6 +19,7 @@ export interface LogFileRegistry {
   clear(): void;
 }
 
+/** Create an isolated {@link LogFileRegistry} backed by an in-memory set with change notification. */
 export const createLogFileRegistry = (): LogFileRegistry => {
   const files = new Set<string>();
   const listeners = new Set<() => void>();
@@ -49,9 +50,14 @@ export const createLogFileRegistry = (): LogFileRegistry => {
   };
 };
 
+declare global {
+  // eslint-disable-next-line no-var
+  var DX_LOG_FILES: LogFileRegistry | undefined;
+}
+
 /**
  * Global singleton so all (possibly duplicated) copies of `@dxos/log` and the
  * transform-injected `globalThis.DX_LOG_FILES.register(...)` calls share one registry —
  * mirrors how `log` is `globalThis.DX_LOG`.
  */
-export const logFileRegistry: LogFileRegistry = ((globalThis as any).DX_LOG_FILES ??= createLogFileRegistry());
+export const logFileRegistry: LogFileRegistry = (globalThis.DX_LOG_FILES ??= createLogFileRegistry());

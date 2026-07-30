@@ -19,8 +19,12 @@
       "default": "./dist/lib/skills.mjs"
     },
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -147,6 +151,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/versioning": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:"
   },

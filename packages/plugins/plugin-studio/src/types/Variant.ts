@@ -44,7 +44,7 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
     jobId: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
   }).pipe(
     LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--image--regular', hue: 'purple' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--image--regular', hue: 'indigo' }),
     // Owned child of an Artifact — hidden from the navtree and object picker (mirrors Instructions).
     Annotation.HiddenAnnotation.set(true),
   ),

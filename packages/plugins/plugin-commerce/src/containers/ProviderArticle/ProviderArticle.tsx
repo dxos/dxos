@@ -6,7 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { type Node, useActionRunner } from '@dxos/plugin-graph';
+import { type Node } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import {
   type ActionExecutor,

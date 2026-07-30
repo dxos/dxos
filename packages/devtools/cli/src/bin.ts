@@ -24,7 +24,7 @@ import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry';
 
-import { admin, agent, chat, debug, dx, fn, hub, mailbox, reflect, repl, reset } from './commands';
+import { admin, agent, chat, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
 import { getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
 import { RELOAD_EXIT_CODE, getReloadRequest, installStderrFilter } from './util';
@@ -89,6 +89,7 @@ const program = Effect.gen(function* () {
       chat,
       fn,
       mailbox,
+      mcp,
 
       // TODO(burdon): Admin-only. Where should these commands live?
       admin,

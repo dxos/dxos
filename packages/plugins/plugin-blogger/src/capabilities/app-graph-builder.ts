@@ -6,21 +6,19 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Attention } from '@dxos/react-ui-attention';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
 import { Blog } from '#types';
 
-/** Stable navtree segment of the "Publications" section. */
-const PUBLICATIONS_SEGMENT = 'publications';
+import { getPublicationsSectionId } from '../paths';
 
 /** Node type of the "Publications" section under a space's content group. */
 const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;
@@ -41,8 +39,8 @@ const CONTENT_DOC_NODE_TYPE = `${meta.profile.key}.post-content`;
 
 /**
  * Contributes the Publications navtree hub, mirroring plugin-studio's Studio section: a "Publications"
- * section under each space's `content` group (always present, so it is the create hub), with a branch
- * node per Publication whose children are that Publication's Posts.
+ * section under each space's `content` group, with a branch node per Publication whose children are
+ * that Publication's Posts.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -50,11 +48,18 @@ export default Capability.makeModule(
       // "Publications" section under each space's content group.
       GraphBuilder.createExtension({
         id: 'publicationsSection',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
-        connector: (space) =>
-          Effect.succeed([
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
+        connector: (space, get) => {
+          // The section is elided while the space has no Publications (as plugin-inbox does for
+          // Mailboxes), so the first one is created from the space's generic create-object menu.
+          const publications = get(space.db.query(Filter.type(Blog.Publication)).atom);
+          if (publications.length === 0) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
             AppNode.makeSection({
-              id: PUBLICATIONS_SEGMENT,
+              id: getPublicationsSectionId(),
               type: PUBLICATIONS_SECTION_TYPE,
               label: ['publications.label', { ns: meta.profile.key }],
               icon: 'ph--books--regular',
@@ -62,13 +67,15 @@ export default Capability.makeModule(
               space,
               position: 400,
             }),
-          ]),
+          ]);
+        },
       }),
 
       // A branch node per Publication under the section, each with its Posts as children, plus the
       // "+ Publication" action on the section.
       GraphBuilder.createExtension({
         id: 'publicationNodes',
+        url: { key: 'publication', kind: 'item', path: [GraphPath.GroupSegments.content, getPublicationsSectionId()] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === PUBLICATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -175,7 +182,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: Attention.linkedSegment('comments'),
+              variant: 'comments',
               label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
               data: contentDoc,

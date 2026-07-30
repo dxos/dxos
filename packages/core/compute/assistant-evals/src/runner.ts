@@ -18,7 +18,7 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, ServiceResolver, type Skill } from '@dxos/compute';
 import { FeedTraceSink } from '@dxos/compute-runtime';
-import { Database, Feed, Ref, Tag } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
@@ -65,9 +65,19 @@ const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => Ai
     EffectEx.runAndForwardErrors,
   );
 
-const createDefaultPlugins = async (options: { plugins?: Plugin.Plugin[] }): Promise<Plugin.Plugin[]> => [
+const createDefaultPlugins = async (options: {
+  plugins?: Plugin.Plugin[];
+  types?: Type.AnyEntity[];
+}): Promise<Plugin.Plugin[]> => [
   ClientPlugin({
-    types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Mailbox.Mailbox],
+    types: [
+      Organization.Organization,
+      Person.Person,
+      Employer.Employer,
+      Tag.Tag,
+      Mailbox.Mailbox,
+      ...(options.types ?? []),
+    ],
   }),
   AssistantPlugin({
     aiServiceMiddleware: await makeAiServiceMiddleware(),
@@ -94,13 +104,14 @@ const runInstructions = <I>(
   spaceId: SpaceId,
   input: I,
   sessionChat?: boolean,
+  seededChat?: Ref.Ref<Chat.Chat>,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedInstructions(instructions);
 
-      let chatRef: Ref.Ref<Chat.Chat> | undefined;
-      if (sessionChat) {
+      let chatRef: Ref.Ref<Chat.Chat> | undefined = seededChat;
+      if (!chatRef && sessionChat) {
         const feed = yield* Database.add(Feed.make());
         const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), name: 'Eval Chat' }));
         yield* Database.flush();
@@ -147,7 +158,28 @@ export interface CreateEvalRunnerOptions<I, O> {
    * @default 60_000
    */
   timeout?: number;
+  /**
+   * Additional ECHO types the scenario's seed/dbQuery touch, registered with the harness client.
+   */
+  types?: Type.AnyEntity[];
+  /**
+   * Seeds the space before the run (e.g. a Project the scenario operates on). Runs inside the
+   * harness with `Database.Service` provided; receives the run's `Instructions` object so seeded
+   * entities can reference it (it is added to the DB after seeding). Returned `objects` are bound
+   * into the session context alongside the instructions' own; a returned `chat` is used as the
+   * session chat (taking precedence over `sessionChat`).
+   */
+  seed?: (context: {
+    spaceId: SpaceId;
+    instructions: Instructions.Instructions;
+  }) => Effect.Effect<SeedResult, unknown, Database.Service>;
 }
+
+/** Entities a {@link CreateEvalRunnerOptions.seed} hook contributes to the run. */
+export type SeedResult = {
+  objects?: Ref.Ref<Obj.Unknown>[];
+  chat?: Ref.Ref<Chat.Chat>;
+};
 
 /** A deterministic DB-state assertion run after the agent completes, before the harness is disposed. */
 export type DbQuery<I, D> = (
@@ -222,8 +254,27 @@ export function createEvalRunner<I, O, D>(
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
 
+        let seeded: SeedResult = {};
+        const seedFn = options.seed;
+        if (seedFn) {
+          seeded = yield* Effect.promise(() =>
+            harness.runPromise(
+              seedFn({ spaceId: personalSpace.id, instructions }).pipe(
+                Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service)),
+              ),
+            ),
+          );
+          if (seeded.objects?.length) {
+            const objects = seeded.objects;
+            Obj.update(instructions, (instructions) => {
+              instructions.objects = [...(instructions.objects ?? []), ...objects];
+            });
+          }
+        }
+
         const agentOutput = yield* Effect.tryPromise({
-          try: () => runInstructions(harness, instructions, model, personalSpace.id, input, options.sessionChat),
+          try: () =>
+            runInstructions(harness, instructions, model, personalSpace.id, input, options.sessionChat, seeded.chat),
           catch: (cause) => new AgentRunFailure({ cause }),
         });
 

@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { Paths } from '@dxos/app-toolkit';
+import { GraphPath } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Order, Query } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
@@ -34,7 +34,7 @@ const MessageModuleContainer = ({ space, attendableId }: { space: Space; attenda
   );
   // Read the selection under the mailbox object's context (matching MailboxModule), not this cell's
   // positional attendableId — sibling ModuleContainer cells have independent attention targets.
-  const selectedId = useSelection(mailbox ? Paths.getObjectPathFromObject(mailbox) : attendableId, 'single');
+  const selectedId = useSelection(mailbox ? GraphPath.getObjectPathFromObject(mailbox) : attendableId, 'single');
   const selected = messages.find((candidate) => candidate.id === selectedId);
   // Open the whole thread, not just the clicked message — mirrors the app's `mailboxMessage`
   // companion connector: all feed messages sharing the selected message's `threadId`, oldest-first.

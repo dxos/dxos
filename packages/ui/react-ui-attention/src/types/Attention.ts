@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom';
 
 export type Attention = {
   hasAttention: boolean;
@@ -159,6 +159,12 @@ export class AttentionManager {
   }
 }
 
+/** The attribute marking an element as attendable, carrying its qualified id. */
+export const ATTENDABLE_ATTRIBUTE = 'data-attendable-id';
+
+/** Selector matching any attendable element. */
+export const ATTENDABLE_SELECTOR = `[${ATTENDABLE_ATTRIBUTE}]`;
+
 /**
  * Accumulates all attendable IDs between the element provided and the root, inclusive.
  * Each `data-attendable-id` value is treated as a single qualified ID (no splitting).
@@ -167,7 +173,7 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
   // Find the closest element with `data-attendable-id`, if any; start from cursor and move up the DOM tree.
   const closestAttendable = cursor.closest(selector);
   if (closestAttendable) {
-    const attendableId = closestAttendable.getAttribute('data-attendable-id');
+    const attendableId = closestAttendable.getAttribute(ATTENDABLE_ATTRIBUTE);
     if (!attendableId) {
       // This has an id of an aria-controls elsewhere on the page, move cursor to that trigger.
       const trigger = document.querySelector(`[aria-controls="${closestAttendable.getAttribute('id')}"]`);
@@ -184,6 +190,15 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
 
   return [...new Set(acc)];
 };
+
+/**
+ * The outermost attendable ancestor of `element` — the root of any nested attendables (e.g. a section
+ * within a stack). Structural (real DOM ancestry), so it is independent of what currently has attention.
+ * Resolve it from an in-DOM element: a portaled subtree (a menu, a popover) is not under its own
+ * attendable, so walk from the trigger or anchor instead.
+ */
+export const getRootAttendableId = (element: Element): string | undefined =>
+  getAttendables(ATTENDABLE_SELECTOR, element).at(-1);
 
 export type AttendableId = { attendableId?: string };
 

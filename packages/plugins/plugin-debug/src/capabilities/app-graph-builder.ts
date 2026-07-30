@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath } from '@dxos/app-toolkit';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
@@ -19,7 +19,7 @@ export default Capability.makeModule(
       // Top-level Debug node (sibling of DevTools under SYSTEM); only present when a space is active.
       GraphBuilder.createExtension({
         id: 'debug',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.system),
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
         connector: (space: Space) =>
           Effect.succeed([
             Node.make({
@@ -53,7 +53,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'debug',
+              variant: 'debug',
               label: ['debug.label', { ns: meta.profile.key }],
               icon: 'ph--bug--regular',
               data: 'debug',

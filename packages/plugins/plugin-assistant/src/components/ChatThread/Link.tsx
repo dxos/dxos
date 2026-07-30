@@ -14,6 +14,7 @@ export type ObjectLinkProps = {
   dxn: URI.URI;
 };
 
+// TODO(burdon): Document.
 export const ObjectLink = ({ space, dxn }: ObjectLinkProps) => {
   const ref = useMemo(() => space.db.makeRef(dxn), [space, dxn]);
 

@@ -34,7 +34,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   return (
     <Card.Body>
       {snippet && (
-        <Card.Section className='aspect-square relative'>
+        <Card.Section className='aspect-video relative'>
           <Card.Row fullWidth>
             {/* Re-seed the readonly snippet when the content changes (the editor takes `initialValue`
                 at mount only). Keyed on the snippet so agent/remote edits are reflected. */}

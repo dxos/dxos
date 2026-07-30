@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppAnnotation } from '@dxos/app-toolkit';
@@ -98,10 +98,24 @@ const useSkills = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'sub
   );
 
   // Subscribe so a project's instructions ref resolving after the project object itself (e.g. loading
-  // over the wire) re-triggers the bind below, mirroring the `feedSnapshot` subscription above.
+  // over the wire) re-triggers the effects below, mirroring the `feedSnapshot` subscription above.
   const [instructionsSnapshot] = useObject(
     Obj.instanceOf(Project.Project, companionTo) ? companionTo.instructions : undefined,
   );
+
+  // Steer the chat with the project's instructions BY REFERENCE (chat.instructions → system prompt at
+  // request time). Also the lazy backfill: pre-existing project chats without the field pick it up here.
+  useEffect(() => {
+    if (!chat || chat.instructions || !Obj.instanceOf(Project.Project, companionTo)) {
+      return;
+    }
+    const instructionsRef = companionTo.instructions;
+    if (instructionsRef) {
+      Obj.update(chat, (chat) => {
+        chat.instructions = instructionsRef;
+      });
+    }
+  }, [chat, companionTo, instructionsSnapshot]);
 
   useAsyncEffect(async () => {
     if (!binder?.isOpen) {
@@ -131,7 +145,8 @@ const useSkills = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'sub
       await binder.bind({ objects: [Ref.make(companionTo)] });
     }
 
-    // Bind the project's instructions, skills, and context objects into the session.
+    // Bind the project's skills and context objects into the session (instructions text travels
+    // via chat.instructions, set above).
     if (Obj.instanceOf(Project.Project, companionTo)) {
       const bindings = Project.contextBindings(companionTo);
       if (bindings.skills.length > 0) {

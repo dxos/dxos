@@ -7,12 +7,13 @@
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
 export type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import type { Atom } from '@effect-atom/atom-react';
+import type { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
 import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
@@ -285,21 +286,26 @@ export const makeObject = ({
 // Companion helpers.
 //
 
-/** Build a plank-level companion panel node. */
+/**
+ * Build a plank-level companion panel node, addressed by its bare `variant` (e.g. `settings`). The id is
+ * always the linked segment `~<variant>`, so the companion shares the plank's attention and is uniformly
+ * addressable as `companion/<variant>` in the URL; the graph builder stamps the `urlSegment` for these
+ * nodes (the declared `linked` tier).
+ */
 export const makeCompanion = <TData = string>({
-  id,
+  variant,
   label,
   icon,
   data,
   position,
 }: {
-  id: string;
+  variant: string;
   label: Translations.Label;
   icon: string;
   data: TData;
   position?: Position.Position;
 }): Node.NodeArg<TData> => ({
-  id,
+  id: Attention.linkedSegment(variant),
   type: PLANK_COMPANION_TYPE,
   data,
   properties: {

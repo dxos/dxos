@@ -148,10 +148,11 @@ cd packages/core/compute/assistant-evals
 npx evalite run src/evals/database.eval.ts
 ```
 
-In this repo, pull the key from the CI Vault via 1Password rather than exporting it manually:
+In this repo, pull the key from the 1Password `CI` vault rather than exporting it manually:
 
 ```bash
-op run --account braneframe --env-file=.config/.env.1password -- npx evalite run src/evals/planning.eval.ts
+eval "$(pnpm -ws 1p-credentials)"
+npx evalite run src/evals/planning.eval.ts
 ```
 
 ## Gotchas (found the hard way — real debugging sessions, not speculation)

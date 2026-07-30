@@ -114,8 +114,8 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       (pluginId: string) =>
         invokePromise(LayoutOperation.Open, {
           subject: [getPluginPath(pluginId)],
-          pivotId: id,
-          positioning: 'end',
+          pivotId: getPluginPath(id),
+          disposition: 'add',
         }),
       [invokePromise, id],
     );

@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Entity, Filter, Key, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -45,13 +45,13 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // System section group — created alongside database/settings so the group always
     // appears when the space plugin is active and hides when there are no children.
     GraphBuilder.createExtension({
-      id: Paths.GroupSegments.system,
+      id: GraphPath.GroupSegments.system,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           AppNode.makeGroup({
-            id: Paths.GroupSegments.system,
-            type: Paths.GroupTypes.system,
+            id: GraphPath.GroupSegments.system,
+            type: GraphPath.GroupTypes.system,
             label: ['nav-tree-group-system.label', { ns: meta.profile.key }],
             space,
             position: 900,
@@ -62,11 +62,11 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // Types section virtual node under the system group.
     GraphBuilder.createExtension({
       id: 'databaseSection',
-      match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.system),
+      match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
       connector: (space) => {
         return Effect.succeed([
           AppNode.makeSection({
-            id: Paths.Segments.database,
+            id: GraphPath.Segments.database,
             type: DATABASE_SECTION_TYPE,
             label: ['database-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
@@ -80,6 +80,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
       id: 'database',
+      url: { key: 'type', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === DATABASE_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -150,6 +151,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // {All} virtual node + view objects under each schema node.
     GraphBuilder.createExtension({
       id: 'schemaChildren',
+      url: { key: 'view', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         // Scoped to the Database section's own type nodes (both static and database schemas — see
@@ -164,9 +166,9 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
         const typeUri = Type.getURI(schema);
 
-        // View objects are the type node's only visible children; objects of the type are resolved
-        // on demand as hidden children (see the `typeCollectionObject` resolver). The list of all
-        // objects is rendered when the type node is selected (see TypeArticle).
+        // View objects are the type node's only visible children; every object of the type (viewed
+        // or not) is also reachable via the `databaseObjects` extension below, keyed generically as
+        // `obj`. The list of all objects is rendered when the type node is selected (see TypeArticle).
         const viewIndex = buildViewIndex(get, space, schemas);
         const viewNodes = viewIndex
           .getViewsForTypeUri(typeUri)
@@ -185,54 +187,50 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
     }),
 
-    // Objects of a type are not enumerated in the nav tree; navigating directly to the canonical
-    // object path resolves the object on demand as a hidden child of its type node. Mirrors the
-    // inbox feed-object resolver: a resolver keyed on path shape, not a connector.
+    // Every object of a type — not just its views — as a hidden child of its type node, so
+    // `…/database/<slug>/<objectId>` resolves via the generic `db` key even when the type has no
+    // dedicated section of its own. Disjoint from `schemaChildren`'s view nodes (`viewIndex.isView`
+    // excludes them) so the two connectors never emit a node with the same id under the same parent.
+    // The `db` key names the database subgraph — the generic key that guarantees every ECHO object a
+    // URL (see the design's "Unmapped nodes"); `object` addresses the same object via the collection
+    // subgraph.
     GraphBuilder.createExtension({
-      id: 'typeCollectionObject',
-      match: () => Option.none(),
-      resolver: (qualifiedId, get) =>
-        Effect.gen(function* () {
-          const segments = qualifiedId.split('/');
-          // Discriminator: the canonical object path `…/database/<slug>/<objectId>`.
-          if (segments.at(-3) !== Paths.Segments.database) {
-            return null;
-          }
+      id: 'databaseObjects',
+      url: { key: 'db', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
+      match: (node) => {
+        const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+        return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)
+          ? Option.some({ space, schema: node.data })
+          : Option.none();
+      },
+      connector: ({ space, schema }, get) => {
+        const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
+        const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
+        const typeUri = Type.getURI(schema);
+        const viewIndex = buildViewIndex(get, space, schemas);
 
-          const spaceId = Paths.getSpaceIdFromPath(qualifiedId);
-          const objectId = segments.at(-1);
-          if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
-            return null;
-          }
+        // Feed-only objects (e.g. games appended via Feed.append) are not in the Automerge graph;
+        // includeFeeds resolves them too.
+        const objects = get(
+          space.db.query(Query.select(Filter.type(typeUri)).from(space.db, { includeFeeds: true })).atom,
+        );
 
-          const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-          const space = client?.spaces.get(spaceId);
-          if (!space) {
-            return null;
-          }
-
-          // Feed-only objects (e.g. games appended via Feed.append) are not in the Automerge graph;
-          // includeAllFeeds scope resolves them from feed queues by id.
-          const object = get(
-            space.db.query(Query.select(Filter.id(objectId)).from(space.db, { includeFeeds: true })).atom,
-          ).at(0);
-          if (!object) {
-            return null;
-          }
-
-          get(Obj.atom(object));
-          const node = AppNode.makeObject({
-            get,
-            db: space.db,
-            object,
-            disposition: 'hidden',
-            draggable: false,
-            droppable: false,
-          });
-          // Resolver nodes are keyed by the requested path (not the local object id) so the parent
-          // type node's child edge connects; `makeObject` uses the local id, so override it here.
-          return node && { ...node, id: qualifiedId };
-        }),
+        return Effect.succeed(
+          objects
+            .filter((object) => !viewIndex.isView(object))
+            .map((object) =>
+              AppNode.makeObject({
+                get,
+                db: space.db,
+                object,
+                disposition: 'hidden',
+                draggable: false,
+                droppable: false,
+              }),
+            )
+            .filter(isNonNullable),
+        );
+      },
     }),
 
     // Actions for schema nodes.
@@ -283,7 +281,7 @@ const createSchemaNode = ({
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
   // a stored schema's entity id, or a static schema's typename.
-  const slug = Paths.getTypeSlug(schema);
+  const slug = GraphPath.getTypeSlug(schema);
   const iconAnnotation =
     Type.getDatabase(schema) == null
       ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))

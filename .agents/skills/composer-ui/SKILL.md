@@ -186,15 +186,14 @@ keyboard shortcuts) target the right surface. Skipping this breaks plugin compos
 ```tsx
 const actionsAtom = useMemo(
   () =>
-    Atom.make(
-      (): ActionGraphProps =>
-        MenuBuilder.make()
-          .action(
-            'add',
-            { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' },
-            handleAdd,
-          )
-          .build(),
+    Atom.make((): ActionGraphProps =>
+      MenuBuilder.make()
+        .action(
+          'add',
+          { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' },
+          handleAdd,
+        )
+        .build(),
     ),
   [handleAdd],
 );
@@ -412,9 +411,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {
-  args: {
-    /* realistic props */
-  },
+  args: {/* realistic props */},
 };
 ```
 

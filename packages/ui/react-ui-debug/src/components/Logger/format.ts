@@ -4,12 +4,17 @@
 
 import { type LogEntry, shortLevelName } from '@dxos/log';
 
+/** Derive the workspace package directory from a source path (…/packages/<group>/<pkg>/…). */
+export const packageName = (file: string): string | undefined => file.match(/packages\/[^/]+\/([^/]+)\//)?.[1];
+
 /**
  * Serializable projection of a {@link LogEntry} for display and clipboard export.
  */
 export type LogRecord = {
   timestamp: string;
   level: string;
+  package?: string;
+  /** Repo-relative source path (…/packages/<group>/<pkg>/…); the row derives the basename for display. */
   file?: string;
   line?: number;
   message?: string;
@@ -29,7 +34,8 @@ export const formatLogEntry = ({
   return {
     timestamp: new Date(timestamp).toISOString(),
     level: shortLevelName[level],
-    file: computedMeta.filename?.split('/').pop(),
+    package: computedMeta.filename ? packageName(computedMeta.filename) : undefined,
+    file: computedMeta.filename,
     line: computedMeta.line,
     message,
     context: Object.keys(computedContext).length > 0 ? computedContext : undefined,

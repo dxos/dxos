@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -92,8 +92,12 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
       const id = Obj.getURI(object);
       void invokePromise(LayoutOperation.Select, { contextId: attendableId, subject: { mode: 'single', id } });
       void invokePromise(LayoutOperation.Open, {
-        subject: [Paths.getObjectPathFromObject(object)],
+        // Open under the node being viewed rather than the object's canonical type path, so an object
+        // reached from a type section opens within that section. Identical for a database type node,
+        // whose object path already is `<typeNode>/<id>`.
+        subject: [GraphPath.getCollectionObjectPath(attendableId, object.id)],
         pivotId: attendableId,
+        disposition: 'add',
         navigation: 'immediate',
       });
     },

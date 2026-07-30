@@ -3,17 +3,20 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Splitter, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 
-import { Companion, Plank } from '#components';
-import { useCompanionSplit } from '#hooks';
-import { type LayoutMode, type ResolvedPart, type Settings } from '#types';
+import { Plank } from '#components';
+import { useBreadcrumbs, useDeckSettings } from '#hooks';
+import { type ResolvedPart } from '#types';
 
-import { PlankCompanionControls, PlankControls } from './PlankControls';
+import { CompanionPlank } from './CompanionPlank';
+import { PlankControls } from './PlankControls';
 import { PlankErrorFallback, PlankLoading } from './PlankFallback';
 import { useDeckPlank } from './useDeckPlank';
 
@@ -22,166 +25,132 @@ const PLANK_LOADING = <PlankLoading />;
 export type DeckPlankProps = ThemedClassName<{
   id: string;
   part: ResolvedPart;
-  layoutMode: LayoutMode;
+  /** Whether this plank is displayed fullscreen (headless, no chrome). */
+  fullscreen?: boolean;
+  /** The real active planks (excludes the derived companion plank), for ordering/close semantics. */
   active?: string[];
-  /** Whether the companion pane should be shown for this plank (gated further by attention in multi-mode). */
-  companionShown?: boolean;
-  settings?: Settings.Settings;
   path?: string[];
 }>;
 
 /**
- * Connected deck plank: resolves the node, companions, actions and operation handlers via
- * {@link useDeckPlank} and renders the presentational {@link Plank} — wrapped in a {@link Splitter}
- * beside a {@link Companion} when a companion is open. Replaces the legacy
- * `PlankContainer`/`PlankComponent`/`PlankHeading` tree.
+ * Connected deck plank: resolves the node, actions and operation handlers via {@link useDeckPlank} and
+ * renders the presentational {@link Plank}. A companion id (a `~<variant>` linked segment) is an ordinary
+ * plank too — delegated to {@link CompanionPlank}, which supplies the companion's own header and content —
+ * so the deck layout never special-cases companions.
  */
-export const DeckPlank = memo(
-  ({ id, part, layoutMode, active, companionShown, settings, path, classNames }: DeckPlankProps) => {
-    const { findFirstFocusable } = useFocusFinders();
-    const rootRef = useRef<HTMLDivElement>(null);
-    const {
-      node,
-      companions,
-      resolvedCompanionId,
-      hasCompanion,
-      companionOrientation,
-      capabilities,
-      sigilActions,
-      popoverAnchorId,
-      scrollIntoView,
-      onAction,
-      onAdjust,
-      onScrollIntoView,
-      onUpdateCompanion,
-    } = useDeckPlank({ id, part, layoutMode, active, companionShown, deckEnabled: settings?.enableDeck });
+export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
+  if (Attention.isLinkedSegment(id)) {
+    return <CompanionPlank id={id} classNames={classNames} />;
+  }
 
-    // Memoize the split point per orientation so toggling side-by-side ↔ stacked restores each one.
-    const { size: companionSize, onSizeChange: onCompanionSizeChange } = useCompanionSplit(companionOrientation);
-
-    // Newly opened/navigated planks are flagged via `scrollIntoView`; focus the pane so it gains
-    // attention, then clear the one-shot flag.
-    useEffect(() => {
-      if (scrollIntoView === id) {
-        rootRef.current?.focus();
-        onScrollIntoView(undefined);
-      }
-    }, [scrollIntoView, id, onScrollIntoView]);
-
-    // Tabster's focus group should move focus to Main on Escape, but something blocks it; handle directly.
-    const handleKeyDown = useCallback(
-      (event: KeyboardEvent<HTMLDivElement>) => {
-        if (event.target === event.currentTarget) {
-          switch (event.key) {
-            case 'Escape':
-              event.currentTarget.closest('main')?.focus();
-              break;
-            case 'Enter':
-              findFirstFocusable(event.currentTarget)?.focus();
-              break;
-          }
-        }
-      },
-      [findFirstFocusable],
-    );
-
-    // Stable reference so Plank's useMemo on articleData doesn't bust every render.
-    const articleData = useMemo(() => ({ path }), [path]);
-
-    // Keep the companion panel mounted for 250ms after hasCompanion goes false so the Splitter's
-    // CSS transition can complete before the subtree is removed from the DOM.
-    const [companionMounted, setCompanionMounted] = useState(hasCompanion);
-    useEffect(() => {
-      if (hasCompanion) {
-        setCompanionMounted(true);
-        return;
-      }
-      const timer = setTimeout(() => setCompanionMounted(false), 250);
-      return () => clearTimeout(timer);
-    }, [hasCompanion]);
-
-    const companionControls = useMemo(() => <PlankCompanionControls primary={id} />, [id]);
-
-    if (!node) {
-      return PLANK_LOADING;
-    }
-
-    const controls = (
-      <PlankControls
-        capabilities={capabilities}
-        layoutMode={layoutMode}
-        close={part === 'complementary' ? 'minify-end' : true}
-        onClick={onAdjust}
-      />
-    );
-
-    const navbarEnd =
-      part !== 'complementary' ? (
-        <Surface.Surface type={AppSurface.NavbarEnd} data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />
-      ) : undefined;
-
-    const sigilFooter = (
-      <Surface.Surface type={AppSurface.MenuFooter} data={{ subject: node.data } satisfies AppSurface.MenuFooterData} />
-    );
-
-    // In fullscreen the toolbar is hidden so the content fills the viewport.
-    const headless = layoutMode === 'solo--fullscreen';
-
-    // Splitter.Root is always the outer element so <Plank> stays at the same tree position regardless of
-    // whether the companion is open. A root-element-type change (Plank ↔ Splitter.Root) would force React
-    // to unmount and remount the entire subtree on every companion toggle, resetting article state.
-    //
-    // `mode` drives the animated open/close: switching between 'split' and 'start' triggers the Splitter's
-    // built-in 250ms CSS transition. `companionMounted` trails `hasCompanion` by 250ms on close so the
-    // panel stays in the DOM long enough for the collapse animation to finish before being unmounted.
-    return (
-      <Splitter.Root
-        orientation={companionOrientation}
-        anchor='end'
-        mode={hasCompanion ? 'split' : 'start'}
-        resizable={hasCompanion}
-        size={companionSize}
-        minSize={20}
-        onSizeChange={onCompanionSizeChange}
-        classNames={classNames}
-      >
-        <Splitter.Panel position='start'>
-          <Plank
-            ref={rootRef}
-            node={node}
-            attendableId={id}
-            related={part === 'complementary'}
-            actions={sigilActions}
-            onAction={onAction}
-            popoverAnchorId={popoverAnchorId}
-            articleData={articleData}
-            controls={controls}
-            navbarEnd={navbarEnd}
-            sigilFooter={sigilFooter}
-            fallback={PlankErrorFallback}
-            placeholder={PLANK_LOADING}
-            headless={headless}
-            onKeyDown={handleKeyDown}
-          />
-        </Splitter.Panel>
-        {companionMounted && (
-          <>
-            <Splitter.Handle />
-            <Splitter.Panel position='end'>
-              <Companion
-                companions={companions}
-                value={resolvedCompanionId}
-                onValueChange={onUpdateCompanion}
-                attendableId={id}
-                companionTo={node.data}
-                controls={companionControls}
-              />
-            </Splitter.Panel>
-          </>
-        )}
-      </Splitter.Root>
-    );
-  },
-);
+  return (
+    <DeckPlankInner id={id} part={part} fullscreen={fullscreen} active={active} path={path} classNames={classNames} />
+  );
+});
 
 DeckPlank.displayName = 'DeckPlank';
+
+const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
+  const { findFirstFocusable } = useFocusFinders();
+  const { invokePromise } = useOperationInvoker();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const { node, capabilities, sigilActions, popoverAnchorId, scrollIntoView, onAction, onAdjust, onScrollIntoView } =
+    useDeckPlank({ id, part, active });
+
+  // In flat mode only the current (last) plank renders; its predecessors in the stack become
+  // breadcrumbs in the heading. Clicking one drops the planks after it (go back), reusing Close.
+  const { flatten } = useDeckSettings();
+  const breadcrumbIds = useMemo(
+    () => (flatten && part === 'main' && active ? active.slice(0, active.indexOf(id)) : []),
+    [flatten, part, active, id],
+  );
+  const breadcrumbs = useBreadcrumbs(breadcrumbIds);
+  const onSelectBreadcrumb = useCallback(
+    (crumbId: string) => {
+      const index = active?.indexOf(crumbId) ?? -1;
+      if (active && index >= 0 && index < active.length - 1) {
+        void invokePromise(LayoutOperation.Close, { subject: active.slice(index + 1) });
+      }
+    },
+    [invokePromise, active],
+  );
+
+  // Newly opened/navigated planks (and a folded plank returned to view by its spine) are flagged via
+  // `scrollIntoView`; focus the pane so it gains attention, then clear the one-shot flag. Scrolling is
+  // owned by the deck viewport, which positions the plank past the pile of spines, so this focus must
+  // not scroll on its own.
+  useEffect(() => {
+    if (scrollIntoView === id) {
+      rootRef.current?.focus({ preventScroll: true });
+      onScrollIntoView(undefined);
+    }
+  }, [scrollIntoView, id, onScrollIntoView]);
+
+  // Tabster's focus group should move focus to Main on Escape, but something blocks it; handle directly.
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.target === event.currentTarget) {
+        switch (event.key) {
+          case 'Escape':
+            event.currentTarget.closest('main')?.focus();
+            break;
+          case 'Enter':
+            findFirstFocusable(event.currentTarget)?.focus();
+            break;
+        }
+      }
+    },
+    [findFirstFocusable],
+  );
+
+  // Stable reference so Plank's useMemo on articleData doesn't bust every render.
+  const articleData = useMemo(() => ({ path }), [path]);
+
+  if (!node) {
+    return PLANK_LOADING;
+  }
+
+  const controls = (
+    <PlankControls
+      capabilities={capabilities}
+      fullscreen={fullscreen}
+      close={part === 'complementary' ? 'minify-end' : true}
+      onClick={onAdjust}
+    />
+  );
+
+  const navbarEnd =
+    part !== 'complementary' ? (
+      <Surface.Surface type={AppSurface.NavbarEnd} data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />
+    ) : undefined;
+
+  const sigilFooter = (
+    <Surface.Surface type={AppSurface.MenuFooter} data={{ subject: node.data } satisfies AppSurface.MenuFooterData} />
+  );
+
+  // In fullscreen the toolbar is hidden so the content fills the viewport.
+  const headless = fullscreen;
+
+  return (
+    <Plank
+      ref={rootRef}
+      node={node}
+      attendableId={id}
+      related={part === 'complementary'}
+      actions={sigilActions}
+      onAction={onAction}
+      breadcrumbs={breadcrumbs}
+      onSelectBreadcrumb={onSelectBreadcrumb}
+      popoverAnchorId={popoverAnchorId}
+      articleData={articleData}
+      controls={controls}
+      navbarEnd={navbarEnd}
+      sigilFooter={sigilFooter}
+      fallback={PlankErrorFallback}
+      placeholder={PLANK_LOADING}
+      headless={headless}
+      onKeyDown={handleKeyDown}
+      classNames={classNames}
+    />
+  );
+};

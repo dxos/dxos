@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -11,7 +11,7 @@ import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { Attention, Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention';
 
 import { meta } from '../meta';
 import { Ibkr } from '../types';
@@ -43,7 +43,7 @@ export default Capability.makeModule(
         )[0] as Ibkr.Report | undefined;
         return Effect.succeed([
           AppNode.makeCompanion({
-            id: Attention.linkedSegment('report'),
+            variant: 'report',
             label: ['report.companion.label', { ns: meta.profile.key }],
             icon: 'ph--file-text--regular',
             data: report ?? 'report',

@@ -41,7 +41,7 @@ export const computeHiddenRanges = (text: string): Range[] => {
   let visible = '';
   let imageCursor = 0;
   const originalIndex: number[] = [];
-  for (let index = 0; index < text.length; ) {
+  for (let index = 0; index < text.length;) {
     if (imageCursor < imageRanges.length && index === imageRanges[imageCursor].from) {
       index = imageRanges[imageCursor].to;
       imageCursor++;
@@ -59,7 +59,7 @@ export const computeHiddenRanges = (text: string): Range[] => {
     // Keep the first two line breaks (one blank line); hide everything after them in the run.
     const secondBreak = run.indexOf('\n', run.indexOf('\n') + 1);
     const runEnd = match.index + run.length;
-    for (let cursor = match.index + secondBreak + 1; cursor < runEnd; ) {
+    for (let cursor = match.index + secondBreak + 1; cursor < runEnd;) {
       // Coalesce contiguous original indices (a run is split only where a hidden image sits).
       const from = originalIndex[cursor];
       let to = from + 1;

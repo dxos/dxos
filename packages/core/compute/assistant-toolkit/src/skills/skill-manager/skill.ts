@@ -17,10 +17,10 @@ const make = () =>
     description: 'Query and enable skills in the current conversation.',
     instructions: Template.make({
       source: trim`
-        You can query available skills and enable them in the current conversation.
-        Use [query-skills] to refresh the list of available skills.
-        Use [enable-skills] to enable skills by their keys. Always call [query-skills] first.
-        Only skills with agentCanEnable=true can be enabled by the agent.
+        The list below is the current set of available skills — it is rendered fresh into this prompt,
+        so do NOT call [query-skills] to obtain it. Call [enable-skills] directly with the keys you
+        need; only skills marked [agent-can-enable] can be enabled by the agent.
+        Reach for [query-skills] only to re-read the list after something has changed it.
 
         <available_skills>
         {{#each skills}}
@@ -28,7 +28,9 @@ const make = () =>
         {{/each}}
         </available_skills>
 
-        NOTE: You must enable the skill to use it, only then the tools from that skill will appear.
+        NOTE: A skill's tools only appear once it is enabled. Skills already enabled in this
+        conversation expose their tools to you directly — do not re-enable a skill whose tools you
+        can already see.
       `,
       inputs: [
         {

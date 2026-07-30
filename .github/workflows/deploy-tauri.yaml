@@ -56,21 +56,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
-      - name: Install CrabNebula CLI
-        run: |
-          # Download the latest cn CLI for Linux
-          curl -L -o cn https://cdn.crabnebula.app/download/crabnebula/cn-cli/latest/cn_linux
-          chmod +x cn
-          sudo mv cn /usr/local/bin/
-
-          # Verify installation
-          cn --version
-
       - name: Compute Tauri version
         id: bump-version
         run: |
           # composer-app/package.json is the source of truth for the version: bumped by deploy-apps' release
-          # job for a production release, current otherwise. Production ships the clean version to the primary
+          # job for a production release, current otherwise. Production ships the clean version to the `main`
           # CrabNebula channel; labs/staging get a unique per-commit prerelease tagged with the env name
           # (which selects its channel).
           BASE=$(jq -r '.version' packages/apps/composer-app/package.json)
@@ -89,6 +79,7 @@ jobs:
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
         with:
+          environment: ${{ inputs.environment }}
           version: ${{ steps.bump-version.outputs.version }}
           ios-bundle-version: ${{ steps.bump-version.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
@@ -96,6 +87,7 @@ jobs:
       - name: Create draft non-production release
         uses: ./.github/actions/cn-release
         with:
+          environment: ${{ inputs.environment }}
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: draft
@@ -114,7 +106,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    timeout-minutes: 45
+    # A production build (no remote cache) already ran 27 min in the v0.10.2 release, close enough to the
+    # previous 45 that a slower runner would have been cut off mid-notarization.
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v5
@@ -137,6 +131,7 @@ jobs:
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
         with:
+          environment: ${{ inputs.environment }}
           version: ${{ needs.draft_tauri.outputs.version }}
           ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
@@ -285,12 +280,29 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Upload assets
+        timeout-minutes: 30
         uses: ./.github/actions/cn-release
         with:
+          environment: ${{ inputs.environment }}
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
           working-directory: ./packages/apps/composer-app/src-tauri/
+
+      # The web deploy is a sibling job that ships independently, so a red run here reads as "the release
+      # failed" when only the desktop half did — announce which half, as build_tauri_ios already does.
+      - name: Notify Discord on desktop build failure
+        if: failure() || cancelled()
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          REF_NAME: ${{ inputs.environment }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg ref "$REF_NAME" --arg url "$RUN_URL" \
+            '{content: (":warning: **build_tauri** failed on `" + $ref + "` — the web deploy is unaffected.\nRun: " + $url)}')
+          curl -sS -X POST "$DX_DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$payload"
 
   build_tauri_ios:
     needs: draft_tauri
@@ -315,6 +327,7 @@ jobs:
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
         with:
+          environment: ${{ inputs.environment }}
           version: ${{ needs.draft_tauri.outputs.version }}
           ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
@@ -417,6 +430,7 @@ jobs:
         timeout-minutes: 30
         uses: ./.github/actions/cn-release
         with:
+          environment: ${{ inputs.environment }}
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
@@ -472,6 +486,7 @@ jobs:
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
         with:
+          environment: ${{ inputs.environment }}
           version: ${{ needs.draft_tauri.outputs.version }}
           ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
@@ -479,6 +494,7 @@ jobs:
       - name: Publish release
         uses: ./.github/actions/cn-release
         with:
+          environment: ${{ inputs.environment }}
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: publish

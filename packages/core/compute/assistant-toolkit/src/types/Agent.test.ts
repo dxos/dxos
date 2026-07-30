@@ -6,8 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Skill } from '@dxos/compute';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Instructions, Skill } from '@dxos/compute';
+import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -17,74 +17,43 @@ import { Agent, Chat, Plan } from '../types';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Skill.Skill, Feed.Feed, Text.Text],
+  types: [
+    Agent.Agent,
+    Plan.Plan,
+    Chat.Chat,
+    Chat.CompanionTo,
+    Skill.Skill,
+    Feed.Feed,
+    Text.Text,
+    Instructions.Instructions,
+  ],
   disableLlmMemoization: true,
 });
 
-const makeAgent = Effect.fnUntraced(function* () {
-  return yield* Agent.makeInitialized(
-    { name: 'Test', instructions: '' },
-    Skill.make({ key: 'org.dxos.test.skill', name: 'Test' }),
-  );
-});
-
-describe('Agent.addArtifact', () => {
-  // The id forms a tool may hand back: a bare entity id, or a fully-qualified ECHO URI. LLMs commonly
-  // strip a returned URI down to the bare id, so both must resolve.
+describe('Agent (0.2.0)', () => {
   it.scoped(
-    'adds a freshly-created object by bare entity id',
+    'makeInitialized creates the identity/preset shape',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* makeAgent();
-        const doc = yield* Database.add(Text.make({ content: 'hello' }));
+        const agent = yield* Agent.makeInitialized(
+          { name: 'Test', instructions: 'Do the thing.' },
+          Skill.make({ key: 'org.dxos.test.skill', name: 'Test' }),
+        );
+        yield* Database.flush();
 
-        yield* Agent.addArtifact(agent, { name: 'Doc', id: doc.id });
+        expect(Type.getVersion(Agent.Agent)).toBe('0.2.0');
+        const { text, instructions } = yield* Agent.loadInstructions(agent);
+        expect(text).toBe('Do the thing.');
+        expect(Obj.getParent(instructions)).toBe(agent);
 
-        expect(agent.artifacts).toHaveLength(1);
-        expect(agent.artifacts[0]!.name).toBe('Doc');
-        const loaded = yield* Database.load(agent.artifacts[0]!.data);
-        expect(loaded.id).toBe(doc.id);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
+        // The relation carries the linkage in both directions; the agent owns no conversation state.
+        const chat = yield* Agent.loadChat(agent);
+        expect(chat).toBeDefined();
+        expect(chat?.instructions?.uri).toBe(agent.instructions.uri);
 
-  it.scoped(
-    'adds an object by fully-qualified ECHO URI',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const agent = yield* makeAgent();
-        const doc = yield* Database.add(Text.make({ content: 'world' }));
-
-        yield* Agent.addArtifact(agent, { name: 'Doc', id: Obj.getURI(doc) });
-
-        expect(agent.artifacts).toHaveLength(1);
-        const loaded = yield* Database.load(agent.artifacts[0]!.data);
-        expect(loaded.id).toBe(doc.id);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  // Best-effort: the reference is stored without resolving (the artifact may be created by a separate
-  // invocation and not yet visible); resolution happens lazily when the artifact is later read.
-  it.scoped(
-    'stores a reference without resolving it (resolves lazily)',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const agent = yield* makeAgent();
-        const doc = yield* Database.add(Text.make({ content: 'later' }));
-        const bareId = doc.id;
-
-        // Add by bare id; the helper must not require the artifact to be resolvable at add time.
-        yield* Agent.addArtifact(agent, { name: 'Doc', id: bareId });
-        expect(agent.artifacts).toHaveLength(1);
-
-        // The stored ref still resolves to the object.
-        const loaded = yield* Database.load(agent.artifacts[0]!.data);
-        expect(loaded.id).toBe(doc.id);
+        // Compare by id: the two query paths may resolve distinct proxy instances.
+        const linkedAgent = chat ? yield* Agent.loadForChat(chat) : undefined;
+        expect(linkedAgent?.id).toBe(agent.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

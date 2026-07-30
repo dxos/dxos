@@ -33,7 +33,7 @@ export const EDGE_SERVICE_DEFAULTS: Readonly<Record<EdgeServiceName, string>> = 
   [EdgeServiceName.Discord]: 'https://discord-service.dxos.workers.dev',
   [EdgeServiceName.CorsProxy]: 'https://cors-proxy.dxos.workers.dev',
   [EdgeServiceName.ApiProxy]: 'https://api-proxy.dxos.workers.dev',
-  [EdgeServiceName.Introspect]: 'https://introspect-service-labs.dxos.workers.dev/mcp',
+  [EdgeServiceName.Introspect]: 'https://mcp-introspect-service-labs.dxos.workers.dev/mcp',
   [EdgeServiceName.ChatAgent]: 'wss://chat-agent-labs.dxos.workers.dev',
 });
 

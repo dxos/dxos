@@ -3,10 +3,20 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import * as Schema from 'effect/Schema';
+import React, {
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
-import { type LogConfig, type LogEntry, LogLevel, type LogOptions, log, logFileRegistry, shouldLog } from '@dxos/log';
+import { LogLevel, logFileRegistry } from '@dxos/log';
 import {
+  ErrorStack,
   Icon,
   IconButton,
   Input,
@@ -19,23 +29,42 @@ import {
   Toolbar,
   composable,
   composableProps,
+  parseCaptureOwnerStack,
   useTranslation,
 } from '@dxos/react-ui';
+import { ViewState, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '../../translations';
-import { formatLogEntry } from './format';
+import { formatLogEntry, packageName } from './format';
+import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer';
+import { type LevelName, LEVELS, composeFilter } from './recorder';
+
+export { LEVELS, composeFilter, startLogRecording } from './recorder';
+export type { LevelName, LogRecorder } from './recorder';
+export { type LogRow, logBuffer } from './log-buffer';
 
 //
 // Shared
 //
 
-export const LEVELS = ['trace', 'debug', 'verbose', 'info', 'warn', 'error'] as const;
-export type LevelName = (typeof LEVELS)[number];
+/** Per-file level overrides are global to the logger, not scoped to an attention context. */
+const LOG_LEVELS_CONTEXT = 'logger';
 
-const DEFAULT_MAX_LINES = 1_000;
+/**
+ * Per-file log level overrides, keyed by source path. Persisted (localStorage) via react-ui-attention
+ * view state so the levels a developer dials in survive reloads; requires a `ViewStateProvider` ancestor
+ * to persist (degrades to session defaults without one).
+ */
+export const logLevelsAspect = ViewState.define<Record<string, LevelName>>({
+  key: 'debug-logger-levels',
+  backend: 'local',
+  schema: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Literal(...LEVELS) })),
+  defaultValue: () => ({}),
+});
 
 export const levelColor = (level: LogLevel) =>
   level > LogLevel.WARN
@@ -46,39 +75,10 @@ export const levelColor = (level: LogLevel) =>
         ? 'text-info-text'
         : 'text-success-text';
 
-// Ref-counted global-config ownership so concurrent panels restore the original config only after the last stops.
-let activeRecorders = 0;
-let sharedSavedOptions: LogOptions | undefined;
-
-const acquireLogConfig = (): void => {
-  if (activeRecorders === 0) {
-    sharedSavedOptions = log.runtimeConfig.options;
-  }
-  activeRecorders += 1;
-};
-
-const releaseLogConfig = (): void => {
-  activeRecorders = Math.max(0, activeRecorders - 1);
-  if (activeRecorders === 0 && sharedSavedOptions) {
-    log.config(sharedSavedOptions);
-    sharedSavedOptions = undefined;
-  }
-};
-
 // Guard clipboard writes so rejected or unavailable writes surface rather than dangling as unhandled rejections.
 export const copyToClipboard = (text: string): void => {
   void navigator.clipboard?.writeText(text)?.catch((err) => console.warn('clipboard write failed', err));
 };
-
-type LogRow = { id: number; entry: LogEntry };
-
-// Derive the workspace package directory from a source path (…/packages/<group>/<pkg>/…) for display/grouping.
-const packageName = (file: string): string | undefined => file.match(/packages\/[^/]+\/([^/]+)\//)?.[1];
-
-// Compose the base filter with per-file overrides into a single @dxos/log filter string.
-// Order-independent: an override below the base level raises that file's verbosity; above, it quiets it.
-export const composeFilter = (base: string, fileLevels: Map<string, LevelName>): string =>
-  [base, ...[...fileLevels].map(([file, level]) => `${file}:${level}`)].filter(Boolean).join(', ');
 
 //
 // Context
@@ -98,6 +98,10 @@ type LoggerContextValue = {
   clearFileLevels: () => void;
   expanded: Set<number>;
   toggleExpand: (id: number) => void;
+  current: number | undefined;
+  setCurrent: (id: number) => void;
+  checked: Set<number>;
+  toggleChecked: (id: number) => void;
   clear: () => void;
   copyAll: () => void;
 };
@@ -122,119 +126,109 @@ const LoggerRoot = ({
 }: LoggerRootProps) => {
   const [filter, setFilter] = useState(initialFilter);
   const [textFilter, setTextFilter] = useState('');
-  const [recording, setRecording] = useState(defaultRecording);
-  const [rows, setRows] = useState<LogRow[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
-  const [fileLevels, setFileLevels] = useState<Map<string, LevelName>>(new Map());
-  // Set membership is O(1); the sorted view is memoized so a high-volume stream never re-sorts per entry.
-  const filesRef = useRef<Set<string>>(new Set(logFileRegistry.getFiles()));
-  const [filesEpoch, setFilesEpoch] = useState(0);
-  const addFile = useCallback((file: string) => {
-    if (file && !filesRef.current.has(file)) {
-      filesRef.current.add(file);
-      setFilesEpoch((epoch) => epoch + 1);
-    }
-  }, []);
+  const [current, setCurrent] = useState<number>();
+  const [checked, setChecked] = useState<Set<number>>(new Set());
+  // Per-file level overrides live in persisted view state; expose them as a Map for `composeFilter`
+  // and the Levels list.
+  const fileLevelsRecord = useViewState(logLevelsAspect, LOG_LEVELS_CONTEXT);
+  const { update: updateFileLevels, clear: clearFileLevelsAction } = useViewStateActions(
+    logLevelsAspect,
+    LOG_LEVELS_CONTEXT,
+  );
+  const fileLevels = useMemo(() => new Map(Object.entries(fileLevelsRecord)), [fileLevelsRecord]);
+
+  // Rows, files and the recorder live in the process-wide buffer, not here: this panel is a deck
+  // companion, so mounting is not the lifetime we want recording to follow.
+  const rows = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRows);
+  const files = useSyncExternalStore(logBuffer.subscribe, logBuffer.getFiles);
+  const recording = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRecording);
 
   // Absorb files registered at module load (dev registry) plus any registered after mount.
   useEffect(() => {
-    const sync = () => {
-      let changed = false;
-      for (const file of logFileRegistry.getFiles()) {
-        if (!filesRef.current.has(file)) {
-          filesRef.current.add(file);
-          changed = true;
-        }
-      }
-      if (changed) {
-        setFilesEpoch((epoch) => epoch + 1);
-      }
-    };
+    const sync = () => logBuffer.addFiles(logFileRegistry.getFiles());
     sync();
     return logFileRegistry.subscribe(sync);
   }, []);
 
-  // Cache the sorted list; recomputed only when the file set actually grows.
-  const files = useMemo(() => [...filesRef.current].sort(), [filesEpoch]);
+  useEffect(() => logBuffer.setCapacity(maxLines), [maxLines]);
 
-  // Normalize the public prop: a non-positive or non-finite bound would defeat `slice(-capacity)`.
-  const capacity = useMemo(
-    () => (Number.isFinite(maxLines) && maxLines >= 1 ? Math.floor(maxLines) : DEFAULT_MAX_LINES),
-    [maxLines],
-  );
-
-  // Monotonic id so list keys stay stable once `slice(-capacity)` drops older rows.
-  const nextRowId = useRef(0);
-
-  // Acquire/release the shared global-config ownership across the recording lifetime (ref-counted across panels).
-  useEffect(() => {
-    if (!recording) {
-      return;
-    }
-    acquireLogConfig();
-    return () => releaseLogConfig();
-  }, [recording]);
-
-  // Apply the composed filter and capture entries while recording; discover every file regardless of the display filter.
   const effectiveFilter = useMemo(() => composeFilter(filter, fileLevels), [filter, fileLevels]);
+  useEffect(() => logBuffer.setFilter(filter, fileLevels), [filter, fileLevels, effectiveFilter]);
+
+  // `defaultRecording` seeds the buffer the first time a panel mounts; thereafter the buffer's own
+  // state wins, so reopening the panel does not silently resume a stream the user paused.
+  const seeded = useRef(false);
   useEffect(() => {
-    if (!recording) {
-      return;
+    if (!seeded.current) {
+      seeded.current = true;
+      if (defaultRecording) {
+        logBuffer.start();
+      }
     }
+  }, [defaultRecording]);
 
-    log.config({ filter: effectiveFilter });
-    const dispose = log.addProcessor((config: LogConfig, entry: LogEntry) => {
-      const file = entry.meta?.F;
-      if (file) {
-        addFile(file);
-      }
-      if (shouldLog(entry, config.filters)) {
-        setRows((prev) => [...prev, { id: nextRowId.current++, entry }].slice(-capacity));
-      }
-    });
+  const setRecording = useCallback((fn: (value: boolean) => boolean) => {
+    const next = fn(logBuffer.recording);
+    logBuffer.start();
+    logBuffer.setPaused(!next);
+  }, []);
 
-    return () => dispose();
-  }, [recording, effectiveFilter, capacity, addFile]);
-
-  // Drop expansion state for evicted rows so the set stays bounded (no-op while nothing is expanded).
+  // Drop per-row state (expansion, selection) for evicted rows so the sets stay bounded.
   useEffect(() => {
-    setExpanded((prev) => {
+    const ids = new Set(rows.map((row) => row.id));
+    const prune = (prev: Set<number>) => {
       if (prev.size === 0) {
         return prev;
       }
-      const ids = new Set(rows.map((row) => row.id));
       const next = new Set([...prev].filter((id) => ids.has(id)));
       return next.size === prev.size ? prev : next;
-    });
+    };
+    setExpanded(prune);
+    setChecked(prune);
   }, [rows]);
 
-  const setFileLevel = useCallback((file: string, level: LevelName | undefined) => {
-    setFileLevels((prev) => {
-      const next = new Map(prev);
-      if (level) {
-        next.set(file, level);
-      } else {
-        next.delete(file);
-      }
-      return next;
-    });
-  }, []);
-  const clearFileLevels = useCallback(() => setFileLevels(new Map()), []);
+  const setFileLevel = useCallback(
+    (file: string, level: LevelName | undefined) => {
+      updateFileLevels((prev) => {
+        const next = { ...prev };
+        if (level) {
+          next[file] = level;
+        } else {
+          delete next[file];
+        }
+        return next;
+      });
+    },
+    [updateFileLevels],
+  );
+  const clearFileLevels = useCallback(() => clearFileLevelsAction(), [clearFileLevelsAction]);
   const clear = useCallback(() => {
-    setRows([]);
+    logBuffer.clear();
     setExpanded(new Set());
+    setChecked(new Set());
+    setCurrent(undefined);
   }, []);
+  // Copy the checked rows when any are checked, else the whole buffer.
   const copyAll = useCallback(() => {
+    const selected = checked.size > 0 ? rows.filter((row) => checked.has(row.id)) : rows;
     copyToClipboard(
       JSON.stringify(
-        rows.map(({ entry }) => formatLogEntry(entry)),
+        selected.map(({ entry }) => formatLogEntry(entry)),
         null,
         2,
       ),
     );
-  }, [rows]);
+  }, [rows, checked]);
   const toggleExpand = useCallback((id: number) => {
     setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+  const toggleChecked = useCallback((id: number) => {
+    setChecked((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -256,6 +250,10 @@ const LoggerRoot = ({
       clearFileLevels={clearFileLevels}
       expanded={expanded}
       toggleExpand={toggleExpand}
+      current={current}
+      setCurrent={setCurrent}
+      checked={checked}
+      toggleChecked={toggleChecked}
       clear={clear}
       copyAll={copyAll}
     >
@@ -484,7 +482,8 @@ type LoggerListProps = ThemedClassName<{}>;
 
 const LoggerList = ({ classNames }: LoggerListProps) => {
   const { t } = useTranslation(translationKey);
-  const { rows, expanded, toggleExpand, textFilter } = useLoggerContext('Logger.List');
+  const { rows, expanded, toggleExpand, current, setCurrent, checked, toggleChecked, textFilter } =
+    useLoggerContext('Logger.List');
 
   // Compute the display record once; filter the buffer by a case-insensitive match on file + message.
   const needle = textFilter.trim().toLowerCase();
@@ -504,41 +503,82 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
 
   return (
     <Listbox.Root>
-      <Listbox.Content classNames={mx(classNames)}>
-        {visible.map(({ id, entry, record }) => (
-          <Listbox.Item
-            key={id}
-            id={String(id)}
-            classNames='group grid grid-cols-[1rem_8rem_1fr_max-content] items-center gap-2 px-2 py-0'
-          >
-            <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
-            <span className='truncate text-subdued'>{record.file}</span>
-            <button
-              type='button'
-              aria-expanded={expanded.has(id)}
-              className='truncate text-start cursor-pointer'
-              title={record.message}
-              onClick={() => toggleExpand(id)}
-            >
-              {record.message}
-            </button>
-            <IconButton
-              icon='ph--clipboard--regular'
-              iconOnly
-              density='xs'
-              label={t('copy-entry.label')}
-              variant='ghost'
-              classNames='p-0 opacity-50 group-hover:opacity-100'
-              onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
-            />
-            {expanded.has(id) && (
-              <pre className='col-span-full px-4 py-1 whitespace-pre-wrap text-subdued'>
-                {JSON.stringify({ message: record.message, context: record.context, error: record.error }, null, 2)}
-              </pre>
-            )}
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
+      <div
+        onKeyDown={(event) => {
+          if (current === undefined) {
+            return;
+          }
+          if (event.key === ' ') {
+            event.preventDefault();
+            toggleExpand(current);
+          } else if (event.key === 'Enter') {
+            event.preventDefault();
+            toggleChecked(current);
+          }
+        }}
+      >
+        <Listbox.Content classNames={mx(classNames)}>
+          {visible.map(({ id, entry, record }) => {
+            const isExpanded = expanded.has(id);
+            // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
+            const frames = isExpanded && record.error ? parseCaptureOwnerStack(record.error) : null;
+            return (
+              <Listbox.Item
+                key={id}
+                id={String(id)}
+                aria-current={current === id || undefined}
+                onFocus={() => setCurrent(id)}
+                onClick={() => setCurrent(id)}
+                classNames='group grid grid-cols-[auto_1rem_8rem_1fr_max-content] gap-2 items-center p-0 dx-current'
+              >
+                <div className='flex items-center pl-2'>
+                  <Input.Root>
+                    <Input.Checkbox
+                      tabIndex={-1}
+                      size={3}
+                      checked={checked.has(id)}
+                      onCheckedChange={() => toggleChecked(id)}
+                    />
+                  </Input.Root>
+                </div>
+                <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
+                <div
+                  className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-description')}
+                  title={record.file}
+                >
+                  <span className='truncate'>{record.file?.split('/').pop() ?? record.file}</span>
+                </div>
+                <span className='truncate' title={record.message}>
+                  {record.message}
+                </span>
+                <IconButton
+                  icon='ph--clipboard--regular'
+                  iconOnly
+                  density='xs'
+                  tabIndex={-1}
+                  label={t('copy-entry.label')}
+                  variant='ghost'
+                  classNames='p-0 opacity-50 group-hover:opacity-100'
+                  onClick={() => copyToClipboard(JSON.stringify(record, null, 2))}
+                />
+                {isExpanded && (
+                  <div className='col-span-full'>
+                    <JsonHighlighter
+                      classNames='p-2'
+                      data={{
+                        file: record.line ? `${record.file}:${record.line}` : record.file,
+                        message: record.message,
+                        context: record.context,
+                      }}
+                    />
+                    {frames && <ErrorStack classNames='p-1 bg-input-surface' frames={frames} />}
+                  </div>
+                )}
+              </Listbox.Item>
+            );
+          })}
+        </Listbox.Content>
+      </div>
     </Listbox.Root>
   );
 };

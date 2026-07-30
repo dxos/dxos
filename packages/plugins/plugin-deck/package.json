@@ -44,14 +44,8 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/DeckPlugin.workerd.ts",
-        "node": "./src/DeckPlugin.node.ts",
-        "default": "./src/DeckPlugin.ts"
-      },
+      "source": "./src/DeckPlugin.ts",
       "types": "./dist/types/src/DeckPlugin.d.ts",
-      "workerd": "./dist/lib/DeckPlugin.workerd.mjs",
-      "node": "./dist/lib/DeckPlugin.node.mjs",
       "default": "./dist/lib/DeckPlugin.mjs"
     },
     "#translations": {
@@ -106,7 +100,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -118,6 +111,7 @@
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-context": "catalog:",

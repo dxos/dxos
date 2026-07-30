@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 
@@ -156,21 +157,26 @@ export const PreviewComponent = ({
     [view, range, dxn, remSize],
   );
 
-  // Open the referenced object: defer to the caller's handler when provided, else navigate to it.
-  const handleOpen = useCallback(() => {
-    if (!uri || !object) {
-      return;
-    }
+  const handleOpen = useCallback(
+    (event: MouseEvent) => {
+      if (!uri || !object) {
+        return;
+      }
 
-    if (onOpen) {
-      onOpen(uri);
-    } else {
-      void invokePromise?.(LayoutOperation.Open, {
-        subject: [Paths.getObjectPathFromObject(object)],
-        navigation: 'immediate',
-      });
-    }
-  }, [uri, object, onOpen, invokePromise]);
+      if (onOpen) {
+        onOpen(uri);
+      } else {
+        void invokePromise?.(LayoutOperation.Open, {
+          subject: [GraphPath.getObjectPathFromObject(object)],
+          pivotId: Attention.getRootAttendableId(event.currentTarget),
+          disposition: 'add',
+          modifiers: { shift: event.shiftKey },
+          navigation: 'immediate',
+        });
+      }
+    },
+    [uri, object, onOpen, invokePromise],
+  );
 
   if (!uri || !object || !data) {
     return null;

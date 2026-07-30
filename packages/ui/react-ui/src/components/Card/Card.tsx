@@ -11,6 +11,7 @@ import React, {
   MouseEventHandler,
   type ReactNode,
   forwardRef,
+  useCallback,
   useId,
   useMemo,
 } from 'react';
@@ -199,11 +200,17 @@ type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
 
 function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps<T>) {
   const { t } = useTranslation(translationKey);
+  // A `Card.Root` with an `onClick` is a click target, and this menu sits inside it. React portals
+  // propagate through the React tree rather than the DOM, so without this both the trigger and the
+  // item selection reach the card's handler and activate it on the way past. Radix's `asChild`
+  // composes the trigger handler, so the menu still opens.
+  const stopPropagation = useCallback<MouseEventHandler>((event) => event.stopPropagation(), []);
   return (
     <CardBlock end>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger disabled={!items?.length} asChild>
           <IconButton
+            onClick={stopPropagation}
             iconOnly
             variant='ghost'
             icon='ph--dots-three-vertical--regular'
@@ -212,7 +219,7 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
         </DropdownMenu.Trigger>
         {(items?.length ?? 0) > 0 && (
           <DropdownMenu.Portal>
-            <DropdownMenu.Content>
+            <DropdownMenu.Content onClick={stopPropagation}>
               <DropdownMenu.Viewport>
                 {items?.map(({ label, icon, onClick: onSelect }, index) => (
                   // `context` is the generic payload threaded to each handler; the cast is the

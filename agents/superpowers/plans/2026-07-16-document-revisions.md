@@ -863,9 +863,7 @@ export const GetHistory = Operation.make({
 
 ```ts
 export type VersionSelection =
-  | { kind: 'current' }
-  | { kind: 'branch'; branchId: string }
-  | { kind: 'checkpoint'; versionId: string };
+  { kind: 'current' } | { kind: 'branch'; branchId: string } | { kind: 'checkpoint'; versionId: string };
 
 export type CompareSelection = { versionId?: string; branchId?: string } | undefined;
 

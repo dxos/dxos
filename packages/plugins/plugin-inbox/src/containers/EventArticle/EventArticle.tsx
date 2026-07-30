@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -35,8 +35,11 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   // inputs. The companion subject can be a non-reactive snapshot; querying by id yields the proxy.
   const live = useQuery(db, Query.select(Filter.id(subject.id)))[0];
   const event = live ?? subject;
-  // A draft event (locally created, not yet synced) is editable and savable.
-  const draft = DraftEvent.instanceOf(event);
+  // A draft event (locally created, not yet synced) is editable and savable. The body editor binds an
+  // automerge accessor, which requires the live (reactive) object — gate editing on `live` so the first
+  // render (before the by-id query resolves) shows the read-only body from the snapshot instead of
+  // handing the editor a non-live subject.
+  const draft = DraftEvent.instanceOf(event) && !!live;
   // Saving (pushing to Google Calendar) requires a connection bound to the calendar.
   const { connection } = useTargetConnection(calendar);
 
@@ -61,7 +64,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
 
   const handleOpenObject = useCallback(
     (object: Obj.Unknown) => {
-      void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(object)] });
+      void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] });
     },
     [invokePromise],
   );

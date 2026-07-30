@@ -25,6 +25,7 @@ export * from '../components/ScrollArea/ScrollArea.theme';
 export * from '../components/Select/Select.theme';
 export * from '../components/Separator/Separator.theme';
 export * from '../components/Skeleton/Skeleton.theme';
+export * from '../components/Slider/Slider.theme';
 export * from '../components/Splitter/Splitter.theme';
 export * from '../components/Status/Status.theme';
 export * from '../components/Tag/Tag.theme';

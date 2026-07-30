@@ -3,17 +3,19 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
+import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, UrlResolution } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Panel } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 import { Editor, type ViewModeItem, defaultViewModeItems, useEditorContext } from '@dxos/react-ui-editor';
@@ -113,9 +115,11 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
       id: string;
       settings: Markdown.Settings;
       viewState?: ViewState.Manager;
+      /** Overrides the default navigation when an internal link resolves to a node. */
+      onSelectObject?: (objectId: string) => void;
     },
     Pick<MarkdownPluginState, 'extensionProviders'>,
-    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'>,
+    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onViewModeChange'>,
     Pick<MarkdownEditorContentProps, 'editorStateStore'>
   >
 >;
@@ -202,7 +206,8 @@ const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { 
     // Toolbar actions from the app graph. Branch selection / suggest / return-to-main live in the
     // History companion (the advanced path); the ambient review mode (incl. Suggesting) is surfaced in
     // the editor view-mode dropdown below.
-    const { graph } = useAppGraph();
+    const builder = useAppGraph();
+    const { graph } = builder;
     const runAction = useActionRunner();
     const customActions = useMemo(
       () => Atom.make((get) => graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction })),
@@ -265,19 +270,36 @@ const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { 
     // Open linked objects.
     const { invokePromise } = useOperationInvoker();
     const handleSelectObject = useCallback(
-      (targetId: string) => {
+      (targetId: string, modifiers?: { shift: boolean }) => {
         if (onSelectObject) {
           onSelectObject(targetId);
         } else {
           void invokePromise?.(LayoutOperation.Open, {
             subject: [targetId],
             pivotId: attendableId,
+            disposition: 'auto',
+            modifiers: { shift: modifiers?.shift },
             // TODO(wittjosiah): This should probably pre-validate.
             navigation: 'immediate',
           });
         }
       },
       [onSelectObject, invokePromise, attendableId],
+    );
+
+    // An internal link carries only a URL pathname; resolving it walks the graph, so it is async and
+    // no-ops when the link does not name an existing node.
+    const handleSelectLink = useCallback(
+      async (pathname: string, modifiers?: { shift: boolean }) => {
+        const nodeId = await EffectEx.runPromise(UrlResolution.resolveInternalLink(builder, pathname));
+        if (Option.isNone(nodeId)) {
+          log.warn('internal link did not resolve to a node', { pathname });
+          return;
+        }
+
+        handleSelectObject(nodeId.value, modifiers);
+      },
+      [builder, handleSelectObject],
     );
 
     if (binding.loading) {
@@ -298,7 +320,7 @@ const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { 
         onAction={runAction}
         onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}
-        onSelectObject={handleSelectObject}
+        onSelectLink={handleSelectLink}
         onViewModeChange={onViewModeChange}
         {...props}
       >

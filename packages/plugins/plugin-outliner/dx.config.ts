@@ -25,6 +25,6 @@ export default Config2.make({
     icon: { key: 'ph--tree-structure--regular', hue: 'indigo' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-outliner',
     spec: 'PLUGIN.mdl',
-    tags: ['labs'],
+    tags: ['alpha'],
   },
 });

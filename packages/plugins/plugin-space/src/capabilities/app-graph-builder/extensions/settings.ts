@@ -42,14 +42,16 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
       ]),
   });
 
-  const childrenExtension = yield* GraphBuilder.createExtension({
-    id: 'settingsSections',
+  // General and Members are separate extensions rather than one so each can be an id-less key (a single
+  // id-less key can address only one fixed node — its terminal segment IS the key).
+  const generalExtension = yield* GraphBuilder.createExtension({
+    id: 'settingsGeneral',
+    url: { key: 'settings', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
-    connector: (space) => {
-      const personal = AppSpace.isPersonalSpace(space);
-      return Effect.succeed([
+    connector: (space) =>
+      Effect.succeed([
         Node.make({
-          id: 'general',
+          id: 'settings',
           type: `${meta.profile.key}.general`,
           data: `${meta.profile.key}.general`,
           properties: {
@@ -61,8 +63,18 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
             testId: 'spacePlugin.general',
           },
         }),
-        ...(!personal
-          ? [
+      ]),
+  });
+
+  const membersExtension = yield* GraphBuilder.createExtension({
+    id: 'settingsMembers',
+    url: { key: 'members', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
+    match: AppNodeMatcher.whenSpaceSettings,
+    connector: (space) =>
+      Effect.succeed(
+        AppSpace.isPersonalSpace(space)
+          ? []
+          : [
               Node.make({
                 id: 'members',
                 type: `${meta.profile.key}.members`,
@@ -76,11 +88,9 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
                   testId: 'spacePlugin.members',
                 },
               }),
-            ]
-          : []),
-      ]);
-    },
+            ],
+      ),
   });
 
-  return [sectionExtension, childrenExtension];
+  return [sectionExtension, generalExtension, membersExtension];
 });

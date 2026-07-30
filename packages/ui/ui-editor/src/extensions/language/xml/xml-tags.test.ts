@@ -11,14 +11,18 @@ import { trim } from '@dxos/util';
 
 import { decorationSetToArray } from '../../../util';
 import { extendedMarkdown } from './extended-markdown';
+import { StubWidget } from './stub';
 import {
   type XmlWidgetDef,
   type XmlWidgetProps,
+  type XmlWidgetState,
   navigateNextEffect,
   navigatePreviousEffect,
+  xmlTagContextEffect,
   xmlTagRebuildEffect,
   xmlTagResetEffect,
   xmlTags,
+  xmlTagUpdateEffect,
 } from './xml-tags';
 
 //
@@ -102,6 +106,26 @@ const xmlDecorations = (view: EditorView): Descriptor[] => {
 };
 
 const flush = () => new Promise<void>((resolve) => queueMicrotask(resolve));
+
+/** The live StubWidget for an id, as CodeMirror would render it. */
+const stubWidget = (view: EditorView, id: string): StubWidget<XmlWidgetProps> => {
+  for (const source of view.state.facet(EditorView.decorations)) {
+    const set = typeof source === 'function' ? source(view) : source;
+    if (!set) {
+      continue;
+    }
+    for (const { value } of decorationSetToArray(set)) {
+      const widget = value.spec?.widget;
+      if (widget instanceof StubWidget && widget.id === id) {
+        return widget;
+      }
+    }
+  }
+
+  throw new Error(`no widget: ${id}`);
+};
+
+const widgetProps = (view: EditorView, id: string): XmlWidgetProps => stubWidget(view, id).props;
 
 const createView = (
   doc: string,
@@ -392,5 +416,173 @@ describe('xmlTags decorations', () => {
       expect(view.state.selection.main.head).toBeLessThan(view.state.doc.length);
       view.destroy();
     });
+  });
+});
+
+//
+// Widget state.
+//
+// `xmlTags` documents that widget state may be updated BEFORE the widget mounts (a thread returning
+// from a remount replaces the document, then rehydrates each widget's state out-of-band). These lock
+// in that contract at the editor level: the effect must survive the reset, must not be dropped when it
+// shares a transaction, and must reach a widget that mounts afterwards.
+//
+
+describe('xmlTags widget state', () => {
+  const stateRegistry: Record<string, XmlWidgetDef> = {
+    toolCall: { block: true, Component: () => null },
+  };
+
+  const doc = trim`
+    <toolCall id="a" />
+
+    <toolCall id="b" />
+  `;
+
+  test('applies every widget update effect in a single transaction', async ({ expect }) => {
+    const view = createView(doc, { registry: stateRegistry });
+    await rebuild(view);
+    view.dispatch({
+      effects: [
+        xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }),
+        xmlTagUpdateEffect.of({ id: 'b', value: { blocks: ['B'] } }),
+      ],
+    });
+    view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+    await flush();
+    expect(widgetProps(view, 'a').blocks).toEqual(['A']);
+    expect(widgetProps(view, 'b').blocks).toEqual(['B']);
+    view.destroy();
+  });
+
+  test('widget state survives the reset that replaces the document', async ({ expect }) => {
+    const view = createView('placeholder', { registry: stateRegistry });
+    await rebuild(view);
+
+    // What `setContent` dispatches on remount: replace the document and clear accumulated state.
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: doc },
+      effects: xmlTagResetEffect.of(null),
+    });
+    view.dispatch({ effects: xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
+    view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+    await flush();
+    expect(widgetProps(view, 'a').blocks).toEqual(['A']);
+    view.destroy();
+  });
+
+  test('state reaches a mounted widget after a rebuild replaced its decoration instance', async ({ expect }) => {
+    let mounted: XmlWidgetState[] = [];
+    const view = createView(doc, { registry: stateRegistry, setWidgets: (widgets) => (mounted = widgets) });
+    await rebuild(view);
+    stubWidget(view, 'a').toDOM(view);
+
+    // Replacing the document rebuilds decorations into fresh widget instances, but `StubWidget.eq`
+    // (id equality) makes CodeMirror keep the rendered DOM — so the rebuilt instance has no root and
+    // an update routed through the decoration set would find nothing to re-render.
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: doc },
+      effects: xmlTagResetEffect.of(null),
+    });
+    expect(stubWidget(view, 'a').root).toBeNull();
+
+    view.dispatch({ effects: xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
+    expect(mounted.find((state) => state.id === 'a')?.props.blocks).toEqual(['A']);
+    view.destroy();
+  });
+
+  test('a widget mounting after its state arrives receives that state', async ({ expect }) => {
+    let mounted: XmlWidgetState[] = [];
+    const view = createView(doc, { registry: stateRegistry, setWidgets: (widgets) => (mounted = widgets) });
+
+    // The one-shot parse-completion rebuild lands first and is never re-armed without a document
+    // change, so the state arriving afterwards cannot be picked up by another rebuild.
+    await rebuild(view);
+    view.dispatch({ effects: xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
+
+    // The widget mounts now — scrolled into CodeMirror's viewport, or portaled after the initial render.
+    const widget = stubWidget(view, 'a');
+    widget.toDOM(view);
+    expect(mounted.find((state) => state.id === 'a')?.props.blocks).toEqual(['A']);
+    view.destroy();
+  });
+});
+
+//
+// Widget context.
+//
+// The host publishes the context widgets call back through (`MarkdownStreamController.setContext`),
+// and it necessarily arrives *after* the first decoration build — the controller does not exist until
+// the editor mounts. A widget captures its props when its decoration is built, so unless the context
+// effect both rebuilds decorations and defeats widget reuse, every widget is left holding
+// `context: undefined` for the life of the document and every callback through it silently no-ops.
+//
+
+describe('xmlTags widget context', () => {
+  const contextRegistry: Record<string, XmlWidgetDef> = {
+    branch: { block: true, Component: () => null },
+  };
+
+  const doc = '<branch id="a" />';
+
+  test('a widget built before the context still receives it', async ({ expect }) => {
+    const view = createView(doc, { registry: contextRegistry });
+    await rebuild(view);
+    expect(widgetProps(view, 'a').context).toBeUndefined();
+
+    const context = { rewind: () => {} };
+    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    await flush();
+
+    expect(widgetProps(view, 'a').context).toBe(context);
+    view.destroy();
+  });
+
+  test('a later context replaces an earlier one', async ({ expect }) => {
+    const view = createView(doc, { registry: contextRegistry });
+    await rebuild(view);
+
+    const first = { rewind: () => {} };
+    view.dispatch({ effects: xmlTagContextEffect.of(first) });
+    await flush();
+    expect(widgetProps(view, 'a').context).toBe(first);
+
+    const second = { rewind: () => {} };
+    view.dispatch({ effects: xmlTagContextEffect.of(second) });
+    await flush();
+    expect(widgetProps(view, 'a').context).toBe(second);
+    view.destroy();
+  });
+
+  test('the mounted widget state carries the context', async ({ expect }) => {
+    let mounted: XmlWidgetState[] = [];
+    const view = createView(doc, { registry: contextRegistry, setWidgets: (widgets) => (mounted = widgets) });
+    await rebuild(view);
+
+    const context = { rewind: () => {} };
+    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    await flush();
+
+    // Mount the way the portal host does, then read what the notifier published.
+    stubWidget(view, 'a').toDOM(view);
+    expect(mounted.find((state) => state.id === 'a')?.props.context).toBe(context);
+    view.destroy();
+  });
+
+  test('re-publishing the same context does not churn the widget', async ({ expect }) => {
+    const view = createView(doc, { registry: contextRegistry });
+    await rebuild(view);
+
+    const context = { rewind: () => {} };
+    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    await flush();
+    const widget = stubWidget(view, 'a');
+
+    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    await flush();
+
+    // Same context: the widget is interchangeable, so CodeMirror should keep the mounted instance.
+    expect(stubWidget(view, 'a').eq(widget)).toBe(true);
+    view.destroy();
   });
 });

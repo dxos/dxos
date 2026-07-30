@@ -56,4 +56,37 @@ describe('layout', () => {
     const { rects } = layout({ heights: [10, 10], columnCount: 0, containerWidth: 100, gapPx: 0 });
     expect(rects.map((rect) => rect.column)).toEqual([0, 0]);
   });
+
+  test('start-aligns columns when centring is off', ({ expect }) => {
+    const options = {
+      heights: [100, 100],
+      columnCount: 2,
+      containerWidth: 1000,
+      gapPx: 10,
+      maxColumnWidthPx: 200,
+    };
+
+    // Capped columns use 410 of 1000, so centring insets both sides by 295.
+    const centred = layout({ ...options, centered: true });
+    expect(centred.rects[0].x).toBe(295);
+
+    const startAligned = layout({ ...options, centered: false });
+    expect(startAligned.rects[0].x).toBe(0);
+    expect(startAligned.rects[1].x).toBe(210);
+
+    // Only the offset changes; the columns themselves are identical.
+    expect(startAligned.columnWidth).toBe(centred.columnWidth);
+    expect(startAligned.height).toBe(centred.height);
+  });
+
+  test('centres by default', ({ expect }) => {
+    const rects = layout({
+      heights: [100],
+      columnCount: 1,
+      containerWidth: 1000,
+      gapPx: 10,
+      maxColumnWidthPx: 200,
+    }).rects;
+    expect(rects[0].x).toBe(400);
+  });
 });

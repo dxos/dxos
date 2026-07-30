@@ -24,7 +24,13 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-attention"
+    },
+    {
       "path": "../react-ui-list"
+    },
+    {
+      "path": "../react-ui-syntax-highlighter"
     },
     {
       "path": "../ui-theme"

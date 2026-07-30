@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -66,7 +66,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         contextId: id,
         selectionId: post.id,
         companion: Attention.linkedSegment('post'),
-        path: Paths.getObjectPathFromObject(subject),
+        path: GraphPath.getObjectPathFromObject(subject),
       });
     },
     [id, showItem, invoker, subject],

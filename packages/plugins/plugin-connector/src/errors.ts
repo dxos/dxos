@@ -18,11 +18,24 @@ const AUTH_EXPIRED_MESSAGE = 'Connection credentials have expired and must be re
 
 const TEST_FAILED_MESSAGE = 'Connection test failed.' as const;
 
+const SYNC_FAILED_MESSAGE = 'Connection sync could not be run.' as const;
+
 /**
  * A connector's {@link TestConnection} probe rejected the stored credential or could not reach the
  * service. Its `message` is the user-facing reason shown in the connection UI.
  */
 export class ConnectionTestError extends BaseError.extend('ConnectionTestError', TEST_FAILED_MESSAGE) {}
+
+/**
+ * A binding's sync could not be run at all — no handler is registered for the connector's sync
+ * operation, or the space has no trigger monitor to force-run the schedule the connector declares.
+ * Distinct from a sync that ran and failed, which the run's own process reports.
+ */
+export class ConnectionSyncError extends BaseError.extend('ConnectionSyncError', SYNC_FAILED_MESSAGE) {
+  constructor(input: { connectorId?: string; cause?: unknown } = {}) {
+    super({ context: { connectorId: input.connectorId }, cause: input.cause });
+  }
+}
 
 /** No Connector capability row matches the requested `connectorId`. */
 export class ConnectorNotFoundError extends BaseError.extend('ConnectorNotFoundError', NO_CONNECTOR_MESSAGE) {

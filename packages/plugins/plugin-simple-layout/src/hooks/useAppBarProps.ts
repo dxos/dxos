@@ -9,7 +9,8 @@ import { useCallback, useMemo } from 'react';
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, Node, useActionRunner, useNode } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { useActionRunner, useNode } from '@dxos/plugin-graph/hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry as AtomRegistry } from '@effect-atom/atom-react';
+import { Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';

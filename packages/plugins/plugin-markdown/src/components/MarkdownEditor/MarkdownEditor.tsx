@@ -4,7 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
@@ -71,7 +71,7 @@ export type MarkdownEditorProviderProps = Merge<
     'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
   >,
   Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'>,
-  Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'identity' | 'onSelectObject'>
+  Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'identity' | 'onSelectLink'>
 >;
 
 export const MarkdownEditorProvider = ({
@@ -88,7 +88,7 @@ export const MarkdownEditorProvider = ({
   slashCommandGroups,
   identity,
   onLinkQuery,
-  onSelectObject,
+  onSelectLink,
   onAction,
   onFileUpload,
   onViewModeChange,
@@ -110,7 +110,7 @@ export const MarkdownEditorProvider = ({
     setWidgets,
     settings,
     identity,
-    onSelectObject,
+    onSelectLink,
   });
 
   const extensions = useMemo(
