@@ -532,7 +532,7 @@ export class ObjectCore {
    * The document's current heads, recorded when the entity is merged away.
    */
   getHeads(): Heads {
-    const doc = this.doc ?? this.docHandle?.doc();
+    const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
     return doc ? A.getHeads(doc) : [];
   }
 

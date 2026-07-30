@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Filter, Merge, Obj } from '@dxos/echo';
+import { Database, Filter, Merge, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
-import { mergeDuplicates, resolveMerged } from './merge-executor';
+import { mergeDuplicates, resolveMerged, rewriteReferences } from './merge-executor';
 
 describe('Merge', () => {
   let builder: EchoTestBuilder;
@@ -167,6 +167,40 @@ describe('Merge', () => {
       // reach the winner rather than dangle.
       expect(resolveMerged(second.id, before)).toBe(first.id);
       expect(resolveMerged(first.id, before)).toBe(first.id);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
+  test('references to a merged-away object are rewritten to the winner', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      const first = Obj.make(TestSchema.Task, { title: 'first' });
+      const second = Obj.make(TestSchema.Task, { title: 'second' });
+      for (const task of [first, second]) {
+        Merge.setNaturalKey(task, 'org.example.seed');
+        yield* Database.add(task);
+      }
+
+      // Declares no natural key, so it is a referrer rather than a merge candidate, and it points
+      // at the object that is about to lose the merge.
+      const referrer = Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) });
+      yield* Database.add(referrer);
+      yield* Database.flush();
+
+      const duplicates = (yield* Database.query(Filter.type(TestSchema.Task)).run).filter(
+        (task) => Merge.getNaturalKey(task) !== undefined,
+      );
+      mergeDuplicates(duplicates);
+      yield* Database.flush();
+
+      const all = yield* Database.query(Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'include' })).run;
+      expect(rewriteReferences([referrer], all)).toBe(1);
+      yield* Database.flush();
+
+      expect(referrer.previous!.uri).toContain(first.id);
+      // Idempotent: a second pass finds nothing left pointing at a loser.
+      expect(rewriteReferences([referrer], all)).toBe(0);
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 

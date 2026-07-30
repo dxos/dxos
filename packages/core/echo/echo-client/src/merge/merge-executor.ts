@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Entity, Merge, Obj } from '@dxos/echo';
-import { type EntityId } from '@dxos/keys';
+import { Merge, Obj, Ref } from '@dxos/echo';
+import { EID, type EntityId } from '@dxos/keys';
 
 import { getObjectCore } from '../echo-handler';
 
@@ -30,8 +30,8 @@ export type MergePassResult = {
  * whole object — a whole-object replace would rewrite every field, so a concurrent edit to a
  * property the merge never touched would lose the last-write-wins race.
  */
-export const mergeDuplicates = (entities: readonly Entity.Unknown[]): MergePassResult => {
-  const byId = new Map<EntityId, Entity.Unknown>();
+export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResult => {
+  const byId = new Map<EntityId, Obj.Unknown>();
   for (const entity of entities) {
     byId.set(entity.id, entity);
   }
@@ -81,14 +81,58 @@ export const mergeDuplicates = (entities: readonly Entity.Unknown[]): MergePassR
 };
 
 /**
+ * Repoint references held by `referrers` from any merged-away entity to the entity that survives.
+ *
+ * Rewriting `X -> loser` to `X -> winner` is idempotent and computes the same target on every
+ * peer, so concurrent rewriters converge. This is an optimization, not a correctness requirement:
+ * a reference that is never rewritten still resolves through the redirect. It matters most for
+ * clients too old to follow `mergedInto`, to which a merged loser looks simply deleted.
+ *
+ * @returns The number of references rewritten.
+ */
+export const rewriteReferences = (referrers: readonly Obj.Unknown[], entities: readonly Obj.Unknown[]): number => {
+  const byId = new Map<EntityId, Obj.Unknown>();
+  for (const entity of entities) {
+    byId.set(entity.id, entity);
+  }
+
+  let rewritten = 0;
+  for (const referrer of referrers) {
+    Obj.update(referrer, (referrer) => {
+      for (const [field, value] of Object.entries(referrer as Record<string, unknown>)) {
+        if (!Ref.isRef(value)) {
+          continue;
+        }
+        const uri = EID.tryParse(value.uri);
+        // Type references are `dxn:` rather than `echo:` and are never merge subjects here.
+        if (!uri) {
+          continue;
+        }
+        const current = EID.getEntityId(uri);
+        if (!current) {
+          continue;
+        }
+        const resolved = resolveMerged(current, entities);
+        const target = resolved === current ? undefined : byId.get(resolved);
+        if (target) {
+          (referrer as Record<string, unknown>)[field] = Ref.make(target);
+          rewritten++;
+        }
+      }
+    });
+  }
+  return rewritten;
+};
+
+/**
  * Follow `system.mergedInto` from `start` to the entity that finally survives, resolving each hop
  * against `entities`.
  *
  * A merged-away entity keeps replicating rather than being erased, precisely so this works: a
  * reference that was never rewritten still reaches the winner.
  */
-export const resolveMerged = (start: EntityId, entities: readonly Entity.Unknown[]): EntityId => {
-  const byId = new Map<EntityId, Entity.Unknown>();
+export const resolveMerged = (start: EntityId, entities: readonly Obj.Unknown[]): EntityId => {
+  const byId = new Map<EntityId, Obj.Unknown>();
   for (const entity of entities) {
     byId.set(entity.id, entity);
   }

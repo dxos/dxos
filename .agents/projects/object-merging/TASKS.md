@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: ratify the identity field's name + shape (DESIGN.md §4.4 / §7 Q6), then start the Phase 0 spike. Uncommitted: none. Last: design review settled 4 of the 5 §7 questions._
+_Resume: wire the merge pass to run on space open behind a flag, then the straggler fold. Uncommitted: none. Last: `meta.naturalKey` + the merge core + executor + multi-peer convergence tests, all green._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -58,11 +58,21 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0
 
 ## Phase 2: Merge engine (flagged)
 
-- [ ] Duplicate detection (query post-filter), deterministic merge executor,
-      tombstone+redirect, opportunistic ref rewrite. Runs on every client at space
-      open (decision 2026-07-30); measure against the Phase 0 numbers.
+- [x] Duplicate detection (query post-filter), deterministic merge executor,
+      tombstone+redirect, opportunistic ref rewrite — `echo-client/src/merge/`.
+      `mergeDuplicates` writes per-field, records `mergedInto` + heads, tombstones;
+      `rewriteReferences` repoints refs (idempotent); `resolveMerged` follows chains.
+- [x] Multi-peer convergence tests (`convergence.test.ts`) over
+      `TestReplicationNetwork`: two peers seeding the same state converge; both
+      peers merging independently agree on the winner; a partial-view merge builds
+      a chain that still resolves to the global minimum.
+- [ ] Wire the pass to run on space open behind a flag; measure the cost.
+- [ ] Straggler fold — diff a loser from `mergedAtHeads` and fold late edits in
+      (fields are recorded, the fold is not implemented).
+- [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action.
+- [ ] Property-based determinism over randomized op schedules (§5.3).
 - [ ] `EntityKind.Object` as merge subject; relation endpoints rewritten when an
-      endpoint is merged away.
+      endpoint is merged away (needs `ObjectCore.setSource/setTarget` plumbed).
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
 - [ ] Multi-peer convergence + property test suite (DESIGN.md §5.2–5.4).
