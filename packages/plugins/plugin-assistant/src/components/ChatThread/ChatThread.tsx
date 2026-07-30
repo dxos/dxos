@@ -106,6 +106,11 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       // once on mount silently loses it and every widget callback (e.g. rewind) dies on the optional call.
       controller?.setContext(syncer.context);
 
+      // Publish the context every pass: widget props read it from a CodeMirror state field, and
+      // `setContext` dispatches through `viewRef.current?` — a no-op before the view exists, so doing this
+      // once on mount silently loses it and every widget callback (e.g. rewind) dies on the optional call.
+      controller?.setContext(syncer.context);
+
       if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');
       }
