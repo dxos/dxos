@@ -8,7 +8,6 @@ import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, {
   type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
-  Fragment,
   type ReactNode,
   forwardRef,
   useCallback,
@@ -53,7 +52,14 @@ const buttonClassNames = 'p-1! transition-opacity';
 //
 
 export type MessageRootProps = ThemedClassName<
-  ComponentPropsWithRef<'div'> & MessageMetadata & Partial<{ continues: boolean; controls: ReactNode }>
+  ComponentPropsWithRef<'div'> &
+    MessageMetadata &
+    Partial<{
+      continues: boolean;
+      controls: ReactNode;
+      /** Whether to draw the avatar; false for a row continuing the sender above it. */
+      showAvatar: boolean;
+    }>
 >;
 
 // TODO(burdon): Show authorName on tooltip.
@@ -66,6 +72,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
       authorAvatarProps,
       continues = true,
       controls,
+      showAvatar = true,
       children,
       classNames,
       ...rootProps
@@ -83,15 +90,19 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           className={mx('grid grid-cols-[var(--dx-rail-size)_1fr_min-content] w-full', classNames)}
           ref={forwardedRef}
         >
-          <div className='flex flex-col items-center pt-1'>
-            <Avatar.Content
-              size={avatarSize}
-              hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
-              fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
-              {...(authorImgSrc && { imgSrc: authorImgSrc })}
-            />
-            {/* The connector has to reach the next tile's avatar to read as one rail: it starts flush
-                under this avatar (no gap) and `-mb-1` carries it across that tile's `pt-1`. */}
+          {/* Only a row that draws an avatar needs the padding that aligns it with the first line of
+              text; a continuation row lets the rail run its full height. */}
+          <div className={mx('flex flex-col items-center', showAvatar && 'pt-1')}>
+            {showAvatar && (
+              <Avatar.Content
+                size={avatarSize}
+                hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
+                fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
+                {...(authorImgSrc && { imgSrc: authorImgSrc })}
+              />
+            )}
+            {/* The connector has to reach the next row's avatar to read as one rail: it starts flush
+                under this avatar (no gap) and `-mb-1` carries it across that row's `pt-1`. */}
             {continues && <div className='w-px grow -mb-1 bg-separator' />}
           </div>
           <div className='py-1 min-w-0'>{children}</div>
@@ -847,6 +858,11 @@ export type MessageTileProps = {
   classNames?: MessageRootProps['classNames'];
   /** Whether the avatar-rail continuation line is drawn below the tile; false for the last tile. */
   continues?: boolean;
+  /**
+   * Whether this row continues the sender of the row above it, as in a group: the avatar and heading
+   * are theirs, so this row draws neither and shows only its own body and controls.
+   */
+  continuation?: boolean;
 };
 
 /**
@@ -854,7 +870,7 @@ export type MessageTileProps = {
  * context for metadata resolution, injected renderers, and callbacks. This is
  * the unit rendered by `Thread.Messages`.
  */
-const MessageTile = ({ message, classNames, continues = true }: MessageTileProps) => {
+const MessageTile = ({ message, classNames, continues = true, continuation = false }: MessageTileProps) => {
   const { t } = useTranslation(translationKey);
   const {
     getMetadata,
@@ -917,6 +933,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
       controls={controls}
       // Selecting a tile is how the host reveals what it refers to (a suggestion's range in the
       // document), so the whole tile is the target — the accent marks which one is showing.
+      showAvatar={!continuation}
       onClick={onMessageSelect ? handleSelect : undefined}
       aria-current={currentMessageId === message.id ? 'location' : undefined}
       classNames={[
@@ -927,7 +944,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
         classNames,
       ]}
     >
-      <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
+      {!continuation && <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />}
       <MessageQuote message={message} />
       <MessageBody
         message={message}
@@ -959,79 +976,27 @@ export type MessageGroupProps = {
 };
 
 /**
- * Groups consecutive same-sender messages (see `Thread.Messages`'s grouping
- * window) into a single tile: one heading (author + first message's
- * timestamp) followed by one body per message, stacked in order. Per-message
- * edit/delete controls are not shown per-row in a group — v1 shows them for
- * the group's first message only, since the heading/controls layout is keyed
- * to a single message.
+ * Groups consecutive same-sender messages (see `Thread.Messages`'s grouping window): the first row
+ * carries the sender's avatar and heading and the rest continue it, so the run reads as one block.
+ *
+ * Each message is its own row with its own controls — reacting to, replying to, editing or deleting
+ * the third message in a run has to act on *that* message, and one control set per group could only
+ * ever act on its first.
  */
-const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupProps) => {
-  const { getMetadata, getReactions, getThreadSummary, identityDid, onMessageReact, onThreadOpen } =
-    useThreadContext('Message.Group');
-  const [editing, setEditing] = useState(false);
-
-  const first = messages[0];
-  const metadata = getMetadata(first);
-  const isAuthor = !!identityDid && identityDid === metadata.authorId;
-
-  const handleEdit = useCallback(() => setEditing(true), []);
-  const handleCancelEdit = useCallback(() => setEditing(false), []);
-  const handleSave = useCallback(
-    (text: string) => {
-      Obj.update(first, (first) => {
-        const block = first.blocks.find((block) => block._tag === 'text');
-        if (block && block._tag === 'text') {
-          block.text = text;
-        }
-      });
-      setEditing(false);
-    },
-    [first],
-  );
-
-  return (
-    <MessageRoot
-      {...metadata}
-      continues={continues}
-      controls={
-        <MessageControls
-          message={first}
-          editing={editing}
-          onEdit={handleEdit}
-          onSaveEdit={handleCancelEdit}
-          onCancelEdit={handleCancelEdit}
-        />
-      }
-      classNames={[hoverableControls, hoverableFocusedWithinControls, classNames]}
-    >
-      <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
-      {messages.map((message) => (
-        <Fragment key={message.id}>
-          <MessageQuote message={message} />
-          <MessageBody
-            message={message}
-            isAuthor={isAuthor}
-            editing={editing && message === first}
-            onSave={handleSave}
-            onCommitEdit={handleCancelEdit}
-            onCancelEdit={handleCancelEdit}
-          />
-          {/* Reactions and threads are per-message, unlike the group's edit/delete controls. */}
-          {onMessageReact && (
-            <MessageReactions
-              reactions={getReactions?.(message) ?? []}
-              onReact={(emoji) => onMessageReact(message.id, emoji)}
-            />
-          )}
-          {onThreadOpen && getThreadSummary?.(message) && (
-            <MessageThreadLink summary={getThreadSummary(message)} onOpen={() => onThreadOpen(message.id)} />
-          )}
-        </Fragment>
-      ))}
-    </MessageRoot>
-  );
-};
+const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupProps) => (
+  <>
+    {messages.map((message, index) => (
+      <MessageTile
+        key={message.id}
+        message={message}
+        continuation={index > 0}
+        // The rail runs on through the group; only the last row of the last group ends it.
+        continues={continues || index < messages.length - 1}
+        classNames={classNames}
+      />
+    ))}
+  </>
+);
 
 MessageGroup.displayName = 'Message.Group';
 

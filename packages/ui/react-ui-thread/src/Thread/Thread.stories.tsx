@@ -3,8 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { expect, within } from 'storybook/test';
 
+import { Ref } from '@dxos/echo';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
@@ -12,6 +14,7 @@ import { Message as MessageType } from '@dxos/types';
 import { translations } from '#translations';
 
 import { createMessages, getStoryMetadata } from '../testing';
+import { type MessageReaction, type MessageThreadSummary } from '../types';
 import { Thread } from './Thread';
 
 const IDENTITY = { role: 'user' as const, identityDid: 'did:key:alice', name: 'Alice' };
@@ -103,6 +106,134 @@ const GroupedStory = () => {
   );
 };
 
+/**
+ * Every state a message can be rendered in, as one conversation: plain and grouped, reacted (one
+ * emoji, several, one inside a group), quote-replying (alone and in a run), carrying a thread (a single
+ * reply, a busy named one, one inside a group), and long-form. Reactions and threads are host-provided
+ * — the fixture answers `getReactions`/`getThreadSummary` from static maps, so the whole gallery renders
+ * without a database.
+ */
+const ConversationStory = () => {
+  const alice = { role: 'user' as const, identityDid: 'did:key:alice', name: 'Alice' };
+  const bob = { role: 'user' as const, identityDid: 'did:key:bob', name: 'Bob' };
+  const carol = { role: 'user' as const, identityDid: 'did:key:carol', name: 'Carol' };
+
+  const { messages, reactions, threads } = useMemo(() => {
+    const base = new Date('2026-07-30T09:00:00.000Z').getTime();
+    let offset = 0;
+    // Default gap starts a new group (over the 60s window); `10_000` continues the run above it.
+    const at = (
+      sender: typeof alice,
+      text: string,
+      { gap = 5 * 60_000, parentMessage }: { gap?: number; parentMessage?: MessageType.Message } = {},
+    ) => {
+      offset += gap;
+      return MessageType.make({
+        created: new Date(base + offset).toISOString(),
+        sender,
+        blocks: [{ _tag: 'text', text }],
+        ...(parentMessage ? { parentMessage: Ref.make(parentMessage) } : {}),
+      });
+    };
+
+    const reactions = new Map<string, MessageReaction[]>();
+    const threads = new Map<string, MessageThreadSummary>();
+
+    const single = at(bob, 'A single message from another sender.');
+    const own = at(alice, 'A single message of my own — mine alone can be edited or deleted.');
+
+    const groupHead = at(carol, 'A run of messages from one sender…');
+    const groupMiddle = at(carol, '…grouped under a single avatar…', { gap: 10_000 });
+    const groupTail = at(carol, '…each row still carrying its own controls.', { gap: 10_000 });
+
+    const reactedOnce = at(bob, 'Reacted to once.');
+    reactions.set(reactedOnce.id, [{ emoji: '👍', count: 1, self: false }]);
+
+    const reactedOften = at(bob, 'Reacted to several ways, one of them mine.');
+    reactions.set(reactedOften.id, [
+      { emoji: '👍', count: 3, self: true },
+      { emoji: '🎉', count: 2, self: false },
+      { emoji: '❤️', count: 1, self: false },
+    ]);
+
+    const reactedGroupHead = at(carol, 'First of a run…');
+    const reactedGroupTail = at(carol, '…and the reaction belongs to the second, not the first.', { gap: 10_000 });
+    reactions.set(reactedGroupTail.id, [{ emoji: '👀', count: 1, self: true }]);
+
+    const quoted = at(alice, 'Quote-replying to a message above.', { parentMessage: reactedOften });
+    const quotedRunHead = at(bob, 'Two quote-replies in a row…', { parentMessage: own });
+    const quotedRunTail = at(bob, '…each quoting a different message.', { gap: 10_000, parentMessage: single });
+
+    const threadOne = at(bob, 'Has a thread with a single reply.');
+    threads.set(threadOne.id, { replyCount: 1, lastActivity: new Date(base + offset + 60_000).toISOString() });
+
+    const threadMany = at(carol, 'Has a busy, named thread.');
+    threads.set(threadMany.id, {
+      replyCount: 24,
+      name: 'Release plan',
+      lastActivity: new Date(base + offset + 45 * 60_000).toISOString(),
+    });
+
+    const threadGroupHead = at(alice, 'First of a run…');
+    const threadGroupTail = at(alice, '…and the thread hangs off the second one.', { gap: 10_000 });
+    threads.set(threadGroupTail.id, { replyCount: 3, lastActivity: new Date(base + offset + 120_000).toISOString() });
+
+    const long = at(
+      bob,
+      'A longer message, to show how a paragraph wraps against the avatar rail and how the hover ' +
+        'controls sit beside it: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do ' +
+        'eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    );
+
+    return {
+      messages: [
+        single,
+        own,
+        groupHead,
+        groupMiddle,
+        groupTail,
+        reactedOnce,
+        reactedOften,
+        reactedGroupHead,
+        reactedGroupTail,
+        quoted,
+        quotedRunHead,
+        quotedRunTail,
+        threadOne,
+        threadMany,
+        threadGroupHead,
+        threadGroupTail,
+        long,
+      ],
+      reactions,
+      threads,
+    };
+  }, []);
+
+  const getReactions = useCallback((message: MessageType.Message) => reactions.get(message.id) ?? [], [reactions]);
+  const getThreadSummary = useCallback((message: MessageType.Message) => threads.get(message.id), [threads]);
+  const canDelete = useCallback((message: MessageType.Message) => message.sender.identityDid === alice.identityDid, []);
+
+  return (
+    <Thread.Root
+      getMetadata={getStoryMetadata}
+      getReactions={getReactions}
+      getThreadSummary={getThreadSummary}
+      canDelete={canDelete}
+      identityDid={alice.identityDid}
+      editable
+      onMessageReact={() => {}}
+      onMessageDelete={() => {}}
+      onThreadOpen={() => {}}
+      onThreadCreate={() => {}}
+    >
+      <Thread.Content classNames='grow min-h-0'>
+        <Thread.Messages messages={messages} />
+      </Thread.Content>
+    </Thread.Root>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-thread/Thread',
   render: DefaultStory,
@@ -125,4 +256,22 @@ export const MixedSenders: Story = {
 
 export const Grouped: Story = {
   render: GroupedStory,
+};
+
+export const Conversation: Story = {
+  render: ConversationStory,
+  // Asserts the gallery covers what it claims — and that a quote resolves from a `Ref` to an object
+  // that was never persisted, which is what lets the whole fixture run without a database.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // `findAllByText`: this message is also quoted further down, so its text renders twice.
+    await expect((await canvas.findAllByText('A single message from another sender.'))[0]).toBeVisible();
+
+    // One pill on each singly-reacted message, three on the one reacted several ways.
+    await expect(await canvas.findAllByTestId('thread.message.reaction')).toHaveLength(5);
+    await expect(await canvas.findAllByTestId('thread.message.quote')).toHaveLength(3);
+    // A summary row per threaded message, and the named thread shows its name.
+    await expect(await canvas.findAllByTestId('thread.message.open-thread')).toHaveLength(3);
+    await expect(await canvas.findByText('Release plan')).toBeVisible();
+  },
 };

@@ -24,14 +24,21 @@ const authors = [
  */
 export const createMessages = (count = 8): Message.Message[] => {
   const objectGenerator = createGenerator(generator, Message.Message);
-  return objectGenerator.createObjects(count).map((message, index) => {
-    const author = authors[index % authors.length];
-    Obj.update(message, (message) => {
-      message.sender = { role: 'user', identityDid: author.did, name: author.name };
-      message.blocks = [{ _tag: 'text', text: random.lorem.paragraph() }];
-    });
-    return message;
-  });
+  return (
+    objectGenerator
+      .createObjects(count)
+      .map((message, index) => {
+        const author = authors[index % authors.length];
+        Obj.update(message, (message) => {
+          message.sender = { role: 'user', identityDid: author.did, name: author.name };
+          message.blocks = [{ _tag: 'text', text: random.lorem.paragraph() }];
+        });
+        return message;
+      })
+      // `Thread.Messages` documents ascending input, and the generator's dates are random: unsorted
+      // messages make the day-divider ids repeat, which React reports as duplicate keys.
+      .sort((left, right) => Date.parse(left.created) - Date.parse(right.created))
+  );
 };
 
 /** Story metadata resolver mapping a message's sender to presentational fields. */

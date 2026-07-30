@@ -103,9 +103,9 @@ export const ThreadsAreCreated: Story = {
 
     // One declared thread in the fixture, so exactly one summary row — not one per message.
     await expect(await canvas.findAllByTestId('thread.message.open-thread')).toHaveLength(1);
-    // The thread slot reflects each message's state: view on the declared one, start on the other.
+    // The thread slot reflects each message's state: view on the declared one, start on the other two.
     await expect(await canvas.findAllByTestId('thread.message.view-thread')).toHaveLength(1);
-    await expect(await canvas.findAllByTestId('thread.message.start-thread')).toHaveLength(1);
+    await expect(await canvas.findAllByTestId('thread.message.start-thread')).toHaveLength(2);
   },
 };
 
@@ -124,10 +124,10 @@ export const DeleteOwnOnly: Story = {
       await expect(await canvas.findByText(SEEDED.own)).toBeVisible();
     }, STORY_TIMEOUT);
 
-    // Two roots render, only one of which the local identity authored — so only that one carries an
-    // overflow menu holding edit and delete.
+    // Three roots render, two of which the local identity authored — so only those carry an overflow
+    // menu holding edit and delete.
     await expect(await canvas.findByText(SEEDED.other)).toBeVisible();
-    await expect(await canvas.findAllByTestId('thread.message.more')).toHaveLength(1);
+    await expect(await canvas.findAllByTestId('thread.message.more')).toHaveLength(2);
 
     // Deleting tombstones the feed item, so the message leaves the list — no "deleted" stub is
     // rendered because the feed query already excludes tombstoned items.
@@ -187,11 +187,11 @@ export const CreateThread: Story = {
     await userEvent.click((await canvas.findAllByTestId('thread.message.start-thread'))[0]);
 
     await waitFor(async () => {
-      // The declaration lands in the feed, so both messages now carry a thread: two summary rows, two
-      // view affordances, and nothing left to start.
+      // The declaration lands in the feed, so that message now carries a thread too: its summary row
+      // appears and its slot turns from start into view.
       await expect(await canvas.findAllByTestId('thread.message.open-thread')).toHaveLength(2);
       await expect(await canvas.findAllByTestId('thread.message.view-thread')).toHaveLength(2);
-      await expect(canvas.queryAllByTestId('thread.message.start-thread')).toHaveLength(0);
+      await expect(await canvas.findAllByTestId('thread.message.start-thread')).toHaveLength(1);
     }, STORY_TIMEOUT);
   },
 };
@@ -284,6 +284,49 @@ export const CancelEdit: Story = {
     }, STORY_TIMEOUT);
     // The editor is rebuilt from the message, so the discarded text is gone from it too.
     await expect(messageTextContaining(canvasElement, SEEDED.own)).not.toContain('Discarded.');
+  },
+};
+
+/**
+ * Every message in a group carries its own controls — the fixture's first two messages share a sender
+ * and so render as one run under a single avatar, and reacting to the second must land on the second.
+ */
+export const GroupedMessageControls: Story = {
+  args: {
+    subject: undefined,
+    attendableId: 'story',
+    role: AppSurface.Article.role,
+    roomId: '04a1d1911703b8e929d0649021a965',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(async () => {
+      await expect(await canvas.findByText(SEEDED.ownFollowUp)).toBeVisible();
+    }, STORY_TIMEOUT);
+
+    const tileFor = async (text: string): Promise<HTMLElement> => {
+      const tile = (await canvas.findByText(text)).closest('[data-testid="thread.message"]');
+      if (!(tile instanceof HTMLElement)) {
+        throw new Error(`No tile for: ${text}`);
+      }
+      return tile;
+    };
+
+    // The run shares one avatar, yet each row has its own reaction options and overflow menu.
+    const second = await tileFor(SEEDED.ownFollowUp);
+    await expect(await within(second).findAllByTestId('thread.message.reaction-option')).toHaveLength(3);
+    await expect(await within(second).findAllByTestId('thread.message.more')).toHaveLength(1);
+
+    await userEvent.click((await within(second).findAllByTestId('thread.message.reaction-option'))[0]);
+
+    // The pill lands on the message that was reacted to, not on the one that heads the group.
+    await waitFor(async () => {
+      await expect(
+        await within(await tileFor(SEEDED.ownFollowUp)).findAllByTestId('thread.message.reaction'),
+      ).toHaveLength(1);
+    }, STORY_TIMEOUT);
+    await expect(within(await tileFor(SEEDED.own)).queryAllByTestId('thread.message.reaction')).toHaveLength(0);
   },
 };
 

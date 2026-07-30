@@ -246,6 +246,12 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 
 - [x] Two groups of controls: the three quick reactions, a `line` separator, then
       the actions that act on the message (picker · view/start thread · ⋯).
+- [x] FIXED: controls acted on a group's **first** message only — a documented v1
+      limitation, so reacting to, replying to, editing or deleting the third
+      message in a run hit the first. Each message in a group is now its own row
+      (`MessageTile` with `continuation`), carrying its own controls and editing
+      state; the run still reads as one block because continuation rows draw
+      neither avatar nor heading. Asserted by `GroupedMessageControls`.
 - [x] The thread affordance changes state instead of disappearing — "start a
       thread" becomes "view thread" once one exists, so the control does not move
       under the cursor. The summary row still shows name · count · last activity.
@@ -254,6 +260,26 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       read as dashes rather than one line. Now flush under the avatar, with
       `-mb-1` carrying it across the next tile's padding. Deliberately not
       asserted in a play (jdw: layout will keep moving).
+
+### Stories (jdw round 5)
+
+- [x] `Conversation` in `react-ui-thread`'s Thread stories: every message state in
+      one conversation — plain, grouped, reacted (once, several ways, and on the
+      second row of a group), quote-replying (alone and in a run), carrying a
+      thread (one reply, a busy named one, and on the second row of a group), and
+      long-form. Written at the `react-ui-thread` level (jdw) rather than against
+      a channel: reactions and threads are host-provided, so static
+      `getReactions`/`getThreadSummary` maps cover them, and `Ref.make` carries a
+      non-persisted target so even the quotes resolve without a database. Its play
+      asserts the gallery covers what it claims.
+- [x] FIXED while writing it: `createMessages` (story helper) generated random
+      `created` dates and never sorted them, violating the ascending input
+      `Thread.Messages` documents — so day-divider ids repeated and React reported
+      duplicate keys. Sorted at the source; the component's contract stands.
+- [x] Story harness is now parameterized (`makeChannelStoryPlugins(seed)`) so the
+      plays and any richer fixture share one wiring. Each stories file keeps its
+      own decorator literal — passing the decorators themselves widens their type
+      and costs `Meta`/`StoryObj` inference in the play context.
 
 ### Message view (jdw round 3)
 
