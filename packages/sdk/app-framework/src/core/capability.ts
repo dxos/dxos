@@ -175,7 +175,9 @@ export interface CapabilityIdentifier<Id extends string, A extends Arity> {
  */
 export interface Contributions<T> {
   /**
-   * Reactive atom of the current contributions.
+   * Reactive atom of the current contributions, for Atom-based composition (e.g. a reactive
+   * `OperationHandlerSet`). The same atom `Capability.atom` resolves to; prefer that helper for a
+   * plain reactive read, and this when the view is already in hand.
    */
   readonly atom: Atom.Atom<T[]>;
 
@@ -300,10 +302,10 @@ export type Capability<T> = {
 export type Any = Capability<any>;
 
 /**
- * Union of the raw capability-entry shapes accepted where a module's return isn't
- * type-checked against a declared `provides` — direct manager injection (`withPluginManager`'s
- * `capabilities` fixture option, {@link CapabilityManager.contribute}) rather than authored
- * modules, which return typed {@link Contribution}s (see {@link makeModule}).
+ * Union of the raw capability-entry shapes a module's `activate` may return, accepted alongside
+ * typed {@link Contribution}s so the manager can ingest an already-expanded entry (the shape
+ * {@link CapabilityManager.contribute} stores) without re-branding it. Authored modules return
+ * {@link Contribution}s instead — only those are checked against a declared `provides`.
  */
 export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]] | readonly [Any, ...Any[]];
 
