@@ -117,7 +117,10 @@ const meta = {
           }),
           RoutinePlugin(),
           AssistantPlugin({
-            aiServiceMiddleware: scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)),
+            // Only the stories that declare their turns are scripted; the rest keep the real service, so
+            // `Default` stays a place to actually talk to a model rather than one with an empty script.
+            aiServiceMiddleware:
+              messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
           }),
           PreviewPlugin(),
           StorybookPlugin({}),
