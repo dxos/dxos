@@ -20,17 +20,13 @@ export type UpdateSchedulerOptions = {
 const TIME_PERIOD = 1_000;
 
 /**
- * Outcome of one run. Always a resolution, never a rejection, so an unobserved run cannot become
- * an unhandled promise rejection; `runBlocking` inspects and re-throws.
- */
-type RunOutcome = { error?: unknown };
-
-/**
  * A claimed run, delivered to waiters via {@link UpdateScheduler._claimed} the moment the runner
- * starts the callback. `observed` marks that a `runBlocking` caller will consume the outcome, so a
- * failure is theirs to throw rather than the context's to raise.
+ * starts the callback. `error` resolves when the run finishes — with its error, or `undefined` on
+ * success — and never rejects, so an unobserved run cannot become an unhandled promise rejection;
+ * `runBlocking` inspects and re-throws. `observed` marks that a `runBlocking` caller will consume
+ * the result, so a failure is theirs to throw rather than the context's to raise.
  */
-type ClaimedRun = { outcome: Promise<RunOutcome>; observed: boolean };
+type RunResult = { error: Promise<unknown>; observed: boolean };
 
 /**
  * Runs a non-reentrant callback at most once at a time, coalescing any number of triggers
@@ -54,7 +50,7 @@ export class UpdateScheduler {
 
   /**
    * Claim signal for the pending run: armed (reset) by the `trigger` call that schedules a runner,
-   * woken by that runner the moment it claims, carrying the run's outcome. This is what lets
+   * woken by that runner the moment it claims, carrying the run's result. This is what lets
    * `runBlocking` bridge the scheduled→claimed gap — after `trigger()`, the run it asked for does
    * not exist in `_currentTask` yet, so there is nothing else it could await.
    *
@@ -62,7 +58,7 @@ export class UpdateScheduler {
    * ONLY because the arm lives in `trigger`'s non-coalesced branch: waiters can park solely while
    * `_scheduled` is true, and that branch requires it to be false.
    */
-  private _claimed = new Trigger<ClaimedRun>();
+  private _claimed = new Trigger<RunResult>();
 
   /**
    * Woken to make the pending (or next) runner skip its throttle delay — urgency without a second
@@ -81,7 +77,7 @@ export class UpdateScheduler {
       await this._currentTask; // Context waits for callback to finish.
       // A runner that never reached its claim (disposed mid-delay, or never started) leaves the
       // claim signal unwoken; release any `runBlocking` callers parked on it. NOOP if already woken.
-      this._claimed.wake({ outcome: Promise.resolve({}), observed: true });
+      this._claimed.wake({ error: Promise.resolve(undefined), observed: true });
     });
   }
 
@@ -138,7 +134,7 @@ export class UpdateScheduler {
 
       if (this._ctx.disposed) {
         // Free parked waiters; nothing waits on the data any more.
-        this._claimed.wake({ outcome: Promise.resolve({}), observed: true });
+        this._claimed.wake({ error: Promise.resolve(undefined), observed: true });
         return;
       }
 
@@ -147,10 +143,10 @@ export class UpdateScheduler {
       this._scheduled = false;
       this._skipDelay = new Trigger();
       this._lastUpdateTime = performance.now();
-      const run: ClaimedRun = { observed: false, outcome: undefined as never };
-      run.outcome = this._callback().then(
-        (): RunOutcome => ({}),
-        async (error): Promise<RunOutcome> => {
+      const run: RunResult = { observed: false, error: undefined as never };
+      run.error = this._callback().then(
+        () => undefined,
+        async (error) => {
           // One microtask hop before deciding where the failure goes: waiters were woken at claim
           // time and mark `observed` on resume, but a synchronously-rejecting callback queues this
           // handler ahead of them — without the hop it would double-report to the context.
@@ -158,10 +154,10 @@ export class UpdateScheduler {
           if (!run.observed) {
             this._ctx.raise(error as Error);
           }
-          return { error };
+          return error as unknown;
         },
       );
-      const task: Promise<void> = run.outcome.then(() => {
+      const task: Promise<void> = run.error.then(() => {
         if (this._currentTask === task) {
           this._currentTask = null;
         }
@@ -192,7 +188,7 @@ export class UpdateScheduler {
    * Ensure a run that observes everything enqueued so far, and wait for it to finish.
    *
    * Waits in two steps: first for the pending run to claim (via the signal armed by `trigger`),
-   * then for that run's outcome. The run that wakes the signal necessarily claims after this call,
+   * then for that run's result. The run that wakes the signal necessarily claims after this call,
    * so its drain includes everything enqueued before it. Concurrent callers coalesce onto the same
    * run. Rejects with that run's error — a caller using this as a flush barrier must be able to see
    * that its batch was NOT handed off (dxos/edge#758). No-op once the context is disposed.
@@ -205,7 +201,7 @@ export class UpdateScheduler {
     this._skipDelay.wake();
     const run = await this._claimed.wait();
     run.observed = true;
-    const { error } = await run.outcome;
+    const error = await run.error;
     if (error !== undefined) {
       throw error;
     }
