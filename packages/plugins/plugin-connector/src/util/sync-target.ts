@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { type NoHandlerError, type Operation } from '@dxos/compute';
+import { type Operation } from '@dxos/compute';
 import { Database, Filter, Obj } from '@dxos/echo';
 
 import { Connection, Connector } from '../types';
@@ -17,9 +17,7 @@ import { syncBinding } from './sync-binding';
  * than a registered Operation, since it only resolves which binding and connector the target belongs
  * to and hands off to {@link syncBinding}. No-op for an object that is not bound to a connection.
  */
-export const syncTarget = (
-  target: Obj.Unknown,
-): Effect.Effect<void, NoHandlerError, Capability.Service | Operation.Service> =>
+export const syncTarget = (target: Obj.Unknown): Effect.Effect<void, Error, Capability.Service | Operation.Service> =>
   Effect.gen(function* () {
     const db = Obj.getDatabase(target);
     if (!db) {

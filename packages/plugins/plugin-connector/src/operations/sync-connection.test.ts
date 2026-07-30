@@ -176,14 +176,15 @@ describe('SyncConnection', () => {
     expect(synced).toEqual([]);
   });
 
-  test('falls back to the sync operation when the space has no trigger monitor', async ({ expect }) => {
+  test('does not sync directly when a scheduled binding’s trigger cannot be run', async ({ expect }) => {
     const { db, connection, cursor } = await setup();
     await addSyncTrigger(db, cursor);
 
-    const result = await invokeSync(makeInvoker({ scheduled: true, withMonitor: false }), connection);
+    // The trigger is the sync path for a scheduled connector, so with no monitor to run it the sync
+    // fails rather than quietly running outside the dispatcher (and losing its durable execution).
+    await expect(invokeSync(makeInvoker({ scheduled: true, withMonitor: false }), connection)).rejects.toThrow();
 
-    expect(result.synced).toBe(1);
-    expect(synced).toEqual([Ref.make(cursor).uri]);
+    expect(synced).toEqual([]);
     expect(fired).toEqual([]);
   });
 

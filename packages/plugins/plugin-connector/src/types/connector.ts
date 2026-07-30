@@ -108,9 +108,9 @@ export type ConnectorSync = {
   /**
    * Schedule to keep bindings in sync on — a timer cron, a subscription, whatever the connector
    * wants. Each new binding gets a Routine wrapping a trigger with this spec, and that trigger is
-   * also what a manual sync force-runs, so scheduled and on-demand syncs share the dispatcher's
-   * durable execution. Omit for a connector that should only sync on demand: {@link operation} is
-   * then invoked directly.
+   * also what a manual sync force-runs — creating the Routine first if the binding has none — so
+   * scheduled and on-demand syncs share the dispatcher's durable execution. Omit for a connector that
+   * should only sync on demand: {@link operation} is then invoked directly.
    */
   trigger?: Trigger.Spec;
 };

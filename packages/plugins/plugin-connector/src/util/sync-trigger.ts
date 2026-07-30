@@ -23,8 +23,8 @@ export const findSyncTriggerForBinding = (cursor: Cursor.ExternalCursor) =>
 /**
  * The space's {@link Trigger.TriggerMonitorService}. The monitor has space affinity, so it is
  * resolved through the app's {@link Capabilities.ServiceResolver} rather than taken from the ambient
- * runtime — which also means it is absent outside the app (CLI, workerd), where callers fall back to
- * invoking the sync operation directly.
+ * runtime; resolution fails where no such capability exists (CLI, workerd), which is why this layer
+ * carries an error channel.
  */
 export const syncTriggerMonitorLayer = (
   spaceId: Key.SpaceId,

@@ -15,6 +15,9 @@ import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
 import { Connector, ConnectorOperation } from '../types';
 import { isCursorForConnection, syncBinding } from '../util';
 
+/** How many of a connection's bindings sync at once. */
+const SYNC_CONCURRENCY = 2;
+
 const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> = ConnectorOperation.SyncConnection.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ connection: connectionRef }) {
@@ -53,7 +56,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
             Effect.provide(Database.layer(db)),
             // `Process.fromOperation` promotes any handler failure to a defect (`Effect.orDie`), so
             // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.
-            // Only a directly-invoked sync surfaces its failure here; one run through the trigger is
+            // Only a directly-invoked sync surfaces its failure here; a run through the trigger is
             // reported by the dispatcher's own process instead.
             // TODO(wittjosiah): A 401 on the trigger path therefore shows a generic sync failure
             //   rather than this reauthentication prompt.
@@ -72,7 +75,9 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
             ),
           ),
         ),
-        { concurrency: 'unbounded' },
+        // Bounded: a connection can have many bindings, and syncing them all at once would hit the
+        // provider with a burst of requests per manual sync.
+        { concurrency: SYNC_CONCURRENCY },
       );
 
       return { synced: cursors.length };
