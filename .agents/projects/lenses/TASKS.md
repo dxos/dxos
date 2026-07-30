@@ -313,14 +313,23 @@ not by being planned.
       the losslessness bar in DESIGN.md §10. Not scheduled; M1 is gated on the lens landing in core.
 - [ ] **`Lens.generate(source, target)`** — see [the decision note](#lensgenerate--decision-note)
       below. **Recommendation: don't take it on yet**; do "Richer source annotations" (Phase 5) first.
-- [ ] **Cross-object lenses — reading through refs** (DESIGN.md §11). Today a `Ref` property crosses
-      the lens as an opaque value; `from` names properties on one object and never traverses. Best
-      case, graded: **strong-dep traversal** (a relation's source/target, an object's parent) is total
-      and synchronous because those are loaded before the entity surfaces; an **arbitrary ref** is
-      readable but partial (`undefined` until loaded) and must keep `get` sync and pure; **writes**
-      through a hop are non-atomic until Automerge has cross-object transactions; **collections** stay
-      read-only. Design it with §10.5 — same feature from two ends, unified by letting `from` be a
-      list of paths.
+- [ ] **Cross-object lenses — composition** (DESIGN.md §11.2-11.4). Lens the _referenced object too_:
+      `Task.assignee: Ref<Person>` becomes `GtdTask.assignee: Ref<GtdPerson>`, dereferencing yields a
+      lensed `Person`. One lens per node, still one object per node. **Easier than projection and
+      worth more** — it introduces no partiality of its own, writes stay inside each object, identity
+      survives (`Lens.of` proxies the base), and `sourcesFor` already resolves which lens produces the
+      declared ref type. The payoff is the whole surface stack over a foreign _graph_, not one form.
+      First real work is an `of` cache keyed by (object, lens id) — the current proxy is minted per
+      call, so `===` and React memoization break without it. Then: `compatible()` grading
+      `Ref(Person)` → `Ref(GtdPerson)` as `automatic` when a registered lens connects them; and
+      validation, since the target schema declares a ref to a type no stored object has.
+- [ ] **Cross-object lenses — projection** (DESIGN.md §11.5). Flatten a referenced object's fields
+      (`assigneeName`). The harder half: `get` must stay sync and pure, so a projected property is
+      partial (`undefined` until loaded); writes across the hop are non-atomic until Automerge has
+      cross-object transactions; collections stay read-only. One carve-out — traversal along a
+      **strong dep** (relation source/target, parent) is total and synchronous today, because those
+      load before the entity surfaces. Needs §10.5's write-set-with-an-address, which composition
+      does not.
 - [ ] Querying _through_ a structural lens (rewrite `Filter` on lensed property names).
 - [ ] Read-only lens as a redaction/capability boundary.
 - [ ] Lens versioning when the base type migrates — including whether the target re-derives

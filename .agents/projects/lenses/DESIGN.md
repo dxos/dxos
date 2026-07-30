@@ -666,90 +666,145 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
    alternate timelines with CRDT merge-back — close to Jazz's per-schema-hash branches. Possibly a
    better home for in-flight migration state than the overlay.
 
-## 11. Cross-object lenses — reading through references
+## 11. Cross-object lenses
 
-Not built. Recorded because "flatten a graph into one form" is the most-requested thing a lens could
-do that it currently cannot, and because the answer is graded rather than yes/no.
+Not built. Two different asks get conflated here, and they have opposite difficulty profiles, so name
+them separately:
+
+- **Composition** — the referenced object is _itself_ lensed. `Task.assignee: Ref<Person>` becomes
+  `GtdTask.assignee: Ref<GtdPerson>`, and dereferencing yields a lensed `Person`. A lens over a
+  _graph_, one lens per node.
+- **Projection** — fields of the referenced object are flattened into the target.
+  `TaskRow.assigneeName: string`. A lens over one node that reaches sideways.
+
+Composition is the more useful of the two **and the easier one**, which is not the intuitive ordering.
+It gets §11.2–11.4; projection is §11.5.
 
 ### 11.1 Shape today: a ref crosses, it does not open
 
-A mapping's `from` is a list of **property names on one object**, and `readSource` reads them off
-that object (`lens/mapping.ts`). There is no traversal.
+A mapping's `from` is a list of property names on one object, and `readSource` reads them off that
+object (`lens/mapping.ts`). There is no traversal, and a `Ref` is an opaque value: `compatible()`
+compares declarations by AST identifier, so `Ref(Person)` auto-maps to `Ref(Person)` and to nothing
+else. A lensed `Task` hands you `assignee` unchanged — the same ref, to the same `Person`.
 
-A `Ref` property is an opaque value. `compatible()` compares declarations by AST identifier, so
-`Ref(Person)` auto-maps to `Ref(Person)` and to nothing else — the ref is carried across by
-reference and the lens never looks inside it. So a lensed `Task` can hand you `assignee` as a ref;
-it cannot give you `assigneeName`.
+In particular `Ref(Person)` against `Ref(GtdPerson)` is _incompatible_ today and reports as
+`suspicious`. That is the correct default (a wrong automatic mapping is worse than an absent one) and
+it is exactly the hole composition fills.
 
-### 11.2 Three walls, in ascending order of hardness
-
-1. **`Lens.get` is synchronous and pure — deliberately.** Purity is what lets `checkLaws` run without
-   mutating anything, and what lets `useLensValue` project on every render (the fix for the staleness
-   bug in §6). But `ref.target` returns `T | undefined` _and triggers a load as a side effect_, and
-   `ref.load()` is a Promise. So a ref-reading lens is either async — which costs the law check and
-   render-time projection — or **partial**: it reads `undefined` until the target is in the working
-   set, and re-projects when it arrives.
-
-   Partial is the right answer. It is the same contract `Ref` already has, so it is not a new concept
-   for consumers, and it keeps `get` pure. The type must say so: a ref-derived property is
-   `T | undefined` even when the referenced property is required.
-
-2. **Reactivity has to follow the hop.** `useLensValue` subscribes to one object; a lens reading
-   through a ref that does not also subscribe to the target goes stale — the exact failure already
-   hit once with the text lens. `internal/Ref/atoms.ts` (`refSimpleFamily`) already does this work:
-   subscribes to the target, resolves to `undefined` on delete, `keepAlive`. The hook composes that
-   rather than inventing it.
-
-3. **Writing through a ref is a write to another automerge document, so it is not atomic.** `put`
-   currently emits writes against one object and `applyWrites` lands them in a single `Obj.update`.
-   Across a hop there is no transaction. This is the same wall as cross-object migration (§10.5) and
-   takes the same answer — the `Write` vocabulary grows an object address, the runner applies per
-   object today, and a cross-object transaction takes the same write set when Automerge ships one.
-
-### 11.3 What is already sound: strong dependencies
-
-Not every hop is equally uncertain. `internal/Ref/strong-deps.ts` defines an entity's
-**strong-dependency set** — its schema, a relation's **source and target**, and its **parent** — and
-an entity is not surfaced until those are loaded. Arbitrary refs are deliberately not in that set.
-
-So there is a class of traversal that is **total and synchronous today**: a lens on a relation
-reading through to its source or target, and a lens on a child reading through to its parent. No
-partiality, no async, no new loading machinery — the objects are already there by the time the lensed
-one exists. _(Read from the code, not yet exercised — confirm before relying on it.)_
-
-That suggests the scoping principle: **lens the subtree that is already loaded together, not the
-whole graph.** Strong-dep traversal first, arbitrary refs second and explicitly partial.
-
-### 11.4 Best case, graded
-
-|                                                  | Read                                                          | Write                                                                   |
-| ------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| **Strong deps** (relation source/target, parent) | Total, sync, no new machinery                                 | Non-atomic across the hop                                               |
-| **Single arbitrary ref**                         | Partial (`undefined` until loaded), reactive via the ref atom | Non-atomic; convergent because writes stay minimal                      |
-| **Multi-hop**                                    | Partial, and each hop compounds the load latency              | Not worth supporting initially                                          |
-| **`Ref.Array` / collections**                    | Fine — map over loaded targets                                | Ill-defined: which element, and does a write create one? Keep read-only |
-
-Proposed surface, consistent with the existing `Lens.from`:
+### 11.2 Composition — the shape
 
 ```ts
-Lens.make(id, Task.Task, TaskRow, {
-  assigneeName: Lens.through(['assignee', 'name']), // partial, read-only by default
-  assigneeEmail: Lens.through(['assignee', 'email'], { write: true }), // opt in, non-atomic
+class GtdPerson extends Type.makeObject<GtdPerson>(...)({ /* ... */ }) {}
+const PersonLens = Lens.register(Lens.make('…person-as-gtd', Person, GtdPerson, { /* ... */ }));
+
+class GtdTask extends Type.makeObject<GtdTask>(...)(Schema.Struct({
+  assignee: Schema.optional(Ref.Ref(GtdPerson)),
+})) {}
+
+const GtdLens = Lens.make('…task-as-gtd', Task.Task, GtdTask, {
+  assignee: Lens.via('assignee', PersonLens),
 });
 ```
 
-**What not to expect**, so it is not relitigated later: atomicity across a hop before Automerge has
-cross-object transactions; queryability or indexing of a ref-derived property (worse than the
-overlay — the value does not live on the object at all); and a `get` that guarantees a value for
-anything but a strong dep.
+`gtdTask.assignee.target` yields `Lens.of(person, PersonLens)` — a lensed handle that already reports
+`GtdPerson` as its typename. Still one object per node in the database; still no copies.
 
-### 11.5 Unify with cross-object migration
+Resolution can be automatic rather than declared: the target schema says the ref points at
+`GtdPerson`, and `Lens.sourcesFor(GtdPerson)` already answers "which registered lenses produce a
+`GtdPerson`". Picking the one whose source matches the referenced object's actual typename is a
+lookup we can already perform, so `Lens.via` is the explicit form and registry resolution is the
+convenience. `compatible()` should then grade `Ref(Person)` → `Ref(GtdPerson)` as `automatic` when a
+registered lens connects them, and keep reporting `suspicious` when none does.
 
-These are the same feature seen from two ends. §10.5 needs a write set addressed to several objects;
-this needs a read path addressed through several objects. The unification is to let `from` be a list
-of **paths** rather than property names — `from: [['status'], ['assignee', 'name']]` — with today's
-`from: ['status']` as the one-element-path case. Designing them together is cheaper than twice, and
-it keeps one `Write` vocabulary rather than two.
+### 11.3 Why composition is the easier one
+
+Every wall that makes projection awkward (§11.5) is absent here.
+
+1. **It introduces no partiality of its own.** `ref.target` is already `T | undefined`; composition
+   lenses whatever comes back and returns `undefined` otherwise. The partiality belongs to `Ref`,
+   where consumers already handle it. Projection has to _invent_ an `undefined` for a property the
+   target schema declares as required.
+2. **Writes stay inside one object.** Editing `assignee.target.name` is a write to the `Person`
+   object alone, through that object's own lens — atomic within that object, exactly as today. No
+   cross-object transaction is needed for the common case. Projection's `assigneeName = 'x'` is a
+   write to a _different_ object initiated from this one, which is the case that has no atomicity.
+3. **Reactivity is already per-object.** Each lensed handle subscribes to its own object with the
+   existing hook; nothing needs a subscription spanning two objects.
+4. **Identity survives.** `Lens.of` returns `new Proxy(obj, …)` over the base object and only
+   intercepts the type symbols, so `Obj.getURI`, the DXN, and therefore `Ref.make(lensedHandle)` all
+   resolve to the real `Person`. Storing a lensed handle back into a ref should need no unwrapping —
+   worth confirming, because it is the difference between "transparent" and "leaky".
+5. **The machinery exists.** The live proxy, the typename interception that makes a lensed object
+   render in surfaces written for the target type, and `sourcesFor` for resolution are all built.
+
+**The payoff worth naming.** Projection gets you one form over a foreign type. Composition gets you
+the whole surface stack — navtree, table, cards, forms — over a foreign _graph_, because every node
+in the subtree reports the type those surfaces already dispatch on. That is use case (a) from §1 at
+its full size, and it is not reachable by flattening.
+
+### 11.4 The hard parts
+
+1. **Wrapper identity.** `Lens.of` mints a fresh `Proxy` per call, so wrapping on every `.target`
+   access breaks `===` and defeats React memoization. Composition needs an `of` cache keyed by
+   (base object, lens id) — the same shape as `refSimpleFamily` in `internal/Ref/atoms.ts`. This is
+   the first thing to build, not an optimization.
+2. **Validation.** The target schema declares `Ref(GtdPerson)` while the stored ref points at a
+   `Person`. Anything that validates by resolving a ref and checking its type must see the lensed
+   view. `Lens.of` already makes the object _report_ the target typename, so a check via
+   `Obj.getTypename` passes — but a check against the stored ref's own type annotation would not.
+   Verify against `Form`'s `RefField` and against the validation `put` performs.
+3. **Which lens, and what if none.** The target schema's declared ref type disambiguates when several
+   lenses share a source. When _none_ is registered, fail at lens construction — never silently hand
+   back the raw object, which would be a `GtdPerson`-typed slot holding a `Person`.
+4. **Cycles** are fine — wrapping is lazy (only on `.target`) and memoization terminates it.
+5. **`Ref.Array`.** Reading maps element-wise and is unremarkable. Appending means storing a lensed
+   handle, which point 4 above suggests is transparent; confirm rather than assume.
+
+### 11.5 Projection — flattening fields across a ref
+
+The lesser case, and the harder one. `TaskRow.assigneeName: Lens.through(['assignee', 'name'])`.
+
+Three constraints, in ascending order of hardness:
+
+1. **`get` must stay synchronous and pure** — that is what lets `checkLaws` run without mutating and
+   `useLensValue` project on every render (§6). `ref.target` returns `T | undefined` _and triggers a
+   load as a side effect_; `ref.load()` is a Promise. So a projected property must be **partial**:
+   typed `T | undefined` even when the source property is required.
+2. **Reactivity has to follow the hop** or the projection goes stale — the exact failure already hit
+   once with the text lens. `refSimpleFamily` already does the work.
+3. **Writing through is a write to another automerge document, so it is not atomic.** Same wall as
+   cross-object migration (§10.5), same answer: `Write` grows an object address; the runner applies
+   per object today and hands the same set to a cross-object transaction later.
+
+Not every hop is equally uncertain, though. `internal/Ref/strong-deps.ts` defines an entity's
+**strong-dependency set** — its schema, a relation's source and target, and its parent — and an
+entity is not surfaced until those are loaded; arbitrary refs are deliberately excluded. So
+projection along a strong dep (a relation reading through to its source or target, a child to its
+parent) is **total and synchronous today**, with no new loading machinery. _(Read from the code, not
+yet exercised.)_ That is the scoping principle: strong-dep projection first, arbitrary refs second
+and explicitly partial.
+
+|                                       | Read                                | Write                                       |
+| ------------------------------------- | ----------------------------------- | ------------------------------------------- |
+| **Composition** (§11.2)               | Partial only where `Ref` already is | Per object, atomic within each              |
+| **Projection · strong deps**          | Total, sync                         | Non-atomic across the hop                   |
+| **Projection · single arbitrary ref** | Partial, reactive via the ref atom  | Non-atomic; convergent, writes stay minimal |
+| **Projection · multi-hop**            | Partial, latency compounds          | Not worth supporting initially              |
+| **Projection · `Ref.Array`**          | Fine — map over loaded targets      | Ill-defined; keep read-only                 |
+
+**What not to expect** from either: atomicity across a hop before Automerge has cross-object
+transactions, and queryability or indexing of a projected property — worse than the overlay, since
+the value does not live on the object at all.
+
+### 11.6 The connection to migration
+
+A composed lens over a graph is also a **graph migration**: `Task → TaskV2` together with
+`Person → PersonV2` migrates a subtree consistently, one node at a time, with each node's writes
+minimal and local. That is the same machinery as §10, and fold-forward (§10.3) applies per node — so
+a late old-shape write to a referenced object is recoverable exactly as it is for the root.
+
+Projection is the half that needs §10.5's write-set-with-an-address. Composition needs none of it,
+which is another reason to build composition first.
 
 ## 12. References
 
