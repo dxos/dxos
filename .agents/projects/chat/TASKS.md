@@ -14,6 +14,8 @@ harness (manual offline/propagation, two-client storybook); thread
 deep-linking, parked in stage 1, landed in round 9. Rounds 2–12 of jdw's
 review are folded in below, each marked with the round that asked for it;
 where a round revised an earlier decision the superseded entry says so.
+2026-07-30: stages 5–9 (agents in channels; josiah) added — model in
+DESIGN.md "Agents".
 NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 
 ## Decisions log
@@ -29,6 +31,16 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 - [x] Replies = `Message.parentMessage` refs.
 - [x] Presence/typing = ephemeral EDGE messaging, never feed blocks.
 - [x] Ship gate: feed phase 1 lands before chat ships to real users.
+- [x] Assistant `Chat`/`Channel`: parallel types over one substrate — a
+      session transcript is not a venue; `Message`, feed idiom, turn loop and
+      message-surface kit converge, the types do not (josiah, 2026-07-30).
+- [x] Agent interactions force a thread; one session per thread; the agent's
+      reply is an action on the venue, recorded in its session feed
+      (2026-07-30).
+- [x] Session placement by venue: private chat client-hosted, channel-bound
+      sessions EDGE-hosted; same `AgentProcess` (2026-07-30).
+- [x] Thread subscription = one primitive, two delivery routes: human →
+      notification, agent → session enqueue (2026-07-30).
 
 ## Stage 1 — prototype in plugin-thread
 
@@ -451,6 +463,110 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       online roster); document the primitive — candidate for extraction, cf.
       plugin-calls swarm presence. Explicitly not feed-backed.
 
+## Stage 5 — identity & attribution groundwork (parallel to stages 2–4)
+
+Rides the "today" (synthetic) phase of
+`agents/superpowers/specs/2026-07-21-agent-identity.md`. Fixes latent bugs in
+the current single-user assistant, independent of agents-in-channels.
+
+- [ ] Stamp `sender.identityDid` on user-authored prompts — `formatUserPrompt`
+      (`assistant/src/request/format.ts`) writes `sender: { role: 'user' }`
+      today, so two humans (or two of one user's devices) in one chat feed
+      are indistinguishable.
+- [ ] Provide `AgentIdentityService` from the session layer (spec scope items
+      1–2) and stamp agent-authored messages with `Agent.did`; retire
+      plugin-review's hardcoded `DEFAULT_AGENT_IDENTITY` ("Kai", name only).
+- [ ] Document the boundary: synthetic `sender` DIDs are claims, not
+      authenticated provenance — no permission checks on `sender`.
+- [ ] One live agent process per conversation: `AgentService`'s per-client
+      in-memory session cache lets two clients double-spawn loops on one feed
+      (interleaved double replies). Minimum-viable claim/coordination now;
+      remote host addressing is stage 9.
+
+## Stage 6 — interface convergence (after stage 2)
+
+- [ ] The assistant chat surface renders on the plugin-chat message kit
+      (tiles, hover controls, composer), parameterized by a **block-render
+      policy**: assistant surface shows tool calls / streaming partials /
+      context chips; channel surface renders finalized content blocks only.
+      One kit, per-surface policies — not a fork.
+- [ ] `Chat` keeps its type and extras (`instructions`, `plan`, in-feed
+      context bindings); `Message`, the feed idiom, and the UI converge.
+- [ ] Stage-1 message affordances (reactions, quote-reply, edit, delete)
+      light up in assistant chats via the shared kit — verify they don't
+      fight the assistant's streaming tiles.
+
+## Stage 7 — agents in channels v1 (after stages 3, 5, 6)
+
+- [ ] Wire `mention()` autocomplete (`ui-editor` completion extension —
+      exists, unwired) into the channel composer: space members + enabled
+      `Agent`s.
+- [ ] Forced thread: an @-agent mention at channel level mints the thread at
+      compose time (composer shows "starting a thread with X" before send;
+      `CreateThread` is already idempotent). Human-only messages stay
+      nudged, never forced.
+- [ ] Session per thread: the mention spawns a session `Chat` bound to
+      `(channel, threadId)` — design the binding (thread-as-object makes
+      `Chat → Thread` natural once cross-feed refs resolve; else channel ref + `threadId`). Spawn-time context = channel-history window via
+      `AiContext.Binding`.
+- [ ] Delivery: thread messages route into the live session via harness
+      `enqueueMessage`; echo suppression keyed on own `sender.identityDid`,
+      not `role`.
+- [ ] Output action: a post-to-thread operation appends the `Message`
+      (sender = agent DID, `threadId`) to the channel feed and records the
+      action in the session feed.
+- [ ] Response policy: respond-by-default while sole agent subscriber and no
+      one else is addressed; mention-gated otherwise.
+- [ ] Provenance: agent venue-messages link to the producing session; "view
+      session" opens it as its own plank (read-only default, joinable for
+      steering).
+- [ ] Progress tile: provisional tile in the thread folded from the session
+      feed's tail; resolves to posted / failed / canceled; derived state,
+      never feed blocks.
+- [ ] Retire plugin-review's `agent-runner`: a review agent = an agent
+      subscribed to the document's comments channel (after stage 3;
+      coordinate with document-revisions, same constraint as stage 3).
+- [ ] Interim placement: client-hosted in the mentioner's client, explicitly
+      marked scaffolding for stage 9.
+- [ ] Prerequisite: session deep-links for provenance and "view session" —
+      threads are URL-addressable since round 9; sessions (companion chats)
+      are not (the plugin-projects UrlBinding gap; same fix serves both).
+
+## Stage 8 — subscriptions & delivery (extends stage 4)
+
+- [ ] Thread membership items (per-user, single-writer, folded at read — the
+      `Reaction` shape): join affordance writes one; first message
+      auto-joins; "X joined" derives at render, never a message block. Write
+      these from day one so notification history is real.
+- [ ] Notification delivery filtered to joined threads (the stage-4 trigger
+      mechanism).
+- [ ] Agent delivery route = the same subscription primitive with delivery =
+      session enqueue; with EDGE (stage 9) both routes are the same trigger
+      machinery.
+- [ ] Keep join distinct from feed-phase-2 read cursors — orthogonal
+      per-user facts; a non-joined reviewer still gets a read cursor.
+
+## Stage 9 — space-hosted sessions & live activity
+
+- [ ] EDGE-hosted `AgentProcess` for channel-bound sessions: same process
+      code over an EDGE-backed process manager; wake-up = EDGE trigger on
+      the channel feed (plugin-routine machinery).
+- [ ] Real agent identity (the spec's "future" phase — EDGE forces it):
+      keypair-backed `did:halo:`, agent as space member; one/few long-lived
+      EDGE runtime devices each hosting many sessions. Declined:
+      device-per-session (credential-graph bloat); shelved for its one
+      virtue, per-session key revocation.
+- [ ] Remote control in the data plane: cancel = control item on the session
+      feed watched by the host; decide who may cancel (open question —
+      leaning any thread member).
+- [ ] Activity pulse: coarse status folded from the replicated session feed
+      first; token-level liveness via the dormant `SwarmTraceSink` publish
+      side only if wanted.
+- [ ] Session-feed retention/GC — a feed per agent task vs ~1000 feeds/space;
+      or gate scale on feed phases 3–4.
+- [ ] Later, not v1: session promotion local → EDGE ("keep going without
+      me").
+
 ## Blocked / needs a separate fix
 
 - [x] `plugin-onboarding:build-exemplar` was failing on `main`
@@ -467,7 +583,8 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       `EID.getEntityId(EID.tryParse(ref.uri)!)`, most with the banned non-null
       assertion, and this change added two more local copies. Core-API
       addition, so it needs Josiah's sign-off before it rides along.
-- [ ] Assistant `Chat`/`Channel` convergence decision (leaning: parallel).
+- [x] Assistant `Chat`/`Channel` convergence — DECIDED 2026-07-30: parallel
+      types over one substrate (DESIGN.md "Agents"); executed via stage 6.
 - [ ] Per-thread read-state: feed phase 2 cursor design must not preclude
       per-`threadId` high-water marks (mirrored in feed-live-objects TASKS).
 - [ ] Channel management polish: sidebar grouping, membership display
