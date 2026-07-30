@@ -65,6 +65,17 @@ export const EntityMetaSchema = Schema.Struct({
   version: Schema.optional(Schema.String),
 
   /**
+   * Caller-supplied domain identity, unique within a space: two entities carrying the same
+   * natural key are the same entity and are merged into one (see `Merge`).
+   *
+   * Opaque to the storage engine — callers that need generations encode them in the string
+   * (e.g. `com.example.seed@2`), which yields distinct entities because the strings differ.
+   * Distinct from `key`/`version` above, which record the registry entry an instance was
+   * created from (provenance, not identity).
+   */
+  naturalKey: Schema.optional(Schema.String),
+
+  /**
    * Dictionary of annotations to this entity.
    */
   annotations: Dictionary,

@@ -945,7 +945,8 @@ const metaNotEmpty = (meta: EntityMeta) =>
   meta.tags.length > 0 ||
   (meta.annotations != null && Object.keys(meta.annotations).length > 0) ||
   meta.key !== undefined ||
-  meta.version !== undefined;
+  meta.version !== undefined ||
+  meta.naturalKey !== undefined;
 
 /**
  * @internal

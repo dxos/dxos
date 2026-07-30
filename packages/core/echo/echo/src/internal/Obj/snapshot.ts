@@ -101,6 +101,7 @@ export const getSnapshot = <T extends object>(obj: T): T => {
     tags: [...(meta?.tags ?? [])],
     ...(meta?.key != null ? { key: meta.key } : {}),
     ...(meta?.version != null ? { version: meta.version } : {}),
+    ...(meta?.naturalKey != null ? { naturalKey: meta.naturalKey } : {}),
     ...(meta?.annotations ? { annotations: { ...meta.annotations } } : {}),
   }));
 

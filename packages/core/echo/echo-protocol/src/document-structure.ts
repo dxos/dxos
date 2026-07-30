@@ -229,6 +229,14 @@ export const EntityStructure = Object.freeze({
     return object.system?.deleted ?? false;
   },
 
+  getNaturalKey: (object: EntityStructure): string | undefined => {
+    return object.meta?.naturalKey;
+  },
+
+  getMergedInto: (object: EntityStructure): EntityId | undefined => {
+    return object.system?.mergedInto;
+  },
+
   getRelationSource: (object: EntityStructure): EncodedReference | undefined => {
     return object.system?.source;
   },
@@ -358,6 +366,17 @@ export type EntityMeta = {
   version?: string;
 
   /**
+   * Caller-supplied domain identity, unique within a space: two entities carrying the same
+   * natural key are the same entity and are merged into one.
+   *
+   * Opaque to the storage engine — callers that need generations encode them in the string
+   * (e.g. `com.example.seed@2`), which yields distinct entities because the strings differ.
+   * Distinct from {@link key}/{@link version}, which record the registry entry an instance was
+   * created from (provenance, not identity).
+   */
+  naturalKey?: string;
+
+  /**
    * Dictionary of annotations to this entity.
    *
    * NOTE: Optional for backwards compatibility. Values are arbitrary decoded automerge primitives;
@@ -418,6 +437,24 @@ export type EntitySystem = {
    * Survives compaction / migrations (unlike automerge change timestamps).
    */
   createdAt?: number;
+
+  /**
+   * Id of the entity this one was merged into, set on the loser of a natural-key merge.
+   *
+   * The loser is tombstoned but keeps replicating, so late peers can run the same merge and
+   * follow the redirect. Every edge points at a smaller id, so chains are finite and acyclic
+   * and terminate at the global minimum.
+   */
+  mergedInto?: EntityId;
+
+  /**
+   * The loser's automerge heads at the moment it was merged away.
+   *
+   * A later pass diffs the loser from these heads to fold in edits made by a peer that was
+   * offline during the merge, instead of re-running the field-wise merge (which prefers the
+   * smallest-id candidate and would discard those edits).
+   */
+  mergedAtHeads?: string[];
 };
 
 /**

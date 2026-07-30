@@ -1,0 +1,11 @@
+---
+'@dxos/echo-protocol': minor
+'@dxos/echo-client': minor
+'@dxos/echo': minor
+---
+
+Entities can declare a `meta.naturalKey`: a caller-supplied domain identity, unique within a space, so that state initialized independently by several peers converges instead of accumulating duplicates. The id stays a surrogate — system-minted and random — and the natural key sits alongside it, distinct from `meta.key`/`meta.version`, which record the registry entry an instance was created from (provenance, not identity). The key is an opaque string; callers that need generations encode them in it (`com.example.seed@2`), which yields distinct entities because the strings differ.
+
+The new `Merge` module carries the deterministic core: `selectWinner` (the minimum id), `groupByNaturalKey` / `findDuplicates`, and `merge`, which computes the merged state over the whole candidate set at once — for each field, the value from the smallest-id candidate that defines it. That is deliberately not a pairwise fold, which would not be associative and would let different application orders diverge. `resolveRedirect` follows the `system.mergedInto` written on a merged-away entity, transitively and without trusting the data: an edge that fails to decrease the id ends the chain, so cycles and forward references terminate.
+
+The merge engine that applies these results is not wired up yet; the schema fields and the pure core ship first.

@@ -24,8 +24,9 @@ the phased rollout this ledger mirrors).
   - Merge-policy pluggability: left open, non-blocking; fixed semantics first.
 - [x] **Shape the identity field** — a **single opaque string**, not a
       `{ key, version }` struct; callers encode generations in the string.
-- [ ] **Name the identity field** (§4.4, §7 Q6) — `naturalKey` / `singletonKey` /
-      `mergeKey` / `canonicalKey`. Blocks Phase 1's schema change, not Phase 0.
+- [x] **Name the identity field** — **`meta.naturalKey`** (§4.4). Names the caller's
+      assertion rather than the mechanism, so it stays true in Phase 1 where the
+      field is inert and in Phase 3 where the indexer triggers the merge.
 
 ## Phase 0: Spike (throwaway, tests only)
 
@@ -42,10 +43,15 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0
 
 ## Phase 1: Foundations (no merge engine)
 
-- [ ] Dedicated identity field on `EntityMeta` — a single optional string (name per
-      §4.4) + exact-match grouping helper.
-- [ ] `system.mergedInto` schema field + resolver redirect-following (inert) +
-      proto-guard snapshot.
+- [x] Dedicated identity field on `EntityMeta` — `meta.naturalKey`, a single optional
+      string, with `Merge.get/setNaturalKey`, `groupByNaturalKey`, `findDuplicates`.
+      Two hand-maintained meta field lists had to learn about it (see below).
+- [x] Pure merge core (`echo/src/Merge.ts`) — `selectWinner` (min id),
+      set-wise `merge` (permutation-independent, not a pairwise fold),
+      `resolveRedirect` (transitive, terminates on cycles and forward refs).
+      39 unit tests + 4 DB round-trip tests.
+- [ ] `system.mergedInto` / `system.mergedAtHeads` — schema fields landed; resolver
+      redirect-following and the proto-guard snapshot still to do.
 - [ ] Internal relation-endpoint mutation (plumb `ObjectCore.setSource/setTarget`).
 - [ ] Creation-side API for declaring an identity key (+ `db.ensure`-style helper).
 - [ ] Feature flag, default off outside tests.
@@ -87,6 +93,16 @@ Scope decision 2026-07-30: every entity kind that can be stored is in scope, pha
 ## Phase 5: GC (optional)
 
 - [ ] Epoch-based compaction of merged-away tombstones.
+
+### Gotchas found while implementing
+
+- **Adding a field to `EntityMeta` is not one change.** Two hand-maintained field
+  lists silently drop anything they do not enumerate, and neither fails loudly:
+  `getSnapshot` (`echo/src/internal/Obj/snapshot.ts`) rebuilds meta from an explicit
+  allowlist, so the field vanished from every snapshot; and `metaNotEmpty`
+  (`echo-client/src/echo-handler/echo-handler.ts`) decides whether meta is persisted
+  at all, so an object whose _only_ meta was a natural key never wrote its meta
+  section. Both are now updated. Worth collapsing into one derived list.
 
 ### References
 

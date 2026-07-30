@@ -302,9 +302,31 @@ The field is independent of `meta.version`, so identity and provenance may disag
 an entity can be seeded from registry entry `1.2.0` while its identity string names
 generation `2`, or names no generation at all.
 
-**Name: pending ratification.** Candidates, all currently unused in-tree
-(`identity`/`identityKey` are excluded — `IdentityKey` is the HALO identity public
-key across 17 files, and the collision would be actively misleading):
+**Name: `meta.naturalKey`** (ratified 2026-07-30). It names what the caller asserts
+rather than what the system does with it — setting it is a claim about what the
+entity _is_, and merging is the consequence of two entities making the same claim.
+That keeps it honest across the phases: Phase 1 ships the field with no merge engine
+at all, where a name like `mergeKey` would be a lie, and Phase 3 moves the trigger
+into the indexer without invalidating it. It also imports the relational
+surrogate-vs-natural distinction exactly: `EntityId` is the surrogate (system-minted,
+random, meaningless outside the database), and §1's problem is that ECHO has only
+surrogates, so two peers creating "the same" entity mint two with no way to recognize
+the sameness.
+
+The alternatives each misdescribed something: `canonicalKey` is wrong on the
+entities that matter (both duplicates carry the key, including the loser — only one
+is canonical); `singletonKey` implies write-time uniqueness enforcement, which was
+rejected along with deterministic ids (before the merge runs there genuinely _are_
+two entities with the key, so the invariant is eventual); `mergeKey` names the
+mechanism, reads oddly on an entity that never has a duplicate, and invites the
+mental model of opting into a behavior rather than asserting an identity.
+`identity`/`identityKey` were excluded outright — `IdentityKey` is the HALO identity
+public key across 17 files, so the collision would be actively misleading.
+
+Accepted cost: the name carries no hint that stamping it opts the entity into
+merging, so that consequence belongs in the field's doc comment.
+
+Rejected candidates, for the record:
 
 | Candidate      | Reads as                                                                                                     | Against                                                                                     |
 | -------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
