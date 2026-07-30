@@ -83,14 +83,16 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           className={mx('grid grid-cols-[var(--dx-rail-size)_1fr_min-content] w-full', classNames)}
           ref={forwardedRef}
         >
-          <div className='flex flex-col items-center gap-2 pt-1'>
+          <div className='flex flex-col items-center pt-1'>
             <Avatar.Content
               size={avatarSize}
               hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
               fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
               {...(authorImgSrc && { imgSrc: authorImgSrc })}
             />
-            {continues && <div className='w-px grow bg-separator' />}
+            {/* The connector has to reach the next tile's avatar to read as one rail: it starts flush
+                under this avatar (no gap) and `-mb-1` carries it across that tile's `pt-1`. */}
+            {continues && <div className='w-px grow -mb-1 bg-separator' />}
           </div>
           <div className='py-1 min-w-0'>{children}</div>
           {controls && <div className='self-start'>{controls}</div>}
@@ -429,6 +431,7 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
     !!onMessageReact ||
     !!onMessageReply ||
     showStartThread ||
+    (!!threadSummary && !!onThreadOpen) ||
     (hasProposal && !!onAcceptProposal) ||
     (hasChange && (!!onAcceptChange || !!onRejectChange)) ||
     showEdit ||
@@ -462,13 +465,14 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
     }
 
     if (onMessageReact) {
-      // A few reactions inline, then the whole set behind the picker: the common ones are one click
-      // away without a menu, and everything else is still reachable.
+      // The quick reactions form their own group — one tap each, separated from the actions that do
+      // something to the message rather than respond to it.
       for (const emoji of inlineReactions) {
         builder.action(`react-${emoji}`, { label: emoji, testId: 'thread.message.reaction-option' }, () =>
           onMessageReact(message.id, emoji),
         );
       }
+      builder.separator('line');
       builder.action(
         'more-reactions',
         {
@@ -494,7 +498,20 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
       );
     }
 
-    if (showStartThread && onThreadCreate) {
+    // One slot for the message's thread, whichever state it is in: the affordance becomes "view" once
+    // a thread exists rather than disappearing, so the control does not move under the cursor.
+    if (threadSummary && onThreadOpen) {
+      builder.action(
+        'view-thread',
+        {
+          label: ['view-thread.label', { ns: translationKey }],
+          icon: 'ph--chats-circle--regular',
+          iconOnly: true,
+          testId: 'thread.message.view-thread',
+        },
+        () => onThreadOpen(message.id),
+      );
+    } else if (showStartThread && onThreadCreate) {
       builder.action(
         'start-thread',
         {
@@ -587,8 +604,10 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
     showStartThread,
     hasProposal,
     hasChange,
+    threadSummary,
     onMessageReact,
     onMessageReply,
+    onThreadOpen,
     onThreadCreate,
     onMessageDelete,
     onAcceptProposal,

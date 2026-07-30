@@ -103,7 +103,8 @@ export const ThreadsAreCreated: Story = {
 
     // One declared thread in the fixture, so exactly one summary row — not one per message.
     await expect(await canvas.findAllByTestId('thread.message.open-thread')).toHaveLength(1);
-    // And the undeclared message is the only one still offering to start one.
+    // The thread slot reflects each message's state: view on the declared one, start on the other.
+    await expect(await canvas.findAllByTestId('thread.message.view-thread')).toHaveLength(1);
     await expect(await canvas.findAllByTestId('thread.message.start-thread')).toHaveLength(1);
   },
 };
@@ -164,7 +165,10 @@ export const ThreadAffordances: Story = {
   },
 };
 
-/** Creating a thread declares its root, which is what makes the summary row appear. */
+/**
+ * Creating a thread declares its root, which is what makes the summary row appear — and turns that
+ * message's start affordance into "view thread" rather than removing it.
+ */
 export const CreateThread: Story = {
   args: {
     subject: undefined,
@@ -183,9 +187,10 @@ export const CreateThread: Story = {
     await userEvent.click((await canvas.findAllByTestId('thread.message.start-thread'))[0]);
 
     await waitFor(async () => {
-      // The declaration lands in the feed, so both messages now carry a thread and neither offers to
-      // start one.
+      // The declaration lands in the feed, so both messages now carry a thread: two summary rows, two
+      // view affordances, and nothing left to start.
       await expect(await canvas.findAllByTestId('thread.message.open-thread')).toHaveLength(2);
+      await expect(await canvas.findAllByTestId('thread.message.view-thread')).toHaveLength(2);
       await expect(canvas.queryAllByTestId('thread.message.start-thread')).toHaveLength(0);
     }, STORY_TIMEOUT);
   },

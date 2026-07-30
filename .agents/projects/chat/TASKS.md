@@ -242,6 +242,19 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       `Thread.deleteMessage` open the overflow menu first (its items are portaled
       to the page root).
 
+### Message controls, round 5 (jdw)
+
+- [x] Two groups of controls: the three quick reactions, a `line` separator, then
+      the actions that act on the message (picker · view/start thread · ⋯).
+- [x] The thread affordance changes state instead of disappearing — "start a
+      thread" becomes "view thread" once one exists, so the control does not move
+      under the cursor. The summary row still shows name · count · last activity.
+- [x] FIXED the avatar rail: the connector sat `gap-2` below its avatar and
+      stopped at the tile's edge, while the next avatar sits behind `pt-1` — so it
+      read as dashes rather than one line. Now flush under the avatar, with
+      `-mb-1` carrying it across the next tile's padding. Deliberately not
+      asserted in a play (jdw: layout will keep moving).
+
 ### Message view (jdw round 3)
 
 - [x] Dropped the stray `border` on the channel's `Thread.Content` — the white

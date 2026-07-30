@@ -33,6 +33,7 @@ export const translations = [
         'add-reaction.label': 'Add reaction',
         'reply-message.label': 'Reply',
         'start-thread.label': 'Start a thread',
+        'view-thread.label': 'View thread',
         'replying-to.label': 'Replying to {{name}}',
         'cancel-reply.label': 'Cancel reply',
         'reply-count.label_one': '{{count}} reply',
