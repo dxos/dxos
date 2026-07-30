@@ -27,18 +27,16 @@ import {
 
 const LOCAL_STORAGE_KEY = 'org.dxos.plugin.debug.panels';
 
-// Every collapsible panel must be listed: the accordion is controlled from this set, so an id
-// missing here would reopen-then-snap-shut on click.
+// Exactly the panels rendered below that have a body: the accordion is controlled from this set, so
+// an id missing here would reopen-then-snap-shut, and one that never becomes an item (a summary-only
+// panel like Memory or Network) would only persist a dead entry.
 const PANEL_KEYS = [
-  'ts',
   'performance',
   'surfaceProfiler',
   'edge',
-  'network',
   'queries',
   'rawQueries',
   'database',
-  'memory',
   'replicator',
   'replicatorMessages',
   'sync',
