@@ -19,7 +19,12 @@ import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { protocol } from './defs';
-import { type EdgeIdentity, authenticateViaChallengeEndpoint, handleAuthChallenge } from './edge-identity';
+import {
+  type EdgeIdentity,
+  authenticateViaChallengeEndpoint,
+  presentCredentialsForChallenge,
+  readAuthChallenge,
+} from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
 import { type Protocol } from './protocol';
@@ -361,10 +366,12 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
 
     const response = await fetch(new URL(path, this._baseHttpUrl), { method: 'GET' });
-    // The header check matters: a 401 forwarded from upstream carries no challenge, and signing a
-    // challenge that isn't there would throw instead of degrading to an unauthenticated attempt.
-    if (response.status === 401 && response.headers.get('WWW-Authenticate') !== null) {
-      return encodePresentationWsAuthHeader(await handleAuthChallenge(response, this._identity));
+    // Gate on a parsed VP challenge, not merely on a 401. A 401 forwarded from upstream can carry
+    // an unrelated `WWW-Authenticate` (or none), and signing a challenge that isn't there would
+    // throw instead of degrading to an unauthenticated attempt.
+    const challenge = response.status === 401 ? await readAuthChallenge(response) : undefined;
+    if (challenge) {
+      return encodePresentationWsAuthHeader(await presentCredentialsForChallenge(this._identity, challenge));
     }
     log.warn('no auth challenge from edge', { status: response.status, statusText: response.statusText });
     return undefined;
