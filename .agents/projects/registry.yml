@@ -144,9 +144,9 @@ projects:
     created: 2026-07-30
     summary: ECHO-level deterministic object merging keyed on identity key (meta key + version) — duplicates from uncoordinated per-peer space initialization merge into a min-id winner with redirects and reference rewriting.
     tasks: .agents/projects/object-merging/TASKS.md
-    design: plans/echo-object-merging/RESEARCH.md
+    design: .agents/projects/object-merging/DESIGN.md
     prs: []
-    resume: 'Research COMPLETE and committed (plans/echo-object-merging/RESEARCH.md) on branch claude/echo-object-merging-research-dqtjx1 (no PR by request). Decisions so far: merge only distinct-id duplicates (collision class 2); same-id-two-docs stays an error (no deterministic ids — rejected, §4.5); merge direction = deterministic ordering, winner = min EntityId. Next: design review of the 5 open questions in RESEARCH.md §7 (identity field, version matching, merge-policy pluggability, where the merge runs, relation scope), then Phase 0 spike (§6).'
+    resume: 'Research COMPLETE and committed (DESIGN.md) on branch claude/echo-object-merging-research-dqtjx1 (no PR by request). Decisions so far: merge only distinct-id duplicates (collision class 2); same-id-two-docs stays an error (no deterministic ids — rejected, §4.5); merge direction = deterministic ordering, winner = min EntityId. Next: design review of the 5 open questions in DESIGN.md §7 (identity field, version matching, merge-policy pluggability, where the merge runs, relation scope), then Phase 0 spike (§6).'
 
   - name: chat
     status: active

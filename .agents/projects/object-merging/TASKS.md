@@ -1,20 +1,20 @@
 # object-merging — Tasks
 
-_Resume: design review of RESEARCH.md §7 open questions, then Phase 0 spike. Uncommitted: none. Last: research reworked per decision (no deterministic ids; merge engine only)._
+_Resume: design review of DESIGN.md §7 open questions, then Phase 0 spike. Uncommitted: none. Last: research reworked per decision (no deterministic ids; merge engine only)._
 
-Design + feasibility research: [`plans/echo-object-merging/RESEARCH.md`](../../../plans/echo-object-merging/RESEARCH.md)
+Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
 the phased rollout this ledger mirrors).
 
 ## Phase R: Research
 
 - [x] **Feasibility research** — storage topology, identity metadata, reference
-      model, prior art; committed as `plans/echo-object-merging/RESEARCH.md`.
+      model, prior art; folded into this project as `DESIGN.md`.
 - [x] **Decision: collision classes** — merge distinct-id duplicates only;
-      same-id-two-docs stays an error; no deterministic object ids (RESEARCH.md §4.5).
+      same-id-two-docs stays an error; no deterministic object ids (DESIGN.md §4.5).
 - [x] **Decision: merge direction** — deterministic ordering; winner = minimum
       `EntityId` (keys are equal among duplicates, so ids are the tiebreaker).
-- [ ] **Design review** — settle the 5 open questions in RESEARCH.md §7:
+- [ ] **Design review** — settle the 5 open questions in DESIGN.md §7:
   - Identity field: `meta.key` + `meta.version` (recommended) vs designated
     `ForeignKey` source vs new field.
   - Version matching: exact (recommended) vs semver-range.
@@ -24,7 +24,7 @@ the phased rollout this ledger mirrors).
 
 ## Phase 0: Spike (throwaway, tests only)
 
-Prove convergence end-to-end; time-boxed ~1–2 weeks. See RESEARCH.md §6 Phase 0.
+Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0.
 
 - [ ] **Minimal end-to-end merge** — 3 `EchoTestPeer`s, duplicate keyed objects,
       min-id winner, `mergedInto` redirect, resolver hook, ref rewrite via
@@ -49,7 +49,7 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See RESEARCH.md §6 Phase
       tombstone+redirect, opportunistic ref rewrite.
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
-- [ ] Multi-peer convergence + property test suite (RESEARCH.md §5.2–5.4).
+- [ ] Multi-peer convergence + property test suite (DESIGN.md §5.2–5.4).
 
 ## Phase 3: Indexing & automation
 
@@ -70,5 +70,5 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See RESEARCH.md §6 Phase
 
 ### References
 
-- `plans/echo-object-merging/RESEARCH.md` — design doc (source of truth).
+- `DESIGN.md` — design doc (source of truth).
 - Branch: `claude/echo-object-merging-research-dqtjx1` (research only, no PR by request).
