@@ -553,6 +553,32 @@ export class ObjectCore {
   }
 
   /**
+   * Ids of the entities merged into this one, deduplicated and sorted.
+   *
+   * Peers merging concurrently on different views both append here, and automerge keeps both
+   * insertions, so the stored list can hold repeats; normalizing on read makes it a set.
+   */
+  getMergedFrom(): EntityId[] {
+    const value = this._getRaw([SYSTEM_NAMESPACE, 'mergedFrom']);
+    return Array.isArray(value) ? [...new Set(value)].sort() : [];
+  }
+
+  /**
+   * Record entities as having merged into this one. Idempotent: re-recording an id already
+   * present rewrites nothing, so a repeated merge pass is a no-op.
+   */
+  addMergedFrom(ids: readonly EntityId[]): void {
+    const merged = new Set(this.getMergedFrom());
+    const before = merged.size;
+    for (const id of ids) {
+      merged.add(id);
+    }
+    if (merged.size !== before) {
+      this._setRaw([SYSTEM_NAMESPACE, 'mergedFrom'], [...merged].sort());
+    }
+  }
+
+  /**
    * The document's current heads, recorded when the entity is merged away.
    */
   getHeads(): Heads {

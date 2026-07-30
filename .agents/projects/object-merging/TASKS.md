@@ -66,6 +66,9 @@ than by a spike.
       peers merging independently agree on the winner; a partial-view merge builds
       a chain that still resolves to the global minimum.
 - [x] `db.mergeDuplicates()` — detection, merge, and reference rewriting in one call.
+- [x] `system.mergedFrom` on the winner — the reverse edge of `mergedInto`, stored
+      because deriving it means an unindexed reverse scan; transitively closed so a
+      collapsing chain carries absorbed ids forward. Read via `getMergedFrom`.
 - [x] Straggler fold (`foldLateEdits`) — asks automerge which data fields moved since
       `mergedAtHeads` and carries exactly those to the winner, then advances the
       watermark so the same edit is never folded twice.

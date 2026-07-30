@@ -10,7 +10,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
-import { mergeDuplicates, resolveMerged, rewriteReferences } from './merge-executor';
+import { getMergedFrom, mergeDuplicates, resolveMerged, rewriteReferences } from './merge-executor';
 
 describe('Merge', () => {
   let builder: EchoTestBuilder;
@@ -240,6 +240,56 @@ describe('Merge', () => {
 
     expect((await db.mergeDuplicates()).merged).toHaveLength(0);
     expect(await db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(2);
+  });
+
+  test('the winner records what merged into it', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const tasks = ['first', 'second', 'third'].map((title) => {
+      const task = db.add(Obj.make(TestSchema.Task, { title }));
+      Merge.setNaturalKey(task, 'org.example.seed');
+      return task;
+    });
+    await db.flush();
+
+    const [winner, ...losers] = [...tasks].sort((a, b) => (a.id < b.id ? -1 : 1));
+    expect(getMergedFrom(winner)).toEqual([]);
+
+    await db.mergeDuplicates();
+    expect(getMergedFrom(winner)).toEqual(losers.map(({ id }) => id).sort());
+
+    // Each loser still resolves, so the recorded ids are usable rather than dangling.
+    const all = await db.query(Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'include' })).run();
+    for (const id of getMergedFrom(winner)) {
+      expect(all.some((task) => task.id === id)).toBe(true);
+    }
+
+    // Idempotent: a second pass adds nothing.
+    await db.mergeDuplicates();
+    expect(getMergedFrom(winner)).toEqual(losers.map(({ id }) => id).sort());
+  });
+
+  test('a collapsing chain carries the absorbed ids forward', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    const tasks = ['a', 'b', 'c'].map((title) => {
+      const task = db.add(Obj.make(TestSchema.Task, { title }));
+      Merge.setNaturalKey(task, 'org.example.seed');
+      return task;
+    });
+    await db.flush();
+    const [smallest, middle, largest] = [...tasks].sort((a, b) => (a.id < b.id ? -1 : 1));
+
+    // Merge only the two larger ones first, as a peer with a partial view would.
+    mergeDuplicates([middle, largest]);
+    await db.flush();
+    expect(getMergedFrom(middle)).toEqual([largest.id]);
+
+    // Collapsing the chain must not lose the id `middle` had already absorbed.
+    await db.mergeDuplicates();
+    expect(getMergedFrom(smallest)).toEqual([middle.id, largest.id].sort());
   });
 
   test('objects with distinct natural keys are not duplicates', async ({ expect }) => {

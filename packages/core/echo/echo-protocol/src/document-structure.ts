@@ -237,6 +237,10 @@ export const EntityStructure = Object.freeze({
     return object.system?.mergedInto;
   },
 
+  getMergedFrom: (object: EntityStructure): EntityId[] => {
+    return object.system?.mergedFrom ?? [];
+  },
+
   getRelationSource: (object: EntityStructure): EncodedReference | undefined => {
     return object.system?.source;
   },
@@ -455,6 +459,19 @@ export type EntitySystem = {
    * smallest-id candidate and would discard those edits).
    */
   mergedAtHeads?: string[];
+
+  /**
+   * Ids of the entities merged into this one, set on the winner of a natural-key merge.
+   *
+   * The reverse edge of {@link mergedInto}, stored rather than derived: finding it the other way
+   * means scanning for entities whose `mergedInto` points here, which no index supports. Holding
+   * it forward also lets a loaded winner reach its absorbed entities directly — what the
+   * straggler fold needs when the merge is driven lazily.
+   *
+   * Transitively closed: when a chain collapses, the surviving entity absorbs the losers' own
+   * lists too, so this always names every entity that folded into this one.
+   */
+  mergedFrom?: EntityId[];
 };
 
 /**

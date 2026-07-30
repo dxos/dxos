@@ -64,16 +64,24 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
       }
     });
 
+    // Transitively closed: a loser that already absorbed others hands those on, so the surviving
+    // entity names every entity that folded into it rather than only the direct hop.
+    const absorbed = new Set<EntityId>();
     for (const loserId of result.losers) {
       const loser = byId.get(loserId);
       if (!loser) {
         continue;
       }
       const core = getObjectCore(loser);
+      absorbed.add(loserId);
+      for (const inherited of core.getMergedFrom()) {
+        absorbed.add(inherited);
+      }
       // Record the heads before tombstoning, so a straggler's later edits can be folded in.
       core.setMergedInto(result.winner, core.getHeads());
       core.setDeleted(true);
     }
+    getObjectCore(winner).addMergedFrom([...absorbed]);
 
     merged.push({ naturalKey, winner: result.winner, losers: result.losers });
   }
@@ -124,6 +132,15 @@ export const rewriteReferences = (referrers: readonly Obj.Unknown[], entities: r
   }
   return rewritten;
 };
+
+/**
+ * Ids of the entities that were merged into this one, deduplicated and sorted.
+ *
+ * Empty for an entity that never absorbed a duplicate. The losers are tombstoned rather than
+ * erased, so each id here still resolves — which is what makes this usable for a diagnostic that
+ * wants to show what was folded in, or for reaching an absorbed entity to recover from it.
+ */
+export const getMergedFrom = (entity: Obj.Unknown): EntityId[] => getObjectCore(entity).getMergedFrom();
 
 /**
  * Fold edits made to a merged-away entity *after* it was merged into the entity that survives.
