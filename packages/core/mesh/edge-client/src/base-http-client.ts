@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
 
-import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
+import { type EdgeIdentity, authenticateViaChallengeEndpoint, handleAuthChallenge } from './edge-identity';
 import { encodeAuthHeader } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
 
@@ -102,10 +102,7 @@ export abstract class BaseHttpClient {
       let processingError: EdgeCallFailedError | undefined = undefined;
       try {
         if (!this._authHeader && args.auth) {
-          const response = await fetch(new URL('/auth', this._baseUrl));
-          if (response.status === 401) {
-            this._authHeader = await this._handleUnauthorized(response);
-          }
+          await this._prefetchAuthHeader();
         }
 
         const request = createRequest(args, this._authHeader, traceHeaders, this._clientTag);
@@ -188,10 +185,7 @@ export abstract class BaseHttpClient {
       let processingError: EdgeCallFailedError | undefined;
       try {
         if (!this._authHeader && args.auth) {
-          const response = await fetch(new URL('/auth', this._baseUrl));
-          if (response.status === 401) {
-            this._authHeader = await this._handleUnauthorized(response);
-          }
+          await this._prefetchAuthHeader();
         }
 
         const headers: Record<string, string> = { ...args.headers };
@@ -227,6 +221,24 @@ export abstract class BaseHttpClient {
       } else {
         throw processingError!;
       }
+    }
+  }
+
+  /**
+   * Acquire an auth header up front by asking `/auth` for a challenge.
+   *
+   * Best-effort: a failure here leaves `_authHeader` unset and the request proceeds
+   * unauthenticated, falling back to the 401-and-retry path below. That fallback is what keeps
+   * this working against servers whose `/auth` only issues a challenge by rejecting.
+   */
+  private async _prefetchAuthHeader(): Promise<void> {
+    if (!this._edgeIdentity) {
+      log.verbose('auth prefetch skipped: no identity set');
+      return;
+    }
+    const presentation = await authenticateViaChallengeEndpoint(this._baseUrl, this._edgeIdentity);
+    if (presentation) {
+      this._authHeader = encodeAuthHeader(presentation);
     }
   }
 

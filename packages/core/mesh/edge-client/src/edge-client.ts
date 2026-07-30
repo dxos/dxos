@@ -19,7 +19,7 @@ import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { protocol } from './defs';
-import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
+import { type EdgeIdentity, authenticateViaChallengeEndpoint, handleAuthChallenge } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
 import { type Protocol } from './protocol';
@@ -342,16 +342,30 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
   }
 
+  /**
+   * Obtain the challenge from `/auth` and sign it into the WebSocket subprotocol auth header.
+   *
+   * This used to fire a GET at the `/ws/:identityDid/:peerKey` upgrade path itself and harvest the
+   * challenge off the resulting 401 — a request sent specifically to be rejected, which surfaced as
+   * a console error on every connect and as a routine auth failure in the server's audit trail.
+   * `/auth` answers the same challenge with a 200. The nonce is not bound to a path, so the
+   * challenge issued at `/auth` is equally valid for the upgrade request.
+   *
+   * Falls back to the old behaviour when `/auth` yields nothing, so this still connects to servers
+   * that predate the challenge endpoint.
+   */
   private async _createAuthHeader(path: string): Promise<string | undefined> {
-    const httpUrl = new URL(path, this._baseHttpUrl);
-    httpUrl.protocol = getEdgeUrlWithProtocol(this._baseWsUrl.toString(), 'http');
-    const response = await fetch(httpUrl, { method: 'GET' });
+    const presentation = await authenticateViaChallengeEndpoint(this._baseHttpUrl, this._identity);
+    if (presentation) {
+      return encodePresentationWsAuthHeader(presentation);
+    }
+
+    const response = await fetch(new URL(path, this._baseHttpUrl), { method: 'GET' });
     if (response.status === 401) {
       return encodePresentationWsAuthHeader(await handleAuthChallenge(response, this._identity));
-    } else {
-      log.warn('no auth challenge from edge', { status: response.status, statusText: response.statusText });
-      return undefined;
     }
+    log.warn('no auth challenge from edge', { status: response.status, statusText: response.statusText });
+    return undefined;
   }
 
   private _isActive = (connection: EdgeWsConnection) => connection === this._currentConnection;

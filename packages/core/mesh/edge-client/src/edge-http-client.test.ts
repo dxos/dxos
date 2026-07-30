@@ -74,13 +74,21 @@ describe('EdgeHttpClient blobs', () => {
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
       if (url.endsWith('/auth')) {
-        return new Response(null, { status: 200 });
+        return new Response(JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
       return new Response(null, { status: 200 });
     });
     vi.stubGlobal('fetch', fetchMock);
 
     const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity({
+      peerKey: 'peer-key',
+      identityDid: 'did:halo:test',
+      presentCredentials: async (): Promise<Presentation> => ({}),
+    });
     const bytes = new Uint8Array([1, 2, 3]);
     await client.putBlob(Context.default(), 'abc123', bytes, { contentType: 'application/octet-stream' });
 
