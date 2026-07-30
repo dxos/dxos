@@ -83,6 +83,7 @@
     "@uiw/codemirror-theme-vscode": "catalog:",
     "ajv": "catalog:",
     "codemirror": "catalog:",
+    "codemirror-lang-mermaid": "catalog:",
     "diff": "catalog:",
     "lib0": "catalog:",
     "lodash.defaultsdeep": "catalog:",

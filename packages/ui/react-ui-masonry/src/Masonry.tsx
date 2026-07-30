@@ -166,10 +166,19 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   selectedIds?: ReadonlySet<string>;
   /** Emitted when a tile is clicked while selectable. The consumer toggles its own selection state. */
   onSelect?: (id: string, event: MouseEvent) => void;
+  /**
+   * Whether this layer owns scrolling. Set `false` when an ancestor already scrolls (e.g. a form's
+   * viewport) to render the grid in a plain block instead of a nested scroll container — the grid is
+   * then sized by `dx-column` rather than by a `ScrollArea.Root`, which `Masonry.Content` provides
+   * and which is therefore not needed. Nesting scroll containers also risks collapsing the measured
+   * width to the scrollbar gutter, which would suppress the grid entirely (see the width gate below).
+   * @default true
+   */
+  scroll?: boolean;
 }>;
 
 const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
-  ({ items, getId, selectedIds, onSelect, ...props }, forwardedRef) => {
+  ({ items, getId, selectedIds, onSelect, scroll = true, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, centered } =
       useMasonryContext('Masonry.Viewport');
     const remInPx = usePx(1);
@@ -233,8 +242,8 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // gutters. The grid fills the content box and the layout centres capped columns,
     // so nothing overflows and left/right spacing matches the gap. The viewport always
     // renders so it can be measured; tiles render once a width is known.
-    return (
-      <ScrollArea.Viewport ref={viewportRef}>
+    const grid = (
+      <>
         {contentWidth > 0 && (
           <div
             {...composableProps(props, {
@@ -289,7 +298,18 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
             })}
           </div>
         )}
-      </ScrollArea.Viewport>
+      </>
+    );
+
+    // `dx-column` (not `dx-expander`) in the non-scrolling case: it gives the definite inline size
+    // the width gate needs (`w-full min-w-0`) without claiming the block axis, which would fight the
+    // surrounding flow — the grid's height comes from the computed layout.
+    return scroll ? (
+      <ScrollArea.Viewport ref={viewportRef}>{grid}</ScrollArea.Viewport>
+    ) : (
+      <div className='dx-column' ref={viewportRef}>
+        {grid}
+      </div>
     );
   },
 );

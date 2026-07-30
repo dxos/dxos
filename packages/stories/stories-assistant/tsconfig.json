@@ -125,6 +125,9 @@
       "path": "../../plugins/plugin-graph"
     },
     {
+      "path": "../../plugins/plugin-illustrator"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
     },
     {
@@ -152,9 +155,6 @@
       "path": "../../plugins/plugin-script"
     },
     {
-      "path": "../../plugins/plugin-sketch"
-    },
-    {
       "path": "../../plugins/plugin-space"
     },
     {
@@ -168,6 +168,9 @@
     },
     {
       "path": "../../plugins/plugin-thread"
+    },
+    {
+      "path": "../../plugins/plugin-tldraw"
     },
     {
       "path": "../../plugins/plugin-transcription"

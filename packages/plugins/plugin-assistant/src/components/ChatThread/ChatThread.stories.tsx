@@ -147,6 +147,35 @@ export const Default: Story = {
   },
 };
 
+/**
+ * Every user prompt carries a rewind toolbar. It is emitted as its own markdown block after the
+ * `<prompt>` tag; a single newline between them would let CommonMark absorb the toolbar into the
+ * prompt's HTML block, so this asserts the tag actually parses into a widget.
+ */
+export const Rewind: Story = {
+  args: {
+    generator: createMessageGenerator(),
+    wait: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const buttons = await waitFor(
+      async () => {
+        const found = canvas.queryAllByTestId('chat.rewind');
+        await expect(found.length).toBeGreaterThan(0);
+        return found;
+      },
+      { timeout: 10_000 },
+    );
+
+    // One toolbar per user prompt.
+    const prompts = canvasElement.querySelectorAll('.cm-prompt, [data-prompt]');
+    if (prompts.length > 0) {
+      await expect(buttons.length).toBe(prompts.length);
+    }
+  },
+};
+
 export const Delayed: Story = {
   args: {
     generator: createMessageGenerator(),

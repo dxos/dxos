@@ -4,4 +4,5 @@
 
 export * from './json';
 export * from './markdown';
+export * from './mermaid';
 export * from './xml';

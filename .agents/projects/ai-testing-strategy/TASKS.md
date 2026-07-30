@@ -271,7 +271,7 @@ as primary coverage.
       `skills` to `[]` instead of `getDefaultSkills()` (harness.ts's `agentTest()` convention),
       so the agent had no database tools and failed with "No tools available to complete the
       task" — fixed by extracting `getDefaultSkills` into a shared `src/skills.ts`. With a real
-      `DX_ANTHROPIC_API_KEY` (pulled from the CI Vault via 1Password's `op run`),
+      `DX_ANTHROPIC_API_KEY` (pulled from the 1Password `CI` vault via `op run`),
       `database.eval.ts` now scores **100%**. PR #12307 is functionally verified end-to-end,
       still draft pending a final ready-for-review pass.
 - [x] **Ported the remaining 5 G1 scenarios, easiest → hardest, each verified live and committed

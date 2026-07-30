@@ -61,16 +61,17 @@ semantics over both the space database and feeds.
 - Package moves on main during this work: `functions-runtime` → `compute-runtime`;
   `compute/src/Trigger.ts` → `compute/src/types/Trigger.ts`.
 
-## Roadmap (post-#12235)
+## Roadmap
 
-Informed by an architectural comparison of ECHO feeds against event-sourcing
-systems (LiveStore in particular). The feed substrate is already event-log-grade
-— server-assigned total order, idempotent replication, partial/tail replication —
-but the semantic layers above it are missing, and several of this project's
-documented workarounds (content-signature change detection, the unbounded
-`processedVersions` map, last-flush-wins data loss) are downstream symptoms of
-those gaps. Phases are ordered so each fixes a debt of this project and unlocks
-the next: 1 → 2 → 3 → 4 land independently as their own PRs; 5 is exploratory.
+Revised 2026-07-29 after the chat/scale exploration (event-sourcing comparison
+vs LiveStore; Discord-scale partial-replication analysis; open-chat/Matrix
+survey). Decisions feeding this ordering: **first-party channels ship on feeds**
+(Bluesky-DM strategy — small and native first); **external large-scale sources
+enter as processed signals via connectors**, not replicated feeds; **Matrix is a
+long-term investigation**, not a dependency. Phases are sequenced by product
+pull — email drives scale-out and first-party channels inherit it — rather than
+by event-sourcing semantics. Dependency chain 1 → 2 → 3 → 4, one PR each; 5 and
+6 are demand-gated.
 
 1. **Version/order axis (correctness).** Wire `insertionId` through the codec +
    index path so live objects stop leaning on `KEY_QUEUE_POSITION` (null unless
@@ -78,25 +79,37 @@ the next: 1 → 2 → 3 → 4 land independently as their own PRs; 5 is explorat
    must always hold a total provisional order (`position`, else Lamport
    `(sequence, actorId)`, else `insertionId`) before server positions arrive;
    document the reorder-on-position-arrival semantics.
-2. **Consumer cursors + subscription discipline.** Implement the stubbed
-   `Feed.cursor`/`Feed.next` (Effect streams) on the phase-1 axis. Rebase the
-   trigger dispatcher onto a durable high-water cursor per subscription —
-   replacing `processedVersions` and, eventually, content-signature diffing —
-   and add the `SubscriptionSpec.options.mutationTypes` filter at the same seam.
-   Pull-from-cursor is also the seam that lets `FeedHandle`'s 1s polling give
-   way to the sync protocol's existing subscription mechanism.
-3. **Delta blocks: give blocks intent.** Partial-object update blocks +
-   field-level LWW merge at the index. The block vocabulary grows from
-   {snapshot, tombstone} to {create, patch, delete}, with the index as the
-   built-in deterministic materializer folding in log order. Shrinks the
-   last-flush-wins data-loss mode to field granularity. Position arrival now
-   changes merge results (not just sort order), so this phase needs a per-object
-   rollback/replay of the fold — cheap, since folds are per-object.
-4. **Retention + compaction.** Implement `Feed.setRetention` and compaction of
-   superseded blocks. Feeds can compact by rewriting a prefix into a snapshot
-   block (self-contained state — unlike a pure event log). Addresses the ~10k
-   blocks/feed ceiling, which phase 3's patch blocks make more pressing.
-5. **App-defined projections (exploratory, demand-gated).** User-defined
+2. **Consumer cursors, read state, and push.** Implement the stubbed
+   `Feed.cursor`/`Feed.next` (Effect streams) on the phase-1 axis. A durable
+   high-water cursor per consumer serves three uses: trigger-dispatcher dedup
+   (replaces the unbounded `processedVersions` map), chat read receipts /
+   unread counts (a member's read state is a cursor), and eventually replacing
+   content-signature diffing. Add the `SubscriptionSpec.options.mutationTypes`
+   filter, and graduate `FeedHandle` from 1s polling to the sync protocol's
+   existing subscription mechanism pushed through EDGE — chat latency is the
+   forcing function.
+3. **Retention + epoch chaining.** Implement `Feed.setRetention`; compaction by
+   rewriting a prefix into a snapshot block (self-contained state — unlike a
+   pure event log); and the epoch-chaining convention: an unbounded logical
+   stream (mailbox, channel) is a chain of per-era feeds with only the head
+   feed live. Breaks the ~10k blocks/feed ceiling; prerequisite for phase 4.
+4. **Sparse feeds: partial-history paging (email-scale).** The local block set
+   becomes a set of position ranges — one durable replicated tail plus
+   evictable cached ranges under an LRU budget. Remote range queries against
+   non-replicated history (the `FeedQuery` protocol already carries
+   `before`/`after`/position-range/`reverse`); domain-order paging bounded by a
+   position watermark, with the live tail patching rendered pages (late
+   arrivals, edits, tombstones). Driven by email archive browsing; first-party
+   channels inherit device-exceeding scale for free.
+5. **Delta blocks (demand-gated).** Partial-object update blocks + field-level
+   LWW merge at the index; block vocabulary grows from {snapshot, tombstone} to
+   {create, patch, delete}; per-object rollback/replay of the fold on position
+   reorder. Deferred because chat and email tolerate whole-object re-append
+   (small objects, rare edits). Constraint discovered in the partial-replication
+   analysis: a patch block must never strand a partial replica without its base
+   snapshot — deltas compose with sparse feeds only with a self-containedness
+   rule at range/replication boundaries.
+6. **App-defined projections (exploratory, demand-gated).** User-defined
    deterministic folds over a feed (typed event objects in, derived ECHO state
    out) with rematerialization keyed on a reducer/schema hash. Candidate
    consumers: trigger pipelines, inbox sync, audit views, composer-search's
@@ -104,8 +117,41 @@ the next: 1 → 2 → 3 → 4 land independently as their own PRs; 5 is explorat
 
 Cross-cutting (attach to whichever phase touches the code): an explicit policy
 for schema-invalid feed items (today silently dropped at `log.verbose`) —
-`warn`/`ignore`/`fail`/callback, per LiveStore's `unknownEventHandling`; and
-surfacing `getSyncState` (`blocksToPull`/`blocksToPush`) in devtools.
+`warn`/`ignore`/`fail`/callback, per LiveStore's `unknownEventHandling`;
+surfacing `getSyncState` (`blocksToPull`/`blocksToPush`) in devtools; and a
+standing principle — product code consumes only the Feed API and the sync layer
+keeps its injected-transport seam (`SyncClient` options `sendMessage`), so a
+future external backend (Matrix bridge, connector-backed feeds) stays a backend
+swap rather than a rewrite.
+
+### Companion workstreams (referenced, not feed phases)
+
+- **First-party chat.** Channels on feeds at current scale: edit/delete/react
+  via live objects (#12235), notifications via subscription triggers, read
+  state via phase 2, scale via phases 3–4. Needs one new primitive — an
+  ephemeral presence/typing channel over EDGE messaging, explicitly not feed
+  blocks. Becomes its own project when work starts.
+- **Large-source ingestion** (e.g. whole Discord servers): source-cursor
+  pipeline (the external cursor, e.g. last snowflake per channel, lives in a
+  small ECHO object) emitting signals; add a capped-retention feed buffer only
+  when multiple consumers or replay-within-a-window are needed.
+- **Pluggable feed backend (`FeedBackend`).** Promote the implicit sync seam —
+  `SyncClient`'s injected `sendMessage`, with the server role played by whoever
+  answers `QueryRequest`/`AppendRequest` — to an explicit backend interface
+  (`query`/`append`/`subscribe`), so the phase-4 read-through machinery can
+  pair the Feed API with a non-EDGE backend (Matrix, IMAP, Discord) unchanged.
+  Per-backend adapter obligations live here, not in the feed phases: mapping
+  external ordering onto monotonic positions, send idempotency across outbox
+  retries (block identity → external message id), and serving `patchUp` (the
+  latest block for any id whose head lies outside a fetched range) from the
+  external API. Out of scope for this project — phase 4's only obligation is to
+  define `query`/`patchUp`/watermark semantics against the interface rather
+  than against EDGE specifics, keeping the seam clean.
+- **Matrix shelf.** The open-chat survey and Matrix integration analysis are
+  done and parked (an ATProto-OAuth → OIDC identity-broker sketch rides along
+  parenthetically). Matrix is a strong candidate for a `FeedBackend` consumer
+  and likely the long-term production chat backend — though the first
+  consumer could equally be freeq or another backend. Revisit on demand.
 
 ## Source map
 

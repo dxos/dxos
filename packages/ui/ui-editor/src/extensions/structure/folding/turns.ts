@@ -146,8 +146,15 @@ class TurnMarker extends GutterMarker {
   }
 }
 
-/** Default head element: a `<prompt>…</prompt>` element (content is escaped, so it never nests). */
-export const PROMPT_ELEMENT = /<prompt\b[^>]*>[\s\S]*?<\/prompt>/g;
+/**
+ * Default head element: a `<prompt>…</prompt>` element (content is escaped, so it never nests),
+ * plus any run of self-closing tags immediately following it.
+ *
+ * Those trailing tags are per-turn affordances belonging to the head — a toolbar rendered under the
+ * prompt, say — so they must stay visible when the response folds. Absorbing them into the head also
+ * keeps the fold starting below them, rather than swallowing the toolbar that triggers the fold.
+ */
+export const PROMPT_ELEMENT = /<prompt\b[^>]*>[\s\S]*?<\/prompt>(?:\s*<[a-zA-Z][\w-]*\b[^>]*\/>)*/g;
 
 /**
  * Builds a {@link TurnSource} that scans the document for head elements matching `element`, folding

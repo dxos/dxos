@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_PROJECT ENDED 2026-07-29 (registry entry moved to `ended`). All five PRs merged: #12335, #12365, #12370, #12383, #12386. This file stays as the ledger — the items below marked open were deliberately left unresolved, not forgotten, and are the starting point if the work resumes: (1) the context/artifact model across Chat/Routine/Project/Agent/Instructions (`instructions.objects` vs `Project.artifacts`) — the shipped change is UI-only, so the decision is still owed before any schema change; (2) URL binding for project chats, needs Josiah; (3) Milestone 4 scoping (post-PR doc, demo, Magazine/CRM reconciliation); (4) the intermittent "first click into empty deck attends but opens no plank". Uncommitted: none._
+_Resume: Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented and OPEN as PR #12389 (one growing PR, per user direction 2026-07-29; leave open for review — do NOT auto-merge). §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Check GREEN on 668f48f01f (all jobs; two review-fix rounds: public-deps inversion, CreateProjectPanel story context, six CodeRabbit threads fixed/answered). Preview: https://pr-12389-composer-main.dxos.workers.dev. NOTE: commits from 3f6744347c on are UNSIGNED (1Password signing agent unreachable mid-session). Next: user walkthrough of the three `stories-projects` stories (each has numbered manual steps), then land. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` authored but unverified; run live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
 
 PR #12383 carries: (1) `Chat.agent` removed and the chat↔agent linkage
 restored to the `CompanionTo` relation — that field was the edge closing the
@@ -60,15 +60,15 @@ Initial priority (user, 2026-07-24):
       `query-skills` call before every `enable-skills` (the list is already rendered into the prompt), project
       chats pre-bind the artifact-type skills, and `create-object` points at type-specific create tools.
       USER-VERIFIED LIVE on the #12386 preview, 2026-07-29. Model-behavioral, so a single run is not a
-      guarantee — `assistant-evals` `projects.eval.ts` remains the repeatable check and has not been run.
+      guarantee — `assistant-evals` `projects.eval.ts` is the repeatable check: RUN LIVE 2026-07-29, 100% (all three scorers, 24s).
 - [x] **PR strategy decision** — moot: the three MS2 commits shipped inside #12335's squash; verified present on main (ProjectArticle `getReactiveOrUndefined`, format.ts `## Instructions` + `<label>`, Projects.stories.tsx, minimal plugin set).
 - [ ] **PLUGIN.mdl for plugin-projects** — as-built record now that implementation settled.
 - [ ] **Commands-authoring UI** — InstructionsEditor edits text/skills only; `commands` currently data-only despite autocomplete shipping.
 - [x] **In-article routine creation** — `ProjectOperation.CreateRoutine` toolbar action scaffolds the blank template through `RoutineOperation.CreateRoutine`, links it into `project.routines`, and opens it. Routines and artifacts now share one `ObjectGallery` (masonry of `ObjectCard`, click to open, ⋮ delete).
 - [x] **Hide `instructions.objects` from the form** — interim step toward the BLOCKING decision below: the field is no longer rendered by `InstructionsEditor` (so it no longer reads as a second artifacts list) but the schema field and every runtime consumer are untouched. Affects the routine form and the Agent article too.
 - [ ] **App-graph Project node children: artifacts + routines** — Phase 3 adds the chat children and the branch-node plumbing; these two reuse it.
-- [ ] **ProjectOperation.Create + operation-handler/events** — extension point 2 (other plugins create/target projects).
-- [ ] **Project templates capability** — plugins contribute instructions+skills+routines presets (mirrors automation-templates).
+- [x] **ProjectOperation.Create + operation-handler/events** — shipped in milestone 4 groundwork (PR #12389).
+- [x] **Project templates capability** — shipped in milestone 4 groundwork as `ProjectCapabilities.Template` (PR #12389).
 - [ ] **"/" completion of commands (and "@", "$")** — unify chat-prompt completion triggers.
 - [ ] **inbox naming sweep** — action id 'create-topic' + Attention.linkedSegment('topic') → 'project' (verify companion segment resolution after rename).
 
@@ -239,6 +239,75 @@ Points to settle with Josiah:
 - [ ] **Watch item** — if `children()` does not re-emit in the graph connector when a chat
       is newly parented, fall back to a `chats: Ref<Collection>` field on Project
       (0.2.0 → 0.3.0 bump + migration); only the enumeration source changes.
+
+## Milestone 4: demo, test, harden — use cases
+
+Scoped in [`./USE-CASES.md`](./USE-CASES.md): Claude Desktop comparison, specification (§2 —
+resolves the context/artifact OPEN decision as "keep artifacts; routines inherit project scope"),
+ten use cases, three prioritized builds (sender ledger / CRM sender research / fact-grounded
+summaries), and the `stories-projects` storybook strategy.
+
+### Tasks (per USE-CASES.md §4/§5, sequencing §6)
+
+- [x] **Groundwork** — `ProjectCapabilities.Template` + blank template + `CreateProjectPanel`
+      picker; `ProjectOperation.Create` (template-driven, programmatic); `CreateRoutine` seeds
+      project scope (subject → `instructions.objects`, `seedProjectScope` adds ProjectSkill +
+      artifact skills); `ARTIFACT_SKILL_KEYS` += table, sheet; ProjectArticle **Context** section
+      (`InstructionsEditor` `fields` prop — only rendered fields write back). `AddArtifact` alias
+      NOT added: `org.dxos.function.project.artifactAdd`/`artifactList` are already public
+      operations with handlers registered by plugin-assistant, so other plugins can invoke them
+      as-is. plugin-projects 13 + plugin-routine 62 tests green.
+- [x] **UC-A sender ledger** — `inboxResearch` project template + "Set up project" mailbox-node
+      action, both in plugin-projects (publishable plugin-inbox cannot depend on the private
+      plugin; the action is injected into the mailbox node, plugin-brain-style); starter feed-triggered Sender Ledger routine (disabled) owned by
+      the project; `stories-projects` package + `SenderLedger.stories.tsx` (play test drives the
+      real operation stack in Chromium and asserts Context/Routines/Artifacts render). Idempotent
+      upsert is graded by the eval below (model-behavioral, not unit-testable).
+- [x] **UC-B sender research** — `crmProject` template (routine-only CRM automation template kept);
+      research routine carries the project skill so profiles/dossiers are filed as artifacts;
+      structural tests + `SenderResearch.stories.tsx` green.
+- [x] **UC-C fact summaries** — plugin-brain `mailboxFacts` template: first **operation-action**
+      routine template (`spec: runnable` → `InboxOperation.AnalyzeMailbox`, timer trigger, mailbox
+      ref baked into `trigger.input`) + brain/inbox skills for chats; `FactSummaries.stories.tsx`
+      green (live loop = numbered manual steps on the story).
+- [x] **Stories can process (UC-C)** — the harness gained `messages` (seeded into the mailbox feed
+      via the inbox `Builder`), `ai: 'mock' | 'ollama'` (an `AiService` LayerSpec on space affinity,
+      matching how the app provisions it), and the missing `Feed`/`Message`/`Person`/`Organization`
+      type registrations. `FactSummaries` now has a `Live` variant (`!test`) that puts the mailbox
+      article beside the project so plugin-brain's own `Analyze` action drives extraction.
+      VERIFIED LIVE against ollama 2026-07-29: 12 seeded messages → `analyze: extracted unit` ×N →
+      `analyze: committed page` → `analyze: pipeline done` → `mailbox action complete`. The CI
+      variants stay scaffold-only — seeding mail alone exceeds the 15s play-test budget.
+- [ ] **UC-A/UC-B still do not process** — both need a model to produce their artifacts, and UC-A is
+      additionally blocked by the table-tool gap below (the table skill has no tools). Once that is
+      resolved, give each a `Live` variant on the same harness options.
+- [ ] **Routines/Artifacts galleries render nothing — upstream width collapse** — REDIAGNOSED
+      2026-07-30. `Masonry.Viewport` gates its grid on `contentWidth > 0`; the measured width is 0.
+      Removing the nested `ScrollArea` (see below) did NOT fix it: the article's own `Form.Viewport`
+      scroll viewport measures **16px** (scrollbar only) and the form-content grid column 0, so any
+      `w-full` child inherits zero. The defect is `Form.Viewport`/`Panel.Content` sizing in this
+      surface, NOT masonry and NOT ref resolution (`refs:1, loaded:1, items:1`). Next: find why the
+      article's scroll viewport has no inline size (suspect `Panel.Content` or the surface cell), then
+      re-check the gallery. Masonry's width gate is only the messenger.
+- [ ] **Evals** — `sender-ledger.eval.ts` RUN LIVE 2026-07-29 (key via `op inject` from the user's
+      `~/.env.tpl`; smoke 100% first) and it FAILED — a real finding, not eval noise: the agent's
+      own completeJob failure says "Cannot create the Sender Ledger table with available tools".
+      The table skill is instructions-only (`tools: []`); table creation in the app flows through
+      the old `defineArtifact`/`createTool` artifact-definition, which does NOT reach the
+      `RunInstructions` toolset. So UC-A's headless routine cannot create (or row-upsert) a Table
+      today, and `ARTIFACT_SKILL_KEYS`'s table/sheet entries bind toolless skills. DECISION OWED:
+      (a) real table operations in plugin-table's skill (create-table/upsert-row — the §2.7
+      channel-1 fix), (b) template pre-scaffolds the Table so the routine only upserts (still needs
+      a row-upsert tool), or (c) ledger as a Markdown table (markdown skill has real ops).
+      `fact-summary.eval.ts` still BLOCKED on a harness fact-seeding path (needs a PutFacts
+      operation or FactStore in the harness ServiceResolver).
+- [ ] **Operations-as-tools gaps (USE-CASES.md §2.7)** — authoring UI for operation-action routines
+      (operation picker + input-mapping form; templates-only today); `{{project.*}}` trigger input
+      substitution (scaffold-time ref literals bind a routine to one object forever); side-effect
+      policy for model-invoked external operations (send/unsubscribe need a per-project allowance).
+- [ ] **Tagged scaffold errors** — `ProjectCapabilities.Template.scaffold` and
+      `RoutineCapabilities.Template.scaffold` both expose bare `Error`; convert BOTH to a tagged
+      Effect error in one change (review follow-up from #12389 — the contracts must stay parallel).
 
 ## Milestone 4 (scoping): what comes after this PR
 

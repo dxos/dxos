@@ -12,6 +12,7 @@ import { type Assistant } from '../../types';
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
+  BranchWidget,
   FallbackWidget,
   ReasoningWidget,
   ReferenceWidget,
@@ -88,8 +89,9 @@ export const componentRegistry: XmlWidgetRegistry = {
       return options?.length ? new SelectWidget(options) : null;
     },
   },
+  // Inline so a run of suggestions flows onto one wrapped line instead of one block per line.
   'suggestion': {
-    block: true,
+    block: false,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new SuggestionWidget(text) : null;
@@ -115,6 +117,10 @@ export const componentRegistry: XmlWidgetRegistry = {
   // React Widgets (portaled outside of the editor)
   //
 
+  'branch': {
+    block: true,
+    Component: BranchWidget,
+  },
   'summary': {
     block: true,
     Component: SummaryWidget,
@@ -168,8 +174,16 @@ export function createBlockRenderer(viewType: Assistant.ChatView | undefined): B
     if (!isBlockVisible(viewType, message, block)) {
       return;
     }
+
     let str = blockToMarkdownImpl(context, message, block);
     if (str && !block.pending) {
+      // Suggestions are inline widgets meant to flow: keeping them on one line lets a run of them wrap
+      // as chips instead of stacking one per line. A trailing space separates adjacent tags so the
+      // inline parser sees them as distinct.
+      if (block._tag === 'suggestion') {
+        return (str += ' ');
+      }
+
       // Use a blank line as the block separator so each rendered block parses as its own
       // markdown block. A single newline lets CommonMark absorb a following `<prompt>` (an
       // HTML type-7 tag, which can't interrupt an open paragraph) into the previous
@@ -208,7 +222,11 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
         if (block.disposition === 'synthetic') {
           return renderXMLBlock('synthetic', { content: block.text, pending: block.pending });
         } else {
-          return `\n<prompt>${block.text}</prompt>\n`;
+          // Built by explicit concatenation, not an indented template: `trim` dedents by the minimum
+          // indent across all lines, and a multi-line prompt contributes lines at zero indent — so the
+          // source file's indentation survived into the document, where 4+ spaces is an indented code
+          // block and neither the prompt nor the toolbar parsed as an element any more.
+          return `\n<prompt>${block.text}</prompt>\n${renderBranchToolbar(message)}\n`;
         }
       } else {
         const text = block.text.trim();
@@ -290,6 +308,13 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
     }
   }
 };
+
+/**
+ * Mini toolbar below a user prompt: branch (soft fork) plus when the prompt was sent.
+ * `messageId` rather than `id` because a tag's `id` attribute would shadow the widget's own id.
+ */
+const renderBranchToolbar = (message: Message.Message) =>
+  `<branch messageId="${escapeXmlAttribute(message.id)}" created="${escapeXmlAttribute(message.created)}" />`;
 
 /**
  * Escape text embedded in generated XML so the mixed XML parser does not treat `&`, `<`, `>` as markup.
