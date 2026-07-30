@@ -10,12 +10,10 @@ import { log } from '@dxos/log';
 
 import { type Connection, type ConnectorEntry, ConnectorOperation } from '#types';
 
-import { AUTO_SYNC_ON_CONNECTION_SETUP } from '../../constants';
-
 /**
  * Run the first sync for a connection whose initial sync targets were just bound, so a new
- * connection populates without the user pressing "Sync now". No-op when
- * {@link AUTO_SYNC_ON_CONNECTION_SETUP} is off or the connector declares no `sync` operation.
+ * connection populates without the user pressing "Sync now". No-op unless the connector opts in via
+ * `sync.auto`.
  *
  * Forked: a first sync walks the whole remote history, and the setup flows it hangs off (the OAuth
  * finalize handler, the sync-targets dialog submit) must return before it finishes. Failures are
@@ -28,7 +26,7 @@ export const autoSyncConnection = (
   connector: ConnectorEntry,
   connection: Connection.Connection,
 ): Effect.Effect<void, never> => {
-  if (!AUTO_SYNC_ON_CONNECTION_SETUP || !connector.sync) {
+  if (!connector.sync?.auto) {
     return Effect.void;
   }
 

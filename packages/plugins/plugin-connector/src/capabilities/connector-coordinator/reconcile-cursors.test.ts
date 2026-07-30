@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Operation } from '@dxos/compute';
@@ -63,10 +64,18 @@ describe('reconcileCursors', () => {
     ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>,
   );
 
+  // Never invoked here — `ConnectorSync` requires an operation, and this test only exercises
+  // cursor reconciliation.
+  const SyncExampleTarget = Operation.make({
+    meta: { key: DXN.make('org.dxos.test.reconcileCursors.sync') },
+    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    output: Schema.Any,
+  });
+
   const makeConnector = (overrides: Partial<ConnectorEntry> = {}): ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
-    materializeTarget: MaterializeExampleTarget,
+    sync: { operation: SyncExampleTarget, materializeTarget: MaterializeExampleTarget },
     ...overrides,
   });
 
@@ -208,7 +217,7 @@ describe('reconcileCursors', () => {
     const { db, connection } = await setup();
     // A targetless connector (e.g. Google Contacts) has no local root type, so the cursor's target is
     // the connection itself. The remote target is identified by `externalId`.
-    const connector = makeConnector({ materializeTarget: undefined });
+    const connector = makeConnector({ sync: { operation: SyncExampleTarget } });
 
     const result = await reconcile(db, connection, connector, [
       { externalId: 'contactGroups/myContacts', name: 'My Contacts' },

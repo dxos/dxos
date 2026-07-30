@@ -115,12 +115,12 @@ const navigateToNewConnection = (
 
 const openSyncTargetsDialogAfterConnectionCreated = (
   invoker: Operation.OperationService,
-  getSyncTargets: NonNullable<ConnectorEntry['getSyncTargets']>,
+  getTargets: NonNullable<NonNullable<ConnectorEntry['sync']>['getTargets']>,
   persistedConnection: Connection.Connection,
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
-    const { targets } = yield* invoker.invoke(getSyncTargets, {
+    const { targets } = yield* invoker.invoke(getTargets, {
       connection: Ref.make(persistedConnection),
     });
     yield* invoker.invoke(LayoutOperation.UpdateDialog, {
@@ -149,7 +149,7 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
       existingTarget,
     });
 
-    if (connector.getSyncTargets) {
+    if (connector.sync?.getTargets) {
       // Multi-target: let the user pick which remote targets to bind.
       yield* Effect.all(
         [
@@ -158,7 +158,7 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
           existingTarget ? Effect.void : navigateToNewConnection(invoker, db, persistedConnection.id),
           openSyncTargetsDialogAfterConnectionCreated(
             invoker,
-            connector.getSyncTargets,
+            connector.sync.getTargets,
             persistedConnection,
             existingTarget,
           ),

@@ -66,8 +66,10 @@ export const useSyncTrigger = ({
       return;
     }
 
-    const sync = connector?.sync;
-    if (!connection || !sync) {
+    // Only a connector that declares a schedule can have a sync routine created for it.
+    const operation = connector?.sync?.operation;
+    const spec = connector?.sync?.trigger;
+    if (!connection || !operation || !spec) {
       return;
     }
 
@@ -78,7 +80,7 @@ export const useSyncTrigger = ({
         if (!cursor) {
           return;
         }
-        yield* createSyncRoutine({ target: subject, cursor, sync });
+        yield* createSyncRoutine({ target: subject, cursor, operation, spec });
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
     } finally {
       setPending(false);

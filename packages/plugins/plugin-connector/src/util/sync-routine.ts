@@ -9,10 +9,8 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
 
-import { type SyncInput, type SyncOutput } from '../types';
-
-/** How often an auto-created sync routine's timer trigger fires. */
-const SYNC_ROUTINE_CRON = '*/10 * * * *';
+import { type ConnectorEntry, type SyncInput, type SyncOutput } from '../types';
+import { findSyncTriggerForBinding } from './sync-trigger';
 
 /**
  * Finds an existing local record for `definition`, or persists a fresh one via
@@ -31,39 +29,36 @@ const ensureOperationRecord = (
   });
 
 /**
- * Ensures a recurring sync Routine exists for `target` (a Mailbox or Calendar) and returns its
- * timer trigger — the existing one if a routine is already connected, otherwise a freshly-created one:
- * a local (`remote` unset) timer trigger, every 10 minutes, wired to `sync` (the connector's own sync
- * operation) with `binding` bound to `cursor` (the target's external-sync {@link Cursor}). The trigger
- * is also what a manual sync force-runs, so scheduled and on-demand syncs share one path. `input` carries only `binding`, matching the
- * sync operation's input schema. The routine is related to `target` by query ({@link connectedRoutinesQuery},
- * surfaced in the routines companion), which reaches it through `binding` → the cursor → the cursor's
- * `spec.target` — so no target ref is smuggled into the operation input.
+ * Creates the sync Routine for `cursor`: a Routine wrapping a local (`remote` unset) trigger built
+ * from the connector's declared `sync.trigger` spec, wired to the connector's sync operation with
+ * `binding` bound to `cursor`. `input` carries only `binding`, matching the sync operation's input
+ * schema — the routine is related to `target` by query ({@link connectedRoutinesQuery}, surfaced in the
+ * routines companion), which reaches it through `binding` → the cursor → the cursor's `spec.target`,
+ * so no target ref is smuggled into the operation input. Returns the existing trigger instead when a
+ * sync routine is already connected to `target`.
  */
 export const createSyncRoutine = ({
   target,
   cursor,
-  sync,
+  operation: definition,
+  spec,
 }: {
   target: Obj.Unknown;
   cursor: Cursor.ExternalCursor;
-  sync: Operation.Definition<SyncInput, SyncOutput>;
-}): Effect.Effect<Trigger.Trigger | undefined, never, Database.Service> =>
+  operation: Operation.Definition<SyncInput, SyncOutput>;
+  spec: Trigger.Spec;
+}): Effect.Effect<Trigger.Trigger, never, Database.Service> =>
   Effect.gen(function* () {
     const connected = yield* Database.query(connectedRoutinesQuery(target)).run;
     for (const routine of connected) {
-      const existingTrigger = routine.triggers.find((ref) => ref.target?.spec?.kind === 'timer')?.target;
+      const existingTrigger = routine.triggers.find((ref) => ref.target?.spec?.kind === spec.kind)?.target;
       if (existingTrigger) {
         return existingTrigger;
       }
     }
 
-    const operation = yield* ensureOperationRecord(sync);
-    const trigger = Trigger.make({
-      enabled: true,
-      spec: Trigger.specTimer(SYNC_ROUTINE_CRON),
-      input: { binding: Ref.make(cursor) },
-    });
+    const operation = yield* ensureOperationRecord(definition);
+    const trigger = Trigger.make({ enabled: true, spec, input: { binding: Ref.make(cursor) } });
 
     const routine = makeRoutine({
       name: 'Sync',
@@ -73,4 +68,31 @@ export const createSyncRoutine = ({
 
     yield* Database.add(routine);
     return trigger;
+  });
+
+/**
+ * The trigger of `cursor`'s sync Routine, creating the Routine when the binding has none yet.
+ * `undefined` when the connector declares no `sync.trigger` — such a connector syncs on demand only,
+ * so its sync operation is invoked directly instead of through a trigger.
+ */
+export const ensureSyncTrigger = ({
+  connector,
+  cursor,
+}: {
+  connector: ConnectorEntry;
+  cursor: Cursor.ExternalCursor;
+}): Effect.Effect<Trigger.Trigger | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const sync = connector.sync;
+    if (!sync?.trigger) {
+      return undefined;
+    }
+    const existing = yield* findSyncTriggerForBinding(cursor);
+    if (existing) {
+      return existing;
+    }
+    // A binding whose target ref no longer resolves is broken beyond what routine setup can fix;
+    // callers treat this whole step as best-effort and fall back to a direct sync.
+    const target = yield* Database.load(cursor.spec.target).pipe(Effect.orDie);
+    return yield* createSyncRoutine({ target, cursor, operation: sync.operation, spec: sync.trigger });
   });

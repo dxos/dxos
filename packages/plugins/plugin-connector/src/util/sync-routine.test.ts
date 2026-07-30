@@ -18,9 +18,13 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Expando } from '@dxos/schema';
 
 import { createSyncRoutine } from './sync-routine';
+import { findSyncTriggerForBinding } from './sync-trigger';
 
-// Stand-in for a connector's `sync` operation (e.g. `InboxOperation.GoogleMailSync`): takes the same
-// `{ binding: Ref<Cursor> }` shape every real connector's `sync` declares.
+/** Stands in for a connector's declared `sync.trigger`. */
+const SYNC_SPEC = Trigger.specTimer('*/10 * * * *');
+
+// Stand-in for a connector's `sync.operation` (e.g. `InboxOperation.GoogleMailSync`): takes the same
+// `{ binding: Ref<Cursor> }` shape every real connector's sync declares.
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.sync'), name: 'Test Sync' },
   input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
@@ -67,7 +71,7 @@ describe('createSyncRoutine', () => {
 
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
     const cursor = makeCursor(db, target);
-    const created = await createSyncRoutine({ target, cursor, sync: TestSync }).pipe(
+    const created = await createSyncRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }).pipe(
       Effect.provide(Database.layer(db)),
       EffectEx.runPromise,
     );
@@ -84,6 +88,10 @@ describe('createSyncRoutine', () => {
     expect(Object.keys(trigger?.input ?? {})).toEqual(['binding']);
     expect(trigger?.input?.binding?.uri).toBe(Ref.make(cursor).uri);
     expect(created?.id).toBe(trigger?.id);
+
+    // The reverse-ref from the cursor is how a manual sync finds this trigger to force-run.
+    const found = await findSyncTriggerForBinding(cursor).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
+    expect(found?.id).toBe(trigger?.id);
   });
 
   test('is idempotent: a second call is a no-op once a sync routine is connected', async ({ expect }) => {
@@ -93,7 +101,7 @@ describe('createSyncRoutine', () => {
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
     const cursor = makeCursor(db, target);
     const run = () =>
-      createSyncRoutine({ target, cursor, sync: TestSync }).pipe(
+      createSyncRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }).pipe(
         Effect.provide(Database.layer(db)),
         EffectEx.runPromise,
       );

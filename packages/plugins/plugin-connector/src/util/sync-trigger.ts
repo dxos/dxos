@@ -7,40 +7,17 @@ import * as Layer from 'effect/Layer';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ServiceResolver, Trigger, type TriggerEvent } from '@dxos/compute';
-import { Database, Filter, type Key, type Obj, Query } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import { connectedRoutinesQuery } from '@dxos/plugin-routine';
+import { Database, Filter, type Key, Query } from '@dxos/echo';
+import { type Cursor } from '@dxos/link';
 
 /**
- * Finds the sync timer trigger bound to `cursor`: a sync Routine's trigger carries the cursor as its
+ * Finds the sync trigger bound to `cursor`: a sync Routine's trigger carries the cursor as its
  * `input.binding`, so the reverse-ref from the cursor reaches it whether or not a Routine owns it.
  */
 export const findSyncTriggerForBinding = (cursor: Cursor.ExternalCursor) =>
   Effect.gen(function* () {
     const triggers = yield* Database.query(Query.select(Filter.id(cursor.id)).referencedBy(Trigger.Trigger)).run;
-    return triggers.find((trigger) => trigger.spec?.kind === 'timer');
-  });
-
-/**
- * Finds `target`'s sync timer trigger: the `timer` trigger owned by a Routine connected to `target`
- * (see {@link connectedRoutinesQuery}), falling back to a bare `timer` trigger bound to `target` via its
- * `binding` cursor (pre-existing triggers not wrapped in a routine). Mirrors the react-side lookup this
- * helper supersedes, so both agree on which trigger is "the" sync trigger.
- */
-export const findSyncTrigger = (target: Obj.Unknown) =>
-  Effect.gen(function* () {
-    const routines = yield* Database.query(connectedRoutinesQuery(target)).run;
-    for (const routine of routines) {
-      const trigger = routine.triggers.find((ref) => ref.target?.spec?.kind === 'timer')?.target;
-      if (trigger) {
-        return trigger;
-      }
-    }
-
-    const triggers = yield* Database.query(
-      Query.select(Filter.id(target.id)).referencedBy(Cursor.Cursor).referencedBy(Trigger.Trigger),
-    ).run;
-    return triggers.find((trigger) => trigger.spec?.kind === 'timer');
+    return triggers.find((trigger) => !!trigger.spec);
   });
 
 /**

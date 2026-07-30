@@ -9,11 +9,12 @@ export * from './meta';
 export * from './types';
 export {
   createSyncRoutine,
+  ensureSyncTrigger,
   findBindingForTarget,
-  findSyncTrigger,
   findSyncTriggerForBinding,
   fireSyncTrigger,
   isCursorForConnection,
   isCursorForTarget,
+  syncBinding,
   syncTarget,
 } from './util';

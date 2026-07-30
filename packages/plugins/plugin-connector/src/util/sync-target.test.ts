@@ -10,7 +10,8 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Capabilities, Capability, CapabilityManager } from '@dxos/app-framework';
 import { Operation, ServiceResolver, Trigger } from '@dxos/compute';
-import { Database, DXN, Obj, Ref } from '@dxos/echo';
+import { operationServiceLayerNoop } from '@dxos/compute/testing';
+import { DXN, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -20,7 +21,6 @@ import { Expando } from '@dxos/schema';
 import { Connection, Connector, type ConnectorEntry } from '#types';
 
 import { syncTarget } from './sync-target';
-import { findSyncTrigger } from './sync-trigger';
 
 describe('syncTarget', () => {
   let builder: EchoTestBuilder;
@@ -37,12 +37,16 @@ describe('syncTarget', () => {
   const fired: string[] = [];
 
   const TestSync = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.syncTarget.sync') },
+    meta: { key: DXN.make('org.dxos.test.syncTarget.sync'), name: 'Test Sync' },
     input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
     output: Schema.Any,
   });
 
-  const connector: ConnectorEntry = { id: 'example', source: 'example.com', sync: TestSync };
+  const connector: ConnectorEntry = {
+    id: 'example',
+    source: 'example.com',
+    sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
+  };
 
   const recordingMonitor: Trigger.Monitor = {
     triggers: Atom.make<readonly Trigger.State[]>([]),
@@ -62,6 +66,7 @@ describe('syncTarget', () => {
   };
 
   const setup = async () => {
+    fired.length = 0;
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([
       Connection.Connection,
@@ -82,20 +87,29 @@ describe('syncTarget', () => {
     return { db, target, trigger };
   };
 
-  test('finds the target’s sync trigger through its binding cursor', async ({ expect }) => {
-    const { db, target, trigger } = await setup();
+  const run = (target: Obj.Unknown) =>
+    syncTarget(target).pipe(
+      Effect.provideService(Capability.Service, capabilities()),
+      // Never reached: the connector declares a schedule, so the sync goes through the trigger.
+      Effect.provide(operationServiceLayerNoop),
+      EffectEx.runPromise,
+    );
 
-    const found = await findSyncTrigger(target).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
-
-    expect(found?.id).toBe(trigger.id);
-  });
-
-  test('force-runs the target’s sync trigger', async ({ expect }) => {
-    fired.length = 0;
+  test('force-runs the sync trigger of the target’s binding', async ({ expect }) => {
     const { target, trigger } = await setup();
 
-    await syncTarget(target).pipe(Effect.provideService(Capability.Service, capabilities()), EffectEx.runPromise);
+    await run(target);
 
     expect(fired).toEqual([trigger.id]);
+  });
+
+  test('does nothing for an object with no binding', async ({ expect }) => {
+    const { db } = await setup();
+    const unbound = db.add(Obj.make(Expando.Expando, { name: 'unbound' }));
+    await db.flush({ indexes: true });
+
+    await run(unbound);
+
+    expect(fired).toEqual([]);
   });
 });

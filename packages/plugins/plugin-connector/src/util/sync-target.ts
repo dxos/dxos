@@ -5,37 +5,31 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { type Trigger } from '@dxos/compute';
+import { type NoHandlerError, type Operation } from '@dxos/compute';
 import { Database, Filter, Obj } from '@dxos/echo';
 
 import { Connection, Connector } from '../types';
 import { findBindingForTarget } from './find-binding';
-import { createSyncRoutine } from './sync-routine';
-import { findSyncTrigger, fireSyncTrigger, syncTriggerMonitorLayer } from './sync-trigger';
+import { syncBinding } from './sync-binding';
 
 /**
- * Force-runs the sync timer trigger for a sync target (a Mailbox, Calendar, …) — invoking the trigger
- * is how a target syncs; this is a thin helper around {@link Trigger.TriggerMonitorService}, not a
- * domain action in its own right, so it's a plain Effect rather than a registered Operation.
- * Creates a sync Routine first via {@link createSyncRoutine} if the target has none yet (e.g. it was
- * bound before this mechanism existed).
+ * Syncs a single sync target (a Mailbox, Calendar, …) by way of its binding: a plain Effect rather
+ * than a registered Operation, since it only resolves which binding and connector the target belongs
+ * to and hands off to {@link syncBinding}. No-op for an object that is not bound to a connection.
  */
-export const syncTarget = (target: Obj.Unknown) =>
+export const syncTarget = (
+  target: Obj.Unknown,
+): Effect.Effect<void, NoHandlerError, Capability.Service | Operation.Service> =>
   Effect.gen(function* () {
     const db = Obj.getDatabase(target);
     if (!db) {
       return;
     }
 
-    const trigger = yield* Effect.gen(function* () {
-      const existing = yield* findSyncTrigger(target);
-      if (existing) {
-        return existing;
-      }
-
+    yield* Effect.gen(function* () {
       const cursor = yield* findBindingForTarget(target);
       if (!cursor) {
-        return undefined;
+        return;
       }
 
       const [connection] = yield* Database.query(
@@ -43,15 +37,10 @@ export const syncTarget = (target: Obj.Unknown) =>
       ).run;
       const connectors = (yield* Capability.getAll(Connector)).flat();
       const connector = connectors.find((entry) => entry.id === connection?.connectorId);
-      if (!connector?.sync) {
-        return undefined;
+      if (!connector) {
+        return;
       }
 
-      return yield* createSyncRoutine({ target, cursor, sync: connector.sync });
+      yield* syncBinding({ connector, cursor, spaceId: db.spaceId });
     }).pipe(Effect.provide(Database.layer(db)));
-    if (!trigger) {
-      return;
-    }
-
-    yield* fireSyncTrigger(trigger).pipe(Effect.provide(syncTriggerMonitorLayer(db.spaceId)));
   });

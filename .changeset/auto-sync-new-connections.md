@@ -2,4 +2,4 @@
 '@dxos/plugin-connector': patch
 ---
 
-Sync a connection by force-running each binding's sync Routine trigger, so an on-demand sync takes the same durable path as the scheduled one. Also syncs a connection as soon as its first sync targets are bound, so a new connection populates without pressing "Sync now" (behind the `AUTO_SYNC_ON_CONNECTION_SETUP` flag).
+Group a connector's sync surface into a nested `sync` field (`operation`, `getTargets`, `materializeTarget`, `optionsSchema`) with an optional `trigger` spec and an `auto` flag. A connector that declares a trigger spec is synced by force-running its binding's Routine trigger — on demand as well as on schedule, so both share the dispatcher's durable execution — and one that declares `auto` syncs as soon as a binding is created.
