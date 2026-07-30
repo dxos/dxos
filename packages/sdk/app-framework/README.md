@@ -2,8 +2,8 @@
 
 A framework for building applications from composible plugins.
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for how plugins, modules, capabilities and contributions
-relate, and how activation is ordered.
+See [API.md](./API.md) for the API surface, and [ARCHITECTURE.md](./ARCHITECTURE.md) for how
+plugins, modules, capabilities and contributions relate and how activation is ordered.
 
 ## Installation
 
