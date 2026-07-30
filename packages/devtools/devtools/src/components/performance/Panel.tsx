@@ -19,12 +19,16 @@ export type PanelProps = ThemedClassName<{
   padding?: boolean;
   /** Clamp the body and let it scroll; `0` leaves the body unclamped. */
   maxHeight?: number;
+  /** Standalone open state. Omit when the panel sits in a stack that owns an `Accordion.Root`. */
+  open?: boolean;
+  onToggle?: (id: string, open: boolean) => void;
 }>;
 
 export type CustomPanelProps<T> = Pick<PanelProps, 'id'> & T;
 
 /**
- * A collapsible section of the stats stack. Open state is owned by the enclosing `Accordion.Root`.
+ * A collapsible section. Open state comes from the enclosing `Accordion.Root` (the stats stack), or
+ * from `open`/`onToggle` when the panel stands alone, in which case it supplies its own root.
  */
 export const Panel = ({
   classNames,
@@ -36,6 +40,8 @@ export const Panel = ({
   action,
   padding = true,
   maxHeight = 240,
+  open,
+  onToggle,
 }: PropsWithChildren<PanelProps>) => {
   const summary = (
     <div className='flex items-center justify-between gap-2'>
@@ -58,24 +64,33 @@ export const Panel = ({
     );
   }
 
-  return (
+  const item = (
     <Accordion.Item item={{ id }}>
       <Accordion.ItemHeader icon={icon} trailing={action} classNames='text-sm text-fine'>
         {summary}
       </Accordion.ItemHeader>
-      {children && (
-        <Accordion.ItemBody
-          classNames={mx(
-            'flex flex-col',
-            maxHeight ? 'overflow-y-auto' : 'overflow-hidden',
-            !padding && 'p-0',
-            classNames,
-          )}
-          style={maxHeight ? { maxHeight } : undefined}
-        >
-          {children}
-        </Accordion.ItemBody>
-      )}
+      <Accordion.ItemBody
+        classNames={mx(
+          'flex flex-col',
+          maxHeight ? 'overflow-y-auto' : 'overflow-hidden',
+          !padding && 'p-0',
+          classNames,
+        )}
+        style={maxHeight ? { maxHeight } : undefined}
+      >
+        {children}
+      </Accordion.ItemBody>
     </Accordion.Item>
   );
+
+  // `Accordion.Item` needs a root; a standalone panel has no stack to provide one.
+  if (onToggle) {
+    return (
+      <Accordion.Root value={open ? [id] : []} onValueChange={(value) => onToggle(id, value.includes(id))}>
+        {() => item}
+      </Accordion.Root>
+    );
+  }
+
+  return item;
 };
