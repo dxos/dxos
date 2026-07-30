@@ -56,6 +56,7 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Skill.Skill,
         AiContext.Binding,
         Feed.Feed,
+        Feed.Reset,
         HasSubject.HasSubject,
         Message.Message,
         Instructions.Instructions,

@@ -131,7 +131,7 @@ free. It is not:
    `space-archive` plus `spaces-service` plus the edge server. And every feed
    that is a _set_ rather than a chain would pay for a graph walk it never uses.
 
-### Rejected: sidecar fork-marker objects
+### Rejected: fork markers whose scope is positional
 
 Appending a `Feed.Fork { from: M3 }` object and treating everything positionally
 after it as part of the branch **misattributes any concurrent writer** who was
@@ -139,11 +139,65 @@ unaware of the fork. Per-item parents avoid this: an unaware writer appends with
 no explicit parent and honestly linearizes onto the read order; a deliberate
 fork states its parent. Both outcomes are resolvable after the fact.
 
+Note what is rejected here is the _positional range_ reading, not the idea of a
+marker object. `Feed.Reset` (below) is a marker, but it claims nothing about the
+items after it — it carries a parent and is otherwise an ordinary item, so
+concurrent writers keep linearizing onto the read order exactly as before.
+
+### `Feed.Reset` expresses the fork, so writers need no fork protocol
+
+A soft fork is expressed by appending a `Feed.Reset` whose lineage parent is the
+item history should resume from. It has no payload: where history resumes is the
+parent, and which items were abandoned follows from it, so recording either again
+would only create something able to disagree with the log.
+
+Its value is that **nothing downstream has to know forking exists**. The reset
+lands as the tip, so the next writer appending "after the tip" is already
+continuing from the fork. In this codebase that matters concretely: the client
+decides the fork, but the turn is appended by a spawned agent process reached
+only through a durable, replayed input log
+([`ProcessHandle.submitInput`](../../../packages/core/compute/compute-runtime/src/ProcessHandle.ts)),
+so any design that has to _tell_ the writer about the fork either widens that
+protocol or parks state in shared storage. A reset needs neither.
+
+**A parentless reset means "resume from nothing"** — what rewinding the very
+first turn needs. This is only sound because a reset is its own type: for an
+ordinary item an absent parent already means "continues from its predecessor", so
+the same absence cannot carry both meanings. It also removes the last place a
+sentinel id would have been needed. The walk stops there and does **not** report
+`shallow`: nothing earlier is missing, there deliberately is nothing earlier.
+
 ### Rejected: branch metadata on the `Feed` object
 
 `Feed.Feed` is the one schema here we do own, but it is Automerge state
 replicated on a _different_ path than the blocks, so a fork could become visible
 before or after the items it describes. There is no way to order the two.
+
+This also rules out the shape this design shipped with first, a `Feed.rewindFrom`
+field holding the pending fork point: besides the ordering problem, a single
+mutable cell means concurrent forks clobber one another, and it made a fork the
+user was still composing into replicated state — visible on their other devices
+and outliving an abandoned rewind. Both are avoided by appending a `Feed.Reset`
+instead, which is per-fork and ordered with the items it discards.
+
+### Rejected: an array of fork points on the `Feed` object
+
+The original sketch. It inherits the ordering problem above, and adds: concurrent
+writers clobber a shared array (last-write-wins silently drops a fork); it grows
+without bound on a hot object; and it is **derivable** — a fork point is any item
+that is some item's parent without being its immediate predecessor — so storing
+it as truth creates a cache that can disagree with the log.
+
+Worth building as a _derived_ index if branch enumeration is wanted (see
+Deferred), which is the part of the idea that holds up.
+
+### A rewind being composed is client-local
+
+Clicking rewind writes nothing. The discarded message id is held by the deciding
+client, which truncates its own view and restores the prompt for editing; the
+`Feed.Reset` is appended only when the revised prompt is sent. So abandoning a
+rewind costs the conversation nothing and shows on no other device, and a reload
+forgets it — the correct outcome for an intent that was never carried out.
 
 ### Resolution is an explicit pure function, not transparent in `Feed.query`
 
@@ -230,6 +284,14 @@ export const history: <T extends Entity.Unknown | Entity.Snapshot>(
   options?: HistoryOptions,
 ) => History<T>;
 
+/**
+ * A fork marker: an item appended for its lineage alone. Omit `parent` to resume from nothing.
+ * Must be included in the list passed to `history` — reachability depends on it.
+ */
+export class Reset extends Type.makeObject<Reset>(DXN.make('org.dxos.type.feed.reset', '0.1.0'))(...) {}
+export const makeReset: (parent?: Entity.Unknown | Entity.Snapshot | EntityId) => Reset;
+export const isReset: (item: Entity.Unknown | Entity.Snapshot) => boolean;
+
 // Existing signature gains an options bag.
 export const append: (
   feed: Feed,
@@ -248,13 +310,22 @@ pointer only has to decide _what_ to pass.
 ## Usage
 
 ```ts
-// Fork: continue the conversation from an earlier message.
+// Fork: continue the conversation from an earlier message. Either say so on the append...
 yield * Feed.append(feed, [Message.make({ sender, blocks })], { parent: m3 });
 
-// Read: the items reachable from the current head.
-const messages = yield * Feed.query(feed, Filter.type(Message.Message)).run;
-const { items, shallow } = Feed.history(messages);
+// ...or append a reset, when the writer that follows should not have to know about the fork.
+yield * Feed.append(feed, [Feed.makeReset(m3)]);
+yield * Feed.append(feed, [Message.make({ sender, blocks })]); // Plain append; the reset is the tip.
+
+// Read: the items reachable from the current head. Resets take part in the walk, so query for them
+// too — omitting them silently resurrects the turns a fork abandoned — then drop them from the view.
+const items = yield * Feed.query(feed, Filter.or(Filter.type(Message.Message), Filter.type(Feed.Reset))).run;
+const { items: reachable, shallow } = Feed.history(items);
+const messages = reachable.filter(Obj.instanceOf(Message.Message));
 ```
+
+The two forms are equivalent for reads. Use `AppendOptions.parent` when the forking
+writer is the one appending the next item; use a reset when it is not.
 
 ## Testing
 

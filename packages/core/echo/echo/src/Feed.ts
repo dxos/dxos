@@ -17,7 +17,7 @@ import { DXN, EID, EntityId } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import * as Database from './Database';
-import type * as Entity from './Entity';
+import * as Entity from './Entity';
 import type * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
@@ -49,24 +49,38 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * - `trace`: Trace feed.
      */
     namespace: Schema.optional(Schema.Literal('data', 'trace')),
-
-    /**
-     * Earliest item a pending rewind discards — set when a soft fork is decided but not yet expressed,
-     * because the writer may be a different process than the one that decided it.
-     *
-     * Stored as the first *discarded* item rather than the new parent so that rewinding to the very
-     * first item needs no sentinel: nothing precedes it, so the continuation simply starts a new line.
-     * Readers show what precedes it; the next append parents to that and clears this.
-     *
-     * Transient intent, never a source of truth for history. The fork itself lives in item lineage
-     * (see {@link PARENT_KEY}), which is what {@link history} walks and what replicates in a defined
-     * order relative to the blocks.
-     */
-    rewindFrom: Schema.optional(Obj.ID.pipe(internal.FormInputAnnotation.set(false))),
   }).pipe(
     internal.HiddenAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),
   ),
+) {}
+
+/**
+ * Marks a soft fork: an item appended for its lineage alone, so that everything appended after its
+ * parent becomes unreachable from {@link history}.
+ *
+ * The feed's equivalent of `git reset`. As a reset moves a branch back to an earlier commit and
+ * abandons those that followed — leaving them in the object store, still reachable through the reflog
+ * until they are collected — appending a Reset moves the effective head back and abandons the items
+ * that followed, leaving them in the log. Reading the feed still returns them; only {@link history}
+ * skips them, exactly as `git log` stops showing abandoned commits while `git cat-file` still finds
+ * them.
+ *
+ * A record rather than a field on {@link Feed} for two reasons. Concurrent writers each append their
+ * own Reset instead of overwriting a shared cell, so no fork can clobber another; and a Reset
+ * replicates in a defined order relative to the items it discards, so a peer can never see a fork
+ * that refers to items it has not received, nor items whose reachability changes when the fork
+ * arrives later.
+ *
+ * Carries no payload beyond provenance: where history resumes is the parent (see {@link PARENT_KEY}),
+ * and which items were discarded follows from it, so recording either again would only create
+ * something able to disagree with the log.
+ */
+export class Reset extends Type.makeObject<Reset>(DXN.make('org.dxos.type.feed.reset', '0.1.0'))(
+  Schema.Struct({
+    /** When the fork was made — provenance, in the spirit of a reflog entry. */
+    created: Schema.String,
+  }).pipe(internal.HiddenAnnotation.set(true)),
 ) {}
 
 //
@@ -183,6 +197,40 @@ export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeed
  */
 // TODO(wittjosiah): How to control the feed namespace (data/trace)? Why do feeds have namespaces?
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
+
+/**
+ * Creates a {@link Reset} that resumes history from `parent`, abandoning everything appended after it.
+ *
+ * Omit `parent` to abandon the whole history, so that what follows starts a fresh line — the case that
+ * has no parent to name, and the reason a caller never needs a sentinel to express it.
+ *
+ * Append it like any other item; the fork takes effect once it is in the log.
+ *
+ * @example
+ * ```ts
+ * // Abandon everything after `earlier`, then carry on.
+ * yield* Feed.append(feed, [Feed.makeReset(earlier)]);
+ * yield* Feed.append(feed, [Obj.make(Notification, { title: 'Take two' })]);
+ *
+ * // Start over, keeping the log intact.
+ * yield* Feed.append(feed, [Feed.makeReset()]);
+ * ```
+ */
+export const makeReset = (parent?: Entity.Unknown | Entity.Snapshot | EntityId): Reset => {
+  const reset = Obj.make(Reset, { created: new Date().toISOString() });
+  if (parent !== undefined) {
+    setParent(reset, parent);
+  }
+  return reset;
+};
+
+/**
+ * Whether an item is a {@link Reset} — a fork marker rather than feed content.
+ *
+ * Works for snapshots as well as live objects, since {@link history} runs over either.
+ */
+export const isReset = (item: Entity.Unknown | Entity.Snapshot): boolean =>
+  Entity.getTypename(item) === Type.getTypename(Reset);
 
 /**
  * Returns the feed object's EID when the feed is stored in a space.
@@ -371,6 +419,14 @@ export const history = <T extends Entity.Unknown | Entity.Snapshot>(
 
     const parent = readParent(item);
     if (!parent.present) {
+      // A reset exists only to fork, so an absent parent cannot mean "continues from its predecessor"
+      // the way it does for ordinary items — it means history resumes from nothing, as `git reset` back
+      // past the first commit would leave a branch with no history. Stop, and not `shallow`: nothing is
+      // missing here, there deliberately is nothing earlier. Giving the absence this meaning is only
+      // sound because a reset is its own type; on an ordinary item it would be ambiguous.
+      if (isReset(item)) {
+        break;
+      }
       cursor -= 1;
       continue;
     }

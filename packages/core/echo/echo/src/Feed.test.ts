@@ -175,11 +175,62 @@ describe('Feed', () => {
       });
     });
   });
+
+  describe('Reset', () => {
+    test('isReset distinguishes a fork marker from feed content', ({ expect }) => {
+      expect(Feed.isReset(Feed.makeReset())).toBe(true);
+      expect(Feed.isReset(message('m1'))).toBe(false);
+    });
+
+    test('a reset abandons everything appended after its parent', ({ expect }) => {
+      const [m1, m2, m3, m4] = [message('m1'), message('m2'), message('m3'), message('m4')];
+      const reset = Feed.makeReset(m2);
+      const m5 = message('m5');
+
+      const history = Feed.history([m1, m2, m3, m4, reset, m5]);
+      expect(ids(history)).toEqual([m1.id, m2.id, reset.id, m5.id]);
+      expect(history.shallow).toBe(false);
+    });
+
+    test('a parentless reset starts the history over', ({ expect }) => {
+      const [m1, m2] = [message('m1'), message('m2')];
+      const reset = Feed.makeReset();
+      const m3 = message('m3');
+
+      const history = Feed.history([m1, m2, reset, m3]);
+      expect(ids(history)).toEqual([reset.id, m3.id]);
+      // Not a boundary: nothing earlier is missing, there deliberately is nothing earlier.
+      expect(history.shallow).toBe(false);
+    });
+
+    // The negative control for the case above: an absent parent means "continues from its predecessor"
+    // for ordinary items, and only a reset's absent parent means "resume from nothing". Without the
+    // distinction the walk would fall through and resurrect the whole conversation.
+    test('an ordinary item with no parent continues from its predecessor instead', ({ expect }) => {
+      const [m1, m2, m3] = [message('m1'), message('m2'), message('m3')];
+
+      const history = Feed.history([m1, m2, m3]);
+      expect(ids(history)).toEqual([m1.id, m2.id, m3.id]);
+    });
+
+    test('a later reset supersedes an earlier one', ({ expect }) => {
+      const [m1, m2, m3] = [message('m1'), message('m2'), message('m3')];
+      const first = Feed.makeReset(m2);
+      const second = Feed.makeReset(m1);
+
+      // Latest-wins, as everywhere else: the walk starts at the tip, so only the last fork is live.
+      const history = Feed.history([m1, m2, m3, first, second]);
+      expect(ids(history)).toEqual([m1.id, second.id]);
+    });
+  });
 });
 
 const message = (title: string) => Obj.make(TestSchema.Task, { title });
 
 const titles = (history: Feed.History<TestSchema.Task>) => history.items.map((item) => item.title);
+
+/** Ids rather than titles, for histories that mix content with fork markers. */
+const ids = (history: Feed.History<TestSchema.Task | Feed.Reset>) => history.items.map((item) => item.id);
 
 /** Writes an unparseable lineage id, standing in for a corrupted or future-format replicated block. */
 const corruptParent = (task: TestSchema.Task) =>

@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Feed, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { byAppendOrder, projectThread, resolveRewind } from './thread';
+import { byAppendOrder, projectThread, resolveForkParent, resolveRewind } from './thread';
 
 describe('byAppendOrder', () => {
   test('orders by feed position when it discriminates', ({ expect }) => {
@@ -108,17 +108,90 @@ describe('resolveRewind', () => {
   });
 });
 
+describe('projectThread with resets', () => {
+  test('a reset hides the turns it abandoned', ({ expect }) => {
+    const [q1, a1, q2, a2] = [
+      positioned(message('q1'), 1),
+      positioned(message('a1', 'assistant'), 2),
+      positioned(message('q2'), 3),
+      positioned(message('a2', 'assistant'), 4),
+    ];
+    const reset = positioned(Feed.makeReset(a1), 5);
+    const q3 = positioned(message('q3'), 6);
+
+    const { messages } = projectThread({ feedMessages: [q1, a1, q2, a2, q3], feedResets: [reset] });
+    expect(text(messages)).toEqual(['q1', 'a1', 'q3']);
+  });
+
+  // The reset takes part in the walk but is not conversation: leaving it in would render an empty turn.
+  test('a reset never reaches the view', ({ expect }) => {
+    const q1 = positioned(message('q1'), 1);
+    const reset = positioned(Feed.makeReset(q1), 2);
+
+    const { messages } = projectThread({ feedMessages: [q1], feedResets: [reset] });
+    expect(messages.every((message) => Obj.instanceOf(Message.Message, message))).toBe(true);
+    expect(text(messages)).toEqual(['q1']);
+  });
+
+  // Without the resets the walk cannot know the fork happened, so the abandoned turns come back. This is
+  // the failure the `feedResets` argument exists to prevent.
+  test('omitting the resets resurrects the abandoned turns', ({ expect }) => {
+    const [q1, a1, q2] = [
+      positioned(message('q1'), 1),
+      positioned(message('a1', 'assistant'), 2),
+      positioned(message('q2'), 3),
+    ];
+    const reset = positioned(Feed.makeReset(a1), 4);
+
+    const { messages } = projectThread({ feedMessages: [q1, a1, q2], feedResets: [] });
+    expect(Feed.getParent(reset)).toBe(a1.id);
+    expect(text(messages)).toEqual(['q1', 'a1', 'q2']);
+  });
+
+  test('a parentless reset empties the thread', ({ expect }) => {
+    const [q1, a1] = [positioned(message('q1'), 1), positioned(message('a1', 'assistant'), 2)];
+    const reset = positioned(Feed.makeReset(), 3);
+
+    const { messages } = projectThread({ feedMessages: [q1, a1], feedResets: [reset] });
+    expect(text(messages)).toEqual([]);
+  });
+});
+
+describe('resolveForkParent', () => {
+  // The projection has already truncated to what precedes the discarded message, so its tail *is* the
+  // fork point — the view and the fork cannot disagree about where history resumes.
+  test('is the last message left after a rewind truncated the thread', ({ expect }) => {
+    const [q1, a1, q2] = [
+      positioned(message('q1'), 1),
+      positioned(message('a1', 'assistant'), 2),
+      positioned(message('q2'), 3),
+    ];
+
+    const { messages } = projectThread({ feedMessages: [q1, a1, q2], rewindFrom: q2.id });
+    expect(text(messages)).toEqual(['q1', 'a1']);
+    expect(resolveForkParent(messages)?.id).toBe(a1.id);
+  });
+
+  test('is undefined when the rewind emptied the thread, so the fork starts a fresh line', ({ expect }) => {
+    const q1 = positioned(message('q1'), 1);
+
+    const { messages } = projectThread({ feedMessages: [q1], rewindFrom: q1.id });
+    expect(messages).toEqual([]);
+    expect(resolveForkParent(messages)).toBeUndefined();
+  });
+});
+
 let clock = 0;
 
 const message = (text: string, sender: 'user' | 'assistant' = 'user') =>
   Message.make({ created: new Date(clock++).toISOString(), sender, blocks: [{ _tag: 'text', text }] });
 
 /** Stamps the queue position a position authority would have assigned. */
-const positioned = (message: Message.Message, position: number) => {
-  Obj.update(message, (message) => {
-    Obj.getMeta(message).keys.push({ source: Feed.POSITION_KEY, id: String(position) });
+const positioned = <T extends Message.Message | Feed.Reset>(item: T, position: number): T => {
+  Obj.update(item, (item) => {
+    Obj.getMeta(item).keys.push({ source: Feed.POSITION_KEY, id: String(position) });
   });
-  return message;
+  return item;
 };
 
 const text = (messages: readonly Message.Message[]) =>

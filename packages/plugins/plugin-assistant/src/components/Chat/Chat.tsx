@@ -10,7 +10,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { getSpace } from '@dxos/client/echo';
-import { type Database, Filter, Obj, Query } from '@dxos/echo';
+import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
@@ -45,7 +45,7 @@ import {
 import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
-import { projectThread, resolveRewind } from './thread';
+import { projectThread, resolveForkParent, resolveRewind } from './thread';
 
 //
 // Root
@@ -101,10 +101,20 @@ const ChatRoot = ({
     db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
+  // Forks are items too, and reachability depends on them: without them the walk would show the turns
+  // a rewind abandoned.
+  const feedResets = useQuery(
+    db,
+    feed ? Query.select(Filter.type(Feed.Reset)).from(feed) : Query.select(Filter.nothing()),
+  );
   const pendingMessages = useAtomValue(processor.messages);
+  // A rewind the user has not resent yet is this client's own intent, not conversation state: held here
+  // so it costs the feed nothing, shows on no other device, and is forgotten on reload. Committing it is
+  // the `submit` branch's job.
+  const [rewindFrom, setRewindFrom] = useState<string | undefined>(undefined);
   const { messages } = useMemo(
-    () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
-    [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
+    () => projectThread({ feedMessages, feedResets, pendingMessages, rewindFrom }),
+    [feedMessages, feedResets, pendingMessages, rewindFrom],
   );
 
   const dump = useDebug({ processor });
@@ -137,23 +147,33 @@ const ChatRoot = ({
           if (!streaming && text.length) {
             lastPrompt.current = ev.text;
             const context = getContext?.();
+
+            // Commit a pending rewind here rather than when it was clicked, so deciding to fork and then
+            // not sending leaves the conversation untouched. Appended before requesting: the reset lands
+            // as the tip, so the agent's own appends continue from the fork without knowing it happened.
+            // A rewind of the very first prompt has no parent to resume from, and a parentless reset is
+            // how that is expressed — so this turns on the rewind, not on finding a parent.
+            const forking = rewindFrom !== undefined;
+            const forkParent = forking ? resolveForkParent(messages) : undefined;
+            setRewindFrom(undefined);
+
             // Await persistence (transient chat) before requesting so the agent resolves the
             // now-durable conversation feed; resolves immediately when there is no hook.
-            void Promise.resolve(onSubmit?.(text)).then(() => processor.request({ message: text, context }));
+            void Promise.resolve(onSubmit?.(text))
+              .then(() => (forking && feed ? db?.appendToFeed(feed, [Feed.makeReset(forkParent)]) : undefined))
+              .then(() => processor.request({ message: text, context }));
           }
           break;
         }
 
         case 'rewind': {
-          // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
-          // composer so it can be revised. Recorded on the feed rather than the chat because the
-          // continuation is appended by the agent's process, which resolves the feed and never sees the
-          // chat. A stale click (message already gone) resolves to nothing and is a no-op.
+          // Edit-and-resend: drop the prompt and everything after it from the view, and put its text back
+          // in the composer so it can be revised. Nothing is written yet — the fork is only expressed if
+          // the revised prompt is actually sent. Guarded on `feed` so the thread never truncates for a
+          // rewind that could not be committed. A stale click resolves to nothing and is a no-op.
           const rewind = feed && resolveRewind(messages, ev.id);
           if (rewind) {
-            Obj.update(feed, (feed) => {
-              feed.rewindFrom = rewind.rewindFrom;
-            });
+            setRewindFrom(rewind.rewindFrom);
             event.emit({ type: 'update-prompt', text: rewind.text });
           }
           break;
@@ -179,9 +199,10 @@ const ChatRoot = ({
 
       onEvent?.(ev);
     });
-    // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
-    // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages]);
+    // `feed` and `messages` are dependencies because the rewind branch reads them, and `rewindFrom`
+    // because submit consumes it: without them the handler would keep resolving rewinds against whatever
+    // was mounted first.
+  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages, rewindFrom, db]);
 
   return (
     <ChatContextProvider

@@ -19,7 +19,16 @@ import { Chat, Plan } from '../types';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [Chat.Chat, Chat.CompanionTo, Plan.Plan, Feed.Feed, Text.Text, Instructions.Instructions, Message.Message],
+  types: [
+    Chat.Chat,
+    Chat.CompanionTo,
+    Plan.Plan,
+    Feed.Feed,
+    Feed.Reset,
+    Text.Text,
+    Instructions.Instructions,
+    Message.Message,
+  ],
   disableLlmMemoization: true,
 });
 
@@ -159,28 +168,61 @@ describe('Chat', () => {
     );
 
     it.effect(
-      'a pending rewind round-trips on the feed',
+      'a reset carries the fork, so the continuation needs no lineage of its own',
       Effect.fnUntraced(
         function* (_) {
           const chat = yield* makeChat;
           const feed = yield* Database.load(chat.feed);
-          expect(feed.rewindFrom).toBeUndefined();
 
-          // On the feed, not the chat: the agent appends the continuation out-of-process and resolves
-          // the feed, never the chat, so this is the only place both sides can see it. Stores the first
-          // *discarded* message, so rewinding to the very first turn needs no sentinel.
-          const messageId = EntityId.random();
-          Obj.update(feed, (feed) => {
-            feed.rewindFrom = messageId;
-          });
-          yield* Database.flush();
-          expect(feed.rewindFrom).toBe(messageId);
+          const first = message('first question');
+          const answer = message('first answer', 'assistant');
+          const abandoned = message('abandoned question');
+          const abandonedAnswer = message('abandoned answer', 'assistant');
+          yield* Feed.append(feed, [first, answer, abandoned, abandonedAnswer]);
 
-          Obj.update(feed, (feed) => {
-            feed.rewindFrom = undefined;
-          });
+          // What the client writes when the revised prompt is sent. Everything after it is a plain
+          // append: the reset is the tip, so continuing from the tip already continues from the fork —
+          // which is why the process that appends the turn needs to know nothing about forking.
+          const reset = Feed.makeReset(answer);
+          yield* Feed.append(feed, [reset]);
+          const retry = message('better question');
+          yield* Feed.append(feed, [retry]);
           yield* Database.flush();
-          expect(feed.rewindFrom).toBeUndefined();
+
+          const history = Feed.history(yield* readFeed(feed));
+          expect(history.items.map((item) => item.id)).toEqual([first.id, answer.id, reset.id, retry.id]);
+          expect(history.shallow).toBe(false);
+        },
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+    );
+
+    it.effect(
+      'a reset with no parent starts the history over',
+      Effect.fnUntraced(
+        function* (_) {
+          const chat = yield* makeChat;
+          const feed = yield* Database.load(chat.feed);
+
+          const first = message('first question');
+          const answer = message('first answer', 'assistant');
+          yield* Feed.append(feed, [first, answer]);
+
+          // Rewinding the very first prompt leaves nothing to resume from. A parentless reset says so
+          // outright, rather than needing a sentinel id for "before everything" — and it must not be
+          // read as an ordinary item's absent parent, which would mean "continues from its predecessor"
+          // and quietly resurrect the whole conversation.
+          const reset = Feed.makeReset();
+          yield* Feed.append(feed, [reset]);
+          const retry = message('asking afresh');
+          yield* Feed.append(feed, [retry]);
+          yield* Database.flush();
+
+          const history = Feed.history(yield* readFeed(feed));
+          expect(history.items.map((item) => item.id)).toEqual([reset.id, retry.id]);
+          // Nothing is missing — there deliberately is nothing earlier, which is not a shallow boundary.
+          expect(history.shallow).toBe(false);
         },
         Effect.provide(TestLayer),
         TestHelpers.provideTestContext,
@@ -215,13 +257,13 @@ const message = (text: string, sender: 'user' | 'assistant' = 'user') =>
   Message.make({ created: new Date(clock++).toISOString(), sender, blocks: [{ _tag: 'text', text }] });
 
 /**
- * Reads a feed's messages in append order — `Feed.history` walks lineage positionally, and a query
- * returns an unordered set.
+ * Reads everything lineage runs through, in append order — messages plus the resets that fork them.
+ * `Feed.history` walks lineage positionally, and a query returns an unordered set.
  */
 const readFeed = (feed: Feed.Feed) =>
   Effect.gen(function* () {
-    const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    const position = (item: Message.Message) =>
+    const items = yield* Feed.query(feed, Filter.or(Filter.type(Message.Message), Filter.type(Feed.Reset))).run;
+    const position = (item: Message.Message | Feed.Reset) =>
       Number(Obj.getKeys(item, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id ?? Number.POSITIVE_INFINITY);
-    return [...messages].sort((a, b) => position(a) - position(b));
+    return [...items].sort((a, b) => position(a) - position(b));
   });

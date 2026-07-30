@@ -117,18 +117,27 @@ export class Session extends Resource {
    * head, so a soft fork's abandoned turns are excluded.
    */
   public async getHistory(): Promise<Message.Message[]> {
-    const { items: reachable } = Feed.history(await this.#messagesInAppendOrder());
-    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, reachable));
+    const { items: reachable } = Feed.history(await this.#itemsInAppendOrder());
+    // Resets have to be in the walk — they are what makes a fork's turns unreachable — but never in the
+    // prompt, since they carry no content and providers reject a message with no blocks.
+    const messages = reachable.filter(Obj.instanceOf(Message.Message));
+    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, messages));
   }
 
   /**
-   * Every message in the feed, in append order — what `Feed.history` needs, since it walks lineage
-   * positionally rather than by `created`, a wall clock peers do not agree on.
+   * Every item lineage runs through, in append order — messages plus the resets that fork them. What
+   * `Feed.history` needs, since it walks lineage positionally rather than by `created`, a wall clock
+   * peers do not agree on.
    */
-  async #messagesInAppendOrder(): Promise<Message.Message[]> {
-    const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
+  async #itemsInAppendOrder(): Promise<(Message.Message | Feed.Reset)[]> {
+    const queryResult = await Runtime.runPromise(this._runtime)(
+      Feed.query(this._feed, Filter.or(Filter.type(Message.Message), Filter.type(Feed.Reset))),
+    );
     const items = await queryResult.run();
-    return Array.sort(items.filter(Obj.instanceOf(Message.Message)), byFeedPosition);
+    return Array.sort(
+      items.filter((item) => Obj.instanceOf(Message.Message, item) || Obj.instanceOf(Feed.Reset, item)),
+      byFeedPosition,
+    );
   }
 
   getTools(): Effect.Effect<
@@ -156,36 +165,14 @@ export class Session extends Resource {
   }
 
   /**
-   * Appends one of this turn's messages to the feed, consuming a pending rewind if there is one.
+   * Appends one of this turn's messages to the feed.
    *
-   * The rewind decision is made in the UI, but the continuation is appended by the agent's process,
-   * which resolves the feed and never sees the chat — so the feed carries the intent and this is where
-   * it becomes lineage. `rewindFrom` names the earliest discarded message, so the new parent is whatever
-   * precedes it; nothing preceding means the continuation starts a fresh line. Only the first message of
-   * a turn finds it set, since the append clears it, so the rest of the turn chains implicitly. Clearing
-   * after the append (rather than before) leaves the rewind pending if the turn fails.
+   * Always a plain append, with no lineage of its own: a fork is expressed by the {@link Feed.Reset} the
+   * client appended before requesting the turn, so continuing from the tip already continues from the
+   * fork. Nothing about forking has to reach this process.
    */
   public async appendTurnMessage(message: Message.Message): Promise<void> {
-    const rewindFrom = this._feed.rewindFrom;
-    const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
-
-    return Runtime.runPromise(this._runtime)(
-      Effect.gen(this, function* () {
-        yield* Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined);
-        if (rewindFrom !== undefined) {
-          Obj.update(this._feed, (feed) => {
-            feed.rewindFrom = undefined;
-          });
-        }
-      }),
-    );
-  }
-
-  /** The message preceding `rewindFrom` in append order, which the continuation parents to. */
-  async #parentForRewind(rewindFrom: string): Promise<string | undefined> {
-    const messages = await this.#messagesInAppendOrder();
-    const index = messages.findIndex((message) => message.id === rewindFrom);
-    return index > 0 ? messages[index - 1].id : undefined;
+    return Runtime.runPromise(this._runtime)(Feed.append(this._feed, [message]));
   }
 
   /**
@@ -356,14 +343,14 @@ const connectMcpServers = (
  * Orders feed items by the position the server assigned them. Unpositioned blocks (written locally and
  * not yet acknowledged) sort last, which is what we want: a message just written is the newest.
  */
-const byFeedPosition = Order.make<Message.Message>((a, b) => {
+const byFeedPosition = Order.make<Message.Message | Feed.Reset>((a, b) => {
   const positionA = feedPosition(a);
   const positionB = feedPosition(b);
   return positionA === positionB ? 0 : positionA < positionB ? -1 : 1;
 });
 
-const feedPosition = (message: Message.Message): number => {
-  const key = Obj.getKeys(message, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
+const feedPosition = (item: Message.Message | Feed.Reset): number => {
+  const key = Obj.getKeys(item, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
   const position = key !== undefined ? Number(key) : Number.NaN;
   return Number.isNaN(position) ? Number.POSITIVE_INFINITY : position;
 };

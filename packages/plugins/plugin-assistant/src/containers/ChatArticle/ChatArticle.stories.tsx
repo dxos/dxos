@@ -102,7 +102,7 @@ const meta = {
         plugins: [
           ...corePlugins(),
           ClientPlugin({
-            types: [Chat.Chat, Feed.Feed, Message.Message],
+            types: [Chat.Chat, Feed.Feed, Feed.Reset, Message.Message],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
             onClientInitialized: ({ client }) =>
               Effect.gen(function* () {
