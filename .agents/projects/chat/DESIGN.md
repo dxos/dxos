@@ -165,7 +165,8 @@ pattern; exact relation type chosen in stage 3). No per-thread relations.
   stage 3 replaces that with comment channels (`threadId = anchor`). Review
   and chat share only `@dxos/types` and `react-ui-thread` (no cross-imports).
 - Assistant `Chat` and inbox `Mailbox` follow the same feed-backed idiom;
-  convergence with Channel is deliberately deferred (see Open questions).
+  the `Chat`/`Channel` relationship is RESOLVED (2026-07-30): parallel types
+  over one substrate — see "Agents".
 
 ## Rollout
 
@@ -183,6 +184,22 @@ pattern; exact relation type chosen in stage 3). No per-thread relations.
    `document-revisions` (burdon), which is active in plugin-review.**
 4. **Post-stage-3 follow-ups**: notifications (subscription triggers) and
    presence/typing (ephemeral EDGE primitive).
+5. **Stage 5 — identity & attribution groundwork** (parallel to 2–4): sender
+   DIDs on user- and agent-authored messages; one live agent process per
+   conversation. Fixes latent bugs in the current single-user assistant.
+6. **Stage 6 — interface convergence** (after 2): the assistant chat surface
+   renders on the plugin-chat message kit, parameterized by a block-render
+   policy. One kit, per-surface policies — not a fork.
+7. **Stage 7 — agents in channels v1** (after 3 + 5 + 6): mentions, forced
+   threads, session-per-thread, provenance link + progress tile;
+   client-hosted interim placement.
+8. **Stage 8 — subscriptions & delivery** (extends 4): per-user thread
+   membership items; notification and agent delivery routes over one
+   subscription primitive.
+9. **Stage 9 — space-hosted sessions & live activity**: EDGE placement, real
+   agent identity, activity pulse.
+
+Detail for 5–9 in "Agents" below.
 
 **Ship gate:** prototype freely on the landed #12235 surface, but feed
 phase 1 (version/order axis) must land before chat ships to real users — v1
@@ -193,6 +210,149 @@ Inherited from feed phases with no plugin changes: read receipts/unread
 (phase 2 cursors), EDGE push replacing 1s polling (phase 2), history beyond
 device capacity (phases 3–4).
 
+## Agents (stages 5–9)
+
+Decision (2026-07-30, josiah): assistant `Chat` and `Channel` stay separate
+types — **a session transcript is not a venue** — but converge on everything
+below the type: one `Message` schema, one feed idiom, one agent turn loop, one
+message-surface component kit. Resolves the former open question (was:
+"leaning parallel").
+
+### Venue vs. session transcript
+
+- In an assistant **chat**, the conversation IS the agent's working
+  transcript: the session reifies history from the chat feed, tool calls land
+  in it, context bindings live in it — the user stands inside the session.
+  `Chat` keeps its extras (`instructions`, `plan`, in-feed `AiContext`
+  bindings).
+- In a **channel**, the conversation is a venue. An agent participating in a
+  thread runs a session whose transcript is its own feed (a `Chat`); the
+  channel feed receives only its final messages. The private chat is the
+  degenerate case: venue == transcript, delivery == identity.
+
+The turn loop (`AiSession`/`AgentProcess`) is identical in both modes and
+never knows which one it is in. The differences are all at the edges:
+
+|            | chat                                                               | channel thread                                                                                                                                                                          |
+| ---------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| input      | harness writes the prompt `Message` straight into the session feed | the user's `Message` lands in the channel feed (an ordinary send); the agent's thread subscription delivers it (`enqueueMessage`); the session records a copy carrying a provenance ref |
+| output     | the assistant block appended to the session feed IS the reply      | posting is an **action**: append a `Message` (sender = agent DID, `threadId`) to the channel feed, recorded in the session feed like any tool call                                      |
+| visibility | tool calls, streaming, context chips render inline                 | final messages only; backstage reachable via the provenance link                                                                                                                        |
+
+### Rules
+
+- **Agent interactions force a thread.** An @-agent mention at channel level
+  mints the thread at compose time (`CreateThread` is idempotent; the
+  composer visibly switches to "starting a thread with X" before send — no
+  post-hoc re-parenting). Human-only messages stay nudged, never forced.
+- **Session per thread.** The mention spawns a session `Chat` bound to
+  `(channel, threadId)`; binding mechanism is a stage-7 design task
+  (thread-as-object makes `Chat → Thread` natural once cross-feed refs
+  resolve; otherwise a channel ref + `threadId` pair). Spawn-time context = a
+  window of channel/thread history bound via `AiContext.Binding` — data the
+  session reads, not transcript. Messages arriving after spawn are live turn
+  inputs via the subscription. A fresh mention elsewhere = a fresh,
+  concurrent session.
+- **Response policy:** respond-by-default while the session is the thread's
+  sole agent subscriber and no one else is addressed; mention-gated
+  otherwise. One rule everywhere — the private chat is the case where the
+  condition is always true.
+- **Echo suppression:** the delivery route drops messages whose
+  `sender.identityDid` is the agent's own. Identity-based, not role-based —
+  with several agents in a thread, `role === 'assistant'` cannot tell "me"
+  from another agent.
+- **Provenance:** an agent's venue messages link to the producing session;
+  "view session" opens it in the chat surface as its own plank (the stage-1
+  thread-plank pattern), read-only by default, joinable — anyone in the
+  thread can steer the running session, not just watch it.
+- **Progress is a render of the session feed.** The thread shows a
+  provisional tile at the reply's landing spot, folded from the session
+  feed's tail (turn started / tools begun / blocks completed). Derived state,
+  never a feed block — and it survives reload because the source blocks are
+  durable, which ephemeral typing-style signals cannot do. Token-level
+  liveness (the dormant `SwarmTraceSink` path) is optional polish. Progress
+  implies outcomes: the tile resolves to posted / failed / canceled, never
+  vanishes.
+
+### Subscription: one primitive, two delivery routes
+
+Per-user durable **thread membership** items (single-writer, folded at read —
+the `Reaction` shape): the join affordance writes one; first message
+auto-joins; "X joined" lines derive at render time, never message blocks.
+Written from day one so membership history is real when notification delivery
+lands. Delivery routes: human subscriber → notification trigger (the stage-4
+mechanism, filtered to joined threads); agent subscriber → session
+`enqueueMessage`. With EDGE hosting (stage 9) both routes become literally
+the same trigger machinery. Join ≠ read cursor (feed phase 2) — orthogonal
+per-user facts.
+
+### Placement is a property of the session, chosen by venue
+
+The session's whole interface is feed reads/writes plus subscription
+delivery — all replicated space data — so the loop is location-transparent by
+construction.
+
+- Private companion chat → **client-hosted** (works offline, streams tokens
+  locally, the user is present by definition). IndexedDB-backed process
+  manager, as today.
+- Channel/thread-bound sessions → **EDGE-hosted** (the task belongs to the
+  venue and must survive every laptop lid in the space). Same `AgentProcess`
+  — already a suspendible, alarm-driven process; the process-manager
+  capability layer is the seam where backends swap. Delivery = an EDGE
+  trigger on the channel feed — the plugin-routine machinery is the agent's
+  alarm clock.
+- Cancel-from-thread stays in the data plane: a control item on the session
+  feed that the host watches (inherits offline queueing), not an RPC path.
+- Later, not v1: promotion — hand a local session to EDGE ("keep going
+  without me"). State lives in the feed and the process suspends, so this is
+  close to suspend-here/resume-there.
+
+### Identity: attribution now, authority at EDGE
+
+Rides `agents/superpowers/specs/2026-07-21-agent-identity.md`; the chat
+stages schedule its two phases.
+
+- **Stage 5 (synthetic):** stamp `sender.identityDid` on user prompts —
+  `formatUserPrompt` writes a bare `role: 'user'` today, so two humans (or
+  two devices) in one feed are indistinguishable — and on agent messages via
+  `AgentIdentityService` reading `Agent.did`. Sufficient while writes happen
+  under the mentioning user's client authority. NOTE: a synthetic `sender`
+  DID is a **claim** — any space writer can stamp any DID — so it is
+  attribution, never authenticated provenance; build no permission checks on
+  it.
+- **Stage 9 (real):** an EDGE process must authenticate to write at all,
+  which forces the spec's real-identity phase: keypair-backed `did:halo:`,
+  agent as space member (`SpaceMember.Role` gates it; rosters and mention
+  autocomplete need no special case; the `resolveAuthor` agent-seeding shim
+  is deleted per the spec). Device model: the agent identity gets one or few
+  **long-lived EDGE runtime devices**, each hosting many sessions — devices
+  are laptops, not tabs. Considered and declined: device-per-session (heavy;
+  device admission permanently grows the append-only HALO credential graph);
+  shelved for its one virtue, per-session key revocation.
+
+### Risks / new pressure
+
+- **Feed budget** — the one genuinely new infrastructure pressure: sessions
+  already live on feeds, but session-per-thread mints them at mention-cadence
+  — a feed per agent task against ~1000 feeds/space. Session feeds need a
+  retention/GC story (disposable once the task concludes); feed phase 3's
+  retention design is the natural home, extended to whole-feed GC/archival
+  rather than only within-feed compaction. Mirrored as constraints in
+  feed-live-objects DESIGN ("Agent sessions" workstream) + TASKS (phases
+  2–3).
+- **Thread deep-links** (stage-1 item, landed round 9) are a stage-7
+  prerequisite: provenance links and "view session" need addressable threads
+  and sessions (url-deck pair-chain grammar; plugin-projects shares the
+  need).
+- **Cross-feed refs**: provenance refs (session ↔ channel messages) are not
+  known to resolve in either direction yet; v1 copies message content into
+  the session feed and carries the ref as metadata.
+- **Coordination**: stage 7 retires plugin-review's separate `agent-runner`
+  loop — a review agent becomes an agent subscribed to a comments channel —
+  under the same plugin-review sequencing constraint as stage 3. The
+  session-binding design overlaps plugin-projects' open context/artifact
+  decision; design them together.
+
 ## Open questions
 
 - Identical anchor range ⇒ same `threadId` ⇒ comments on the same selection
@@ -200,8 +360,10 @@ device capacity (phases 3–4).
 - Orphaned anchors (anchored text deleted): render-as-orphaned, as review
   does today.
 - `resolved` on the root message vs elsewhere — validate in stage 3.
-- Assistant `Chat` / `Channel` convergence (leaning: keep parallel; converge
-  only if the assistant needs channel features).
+- Who may cancel a running agent session from its thread: the mentioner or
+  any thread member (leaning: any member, per the team-steerable framing).
+- Session-feed retention/GC policy (see "Risks") — decide before stage 7
+  ships at any scale.
 - Per-thread read-state granularity: finer than the per-feed cursor feed
   phase 2 defines — feed phase 2 should not design out per-`threadId`
   high-water marks (flagged in feed-live-objects TASKS).

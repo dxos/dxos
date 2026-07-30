@@ -130,7 +130,18 @@ swap rather than a rewrite.
   via live objects (#12235), notifications via subscription triggers, read
   state via phase 2, scale via phases 3–4. Needs one new primitive — an
   ephemeral presence/typing channel over EDGE messaging, explicitly not feed
-  blocks. Becomes its own project when work starts.
+  blocks. Became the `chat` project (see `.agents/projects/chat/`).
+- **Agent sessions** (chat stages 5–9; see chat DESIGN.md "Agents"). Agent
+  sessions already live on feeds (every assistant `Chat` has one); what
+  changes is the minting rate — an agent responding in a channel thread gets
+  a session per task, so feeds are created at mention-cadence rather than one
+  per deliberately-created chat. Two touch points: (1) phase 2's
+  trigger/cursor machinery gains a second consumer — agent wake-up (delivery =
+  enqueue into an EDGE-hosted session process), the same subscription
+  primitive as notifications with a different delivery route; (2) pressure on
+  the ~1000 feeds/space budget — concluded session feeds are disposable, so
+  phase 3's retention design should cover whole-feed GC / archival, not only
+  within-feed compaction. Constraints mirrored in TASKS.
 - **Large-source ingestion** (e.g. whole Discord servers): source-cursor
   pipeline (the external cursor, e.g. last snowflake per channel, lives in a
   small ECHO object) emitting signals; add a capped-retention feed buffer only

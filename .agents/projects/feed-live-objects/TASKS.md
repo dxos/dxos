@@ -142,6 +142,10 @@ flagged the default-off guarantee). Also the chat ship gate.
       mechanism to replace `FeedHandle`'s 1s polling; keep polling fallback.
 - [ ] Constraint from chat: do NOT design out per-`threadId` high-water marks
       (per-thread unread); cursor model should permit keyed sub-cursors later.
+- [ ] Constraint from chat stages 5–9: the trigger/subscription machinery
+      gains a second consumer — agent session wake-up (delivery = enqueue
+      into an EDGE-hosted session process, not a notification op); keep the
+      dispatch target pluggable.
 
 ### Phase 3 — retention + epoch chaining
 
@@ -154,6 +158,10 @@ flagged the default-off guarantee). Also the chat ship gate.
       use.
 - [ ] Interaction check: retention vs tombstones (a tombstone must not be
       compacted away while any replica could still hold the live object).
+- [ ] Constraint from chat stages 5–9: agent session-per-thread mints feeds at
+      mention-cadence against the ~1000 feeds/space budget, and concluded
+      session feeds are disposable — retention design should cover whole-feed
+      GC/archival, not only within-feed compaction.
 
 ### Phase 4 — sparse feeds (email-scale partial history)
 
