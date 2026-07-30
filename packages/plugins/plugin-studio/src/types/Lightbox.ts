@@ -24,7 +24,7 @@ export class Lightbox extends Type.makeObject<Lightbox>(DXN.make('org.dxos.type.
     layout: BoardLayout.pipe(FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'purple' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'indigo' }),
   ),
 ) {}
 

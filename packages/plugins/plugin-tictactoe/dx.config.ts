@@ -40,7 +40,7 @@ export default Config2.make({
     icon: { key: 'ph--hash-straight--regular', hue: 'cyan' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-tictactoe',
     spec: 'PLUGIN.mdl',
-    tags: ['game'],
+    tags: ['alpha', 'game'],
     dependsOn: ['org.dxos.plugin.game'],
   },
 });
