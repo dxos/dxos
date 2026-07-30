@@ -289,6 +289,7 @@ for (const manifest of globSync(
     browser = {},
     dependencies = {},
     devDependencies = {},
+    peerDependencies = {},
   } = JSON.parse(readFileSync(manifest, 'utf8'));
 
   // Self-referencing subpath imports (`#meta`, `#plugin`) are otherwise unresolvable: knip follows
@@ -340,13 +341,16 @@ for (const manifest of globSync(
       ...supplemental.map((p) => `${p}!`),
       ...AUXILIARY_ENTRY,
     ],
-    project: PROJECT.map((p) => `${p}!`),
+    project: PROJECT.map((path) => `${path}!`),
     paths,
     ignoreDependencies: [
       ...configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...moonInvokedDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...peerSatisfyingDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...bundledDependencies(dir),
+      // A peer declaration states what the host must provide, not what this package imports, so an
+      // unused one is a contract decision rather than a stale dependency.
+      ...Object.keys(peerDependencies),
     ],
   };
 }

@@ -34,7 +34,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -45,8 +44,11 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/compute-runtime": "workspace:*",
+    "@effect/platform": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -34,7 +34,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/credentials": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -44,6 +43,9 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/credentials": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

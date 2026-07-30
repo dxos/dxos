@@ -31,13 +31,11 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
@@ -63,7 +61,9 @@
     "zone.js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/client-services": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@effect/platform": "catalog:",
     "@types/js-yaml": "catalog:"
   },

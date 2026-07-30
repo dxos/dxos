@@ -38,7 +38,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "date-fns": "catalog:",
@@ -46,6 +45,7 @@
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
+    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

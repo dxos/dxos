@@ -29,7 +29,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -41,6 +40,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
     "vite": "catalog:"
   },

@@ -56,13 +56,13 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "mermaid": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

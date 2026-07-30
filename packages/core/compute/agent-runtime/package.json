@@ -50,13 +50,13 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"
   },

@@ -108,13 +108,13 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

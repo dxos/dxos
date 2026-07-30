@@ -64,7 +64,6 @@
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -83,6 +82,7 @@
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "catalog:",
+    "@dxos/echo-client": "workspace:*",
     "vitest": "catalog:"
   },
   "peerDependencies": {

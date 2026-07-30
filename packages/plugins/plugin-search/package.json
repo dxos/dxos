@@ -110,7 +110,6 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "main-thread-scheduling": "catalog:"
   },
@@ -118,6 +117,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",

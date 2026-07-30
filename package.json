@@ -33,7 +33,7 @@
     "postinstall": "[ \"$CI\" != \"true\" ] && vite-node tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
-    "knip": "knip --config .config/knip.ts --no-config-hints",
+    "knip": "knip --config .config/knip.ts --no-config-hints && knip --config .config/knip.ts --no-config-hints --production --strict --exclude binaries,files",
     "lint": "pnpm exec moon run :lint-fix",
     "lint-changed": "pnpm exec moon run :lint-fix --affected remote",
     "lint-check": "pnpm exec moon run :lint",

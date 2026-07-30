@@ -33,7 +33,6 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/lang-xml": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/async": "workspace:*",
@@ -53,30 +52,31 @@
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "date-fns": "catalog:",
-    "tabster": "catalog:"
+    "date-fns": "catalog:"
   },
   "devDependencies": {
+    "@codemirror/lang-xml": "catalog:",
     "@dxos/effect-proto": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "tabster": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

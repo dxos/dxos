@@ -43,13 +43,13 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:",
-    "hyparquet": "catalog:"
+    "@effect/ai": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "effect": "catalog:",
+    "hyparquet": "catalog:",
     "hyparquet-writer": "catalog:",
     "vitest": "catalog:"
   },

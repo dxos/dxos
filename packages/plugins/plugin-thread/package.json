@@ -105,7 +105,6 @@
     "@dxos/compute": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-react": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -121,6 +120,7 @@
     "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",

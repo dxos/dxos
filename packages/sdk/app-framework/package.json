@@ -107,8 +107,6 @@
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
-    "@dxos/storybook-addon-logger": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
@@ -124,6 +122,8 @@
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/storybook-addon-logger": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",

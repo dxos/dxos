@@ -25,11 +25,11 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/web-context": "workspace:*",
-    "solid-element": "catalog:"
+    "@dxos/web-context": "workspace:*"
   },
   "devDependencies": {
     "@solidjs/testing-library": "catalog:",
+    "solid-element": "catalog:",
     "solid-js": "catalog:",
     "vite-plugin-solid": "catalog:"
   },

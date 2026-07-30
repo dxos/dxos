@@ -76,7 +76,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-react": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/link": "workspace:*",
@@ -92,6 +91,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",

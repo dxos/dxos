@@ -39,7 +39,6 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
@@ -50,6 +49,7 @@
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",

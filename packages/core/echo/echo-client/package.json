@@ -51,18 +51,18 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect/experimental": "catalog:",
-    "@effect/sql": "catalog:",
     "effect": "catalog:",
-    "eventemitter3": "catalog:",
-    "fast-deep-equal": "catalog:"
+    "eventemitter3": "catalog:"
   },
   "devDependencies": {
-    "@dxos/test-utils": "workspace:*"
+    "@dxos/sql-sqlite": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@effect/sql": "catalog:",
+    "fast-deep-equal": "catalog:"
   },
   "publishConfig": {
     "access": "public"

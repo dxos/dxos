@@ -392,6 +392,20 @@ glslify `#pragma`. Each rule is derived from the manifests and task definitions 
 hardcoded, so a new package is covered without touching the config. When knip reports something that
 is genuinely reachable, prefer extending the relevant rule over adding an ignore.
 
+`pnpm knip` runs two passes. The first checks the whole repo for unused dependencies, undeclared
+imports and unreferenced files. The second adds `--production --strict`, which analyses only what
+ships — no tests, stories or configs — and requires production code to import from `dependencies`
+alone. That second pass is what keeps a published package from making consumers install a package
+only its storybook needs. Only entry and project patterns suffixed with `!` count as production, so
+a new pattern needs that suffix to be visible to it.
+
+Unreferenced _files_ are excluded from the strict pass: some 74 components are reachable only from
+stories, and whether those are work in progress or genuinely dead is a judgement per component
+rather than a rule. `pnpm knip --production --strict` without the exclusion lists them.
+
+A `peerDependencies` entry states what a host must provide rather than what the package imports, so
+those are exempt from the unused check.
+
 **The repo root's own dependencies are not audited.** They are consumed by moon task commands and the
 shared vitest/vite bases rather than by the few files knip attributes to the root workspace, so
 nearly all of them read as unused, and removing them breaks `pnpm install` on peer resolution. The

@@ -25,9 +25,6 @@
     "dist",
     "src"
   ],
-  "dependencies": {
-    "d3": "catalog:"
-  },
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -36,6 +33,7 @@
     "@rive-app/react-canvas": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
+    "d3": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

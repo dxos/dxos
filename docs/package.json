@@ -22,17 +22,17 @@
     "@astrojs/rss": "catalog:",
     "@astrojs/starlight": "catalog:",
     "@bryanguffey/astro-standard-site": "catalog:",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "astro": "catalog:",
     "starlight-links-validator": "catalog:"
   },
   "devDependencies": {
     "@atproto/api": "catalog:",
     "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
-    "@dxos/config": "workspace:*",
-    "@dxos/echo": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@types/turndown": "catalog:",
     "turndown": "catalog:"
   }

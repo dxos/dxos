@@ -25,7 +25,6 @@
     "proxy": "vite-node scripts/proxy.ts"
   },
   "dependencies": {
-    "@automerge/automerge": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -58,7 +57,6 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -73,7 +71,6 @@
     "chartjs-adapter-luxon": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",
-    "isomorphic-ws": "catalog:",
     "localforage": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "lodash.merge": "catalog:",
@@ -84,10 +81,12 @@
     "ws": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
     "@dxos/config": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
@@ -96,6 +95,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "isomorphic-ws": "catalog:",
     "unplugin-fonts": "catalog:",
     "vite": "catalog:",
     "vite-plugin-pwa": "catalog:",

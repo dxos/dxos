@@ -29,7 +29,7 @@
     "dist",
     "src"
   ],
-  "dependencies": {
+  "devDependencies": {
     "@dxos/context": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "miniflare": "catalog:"

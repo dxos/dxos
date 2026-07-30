@@ -93,7 +93,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-audio": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -106,6 +105,7 @@
     "tone": "catalog:"
   },
   "devDependencies": {
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",

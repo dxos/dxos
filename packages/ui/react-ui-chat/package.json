@@ -37,7 +37,6 @@
     "@codemirror/view": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
@@ -48,6 +47,7 @@
     "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

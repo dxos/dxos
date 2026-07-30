@@ -123,14 +123,14 @@
     "@dxos/worker-framework": "workspace:*",
     "@effect/experimental": "catalog:",
     "@effect/platform-browser": "catalog:",
-    "@effect/rpc": "catalog:",
-    "@effect/sql": "catalog:",
     "effect": "catalog:",
     "jwt-decode": "catalog:",
     "lodash.isequalwith": "catalog:"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
+    "@effect/rpc": "catalog:",
+    "@effect/sql": "catalog:",
     "@types/lodash.isequalwith": "catalog:",
     "typedoc": "catalog:"
   },

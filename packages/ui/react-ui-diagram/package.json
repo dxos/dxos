@@ -33,7 +33,6 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@xyflow/react": "catalog:",
     "effect": "catalog:"
@@ -41,6 +40,7 @@
   "devDependencies": {
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@radix-ui/react-compose-refs": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

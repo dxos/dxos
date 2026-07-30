@@ -93,7 +93,6 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
