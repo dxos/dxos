@@ -74,7 +74,7 @@ sequenceDiagram
 
   AP->>AP: delegation reconcile · alarm reconcile · maybeComplete
   AP-->>P: waitForCompletion resolves
-  P->>UI: flush streaming → pending; active = false
+  P->>UI: flush streaming → pending · active = false
   F-->>UI: useQuery(feed) — durable messages (deduped vs streaming)
 ```
 
