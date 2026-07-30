@@ -10,26 +10,26 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { MessageThreadContext } from '../sync';
-import { RewindWidget, type RewindWidgetProps } from './RewindWidget';
+import { BranchWidget, type BranchWidgetProps } from './BranchWidget';
 
 const MESSAGE_ID = '01JQ0000000000000000000001';
 
 const onRewind = fn();
 
 const baseWidgetProps = {
-  _tag: 'rewind',
+  _tag: 'branch',
   range: { from: 0, to: 1 },
-} satisfies Pick<RewindWidgetProps, '_tag' | 'range'>;
+} satisfies Pick<BranchWidgetProps, '_tag' | 'range'>;
 
 const meta = {
-  title: 'plugins/plugin-assistant/components/ChatWidgets/RewindWidget',
-  component: RewindWidget,
+  title: 'plugins/plugin-assistant/components/ChatWidgets/BranchWidget',
+  component: BranchWidget,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof RewindWidget>;
+} satisfies Meta<typeof BranchWidget>;
 
 export default meta;
 

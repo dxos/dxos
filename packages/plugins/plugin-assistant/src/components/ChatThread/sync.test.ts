@@ -56,13 +56,15 @@ describe('reducers', () => {
       ];
 
       syncer.update(messages);
-      expect(normalize(doc.content)).toEqual('\n<prompt>Hello</prompt>\n\n<rewind />\n\nHi there!\n');
+      expect(normalize(doc.content)).toEqual('\n\n\n<prompt>Hello</prompt>\n<branch />\n\nHi there!\n');
 
       Obj.update(messages[1], (obj) => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.update(messages);
-      expect(normalize(doc.content)).toEqual('\n<prompt>Hello</prompt>\n\n<rewind />\n\nHi there!\nHow can I help?\n');
+      expect(normalize(doc.content)).toEqual(
+        '\n\n\n<prompt>Hello</prompt>\n<branch />\n\nHi there!\nHow can I help?\n',
+      );
     }),
   );
 
@@ -78,7 +80,7 @@ describe('reducers', () => {
       ];
 
       syncer.update(messages);
-      expect(normalize(doc.content)).toEqual('\n<prompt>Hello</prompt>\n\n<rewind />\n\nHi there!');
+      expect(normalize(doc.content)).toEqual('\n\n\n<prompt>Hello</prompt>\n<branch />\n\nHi there!');
 
       Obj.update(messages[1], (obj) => {
         const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
@@ -92,7 +94,7 @@ describe('reducers', () => {
       });
       syncer.update(messages);
       expect(normalize(doc.content)).toEqual(
-        '\n<prompt>Hello</prompt>\n\n<rewind />\n\nHi there! How are you?\nHow can I help?\n',
+        '\n\n\n<prompt>Hello</prompt>\n<branch />\n\nHi there! How are you?\nHow can I help?\n',
       );
     }),
   );
@@ -333,7 +335,7 @@ describe('MessageSyncer tool widget rehydration', () => {
 });
 
 /**
- * Strips the rewind toolbar's attributes: `messageId` is a fresh ULID and `created` a wall-clock
+ * Strips the branch toolbar's attributes: `messageId` is a fresh ULID and `created` a wall-clock
  * timestamp, so neither is stable across runs.
  */
-const normalize = (content: string) => content.replace(/<rewind\b[^>]*\/>/g, '<rewind />');
+const normalize = (content: string) => content.replace(/<branch\b[^>]*\/>/g, '<branch />');

@@ -25,17 +25,17 @@ describe('createTurnSource', () => {
   // A toolbar rendered under the prompt belongs to the head: folding the response must not hide the
   // control that folds it.
   test('keeps a trailing self-closing toolbar tag out of the fold range', ({ expect }) => {
-    const doc = ['<prompt>Hi</prompt>', '', '<rewind messageId="a" created="t" />', 'Answer.'].join('\n');
+    const doc = ['<prompt>Hi</prompt>', '', '<branch messageId="a" created="t" />', 'Answer.'].join('\n');
     const turns = scan(doc);
     expect(turns).toHaveLength(1);
-    expect(turns[0].head).toContain('<rewind');
+    expect(turns[0].head).toContain('<branch');
     expect(turns[0].folded).toBe('Answer.');
     // The marker still sits on the prompt, not on the toolbar.
     expect(turns[0].headLine).toBe(0);
   });
 
   test('absorbs several trailing self-closing tags', ({ expect }) => {
-    const doc = ['<prompt>Hi</prompt>', '<rewind messageId="a" />', '<other />', 'Answer.'].join('\n');
+    const doc = ['<prompt>Hi</prompt>', '<branch messageId="a" />', '<other />', 'Answer.'].join('\n');
     const turns = scan(doc);
     expect(turns[0].folded).toBe('Answer.');
   });
@@ -57,7 +57,7 @@ describe('createTurnSource', () => {
 
   test('yields no turn for a prompt with an empty response', ({ expect }) => {
     expect(scan('<prompt>Hi</prompt>')).toHaveLength(0);
-    expect(scan(['<prompt>Hi</prompt>', '<rewind messageId="a" />'].join('\n'))).toHaveLength(0);
+    expect(scan(['<prompt>Hi</prompt>', '<branch messageId="a" />'].join('\n'))).toHaveLength(0);
   });
 });
 

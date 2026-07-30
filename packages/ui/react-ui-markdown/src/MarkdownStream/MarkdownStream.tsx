@@ -317,6 +317,7 @@ const useMarkdownStreamTextEditor = (
               hideTags: true,
             }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            // TODO(burdon): Folding gets progressively off due to some widgets?
             turnFolding({ source: turnSource }),
             scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&

@@ -11,7 +11,7 @@ import { meta } from '#meta';
 
 import { type MessageThreadContext } from '../sync';
 
-export type RewindWidgetProps = XmlWidgetProps<
+export type BranchWidgetProps = XmlWidgetProps<
   {
     /** Id of the message to rewind to. Named to avoid colliding with the widget's own `id` prop. */
     messageId?: string;
@@ -25,7 +25,7 @@ export type RewindWidgetProps = XmlWidgetProps<
  * Mini toolbar rendered below each user prompt, offering a soft fork ("rewind") back to that prompt
  * along with when it was sent.
  */
-export const RewindWidget = ({ messageId, created, context }: RewindWidgetProps) => {
+export const BranchWidget = ({ messageId, created, context }: BranchWidgetProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   const handleRewind = useCallback(() => {
@@ -39,7 +39,7 @@ export const RewindWidget = ({ messageId, created, context }: RewindWidgetProps)
   }
 
   return (
-    <div role='toolbar' className='flex items-center gap-1 justify-end text-xs text-subdued'>
+    <div role='toolbar' className='flex items-center p-1 gap-1 justify-end text-xs text-subdued hover:text-inherit'>
       <IconButton
         classNames='min-h-0 p-1'
         icon='ph--clock-counter-clockwise--regular'
