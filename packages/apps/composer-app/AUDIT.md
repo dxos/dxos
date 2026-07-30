@@ -962,7 +962,7 @@ After the capability-dependency activation refactor (multi-default arity, opaque
 entire module population is uniform and auditable in one probe:
 `globalThis.composer.manager.getModules()` on a booted dev instance. Snapshot (dev boot,
 `failed: []`, 432 modules; full lists in
-[`.agents/projects/app-framework-capability-activation/AUDIT-modules.md`](../../../.agents/projects/app-framework-capability-activation/AUDIT-modules.md)):
+[`.agents/projects/startup-latency/AUDIT-modules.md`](../../../.agents/projects/startup-latency/AUDIT-modules.md)):
 
 | Population                                                                   | Count |
 | ---------------------------------------------------------------------------- | ----: |

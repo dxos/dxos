@@ -1,5 +1,12 @@
 # Plugin module audit — Composer runtime inventory (2026-07-19)
 
+> **Status: starting inventory for [Phase 1](./DESIGN.md), not current.** Captured during the
+> capability-activation refactor at 432 modules; the population is ~460 today, and several plugins
+> have since been added, split, or renamed (sketch → tldraw + illustrator; new projects, atproto,
+> library, terra). The Phase 1 map re-probes and supersedes this wherever they disagree — what
+> stays useful is the shape: the per-capability groupings, the startup-root vs chain-member split,
+> and the activation-event inventory at the end.
+
 Source of truth: `manager.getModules()` probed from a booted Composer dev instance
 (432 modules, failed: []). Events fired during boot: app-framework.event.startup, plugin.client.event.spacesReady, plugin.space.event.spaceCreated, plugin.client.event.identityCreated.
 

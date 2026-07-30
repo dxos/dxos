@@ -22,7 +22,7 @@ statically, and event-mode activation already exists as a deferral mechanism.
 
 Prior art: [`composer-app/AUDIT.md` §12](../../../packages/apps/composer-app/AUDIT.md) (2026-07-19
 module audit, per-capability counts) with full per-module lists in
-[`AUDIT-modules.md`](../app-framework-capability-activation/AUDIT-modules.md). Useful starting
+[`AUDIT-modules.md`](./AUDIT-modules.md). Useful starting
 inventory; superseded by the Phase 1 map wherever they disagree.
 
 ## Principle: two tiers, no middle

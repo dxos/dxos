@@ -17,7 +17,10 @@ Questions the instrumentation must answer (exit criteria in DESIGN.md):
 - [ ] Fan-out concurrency vs per-module weight (the AppGraphBuilder cluster)
 - [ ] Client/network-init vs module-work split on real hardware
 
-The map itself:
+The map itself — start from [`AUDIT-modules.md`](./AUDIT-modules.md) (the 2026-07-19 per-module
+inventory carried over from the capability-activation project: per-capability groupings,
+startup-root vs chain-member split, activation-event inventory). Re-probe first; it predates ~28
+modules and the sketch/tldraw/illustrator split.
 
 - [ ] Classify all ~460 modules: startup-essential | demand-gated(signal) | signal-needs-substrate
       | unknown — unknowns driven to zero
