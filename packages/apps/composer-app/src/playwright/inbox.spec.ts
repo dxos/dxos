@@ -50,8 +50,16 @@ test.describe('Inbox', () => {
     if (!AUTO_SYNC) {
       await Inbox.sync(host.page);
     }
-    await expect(Inbox.rows(host.page).first()).toBeVisible();
+    await expectPopulated();
     return mock;
+  };
+
+  // A first sync creates the sync Routine and then waits on the trigger dispatcher to run it, which
+  // outlasts the default assertion timeout — and, with app startup, the default per-test budget.
+  const expectPopulated = async () => {
+    test.slow();
+    await expect(Inbox.rows(host.page).first()).toBeVisible({ timeout: 45_000 });
+    expect(await Inbox.rows(host.page).count()).toBeGreaterThan(0);
   };
 
   test('JMAP: connecting an account syncs it with no sync press', async () => {
@@ -59,8 +67,7 @@ test.describe('Inbox', () => {
     await connectMailbox();
 
     // Nothing presses "Sync now": binding the connection is what runs the connector's sync.
-    await expect(Inbox.rows(host.page).first()).toBeVisible();
-    expect(await Inbox.rows(host.page).count()).toBeGreaterThan(0);
+    await expectPopulated();
   });
 
   test('JMAP: a connected account populates when sync is pressed', async () => {
@@ -71,8 +78,7 @@ test.describe('Inbox', () => {
     await expect(Inbox.rows(host.page)).toHaveCount(0);
     await Inbox.sync(host.page);
 
-    await expect(Inbox.rows(host.page).first()).toBeVisible();
-    expect(await Inbox.rows(host.page).count()).toBeGreaterThan(0);
+    await expectPopulated();
   });
 
   test('selecting a thread opens the message companion', async () => {
