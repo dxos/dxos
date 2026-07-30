@@ -265,6 +265,13 @@ const readParent = (item: Entity.Unknown | Entity.Snapshot): { present: boolean;
 };
 
 /**
+ * Foreign-key source for the global position a position authority assigned a feed item.
+ * Exposed alongside {@link getPosition} so callers can stamp or inspect it without reaching for
+ * `@dxos/protocols`.
+ */
+export const POSITION_KEY = KEY_QUEUE_POSITION;
+
+/**
  * The global position a feed item was assigned, or `+Infinity` when it has none — a block written
  * locally and not yet acknowledged, which sorts last because it is the newest.
  *

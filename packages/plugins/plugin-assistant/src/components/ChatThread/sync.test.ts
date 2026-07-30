@@ -331,6 +331,45 @@ describe('MessageSyncer tool widget rehydration', () => {
     }),
   );
 
+  // Regression: `update` streams a suffix, so an append-only path leaves removed turns on screen. A
+  // rewind shrinks the thread, which has to fall back to a full reset.
+  it.effect(
+    'a shrinking message list replaces the document',
+    Effect.fn(function* ({ expect }) {
+      const doc = new TestDocument();
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
+
+      const prompt = createMessage('user', [{ _tag: 'text', text: 'Hello' }]);
+      const reply = createMessage('assistant', [{ _tag: 'text', text: 'Hi there!' }]);
+      syncer.update([prompt, reply]);
+      expect(doc.content).toContain('Hi there!');
+
+      // The rewind case: same first message, fewer turns.
+      const replaced = syncer.update([prompt]);
+      expect(replaced).toBe(true);
+      expect(doc.content).not.toContain('Hi there!');
+      expect(doc.content).toContain('Hello');
+    }),
+  );
+
+  it.effect(
+    'a message list diverging mid-thread replaces the document',
+    Effect.fn(function* ({ expect }) {
+      const doc = new TestDocument();
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
+
+      const prompt = createMessage('user', [{ _tag: 'text', text: 'Hello' }]);
+      const abandoned = createMessage('assistant', [{ _tag: 'text', text: 'Abandoned.' }]);
+      syncer.update([prompt, abandoned]);
+
+      // Same length, different second turn — the branch changed underneath us.
+      const retry = createMessage('assistant', [{ _tag: 'text', text: 'Retry.' }]);
+      expect(syncer.update([prompt, retry])).toBe(true);
+      expect(doc.content).not.toContain('Abandoned.');
+      expect(doc.content).toContain('Retry.');
+    }),
+  );
+
   // Regression: widget callbacks reach the thread through the syncer's context, which the host has to
   // publish to the editor via `setContext`. Nothing did, so a widget received `context: undefined` and
   // the rewind button silently no-oped.

@@ -96,18 +96,15 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       () => controller && new MessageSyncer(controller, renderer, { onRewind: handleRewind }),
       [controller, renderer, handleRewind],
     );
-    // Publish the context to the editor: widget props read it from a CodeMirror state field, so without
-    // this a widget's `context` is undefined and its callbacks (e.g. rewind) silently no-op.
-    useEffect(() => {
-      if (controller && syncer) {
-        controller.setContext(syncer.context);
-      }
-    }, [controller, syncer]);
-
     useEffect(() => {
       if (!syncer) {
         return;
       }
+
+      // Publish the context every pass: widget props read it from a CodeMirror state field, and
+      // `setContext` dispatches through `viewRef.current?` — a no-op before the view exists, so doing this
+      // once on mount silently loses it and every widget callback (e.g. rewind) dies on the optional call.
+      controller?.setContext(syncer.context);
 
       if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');

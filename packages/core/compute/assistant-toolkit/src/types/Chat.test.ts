@@ -44,7 +44,14 @@ describe('Chat', () => {
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through CompanionTo, never a field —
         // that field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'plan', 'viewType']);
+        expect(Object.keys(Chat.Chat.fields).sort()).toEqual([
+          'feed',
+          'forkPoint',
+          'instructions',
+          'name',
+          'plan',
+          'viewType',
+        ]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -152,6 +159,33 @@ describe('Chat', () => {
           // Latest-wins: retryB's branch is live, so retryA drops out.
           const history = Feed.history(yield* readFeed(feed));
           expect(history.items.map((item) => item.id)).toEqual([first.id, answer.id, second.id, retryB.id]);
+        },
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+    );
+
+    it.effect(
+      'a fork point round-trips on the chat',
+      Effect.fnUntraced(
+        function* (_) {
+          const chat = yield* makeChat;
+          expect(chat.forkPoint).toBeUndefined();
+
+          // Durable rather than UI state: the agent appends the continuation out-of-process, so the
+          // pending fork point has to outlive the component that recorded it.
+          const messageId = EntityId.random();
+          Obj.update(chat, (chat) => {
+            chat.forkPoint = messageId;
+          });
+          yield* Database.flush();
+          expect(chat.forkPoint).toBe(messageId);
+
+          Obj.update(chat, (chat) => {
+            chat.forkPoint = undefined;
+          });
+          yield* Database.flush();
+          expect(chat.forkPoint).toBeUndefined();
         },
         Effect.provide(TestLayer),
         TestHelpers.provideTestContext,

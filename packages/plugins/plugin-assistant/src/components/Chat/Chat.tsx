@@ -4,16 +4,14 @@
 
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
-import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
-import * as Order from 'effect/Order';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { getSpace } from '@dxos/client/echo';
-import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { type Database, Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useObjectValue, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import {
@@ -47,23 +45,7 @@ import {
 import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
-
-/**
- * Append order for `Feed.history`, which walks lineage positionally rather than by time.
- *
- * Position is authoritative but server-assigned: locally-written blocks (and every block when no
- * position authority has acknowledged them) report `+Infinity`, and a query returns an unordered set, so
- * position alone leaves them arbitrary. `created` breaks those ties — sound locally, where one
- * conversation's messages come off one clock, and only consulted when position cannot decide.
- */
-const byAppendOrder: Order.Order<Message.Message> = (a, b) => {
-  const positionA = Feed.getPosition(a);
-  const positionB = Feed.getPosition(b);
-  if (positionA !== positionB) {
-    return positionA < positionB ? -1 : 1;
-  }
-  return a.created < b.created ? -1 : a.created > b.created ? 1 : 0;
-};
+import { projectThread } from './thread';
 
 //
 // Root
@@ -105,6 +87,9 @@ const ChatRoot = ({
 
   // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
   const [feedSnapshot] = useObject(chat?.feed);
+  // Likewise for the chat itself: `forkPoint` is mutated in place, and without a subscription the
+  // rendered branch would not recompute when a rewind sets it.
+  const chatSnapshot = useObjectValue(chat);
   const feed = Obj.getReactiveOrUndefined(feedSnapshot);
 
   // Event sink.
@@ -120,22 +105,19 @@ const ChatRoot = ({
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
   const pendingMessages = useAtomValue(processor.messages);
-  // Render only the turns reachable from the feed's head, so a rewind's abandoned turns disappear.
-  const messages = useMemo(() => {
-    const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
-    const sorted = Array.sort(all, byAppendOrder);
-    const resolved = Feed.history(sorted).items;
-    // eslint-disable-next-line no-console
-    console.log(
-      'CHATORDER>>>',
-      JSON.stringify({
-        raw: all.map((m) => [(m.blocks[0] as any)?.text, m.created, Feed.getPosition(m)]),
-        sorted: sorted.map((m) => (m.blocks[0] as any)?.text),
-        resolved: resolved.map((m) => (m.blocks[0] as any)?.text),
-      }),
-    );
-    return resolved;
-  }, [feedMessages, pendingMessages]);
+  const { messages, forkPointSuperseded } = useMemo(
+    () => projectThread({ feedMessages, pendingMessages, forkPoint: chatSnapshot?.forkPoint }),
+    [feedMessages, pendingMessages, chatSnapshot?.forkPoint],
+  );
+
+  // Drop a fork point the feed now expresses through lineage, so it cannot pin the view behind its branch.
+  useEffect(() => {
+    if (chat && forkPointSuperseded) {
+      Obj.update(chat, (chat) => {
+        chat.forkPoint = undefined;
+      });
+    }
+  }, [chat, forkPointSuperseded]);
 
   const dump = useDebug({ processor });
 
@@ -174,6 +156,17 @@ const ChatRoot = ({
           break;
         }
 
+        case 'rewind': {
+          // Records the fork point durably; the thread reads back to it immediately, and the next
+          // prompt continues from it.
+          if (chat) {
+            Obj.update(chat, (chat) => {
+              chat.forkPoint = ev.id;
+            });
+          }
+          break;
+        }
+
         case 'retry': {
           if (!streaming) {
             void processor.retry();
@@ -194,7 +187,9 @@ const ChatRoot = ({
 
       onEvent?.(ev);
     });
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext]);
+    // `chat` is a dependency because the rewind branch writes to it: without it the handler would keep
+    // recording fork points on whichever chat was mounted first.
+  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, chat]);
 
   return (
     <ChatContextProvider

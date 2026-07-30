@@ -41,6 +41,15 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      */
     // TODO(burdon): Generalize to artifact associated with a skill.
     plan: Schema.optional(Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false))),
+
+    /**
+     * Message the conversation has been rewound to — the pending soft-fork point.
+     *
+     * Durable rather than UI state because the agent appends the continuation out-of-process. Reading
+     * stops here until a message naming it as its lineage parent arrives, after which the feed's own
+     * latest-wins lineage takes over and this is cleared.
+     */
+    forkPoint: Schema.optional(Obj.ID.pipe(FormInputAnnotation.set(false))),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({
