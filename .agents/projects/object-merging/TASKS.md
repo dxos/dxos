@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: index `meta.naturalKey` so detection stops scanning — that is what blocks automatic merge on space open (see Blocker below). Uncommitted: none. Last: `db.mergeDuplicates()`, the straggler fold, and the derived `SCALAR_META_FIELDS` fix; 4 convergence + 10 executor tests green over 3 clean repeats._
+_Resume: implement merge-on-entity-load per DESIGN.md §4.7 — index `meta.naturalKey`, add `Filter.naturalKey`, hook `entity-manager`'s load path. Uncommitted: none. Last: `db.mergeDuplicates()`, the straggler fold, and the derived `SCALAR_META_FIELDS` fix; 4 convergence + 10 executor tests green over 3 clean repeats._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -18,7 +18,8 @@ the phased rollout this ledger mirrors).
   - Identity field: **a new dedicated `EntityMeta` field** (not `meta.key`/`version`,
     not a `ForeignKey`); the derived-key namespacing sub-question is moot as a result.
   - Version matching: **exact**.
-  - Where the merge runs: **every client, on space open**; Phase 0 measures cost.
+  - Where the merge runs: every client — **on entity load**, revised from "on space
+    open" after the scan proved to hydrate the whole space (DESIGN.md §4.7).
   - Scope: **all entity kinds** (object, relation, type), phased — relations are
     merge subjects eventually, not just endpoints.
   - Merge-policy pluggability: left open, non-blocking; fixed semantics first.
@@ -68,7 +69,7 @@ than by a spike.
 - [x] Straggler fold (`foldLateEdits`) — asks automerge which data fields moved since
       `mergedAtHeads` and carries exactly those to the winner, then advances the
       watermark so the same edit is never folded twice.
-- [ ] **Run it automatically on space open — BLOCKED, see below.**
+- [ ] **Merge on entity load** (revises "on space open", DESIGN.md §4.7) — see below.
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
 - [ ] Property-based determinism over randomized op schedules (§5.3).
@@ -77,8 +78,8 @@ than by a spike.
 
 ## Phase 3: Indexing & automation
 
-- [ ] **`meta.naturalKey` index column** — unblocks automatic merge on space open
-      (see Blocker). Migration, populate, and a duplicate-groups query.
+- [ ] **`meta.naturalKey` index column + `Filter.naturalKey` equality pushdown** —
+      unblocks merge-on-load (see below). Point lookup, not a duplicate-groups scan.
 - [ ] Meta-key columns + planner pushdown for `Filter.key` / `Filter.foreignKeys`.
 - [ ] Indexer key-collision events trigger the merge automatically.
 
@@ -104,38 +105,46 @@ Scope decision 2026-07-30: every entity kind that can be stored is in scope, pha
 
 - [ ] Epoch-based compaction of merged-away tombstones.
 
-### Blocker: automatic merge on space open needs the index first
+### Next: merge on entity load (decision 2026-07-30, DESIGN.md §4.7)
 
-Wiring `mergeDuplicates()` into `DatabaseImpl._open` / `setSpaceRoot` was tried and
-**reverted**. Detection has no way to ask "which entities declare a natural key", so
-it scans `Filter.everything()`, which hydrates the entire space into the working set.
-That is not a test artifact — it broke three existing tests that assert lazy loading
-(`entity-manager.test.ts` "pending links are loaded" and "linked objects are loaded
-on update only if they were loaded before"; `query-api-stall.test.ts`), and at scale
-it is the working-set explosion this codebase has been fighting elsewhere.
+Merging on space open was implemented and **reverted**: detection had to enumerate
+every entity declaring a natural key, so it scanned `Filter.everything()` and
+hydrated the whole space. Not a test artifact — it broke three tests asserting lazy
+loading (`entity-manager.test.ts` "pending links are loaded" and "linked objects are
+loaded on update only if they were loaded before"; `query-api-stall.test.ts`).
 
-The fix is Phase 3 brought forward. It is a **feature, not a patch** — but it needs
-**no new RPC**: `execQuery` already carries a `QueryAST`, so this rides the existing
-service surface. Concretely, five pieces:
+**The trigger is entity hydration instead**, which makes the cost proportional to use
+and turns detection into a point lookup rather than a scan. Pieces:
 
-1. `index-core/src/indexes/entity-meta-index.ts` — a `naturalKey TEXT` column, the
+1. `index-core/src/indexes/entity-meta-index.ts` — `naturalKey TEXT` column, the
    `ALTER TABLE` migration (same pattern as `parent`/`createdAt`), populate from
-   `castData[ATTR_META]?.naturalKey` in both the INSERT and UPDATE branches, and a
-   query for rows where it is non-null.
-2. `echo-protocol/src/query/ast.ts` — a filter field alongside the existing
-   `metaKey`, expressing "declares a natural key" (and optionally "equals _k_").
-3. `echo/src/Filter.ts` — `Filter.naturalKey(...)`, mirroring `Filter.key`.
+   `castData[ATTR_META]?.naturalKey` in both the INSERT and UPDATE branches, and an
+   index on `(spaceId, naturalKey)`.
+2. `echo-protocol/src/query/ast.ts` — a `metaNaturalKey` filter field beside the
+   existing `metaKey`.
+3. `echo/src/Filter.ts` — `Filter.naturalKey(key)`, mirroring `Filter.key`.
 4. `echo-host/src/filter/filter-match.ts` — the post-filter branch, so the filter is
-   correct even when the fast path is not taken.
-5. `echo-host/src/query/query-planner.ts` — a new `QueryPlan.Selector` and the index
-   fast path that emits it. This is the notable part: `metaKey` is post-filter only
-   today, so nothing currently pushes a meta field to the index, and this would be
-   the first. A new selector also has to be handled wherever selectors are executed.
+   correct whether or not the fast path is taken.
+5. `echo-host/src/query/query-planner.ts` — index fast path for the equality case.
+   Same shape as the typename fast path, so likely no new `QueryPlan.Selector` —
+   this is where the on-load design is materially cheaper than merging on open,
+   which would have needed a novel "all non-null, grouped" selector.
+6. `echo-client/src/core-db/entity-manager.ts` — the hook. `loadObjectCoreById` /
+   `_loadObjectDocument` and the `_updateEvent` path are the seam.
 
-Sequenced as its own PR: a new query-plan selector plus an index migration is its own
-review surface, and it would swamp the merge work if bolted on.
+Needs **no new RPC**: `execQuery` already carries a `QueryAST`.
 
-Until then `db.mergeDuplicates()` is an explicit call: the caller opts into the scan.
+Open questions before implementing:
+
+- **Transient double-result** — a query's result set is computed from the index
+  before hydration completes, so a query spanning both duplicates can return two and
+  settle to one. Reactive queries re-emit; a one-shot `run()` may see the pair.
+  Acceptable, or does the query path need a merge barrier?
+- **Re-entrancy** — the merge hydrates the other candidates, which would re-trigger
+  it. Needs an in-flight guard keyed by natural key.
+
+Until this lands, `db.mergeDuplicates()` is an explicit call: the caller opts into
+the scan.
 
 ### Gotchas found while implementing
 

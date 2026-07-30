@@ -43,7 +43,13 @@
     `EntityKind.Object`, `.Relation`, and `.Type` (`echo/src/internal/common/types/entity.ts:124-128`)
     — delivered in phases, not restricted to objects. Relations are therefore merge
     _subjects_ eventually, not merely endpoints to be rewritten; the phasing is in §6.
-- **Open**: the identity field's name (§4.4).
+- **2026-07-30 (Josiah)** — **Revises "where the merge runs": on entity load, not on
+  space open.** Merging on open has to ask for every entity declaring a natural key,
+  which is unbounded and hydrates all of them just to discover that almost none are
+  duplicated — a working-set bloat paid on every open for objects the session may
+  never touch. Merging when an entity is hydrated instead makes the cost proportional
+  to use, and reduces detection to a **point lookup** (`naturalKey = X`, normally one
+  row) rather than a scan. See §4.7.
 
 ---
 
@@ -348,6 +354,43 @@ bootstrap changes) whose complexity is not justified when the merge engine handl
 the distinct-id case anyway. Class-1 collisions therefore remain errors; optionally,
 Phase 2's doctor diagnostic can surface them explicitly instead of a log warning.
 
+### 4.7 Where the merge runs: on load, not on open
+
+**Decided 2026-07-30, revising the earlier "client on space open".**
+
+Merging on space open was implemented and reverted (see the ledger). Detection had to
+enumerate every entity declaring a natural key, so it scanned and hydrated the whole
+space — which broke three tests asserting lazy loading, and is bloat paid on every
+open for objects the session may never touch.
+
+The trigger is **entity hydration** instead. When an entity carrying a natural key is
+loaded, look for others with the same key; merge only if more than one exists.
+
+Why this is the better shape:
+
+- **Cost is proportional to use.** An entity never loaded never costs anything.
+- **Detection becomes a point lookup.** `naturalKey = X` returns one row in the
+  common case and hydrates nothing extra, versus "every row with a natural key",
+  which hydrates everything to discover that almost none are duplicated.
+- **It fits the existing planner.** An equality filter on an indexed column is the
+  same shape as the typename fast path, rather than a novel "all non-null, grouped"
+  query needing its own selector.
+- **A duplicate cannot be observed without triggering the merge**, because anything
+  that would surface it — a query returning both, a reference resolving to one — must
+  hydrate it first. So laziness does not let unmerged duplicates leak somewhere that
+  eager merging would have caught.
+
+Consequences to design for:
+
+- **Transient double-result.** A query's result set is computed from the index before
+  hydration finishes, so a query spanning both duplicates can return two entities and
+  then settle to one as the merge lands. Reactive queries re-emit; one-shot `run()`
+  callers may observe the pre-merge pair. Whether that needs a barrier is open.
+- **Re-entrancy.** The merge hydrates the other candidates, which would re-trigger the
+  merge; needs an in-flight guard keyed by natural key.
+- **Convergence is unaffected.** The merge function is deterministic and idempotent,
+  so _when_ it runs does not change what it computes — only how soon peers converge.
+
 ### 4.6 Principal risks
 
 | Risk                                                                         | Severity     | Mitigation                                                                                                                                                                      |
@@ -511,8 +554,9 @@ settled, and the derived-key sub-question dissolved with them.
    would surface. If/when pluggability is wanted, the lens mapping vocabulary
    (typed, bidirectional, law-checked — lenses project) is a candidate merge-policy
    surface rather than inventing a new one.
-4. ~~**Where the merge runs**~~ — **settled**: every client on space open;
-   Phase 0 measures the cost.
+4. ~~**Where the merge runs**~~ — **settled**: every client, **on entity load**.
+   Revised from "on space open" once that proved to hydrate the whole space; see
+   §4.7 for why the load trigger is both cheaper and a smaller change.
 5. ~~**Scope**~~ — **settled**: all three entity kinds (object, relation, type),
    phased.
 
