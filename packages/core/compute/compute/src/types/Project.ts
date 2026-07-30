@@ -34,7 +34,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
   }).pipe(
     Schema.annotations({ title: 'Project' }),
     LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'rose' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
   ),
 ) {}
 
