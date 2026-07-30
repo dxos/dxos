@@ -9,6 +9,14 @@
   references updated to point at the merged object — instead of accumulating
   duplicates.
 
+## Decision log
+
+- **2026-07-30 (Josiah)** — Merge only distinct-id duplicates that share an identity
+  key ("collision class 2"). Do **not** derive object ids deterministically from the
+  identity key: same-id-different-document collisions ("collision class 1") remain
+  an error condition, as today. Consequences are folded into §4 and §6 below; the
+  rejected alternative is recorded in §4.5.
+
 ---
 
 ## 1. Problem statement
@@ -59,12 +67,15 @@ semantics (`echo/src/internal/common/types/meta.ts:105-109`,
   read-only through the proxy (`echo-handler.ts:349-352`). The id is the map key —
   it is not stored inside the entity structure.
 - **Concurrent creation of distinct ids is conflict-free**: different map keys, both
-  survive. The dangerous case is _same key, different documents_: `links[id]` is
+  survive. The pathological case is _same key, different documents_: `links[id]` is
   LWW, the losing document is orphaned (client warns:
-  `entity-manager.ts:1340-1346`).
+  `entity-manager.ts:1340-1346`). Per the decision log, this stays an error
+  condition — the design below never routes normal operation through it.
 - Convergence is guaranteed by Automerge **per document only**. Two documents
   without shared ancestry cannot be CRDT-merged (the "two-roots" problem —
-  `echo-client/docs/VERSIONING.md`).
+  `echo-client/docs/VERSIONING.md`). Duplicates created independently by two peers
+  therefore never share ancestry, so the merge must be a deterministic function of
+  the two states, not an Automerge merge.
 - Deletion is a tombstone (`system.deleted`, `entity-manager.ts:545-548`); the doc
   keeps replicating; `db.add` un-deletes; real unlinking exists
   (`unlinkObjects`, `entity-manager.ts:550-571`) but is not wired to `remove`. No GC.
@@ -89,10 +100,12 @@ semantics (`echo/src/internal/common/types/meta.ts:105-109`,
   has no key columns (`index-core/src/indexes/entity-meta-index.ts:119-153`).
   Every key lookup today is a type scan + linear post-filter — this is _why_ the
   trace-feed race happens (lookup can miss a not-yet-indexed object).
-- `EntityId.deterministic(...seed)` already exists, is documented for "well-known
-  objects", and is load-bearing in production for `Type.Type` entities keyed by
-  `(typename, version)` (`common/keys/src/entity-id.ts:37-140`,
-  `echo/src/internal/Entity/entity.ts:233-241`).
+- `EntityId.deterministic(...seed)` exists (`common/keys/src/entity-id.ts:37-140`)
+  but is used only for **in-memory** `Type.Type` declarations — chiefly to avoid
+  RNG calls at module top-level under workerd (`echo/src/internal/Entity/entity.ts:233-241`).
+  The persisted copy discards the deterministic id and mints a random one
+  (`proxy-db/database.ts:423-427`). No persisted, replicated object uses
+  deterministic ids today, and per the decision log none will as part of this work.
 
 ### 3.3 Reference model
 
@@ -128,9 +141,6 @@ propPath)` (`index-core/src/indexes/reverse-ref-index.ts`), surfaced as
   field-level merge.
 - **`copyObjectData`** (`assistant-toolkit/src/sync/sync.ts:72-109`): field copy +
   foreign-key union — the merge semantics we want, at the wrong layer.
-- **Branch merge**: `EntityManager.mergeBranch` does true `A.merge` over shared
-  ancestry (`entity-manager.ts:976-1024`) — the machinery for CRDT-merging two
-  copies of an object _when ancestry is shared_.
 - **`Migrations`/epochs**: id-preserving offline rewrite with full control over the
   new root (`sdk/migrations/`).
 
@@ -138,61 +148,28 @@ propPath)` (`index-core/src/indexes/reverse-ref-index.ts`), surfaced as
 
 ## 4. Feasibility assessment
 
-**Verdict: feasible, in layers.** No single mechanism solves it; three complementary
-mechanisms do, and each is independently useful. The critical insight is that
-determinism must come from **construction** (identical identity → identical id →
-same CRDT document) wherever possible, and from a **convergent repair algorithm**
-for everything else.
+**Verdict: feasible.** The mechanism is a single **convergent merge engine**:
+duplicates are detected by identity key, merged by a deterministic algorithm, and
+the merged-away object becomes a replicated redirect. Object id semantics are
+untouched — ids stay random, and the same-id-two-documents anomaly (collision
+class 1) remains an error, exactly as today.
 
-### 4.1 Layer 1 — deterministic identity at creation ("don't duplicate")
+### 4.1 The merge algorithm
 
-If the identity key deterministically derives the object id —
-`EntityId.deterministic(key, version)` — then two peers independently initializing
-the same state create the **same object id**. This alone collapses the problem for
-the primary use case, and the primitive already exists and is proven for
-`Type.Type`.
-
-Remaining hazard: same id, two documents. Two sub-strategies:
-
-- **(a) Inline placement (`placeIn: 'root-doc'`)**: both peers write
-  `objects[id] = …` in the _same_ document. Automerge resolves the concurrent map
-  assignment deterministically on all peers. Convergent, but the losing peer's
-  _nested edits made before sync_ are discarded with its subtree — acceptable for
-  small singletons (space properties, settings), not for content.
-- **(b) Deterministic bootstrap change (shared-ancestry trick)**: create the
-  object's initial Automerge change with a **fixed actor id, fixed timestamp
-  (0), and identical ops** derived purely from `(key, version, initial value)`.
-  Identical inputs → identical change hash → the two peers' documents **share a
-  root change** → they are no longer "two roots" and can be truly CRDT-merged
-  (`A.applyChanges` / `A.merge`) with **zero data loss**, including edits both
-  peers made before ever syncing. The `links[id]` LWW then picks a canonical
-  document id, and a small reconciler folds the losing document's changes into the
-  winner (both peers compute the same result — Automerge merge is
-  order-independent). This needs spike validation (can we construct the bootstrap
-  change through `@automerge/automerge`'s `change(…, { time: 0 })` with a pinned
-  actor, through automerge-repo's `create`/`import` path?), but nothing in the
-  storage layer forbids it, and `migrate-document.ts` + branch docs show we already
-  drop to raw Automerge APIs where needed.
-
-Layer 1 requires **no reference rewriting at all** — the id never differs.
-
-### 4.2 Layer 2 — convergent post-hoc merge ("repair duplicates")
-
-For objects that already exist with random ids (retrofits, sync pipelines keyed on
-`ForeignKey`, or bugs), a repair pass:
+For objects in the same space sharing an identity key + version:
 
 1. **Detect**: query objects grouped by identity key (+ version). Spike: type scan +
    post-filter (what `Filter.foreignKeys` does today). Later: index-backed (§6
    Phase 3).
 2. **Choose the winner deterministically**: minimum `EntityId` (ULID sort — also the
    earliest-created, a nice semantic). Pure function of the candidate id set.
-3. **Merge data deterministically**:
-   - If the duplicates share ancestry (Layer 1b objects): true Automerge merge —
-     lossless and trivially convergent.
-   - Otherwise: a pure deterministic function `merge(winnerState, loserState)`
-     applied via `atomicReplaceObject`-style single change — field-wise
-     winner-preference, `meta.keys` union (the `copyObjectData` semantics, made
-     deterministic). Lossy at field granularity but convergent.
+3. **Merge data deterministically**: a pure function `merge(winnerState, loserState)`
+   applied to the winner via an `atomicReplaceObject`-style single change —
+   field-wise winner-preference, `meta.keys` union (the `copyObjectData` semantics,
+   made deterministic). Duplicates never share Automerge ancestry (§3.1), so this
+   function — not an Automerge merge — is the only merge path. Convergent because
+   it is a pure function of the two entity states; lossy at field granularity by
+   design (see risk table).
 4. **Redirect, don't erase**: write `system.mergedInto: <winnerId>` on the loser and
    tombstone it (`system.deleted = true`). The loser keeps replicating (this is
    essential — late peers must be able to run the same merge and follow the
@@ -205,8 +182,9 @@ For objects that already exist with random ids (retrofits, sync pipelines keyed 
    internally). Rewriting `X→loser` to `X→winner` is idempotent, so concurrent
    rewriters converge. Refs that can't be rewritten still resolve via the redirect.
 
-**Convergence under concurrent merging by peers with different views** — the key
-correctness argument:
+### 4.2 Convergence under concurrent merging
+
+The key correctness argument, for peers acting on different views:
 
 - Peer A sees duplicates `{X, Y}` (winner X); peer B sees `{X, Y, Z}` with
   `Z < X` (winner Z). A writes `Y.mergedInto = X`; B writes `Y.mergedInto = Z` and
@@ -216,11 +194,10 @@ correctness argument:
   (it must be idempotent and cheap when there's nothing to do) collapses chains and
   re-rewrites refs to the final winner.
 - Merges of data are re-runnable: if the loser receives further changes after a
-  peer merged it (offline straggler), the next merge pass folds them in. With
-  shared ancestry this is exact; with the deterministic-function fallback it is
-  eventually consistent at the same granularity as the function.
+  peer merged it (offline straggler), the next merge pass folds them in — eventual
+  consistency at the granularity of the merge function.
 
-### 4.3 Layer 3 — GC (later)
+### 4.3 GC (later)
 
 Merged-away tombstones accumulate. An epoch-based compaction
 (`compactDocumentsEpochMigration` precedent) can eventually drop loser documents
@@ -243,17 +220,29 @@ and map the other onto it later:
    folding), but multi-key alias identity makes winner selection and key-union
    semantics subtler (key sets can _become_ overlapping later). Defer.
 
-### 4.5 Principal risks
+### 4.5 Rejected alternative: deterministic object ids
 
-| Risk                                                                                     | Severity     | Mitigation                                                                                                                                                    |
-| ---------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Deterministic-bootstrap change can't be constructed through automerge-repo's API surface | Medium       | Spike task #1; fallback is inline placement + Layer 2 repair.                                                                                                 |
-| `EntityId.deterministic` collision (64-bit FNV packing)                                  | Low          | Well-known objects per space number in the dozens; document the birthday bound; optionally lengthen the hash before GA.                                       |
-| Redirect-following in the resolver adds a hop to every unresolved load                   | Low          | Only consulted on miss/tombstone; measured in spike.                                                                                                          |
-| Ref-rewrite misses (markdown, feeds, side maps)                                          | Medium       | Redirects make misses non-fatal; doctor diagnostic extended to report them; opportunistic rewrite passes.                                                     |
-| Concurrent merge + user edit on the loser (non-shared-ancestry fallback) loses the edit  | Medium       | Re-runnable merges shrink the window; shared-ancestry path eliminates it; scope Phase-1 adoption to init-state objects where the window is empty in practice. |
-| Proxy identity: live proxies holding the loser                                           | Medium       | Loser stays resolvable (tombstone+redirect); optionally rebind cores (`_rebindObjects` precedent) in a later phase.                                           |
-| Feed-backed objects                                                                      | Out of scope | Feeds already collapse by id; deterministic feed ids (Layer 1) fix feed-creation races.                                                                       |
+Deriving the object id from the identity key (`EntityId.deterministic(key,
+version)`) would prevent duplication by construction and avoid all reference
+rewriting. **Rejected (decision log)**: it converts key collisions into
+same-id-different-document collisions, which the storage layer treats as an
+anomaly (LWW on `links[id]`, losing document silently orphaned,
+`entity-manager.ts:1340-1346`) — routing normal operation through an error-recovery
+path. Making that path safe would require additional machinery (e.g. shared-ancestry
+bootstrap changes) whose complexity is not justified when the merge engine handles
+the distinct-id case anyway. Class-1 collisions therefore remain errors; optionally,
+Phase 2's doctor diagnostic can surface them explicitly instead of a log warning.
+
+### 4.6 Principal risks
+
+| Risk                                                                         | Severity     | Mitigation                                                                                                                                          |
+| ---------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Redirect-following in the resolver adds a hop to every unresolved load       | Low          | Only consulted on miss/tombstone; measured in spike.                                                                                                |
+| Ref-rewrite misses (markdown, feeds, side maps)                              | Medium       | Redirects make misses non-fatal; doctor diagnostic extended to report them; opportunistic rewrite passes.                                           |
+| Concurrent merge + user edit on the loser loses the edit (field granularity) | Medium       | Re-runnable merges shrink the window; scope early adoption to init-state objects where the concurrent-edit window is empty in practice.             |
+| Proxy identity: live proxies holding the loser                               | Medium       | Loser stays resolvable (tombstone+redirect); optionally rebind cores (`_rebindObjects` precedent) in a later phase.                                 |
+| Merge function semantics disputed per type (arrays: union vs winner)         | Medium       | Ship fixed field-wise semantics first; revisit pluggability (open question 3) only with evidence.                                                   |
+| Feed-backed objects                                                          | Out of scope | Feeds already collapse by id at the index (`echo-feed-codec.ts:20-24`); feed-object dedup rides on the same identity-key mechanism if needed later. |
 
 ---
 
@@ -267,8 +256,6 @@ Determinism and convergence are the product; the tests are the spec.
      edge decreases the id), chain collapse on re-run.
    - Deterministic merge function: `merge(a,b)` idempotent (`merge(a,a) = a`),
      deterministic across isolates, `meta.keys` union correctness.
-   - Deterministic bootstrap change: identical `(key, version, seed)` → identical
-     change hash across two independent `EchoTestPeer`s; divergent seeds → distinct.
 2. **Multi-peer convergence (echo-client-e2e, using the existing `EchoTestPeer` +
    replication test harness, cf. `integration.test.ts:290-311`)**
    - k peers (2–4) each create the same keyed object, edit fields concurrently,
@@ -278,7 +265,7 @@ Determinism and convergence are the product; the tests are the spec.
    - Partial-view merges: peers merge different duplicate subsets concurrently →
      final state converges to global-minimum winner via chains.
    - Straggler: peer offline during merge keeps editing the loser; on reconnect the
-     re-run folds its edits (exact under shared ancestry).
+     re-run folds its edits at merge-function granularity.
    - Relations: duplicates as relation endpoints → endpoints rewritten, no
      transitive-deletion misfires (`object-core.ts:573-617` semantics preserved).
 3. **Property-based determinism**: randomized op schedules (fast-check style, seeded)
@@ -299,46 +286,43 @@ Determinism and convergence are the product; the tests are the spec.
 
 ### Phase 0 — Spike (time-boxed ~1–2 weeks, throwaway code, tests only)
 
-Goal: retire the two unknowns and pick the architecture. All work in
+Goal: prove convergence end-to-end and settle the open questions. All work in
 `echo-client`/`echo-host` test files behind no flag (never shipped).
 
-1. **Deterministic bootstrap change**: construct two documents on two isolated
-   peers from the same `(key, version, initial-value)` seed with pinned actor/time;
-   assert shared root hash; `A.applyChanges` across them; measure what
-   automerge-repo import requires.
-2. **Minimal end-to-end merge**: 3 `EchoTestPeer`s, duplicate keyed objects,
+1. **Minimal end-to-end merge**: 3 `EchoTestPeer`s, duplicate keyed objects,
    min-id winner, `mergedInto` redirect (as a plain `system` field), resolver
    redirect hook, ref rewrite via `Query.referencedBy` — assert convergence under
-   randomized sync orders.
-3. **Decision memo**: Layer 1a vs 1b vs both; identity field (`meta.key+version`
-   recommendation confirmed or revised); where the merge runs (client on space
-   open vs host maintenance job — spike should measure both).
+   randomized sync orders, including the partial-view chain case.
+2. **Merge-function shape**: prototype field-wise winner-preference on 2–3 real
+   types (Collection, Feed, an Expando) and check the semantics are acceptable.
+3. **Decision memo**: identity field (`meta.key+version` recommendation confirmed
+   or revised); where the merge runs (client on space open vs host maintenance job
+   vs indexer-triggered — spike should measure); merge-function semantics.
 
 Exit criteria: convergence demonstrated in tests; go/no-go with chosen shape.
 
-### Phase 1 — Foundations: "well-known objects" (no merge engine yet)
+### Phase 1 — Foundations (no merge engine yet)
 
-- Public API to create identity-keyed objects, e.g.
-  `Obj.make(T, props, { wellKnown: { key, version } })` → deterministic id +
-  meta stamped (+ deterministic bootstrap change if 1b won the spike).
 - `system.mergedInto` schema field + resolver redirect-following (inert until
   Phase 2 writes it) + proto-guard snapshot.
 - Expose internal relation-endpoint mutation (`ObjectCore.setSource/setTarget`
   plumbed to an internal API, not public).
-- Adopt in the **three known hot spots** where creation is init-only and the
-  concurrent-edit window is empty: trace feed (`FeedTraceSink`), persisted schema
-  (`db.addType`), `SHARED` space-order Expando. These get dedup _by construction_
-  with no merge engine.
+- Bless a creation-side API for declaring an identity key, e.g.
+  `Obj.make(T, { [Obj.Meta]: { key, version }, ...props })` plus a `db.ensure`-style
+  helper that creates keyed state immediately (no check-then-create) and relies on
+  the merge engine to repair races.
 - Feature flag: config-gated, default off outside tests.
 
-### Phase 2 — Merge engine (repair path), flagged
+### Phase 2 — Merge engine, flagged
 
 - Duplicate detection (query-based post-filter is fine at this scale).
-- Deterministic merge executor: winner selection, data merge (shared-ancestry exact
-  path + deterministic-function fallback), tombstone+redirect, opportunistic ref
-  rewrite. Runs on space open + on demand (`space.internal` / doctor action).
+- Deterministic merge executor: winner selection, deterministic data merge,
+  tombstone+redirect, opportunistic ref rewrite. Runs on space open + on demand
+  (`space.internal` / doctor action).
 - Extend `plugin-doctor` with a duplicates diagnostic + "merge now" repair action —
-  the manual escape hatch ships before the automatic path.
+  the manual escape hatch ships before the automatic path. Also surface class-1
+  (same-id-two-documents) anomalies as an explicit diagnostic instead of a log
+  warning.
 - Full multi-peer convergence + property test suite (§5.2–5.4).
 
 ### Phase 3 — Indexing & automation
@@ -352,10 +336,12 @@ Exit criteria: convergence demonstrated in tests; go/no-go with chosen shape.
 
 ### Phase 4 — Adoption & generalization
 
-- Convert `SpaceProperties` + root collection to well-known identity (drop the
-  `=== 1` hang and the `CollectionModel` invariant in favor of merge semantics).
+- Convert the known hot spots to keyed creation + merge: trace feed
+  (`FeedTraceSink`), persisted schema (`db.addType`), `SHARED` space-order Expando,
+  `SpaceProperties` + root collection (drop the `=== 1` hang and the
+  `CollectionModel` invariant in favor of merge semantics).
 - Restore plugin default-content provisioning (`OnCreateSpace` for table/thread/
-  assistant) on top of well-known objects — the original motivating feature.
+  assistant) on top of keyed objects — the original motivating feature.
 - Generalize the merge key to `meta.keys` foreign keys; migrate `syncObjects`,
   `extractor/getOrCreate`, plugin-ibkr alias folding onto the engine; delete the
   four divergent dedup implementations.
@@ -373,9 +359,9 @@ Exit criteria: convergence demonstrated in tests; go/no-go with chosen shape.
 2. **Version matching**: exact-match identity (recommended) or semver-range
    (e.g. merge `1.0.1` into `1.0.0` state)? Exact is simpler and deterministic;
    ranges reintroduce ambiguity about the winner.
-3. **Merge policy pluggability**: is field-wise winner-preference enough for the
-   fallback path, or do types need to declare a merge annotation (e.g. arrays:
-   union vs winner)? Recommend shipping fixed semantics first.
+3. **Merge policy pluggability**: is field-wise winner-preference enough, or do
+   types need to declare a merge annotation (e.g. arrays: union vs winner)?
+   Recommend shipping fixed semantics first.
 4. **Where the merge runs**: every client on space open (deterministic ⇒ safe, but
    redundant work) vs host-side maintenance vs indexer-triggered. Spike measures.
 5. **Scope**: objects only in Phases 1–3; relations as merge _subjects_ (not just
