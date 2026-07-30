@@ -8,7 +8,12 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
 
-import { type EdgeIdentity, authenticateViaChallengeEndpoint, handleAuthChallenge } from './edge-identity';
+import {
+  type EdgeIdentity,
+  authenticateViaChallengeEndpoint,
+  handleAuthChallenge,
+  parseChallengeHeader,
+} from './edge-identity';
 import { encodeAuthHeader } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
 
@@ -129,9 +134,10 @@ export abstract class BaseHttpClient {
           if (body.success) {
             return body.data;
           }
-        } else if (response.status === 401 && response.headers.get('WWW-Authenticate') !== null && !handledAuth) {
-          // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets
-          // `WWW-Authenticate` on its own 401s; upstream-forwarded 401s lack it.
+        } else if (response.status === 401 && hasVpChallenge(response) && !handledAuth) {
+          // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets a
+          // VP challenge on its own 401s; upstream-forwarded 401s carry none, or carry an
+          // unrelated scheme.
           this._authHeader = await this._handleUnauthorized(response);
           handledAuth = true;
           continue;
@@ -205,7 +211,7 @@ export abstract class BaseHttpClient {
           return response;
         }
 
-        if (response.status === 401 && response.headers.get('WWW-Authenticate') !== null && !handledAuth) {
+        if (response.status === 401 && hasVpChallenge(response) && !handledAuth) {
           this._authHeader = await this._handleUnauthorized(response);
           handledAuth = true;
           continue;
@@ -251,6 +257,16 @@ export abstract class BaseHttpClient {
     return encodeAuthHeader(challenge);
   }
 }
+
+/**
+ * Whether a response carries a VerifiablePresentation challenge we can actually answer.
+ *
+ * Header *presence* is not enough: a 401 forwarded from upstream may carry an unrelated scheme
+ * (`Bearer realm="…"`), which yields no VP challenge. Retrying those through the auth path would
+ * fail on a missing challenge and mask the real upstream error.
+ */
+const hasVpChallenge = (response: Response): boolean =>
+  parseChallengeHeader(response.headers.get('WWW-Authenticate')) !== undefined;
 
 const createRequest = (
   { method, body, json = true }: HttpRequestArgs,

@@ -135,6 +135,38 @@ describe('EdgeHttpClient blobs', () => {
     expect((fileCalls[1][1]?.headers as Record<string, string>).Authorization).toMatch(/^VerifiablePresentation/);
   });
 
+  test('an upstream 401 with a non-VP challenge is not retried through the auth path', async ({ expect }) => {
+    // `WWW-Authenticate` being non-null is not enough — an upstream 401 can carry an unrelated
+    // scheme, which yields no VP challenge. Retrying those would fail on the missing challenge and
+    // surface an invariant error in place of the real upstream failure.
+    const identity: EdgeIdentity = {
+      peerKey: 'peer-key',
+      identityDid: 'did:halo:test',
+      presentCredentials: async (): Promise<Presentation> => ({}),
+    };
+
+    const fetchMock = vi.fn(async (input: any) => {
+      const url = String(input instanceof URL ? input : (input.url ?? input));
+      if (url.endsWith('/auth')) {
+        return new Response(null, { status: 404 });
+      }
+      return new Response(null, { status: 401, headers: { 'WWW-Authenticate': 'Bearer realm="upstream"' } });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity(identity);
+
+    // The upstream 401 must surface as itself. Gating on header presence alone sent this through
+    // the auth path, where the missing challenge threw and was rewrapped as a generic
+    // 'Error processing request.' — hiding the actual status from the caller.
+    await expect(client.getBlob(Context.default(), 'abc123')).rejects.toThrow(/HTTP code 401/);
+
+    // Exactly one attempt at the resource: no auth retry.
+    const fileCalls = fetchMock.mock.calls.filter((call) => String(call[0]).includes('/api/file/abc123'));
+    expect(fileCalls.length).toBe(1);
+  });
+
   test('getBlob returns bytes on success', async ({ expect }) => {
     const fetchMock = vi.fn(async (input: any) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
