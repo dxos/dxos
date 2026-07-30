@@ -8,6 +8,11 @@
   (meta key + version) deterministically merge into a single object — with all
   references updated to point at the merged object — instead of accumulating
   duplicates.
+- **Consumers**: (1) app-state initialization (this doc's primary case); (2) schema
+  migrations that split objects (`.agents/projects/lenses/`) will stamp derived
+  identity keys on fan-out-created objects and rely on this engine to collapse
+  concurrent duplicates — their requirements are folded into §4.1/§4.2, Phase 1,
+  and open questions 1/3 below.
 
 ## Decision log
 
@@ -165,8 +170,12 @@ For objects in the same space sharing an identity key + version:
    earliest-created, a nice semantic). Pure function of the candidate id set.
 3. **Merge data deterministically, over the whole candidate set**: the merged
    state is a pure function of the **complete set of duplicates visible to the
-   peer**, applied to the winner via an `atomicReplaceObject`-style single change —
-   NOT a pairwise fold. Pairwise winner-preference is not associative (for ids
+   peer**, applied to the winner as **one Automerge change that writes only the
+   fields whose values differ** from the computed result — per-field writes, not a
+   whole-object replace (an `atomicReplaceObject`-style replace rewrites every
+   field, so a concurrent user edit to a property the merge never touched would
+   lose the LWW; empty window for init-state objects, but Phase 4 generalizes to
+   user data). And NOT a pairwise fold. Pairwise winner-preference is not associative (for ids
    `Z < X < Y` where `Z` lacks field `a`, merging `X` then `Y` into `Z` yields a
    different `a` than `Y` then `X`), so different application orders would diverge.
    Instead, per field: take the value from the **smallest-id candidate that defines
@@ -179,8 +188,9 @@ For objects in the same space sharing an identity key + version:
    function once views converge. Duplicates never share Automerge ancestry (§3.1),
    so this function — not an Automerge merge — is the only merge path; lossy at
    field granularity by design (see risk table).
-4. **Redirect, don't erase**: write `system.mergedInto: <winnerId>` on the loser and
-   tombstone it (`system.deleted = true`). The loser keeps replicating (this is
+4. **Redirect, don't erase**: write `system.mergedInto: <winnerId>` (plus
+   `system.mergedAtHeads` — the loser's heads at merge time, used by the straggler
+   fold in §4.2) on the loser and tombstone it (`system.deleted = true`). The loser keeps replicating (this is
    essential — late peers must be able to run the same merge and follow the
    redirect). `mergedInto` is **sticky and authoritative**: `db.add` today
    un-deletes a tombstoned object (§3.1), so the un-delete path must special-case
@@ -212,9 +222,14 @@ The key correctness argument, for peers acting on different views:
   chains are finite, acyclic, and end at the global minimum. Re-running the merge
   (it must be idempotent and cheap when there's nothing to do) collapses chains and
   re-rewrites refs to the final winner.
-- Merges of data are re-runnable: if the loser receives further changes after a
-  peer merged it (offline straggler), the next merge pass folds them in — eventual
-  consistency at the granularity of the merge function.
+- Merges of data are re-runnable, and **stragglers can keep their edits**: the
+  merge records the loser's heads at merge time (e.g. `system.mergedAtHeads`
+  alongside `mergedInto`). A later pass diffs the loser from those heads
+  (`A.getHeads`/`A.diff` — precedent in `echo-handler/edit-history.ts:76-77`) and
+  folds **exactly the late edits** into the winner as per-property writes, instead
+  of re-running the field-wise merge (which would prefer the smallest-id candidate
+  and could discard the straggler's change). Field-wise recompute remains the
+  fallback when recorded heads are unavailable.
 
 ### 4.3 GC (later)
 
@@ -254,15 +269,15 @@ Phase 2's doctor diagnostic can surface them explicitly instead of a log warning
 
 ### 4.6 Principal risks
 
-| Risk                                                                         | Severity     | Mitigation                                                                                                                                          |
-| ---------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Redirect-following in the resolver adds a hop to every unresolved load       | Low          | Only consulted on miss/tombstone; measured in spike.                                                                                                |
-| Ref-rewrite misses (markdown, feeds, side maps)                              | Medium       | Redirects make misses non-fatal; doctor diagnostic extended to report them; opportunistic rewrite passes.                                           |
-| Concurrent merge + user edit on the loser loses the edit (field granularity) | Medium       | Re-runnable merges shrink the window; scope early adoption to init-state objects where the concurrent-edit window is empty in practice.             |
-| Proxy identity: live proxies holding the loser                               | Medium       | Loser stays resolvable (tombstone+redirect); optionally rebind cores (`_rebindObjects` precedent) in a later phase.                                 |
-| Merge function semantics disputed per type (arrays: union vs winner)         | Medium       | Ship fixed field-wise semantics first; revisit pluggability (open question 3) only with evidence.                                                   |
-| Mixed client versions: old clients can't follow `mergedInto` redirects       | Medium       | Ref rewriting is the compat path; flag stays off until a min-client-version gate; mixed-version tests (§5.7).                                       |
-| Feed-backed objects                                                          | Out of scope | Feeds already collapse by id at the index (`echo-feed-codec.ts:20-24`); feed-object dedup rides on the same identity-key mechanism if needed later. |
+| Risk                                                                         | Severity     | Mitigation                                                                                                                                                                      |
+| ---------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Redirect-following in the resolver adds a hop to every unresolved load       | Low          | Only consulted on miss/tombstone; measured in spike.                                                                                                                            |
+| Ref-rewrite misses (markdown, feeds, side maps)                              | Medium       | Redirects make misses non-fatal; doctor diagnostic extended to report them; opportunistic rewrite passes.                                                                       |
+| Concurrent merge + user edit on the loser loses the edit (field granularity) | Medium       | Heads-diff straggler fold (§4.2) preserves late edits per-property; per-field writes (§4.1 step 3) protect untouched winner fields; scope early adoption to init-state objects. |
+| Proxy identity: live proxies holding the loser                               | Medium       | Loser stays resolvable (tombstone+redirect); optionally rebind cores (`_rebindObjects` precedent) in a later phase.                                                             |
+| Merge function semantics disputed per type (arrays: union vs winner)         | Medium       | Ship fixed field-wise semantics first; revisit pluggability (open question 3) only with evidence.                                                                               |
+| Mixed client versions: old clients can't follow `mergedInto` redirects       | Medium       | Ref rewriting is the compat path; flag stays off until a min-client-version gate; mixed-version tests (§5.7).                                                                   |
+| Feed-backed objects                                                          | Out of scope | Feeds already collapse by id at the index (`echo-feed-codec.ts:20-24`); feed-object dedup rides on the same identity-key mechanism if needed later.                             |
 
 ---
 
@@ -339,18 +354,21 @@ Exit criteria: convergence demonstrated in tests; go/no-go with chosen shape.
 - `system.mergedInto` schema field + resolver redirect-following (inert until
   Phase 2 writes it) + proto-guard snapshot.
 - Expose internal relation-endpoint mutation (`ObjectCore.setSource/setTarget`
-  plumbed to an internal API, not public).
+  plumbed to a small **named** internal API, not inlined into the merge executor —
+  it has a second consumer: migration relation rewiring (lenses project).
 - Bless a creation-side API for declaring an identity key, e.g.
   `Obj.make(T, { [Obj.Meta]: { key, version }, ...props })` plus a `db.ensure`-style
   helper that creates keyed state immediately (no check-then-create) and relies on
-  the merge engine to repair races.
+  the merge engine to repair races. Keep `db.ensure` generic — it is also the
+  migration fan-out primitive, not an app-init special case.
 - Feature flag: config-gated, default off outside tests.
 
 ### Phase 2 — Merge engine, flagged
 
 - Duplicate detection (query-based post-filter is fine at this scale).
 - Deterministic merge executor: winner selection, set-based deterministic data
-  merge, tombstone+redirect, opportunistic ref rewrite. Runs on space open + on
+  merge applied as per-field writes, tombstone+redirect (+ `mergedAtHeads`),
+  heads-diff straggler fold, opportunistic ref rewrite. Runs on space open + on
   demand (`space.internal` / doctor action).
 - Sticky-tombstone guard: `db.add` / restore of an entity with `system.mergedInto`
   set resolves to the winner instead of un-deleting the loser (§4.1 step 4).
@@ -396,13 +414,18 @@ Exit criteria: convergence demonstrated in tests; go/no-go with chosen shape.
 ## 7. Open questions (for design review before the spike)
 
 1. **Identity field**: confirm `meta.key` + `meta.version` (recommended) vs a
-   designated `ForeignKey` source vs a new dedicated field.
+   designated `ForeignKey` source vs a new dedicated field. Sub-question from the
+   migrations consumer: are **derived, non-registry strings** (e.g.
+   `<migrationId>:<sourceId>:<role>`) admissible in `meta.key`, or does the key
+   need a namespacing convention to keep registry FQNs and derived keys apart?
 2. **Version matching**: exact-match identity (recommended) or semver-range
    (e.g. merge `1.0.1` into `1.0.0` state)? Exact is simpler and deterministic;
    ranges reintroduce ambiguity about the winner.
 3. **Merge policy pluggability**: is field-wise winner-preference enough, or do
    types need to declare a merge annotation (e.g. arrays: union vs winner)?
-   Recommend shipping fixed semantics first.
+   Recommend shipping fixed semantics first. If/when pluggability is wanted, the
+   lens mapping vocabulary (typed, bidirectional, law-checked — lenses project)
+   is a candidate merge-policy surface rather than inventing a new one.
 4. **Where the merge runs**: every client on space open (deterministic ⇒ safe, but
    redundant work) vs host-side maintenance vs indexer-triggered. Spike measures.
 5. **Scope**: objects only in Phases 1–3; relations as merge _subjects_ (not just
