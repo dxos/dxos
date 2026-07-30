@@ -15,8 +15,11 @@ export type LinkTooltipProps = {
   render: RenderCallback<{ url: string }>;
 };
 
+// Internal object links render their own inline/block preview, so a raw-URI hover tooltip is noise.
+const INTERNAL_SCHEMES = ['dxn:', 'echo:'];
+
 /**
- * Hover tooltip showing a rendered preview for markdown links (skips `dxn:` URLs).
+ * Hover tooltip showing a rendered preview for markdown links (skips internal object URIs).
  */
 export const linkTooltip = ({ render }: LinkTooltipProps) => {
   return hoverTooltip((view, pos, side) => {
@@ -32,7 +35,7 @@ export const linkTooltip = ({ render }: LinkTooltipProps) => {
     }
 
     const urlText = view.state.sliceDoc(url.from, url.to);
-    if (urlText.startsWith('dxn')) {
+    if (INTERNAL_SCHEMES.some((scheme) => urlText.startsWith(scheme))) {
       return null;
     }
 

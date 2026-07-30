@@ -4,7 +4,15 @@
 
 import { type EditorView } from '@codemirror/view';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { Fragment, type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  Fragment,
+  type KeyboardEvent,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -12,6 +20,7 @@ import {
   DX_ANCHOR_ACTIVATE,
   type DxAnchorActivate,
   Icon,
+  Input,
   Popover,
   ScrollArea,
   toLocalizedString,
@@ -20,7 +29,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
-import { type EditorMenuGroup, type EditorMenuItem } from './menu';
+import { type EditorMenuGroup, type EditorMenuItem, getMenuItem } from './menu';
 
 export type EditorMenuProviderProps = PropsWithChildren<{
   // Provided as a getter (not a value prop) so the live `EditorView` is never carried in a React prop that
@@ -31,10 +40,16 @@ export type EditorMenuProviderProps = PropsWithChildren<{
   open?: boolean;
   defaultOpen?: boolean;
   numItems?: number;
+  /** Render the menu as a combobox: the popover owns the query input and takes focus from the editor. */
+  search?: boolean;
+  query?: string;
+  searchPlaceholder?: string;
   onOpenChange?: (event: { view: EditorView; open: boolean; trigger?: string }) => void;
   onActivate?: (event: { view: EditorView; trigger?: string }) => void;
   onSelect?: (event: { view: EditorView; item: EditorMenuItem }) => void;
   onCancel?: (event: { view: EditorView }) => void;
+  onQueryChange?: (query: string) => void;
+  onNavigate?: (direction: 'up' | 'down') => void;
 }>;
 
 /**
@@ -50,12 +65,16 @@ export const EditorMenuProvider = ({
   open: openProp,
   defaultOpen,
   numItems = 8,
+  search,
+  query = '',
+  searchPlaceholder,
   onOpenChange,
   onActivate,
   onSelect,
   onCancel,
+  onQueryChange,
+  onNavigate,
 }: EditorMenuProviderProps) => {
-  const { tx } = useThemeContext();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Hold the latest `getView` so callbacks/effects always read the current view without re-subscribing.
@@ -116,6 +135,29 @@ export const EditorMenuProvider = ({
 
   const menuGroups = groups?.filter((group) => group.items.length > 0) ?? [];
 
+  const handleSearchKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      switch (event.key) {
+        case 'ArrowUp':
+        case 'ArrowDown': {
+          event.preventDefault();
+          onNavigate?.(event.key === 'ArrowUp' ? 'up' : 'down');
+          break;
+        }
+
+        case 'Enter': {
+          const item = getMenuItem(menuGroups, currentItem);
+          if (item) {
+            event.preventDefault();
+            handleSelect(item);
+          }
+          break;
+        }
+      }
+    },
+    [menuGroups, currentItem, handleSelect, onNavigate],
+  );
+
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
       <Popover.VirtualTrigger virtualRef={triggerRef} />
@@ -124,7 +166,7 @@ export const EditorMenuProvider = ({
       <Popover.Portal>
         <Popover.Content
           align='start'
-          classNames={['flex flex-col', !menuGroups.length && 'hidden']}
+          classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']}
           style={{
             maxBlockSize: 36 * numItems + 10,
           }}
@@ -135,8 +177,23 @@ export const EditorMenuProvider = ({
               onCancel?.({ view: currentView });
             }
           }}
-          onOpenAutoFocus={(event) => event.preventDefault()}
+          // In search mode the query is typed into the popover's own input, so it must take focus.
+          onOpenAutoFocus={search ? undefined : (event) => event.preventDefault()}
         >
+          {search && (
+            <Input.Root>
+              <Input.TextInput
+                autoFocus
+                density='sm'
+                variant='subdued'
+                classNames='shrink-0 mbe-1'
+                value={query}
+                placeholder={searchPlaceholder}
+                onChange={(event) => onQueryChange?.(event.target.value)}
+                onKeyDown={handleSearchKeyDown}
+              />
+            </Input.Root>
+          )}
           <Popover.Viewport asChild classNames='dx-container'>
             <ScrollArea.Root thin>
               <ScrollArea.Viewport>

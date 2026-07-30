@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
@@ -17,10 +18,31 @@ import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
 
-import { Markdown } from '../types';
+import { meta } from '#meta';
+
+const getLabel = (object: Obj.Unknown): Label => {
+  const typename = Obj.getTypename(object);
+  // A typeless object cannot key a translation namespace, so it falls back to the literal.
+  const placeholder: Label = typename
+    ? ['object-name.placeholder', { ns: typename, defaultValue: 'New object' }]
+    : 'New object';
+  return Obj.getLabel(object) ?? placeholder;
+};
+
+/**
+ * Insert a link to `object`; "@@" (block mode) puts a block embed on its own line.
+ */
+const insertLink = (view: EditorView, head: number, label: string, uri: string, block: boolean): void => {
+  const link = `[${label}](${uri})`;
+  if (block) {
+    insertAtLineStart(view, head, `!${link}\n`);
+  } else {
+    insertAtCursor(view, head, `${link} `);
+  }
+};
 
 export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Unknown) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const filter = useMemo(
@@ -40,9 +62,11 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
         return Promise.resolve([]);
       }
 
+      // A second "@" switches the link query into block-embed mode, so "@@foo" searches for "foo".
+      const block = query?.startsWith('@') ?? false;
+      const name = (block ? query!.slice(1) : (query ?? '')).toLowerCase();
+
       return Effect.gen(function* () {
-        // A second "@" switches the link query into block-embed mode, so "@@foo" searches for "foo".
-        const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
         const [results, containing] = yield* Effect.all(
           [
             Database.query(Query.select(filter)).run,
@@ -51,68 +75,50 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
           { concurrency: 'unbounded' },
         );
 
-        const getLabel = (object: Obj.Unknown): Label => {
-          const typename = Obj.getTypename(object);
-          // A typeless object cannot key a translation namespace, so it falls back to the literal.
-          const placeholder: Label = typename
-            ? ['object-name.placeholder', { ns: typename, defaultValue: 'New object' }]
-            : 'New object';
-          return Obj.getLabel(object) ?? placeholder;
-        };
-
         const items = results
           // Exclude the current document; it cannot link to itself.
           .filter((object) => object.id !== current?.id)
-          .filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
-          .map((object: Obj.Unknown): EditorMenuItem => {
+          .map((object: Obj.Unknown) => ({ object, label: toLocalizedString(getLabel(object), t) }))
+          .filter(({ label }) => label.toLowerCase().includes(name))
+          .sort((a, b) => a.label.localeCompare(b.label))
+          .map(({ object, label }): EditorMenuItem => {
             const type = Obj.getType(object);
             const icon = type
               ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(type)))?.icon
               : undefined;
-            const label = toLocalizedString(getLabel(object), t);
             return {
               id: object.id,
               label,
               icon,
-              onSelect: ({ view, head }) => {
-                const link = `[${label}](${Obj.getURI(object)})`;
-                // "@@" inserts a block embed on its own line instead of an inline link.
-                if (query?.startsWith('@')) {
-                  insertAtLineStart(view, head, `!${link}\n`);
-                } else {
-                  insertAtCursor(view, head, `${link} `);
-                }
-              },
+              onSelect: ({ view, head }) => insertLink(view, head, label, Obj.getURI(object), block),
             };
           });
 
         // File new objects in the current document's collection; with no containing collection
-        // `AddObject` falls back to the space's own default placement.
+        // `OpenCreateObject` falls back to the space's own default placement.
         const target = containing[0] ?? db;
 
-        // Add "Create new document" option at the end.
         const createItem: EditorMenuItem = {
-          id: 'create-document',
-          label: ['add-object.label', { ns: Type.getTypename(Markdown.Document) }],
+          id: 'create-object',
+          label: ['add-object.label', { ns: meta.profile.key }],
           icon: 'ph--plus--regular',
           onSelect: ({ view, head }) => {
-            const doc = Markdown.make({ name: name || undefined });
-            void invokePromise?.(SpaceOperation.AddObject, { object: doc, target });
-            const label = name || t('object-name.placeholder', { ns: Type.getTypename(Markdown.Document) });
-            // `AddObject` attaches the object asynchronously, so this is the space-relative form of
-            // its URI; the anchor/preview path resolves that against the current space.
-            const link = `[${label}](${Obj.getURI(doc)})`;
-            if (query?.startsWith('@')) {
-              insertAtLineStart(view, head, `!${link}\n`);
-            } else {
-              insertAtCursor(view, head, `${link} `);
-            }
+            void invokePromise?.(SpaceOperation.OpenCreateObject, {
+              target,
+              // Keep the deck where it is: the link is inserted back into the editor the user is in.
+              navigable: false,
+              initialFormValues: name ? { name } : undefined,
+              onCreateObject: (object: Obj.Unknown) => {
+                insertLink(view, head, toLocalizedString(getLabel(object), t), Obj.getURI(object), block);
+                view.focus();
+              },
+            });
           },
         };
 
         return [
-          { id: 'echo', items },
           { id: 'create', items: [createItem] },
+          { id: 'echo', items },
         ];
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
     },
