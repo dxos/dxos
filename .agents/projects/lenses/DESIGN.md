@@ -808,7 +808,17 @@ section, and the most likely reason the bar turns out to be unreachable.
 
 #### What flows back to object-merging
 
-The exchange is not one-way; three things from this plan bear on that project:
+**Status: adopted** (PR #12410, commit 2573cdd2). Their §4.1 now applies the merge as per-field
+writes; §4.2 records `system.mergedAtHeads` and folds stragglers per-property with field-wise
+recompute as fallback; open question 1 carries the derived-key admissibility sub-question; Phase 1
+names the `setSource`/`setTarget` internal API and keeps `db.ensure` generic; open question 3 names
+the lens vocabulary. Their same round also made the merge function set-based (pairwise
+winner-preference is not associative), which strengthens the convergence fan-out rides on. Residual
+nuance, tracked by M0 claim 5 rather than another PR round: `mergedAtHeads` is loser-side only, so a
+fold can silently overwrite a winner-side edit made after the merge — detecting that conflict needs
+winner-side heads too.
+
+The three things raised, as recorded when the exchange was one-way:
 
 1. **Straggler edits at property granularity.** Their §4.6 accepts that a concurrent edit on the
    loser is lost at _field_ granularity (winner-preference merge). Fold-forward's heads-diff
