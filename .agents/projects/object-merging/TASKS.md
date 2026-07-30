@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: implement merge-on-entity-load per DESIGN.md §4.7 — index `meta.naturalKey`, add `Filter.naturalKey`, hook `entity-manager`'s load path. Uncommitted: none. Last: `db.mergeDuplicates()`, the straggler fold, and the derived `SCALAR_META_FIELDS` fix; 4 convergence + 10 executor tests green over 3 clean repeats._
+_Resume: implement the `MergeStep` in the query pipeline (DESIGN.md §4.8) — no index needed, covers every §2 failure; then the load-path hook (§4.7) with the index. Uncommitted: none. Last: `db.mergeDuplicates()`, the straggler fold, and the derived `SCALAR_META_FIELDS` fix; 4 convergence + 10 executor tests green over 3 clean repeats._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -69,7 +69,9 @@ than by a spike.
 - [x] Straggler fold (`foldLateEdits`) — asks automerge which data fields moved since
       `mergedAtHeads` and carries exactly those to the winner, then advances the
       watermark so the same edit is never folded twice.
-- [ ] **Merge on entity load** (revises "on space open", DESIGN.md §4.7) — see below.
+- [ ] **`MergeStep` in the query pipeline** (DESIGN.md §4.8) — a caller never sees
+      two. No index needed; covers every §2 failure. Do this first.
+- [ ] **Merge on entity load** (DESIGN.md §4.7) — for entities reached by id/ref.
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
 - [ ] Property-based determinism over randomized op schedules (§5.3).
@@ -79,7 +81,7 @@ than by a spike.
 ## Phase 3: Indexing & automation
 
 - [ ] **`meta.naturalKey` index column + `Filter.naturalKey` equality pushdown** —
-      unblocks merge-on-load (see below). Point lookup, not a duplicate-groups scan.
+      for the load path only; the query pipeline needs no index. Point lookup.
 - [ ] Meta-key columns + planner pushdown for `Filter.key` / `Filter.foreignKeys`.
 - [ ] Indexer key-collision events trigger the merge automatically.
 
@@ -113,8 +115,24 @@ hydrated the whole space. Not a test artifact — it broke three tests asserting
 loading (`entity-manager.test.ts` "pending links are loaded" and "linked objects are
 loaded on update only if they were loaded before"; `query-api-stall.test.ts`).
 
-**The trigger is entity hydration instead**, which makes the cost proportional to use
-and turns detection into a point lookup rather than a scan. Pieces:
+**Do the query-pipeline step first (DESIGN.md §4.8).** A `MergeStep` in the query
+plan collapses duplicates in the working set before results are returned, so a caller
+never observes two. It needs **no index** — the working set is already hydrated, so
+grouping by natural key is one in-memory pass — and it covers every failure in §2,
+all of which are query-shaped. Pieces:
+
+- `echo-host/src/query/plan.ts` — add `MergeStep` to the `Step` union, beside
+  `FilterDeletedStep`.
+- `echo-host/src/query/query-executor.ts` — the dispatch branch: group the working
+  set by natural key, merge groups of more than one, drop the losers.
+- `echo-host/src/query/query-planner.ts` — emit the step.
+- Guard the reactive path: the step writes during query evaluation, which
+  invalidates queries. Bounded and idempotent, but it must not loop.
+
+**Then the load-path hook**, for entities reached by id or reference, which have no
+siblings in a result set to compare against. This is where the index earns its keep,
+and it is now completeness rather than a blocker — `resolveRedirect` already covers
+an entity once merged, and any query that surfaces it performs the merge. Pieces:
 
 1. `index-core/src/indexes/entity-meta-index.ts` — `naturalKey TEXT` column, the
    `ALTER TABLE` migration (same pattern as `parent`/`createdAt`), populate from

@@ -50,6 +50,12 @@
   never touch. Merging when an entity is hydrated instead makes the cost proportional
   to use, and reduces detection to a **point lookup** (`naturalKey = X`, normally one
   row) rather than a scan. See §4.7.
+- **2026-07-30 (Josiah)** — **Merge inside query evaluation**, so a caller never sees
+  two entities where there should be one. A `MergeStep` in the query plan collapses
+  duplicates in the working set before results are returned. Needs no index (the
+  working set is already hydrated) and covers every failure in §2, which are all
+  query-shaped — so the index and the load-path hook become completeness work rather
+  than blockers. See §4.8.
 
 ---
 
@@ -382,14 +388,42 @@ Why this is the better shape:
 
 Consequences to design for:
 
-- **Transient double-result.** A query's result set is computed from the index before
-  hydration finishes, so a query spanning both duplicates can return two entities and
-  then settle to one as the merge lands. Reactive queries re-emit; one-shot `run()`
-  callers may observe the pre-merge pair. Whether that needs a barrier is open.
 - **Re-entrancy.** The merge hydrates the other candidates, which would re-trigger the
   merge; needs an in-flight guard keyed by natural key.
 - **Convergence is unaffected.** The merge function is deterministic and idempotent,
   so _when_ it runs does not change what it computes — only how soon peers converge.
+
+### 4.8 The merge belongs in the query pipeline
+
+A query's result set is materialized before it is returned, so a query spanning both
+duplicates would hand back two entities and settle to one only as the merge landed.
+Rather than accept that transient, **merge during query evaluation**: a `MergeStep`
+in the plan, alongside the existing `FilterDeletedStep`, grouping the working set by
+natural key, merging any group of more than one, and dropping the losers before
+results are returned. A caller then never observes two.
+
+The plan is already a step sequence with a `_tag` union and executor dispatch
+(`echo-host/src/query/plan.ts`, `query-executor.ts`), so this is an ordinary addition
+rather than new machinery.
+
+**This needs no index.** The working set is already hydrated by the time a step runs,
+so grouping it by natural key is one in-memory pass over objects already in hand —
+nothing extra to load, nothing to look up. The cost is nil for result sets that
+declare no natural keys, and real only where a duplicate group actually exists.
+
+It is also sufficient for every failure in §2, all of which are query-shaped:
+`space.properties` (`results.length === 1`), `CollectionModel`'s
+duplicate-`SpaceProperties` invariant, `useTraceMessages` querying across trace feeds,
+the `SHARED` expando check-then-create, and `db.addType`.
+
+That demotes the index and the load-path hook from blocker to completeness: an entity
+reached by id or by reference has no siblings in a result set to compare against, but
+`resolveRedirect` already covers it once merged, and any query that surfaces it
+performs the merge.
+
+Risk to weigh in review: this **writes during query evaluation**. The write is bounded
+and idempotent (a second pass finds nothing), but it invalidates queries, so the
+reactive path must not loop.
 
 ### 4.6 Principal risks
 
