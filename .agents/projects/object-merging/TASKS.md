@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: implement the `MergeStep` in the query pipeline (DESIGN.md §4.8) — no index needed, covers every §2 failure; then the load-path hook (§4.7) with the index. Uncommitted: none. Last: `db.mergeDuplicates()`, the straggler fold, and the derived `SCALAR_META_FIELDS` fix; 4 convergence + 10 executor tests green over 3 clean repeats._
+_Resume: merge-on-query is live; next is the load-path hook (§4.7) with the `meta.naturalKey` index, for entities reached by id/ref where no result set exposes the duplicate. Uncommitted: none. Last: `db.mergeDuplicates()`, the straggler fold, and the derived `SCALAR_META_FIELDS` fix; 4 convergence + 10 executor tests green over 3 clean repeats._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -72,8 +72,10 @@ than by a spike.
 - [x] Straggler fold (`foldLateEdits`) — asks automerge which data fields moved since
       `mergedAtHeads` and carries exactly those to the winner, then advances the
       watermark so the same edit is never folded twice.
-- [ ] **`MergeStep` in the query pipeline** (DESIGN.md §4.8) — a caller never sees
-      two. No index needed; covers every §2 failure. Do this first.
+- [x] **Collapse duplicates during query evaluation** (DESIGN.md §4.8) — a caller
+      never sees two. No index needed; covers every §2 failure. Landed in the client's
+      `_presentResults`, not as a `QueryPlan` step: the plan runs host-side over raw
+      documents, while merging needs live entities.
 - [ ] **Merge on entity load** (DESIGN.md §4.7) — for entities reached by id/ref.
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.

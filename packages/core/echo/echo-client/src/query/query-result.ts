@@ -7,14 +7,35 @@ import * as Atom from '@effect-atom/atom/Atom';
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Entity, Query, type QueryAST, type QueryResult } from '@dxos/echo';
+import { type Entity, Obj, Query, type QueryAST, type QueryResult } from '@dxos/echo';
 import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { getDeep, isNonNullable } from '@dxos/util';
 
+import { isMergedAway, mergeDuplicates } from '../merge';
 import { type QueryContext, type SourceEntry } from './query-context';
+
+/**
+ * True when any part of the query asks for deleted entities.
+ *
+ * `.options({ deleted })` produces a node that scoping wraps further, so the flag can sit at any
+ * depth rather than on the root.
+ */
+const _queryIncludesDeleted = (node: unknown): boolean => {
+  if (node === null || typeof node !== 'object') {
+    return false;
+  }
+  const record = node as Record<string, unknown>;
+  if (record.type === 'options') {
+    const deleted = (record.options as { deleted?: string } | undefined)?.deleted;
+    if (deleted === 'include' || deleted === 'only') {
+      return true;
+    }
+  }
+  return Object.values(record).some(_queryIncludesDeleted);
+};
 
 /**
  * Predicate based query.
@@ -215,6 +236,8 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     entries: QueryResult.EntityEntry<T>[];
     grouped: boolean;
   } {
+    entries = this._collapseDuplicates(entries);
+
     if (entries.length > 0 && entries[0].group !== undefined) {
       const { groups, entries: groupEntries } = _assembleGroups(entries, _groupAggregatesFromQuery(this._query.ast));
       // Boundary cast: T is the flat aggregate record for aggregate queries (per Query.aggregate's
@@ -228,6 +251,54 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     }
 
     return { objects: this._uniqueObjects(entries), entries, grouped: false };
+  }
+
+  /**
+   * Collapse entities that declare the same natural key, so a caller never observes two where
+   * there should be one — the failure this exists to prevent is code that reads `results.length`
+   * or asserts a singleton and breaks on a duplicate it did not create.
+   *
+   * Runs here rather than in the query plan because the plan executes host-side over raw document
+   * structures, while merging needs live entities. By this point the working set is materialized,
+   * so the whole pass is over entities already in hand: no extra load, no index lookup, and no
+   * cost at all for results that declare no natural key.
+   *
+   * The merge writes, which invalidates the query and recomputes this. That terminates rather than
+   * loops because the merge is idempotent — the second pass sees one live entity per key and
+   * writes nothing.
+   */
+  private _collapseDuplicates(entries: SourceEntry<T>[]): SourceEntry<T>[] {
+    // A query that explicitly asks for tombstones is asking to see what was merged away, so
+    // collapsing would defeat it — this is how a diagnostic inspects the losers.
+    if (_queryIncludesDeleted(this._query.ast)) {
+      return entries;
+    }
+
+    // Objects only: relations and persisted types are not merge subjects yet, and reading meta off
+    // a non-object throws — which would take out unrelated queries, including the schema preload
+    // that runs on database open.
+    const objects: Obj.Unknown[] = [];
+    for (const { result } of entries) {
+      if (Obj.isObject(result)) {
+        objects.push(result);
+      }
+    }
+    if (objects.length < 2) {
+      return entries;
+    }
+
+    const { merged } = mergeDuplicates(objects);
+
+    // Drop every entity that redirects, not only the ones this pass merged: the tombstone reaches
+    // the index a moment after the redirect is written, so an earlier merge's loser can still be
+    // in these results.
+    const mergedAway = new Set(objects.filter(isMergedAway).map(({ id }) => id));
+    if (mergedAway.size === 0) {
+      return entries;
+    }
+
+    log('collapsed duplicates during query', { groups: merged.length, dropped: mergedAway.size });
+    return entries.filter(({ result }) => !(Obj.isObject(result) && mergedAway.has(result.id)));
   }
 
   private _uniqueObjects(entries: SourceEntry<T>[]): T[] {

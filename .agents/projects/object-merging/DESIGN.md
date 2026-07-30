@@ -51,11 +51,12 @@
   to use, and reduces detection to a **point lookup** (`naturalKey = X`, normally one
   row) rather than a scan. See §4.7.
 - **2026-07-30 (Josiah)** — **Merge inside query evaluation**, so a caller never sees
-  two entities where there should be one. A `MergeStep` in the query plan collapses
-  duplicates in the working set before results are returned. Needs no index (the
-  working set is already hydrated) and covers every failure in §2, which are all
-  query-shaped — so the index and the load-path hook become completeness work rather
-  than blockers. See §4.8.
+  two entities where there should be one: duplicates in the working set collapse
+  before results are returned. Needs no index (the working set is already hydrated)
+  and covers every failure in §2, which are all query-shaped — so the index and the
+  load-path hook become completeness work rather than blockers. Implemented in the
+  client's result presentation rather than as a query-plan step, because the plan
+  executes host-side over raw documents. See §4.8. **IMPLEMENTED.**
 
 ---
 
@@ -397,14 +398,17 @@ Consequences to design for:
 
 A query's result set is materialized before it is returned, so a query spanning both
 duplicates would hand back two entities and settle to one only as the merge landed.
-Rather than accept that transient, **merge during query evaluation**: a `MergeStep`
-in the plan, alongside the existing `FilterDeletedStep`, grouping the working set by
-natural key, merging any group of more than one, and dropping the losers before
-results are returned. A caller then never observes two.
+Rather than accept that transient, **merge during query evaluation**, grouping the
+working set by natural key, merging any group of more than one, and dropping the
+losers before results are returned. A caller then never observes two.
 
-The plan is already a step sequence with a `_tag` union and executor dispatch
-(`echo-host/src/query/plan.ts`, `query-executor.ts`), so this is an ordinary addition
-rather than new machinery.
+**Not a `QueryPlan` step, as first sketched.** The plan executes host-side over raw
+`EntityStructure` documents — potentially in another worker — while merging needs live
+client entities and `Obj.update`. The hook is therefore in the client's result
+presentation (`echo-client/src/query/query-result.ts`, `_presentResults`), which both
+`run()` and the reactive recompute funnel through. That it works at all depends on the
+merge being **synchronous**: only persistence is async, so the collapse fits inside a
+synchronous getter like `results`.
 
 **This needs no index.** The working set is already hydrated by the time a step runs,
 so grouping it by natural key is one in-memory pass over objects already in hand —
@@ -420,6 +424,22 @@ That demotes the index and the load-path hook from blocker to completeness: an e
 reached by id or by reference has no siblings in a result set to compare against, but
 `resolveRedirect` already covers it once merged, and any query that surfaces it
 performs the merge.
+
+Rules the implementation had to learn (each one a bug first):
+
+- **Query results are not unique** — the same entity can appear twice before
+  presentation dedupes (there is a standing TODO to that effect). Merging a repeat
+  treated it as a duplicate of itself and tombstoned the winner, so `Merge.merge` now
+  deduplicates by id.
+- **A query asking for tombstones must not collapse.** `deleted: 'include'` exists to
+  show what was merged away; the option can sit at any depth in the AST because
+  scoping wraps it.
+- **Drop everything that redirects, not only what this pass merged.** The tombstone
+  reaches the index after the redirect is written, so an earlier loser can still be in
+  the results.
+- **Objects only, and only automerge-backed ones.** Reading meta off a relation or a
+  persisted type throws, which took out the schema preload on database open; feed
+  entities have no core at all (already out of scope, §4.6).
 
 Risk to weigh in review: this **writes during query evaluation**. The write is bounded
 and idempotent (a second pass finds nothing), but it invalidates queries, so the

@@ -406,14 +406,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * index query rather than query-planner pushdown.
    */
   async mergeDuplicates(): Promise<MergePassResult> {
-    const entities = await this.query(Filter.everything()).run();
+    // Includes tombstones: the merge itself now happens inside query evaluation, so by the time a
+    // plain query returns, the duplicates are already collapsed and the losers filtered out. What
+    // is left for this pass is repointing references at the survivors, which needs the losers.
+    const entities = await this.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run();
     const result = mergeDuplicates(entities);
-    if (result.merged.length > 0) {
-      // `entities` still holds the losers as live proxies, so they are available as redirect hops
-      // even though the merge has just tombstoned them.
-      rewriteReferences(entities, entities);
+    const rewritten = rewriteReferences(entities, entities);
+    if (result.merged.length > 0 || rewritten > 0) {
       await this.flush();
-      log('merged duplicates', { spaceId: this.spaceId, groups: result.merged.length });
+      log('merged duplicates', { spaceId: this.spaceId, groups: result.merged.length, rewritten });
     }
 
     return result;

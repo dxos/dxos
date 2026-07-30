@@ -78,10 +78,9 @@ describe('Merge', () => {
 
       yield* Database.flush();
 
-      const tasks = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(tasks).toHaveLength(2);
-
-      const duplicates = Merge.findDuplicates(tasks.map(Merge.candidateOf));
+      // Deliberately not via a query: a query collapses duplicates on sight, so this exercises the
+      // pure detection over the two entities directly.
+      const duplicates = Merge.findDuplicates([first, second].map(Merge.candidateOf));
       expect(duplicates.size).toBe(1);
 
       const result = Merge.merge(duplicates.get('org.example.seed')!);
@@ -107,8 +106,7 @@ describe('Merge', () => {
       yield* Database.add(second);
       yield* Database.flush();
 
-      const before = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      const result = mergeDuplicates(before);
+      const result = mergeDuplicates([first, second]);
       expect(result.merged).toHaveLength(1);
       expect(result.merged[0].winner).toBe(first.id);
       yield* Database.flush();
@@ -135,13 +133,9 @@ describe('Merge', () => {
       }
       yield* Database.flush();
 
-      const before = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(mergeDuplicates(before).merged).toHaveLength(1);
-      yield* Database.flush();
-
+      // The query collapses them on sight; a second pass over the survivors finds nothing.
       const after = yield* Database.query(Filter.type(TestSchema.Task)).run;
       expect(after).toHaveLength(1);
-      // Nothing left to merge: the survivors no longer contain a duplicate group.
       expect(mergeDuplicates(after).merged).toHaveLength(0);
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
@@ -159,14 +153,13 @@ describe('Merge', () => {
       }
       yield* Database.flush();
 
-      const before = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      mergeDuplicates(before);
+      mergeDuplicates([first, second]);
       yield* Database.flush();
 
       // The loser is tombstoned but still resolvable, which is what makes a stale reference to it
       // reach the winner rather than dangle.
-      expect(resolveMerged(second.id, before)).toBe(first.id);
-      expect(resolveMerged(first.id, before)).toBe(first.id);
+      expect(resolveMerged(second.id, [first, second])).toBe(first.id);
+      expect(resolveMerged(first.id, [first, second])).toBe(first.id);
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 
@@ -188,10 +181,7 @@ describe('Merge', () => {
       yield* Database.add(referrer);
       yield* Database.flush();
 
-      const duplicates = (yield* Database.query(Filter.type(TestSchema.Task)).run).filter(
-        (task) => Merge.getNaturalKey(task) !== undefined,
-      );
-      mergeDuplicates(duplicates);
+      mergeDuplicates([first, second]);
       yield* Database.flush();
 
       const all = yield* Database.query(Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'include' })).run;
@@ -290,6 +280,94 @@ describe('Merge', () => {
     // Collapsing the chain must not lose the id `middle` had already absorbed.
     await db.mergeDuplicates();
     expect(getMergedFrom(smallest)).toEqual([middle.id, largest.id].sort());
+  });
+
+  // The §2 failure shape: callers that read `results.length` or assert a singleton break on a
+  // duplicate they did not create. The query must never hand them two.
+  describe('collapsing during query evaluation', () => {
+    test('a query never returns duplicates, without anyone calling the merge', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      const tasks = ['first', 'second'].map((title) => {
+        const task = db.add(Obj.make(TestSchema.Task, { title, description: title }));
+        Merge.setNaturalKey(task, 'org.example.seed');
+        return task;
+      });
+      await db.flush();
+      const winner = tasks[0].id < tasks[1].id ? tasks[0] : tasks[1];
+
+      // No explicit mergeDuplicates call — the query itself collapses them.
+      const results = await db.query(Filter.type(TestSchema.Task)).run();
+      expect(results).toHaveLength(1);
+      expect(results[0].id).toBe(winner.id);
+      expect(getMergedFrom(winner)).toHaveLength(1);
+    });
+
+    test('the collapse is durable, not just filtered out of one result', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      for (const title of ['first', 'second', 'third']) {
+        const task = db.add(Obj.make(TestSchema.Task, { title }));
+        Merge.setNaturalKey(task, 'org.example.seed');
+      }
+      await db.flush();
+
+      expect(await db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(1);
+      await db.flush();
+
+      // A fresh query sees one because the losers are tombstoned, not because it re-filtered.
+      const live = await db.query(Filter.type(TestSchema.Task)).run();
+      expect(live).toHaveLength(1);
+      const all = await db.query(Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'include' })).run();
+      expect(all).toHaveLength(3);
+    });
+
+    test('repeated queries settle rather than looping', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      for (const title of ['first', 'second']) {
+        const task = db.add(Obj.make(TestSchema.Task, { title }));
+        Merge.setNaturalKey(task, 'org.example.seed');
+      }
+      await db.flush();
+
+      // The merge writes, which invalidates the query. Idempotence is what stops that recurring.
+      const winner = (await db.query(Filter.type(TestSchema.Task)).run())[0];
+      const absorbed = getMergedFrom(winner);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const results = await db.query(Filter.type(TestSchema.Task)).run();
+        expect(results).toHaveLength(1);
+        expect(results[0].id).toBe(winner.id);
+        expect(getMergedFrom(winner)).toEqual(absorbed);
+      }
+    });
+
+    test('a query over entities with no natural key is untouched', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      db.add(Obj.make(TestSchema.Task, { title: 'first' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'second' }));
+      await db.flush();
+
+      expect(await db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(2);
+    });
+
+    test('entities with distinct natural keys are both returned', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      for (const naturalKey of ['org.example.seed', 'org.example.seed@2']) {
+        const task = db.add(Obj.make(TestSchema.Task, { title: naturalKey }));
+        Merge.setNaturalKey(task, naturalKey);
+      }
+      await db.flush();
+
+      expect(await db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(2);
+    });
   });
 
   test('objects with distinct natural keys are not duplicates', async ({ expect }) => {

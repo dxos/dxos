@@ -190,6 +190,20 @@ describe('Merge', () => {
       expect(() => Merge.merge([])).toThrow(TypeError);
     });
 
+    test('the same entity passed twice is not a duplicate of itself', ({ expect }) => {
+      // Query results are not unique until presentation, so a caller can hand the same entity in
+      // more than once. Treating the repeat as a loser would tombstone the winner.
+      const result = Merge.merge([candidate(idB, { title: 'only' }), candidate(idB, { title: 'only' })]);
+      expect(result.winner).toBe(idB);
+      expect(result.losers).toEqual([]);
+    });
+
+    test('a repeat alongside a genuine duplicate still yields one loser', ({ expect }) => {
+      const result = Merge.merge([candidate(idB), candidate(idA), candidate(idB)]);
+      expect(result.winner).toBe(idA);
+      expect(result.losers).toEqual([idB]);
+    });
+
     test('a single candidate merges to itself with no losers', ({ expect }) => {
       const result = Merge.merge([candidate(idB, { title: 'only' })]);
       expect(result.winner).toBe(idB);

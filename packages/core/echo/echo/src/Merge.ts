@@ -179,8 +179,18 @@ export const merge = (candidates: readonly Candidate[]): MergeResult => {
     throw new TypeError('Cannot merge an empty candidate set.');
   }
 
+  // Deduplicate by id first: a caller may pass the same entity twice (query results are not unique
+  // until presentation), and without this the repeat becomes a loser pointing at itself, which
+  // would tombstone the winner.
+  const byId = new Map<EntityId, Candidate>();
+  for (const candidate of candidates) {
+    if (!byId.has(candidate.id)) {
+      byId.set(candidate.id, candidate);
+    }
+  }
+
   // Ascending by id, so the first candidate defining a field is the smallest-id one that does.
-  const ordered = [...candidates].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const ordered = [...byId.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const [winner, ...losers] = ordered;
 
   const data: Record<string, unknown> = {};

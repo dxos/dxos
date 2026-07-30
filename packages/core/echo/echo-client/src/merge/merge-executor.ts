@@ -6,7 +6,7 @@ import { Merge, Obj, Ref } from '@dxos/echo';
 import { PROPERTY_ID } from '@dxos/echo-protocol';
 import { EID, type EntityId } from '@dxos/keys';
 
-import { getObjectCore } from '../echo-handler';
+import { getObjectCore, isEchoObject } from '../echo-handler';
 
 /**
  * What one merge pass did, for diagnostics and for asserting idempotence.
@@ -43,8 +43,34 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
     losers: readonly EntityId[];
   }[] = [];
 
-  for (const [naturalKey, group] of Merge.findDuplicates(entities.map(Merge.candidateOf))) {
-    const result = Merge.merge(group);
+  // Group on the natural key alone first. Building a `Candidate` snapshots the entity, which is a
+  // deep copy — too costly to pay for every entity on a path that runs per query, when almost none
+  // are duplicated.
+  const groups = new Map<string, Obj.Unknown[]>();
+  for (const entity of entities) {
+    const naturalKey = Merge.getNaturalKey(entity);
+    if (naturalKey === undefined) {
+      continue;
+    }
+    // Feed-backed entities have no automerge core to merge into (out of scope, see DESIGN.md);
+    // and an entity already merged away is not a candidate — it keeps its natural key so a late
+    // peer can still recognize it, so a query including tombstones would otherwise re-merge it.
+    if (!isEchoObject(entity) || getObjectCore(entity).getMergedInto() !== undefined) {
+      continue;
+    }
+    const group = groups.get(naturalKey);
+    if (group) {
+      group.push(entity);
+    } else {
+      groups.set(naturalKey, [entity]);
+    }
+  }
+
+  for (const [naturalKey, group] of groups) {
+    if (group.length < 2) {
+      continue;
+    }
+    const result = Merge.merge(group.map(Merge.candidateOf));
     const winner = byId.get(result.winner);
     if (!winner) {
       continue;
@@ -141,6 +167,16 @@ export const rewriteReferences = (referrers: readonly Obj.Unknown[], entities: r
  * wants to show what was folded in, or for reaching an absorbed entity to recover from it.
  */
 export const getMergedFrom = (entity: Obj.Unknown): EntityId[] => getObjectCore(entity).getMergedFrom();
+
+/**
+ * True once the entity has been merged into another.
+ *
+ * Distinct from being deleted: the tombstone reaches the index a moment after the redirect is
+ * written, so a query can still surface a merged-away entity. Callers presenting results use this
+ * to drop it rather than waiting for the index.
+ */
+export const isMergedAway = (entity: Obj.Unknown): boolean =>
+  isEchoObject(entity) && getObjectCore(entity).getMergedInto() !== undefined;
 
 /**
  * Fold edits made to a merged-away entity *after* it was merged into the entity that survives.
