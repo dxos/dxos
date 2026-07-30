@@ -213,3 +213,18 @@ didn't fix egress). No plugin change kept.
 **Path to finish (outside this sandbox):** run `dx` where bun's fetch can reach the internet (or the
 proxy is bun-compatible), then a single agent turn completes it:
 `dx agent --skill org.dxos.skill.ibkr "run SyncPortfolioReport once, then GetPortfolio"`.
+
+## IBKR CLI wiring reverted (post-merge, 2026-07-30)
+
+After merging main (which added a new `cli:check-module-structure` CI gate), the IBKR wiring failed
+that gate: `src/bin.ts` transitively imported react/react-dom via `@dxos/plugin-ibkr`
+(→ `app-graph-builder` → `react-ui-attention` → react). The `dx` CLI must stay react-free.
+
+Since the IBKR-in-CLI was the _demonstration_ (its live fetch is environment-blocked anyway) and the
+harness bridge (P1–P4) is the deliverable, the wiring was reverted from the CLI: removed the
+`@dxos/plugin-ibkr` skill/operations/type registrations from `util/skills.ts` and the
+`@dxos/plugin-ibkr` + `@dxos/link` CLI deps. `cli:check-module-structure` now passes.
+
+To re-add IBKR to the CLI later, `@dxos/plugin-ibkr` needs react-free subpath exports
+(`/skills`, `/operations`, `/types`) that don't pull `app-graph-builder`, imported in place of the
+root/`/plugin` entry points.

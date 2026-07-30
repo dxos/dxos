@@ -7560,9 +7560,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/link':
-        specifier: workspace:*
-        version: link:../../core/compute/link
       '@dxos/lock-file':
         specifier: workspace:*
         version: link:../../common/lock-file
@@ -7587,9 +7584,6 @@ importers:
       '@dxos/plugin-game':
         specifier: workspace:*
         version: link:../../plugins/plugin-game
-      '@dxos/plugin-ibkr':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-ibkr
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
