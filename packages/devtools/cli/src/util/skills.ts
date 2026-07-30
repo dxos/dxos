@@ -53,12 +53,15 @@ import {
   Task,
 } from '@dxos/types';
 
+import { AgentToolkitOpaque } from './agent-toolkit';
+import { HarnessSkill } from './harness-skill';
 import * as TestToolkit from './test-toolkit';
 
 export const skillRegistry = makeRegistry({
   initial: [
     // Skills available to the chat.
     AssistantSkill.make(),
+    HarnessSkill,
     DatabaseSkill.make(),
     CalendarSkill.make(),
     ChessSkill.make(),
@@ -96,6 +99,9 @@ export const operationHandlers = OperationHandlerSet.merge(
 export const toolkits: OpaqueToolkit.OpaqueToolkit[] = [
   // NOTE: Toolkits referenced by skills above need to be added here.
   OpaqueToolkit.make(WebSearchToolkit, Layer.empty),
+
+  // File/shell/reload tools for the harness self-develop skill.
+  AgentToolkitOpaque,
 
   // TODO(burdon): Remove?
   OpaqueToolkit.make(TestToolkit.toolkit, TestToolkit.layer),

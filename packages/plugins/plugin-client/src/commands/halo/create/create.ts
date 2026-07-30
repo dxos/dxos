@@ -13,6 +13,7 @@ import { AppSpace } from '@dxos/app-toolkit';
 import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -48,8 +49,15 @@ export const handler = Effect.fn(function* ({
     client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
   );
   yield* Effect.promise(() => space.waitUntilReady());
-  yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-  yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
+  if (agent) {
+    // Edge replication + sync only make sense alongside an EDGE agent. A purely local (`--noAgent`)
+    // identity — the headless-bootstrap case — must not block on an unreachable edge, so it flushes
+    // indexes locally and skips the edge round-trip.
+    yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+    yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
+  } else {
+    yield* Database.flush({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
+  }
 
   if (json) {
     yield* Console.log(

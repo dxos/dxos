@@ -24,10 +24,10 @@ import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry';
 
-import { admin, chat, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
+import { admin, agent, chat, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
 import { getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
-import { installStderrFilter } from './util';
+import { RELOAD_EXIT_CODE, getReloadRequest, installStderrFilter } from './util';
 
 // Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
 // of the process. The warnings come from eager space initialisation in
@@ -85,6 +85,7 @@ const program = Effect.gen(function* () {
       //   Currently would require standalone plugins due to clash between solid & react compilation.
       //   Either create cli-specific plugins for these or wait until assistant/script plugins are built w/ Solid.
       // Note: ClientPlugin already contributes ClientService via its layer, so we don't need to provide it again.
+      agent,
       chat,
       fn,
       mailbox,
@@ -126,7 +127,10 @@ const program = Effect.gen(function* () {
 
 BunRuntime.runMain(program, {
   teardown: (exit, onExit) => {
-    const exitCode = Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause) ? 1 : 0;
+    // Runs after the program scope closes (client destroyed, writes flushed). A clean turn in which
+    // the agent called `request_reload` exits 75 — the hypervisor's reload gate — instead of 0.
+    const failed = Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause);
+    const exitCode = failed ? 1 : getReloadRequest() !== undefined ? RELOAD_EXIT_CODE : 0;
     onExit(exitCode);
     if (FORCE_EXIT) {
       process.exit(exitCode);

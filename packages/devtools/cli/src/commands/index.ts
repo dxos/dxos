@@ -3,6 +3,7 @@
 //
 
 export * from './admin';
+export * from './agent';
 export * from './chat';
 export * from './debug';
 export * from './dx';
