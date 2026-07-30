@@ -4,7 +4,7 @@
 
 export * from './channel-backend';
 export * from './threads';
-export * from './ThreadSelection';
+export * from './thread-node';
 export * as Reaction from './Reaction';
 export * as ThreadAnnotation from './ThreadAnnotation';
 export * as ThreadCapabilities from './ThreadCapabilities';

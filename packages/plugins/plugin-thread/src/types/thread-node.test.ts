@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { getThreadId, getThreadNodeId } from './ThreadSelection';
+import { getThreadId, getThreadNodeId } from './thread-node';
 
-describe('ThreadSelection', () => {
+describe('thread nodes', () => {
   // The channel article and a thread's article both take a channel as their subject and are told
   // apart by this property alone, so anything that is not a thread id has to read as absent.
   test('reads the thread id off node properties', ({ expect }) => {
