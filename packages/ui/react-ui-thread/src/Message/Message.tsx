@@ -34,7 +34,13 @@ import { type ActionGroupBuilder, Menu, MenuBuilder, useMenuBuilder } from '@dxo
 import { EmojiPickerContent } from '@dxos/react-ui-pickers';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
+import {
+  hoverableControlItem,
+  hoverableControls,
+  hoverableFocusedWithinControls,
+  hoverableOverlayControlItem,
+  mx,
+} from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
 import { command } from '../command';
@@ -80,14 +86,15 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     forwardedRef,
   ) => {
     // Must wrap the message since Avatar.Label may be used in the content.
-    // Columns mirror Thread.Header (avatar/rail · content · controls) so trailing
-    // controls align with the thread header's controls.
+    // Two columns (avatar/rail · content): the controls float over the content rather than taking a
+    // column of their own, which would narrow every message by the width of a toolbar that is only
+    // visible on hover.
     return (
       <Avatar.Root>
         <div
           data-testid='thread.message'
           {...rootProps}
-          className={mx('grid grid-cols-[var(--dx-rail-size)_1fr_min-content] w-full', classNames)}
+          className={mx('relative grid grid-cols-[var(--dx-rail-size)_1fr] w-full', classNames)}
           ref={forwardedRef}
         >
           {/* Only a row that draws an avatar needs the padding that aligns it with the first line of
@@ -106,7 +113,9 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
             {continues && <div className='w-px grow -mb-1 bg-separator' />}
           </div>
           <div className='py-1 min-w-0'>{children}</div>
-          {controls && <div className='self-start'>{controls}</div>}
+          {/* Anchored to the row's top-end corner, over the first line — the same place Discord puts
+              it, and the corner of a message least likely to hold text worth reading. */}
+          {controls && <div className='absolute z-1 top-0 end-1'>{controls}</div>}
         </div>
       </Avatar.Root>
     );
@@ -641,8 +650,18 @@ const MessageControls = ({ message, editing, onEdit, onSaveEdit, onCancelEdit }:
         {/* The picker opens from a toolbar action rather than its own trigger — that keeps every
             affordance in the action graph, and so in one running order — so the toolbar is the anchor. */}
         <Popover.Anchor asChild>
+          {/* It floats over the message, so it keeps the toolbar's own surface and shadow (it has to
+              hide what is behind it) and `w-auto` — the toolbar is full-width by default, which an
+              absolutely positioned box would resolve against the whole row. */}
           <Menu.Toolbar
-            classNames={mx('pe-2 border-none bg-transparent', !editing && hoverableControlItem)}
+            classNames={mx(
+              'w-auto rounded-sm border border-separator',
+              // Editing collapses the toolbar to save/cancel, which must stay put rather than follow
+              // the pointer; so must a toolbar whose menu or picker is open, since reaching either
+              // takes the pointer off the row.
+              !editing && !picking && hoverableOverlayControlItem,
+              'has-[[aria-expanded=true]]:[--controls-opacity:1] has-[[aria-expanded=true]]:[--controls-visibility:visible]',
+            )}
             density='sm'
           />
         </Popover.Anchor>

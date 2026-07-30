@@ -281,6 +281,34 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       own decorator literal — passing the decorators themselves widens their type
       and costs `Meta`/`StoryObj` inference in the play context.
 
+### Round 7 (jdw)
+
+- [x] Hover controls overlay the message instead of taking a column. The row was
+      `[rail | content | controls]`, so a toolbar only visible on hover narrowed
+      every message by its width — a paragraph wrapped in half the space it had.
+      The row is now two columns and the toolbar is absolutely positioned at the
+      top-end corner, over the content, as Discord does it. - Overlaying makes transparency insufficient: an invisible toolbar over text
+      swallows its clicks and text selection. `hoverableOverlayControlItem` (new,
+      in `ui-theme`) drives `visibility` from the same hover state — visibility
+      does suppress pointer events, and keeps the box's layout so the emoji
+      picker stays anchored to it. An open menu or picker pins it visible, since
+      reaching either takes the pointer off the row.
+- [ ] `ThreadRoot` becomes an annotation on the root message, and it and
+      `Reaction` move out of `@dxos/types` into `plugin-thread` (jdw: neither is a
+      general type; a thread root does not feel like a separate object). Trade-off
+      accepted knowingly: declaring or naming another participant's message
+      re-appends _their_ message (whole-object, last-flush-wins), so a concurrent
+      edit of it can be lost — the separate per-author item existed to avoid
+      exactly that. In exchange the whole declaration channel disappears:
+      `subscribeThreadRoots`/`appendThreadRoot`, `useThreadRoots`, the
+      name-by-recency fold, and the identity gating on rename.
+- [ ] Message UI state (editing, picking) moves into an atom the control menu
+      reads, so the action graph reacts to it rather than being rebuilt through
+      React deps.
+- [ ] Thread nodes carry the channel as node `data` with the thread id in
+      `properties`, the shape plugin-inbox uses for a mailbox filter/tag — so a
+      node's data stays an object and the selection is metadata beside it.
+
 ### Threads stopped loading into the app graph (jdw round 6)
 
 - [x] ROOT CAUSE: the navtree expands a channel before anything has resolved its
