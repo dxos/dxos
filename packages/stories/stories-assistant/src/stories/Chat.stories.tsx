@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { userEvent, within } from 'storybook/test';
 
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DelegationSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
@@ -139,5 +140,72 @@ export const WithSubAgentsTest: Story = {
 
     // The supervisor runs the sub-agent in the background and posts the result back to the chat.
     await canvas.findByText(/sub-agent completed/i, {}, { timeout: 180_000 });
+  },
+};
+
+const { text, toolCall, promptIncludes } = ScriptedLanguageModel;
+
+/**
+ * Deterministic end-to-end delegation over a scripted (offline) model — the storybook analog of
+ * `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`, sharing the same routed turn
+ * script: the sub-agent route keys on the `RunInstructions` "non-interactive mode" system prompt,
+ * the chat-naming turn has its own route, and the supervisor is the fallback. Runs in CI.
+ */
+export const WithSubAgentsScripted: Story = {
+  decorators: createDecorators({
+    createAgent: {
+      name: 'Supervisor',
+      instructions: 'You delegate units of work to sub-agents using the available tools.',
+    },
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+    skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
+    scripted: [
+      {
+        name: 'sub-agent',
+        match: promptIncludes('non-interactive mode'),
+        turns: [{ parts: [toolCall('completeJob', { success: '3628800' })] }, { parts: [text('Done.')] }],
+      },
+      {
+        name: 'chat-name',
+        match: promptIncludes('Suggest a name for this chat'),
+        turns: [{ parts: [text('Delegation Demo')] }],
+      },
+      {
+        name: 'supervisor',
+        match: () => true,
+        turns: [
+          { parts: [text('On it — delegating.'), toolCall('delegate-task', { title: 'Compute 10 factorial' })] },
+          { parts: [text('Delegated. I will report back when it completes.')] },
+        ],
+      },
+    ],
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+    if (!editor) {
+      throw new Error('Chat editor not found.');
+    }
+
+    await userEvent.click(editor);
+    await userEvent.type(editor, 'Delegate a task to a sub-agent to compute 10 factorial.');
+    await userEvent.keyboard('{Enter}');
+
+    // The immediate reply streams before the sub-agent runs.
+    await canvas.findByText(/On it — delegating/i, {}, { timeout: 30_000 });
+
+    // The supervisor spawns the sub-agent after the turn and folds its result back.
+    await canvas.findByText(/sub-agent completed/i, {}, { timeout: 60_000 });
+    await canvas.findByText(/3628800/, {}, { timeout: 10_000 });
   },
 };

@@ -14,7 +14,7 @@ import { keyToFallback } from '@dxos/util';
 import { type Assistant } from '../../types';
 import { type ChatEvent } from '../Chat';
 import { componentRegistry, createBlockRenderer } from './registry';
-import { type MessageRange, MessageSyncer } from './sync';
+import { type MessageSpan, MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
@@ -30,8 +30,8 @@ export type ChatThreadProps = ThemedClassName<
     error?: Error;
     viewType?: Assistant.ChatView;
     onEvent?: (event: ChatEvent) => void;
-    /** Publishes the syncer's per-message document offset ranges after each update. */
-    onRanges?: (ranges: MessageRange[]) => void;
+    /** Publishes the syncer's per-message document spans after each update (minimap, prompt nav). */
+    onSpans?: (spans: MessageSpan[]) => void;
   } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;
 
@@ -48,7 +48,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       extensions,
       viewType,
       onEvent,
-      onRanges,
+      onSpans,
     },
     forwardedRef,
   ) => {
@@ -106,12 +106,17 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       // once on mount silently loses it and every widget callback (e.g. rewind) dies on the optional call.
       controller?.setContext(syncer.context);
 
+      // Publish the context every pass: widget props read it from a CodeMirror state field, and
+      // `setContext` dispatches through `viewRef.current?` — a no-op before the view exists, so doing this
+      // once on mount silently loses it and every widget callback (e.g. rewind) dies on the optional call.
+      controller?.setContext(syncer.context);
+
       if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');
       }
-      // Ranges are valid synchronously after `update` (offsets are computed during the walk).
-      onRanges?.(syncer.getRanges());
-    }, [controller, syncer, messages, onRanges]);
+      // Spans are valid synchronously after `update` (offsets are computed during the walk).
+      onSpans?.(syncer.getSpans());
+    }, [controller, syncer, messages, onSpans]);
 
     // Event adapter.
     const handleEvent = useCallback<NonNullable<MarkdownStreamProps['onEvent']>>(
