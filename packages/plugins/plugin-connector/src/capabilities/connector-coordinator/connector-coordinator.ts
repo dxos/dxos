@@ -4,12 +4,12 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { type Operation } from '@dxos/compute';
+import { Credential, type Operation, ServiceResolver } from '@dxos/compute';
 import { Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
@@ -22,7 +22,6 @@ import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
-import { clientCredentialsLayer } from '../../util/credentials-layer';
 import { createSingleCursor } from './create-single-cursor';
 import { decodeOAuthMessageData, initiateOAuthFlow, openOAuthPopupWindow, openOAuthRedirectWindow } from './oauth';
 import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
@@ -82,7 +81,7 @@ const openConnectorFormDialog = (
 
 const runOnTokenCreated = (
   connector: ConnectorEntry,
-  client: Client,
+  serviceResolver: ServiceResolver.ServiceResolver,
   db: Database.Database,
   input: {
     accessToken: AccessToken.AccessToken;
@@ -96,7 +95,13 @@ const runOnTokenCreated = (
   }
   return onTokenCreated(input).pipe(
     Effect.provide(FetchHttpClient.layer),
-    Effect.provide(clientCredentialsLayer(client, db)),
+    // Resolved through the process manager so the connector reads its credential from the same
+    // space-scoped `CredentialsService` operations use.
+    Effect.provide(
+      ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
+        Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+      ),
+    ),
     Effect.catchAll((error) =>
       Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
     ),
@@ -143,7 +148,7 @@ const openSyncTargetsDialogAfterConnectionCreated = (
 
 const finalizePendingEntry = (
   invoker: Operation.OperationService,
-  client: Client,
+  serviceResolver: ServiceResolver.ServiceResolver,
   entry: Pending,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
@@ -152,7 +157,7 @@ const finalizePendingEntry = (
     const persistedConnection = db.add(connection);
     Obj.setParent(persistedToken, persistedConnection);
 
-    yield* runOnTokenCreated(connector, client, db, {
+    yield* runOnTokenCreated(connector, serviceResolver, db, {
       accessToken: persistedToken,
       connection: persistedConnection,
       existingTarget,
@@ -187,6 +192,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* Capability.get(ClientCapabilities.Client);
     const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+    const serviceResolver = yield* Capability.get(Capabilities.ServiceResolver);
     const pluginContext = yield* Capability.Service;
 
     let cachedEdgeClient: EdgeHttpClient | undefined;
@@ -245,7 +251,7 @@ export default Capability.makeModule(
         if (entry.mode === 'reauth') {
           return;
         }
-        yield* finalizePendingEntry(invoker, client, entry);
+        yield* finalizePendingEntry(invoker, serviceResolver, entry);
       });
 
     const handleMessage = (event: MessageEvent): void => {
@@ -404,7 +410,7 @@ export default Capability.makeModule(
           if (inMemory.mode === 'reauth') {
             return;
           }
-          yield* finalizePendingEntry(invoker, client, inMemory);
+          yield* finalizePendingEntry(invoker, serviceResolver, inMemory);
           return;
         }
 
@@ -465,7 +471,7 @@ export default Capability.makeModule(
           ? space.db.makeRef<Obj.Any>(DXN.tryMake(snapshot.existingTargetDxn)!)
           : undefined;
 
-        yield* finalizePendingEntry(invoker, client, {
+        yield* finalizePendingEntry(invoker, serviceResolver, {
           mode: 'create',
           token,
           connection,
@@ -497,7 +503,7 @@ export default Capability.makeModule(
           accessToken: Ref.make(accessToken),
         });
 
-        yield* finalizePendingEntry(invoker, client, {
+        yield* finalizePendingEntry(invoker, serviceResolver, {
           mode: 'create',
           token: accessToken,
           connection,
@@ -524,7 +530,7 @@ export default Capability.makeModule(
         const result = yield* connector.credentialForm.onSubmit({ values, connector, db });
 
         if (result.kind === 'complete') {
-          yield* finalizePendingEntry(invoker, client, {
+          yield* finalizePendingEntry(invoker, serviceResolver, {
             mode: 'create',
             token: result.accessToken,
             connection: result.connection,

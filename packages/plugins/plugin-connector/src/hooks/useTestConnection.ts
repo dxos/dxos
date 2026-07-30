@@ -7,16 +7,19 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
+import { useSpaceCallback } from '@dxos/app-framework/ui';
+import { Credential } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useConnector } from '#hooks';
 
 import { type Connection } from '../types';
-import { clientCredentialsLayer } from '../util/credentials-layer';
 
 export type TestConnectionStatus =
   /** No test has run yet (connection or its token not resolved). */
@@ -58,37 +61,49 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
 
   const retest = useCallback(() => setNonce((value) => value + 1), []);
 
-  useEffect(() => {
-    if (!connection || !connector) {
-      return;
-    }
-    const testConnection = connector.testConnection;
-    if (!testConnection) {
-      setStatus('unsupported');
-      setError(undefined);
-      return;
-    }
-    // Wait for the token ref to resolve, and for a db to read its credential from, before probing.
-    const db = accessToken && Obj.getDatabase(accessToken);
-    if (!accessToken || !db) {
-      // Reset rather than just return: a probe may already have been running when the token or its
-      // database went away, which would otherwise leave the status on 'testing' indefinitely.
-      setStatus('idle');
-      setError(undefined);
-      return;
-    }
+  const testConnection = connector?.testConnection;
+  // Wait for the token ref to resolve, and for a db to read its credential from, before probing.
+  const db = accessToken && Obj.getDatabase(accessToken);
 
-    let cancelled = false;
-    setStatus('testing');
-    setError(undefined);
+  // Resolved through the process manager so the connector reads its credential from the same
+  // space-scoped `CredentialsService` operations use.
+  const runTest = useSpaceCallback(
+    db?.spaceId,
+    [Credential.CredentialsService],
+    () => {
+      invariant(testConnection && connection && accessToken, 'Connection test ran without a resolved token.');
+      // Exit rather than failure, so a rejected credential is inspected here rather than thrown.
+      return Effect.exit(
+        testConnection({ accessToken, connection, client }).pipe(Effect.provide(FetchHttpClient.layer)),
+      );
+    },
+    [testConnection, connection, accessToken, client],
+  );
 
-    void Effect.runPromiseExit(
-      testConnection({ accessToken, connection, client }).pipe(
-        Effect.provide(FetchHttpClient.layer),
-        Effect.provide(clientCredentialsLayer(client, db)),
-      ),
-    ).then((exit) => {
-      if (cancelled) {
+  useAsyncEffect(
+    async (controller) => {
+      if (!connection || !connector) {
+        return;
+      }
+      if (!testConnection) {
+        setStatus('unsupported');
+        setError(undefined);
+        return;
+      }
+      if (!accessToken || !db) {
+        // Reset rather than just return: a probe may already have been running when the token or its
+        // database went away, which would otherwise leave the status on 'testing' indefinitely.
+        setStatus('idle');
+        setError(undefined);
+        return;
+      }
+
+      setStatus('testing');
+      setError(undefined);
+
+      // Service resolution failing rejects rather than yielding an exit; treat it as a failed probe.
+      const exit = await runTest().catch(Exit.die);
+      if (controller.signal.aborted) {
         return;
       }
       if (Exit.isSuccess(exit)) {
@@ -99,12 +114,9 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
         // A defect (unexpected throw) leaves no typed failure — fall back to a generic message.
         setError(Option.getOrUndefined(Cause.failureOption(exit.cause))?.message ?? 'Connection test failed.');
       }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [connection, connector, accessToken, accessTokenSnapshot?.token, client, nonce]);
+    },
+    [connection, connector, testConnection, accessToken, accessTokenSnapshot?.token, db?.spaceId, runTest, nonce],
+  );
 
   return { status, error, retest };
 };
