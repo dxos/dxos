@@ -666,7 +666,92 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
    alternate timelines with CRDT merge-back — close to Jazz's per-schema-hash branches. Possibly a
    better home for in-flight migration state than the overlay.
 
-## 11. References
+## 11. Cross-object lenses — reading through references
+
+Not built. Recorded because "flatten a graph into one form" is the most-requested thing a lens could
+do that it currently cannot, and because the answer is graded rather than yes/no.
+
+### 11.1 Shape today: a ref crosses, it does not open
+
+A mapping's `from` is a list of **property names on one object**, and `readSource` reads them off
+that object (`lens/mapping.ts`). There is no traversal.
+
+A `Ref` property is an opaque value. `compatible()` compares declarations by AST identifier, so
+`Ref(Person)` auto-maps to `Ref(Person)` and to nothing else — the ref is carried across by
+reference and the lens never looks inside it. So a lensed `Task` can hand you `assignee` as a ref;
+it cannot give you `assigneeName`.
+
+### 11.2 Three walls, in ascending order of hardness
+
+1. **`Lens.get` is synchronous and pure — deliberately.** Purity is what lets `checkLaws` run without
+   mutating anything, and what lets `useLensValue` project on every render (the fix for the staleness
+   bug in §6). But `ref.target` returns `T | undefined` _and triggers a load as a side effect_, and
+   `ref.load()` is a Promise. So a ref-reading lens is either async — which costs the law check and
+   render-time projection — or **partial**: it reads `undefined` until the target is in the working
+   set, and re-projects when it arrives.
+
+   Partial is the right answer. It is the same contract `Ref` already has, so it is not a new concept
+   for consumers, and it keeps `get` pure. The type must say so: a ref-derived property is
+   `T | undefined` even when the referenced property is required.
+
+2. **Reactivity has to follow the hop.** `useLensValue` subscribes to one object; a lens reading
+   through a ref that does not also subscribe to the target goes stale — the exact failure already
+   hit once with the text lens. `internal/Ref/atoms.ts` (`refSimpleFamily`) already does this work:
+   subscribes to the target, resolves to `undefined` on delete, `keepAlive`. The hook composes that
+   rather than inventing it.
+
+3. **Writing through a ref is a write to another automerge document, so it is not atomic.** `put`
+   currently emits writes against one object and `applyWrites` lands them in a single `Obj.update`.
+   Across a hop there is no transaction. This is the same wall as cross-object migration (§10.5) and
+   takes the same answer — the `Write` vocabulary grows an object address, the runner applies per
+   object today, and a cross-object transaction takes the same write set when Automerge ships one.
+
+### 11.3 What is already sound: strong dependencies
+
+Not every hop is equally uncertain. `internal/Ref/strong-deps.ts` defines an entity's
+**strong-dependency set** — its schema, a relation's **source and target**, and its **parent** — and
+an entity is not surfaced until those are loaded. Arbitrary refs are deliberately not in that set.
+
+So there is a class of traversal that is **total and synchronous today**: a lens on a relation
+reading through to its source or target, and a lens on a child reading through to its parent. No
+partiality, no async, no new loading machinery — the objects are already there by the time the lensed
+one exists. _(Read from the code, not yet exercised — confirm before relying on it.)_
+
+That suggests the scoping principle: **lens the subtree that is already loaded together, not the
+whole graph.** Strong-dep traversal first, arbitrary refs second and explicitly partial.
+
+### 11.4 Best case, graded
+
+|                                                  | Read                                                          | Write                                                                   |
+| ------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **Strong deps** (relation source/target, parent) | Total, sync, no new machinery                                 | Non-atomic across the hop                                               |
+| **Single arbitrary ref**                         | Partial (`undefined` until loaded), reactive via the ref atom | Non-atomic; convergent because writes stay minimal                      |
+| **Multi-hop**                                    | Partial, and each hop compounds the load latency              | Not worth supporting initially                                          |
+| **`Ref.Array` / collections**                    | Fine — map over loaded targets                                | Ill-defined: which element, and does a write create one? Keep read-only |
+
+Proposed surface, consistent with the existing `Lens.from`:
+
+```ts
+Lens.make(id, Task.Task, TaskRow, {
+  assigneeName: Lens.through(['assignee', 'name']), // partial, read-only by default
+  assigneeEmail: Lens.through(['assignee', 'email'], { write: true }), // opt in, non-atomic
+});
+```
+
+**What not to expect**, so it is not relitigated later: atomicity across a hop before Automerge has
+cross-object transactions; queryability or indexing of a ref-derived property (worse than the
+overlay — the value does not live on the object at all); and a `get` that guarantees a value for
+anything but a strong dep.
+
+### 11.5 Unify with cross-object migration
+
+These are the same feature seen from two ends. §10.5 needs a write set addressed to several objects;
+this needs a read path addressed through several objects. The unification is to let `from` be a list
+of **paths** rather than property names — `from: [['status'], ['assignee', 'name']]` — with today's
+`from: ['status']` as the one-element-path case. Designing them together is cheaper than twice, and
+it keeps one `Write` vocabulary rather than two.
+
+## 12. References
 
 - panproto — https://github.com/panproto/panproto · book https://panproto.dev/book/ ·
   `panproto-lens` https://docs.rs/panproto-lens/latest/panproto_lens/ ·

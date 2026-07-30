@@ -313,6 +313,14 @@ not by being planned.
       the losslessness bar in DESIGN.md §10. Not scheduled; M1 is gated on the lens landing in core.
 - [ ] **`Lens.generate(source, target)`** — see [the decision note](#lensgenerate--decision-note)
       below. **Recommendation: don't take it on yet**; do "Richer source annotations" (Phase 5) first.
+- [ ] **Cross-object lenses — reading through refs** (DESIGN.md §11). Today a `Ref` property crosses
+      the lens as an opaque value; `from` names properties on one object and never traverses. Best
+      case, graded: **strong-dep traversal** (a relation's source/target, an object's parent) is total
+      and synchronous because those are loaded before the entity surfaces; an **arbitrary ref** is
+      readable but partial (`undefined` until loaded) and must keep `get` sync and pure; **writes**
+      through a hop are non-atomic until Automerge has cross-object transactions; **collections** stay
+      read-only. Design it with §10.5 — same feature from two ends, unified by letting `from` be a
+      list of paths.
 - [ ] Querying _through_ a structural lens (rewrite `Filter` on lensed property names).
 - [ ] Read-only lens as a redaction/capability boundary.
 - [ ] Lens versioning when the base type migrates — including whether the target re-derives
