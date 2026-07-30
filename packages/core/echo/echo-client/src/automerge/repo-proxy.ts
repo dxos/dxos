@@ -420,9 +420,6 @@ export class RepoProxy extends Resource {
       );
 
       const updates: DocumentUpdate[] = [];
-      // Heads each update carries, so the acknowledgement below confirms exactly what was sent
-      // rather than whatever a concurrent pass happened to stage last.
-      const sentHeads = new Map<DocumentId, A.Heads>();
       const addMutations = (documentIds: DocumentId[]) => {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
@@ -433,10 +430,9 @@ export class RepoProxy extends Resource {
             log('skipping update for removed handle', { documentId });
             continue;
           }
-          const pending = handle._getPendingChanges();
-          if (pending) {
-            updates.push({ documentId, mutation: pending.mutation });
-            sentHeads.set(documentId, pending.heads);
+          const mutation = handle._getPendingChanges();
+          if (mutation) {
+            updates.push({ documentId, mutation });
           }
         }
       };
@@ -451,9 +447,9 @@ export class RepoProxy extends Resource {
         if (this._lifecycleState === LifecycleState.CLOSED) {
           return;
         }
-        for (const [documentId, heads] of sentHeads) {
+        for (const { documentId } of updates) {
           // Handle may have been removed between RPC start and ack — skip silently.
-          this._handles[documentId]?._confirmSync(heads);
+          this._handles[documentId]?._confirmSync();
         }
       }
 
