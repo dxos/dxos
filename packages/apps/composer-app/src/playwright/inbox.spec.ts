@@ -34,6 +34,9 @@ test.describe('Inbox', () => {
   // Create a JMAP-connected mailbox by driving the real credential form; provider HTTP is served by
   // the fixture-backed mock.
   const connectMailbox = async () => {
+    // App startup plus a first sync outlasts the default per-test budget; claimed here, before any
+    // step spends it.
+    test.slow();
     // The inbox plugin is enabled by default (see composer-app plugin-defs getDefaults).
     const mock = await installInboxMock(host.page, { account: 'me@jmap.test' });
     await host.createSpace();
@@ -55,9 +58,8 @@ test.describe('Inbox', () => {
   };
 
   // A first sync creates the sync Routine and then waits on the trigger dispatcher to run it, which
-  // outlasts the default assertion timeout — and, with app startup, the default per-test budget.
+  // outlasts the default assertion timeout.
   const expectPopulated = async () => {
-    test.slow();
     await expect(Inbox.rows(host.page).first()).toBeVisible({ timeout: 45_000 });
     expect(await Inbox.rows(host.page).count()).toBeGreaterThan(0);
   };
