@@ -32,7 +32,7 @@ import { jmapCredentialForm } from './jmap-credential-form';
 const MAIL_SYNC_CRON = '*/10 * * * *';
 
 /** Whether a newly bound mailbox syncs itself instead of waiting for the user to ask. */
-const MAIL_AUTO_SYNC = true;
+const MAIL_AUTO_SYNC = false;
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),

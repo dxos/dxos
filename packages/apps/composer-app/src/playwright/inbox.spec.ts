@@ -17,7 +17,7 @@ if (process.env.DX_PWA !== 'false') {
  * plugin-inbox's connector capability — a stale value here fails these tests rather than quietly
  * exercising the other path, since the two configurations differ in whether "Sync now" is pressed.
  */
-const AUTO_SYNC = true;
+const AUTO_SYNC = false;
 
 test.describe('Inbox', () => {
   let host: AppManager;
