@@ -82,6 +82,9 @@ export const useEditorMenu = ({
   // embed); in search mode the rest of the query comes from the popover's input.
   const contextRef = useRef<{ view: EditorView; pos: number; text: string; trigger?: string } | null>(null);
 
+  // Monotonic token identifying the latest menu query; bumped per request and on close.
+  const requestRef = useRef(0);
+
   /**
    * Get filtered options.
    */
@@ -103,7 +106,15 @@ export const useEditorMenu = ({
    */
   const updateGroups = useCallback(
     async ({ view, pos, text, trigger }: { view: EditorView; pos: number; text: string; trigger?: string }) => {
-      groupsRef.current = (await getMenuOptions({ state: view.state, pos, text, trigger })) ?? [];
+      const request = ++requestRef.current;
+      const groups = (await getMenuOptions({ state: view.state, pos, text, trigger })) ?? [];
+      // Queries resolve out of order, so a slower earlier one must not overwrite a newer result
+      // (or repopulate the menu after it closed).
+      if (request !== requestRef.current) {
+        return;
+      }
+
+      groupsRef.current = groups;
       const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
       if (firstItem) {
         setCurrentItem(firstItem.id);
@@ -129,6 +140,10 @@ export const useEditorMenu = ({
         setSearch(false);
         setQuery('');
         contextRef.current = null;
+        // Invalidate in-flight queries so a late response cannot repopulate the closed menu.
+        requestRef.current++;
+        groupsRef.current = [];
+        currentRef.current = null;
         view.dispatch({
           effects: [popoverRangeEffect.of(null)],
         });

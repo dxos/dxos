@@ -29,6 +29,8 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
+import { translationKey } from '#translations';
+
 import { type EditorMenuGroup, type EditorMenuItem, getMenuItem } from './menu';
 
 export type EditorMenuProviderProps = PropsWithChildren<{
@@ -75,6 +77,7 @@ export const EditorMenuProvider = ({
   onQueryChange,
   onNavigate,
 }: EditorMenuProviderProps) => {
+  const { t } = useTranslation(translationKey);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Hold the latest `getView` so callbacks/effects always read the current view without re-subscribing.
@@ -210,8 +213,9 @@ export const EditorMenuProvider = ({
                 classNames='shrink-0 mbe-1'
                 value={query}
                 placeholder={searchPlaceholder}
-                // Placeholder text is not a persistent accessible name.
-                aria-label={searchPlaceholder}
+                // Placeholder text is not a persistent accessible name, and it is optional — fall
+                // back to the generic label so the input is never anonymous.
+                aria-label={searchPlaceholder ?? t('search.label')}
                 onChange={(event) => onQueryChange?.(event.target.value)}
                 onKeyDown={handleSearchKeyDown}
               />
