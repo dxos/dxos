@@ -17,6 +17,10 @@ module bodies authored with `Capability.lazyModule` (code-split) or
 opaque `Capability.Module<Options>`, parameterized only by its options type, so a
 module export never leaks a foreign capability's type into declaration emit.
 
+Every plugin in the repository is migrated to this API. The plugins gain no
+behaviour of their own from the change, but any plugin defined outside the
+repository must be migrated too — the legacy API is removed, not deprecated.
+
 Breaking: the legacy event-wiring API is removed — `AppPlugin` and its
 `addXModule` helpers, `firesBeforeActivation`/`firesAfterActivation`, `compatFires`,
 and the ordering-only `Setup*`/`*Ready` activation events (genuine runtime events
