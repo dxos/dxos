@@ -282,14 +282,20 @@ export type CommentConfig = Readonly<{
  */
 export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.commentConfig');
 
-export type NavigationTarget = {
-  /** Navigation path usable with the Open operation. */
-  path: string;
-  /** Human-readable label. */
-  label: string;
-  /** Object type. */
-  type: string;
-};
+export const NavigationTargetSchema = Schema$.Struct({
+  path: Schema$.String.annotations({ description: 'Navigation path to use with the Open operation.' }),
+  label: Schema$.String.annotations({ description: 'Human-readable label.' }),
+  type: Schema$.String.annotations({ description: 'Object type.' }),
+  /**
+   * Set by a resolver that only produces a generic path — the database subtree, which guarantees every
+   * ECHO object *a* path but is not where the tree shows it. Resolution prefers non-fallback targets,
+   * so a resolver that knows an object's canonical home (its collection, a type section) wins. Only
+   * the resolver knows whether it is being generic, hence a declared flag rather than path sniffing.
+   */
+  fallback: Schema$.optional(Schema$.Boolean),
+});
+
+export type NavigationTarget = Schema$.Schema.Type<typeof NavigationTargetSchema>;
 
 export type NavigationQuery = {
   uri?: URI.URI;
@@ -301,7 +307,8 @@ export type NavigationQuery = {
  * When called without a query, returns the plugin's default navigable pages.
  *
  * Requires `Database.Service`: a resolver turns an object URI into a path, which means loading the
- * object. The caller derives the database from the query's space and provides the layer.
+ * object. The caller derives the database from the query's space and provides the layer — see
+ * `NavigationOperation.ResolveNavigationTargets`, the one entry point that runs every resolver.
  * @category Capability
  */
 export type NavigationTargetResolver = (

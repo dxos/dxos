@@ -14,7 +14,9 @@ import { meta } from './meta';
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ClientPlugin', () => {
-  test('modules activate on the expected events', async ({ expect }) => {
+  // Booting a real client and resolving the operation-handler set takes ~12s on modest hardware, so the
+  // default 15s per-test budget leaves no headroom under concurrent runs.
+  test('modules activate on the expected events', { timeout: 60_000 }, async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({})],
     });

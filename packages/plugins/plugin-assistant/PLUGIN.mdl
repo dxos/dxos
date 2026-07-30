@@ -68,14 +68,6 @@ type Message
 ```
 
 ```mdl
-type NavigationTarget
-  fields:
-    path: string
-    label: string
-    type: string
-```
-
-```mdl
 type SkillForm
   fields:
     key: string
@@ -195,16 +187,6 @@ op EnsureCompanionChat
 ```
 
 ```mdl
-op ResolveNavigationTargets
-  desc: Returns navigation paths for objects in the active space, optionally filtered by DXN.
-  input:
-    query?:
-      dxn?: DXN
-  output:
-    targets: NavigationTarget[]
-```
-
-```mdl
 op OnCreateSpace
   desc: Provisions initial assistant objects when a new space is created.
   input:
@@ -273,7 +255,9 @@ feat F-4: Multi-Provider LLM
 ```mdl
 feat F-5: Tool Execution
 
-  req F-5.1: The assistant skill exposes LayoutOperation.Open and ResolveNavigationTargets as tools.
+  req F-5.1: The assistant skill exposes LayoutOperation.Open and NavigationOperation.ResolveNavigationTargets
+             as tools. Both are owned elsewhere — the assistant contributes no navigation operation of its
+             own, so an agent resolving an object to a path uses the same entry point the UI does.
   req F-5.2: Web search tool is registered via WebSearchToolkit.
   req F-5.3:
     when: AI invokes a tool during a conversation
@@ -343,15 +327,6 @@ test T-5: Run prompt in background
   then:
     - a new Chat is created and returned
     - the prompt runs via compute runtime without opening the UI
-```
-
-```mdl
-test T-6: Navigation target resolution
-  given: active space contains documents and collections
-  when: op:ResolveNavigationTargets is called with no query
-  then:
-    - returned targets include paths for all top-level navigable objects
-    - each target has a non-empty label and type
 ```
 
 ```mdl

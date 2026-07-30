@@ -468,6 +468,14 @@ feat F-5: Collections
   req F-5.1: A Collection is an ordered list of references to ECHO objects.
   req F-5.2: CollectionArticle renders collection contents with drag-to-reorder support.
   req F-5.3: op:CollectionOperation.Create creates an empty Collection in the active space.
+  req F-5.4: An object's collection ancestry is its canonical location: `resolveCollectionObjectPath`
+             walks the space's collection tree to the root collection and yields
+             `content/collections/<ancestors…>/<objectId>`. Both URL resolution (the `object` url key)
+             and the plugin's NavigationTargetResolver answer with it, so a link to an object lands
+             where the nav tree shows it.
+  req F-5.5: The plugin's NavigationTargetResolver offers the collection path first and the database
+             path (`system/database/<type>/<objectId>`) as `fallback` — every object has the latter, but
+             it names a hidden node, so it is only used for objects outside the collection tree.
 ```
 
 ```mdl

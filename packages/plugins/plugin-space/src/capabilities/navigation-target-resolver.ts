@@ -12,6 +12,8 @@ import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
 
 import { meta } from '#meta';
 
+import { resolveCollectionObjectPath } from '../collection-path';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const resolver: AppCaps.NavigationTargetResolver = (query) =>
@@ -43,11 +45,19 @@ export default Capability.makeModule(
           return [];
         }
 
+        const label = Entity.getLabel(object) ?? '';
+
+        // Where the tree actually shows the object, when it lives in the collection tree. Offered ahead
+        // of the database path, which every object has but no visible node bears.
+        const collectionPath = yield* resolveCollectionObjectPath({ objectId: object.id });
+
         return [
+          ...(collectionPath ? [{ path: collectionPath, label, type: typename }] : []),
           {
             path: GraphPath.getObjectPath(db.spaceId, typename, object.id),
-            label: Entity.getLabel(object) ?? '',
+            label,
             type: typename,
+            fallback: true,
           },
         ];
       });
