@@ -2,9 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useReducer } from 'react';
 
 import { Obj } from '@dxos/echo';
 
@@ -85,28 +83,24 @@ export const useLens: {
 /**
  * The lensed view as a value, without an update callback.
  *
- * Reactivity comes from the base object's own atom: a lens adds no state of its own, so any change to
- * the object — including one replicated from another peer, and including an overlay value in the
- * object's annotations — reprojects the view.
+ * A lens holds no state of its own: the view is projected from the live object on every render, and
+ * `Obj.subscribe` is only the signal that schedules one.
  */
 export const useLensValue = <S extends Obj.Unknown, T extends Record<string, any>, K extends keyof T & string>(
   obj: S | undefined,
   lens: Lens.Lens<any, T>,
   property?: K,
 ): any => {
-  const atom = useMemo(() => {
-    if (obj == null) {
-      return Atom.make<undefined>(() => undefined);
-    }
-    const source = Obj.atom(obj);
-    return Atom.make((get) => {
-      // Depend on the object snapshot so the view recomputes on every change, then read through the
-      // lens (which needs the live object, not the snapshot, to resolve refs and overlays).
-      get(source);
-      const view = Lens.get(obj, lens);
-      return property === undefined ? view : view[property];
-    });
-  }, [obj, lens, property]);
+  const [, bump] = useReducer((value: number) => value + 1, 0);
+  useEffect(() => (obj ? Obj.subscribe(obj, bump) : undefined), [obj, bump]);
 
-  return useAtomValue(atom as any);
+  // Projected on every render rather than memoized against a change signal. The projection is pure and
+  // cheap, and caching it behind a signal is how a lens over TEXT went stale: the subscription that
+  // fires for a property assignment does not fire for every string-CRDT splice, so a cached view
+  // survived edits the object had already taken.
+  if (obj == null) {
+    return undefined;
+  }
+  const view = Lens.get(obj, lens);
+  return property === undefined ? view : view[property];
 };

@@ -158,29 +158,87 @@ export const DefaultTest: Story = {
     await expect(editor.textContent).not.toContain('#');
     await expect(editor.textContent).not.toContain('**');
     // ...they render as actual rich text instead.
-    await expect(editor.querySelector('strong')?.textContent).toBe('what is stored');
-    await expect(editor.querySelector('em')?.textContent).toBe('a view of it');
+    const strong = editor.querySelector<HTMLElement>('strong')!;
+    const em = editor.querySelector<HTMLElement>('em')!;
+    await expect(strong.textContent).toBe('what is stored');
+    await expect(em.textContent).toBe('a view of it');
     await expect(editor.querySelector('code')?.textContent).toBe('source range');
 
-    // Editing a heading in the rich-text editor splices only that heading's range: the markdown
-    // editor shows the new title and every other line is untouched.
-    const heading = editor.querySelector<HTMLElement>('h1')!;
-    await userEvent.click(heading);
+    // And they render as rich text *visibly*. Asserting the elements exist is not enough: the theme's
+    // preflight resets heading sizes, `strong` weight, and list markers, so the earlier version of
+    // this test passed while every one of them rendered as plain text.
+    const paragraph = editor.querySelector<HTMLElement>('p')!;
+    const heading1 = editor.querySelector<HTMLElement>('h1')!;
+    const heading2 = editor.querySelector<HTMLElement>('h2')!;
+    const size = (element: HTMLElement) => Number.parseFloat(getComputedStyle(element).fontSize);
+    await expect(size(heading1)).toBeGreaterThan(size(paragraph));
+    await expect(size(heading2)).toBeGreaterThan(size(paragraph));
+    await expect(Number.parseInt(getComputedStyle(strong).fontWeight, 10)).toBeGreaterThan(
+      Number.parseInt(getComputedStyle(paragraph).fontWeight, 10),
+    );
+    await expect(getComputedStyle(em).fontStyle).toBe('italic');
+
+    // Bullets are a real list, with markers — a bare `li` outside a `ul` renders none.
+    const list = editor.querySelector<HTMLElement>('ul')!;
+    await expect(list).toBeInTheDocument();
+    await expect(list.querySelectorAll('li')).toHaveLength(2);
+    await expect(getComputedStyle(list.querySelector('li')!).display).toBe('list-item');
+    await expect(getComputedStyle(list).listStyleType).toBe('disc');
+
+    // ---------------------------------------------------------------------------------------------
+    // Direction 1: edit through the LENS, and the stored markdown follows.
+    // ---------------------------------------------------------------------------------------------
+    await userEvent.click(editor.querySelector<HTMLElement>('h1')!);
     await userEvent.keyboard('EDIT');
 
+    // Assert against the STORED string — the lens's whole claim is about what it wrote.
     await waitFor(
       async () => {
-        // The edit reached the stored markdown, still as a heading.
-        await expect(find('block-list')).toHaveTextContent('heading1');
-        await expect(find('markdown-editor')).toHaveTextContent('EDIT');
-        // ...and every other block survived verbatim. A whole-document rewrite — or a lens that
-        // re-serialized the tree — would show up right here.
-        await expect(find('markdown-editor')).toHaveTextContent('## Why it merges');
-        await expect(find('markdown-editor')).toHaveTextContent('Each block remembers its');
-        await expect(find('markdown-editor')).toHaveTextContent('- So an edit splices that range alone');
+        const stored = find('raw-content').textContent ?? '';
+        await expect(stored).toContain('EDIT');
+        // The edit stayed inside the heading, and every other line survived verbatim. A
+        // whole-document rewrite — or a lens that re-serialized the tree — would show up right here.
+        await expect(stored).toContain('## Why it merges');
+        await expect(stored).toContain('- Each block remembers its `source range`');
+        await expect(stored).toContain('- So an edit splices that range alone');
+        await expect(stored).toContain('**what is stored**');
       },
       { timeout: 10_000 },
     );
+
+    // ---------------------------------------------------------------------------------------------
+    // Direction 2: edit the markdown SOURCE, and the lensed editor follows.
+    //
+    // This is the direction that only works because the lens re-projects on every change: the
+    // ProseMirror editor holds its own document, and reconciles from the lens when it isn't focused.
+    // ---------------------------------------------------------------------------------------------
+    const line = Array.from(find('markdown-editor').querySelectorAll<HTMLElement>('.cm-line')).find((candidate) =>
+      candidate.textContent?.includes('So an edit splices'),
+    )!;
+    await expect(line).toBeInTheDocument();
+    await userEvent.click(line);
+    await userEvent.keyboard('SYNC');
+
+    await waitFor(
+      async () => {
+        // The typed text reached the stored string...
+        await expect(find('raw-content').textContent ?? '').toContain('SYNC');
+        // ...the lens re-parsed it into the same bullet...
+        await expect(find('block-list')).toHaveTextContent('SYNC');
+        // ...and the rich-text editor shows it, still inside the list.
+        // Which block the caret was in is not worth pinning down; that it reached the lensed editor is.
+        await expect(editor.textContent).toContain('SYNC');
+        // The structure survived the source edit: still one list, still two items.
+        await expect(editor.querySelectorAll('ul')).toHaveLength(1);
+        await expect(editor.querySelectorAll('li')).toHaveLength(2);
+        // The earlier lensed edit is still there: neither side clobbered the other.
+        await expect(find('raw-content').textContent ?? '').toContain('EDIT');
+      },
+      { timeout: 10_000 },
+    );
+
+    // Marks survive an edit from the source side, since the lens re-parses rather than re-serializing.
+    await expect(editor.querySelector('strong')?.textContent).toBe('what is stored');
   },
 };
 
@@ -209,18 +267,40 @@ export const Collaboration: Story = {
       timeout: 15_000,
     });
 
-    // Peer 1 edits a block; peer 0's markdown editor receives the splice.
+    // Peer 1 edits through the LENS; peer 0 receives the splice into its stored markdown.
     const heading = editor.querySelector<HTMLElement>('h2')!;
     await userEvent.click(heading);
     await userEvent.keyboard('EDIT');
 
     await waitFor(
       async () => {
-        await expect(findAll('markdown-editor')[0]).toHaveTextContent('EDIT');
-        // ...and the rest of the document is intact on the peer that did not make the edit — the
-        // splice touched one block's range and nothing else crossed the wire.
-        await expect(findAll('markdown-editor')[0]).toHaveTextContent('# One object, two editors');
-        await expect(findAll('markdown-editor')[0]).toHaveTextContent('Each block remembers its');
+        // Read the stored string on the peer that did NOT make the edit.
+        const stored = findAll('raw-content')[0].textContent ?? '';
+        await expect(stored).toContain('EDIT');
+        // ...and the rest of the document is intact there — the splice touched one block's range and
+        // nothing else crossed the wire.
+        await expect(stored).toContain('# One object, two editors');
+        await expect(stored).toContain('- Each block remembers its `source range`');
+      },
+      { timeout: 15_000 },
+    );
+
+    // And the other direction: peer 0 edits the markdown SOURCE, and peer 1's lensed editor follows.
+    const [markdown] = findAll('markdown-editor');
+    const line = Array.from(markdown.querySelectorAll<HTMLElement>('.cm-line')).find((candidate) =>
+      candidate.textContent?.includes('So an edit splices'),
+    )!;
+    await userEvent.click(line);
+    await userEvent.keyboard('SYNC');
+
+    await waitFor(
+      async () => {
+        // Peer 1's block list and rich-text editor both reflect peer 0's source edit...
+        await expect(findAll('block-list')[1]).toHaveTextContent('SYNC');
+        await expect(findAll('pm-editor')[0].textContent).toContain('SYNC');
+        // ...and peer 1's own earlier edit survived peer 0's, on both peers.
+        await expect(findAll('raw-content')[0].textContent ?? '').toContain('EDIT');
+        await expect(findAll('raw-content')[1].textContent ?? '').toContain('EDIT');
       },
       { timeout: 15_000 },
     );

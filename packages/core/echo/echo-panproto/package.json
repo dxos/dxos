@@ -41,8 +41,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "@panproto/core": "catalog:",
     "effect": "catalog:",
     "react": "catalog:"

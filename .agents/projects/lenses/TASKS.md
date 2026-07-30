@@ -206,6 +206,19 @@ keeps them honest.
 - [x] **Story shape** — `Default` is the side-by-side story and renders only, for a human to poke at;
       `DefaultTest` carries its assertions; `Collaboration` carries its own inline (no separate twin).
       Titles are `stories/stories-lens/*`, matching the sibling packages.
+- [x] **Rich text renders as rich text, not as elements that happen to exist.** The first version of
+      the assertions passed while headings, `strong`, and bullets all rendered as undifferentiated
+      text: the theme's preflight resets heading sizes, bold weight, and list markers, and a bare
+      `<li>` outside a `<ul>` has no marker at all. Fixed by giving the ProseMirror schema real
+      `bullet_list`/`list_item` nodes (consecutive bullets grouped on the way in, ungrouped on the way
+      out, since the lens addresses one markdown line per block) plus a `CONTENT_CLASSES` block on the
+      editor, and by asserting **computed style** — `fontSize` vs the paragraph, `fontWeight`,
+      `fontStyle`, `display: list-item`, `listStyleType: disc`.
+- [x] **Both directions stay in sync as either side is edited.** `DefaultTest` now drives Direction 1
+      (edit the lensed block tree → assert the *stored string*, with every untouched line verbatim) and
+      Direction 2 (edit the markdown source → assert the block list and the lensed editor follow, the
+      list structure survives, and the Direction-1 edit is still there). `Collaboration` does the same
+      across two peers. The markdown pane is deliberately the source view — no `decorateMarkdown`.
 
 ### Notes for whoever runs these
 
@@ -219,6 +232,19 @@ keeps them honest.
   _other_ blocks rather than on an exact caret position.
 - Don't hardcode source offsets in assertions; derive them from the fixture. The offsets are the
   claim, so a wrong constant reads as a lens bug.
+- **A lens must not be cached behind a change signal.** `useLensValue` originally memoized the
+  projection against a derived `Obj.atom`; that atom does not invalidate for string-CRDT splices, so a
+  lens over `Text` served a view the object had already moved past. It now subscribes for the
+  _schedule_ and projects on every render — the projection is pure and cheap, and correctness beats the
+  saved call. Anything else that caches a lens view owes the same reasoning.
+- **The editor that holds its own document needs three things** to reconcile without fighting the
+  caret: an effect keyed on a *value* signature (`signatureOf`) rather than object identity, a
+  `REMOTE`-marked transaction so `dispatchTransaction` doesn't write an incoming change straight back
+  out, and a `blur` handler to apply whatever was skipped while it had focus.
+- Don't assert which block a caret landed in after typing into the other editor. Diagnostics chased a
+  "stale signature" that was changing correctly on every keystroke — the real problem was the
+  assertion pinning the typed text to the `<ul>`. Assert that the text arrived and that the structure
+  survived.
 
 ## Phase 5: Toward first-class
 

@@ -16,9 +16,10 @@ import {
 } from '@dxos/ui-editor';
 
 //
-// The canonical text surface: the same extension set Composer's markdown editor uses
-// (`createBasicExtensions` + `createThemeExtensions` with syntax highlighting + `createMarkdownExtensions`),
-// bound straight to `Text.content` and with no knowledge that a lens exists.
+// The canonical text surface: Composer's markdown extension bundle over `Text.content`, with no
+// knowledge that a lens exists. Deliberately the source view — syntax visible, highlighted — because
+// this pane's job is to show the string as stored. (`decorateMarkdown`, which hides the markers and
+// renders marks in place, is what a document surface adds on top; it would obscure the point here.)
 //
 // Its automerge extension applies character-level edits, which is why a lens write has to be a splice:
 // a whole-document rewrite from the other editor would fight it and destroy this one's cursor.
