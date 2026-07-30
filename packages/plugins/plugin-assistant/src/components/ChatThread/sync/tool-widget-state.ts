@@ -23,13 +23,11 @@ export const applyToolBlockToWidgetState = (context: ToolWidgetStateSink, block:
       });
       break;
     }
+
     case 'toolResult': {
       context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] } = { blocks: [] }) => ({
         blocks: [...blocks, block],
       }));
-      break;
-    }
-    default: {
       break;
     }
   }

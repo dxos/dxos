@@ -84,14 +84,16 @@ sequenceDiagram
    (`useChatServices`), and builds an **`AiChatProcessor`** (`useChatProcessor`): it opens a
    client-side `AiSession.Session` over the chat's `Feed` (used only for context binding /
    system-prompt preview — the turn itself runs elsewhere, see 3) and a _space layer_
-   (`ServiceResolver.provide(Database, Credentials, AiService, AgentService, Registry,
-OpaqueToolkitProvider)`) that every processor effect is provided with.
+   (`ServiceResolver.provide(Database, Credentials, AiService, AgentService, Registry, OpaqueToolkitProvider)`)
+   that every processor effect is provided with.
+
 2. **`Chat.Prompt`** (CodeMirror editor) emits `{ type: 'submit', text }` on the `Chat.Root`
    event bus. `Chat.Root` awaits `onSubmit` (lets a transient chat persist its feed first),
    captures ephemeral context (`getContext` — e.g. companion-document selection), then calls
    `processor.request({ message, context })`.
-3. **`AiChatProcessor.request`** → `AgentService.getSession(feed, { model, provider,
-instructions })` spawns (or reuses) a durable, process-backed **`AgentProcess`** keyed on the
+
+3. **`AiChatProcessor.request`** → `AgentService.getSession(feed, { model, provider, instructions })`
+   spawns (or reuses) a durable, process-backed **`AgentProcess`** keyed on the
    conversation feed; forks `session.subscribeEphemeral()`; `session.submitPrompt(...)` pushes
    the prompt onto the agent's persisted input queue; `session.waitForCompletion()` awaits the
    turn. In production the `AgentService` layer is contributed as an application-affinity

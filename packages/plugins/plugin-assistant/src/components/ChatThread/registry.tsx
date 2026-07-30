@@ -9,8 +9,7 @@ import { ContentBlock, type Message } from '@dxos/types';
 import { AnchorWidget, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
 import { type Assistant } from '../../types';
-import { type BlockRenderer, type MessageThreadContext } from './sync';
-import { applyToolBlockToWidgetState } from './tool-widget-state';
+import { type BlockRenderer, type MessageThreadContext, applyToolBlockToWidgetState } from './sync';
 import {
   FallbackWidget,
   ReasoningWidget,
