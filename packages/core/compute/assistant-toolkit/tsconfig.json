@@ -69,6 +69,9 @@
       "path": "../../mesh/edge-client"
     },
     {
+      "path": "../../protocols"
+    },
+    {
       "path": "../agent-runtime"
     },
     {

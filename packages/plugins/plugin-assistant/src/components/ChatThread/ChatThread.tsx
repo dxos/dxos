@@ -82,13 +82,29 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       initializedRef.current = true;
     }, [controller, error]);
 
+    // Widget callbacks are routed through the syncer's context, so they must be referentially stable
+    // — rebuilding the syncer replaces the document.
+    const onEventRef = useRef(onEvent);
+    useEffect(() => {
+      onEventRef.current = onEvent;
+    }, [onEvent]);
+    const handleRewind = useCallback((id: string) => onEventRef.current?.({ type: 'rewind', id }), []);
+
     // Update document.
     const renderer = useMemo(() => createBlockRenderer(viewType), [viewType]);
-    const syncer = useMemo(() => controller && new MessageSyncer(controller, renderer), [controller, renderer]);
+    const syncer = useMemo(
+      () => controller && new MessageSyncer(controller, renderer, { onRewind: handleRewind }),
+      [controller, renderer, handleRewind],
+    );
     useEffect(() => {
       if (!syncer) {
         return;
       }
+
+      // Publish the context every pass: widget props read it from a CodeMirror state field, and
+      // `setContext` dispatches through `viewRef.current?` — a no-op before the view exists, so doing this
+      // once on mount silently loses it and every widget callback (e.g. rewind) dies on the optional call.
+      controller?.setContext(syncer.context);
 
       if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');

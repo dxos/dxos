@@ -37,11 +37,25 @@ export type BlockRenderer = (
 ) => string | undefined;
 
 /**
+ * Callbacks a widget can invoke through {@link MessageThreadContext}.
+ *
+ * React widgets are portaled by `MarkdownStream` without its `onEvent`, so interactive widgets reach
+ * the thread through the context they already receive in their props.
+ */
+export type MessageThreadHandlers = {
+  /** Soft-fork the thread from the given message. */
+  onRewind?: (messageId: string) => void;
+};
+
+/**
  * Thread context passed to renderer.
  * This enables the renderer to "stream" content into the widget state.
  */
 export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
-  constructor(private readonly _widgetState?: XmlWidgetStateManager) {}
+  constructor(
+    private readonly _widgetState?: XmlWidgetStateManager,
+    private readonly _handlers: MessageThreadHandlers = {},
+  ) {}
 
   updateWidget<T>(id: string, value: StateDispatch<T>) {
     this._widgetState?.updateWidget(id, value);
@@ -50,6 +64,10 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
   // TODO(burdon): Resolve name from hypergraph.
   getObjectLabel(_id: URI.URI) {
     return 'Object';
+  }
+
+  rewind(messageId: string) {
+    this._handlers.onRewind?.(messageId);
   }
 }
 
@@ -70,6 +88,13 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
 export class MessageSyncer {
   private _threadId?: string;
 
+  /**
+   * Ids of the messages rendered so far, in document order. `update` streams a suffix, so it needs to
+   * know when the incoming list no longer extends what is on screen — a rewind drops turns, and an
+   * append-only path would leave them rendered.
+   */
+  private _renderedIds: string[] = [];
+
   /** Cumulative block index (across all completed blocks in all messages). */
   private _completed = 0;
 
@@ -87,8 +112,9 @@ export class MessageSyncer {
   constructor(
     private readonly _document: TextModel,
     private readonly _renderer: BlockRenderer,
+    handlers: MessageThreadHandlers = {},
   ) {
-    this._context = new MessageThreadContext(this._document);
+    this._context = new MessageThreadContext(this._document, handlers);
   }
 
   get context() {
@@ -120,6 +146,7 @@ export class MessageSyncer {
    */
   reset(messages: Message.Message[] = []): void {
     this._threadId = messages[0]?.id;
+    this._renderedIds = messages.map((message) => message.id);
     this._completed = 0;
     this._trailing = 0;
     this._completedOffset = 0;
@@ -137,15 +164,29 @@ export class MessageSyncer {
   }
 
   /**
+   * Whether `messages` still begins with everything already rendered, making this an append.
+   *
+   * A rewind removes turns from the middle or end of the thread, and the streaming path can only add
+   * text — so anything other than an extension has to go through {@link reset}.
+   */
+  #extendsRendered(messages: Message.Message[]): boolean {
+    if (messages.length < this._renderedIds.length) {
+      return false;
+    }
+    return this._renderedIds.every((id, index) => messages[index]?.id === id);
+  }
+
+  /**
    * Stream the suffix of the rendered messages into the document.
    * Returns `true` if the document was replaced (initial mount or thread switch), `false`
    * if the call was a streaming append (or a no-op).
    */
   update(messages: Message.Message[]): boolean {
-    if (messages[0]?.id !== this._threadId) {
+    if (messages[0]?.id !== this._threadId || !this.#extendsRendered(messages)) {
       this.reset(messages);
       return true;
     }
+    this._renderedIds = messages.map((message) => message.id);
     const buffer = this._walk(messages);
     if (buffer.length > 0) {
       void this._document.append(buffer);

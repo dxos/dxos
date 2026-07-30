@@ -518,6 +518,12 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
         if (effect.is(xmlTagRebuildEffect)) {
           return buildDecorations(tr.state, { from: 0, to: tr.state.doc.length }, registry, notifier, urlSchemeMap);
         }
+        // Widget props capture the context at build time and `StubWidget.eq` compares ids, so a context
+        // set after the first build would otherwise never reach a widget — leaving its callbacks bound to
+        // `undefined` for the life of the document.
+        if (effect.is(xmlTagContextEffect)) {
+          return buildDecorations(tr.state, { from: 0, to: tr.state.doc.length }, registry, notifier, urlSchemeMap);
+        }
       }
 
       if (tr.docChanged) {
