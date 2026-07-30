@@ -22,8 +22,11 @@ const handler: Operation.WithHandler<typeof ThreadOperation.RenameThread> = Thre
       invariant(provider, `No channel backend for kind: ${channel.backend.kind}`);
       const { subscribeThreadRoots } = provider;
 
-      const declarations = yield* readOnce<ThreadRoot.ThreadRoot>((onItems) =>
-        subscribeThreadRoots ? subscribeThreadRoots(channel, onItems) : () => {},
+      // Passed through as `undefined` when the backend has no such subscription: a callback that
+      // subscribes to nothing would return an unsubscribe without ever emitting, and `readOnce` would
+      // wait for an emission that never comes.
+      const declarations = yield* readOnce<ThreadRoot.ThreadRoot>(
+        subscribeThreadRoots && ((onItems) => subscribeThreadRoots(channel, onItems)),
       );
       const name = foldThreads([], declarations).get(message.id)?.name;
 

@@ -24,8 +24,11 @@ const handler: Operation.WithHandler<typeof ThreadOperation.CreateThread> = Thre
 
       // Any existing declaration already makes the thread exist, whoever wrote it — a second one
       // would only add an item nothing reads.
-      const declarations = yield* readOnce<ThreadRoot.ThreadRoot>((onItems) =>
-        subscribeThreadRoots ? subscribeThreadRoots(channel, onItems) : () => {},
+      // Passed through as `undefined` when the backend has no such subscription: a callback that
+      // subscribes to nothing would return an unsubscribe without ever emitting, and `readOnce` would
+      // wait for an emission that never comes.
+      const declarations = yield* readOnce<ThreadRoot.ThreadRoot>(
+        subscribeThreadRoots && ((onItems) => subscribeThreadRoots(channel, onItems)),
       );
       if (declarations.some((declaration) => targetMessageId(declaration) === message.id)) {
         return;
