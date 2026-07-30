@@ -6,8 +6,10 @@ import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
 
+import { MailboxModule } from './MailboxModule';
 import { ProjectModule, type ProjectModuleProps } from './ProjectModule';
 
+export * from './MailboxModule';
 export * from './ProjectModule';
 
 /**
@@ -20,6 +22,7 @@ export const StoryRole = {
   ...ModuleRole,
 
   Project: Role.make<ProjectModuleProps>('org.dxos.storybook.role.project'),
+  Mailbox: Role.make<Record<string, never>>('org.dxos.storybook.role.mailbox'),
 };
 
 /** React surfaces for this package's panels, keyed by `StoryRole` tokens, plus the generic ones. */
@@ -30,5 +33,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.project',
     filter: Surface.makeFilter(StoryRole.Project),
     component: ProjectModule,
+  }),
+
+  Surface.create({
+    id: 'role.mailbox',
+    filter: Surface.makeFilter(StoryRole.Mailbox),
+    component: MailboxModule,
   }),
 ];
