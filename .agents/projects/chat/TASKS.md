@@ -1,25 +1,27 @@
 # First-party chat — TASKS
 
-See DESIGN.md for the unified model (Channel-only, threads = `threadId`
-partitions, single-writer feed items) and the feed-live-objects roadmap
-dependency.
+See DESIGN.md for the unified model (one Channel per conversation, a thread =
+a `Thread` feed object plus the `threadId` partition it names, single-writer
+feed items) and the feed-live-objects roadmap dependency.
 
 ## Status
 
 Project created 2026-07-29; design unified same day. Architecture review
 DONE: no new plugin — all work lands in `plugin-thread` (stage 1), renamed to
 `plugin-chat` when proven (stage 2), review unification last (stage 3).
-**Stage 1 is COMPLETE** except for two items parked by decision (thread
-deep-linking, awaiting the url-deck grammar) and two that need a human or a
-two-peer harness (manual offline/propagation, two-client storybook). Rounds 2–5
-of jdw's review are folded in below, each marked with the round that asked for
-it; where a round revised an earlier decision the superseded entry says so.
+**Stage 1 is COMPLETE** except for two items that need a human or a two-peer
+harness (manual offline/propagation, two-client storybook); thread
+deep-linking, parked in stage 1, landed in round 9. Rounds 2–12 of jdw's
+review are folded in below, each marked with the round that asked for it;
+where a round revised an earlier decision the superseded entry says so.
 NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 
 ## Decisions log
 
 - [x] No new plugin; harden plugin-thread's Channel path.
-- [x] Channel absorbs Thread — no Thread object; thread = `(feed, threadId)`.
+- [x] Channel absorbs the legacy `Thread` object; a thread is a partition
+      `(feed, threadId)`. Round 10 gave that partition a name: a `Thread` feed
+      object owned by plugin-thread, whose object id _is_ the `threadId`.
 - [x] Comments = per-document Channel, `threadId = anchor id`, no per-thread
       `AnchoredTo`.
 - [x] Reactions = per-author `Reaction` feed items folded at read (single-
@@ -87,10 +89,9 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 - [x] Thread rename — SUPERSEDED twice: the round-1 in-panel header input became
       a navtree node action in round 3, and stopped being author-only in round 4
       once the name moved to the per-author declaration.
-- [ ] Deep-link a thread. PARKED by josiah (2026-07-29) until the rest is
-      working — thread selection is component state for now (the navtree
-      thread nodes open via surface data, not URL). Needs the url-deck
-      pair-chain grammar, and plugin-projects has the same open need.
+- [x] Deep-link a thread. Parked by josiah (2026-07-29), then DONE in round 9 —
+      see the URL-addressable entry in round 9 below. plugin-projects has the
+      same open need and can copy the shape.
 - [ ] Explore starting threads from anywhere (inside threads, from replies) —
       jdw: Discord-only for now, revisit later.
 
@@ -293,13 +294,14 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       does suppress pointer events, and keeps the box's layout so the emoji
       picker stays anchored to it. An open menu or picker pins it visible, since
       reaching either takes the pointer off the row.
-- [ ] `ThreadRoot` becomes an annotation on the root message, and it and
-      `Reaction` move out of `@dxos/types` into `plugin-thread` (jdw: neither is a
-      general type; a thread root does not feel like a separate object). Trade-off
-      accepted knowingly: declaring or naming another participant's message
-      re-appends _their_ message (whole-object, last-flush-wins), so a concurrent
-      edit of it can be lost — the separate per-author item existed to avoid
-      exactly that. In exchange the whole declaration channel disappears:
+- [x] `ThreadRoot` and `Reaction` move out of `@dxos/types` into `plugin-thread`
+      (jdw: neither is a general type). `ThreadRoot` first became an annotation
+      on the root message, which cost a knowingly-accepted trade — declaring or
+      naming someone else's message re-appends _their_ message (whole-object,
+      last-flush-wins), so a concurrent edit of it can be lost. SUPERSEDED by
+      round 10: the `Thread` object refs the root instead of mutating it, which
+      buys the annotation's shape back without touching another author's block.
+      Either way the declaration channel is gone —
       `subscribeThreadRoots`/`appendThreadRoot`, `useThreadRoots`, the
       name-by-recency fold, and the identity gating on rename.
 - [x] Message UI state (editing, picking) lives in a per-tile atom that the
@@ -320,6 +322,30 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       an add-reaction pill that opens the full picker anchored to itself.
 - [x] The hover toolbar overlays the message instead of taking a column, and the
       quote above a reply gained the reply arrow.
+
+### Rounds 10–12 (jdw) — a thread is an object again
+
+- [x] `Thread` is a first-class feed object owned by plugin-thread: a ref to the
+      root message, an optional `name`, and `created`. It is appended to the
+      channel feed beside messages and reactions, so it needs no ref back to the
+      channel. Its **object id is the `threadId`** its replies carry, which is
+      what makes the partition queryable from the thread alone.
+- [x] One thread per message is still the rule, but it can no longer be
+      enforced: two partitioned peers can each append a `Thread` for the same
+      root. Reconciling those is deliberately out of scope (TODO in
+      `types/threads.ts`); until then `selectCanonicalThreads` elects the first
+      in feed order, which every peer converges on once the feeds merge.
+- [x] Thread nodes go through `AppNode.makeObject` like every other object node,
+      so label, icon, hue, testId and persistence keys come from one place. The
+      icon (`ph--chats-circle--regular`) and hue live on the schema as an
+      `IconAnnotation`, not at the call site.
+- [x] Field annotations: `target` and `created` are `FormInputAnnotation.set(false)`
+      (neither is user-editable), and `LabelAnnotation.set(['name'])` names the
+      object. Translations for the `org.dxos.chat.thread` namespace — typename
+      label, plurals, `object-name.placeholder`.
+- [x] The custom rename action is gone. `AppNode.makeObject` nodes already get
+      rename and delete from plugin-space, so `RenameThread`/`SetThreadName` and
+      their operations were duplicating a path the platform provides.
 
 ### Threads stopped loading into the app graph (jdw round 6)
 
@@ -363,11 +389,12 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 
 ### Stage-1 verification
 
-- [x] Unit: folds (thread existence by declaration, name-by-recency, reactions,
-      participants, orphaned root) and reaction toggle idempotency — 20 tests in
-      `types/threads.test.ts`, plus 9 in `@dxos/types` for the schema changes
-      (`Message.parentMessage`, `Reaction`, `ThreadRoot`).
-- [x] Storybook plays: 15 green in a real browser (10 channel + 4 thread + 1
+- [x] Unit: 37 in `plugin-thread` — the folds and canonical-thread election
+      (`types/threads.test.ts`, 20), reaction toggle idempotency
+      (`types/Reaction.test.ts`, 3), the feed backend and `readOnce`, and the
+      graph connector (`capabilities/app-graph-builder.test.ts`, 7, including
+      the late-resolving feed ref and duplicate-thread election).
+- [x] Storybook plays: 16 green in a real browser (11 channel + 4 thread + 1
       legacy), covering roots-only rendering, deliberate thread creation, the
       threaded reply, author-gated delete via the overflow menu, the reaction
       round trip, the channel/thread affordance asymmetry, the edit/cancel round
