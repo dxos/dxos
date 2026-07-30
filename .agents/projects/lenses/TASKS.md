@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: PHASES 1-4 DONE for BOTH lenses. `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 6 passing stories across two demos (`Default` renders only; `DefaultTest` and `Collaboration` carry assertions): Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets **and inline marks**, with 11 unit tests; the ProseMirror editor renders real `<strong>`/`<em>`/`<code>` and toggles them with Mod-b/i/e. Both story tests assert **bidirectional** sync at the exact line each edit produced (see the `userEvent.click`/CodeMirror caret note), and are mutation-checked. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
+_Resume: PHASES 1-4 DONE for BOTH lenses. `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 6 passing stories across two demos (`Default` and `Collaboration` render only; `Spec` carries the assertions): Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets **and inline marks**, with 11 unit tests; the ProseMirror editor renders real `<strong>`/`<em>`/`<code>` and toggles them with Mod-b/i/e. Both story specs assert **bidirectional** sync at the exact line each edit produced (see the `userEvent.click`/CodeMirror caret note), and are mutation-checked. The UI is `@dxos/react-ui` primitives throughout — both task panels are the same `Form` given a different schema — except the ProseMirror editor. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](../../../packages/core/echo/echo-panproto/API.md).
 This file is the ledger only.
@@ -227,8 +227,25 @@ keeps them honest.
       story tests exactly at the sync assertion, so the assertions are load-bearing rather than
       incidentally true.
 
+- [x] **The UI is built from `@dxos/react-ui` primitives, not hand-rolled markup.** Both task panels
+      are the _same_ component — `Form` from `@dxos/react-ui-form` — given a different schema, which
+      states the lens's claim as code: a surface written against a type drives any object that lenses
+      to it. Panel chrome is `Panel.Root`/`Toolbar`/`Content` + `ScrollArea`; the inspector is
+      `Card.Section` + the `Syntax.*` composition; the loading state is `Loading`. The one exception
+      is the ProseMirror editor, since there is no `react-ui` rich-text editor.
+- [x] **Story shape (revised)** — `Default` renders only; `Spec` (formerly `DefaultTest`) carries the
+      assertions; `Collaboration` renders only and smoke-tests the two-peer mount.
+
 ### Notes for whoever runs these
 
+- **`Form`'s `autoSave` fires on blur only, and the switch and select fields never blur** — a toggled
+  `done` or a chosen `status` would never reach the object. Drive object writes from
+  `onValuesChanged` (guarded on `meta.isValid`) instead; it fires per change for every field type and
+  reports exactly the one path that changed, which is also precisely the minimal patch the lens wants.
+- **Addressing `Form` fields from a play function**: there are no per-field test ids, so `testing.ts`
+  walks out from the label to the field's control. Note the asymmetry — a select's _trigger_ shows the
+  schema value (`in-progress`) while its _options_ show labels; here both are the raw value, so
+  `selectOption` takes the value. Options render in a portal on `document.body`, not in the canvas.
 - The story timeout is raised to 60s in `vite.config.ts`: two clients, two identities, and an
   invitation all happen before the first assertion, well past the 15s default.
 - Drive controlled inputs with `userEvent`, never a raw `.value` assignment — React tracks its own

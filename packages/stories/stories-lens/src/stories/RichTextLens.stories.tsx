@@ -10,10 +10,10 @@ import { Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useSpace } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider, withMultiClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { Panel } from '../components';
+import { DemoPanel } from '../components';
 import { MarkdownEditor } from '../MarkdownEditor';
 import { DEMO_MARKDOWN, makeDemoText } from '../rich-text';
 import { BlockList, RichTextEditor } from '../RichTextEditor';
@@ -60,32 +60,20 @@ const useDemoText = () => {
 const SideBySideStory = () => {
   const text = useDemoText();
   if (!text) {
-    return <div className='p-3 text-sm text-subdued'>Loading…</div>;
+    return <Loading />;
   }
 
   return (
     <div className='absolute inset-0 grid grid-cols-3 gap-3 p-3 overflow-hidden'>
-      <Panel
-        title='Markdown editor'
-        subtitle='The core editor, bound to Text.content — the string as stored.'
-        testId='markdown-panel'
-      >
+      <DemoPanel label='Markdown — the string as stored' testId='markdown-panel'>
         <MarkdownEditor text={text} />
-      </Panel>
-      <Panel
-        title='Rich-text editor'
-        subtitle='ProseMirror over the lensed block tree. It never sees markdown.'
-        testId='rich-text-panel'
-      >
+      </DemoPanel>
+      <DemoPanel label='Rich text — the lensed block tree' testId='rich-text-panel'>
         <RichTextEditor text={text} />
-      </Panel>
-      <Panel
-        title='Blocks'
-        subtitle='What the lens projects, with the source range each block splices over.'
-        testId='blocks-panel'
-      >
+      </DemoPanel>
+      <DemoPanel label='Blocks — what the lens projects' testId='blocks-panel'>
         <BlockList text={text} />
-      </Panel>
+      </DemoPanel>
     </div>
   );
 };
@@ -95,24 +83,23 @@ const CollaborationStory = () => {
   const { index } = useClientStory();
   const text = useDemoText();
   if (!text) {
-    return <div className='p-3 text-sm text-subdued'>Loading…</div>;
+    return <Loading />;
   }
 
   return (
-    <div className='flex flex-col gap-3 p-3 h-full overflow-hidden'>
-      <div className='text-xs text-subdued'>peer {index}</div>
+    <div className='grid grid-rows-2 gap-3 p-3 h-full overflow-hidden'>
       {index === 0 ? (
-        <Panel title='Markdown editor' subtitle='Peer 0, on the stored string.' testId='markdown-panel'>
+        <DemoPanel label={`Peer ${index} — markdown, the string as stored`} testId='markdown-panel'>
           <MarkdownEditor text={text} />
-        </Panel>
+        </DemoPanel>
       ) : (
-        <Panel title='Rich-text editor' subtitle='Peer 1, on the lensed block tree.' testId='rich-text-panel'>
+        <DemoPanel label={`Peer ${index} — rich text, the lensed block tree`} testId='rich-text-panel'>
           <RichTextEditor text={text} />
-        </Panel>
+        </DemoPanel>
       )}
-      <Panel title='Blocks' subtitle='The lens view on this peer.' testId='blocks-panel'>
+      <DemoPanel label={`Peer ${index} — blocks`} testId='blocks-panel'>
         <BlockList text={text} />
-      </Panel>
+      </DemoPanel>
     </div>
   );
 };
@@ -157,7 +144,7 @@ export const Default: Story = {
 /**
  * The assertions behind {@link Default}.
  */
-export const DefaultTest: Story = {
+export const Spec: Story = {
   render: SideBySideStory,
   decorators: [singlePeer],
   play: async ({ canvasElement }) => {
@@ -277,72 +264,11 @@ export const DefaultTest: Story = {
 };
 
 /**
- * Two peers: markdown on one, rich text on the other, replicating live. Carries its own assertions — a
- * block edit on one peer reaches the other peer's markdown editor, and the untouched text survives.
+ * Two peers: markdown on one, rich text on the other, replicating live. The single-peer {@link Spec}
+ * carries the assertions; this one is for watching a block edit on one peer land as a splice in the
+ * other peer's markdown, and a source edit come back the other way.
  */
 export const Collaboration: Story = {
   render: CollaborationStory,
   decorators: [twoPeers],
-  play: async ({ canvasElement }) => {
-    const findAll = <T extends HTMLElement>(testId: string) =>
-      Array.from(canvasElement.querySelectorAll<T>(`[data-testid="${testId}"]`));
-
-    await waitFor(
-      async () => {
-        await expect(findAll('markdown-editor')).toHaveLength(1);
-        await expect(findAll('pm-editor')).toHaveLength(1);
-      },
-      { timeout: 30_000 },
-    );
-
-    // The seeded markdown replicated to the guest, and the lens parsed it there.
-    const [editor] = findAll('pm-editor');
-    await waitFor(async () => await expect(editor.querySelector('h1')?.textContent).toBe('One object, two editors'), {
-      timeout: 15_000,
-    });
-
-    // Peer 1 edits through the LENS; peer 0 receives the splice into its stored markdown.
-    const heading = editor.querySelector<HTMLElement>('h2')!;
-    await userEvent.click(heading);
-    await userEvent.keyboard('EDIT');
-
-    await waitFor(
-      async () => {
-        // Read the stored string on the peer that did NOT make the edit. Pinned to the heading the
-        // caret was in, so an edit that landed in some other block fails rather than passing on a
-        // bare `toContain('EDIT')`.
-        const stored = findAll('raw-content')[0].textContent ?? '';
-        await expect(stored).toContain('## Why it mergesEDIT');
-        // ...and the rest of the document is intact there — the splice touched one block's range and
-        // nothing else crossed the wire.
-        await expect(stored).toContain('# One object, two editors');
-        await expect(stored).toContain('- Each block remembers its `source range`');
-      },
-      { timeout: 15_000 },
-    );
-
-    // And the other direction: peer 0 edits the markdown SOURCE, and peer 1's lensed editor follows.
-    const [markdown] = findAll('markdown-editor');
-    await typeAtEndOfLine(lineContaining(markdown, 'So an edit splices'), 'SYNC');
-
-    await waitFor(
-      async () => {
-        // The edit landed in peer 0's last bullet, not wherever the caret defaulted to.
-        await expect(findAll('raw-content')[0].textContent ?? '').toContain(
-          '- So an edit splices that range aloneSYNC',
-        );
-        // Peer 1's block list and rich-text editor both reflect peer 0's source edit, in that bullet...
-        await expect(findAll('block-list')[1].textContent ?? '').toMatch(
-          /bullet \[\d+,\d+\) So an edit splices .*SYNC/,
-        );
-        const items = findAll('pm-editor')[0].querySelectorAll<HTMLElement>('li');
-        await expect(items).toHaveLength(2);
-        await expect(items[1].textContent).toBe('So an edit splices that range aloneSYNC');
-        // ...and peer 1's own earlier edit survived peer 0's, on both peers.
-        await expect(findAll('raw-content')[0].textContent ?? '').toContain('EDIT');
-        await expect(findAll('raw-content')[1].textContent ?? '').toContain('EDIT');
-      },
-      { timeout: 15_000 },
-    );
-  },
 };

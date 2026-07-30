@@ -13,6 +13,7 @@ import { type Obj } from '@dxos/echo';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
+import { Card } from '@dxos/react-ui';
 
 import {
   type Block,
@@ -262,21 +263,27 @@ export const BlockList = ({ text }: { text: Obj.Unknown }) => {
   const [snapshot] = useObject(text);
 
   return (
-    <>
-      <div className='text-xs uppercase tracking-wide text-subdued'>stored markdown</div>
-      <pre className='text-xs whitespace-pre-wrap' data-testid='raw-content'>
-        {(snapshot as { content?: string } | undefined)?.content ?? ''}
-      </pre>
-      <div className='text-xs uppercase tracking-wide text-subdued'>blocks</div>
-      <pre className='text-xs whitespace-pre-wrap' data-testid='block-list'>
-        {(view?.blocks ?? [])
-          .map(
-            (block) =>
-              `${block.type}${block.level ? block.level : ''} [${block.range[0]},${block.range[1]}) ${blockText(block)}`,
-          )
-          .join('\n')}
-      </pre>
-    </>
+    <Card.Root>
+      <Card.Section title='stored markdown'>
+        <Card.Row fullWidth>
+          <Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='raw-content'>
+            {(snapshot as { content?: string } | undefined)?.content ?? ''}
+          </Card.Text>
+        </Card.Row>
+      </Card.Section>
+      <Card.Section title='blocks'>
+        <Card.Row fullWidth>
+          <Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='block-list'>
+            {(view?.blocks ?? [])
+              .map(
+                (block) =>
+                  `${block.type}${block.level ? block.level : ''} [${block.range[0]},${block.range[1]}) ${blockText(block)}`,
+              )
+              .join('\n')}
+          </Card.Text>
+        </Card.Row>
+      </Card.Section>
+    </Card.Root>
   );
 };
 

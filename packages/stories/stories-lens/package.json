@@ -21,6 +21,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/storybook-testing": "workspace:*",
     "@dxos/types": "workspace:*",

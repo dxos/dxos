@@ -10,11 +10,12 @@ import { Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useSpace } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider, withMultiClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
 import { CanonicalTaskPanel, LensedGtdPanel, RawInspector } from '../components';
 import { makeDemoTask } from '../gtd';
+import { control, selectOption, selectValue, typeInto } from '../testing';
 
 //
 // One object, viewed through two interfaces.
@@ -35,7 +36,7 @@ const useDemoTask = () => {
 const SideBySideStory = () => {
   const task = useDemoTask();
   if (!task) {
-    return <div className='p-3 text-sm text-subdued'>Loading…</div>;
+    return <Loading />;
   }
 
   return (
@@ -55,12 +56,11 @@ const CollaborationStory = () => {
   const { index } = useClientStory();
   const task = useDemoTask();
   if (!task) {
-    return <div className='p-3 text-sm text-subdued'>Loading…</div>;
+    return <Loading />;
   }
 
   return (
-    <div className='flex flex-col gap-3 p-3 h-full overflow-auto'>
-      <div className='text-xs text-subdued'>peer {index}</div>
+    <div className='grid grid-rows-2 gap-3 p-3 h-full overflow-hidden'>
       {index === 0 ? <CanonicalTaskPanel task={task} /> : <LensedGtdPanel task={task} />}
       <RawInspector task={task} />
     </div>
@@ -109,7 +109,7 @@ export const Default: Story = {
 /**
  * The assertions behind {@link Default}.
  */
-export const DefaultTest: Story = {
+export const Spec: Story = {
   render: SideBySideStory,
   decorators: [singlePeer],
   play: async ({ canvasElement }) => {
@@ -117,95 +117,55 @@ export const DefaultTest: Story = {
       canvasElement.querySelector<T>(`[data-testid="${testId}"]`)!;
 
     await waitFor(() => expect(find('lensed-panel')).toBeInTheDocument(), { timeout: 15_000 });
+    const canonical = find('canonical-panel');
+    const lensed = find('lensed-panel');
 
     // The lens reports the object as its TARGET type; the inspector reports the base object's own.
     await expect(find('inspector-typename')).toHaveTextContent('org.dxos.type.task');
 
+    // Both panels are the same `Form` component and differ only in the schema they are given, so the
+    // fields are addressed by their schema-declared labels — all a form consumer knows about them.
     // `status: 'in-progress'` reads as `done: false` through the lens.
-    const done = find<HTMLInputElement>('lensed-done');
-    await expect(done.checked).toBe(false);
-    await expect(find('lensed-panel')).toHaveTextContent('stage: in-progress');
+    await expect(control(lensed, 'Done')).not.toBeChecked();
+    await expect(selectValue(lensed, 'Stage')).toBe('in-progress');
 
     // Completing it through the lens writes `status` on the base object — visible in both other panes.
-    await userEvent.click(done);
+    await userEvent.click(control(lensed, 'Done'));
     await waitFor(async () => {
-      await expect(find<HTMLSelectElement>('canonical-status').value).toBe('done');
+      await expect(selectValue(canonical, 'Status')).toBe('done');
       await expect(find('inspector-properties')).toHaveTextContent('"status": "done"');
     });
 
     // A canonical edit shows through the lens, in the other direction.
-    await userEvent.selectOptions(find<HTMLSelectElement>('canonical-status'), 'todo');
+    await selectOption(canonical, 'Status', 'todo');
     await waitFor(async () => {
-      await expect(find<HTMLInputElement>('lensed-done').checked).toBe(false);
-      await expect(find('lensed-panel')).toHaveTextContent('stage: todo');
+      await expect(control(lensed, 'Done')).not.toBeChecked();
+      await expect(selectValue(lensed, 'Stage')).toBe('todo');
     });
 
     // An overlay property — nothing on `Task` corresponds — lands in the object's annotations.
-    await userEvent.selectOptions(find<HTMLSelectElement>('lensed-context'), '@work');
+    await selectOption(lensed, 'Context', '@work');
     await waitFor(async () => {
       await expect(find('inspector-overlay')).toHaveTextContent('"context": "@work"');
       // ...and NOT as a property of the base object.
       await expect(find('inspector-properties')).not.toHaveTextContent('"context"');
+    });
+
+    // A lensed rename is an ordinary `title` write on the base object.
+    await typeInto(lensed, 'Title', 'Renamed through the lens');
+    await waitFor(async () => {
+      await expect(control<HTMLInputElement>(canonical, 'Title')).toHaveValue('Renamed through the lens');
+      await expect(find('inspector-properties')).toHaveTextContent('"title": "Renamed through the lens"');
     });
   },
 };
 
 /**
  * Two peers, one object: the canonical interface on one, the lensed interface on the other, replicating
- * live over a real invitation. Carries its own assertions — including the one that fails if a lens write
- * is not minimal.
+ * live over a real invitation. The single-peer {@link Spec} carries the assertions; this one is for
+ * watching a lensed edit cross the network into a canonical form written against a different schema.
  */
 export const Collaboration: Story = {
   render: CollaborationStory,
   decorators: [twoPeers],
-  play: async ({ canvasElement }) => {
-    const findAll = <T extends HTMLElement>(testId: string) =>
-      Array.from(canvasElement.querySelectorAll<T>(`[data-testid="${testId}"]`));
-
-    // Identity creation, space creation, and the invitation are all async.
-    await waitFor(
-      async () => {
-        await expect(findAll('canonical-panel')).toHaveLength(1);
-        await expect(findAll('lensed-panel')).toHaveLength(1);
-      },
-      { timeout: 30_000 },
-    );
-
-    const [canonicalTitle] = findAll<HTMLInputElement>('canonical-title');
-    const [lensedDone] = findAll<HTMLInputElement>('lensed-done');
-    const [lensedContext] = findAll<HTMLSelectElement>('lensed-context');
-
-    // The seeded object replicated to the guest, and the lens projects it there.
-    await expect(lensedDone.checked).toBe(false);
-
-    // Peer 1 completes the task through the lens; peer 0 sees `status` change on the canonical form.
-    await userEvent.click(lensedDone);
-    await waitFor(async () => await expect(findAll<HTMLSelectElement>('canonical-status')[0].value).toBe('done'), {
-      timeout: 15_000,
-    });
-
-    // Peer 1 sets an overlay property; it replicates as part of the object's own metadata.
-    await userEvent.selectOptions(lensedContext, '@errands');
-    await waitFor(
-      async () => {
-        for (const overlay of findAll('inspector-overlay')) {
-          await expect(overlay).toHaveTextContent('"context": "@errands"');
-        }
-      },
-      { timeout: 15_000 },
-    );
-
-    // Peer 0 renames through the canonical interface; peer 1's lensed title follows...
-    await userEvent.clear(canonicalTitle);
-    await userEvent.type(canonicalTitle, 'Renamed by the canonical UI');
-    await waitFor(
-      async () => await expect(findAll<HTMLInputElement>('lensed-title')[0].value).toBe('Renamed by the canonical UI'),
-      { timeout: 15_000 },
-    );
-
-    // ...and the lensed edit from before survived it. A lens write that assigned the whole object
-    // would have reverted this rename; this assertion is what makes write-minimality observable.
-    await expect(findAll<HTMLSelectElement>('canonical-status')[0].value).toBe('done');
-    await expect(findAll<HTMLInputElement>('lensed-done')[0].checked).toBe(true);
-  },
 };

@@ -2,185 +2,182 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode } from 'react';
+import React, { type ReactNode, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
-import { type Task } from '@dxos/types';
+import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Task } from '@dxos/types';
 
-import { GTD_LENS_ID, GtdLens, type GtdTask } from './gtd';
+import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd';
 
 //
 // Two interfaces over one object, plus an inspector showing where the data actually lands.
 //
-// Neither interface knows about the other. The canonical panel is written against `Task`; the lensed
-// panel is written against `GtdTask` and never imports `Task` at all.
+// Both interfaces are the SAME component — `Form` from `@dxos/react-ui-form` — differing only in the
+// schema they are given. That is the whole claim of the lens stated as code: a surface written against
+// a type works on any object that lenses to it, with no knowledge that a lens is involved.
 //
 
-const PANEL =
-  'flex flex-col gap-2 p-3 min-w-0 overflow-auto bg-base-surface border border-subdued-separator rounded-md';
-const LABEL = 'text-xs uppercase tracking-wide text-subdued';
-const INPUT = 'w-full px-2 py-1 text-sm bg-input-surface border border-subdued-separator rounded';
-
-const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-  <label className='flex flex-col gap-1'>
-    <span className={LABEL}>{label}</span>
-    {children}
-  </label>
+/** The panel chrome: a captioned, scrollable region. */
+export const DemoPanel = ({ label, children, testId }: { label: string; children: ReactNode; testId: string }) => (
+  <Panel.Root classNames='min-w-0 bg-base-surface border border-subdued-separator rounded-md' data-testid={testId}>
+    <Panel.Toolbar>
+      <Toolbar.Root>
+        <Toolbar.Text>{label}</Toolbar.Text>
+      </Toolbar.Root>
+    </Panel.Toolbar>
+    <Panel.Content asChild>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Panel.Content>
+  </Panel.Root>
 );
-
-export const Panel = ({
-  title,
-  subtitle,
-  children,
-  testId,
-}: {
-  title: string;
-  subtitle: string;
-  children: ReactNode;
-  testId: string;
-}) => (
-  <section className={PANEL} data-testid={testId}>
-    <header className='flex flex-col gap-0.5 pb-1'>
-      <h2 className='text-sm font-medium'>{title}</h2>
-      <p className='text-xs text-subdued'>{subtitle}</p>
-    </header>
-    {children}
-  </section>
-);
-
-const STATUSES = ['todo', 'in-progress', 'done'] as const;
-const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
 
 /**
- * The interface that already exists: written against `Task`, unaware that any lens exists.
+ * The changed subset of a form's values.
+ *
+ * Both schemas here are flat, so a changed json path is a property name. Passing only this subset is
+ * what keeps a write minimal — handing the whole view to either sink would rewrite properties the user
+ * never touched and clobber a concurrent peer.
+ *
+ * Both panels drive this from `onValuesChanged` rather than `autoSave`: autosave fires on blur, and the
+ * switch and select fields never blur, so a toggled `done` would never reach the object.
+ */
+const changedOnly = <T extends object>(values: T, { changed }: FormUpdateMeta<any>): Partial<T> => {
+  const touched = new Set(
+    Object.entries(changed)
+      .filter(([, edited]) => edited)
+      .map(([path]) => path),
+  );
+
+  const patch: Partial<T> = {};
+  for (const [property, value] of Object.entries(values)) {
+    if (touched.has(property)) {
+      Object.assign(patch, { [property]: value });
+    }
+  }
+  return patch;
+};
+
+// `estimate` and the two `Ref` properties are omitted: refs would render pickers for types this story
+// never seeds, and neither is part of what the lens demonstrates.
+const CANONICAL_LAYOUT = `
+  <grid cols="1">
+    <field name="title"/>
+    <field name="status"/>
+    <field name="priority"/>
+    <field name="description"/>
+  </grid>
+`;
+
+const TaskForm = omitId(Task.Task);
+
+/**
+ * The interface that already exists: a `Form` over the `Task` schema, unaware that any lens exists.
  */
 export const CanonicalTaskPanel = ({ task }: { task: Task.Task }) => {
-  const [view, update] = useObject(task);
+  const [snapshot] = useObject(task);
+
+  const handleChange = useCallback(
+    (values: object, meta: FormUpdateMeta<any>) => {
+      if (!meta.isValid) {
+        return;
+      }
+      Obj.update(task, (task) => void Object.assign(task, changedOnly(values, meta)));
+    },
+    [task],
+  );
 
   return (
-    <Panel
-      title='Canonical interface'
-      subtitle='Written against Task — the object as it is stored.'
-      testId='canonical-panel'
-    >
-      <Field label='title'>
-        <input
-          className={INPUT}
-          data-testid='canonical-title'
-          value={view?.title ?? ''}
-          onChange={(event) => update((task) => void (task.title = event.target.value))}
-        />
-      </Field>
-      <Field label='status'>
-        <select
-          className={INPUT}
-          data-testid='canonical-status'
-          value={view?.status ?? 'todo'}
-          onChange={(event) => update((task) => void (task.status = event.target.value as Task.Task['status']))}
-        >
-          {STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label='priority'>
-        <select
-          className={INPUT}
-          data-testid='canonical-priority'
-          value={view?.priority ?? 'none'}
-          onChange={(event) => update((task) => void (task.priority = event.target.value as Task.Task['priority']))}
-        >
-          {PRIORITIES.map((priority) => (
-            <option key={priority} value={priority}>
-              {priority}
-            </option>
-          ))}
-        </select>
-      </Field>
-    </Panel>
+    <DemoPanel label='Canonical — Form over Task' testId='canonical-panel'>
+      <Form.Root schema={TaskForm} values={snapshot} onValuesChanged={handleChange}>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.Section
+              title='Task'
+              description='The object as it is stored. This form is written against Task and nothing else.'
+            />
+            <Form.Layout template={CANONICAL_LAYOUT} />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    </DemoPanel>
   );
 };
 
-const CONTEXTS = ['@home', '@work', '@errands'] as const;
+const LENSED_LAYOUT = `
+  <grid cols="1">
+    <field name="title"/>
+    <field name="done"/>
+    <field name="stage"/>
+    <field name="urgency"/>
+    <field name="context"/>
+    <field name="waitingOn"/>
+  </grid>
+`;
+
+const GtdForm = omitId(GtdTask);
 
 /**
- * A different interface over the SAME object, written only against `GtdTask`.
+ * A different interface over the SAME object: the same `Form`, given `GtdTask` instead.
  *
- * `done` is a checkbox where the object stores a three-state `status`; `urgency` is a number where it
+ * `done` is a switch where the object stores a three-state `status`; `urgency` is a number where it
  * stores an enum; `context` and `waitingOn` have no counterpart at all and land in the object's
  * annotations. Nothing here references `Task`.
  */
 export const LensedGtdPanel = ({ task }: { task: Obj.Unknown }) => {
-  const [view, update] = useLens(task, GtdLens as Lens.Lens<any, GtdTask>);
+  const [view] = useLens(task, GtdLens);
+
+  const handleChange = useCallback(
+    (values: object, meta: FormUpdateMeta<any>) => {
+      if (!meta.isValid) {
+        return;
+      }
+      // The form reports which field the user just changed; the lens turns it into the minimal write on
+      // the base object — an `assign` to a mapped property, or an `overlay` when nothing maps.
+      Lens.put(task, GtdLens, changedOnly(values, meta));
+    },
+    [task],
+  );
 
   return (
-    <Panel
-      title='Lensed interface'
-      subtitle='Written against GtdTask — the same object, a different shape.'
-      testId='lensed-panel'
-    >
-      <Field label='title'>
-        <input
-          className={INPUT}
-          data-testid='lensed-title'
-          value={view?.title ?? ''}
-          onChange={(event) => update((gtd) => void (gtd.title = event.target.value))}
-        />
-      </Field>
-      <label className='flex items-center gap-2 py-1'>
-        <input
-          type='checkbox'
-          data-testid='lensed-done'
-          checked={view?.done ?? false}
-          onChange={(event) => update((gtd) => void (gtd.done = event.target.checked))}
-        />
-        <span className='text-sm'>done</span>
-        <span className='text-xs text-subdued'>(stage: {view?.stage ?? 'unset'})</span>
-      </label>
-      <Field label='urgency (1-5)'>
-        <input
-          className={INPUT}
-          data-testid='lensed-urgency'
-          type='number'
-          min={1}
-          max={5}
-          value={view?.urgency ?? 1}
-          onChange={(event) => update((gtd) => void (gtd.urgency = Number(event.target.value)))}
-        />
-      </Field>
-      <Field label='context (overlay — no counterpart on Task)'>
-        <select
-          className={INPUT}
-          data-testid='lensed-context'
-          value={view?.context ?? ''}
-          onChange={(event) =>
-            update((gtd) => void (gtd.context = (event.target.value || undefined) as GtdTask['context']))
-          }
-        >
-          <option value=''>unset</option>
-          {CONTEXTS.map((context) => (
-            <option key={context} value={context}>
-              {context}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label='waiting on (overlay)'>
-        <input
-          className={INPUT}
-          data-testid='lensed-waiting-on'
-          value={view?.waitingOn ?? ''}
-          onChange={(event) => update((gtd) => void (gtd.waitingOn = event.target.value || undefined))}
-        />
-      </Field>
-    </Panel>
+    <DemoPanel label='Lensed — Form over GtdTask' testId='lensed-panel'>
+      <Form.Root schema={GtdForm} values={view} onValuesChanged={handleChange}>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.Section
+              title='GTD task'
+              description='The same object, a different shape. This form has never heard of Task.'
+            />
+            <Form.Layout template={LENSED_LAYOUT} />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    </DemoPanel>
   );
 };
+
+/**
+ * A labelled JSON block.
+ *
+ * `Syntax` rather than a bare `JsonHighlighter`: the highlighter is documented as inline and
+ * non-scrolling, so a long property value ran off the pane instead of scrolling.
+ */
+const JsonSection = ({ title, data, testId }: { title: string; data: unknown; testId: string }) => (
+  <Card.Section title={title}>
+    <Syntax.Root data={data}>
+      <Syntax.Viewport classNames='max-h-64'>
+        <Syntax.Code testId={testId} />
+      </Syntax.Viewport>
+    </Syntax.Root>
+  </Card.Section>
+);
 
 /**
  * The proof, and the reason this pane exists: every lensed edit shows up here as an ordinary property
@@ -191,29 +188,23 @@ export const RawInspector = ({ task }: { task: Obj.Unknown }) => {
   const [snapshot] = useObject(task);
   const overlays = snapshot ? Lens.getOverlays(task, GTD_LENS_ID) : {};
 
+  // `@`/`~` prefixes are the snapshot's own bookkeeping, not properties of the Task.
   const stored: Record<string, unknown> = snapshot ? JSON.parse(JSON.stringify(snapshot)) : {};
-  const properties = Object.fromEntries(Object.entries(stored).filter(([key]) => !key.startsWith('@')));
+  const properties = Object.fromEntries(
+    Object.entries(stored).filter(([key]) => !key.startsWith('@') && !key.startsWith('~')),
+  );
 
   return (
-    <Panel title='Raw object' subtitle='What is actually stored. One object, no copies.' testId='inspector-panel'>
-      <div className='flex flex-col gap-1'>
-        <span className={LABEL}>typename</span>
-        <code className='text-xs' data-testid='inspector-typename'>
-          {Obj.getTypename(task)}
-        </code>
-      </div>
-      <div className='flex flex-col gap-1'>
-        <span className={LABEL}>properties (Task schema)</span>
-        <pre className='text-xs whitespace-pre-wrap' data-testid='inspector-properties'>
-          {JSON.stringify(properties, null, 2)}
-        </pre>
-      </div>
-      <div className='flex flex-col gap-1'>
-        <span className={LABEL}>meta.annotations — lens overlay</span>
-        <pre className='text-xs whitespace-pre-wrap' data-testid='inspector-overlay'>
-          {JSON.stringify(overlays, null, 2)}
-        </pre>
-      </div>
-    </Panel>
+    <DemoPanel label='Raw object' testId='inspector-panel'>
+      <Card.Root>
+        <Card.Section title='typename'>
+          <Card.Row fullWidth>
+            <Card.Text data-testid='inspector-typename'>{Obj.getTypename(task)}</Card.Text>
+          </Card.Row>
+        </Card.Section>
+        <JsonSection title='properties (Task schema)' data={properties} testId='inspector-properties' />
+        <JsonSection title='meta.annotations — lens overlay' data={overlays} testId='inspector-overlay' />
+      </Card.Root>
+    </DemoPanel>
   );
 };
