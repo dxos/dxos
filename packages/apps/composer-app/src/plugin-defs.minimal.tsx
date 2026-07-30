@@ -10,7 +10,6 @@ import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
 import { ReviewPlugin } from '@dxos/plugin-review/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
