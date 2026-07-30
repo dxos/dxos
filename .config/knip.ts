@@ -334,11 +334,13 @@ for (const manifest of globSync(
 
   workspaces[dir] = {
     entry: [
-      ...(entry.length && !isApp ? entry : ['src/**/*.{ts,tsx,js,jsx,mjs,cjs}', '*.{ts,tsx,js,jsx,mjs,cjs}']),
-      ...supplemental,
+      ...(entry.length && !isApp ? entry : ['src/**/*.{ts,tsx,js,jsx,mjs,cjs}', '*.{ts,tsx,js,jsx,mjs,cjs}']).map(
+        (p) => `${p}!`,
+      ),
+      ...supplemental.map((p) => `${p}!`),
       ...AUXILIARY_ENTRY,
     ],
-    project: PROJECT,
+    project: PROJECT.map((p) => `${p}!`),
     paths,
     ignoreDependencies: [
       ...configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
