@@ -31,11 +31,26 @@ import {
 // own source range.
 //
 
+/**
+ * Weight and slant must be carried by the theme's OWN classes, on the element.
+ *
+ * The theme sets `font-synthesis: none` and pins `font-variation-settings: 'wght' 400` at `:root`, so
+ * a bare `font-weight: 700` computes correctly and renders as regular text — nothing drives the
+ * variable font's axis. Only the literal `.font-bold` / `.italic` classes set those axes, which a
+ * descendant variant like `[&_strong]:font-bold` never applies.
+ */
+const HEADING_CLASSES: Record<number, string> = {
+  1: 'text-xl font-semibold',
+  2: 'text-lg font-semibold',
+  3: 'text-base font-semibold',
+  4: 'text-sm font-semibold',
+};
+
 /** Minimal schema: the block kinds the lens projects, and the inline marks it carries. */
 const schema = new PmSchema({
   marks: {
-    strong: { parseDOM: [{ tag: 'strong' }], toDOM: () => ['strong', 0] },
-    em: { parseDOM: [{ tag: 'em' }], toDOM: () => ['em', 0] },
+    strong: { parseDOM: [{ tag: 'strong' }], toDOM: () => ['strong', { class: 'font-bold' }, 0] },
+    em: { parseDOM: [{ tag: 'em' }], toDOM: () => ['em', { class: 'italic' }, 0] },
     code: { parseDOM: [{ tag: 'code' }], toDOM: () => ['code', { class: 'px-1 rounded bg-hover-surface' }, 0] },
   },
   nodes: {
@@ -47,7 +62,7 @@ const schema = new PmSchema({
       group: 'block',
       defining: true,
       parseDOM: [1, 2, 3, 4, 5, 6].map((level) => ({ tag: `h${level}`, attrs: { level } })),
-      toDOM: (node) => [`h${node.attrs.level}`, 0],
+      toDOM: (node) => [`h${node.attrs.level}`, { class: HEADING_CLASSES[node.attrs.level] ?? HEADING_CLASSES[4] }, 0],
     },
     bullet_list: {
       content: 'list_item+',
@@ -78,17 +93,11 @@ const toInline = (runs: readonly Inline[]) =>
 const EMPTY_BLOCK: Block = { type: 'paragraph', content: [], range: [0, 0] };
 
 /**
- * The editor styles its own content: the theme's preflight resets heading sizes, `strong` weight, and
- * list markers, so without this the block structure and marks render as undifferentiated text.
+ * Layout only — everything font-related is a class on the node itself (see {@link HEADING_CLASSES}).
+ * The preflight resets list markers, so the bullets still need styling here.
  */
 const CONTENT_CLASSES = [
   'outline-none p-2 text-sm flex flex-col gap-2',
-  '[&_h1]:text-xl [&_h1]:font-semibold',
-  '[&_h2]:text-lg [&_h2]:font-semibold',
-  '[&_h3]:text-base [&_h3]:font-semibold',
-  '[&_h4]:text-sm [&_h4]:font-semibold',
-  '[&_strong]:font-bold',
-  '[&_em]:italic',
   '[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1',
   '[&_li]:list-item',
 ].join(' ');

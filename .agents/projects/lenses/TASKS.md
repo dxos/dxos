@@ -246,6 +246,12 @@ keeps them honest.
   walks out from the label to the field's control. Note the asymmetry — a select's _trigger_ shows the
   schema value (`in-progress`) while its _options_ show labels; here both are the raw value, so
   `selectOption` takes the value. Options render in a portal on `document.body`, not in the canvas.
+- **Weight and slant come from `font-variation-settings`, not `font-weight`/`font-style`.** The theme
+  sets `font-synthesis: none` and pins `'wght' 400, 'slnt' 0` at `:root`, and only the theme's literal
+  `.font-bold` / `.italic` / `.font-semibold` classes move those axes. A descendant variant
+  (`[&_strong]:font-bold`) emits an inert `font-weight: 700`, so bold shipped rendering as regular
+  while a `getComputedStyle(...).fontWeight` assertion passed. Put the theme's class on the element —
+  for ProseMirror that means the mark/node `toDOM` — and assert `fontVariationSettings`.
 - The story timeout is raised to 60s in `vite.config.ts`: two clients, two identities, and an
   invitation all happen before the first assertion, well past the 15s default.
 - Drive controlled inputs with `userEvent`, never a raw `.value` assignment — React tracks its own

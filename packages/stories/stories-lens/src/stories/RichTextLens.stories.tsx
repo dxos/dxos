@@ -175,18 +175,25 @@ export const Spec: Story = {
     await expect(editor.querySelector('code')?.textContent).toBe('source range');
 
     // And they render as rich text *visibly*. Asserting the elements exist is not enough: the theme's
-    // preflight resets heading sizes, `strong` weight, and list markers, so the earlier version of
-    // this test passed while every one of them rendered as plain text.
+    // preflight resets heading sizes and list markers, so an earlier version of this test passed while
+    // every one of them rendered as plain text.
     const paragraph = editor.querySelector<HTMLElement>('p')!;
     const heading1 = editor.querySelector<HTMLElement>('h1')!;
     const heading2 = editor.querySelector<HTMLElement>('h2')!;
     const size = (element: HTMLElement) => Number.parseFloat(getComputedStyle(element).fontSize);
     await expect(size(heading1)).toBeGreaterThan(size(paragraph));
     await expect(size(heading2)).toBeGreaterThan(size(paragraph));
-    await expect(Number.parseInt(getComputedStyle(strong).fontWeight, 10)).toBeGreaterThan(
-      Number.parseInt(getComputedStyle(paragraph).fontWeight, 10),
-    );
-    await expect(getComputedStyle(em).fontStyle).toBe('italic');
+
+    // Weight and slant are asserted on `font-variation-settings`, NOT `font-weight`/`font-style`.
+    // The theme sets `font-synthesis: none` and pins `'wght' 400` at `:root`, so `font-weight: 700`
+    // computes as 700 and still renders as regular — which is exactly how bold shipped broken while a
+    // `fontWeight` assertion passed. The variation axes are what the variable font actually reads.
+    const axes = (element: HTMLElement) => getComputedStyle(element).fontVariationSettings;
+    await expect(axes(paragraph)).toContain('"wght" 400');
+    await expect(axes(strong)).toContain('"wght" 700');
+    await expect(axes(heading1)).toContain('"wght" 600');
+    await expect(axes(heading2)).toContain('"wght" 600');
+    await expect(axes(em)).toContain('"slnt" -10');
 
     // Bullets are a real list, with markers — a bare `li` outside a `ul` renders none.
     const list = editor.querySelector<HTMLElement>('ul')!;
