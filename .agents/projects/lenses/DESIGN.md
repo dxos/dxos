@@ -593,7 +593,29 @@ consequence is something a `transform` function cannot offer:
 `Migration.define` with a hand-written `transform` stays for what a mapping cannot express. The lens
 form is what you reach for first, and only the lens form gets fold-forward.
 
-### 10.5 Cross-object, built for atomicity we do not have yet
+### 10.5 Cross-object: fan-out, merge, and effects as data
+
+Everything above assumes one object in, one object out. A whole class of migration does not: splitting
+one object into several, extracting a field into its own object plus a **relation**, or merging
+several objects into one. This class **creates and destroys entities**, which is different in kind
+from rewriting properties, and it is the part of the research most likely to change the shape of the
+API.
+
+#### The rule that shapes it: creation cannot happen in `get`
+
+`Lens.get` is synchronous and pure, and that is load-bearing — it is what lets `checkLaws` run without
+mutating anything and what lets `useLensValue` project on every render (§6). Creating an object is a
+side effect. So a split cannot be expressed as "a lens whose `get` materializes the other object".
+
+The division that follows:
+
+- the **migration** creates the new entities and rewires the refs, as a write set;
+- the **lens** then reads the resulting graph, via composition (§11.2).
+
+Conflating them would cost purity, and purity is what the law check and the render path are built on.
+Composition is the _consumer_ of a fan-out migration, not the mechanism.
+
+#### Effects as data
 
 ECHO transacts within one object, not across objects; Automerge has cross-object dependencies on its
 roadmap. The rule that lets us write the API now and get atomicity later for free:
@@ -601,16 +623,78 @@ roadmap. The rule that lets us write the API now and get atomicity later for fre
 > **Make the effects data, not callbacks.**
 
 A cross-object migration declares a match — a tuple of objects — and _returns_ a write set addressed
-to them rather than performing it. `Write` extends with an object address; nothing else changes.
+to them (including entity creation and deletion) rather than performing it. `Write` grows an object
+address and a create/delete verb; nothing else changes.
 
 - **Today** the runner applies the set per object, non-atomically, but because the writes are data it
   can order them deterministically, make them idempotent, and resume after a crash.
 - **Later** it hands the same set to a cross-object transaction. No call site moves.
 
-The hard part is **identity**: splitting one object into two means minting an id, and two peers
-minting independently produce two objects. Require **derived ids** — a new object's id is a hash of
-the source id plus a role name, so two peers independently minting "the `Person` for `Task` X"
-derive the same id and Automerge merges them into one. Reject non-derived ids outright.
+Note what exists: `MigrationBuilder.addObject` mints a **random** id, though the private
+`_createObject` it calls already accepts one. So the plumbing for derived ids is there and simply not
+reachable — a small change, but the semantics below depend on it entirely.
+
+#### Derived ids, and the key problem
+
+Two peers minting a new object independently produce two objects. The fix is that a created object's
+id is **derived** — `hash(sourceId, role)` — so two peers independently minting "the `Address` for
+`Person` X" land on the same id and Automerge merges them into one. This also makes a split
+**idempotent**: re-running it cannot duplicate, which is the strongest argument for requiring derived
+ids rather than encouraging them. Non-derived ids in a migration should be rejected.
+
+That works cleanly for **1 → 1 auxiliary** (one `Address` per `Person`). It is genuinely unsolved for
+**1 → N from a collection**, and this is the sharp research question:
+
+- **Position is not a stable key.** A reorder changes it, and two peers whose lists merged in
+  different orders derive different ids.
+- **Content hash is stable until the content is edited**, at which point the element mints a _new_
+  object and orphans the old one — the worst outcome, since the edit looks like a delete plus create.
+
+The promising direction is that Automerge list elements carry opaque stable identity, which is the
+same primitive the backlog already wants for block identity in the rich-text lens ("stable block
+identity via Automerge cursors"). If one mechanism serves both, that is a strong argument for doing
+it early.
+
+#### Relations
+
+Extracting a field into its own object plus a relation is the common real case
+(`Task -[assignedTo]-> Person`). A relation is an entity with its own id _and_ a source and target,
+and per `internal/Ref/strong-deps.ts` both endpoints are strong dependencies.
+
+- The relation's id must be derived too, on the same rule.
+- With no cross-object transaction there is a window where the relation exists and its target does
+  not. Because an entity is not surfaced until its strong deps load, a dangling relation most likely
+  just does not appear — graceful degradation rather than a crash. **Confirm this**: if it instead
+  errors or blocks the subtree, then write ordering becomes a hard requirement rather than a
+  nicety, and the runner has to guarantee it.
+
+#### Merge (N → 1)
+
+The inverse, and asymmetric in a way splitting is not.
+
+- **Which id survives?** It must be deterministic, and it should be _declared_ by the migration (a
+  primary side), not inferred by a rule like "lowest id" that is arbitrary and surprising when you
+  are looking at the data.
+- The non-surviving objects need tombstoning, and **every ref pointing at them has to be rewritten**.
+  That is an unbounded back-reference scan; whether we have an index that makes it tractable is an
+  open question, and if we do not, merge may have to be scoped to cases where the caller supplies the
+  referrers.
+
+#### Fan-out and the losslessness bar
+
+This is where §10.1 bites hardest. `Person.address: string` splits into an `Address` object; an
+offline peer writes `person.address = '10 Main St'` a week later. Fold-forward (§10.3) must derive the
+`Address` id, find-or-create it, parse the value, and write it there — and two peers doing that
+concurrently must converge, which derived ids give.
+
+Two consequences:
+
+- **A split must not delete the source property** until the fold-forward window closes. That is the
+  same conclusion as §10.3 claim 1, arrived at independently, which is mild evidence it is right.
+- **If the split's `get` is partial, the fold is lossy.** Parsing `'10 Main St'` into
+  `{ street, city, zip }` may fail. A fan-out migration therefore needs an explicit answer for
+  unparseable input — most likely: leave the source property in place, do not create the object, and
+  report it, rather than creating a half-populated object.
 
 ### 10.6 Convergence between peers
 

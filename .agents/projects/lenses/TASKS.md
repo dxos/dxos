@@ -309,8 +309,9 @@ not by being planned.
 - [ ] **Foreign-type adaptation** — a third lens mapping an external type onto `DataType.Task`,
       proving existing `Task` surfaces render it unchanged.
 - [ ] **Migration** — phased plan below (["Migration — phased plan"](#migration--phased-plan)):
-      M0 proof of concept, M1 lens-backed single-object, M2 lossless + cross-object. Rationale and
-      the losslessness bar in DESIGN.md §10. Not scheduled; M1 is gated on the lens landing in core.
+      M0 proof of concept, M1 lens-backed single-object, M2 lossless + cross-object + fan-out.
+      Rationale and the losslessness bar in DESIGN.md §10. Not scheduled; M1 is gated on the lens
+      landing in core.
 - [ ] **`Lens.generate(source, target)`** — see [the decision note](#lensgenerate--decision-note)
       below. **Recommendation: don't take it on yet**; do "Richer source annotations" (Phase 5) first.
 - [ ] **Cross-object lenses — composition** (DESIGN.md §11.2-11.4). Lens the _referenced object too_:
@@ -374,6 +375,26 @@ the mechanism; these are its falsifiable claims in kill order.
 - [ ] **Claim 5 · genuine conflicts surface as conflicts.** A folded-forward value and a
       directly-written value both target the same property. The result must be an ordinary visible
       CRDT conflict, not a silent overwrite in either direction.
+- [ ] **Claim 6 · fan-out — is a derived id enough?** Split one object into two (or into an object
+      plus a relation) on two peers independently. Derived ids (`hash(sourceId, role)`) should make
+      them converge on one object and make re-running idempotent. `MigrationBuilder.addObject` mints a
+      **random** id today, though the private `_createObject` already accepts one — so this is
+      reachable with a small change.
+- [ ] **Claim 7 · what is the stable key for 1 → N?** Splitting a collection into N objects needs a
+      per-element key. Position is not stable (a reorder changes it, and two peers whose lists merged
+      differently disagree); a content hash is stable until the element is edited, at which point it
+      mints a new object and orphans the old. **This is the sharpest unknown in the phase.** Check
+      whether Automerge list-element identity serves — it is the same primitive the rich-text lens
+      wants for stable block identity, so one mechanism may cover both.
+- [ ] **Claim 8 · does a dangling relation degrade gracefully?** With no cross-object transaction
+      there is a window where a created relation's target does not exist yet. Strong-deps suggests it
+      simply does not surface; confirm. If it instead errors or blocks the subtree, write ordering
+      becomes a hard requirement on the runner rather than a nicety.
+- [ ] **Claim 9 · fan-out under a late write.** The §10.1 scenario applied to a split: an offline peer
+      writes the _source_ property after the object was split. Fold-forward must derive the new
+      object's id, find-or-create, and write there — convergently, from two peers at once. Also
+      settles what happens when the split's transform is partial (an unparseable value should leave
+      the source in place and report, not create a half-populated object).
 - [ ] **Write up what survives** in DESIGN.md §10.3 — including, if it comes to it, the honest
       finding that the bar is unreachable and why.
 
@@ -401,7 +422,7 @@ lens landing in core (Phase 5).
       is still lost, and effectful `onMigration` still runs more than once. Say so in the API docs
       rather than letting it be discovered.
 
-### Phase M2 — integrate the research: lossless, cross-object, convergent
+### Phase M2 — integrate the research: lossless, cross-object, fan-out, convergent
 
 The full thing. Only starts once M0 has answered its claims; its shape depends on those answers.
 
@@ -413,9 +434,21 @@ The full thing. Only starts once M0 has answered its claims; its shape depends o
       match (a tuple of objects) and _returns_ a write set addressed to them. Applied per object and
       non-atomically today; handed to a cross-object transaction when Automerge ships one, with no
       call site moving.
+- [ ] **Fan-out, merge and relations** (DESIGN.md §10.5) — splitting one object into several,
+      extracting a field into an object plus a relation, and merging several into one. This class
+      creates and destroys entities, so `Write` grows a create/delete verb alongside the object
+      address. **Creation stays out of `Lens.get`** — the migration creates and rewires, the lens then
+      reads the resulting graph by composition (§11.2); putting creation in `get` would cost the
+      purity the law check and the render path depend on.
 - [ ] **Derived ids required** — a new object's id is a hash of the source id plus a role, so two
-      peers minting "the `Person` for `Task` X" derive the same id and merge into one. Reject
-      non-derived ids outright.
+      peers minting "the `Person` for `Task` X" derive the same id and merge into one. This is also
+      what makes a split idempotent. Reject non-derived ids outright, and expose the id parameter
+      `MigrationBuilder._createObject` already takes.
+- [ ] **A stable key for 1 → N**, per M0 claim 7 — likely shared with the rich-text lens's block
+      identity work.
+- [ ] **Merge policy** — the surviving id is _declared_ by the migration, not inferred by an
+      arbitrary rule; losers are tombstoned and inbound refs rewritten. Needs an answer for the
+      back-reference scan (is there an index, or must the caller supply the referrers?).
 - [ ] **Convergence strategy A as the default** (DESIGN.md §10.6): deterministic, idempotent, in
       place, no coordination. Force an explicit opt-out for anything effectful.
 - [ ] **Strategy B where it fits** — don't migrate, read through the lens; the overlay already holds
