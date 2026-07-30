@@ -120,6 +120,29 @@ describe('update-scheduler', () => {
     await ctx.dispose();
   });
 
+  // The outcome handle must be read AFTER `trigger()`: when a run is already in flight the handle is
+  // still the finished-and-woken one from that run, so reading it first would return immediately and
+  // report a flush that never covered the caller's work.
+  test('runBlocking waits for a run that starts after it, not one already in flight', async ({ expect }) => {
+    const ctx = new Context();
+    const queue: string[] = [];
+    const drained: string[][] = [];
+    const scheduler = new UpdateScheduler(ctx, async () => {
+      drained.push(queue.splice(0, queue.length));
+      await sleep(30);
+    });
+
+    queue.push('first');
+    scheduler.trigger();
+    await sleep(5); // The first run has claimed 'first' and is still in flight.
+
+    queue.push('second'); // Enqueued while that run is running, so it cannot be in its drain.
+    await scheduler.runBlocking();
+
+    expect(drained.flat(), 'runBlocking resolved without draining later work').toContain('second');
+    await ctx.dispose();
+  });
+
   // Concurrent flushes coalesce onto one run that observes everything enqueued before either call —
   // they are all asking the same question ("has what I queued been handed off?"), so one drain
   // answers all of them.
