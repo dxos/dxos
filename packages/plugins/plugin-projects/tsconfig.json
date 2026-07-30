@@ -28,9 +28,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/util"
     },
     {
