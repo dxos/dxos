@@ -56,13 +56,13 @@ describe('reducers', () => {
       ];
 
       syncer.update(messages);
-      expect(doc.content).toEqual('\n<prompt>Hello</prompt>\n\nHi there!\n');
+      expect(normalize(doc.content)).toEqual('\n<prompt>Hello</prompt>\n<branch />\n\nHi there!\n');
 
       Obj.update(messages[1], (obj) => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.update(messages);
-      expect(doc.content).toEqual('\n<prompt>Hello</prompt>\n\nHi there!\nHow can I help?\n');
+      expect(normalize(doc.content)).toEqual('\n<prompt>Hello</prompt>\n<branch />\n\nHi there!\nHow can I help?\n');
     }),
   );
 
@@ -78,7 +78,7 @@ describe('reducers', () => {
       ];
 
       syncer.update(messages);
-      expect(doc.content).toEqual('\n<prompt>Hello</prompt>\n\nHi there!');
+      expect(normalize(doc.content)).toEqual('\n<prompt>Hello</prompt>\n<branch />\n\nHi there!');
 
       Obj.update(messages[1], (obj) => {
         const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
@@ -91,7 +91,9 @@ describe('reducers', () => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.update(messages);
-      expect(doc.content).toEqual('\n<prompt>Hello</prompt>\n\nHi there! How are you?\nHow can I help?\n');
+      expect(normalize(doc.content)).toEqual(
+        '\n<prompt>Hello</prompt>\n<branch />\n\nHi there! How are you?\nHow can I help?\n',
+      );
     }),
   );
 
@@ -328,4 +330,88 @@ describe('MessageSyncer tool widget rehydration', () => {
       expect(state.blocks.map((block) => block._tag)).toEqual(['toolCall', 'toolResult']);
     }),
   );
+
+  // Regression: the prompt was built with an indented `trim` template, which dedents by the minimum
+  // indent across all lines — so a multi-line prompt, contributing lines at zero indent, left the source
+  // file's indentation in the document. At 4+ spaces CommonMark reads an indented code block, so neither
+  // the prompt nor the toolbar parsed as an element and the turn rendered as raw text.
+  it.effect(
+    'a multi-line prompt emits unindented markup',
+    Effect.fn(function* ({ expect }) {
+      const doc = new TestDocument();
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
+
+      const prompt = createMessage('user', [{ _tag: 'text', text: 'this is a list:\n- foo\n- bar' }]);
+      syncer.update([prompt]);
+
+      const indented = doc.content.split('\n').filter((line) => /^\s+\S/.test(line));
+      expect(indented).toEqual([]);
+      expect(normalize(doc.content)).toContain('<prompt>this is a list:\n- foo\n- bar</prompt>\n<branch />');
+    }),
+  );
+
+  // Regression: `update` streams a suffix, so an append-only path leaves removed turns on screen. A
+  // rewind shrinks the thread, which has to fall back to a full reset.
+  it.effect(
+    'a shrinking message list replaces the document',
+    Effect.fn(function* ({ expect }) {
+      const doc = new TestDocument();
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
+
+      const prompt = createMessage('user', [{ _tag: 'text', text: 'Hello' }]);
+      const reply = createMessage('assistant', [{ _tag: 'text', text: 'Hi there!' }]);
+      syncer.update([prompt, reply]);
+      expect(doc.content).toContain('Hi there!');
+
+      // The rewind case: same first message, fewer turns.
+      const replaced = syncer.update([prompt]);
+      expect(replaced).toBe(true);
+      expect(doc.content).not.toContain('Hi there!');
+      expect(doc.content).toContain('Hello');
+    }),
+  );
+
+  it.effect(
+    'a message list diverging mid-thread replaces the document',
+    Effect.fn(function* ({ expect }) {
+      const doc = new TestDocument();
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
+
+      const prompt = createMessage('user', [{ _tag: 'text', text: 'Hello' }]);
+      const abandoned = createMessage('assistant', [{ _tag: 'text', text: 'Abandoned.' }]);
+      syncer.update([prompt, abandoned]);
+
+      // Same length, different second turn — the branch changed underneath us.
+      const retry = createMessage('assistant', [{ _tag: 'text', text: 'Retry.' }]);
+      expect(syncer.update([prompt, retry])).toBe(true);
+      expect(doc.content).not.toContain('Abandoned.');
+      expect(doc.content).toContain('Retry.');
+    }),
+  );
+
+  // Regression: widget callbacks reach the thread through the syncer's context, which the host has to
+  // publish to the editor via `setContext`. Nothing did, so a widget received `context: undefined` and
+  // the rewind button silently no-oped.
+  it.effect(
+    'exposes a context routing widget callbacks to the handlers',
+    Effect.fn(function* ({ expect }) {
+      const rewound: string[] = [];
+      const syncer = new MessageSyncer(new TestDocument(), createBlockRenderer('thinking'), {
+        onRewind: (id) => rewound.push(id),
+      });
+
+      expect(syncer.context).toBeDefined();
+      syncer.context.rewind('msg-1');
+      expect(rewound).toEqual(['msg-1']);
+    }),
+  );
 });
+
+/**
+ * Canonicalizes the rendered document for comparison:
+ * - the branch toolbar's attributes, since `messageId` is a fresh ULID and `created` a wall-clock
+ *   timestamp, so neither is stable across runs;
+ * - the run of leading newlines, which is presentational padding above the first block and is tuned
+ *   independently — these tests are about the block sequence and the incremental append path.
+ */
+const normalize = (content: string) => content.replace(/<branch\b[^>]*\/>/g, '<branch />').replace(/^\n+/, '\n');

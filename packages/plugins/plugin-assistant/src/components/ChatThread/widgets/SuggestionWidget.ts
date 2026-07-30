@@ -20,13 +20,22 @@ export class SuggestionWidget extends WidgetType {
 
   override toDOM() {
     // NOTE: Container must have `dx-inline-size-container` (or `dx-size-container`) to support cqi.
+    //
+    // Inline-level root so consecutive suggestions flow onto one wrapped line rather than stacking —
+    // the tag is registered `block: false` and the renderer omits the usual block separator between
+    // them.
+    //
+    // Vertical space must be **padding, never margin**: CodeMirror measures a widget from its own box,
+    // and a margin sits outside what it can see, so the height model drifts from what is rendered, the
+    // error accumulates down the document, and the turn-fold gutter markers end up visibly misaligned.
+    // Adjacent chips are likewise spaced with trailing padding rather than a margin.
     return Domino.of('span')
-      .classNames(mx('inline-flex max-w-[calc(100cqi-8px)] my-1 pe-2 overflow-hidden'))
+      .classNames(mx('inline-flex max-w-[calc(100cqi-8px)] py-1 pe-1 overflow-hidden'))
       .append(
         Domino.of('button')
           .attributes({
-            'data-action': 'submit',
             'data-density': 'md',
+            'data-action': 'submit',
             'data-value': this.text,
           })
           .classNames(mx('dx-button gap-2 w-full overflow-hidden'))
