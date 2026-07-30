@@ -4,6 +4,7 @@
 
 import { PublicKey } from '@dxos/keys';
 
-import { type LevelDB, createLevel } from '../level';
+import { createLevel } from '../create-level';
+import { type LevelDB } from '../level';
 
 export const createTestLevel = (path = `/tmp/dxos-${PublicKey.random().toHex()}`): LevelDB => createLevel(path);

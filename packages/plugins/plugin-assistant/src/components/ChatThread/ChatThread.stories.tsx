@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import React, { useEffect, useMemo, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Database, Feed, Filter, Query } from '@dxos/echo';
@@ -17,6 +18,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
+import { Button } from '@dxos/react-ui';
 import { EditorPreviewProvider } from '@dxos/react-ui-editor';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization, Person } from '@dxos/types';
@@ -30,9 +32,15 @@ random.seed(1);
 
 type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService>;
 
-type StoryArgs = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
+type StoryArgs = {
+  generator?: MessageGenerator[];
+  delay?: number;
+  wait?: boolean;
+  /** Render a toggle that unmounts and remounts the thread, reproducing navigating away and back. */
+  remountable?: boolean;
+} & ChatThreadProps;
 
-const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryArgs) => {
+const DefaultStory = ({ generator = [], delay = 0, wait, remountable, ...props }: StoryArgs) => {
   const [space] = useSpaces();
   const feed = useMemo<Feed.Feed | undefined>(
     () => (space ? space.db.add(Feed.make({ name: 'chat' })) : undefined),
@@ -74,8 +82,29 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryArgs) 
 
   return (
     <EditorPreviewProvider onLookup={async ({ dxn, label }) => ({ label, text: dxn })}>
-      <ChatThread {...props} messages={messages} />
+      {remountable ? (
+        <RemountableThread {...props} messages={messages} />
+      ) : (
+        <ChatThread {...props} messages={messages} />
+      )}
     </EditorPreviewProvider>
+  );
+};
+
+/**
+ * Unmount/remount harness. Returning to a chat remounts the thread, which re-walks the messages and
+ * replaces the document — and a full replace clears accumulated widget props, so tool rows depend on
+ * the rehydration that follows it. Mounting fresh never exercises that path.
+ */
+const RemountableThread = (props: ChatThreadProps) => {
+  const [mounted, setMounted] = useState(true);
+  return (
+    <div className='flex flex-col h-full'>
+      <Button data-testid='story.toggleMount' onClick={() => setMounted((value) => !value)}>
+        {mounted ? 'Unmount' : 'Mount'}
+      </Button>
+      {mounted && <ChatThread {...props} />}
+    </div>
   );
 };
 
@@ -118,6 +147,35 @@ export const Default: Story = {
   },
 };
 
+/**
+ * Every user prompt carries a rewind toolbar. It is emitted as its own markdown block after the
+ * `<prompt>` tag; a single newline between them would let CommonMark absorb the toolbar into the
+ * prompt's HTML block, so this asserts the tag actually parses into a widget.
+ */
+export const Rewind: Story = {
+  args: {
+    generator: createMessageGenerator(),
+    wait: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const buttons = await waitFor(
+      async () => {
+        const found = canvas.queryAllByTestId('chat.rewind');
+        await expect(found.length).toBeGreaterThan(0);
+        return found;
+      },
+      { timeout: 10_000 },
+    );
+
+    // One toolbar per user prompt.
+    const prompts = canvasElement.querySelectorAll('.cm-prompt, [data-prompt]');
+    if (prompts.length > 0) {
+      await expect(buttons.length).toBe(prompts.length);
+    }
+  },
+};
+
 export const Delayed: Story = {
   args: {
     generator: createMessageGenerator(),
@@ -127,5 +185,41 @@ export const Delayed: Story = {
       typewriter: true,
       cursor: true,
     },
+  },
+};
+
+/**
+ * Tool rows must survive navigating away and back.
+ *
+ * They render from out-of-band widget state, not from the document: `blockToMarkdown` emits a
+ * `<toolCall id/>` placeholder and pushes the blocks via `updateWidget`; an empty state renders an
+ * empty row. On remount `MessageSyncer.reset` replaces the document, which fires `xmlTagResetEffect`
+ * and clears that state, then rehydrates it — and that rehydration used to be dropped, because the
+ * rebuild it triggers replaces the widget instances the editor was routing updates through
+ * (`xml-tags.test.ts`, "state reaches a mounted widget after a rebuild replaced its decoration
+ * instance").
+ */
+export const Remount: Story = {
+  args: {
+    generator: createMessageGenerator(),
+    wait: true,
+    remountable: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Streaming path: the tool rows render as the messages land.
+    await expect(canvas.findByText(/Calling search/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText(/Calling create/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // Away and back.
+    const toggle = await canvas.findByTestId('story.toggleMount');
+    await userEvent.click(toggle);
+    await waitFor(() => expect(canvas.queryByText(/Calling search/)).toBeNull());
+    await userEvent.click(toggle);
+
+    // Replay path: same rows, rebuilt from the messages rather than from streaming updates.
+    await expect(canvas.findByText(/Calling search/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText(/Calling create/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };

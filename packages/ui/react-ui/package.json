@@ -51,7 +51,6 @@
     "@dxos/react-list": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
     "@internationalized/date": "catalog:",
     "@radix-ui/primitive": "catalog:",

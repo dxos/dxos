@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import React from 'react';
 
 import { composable, composableProps } from '@dxos/react-ui';

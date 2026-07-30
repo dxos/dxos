@@ -141,6 +141,16 @@
       "autoPort": false
     },
     {
+      "name": "plugin-excalidraw-storybook",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && pnpm --filter @dxos/plugin-excalidraw exec storybook dev --port 9015 --no-open --ci"
+      ],
+      "port": 9015,
+      "autoPort": true
+    },
+    {
       "name": "storybook-9014",
       "runtimeExecutable": "sh",
       "runtimeArgs": [

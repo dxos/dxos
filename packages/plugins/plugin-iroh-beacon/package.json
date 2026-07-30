@@ -84,7 +84,7 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

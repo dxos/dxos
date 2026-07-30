@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { useNode } from '@dxos/plugin-graph';
+import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 

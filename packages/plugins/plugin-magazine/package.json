@@ -121,6 +121,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "date-fns": "catalog:",

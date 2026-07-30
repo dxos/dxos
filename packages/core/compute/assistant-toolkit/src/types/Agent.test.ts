@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Instructions, Skill } from '@dxos/compute';
-import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -46,11 +46,14 @@ describe('Agent (0.2.0)', () => {
         expect(text).toBe('Do the thing.');
         expect(Obj.getParent(instructions)).toBe(agent);
 
-        // The chat carries the inverted linkage; the agent owns no conversation state.
+        // The relation carries the linkage in both directions; the agent owns no conversation state.
         const chat = yield* Agent.loadChat(agent);
         expect(chat).toBeDefined();
-        expect(chat?.agent?.uri).toBe(Ref.make(agent).uri);
         expect(chat?.instructions?.uri).toBe(agent.instructions.uri);
+
+        // Compare by id: the two query paths may resolve distinct proxy instances.
+        const linkedAgent = chat ? yield* Agent.loadForChat(chat) : undefined;
+        expect(linkedAgent?.id).toBe(agent.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

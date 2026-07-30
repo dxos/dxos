@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom';
 import { DebugOverlayCorner, type KeyEvent, hexToRgb } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
 import {
