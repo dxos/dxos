@@ -22,6 +22,7 @@ import { Expando } from '@dxos/schema';
 
 import { Connection, Connector, type ConnectorEntry, ConnectorOperation } from '#types';
 
+import { autoSyncConnection } from '../capabilities/connector-coordinator/auto-sync';
 import SyncConnectionHandler from './sync-connection';
 
 describe('SyncConnection', () => {
@@ -63,11 +64,12 @@ describe('SyncConnection', () => {
    * A connector that keeps its bindings in sync on a schedule (`scheduled`) syncs by force-running
    * the Routine's trigger; one without a spec is invoked directly, which is the distinction under test.
    */
-  const makeConnector = ({ scheduled }: { scheduled: boolean }): ConnectorEntry => ({
+  const makeConnector = ({ scheduled, auto }: { scheduled: boolean; auto?: boolean }): ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
     sync: {
       operation: TestSync,
+      ...(auto ? { auto: true } : {}),
       ...(scheduled ? { trigger: Trigger.specTimer('*/10 * * * *') } : {}),
     },
   });
@@ -129,6 +131,26 @@ describe('SyncConnection', () => {
     const result = await invokeSync(makeInvoker({ scheduled: true }), connection);
 
     expect(result.synced).toBe(0);
+    expect(synced).toEqual([]);
+    expect(fired).toEqual([]);
+  });
+
+  test('auto-syncs a new connection when its connector opts in', async ({ expect }) => {
+    const { db, connection, cursor } = await setup();
+    const connector = makeConnector({ scheduled: false, auto: true });
+
+    await EffectEx.runPromise(autoSyncConnection(makeInvoker({ scheduled: false }), db, connector, connection));
+
+    // Forked so connection setup returns without waiting, so the sync lands after this call.
+    await expect.poll(() => synced).toEqual([Ref.make(cursor).uri]);
+  });
+
+  test('does not auto-sync a connection whose connector omits the flag', async ({ expect }) => {
+    const { db, connection } = await setup();
+    const connector = makeConnector({ scheduled: false });
+
+    await EffectEx.runPromise(autoSyncConnection(makeInvoker({ scheduled: false }), db, connector, connection));
+
     expect(synced).toEqual([]);
     expect(fired).toEqual([]);
   });
