@@ -137,6 +137,17 @@ projects:
     design: .agents/projects/feed-soft-fork/DESIGN.md
     prs: [12387]
     resume: 'Phase 1 COMPLETE. PR #12387 OPEN, Check GREEN (preview pr-12387-composer-main.dxos.workers.dev); CodeRabbit was rate-limited on the first push, re-requested. `Feed.PARENT_KEY` / `getParent` / `setParent` over `@meta` foreign keys, `Feed.resolveBranch` (linear-with-cuts walk, `head` override, truncation on absent parent, termination on forward reference/cycle), `Feed.append` `{ parent }` option. 17 pure tests in echo/src/Feed.test.ts + a DB round-trip in echo-client/src/feed/feed.test.ts. Lineage deliberately does NOT live on the Block (concurrent writers already fork the block chain, and one item is N blocks) — see DESIGN.md "Rejected". Next: land #12387, then the backlog in TASKS.md (branch enumeration, explicit active-branch head, query-plan push-down, assistant chat wiring — which must not reuse `Message.parentMessage`, that means tool-call nesting).'
+  - name: object-merging
+    status: active
+    user: josiah
+    host: remote
+    created: 2026-07-30
+    summary: ECHO-level deterministic object merging keyed on identity key (meta key + version) — duplicates from uncoordinated per-peer space initialization merge into a min-id winner with redirects and reference rewriting.
+    tasks: .agents/projects/object-merging/TASKS.md
+    design: .agents/projects/object-merging/DESIGN.md
+    prs: []
+    resume: 'Research COMPLETE and committed (DESIGN.md) on branch claude/echo-object-merging-research-dqtjx1 (no PR by request). Decisions so far: merge only distinct-id duplicates (collision class 2); same-id-two-docs stays an error (no deterministic ids — rejected, §4.5); merge direction = deterministic ordering, winner = min EntityId. Next: design review of the 5 open questions in DESIGN.md §7 (identity field, version matching, merge-policy pluggability, where the merge runs, relation scope), then Phase 0 spike (§6).'
+
   - name: chat
     status: active
     user: josiah
