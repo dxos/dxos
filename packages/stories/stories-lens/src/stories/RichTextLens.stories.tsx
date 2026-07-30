@@ -27,6 +27,29 @@ import { BlockList, RichTextEditor } from '../RichTextEditor';
 // range alone and the markdown editor's character-level automerge edits survive alongside it.
 //
 
+/**
+ * Put the caret at the end of a CodeMirror line and type.
+ *
+ * `userEvent.click` reports no pointer coordinates, and CodeMirror derives the caret from
+ * `clientX`/`clientY` — so a plain click on a line lands at document position 0 instead, silently
+ * typing into the wrong block. Clicking past the right edge of the line's box maps to its end.
+ */
+const typeAtEndOfLine = async (line: HTMLElement, text: string) => {
+  const rect = line.getBoundingClientRect();
+  await userEvent.pointer({
+    keys: '[MouseLeft]',
+    target: line,
+    coords: { clientX: rect.right - 2, clientY: rect.top + rect.height / 2 },
+  });
+  await userEvent.keyboard(text);
+};
+
+/** The line of the markdown editor holding the given text. */
+const lineContaining = (editor: HTMLElement, text: string) =>
+  Array.from(editor.querySelectorAll<HTMLElement>('.cm-line')).find((candidate) =>
+    candidate.textContent?.includes(text),
+  )!;
+
 const useDemoText = () => {
   const { spaceId } = useClientStory();
   const space = useSpace(spaceId);
@@ -195,9 +218,12 @@ export const DefaultTest: Story = {
     await waitFor(
       async () => {
         const stored = find('raw-content').textContent ?? '';
-        await expect(stored).toContain('EDIT');
-        // The edit stayed inside the heading, and every other line survived verbatim. A
-        // whole-document rewrite — or a lens that re-serialized the tree — would show up right here.
+        // Pinned to the heading line: the splice rewrote that block's range and put the text where the
+        // caret was, markers preserved. A bare `toContain('EDIT')` would also pass for an edit that
+        // landed in the wrong block, or in front of the `#`.
+        await expect(stored).toContain('# One object, two editorsEDIT');
+        // Every other line survived verbatim. A whole-document rewrite — or a lens that re-serialized
+        // the tree — would show up right here.
         await expect(stored).toContain('## Why it merges');
         await expect(stored).toContain('- Each block remembers its `source range`');
         await expect(stored).toContain('- So an edit splices that range alone');
@@ -212,31 +238,39 @@ export const DefaultTest: Story = {
     // This is the direction that only works because the lens re-projects on every change: the
     // ProseMirror editor holds its own document, and reconciles from the lens when it isn't focused.
     // ---------------------------------------------------------------------------------------------
-    const line = Array.from(find('markdown-editor').querySelectorAll<HTMLElement>('.cm-line')).find((candidate) =>
-      candidate.textContent?.includes('So an edit splices'),
-    )!;
+    const line = lineContaining(find('markdown-editor'), 'So an edit splices');
     await expect(line).toBeInTheDocument();
-    await userEvent.click(line);
-    await userEvent.keyboard('SYNC');
+    await typeAtEndOfLine(line, 'SYNC');
+
+    // The edit went into the last bullet in the SOURCE — assert that before anything downstream, so a
+    // caret that landed in the wrong block fails here rather than passing on a looser check later.
+    await waitFor(
+      async () =>
+        await expect(find('raw-content').textContent ?? '').toContain('- So an edit splices that range aloneSYNC'),
+      { timeout: 10_000 },
+    );
 
     await waitFor(
       async () => {
-        // The typed text reached the stored string...
-        await expect(find('raw-content').textContent ?? '').toContain('SYNC');
-        // ...the lens re-parsed it into the same bullet...
-        await expect(find('block-list')).toHaveTextContent('SYNC');
-        // ...and the rich-text editor shows it, still inside the list.
-        // Which block the caret was in is not worth pinning down; that it reached the lensed editor is.
-        await expect(editor.textContent).toContain('SYNC');
-        // The structure survived the source edit: still one list, still two items.
+        // The lens re-parsed it as the same bullet, not as a new block...
+        await expect(find('block-list')).toHaveTextContent('bullet');
+        await expect(find('block-list').textContent ?? '').toMatch(/bullet \[\d+,\d+\) So an edit splices .*SYNC/);
+        // ...and the lensed editor shows it in the second list item, the list still intact.
+        const items = editor.querySelectorAll<HTMLElement>('li');
+        await expect(items).toHaveLength(2);
         await expect(editor.querySelectorAll('ul')).toHaveLength(1);
-        await expect(editor.querySelectorAll('li')).toHaveLength(2);
+        await expect(items[1].textContent).toBe('So an edit splices that range aloneSYNC');
+        // The untouched bullet is untouched.
+        await expect(items[0].textContent).toBe('Each block remembers its source range');
         // The earlier lensed edit is still there: neither side clobbered the other.
         await expect(find('raw-content').textContent ?? '').toContain('EDIT');
       },
       { timeout: 10_000 },
     );
 
+    // The heading is still a heading. A source edit that landed at offset 0 would demote it to a
+    // paragraph by pushing text in front of the `#` — which is exactly how the bad caret was caught.
+    await expect(editor.querySelector('h1')?.textContent).toBe('One object, two editorsEDIT');
     // Marks survive an edit from the source side, since the lens re-parses rather than re-serializing.
     await expect(editor.querySelector('strong')?.textContent).toBe('what is stored');
   },
@@ -274,9 +308,11 @@ export const Collaboration: Story = {
 
     await waitFor(
       async () => {
-        // Read the stored string on the peer that did NOT make the edit.
+        // Read the stored string on the peer that did NOT make the edit. Pinned to the heading the
+        // caret was in, so an edit that landed in some other block fails rather than passing on a
+        // bare `toContain('EDIT')`.
         const stored = findAll('raw-content')[0].textContent ?? '';
-        await expect(stored).toContain('EDIT');
+        await expect(stored).toContain('## Why it mergesEDIT');
         // ...and the rest of the document is intact there — the splice touched one block's range and
         // nothing else crossed the wire.
         await expect(stored).toContain('# One object, two editors');
@@ -287,17 +323,21 @@ export const Collaboration: Story = {
 
     // And the other direction: peer 0 edits the markdown SOURCE, and peer 1's lensed editor follows.
     const [markdown] = findAll('markdown-editor');
-    const line = Array.from(markdown.querySelectorAll<HTMLElement>('.cm-line')).find((candidate) =>
-      candidate.textContent?.includes('So an edit splices'),
-    )!;
-    await userEvent.click(line);
-    await userEvent.keyboard('SYNC');
+    await typeAtEndOfLine(lineContaining(markdown, 'So an edit splices'), 'SYNC');
 
     await waitFor(
       async () => {
-        // Peer 1's block list and rich-text editor both reflect peer 0's source edit...
-        await expect(findAll('block-list')[1]).toHaveTextContent('SYNC');
-        await expect(findAll('pm-editor')[0].textContent).toContain('SYNC');
+        // The edit landed in peer 0's last bullet, not wherever the caret defaulted to.
+        await expect(findAll('raw-content')[0].textContent ?? '').toContain(
+          '- So an edit splices that range aloneSYNC',
+        );
+        // Peer 1's block list and rich-text editor both reflect peer 0's source edit, in that bullet...
+        await expect(findAll('block-list')[1].textContent ?? '').toMatch(
+          /bullet \[\d+,\d+\) So an edit splices .*SYNC/,
+        );
+        const items = findAll('pm-editor')[0].querySelectorAll<HTMLElement>('li');
+        await expect(items).toHaveLength(2);
+        await expect(items[1].textContent).toBe('So an edit splices that range aloneSYNC');
         // ...and peer 1's own earlier edit survived peer 0's, on both peers.
         await expect(findAll('raw-content')[0].textContent ?? '').toContain('EDIT');
         await expect(findAll('raw-content')[1].textContent ?? '').toContain('EDIT');

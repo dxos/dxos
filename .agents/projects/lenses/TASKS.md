@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: PHASES 1-4 DONE for BOTH lenses. `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 6 passing stories across two demos (`Default` renders only; `DefaultTest` and `Collaboration` carry assertions): Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets **and inline marks**, with 11 unit tests; the ProseMirror editor renders real `<strong>`/`<em>`/`<code>` and toggles them with Mod-b/i/e. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
+_Resume: PHASES 1-4 DONE for BOTH lenses. `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 6 passing stories across two demos (`Default` renders only; `DefaultTest` and `Collaboration` carry assertions): Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets **and inline marks**, with 11 unit tests; the ProseMirror editor renders real `<strong>`/`<em>`/`<code>` and toggles them with Mod-b/i/e. Both story tests assert **bidirectional** sync at the exact line each edit produced (see the `userEvent.click`/CodeMirror caret note), and are mutation-checked. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](../../../packages/core/echo/echo-panproto/API.md).
 This file is the ledger only.
@@ -215,10 +215,17 @@ keeps them honest.
       editor, and by asserting **computed style** — `fontSize` vs the paragraph, `fontWeight`,
       `fontStyle`, `display: list-item`, `listStyleType: disc`.
 - [x] **Both directions stay in sync as either side is edited.** `DefaultTest` now drives Direction 1
-      (edit the lensed block tree → assert the *stored string*, with every untouched line verbatim) and
+      (edit the lensed block tree → assert the _stored string_, with every untouched line verbatim) and
       Direction 2 (edit the markdown source → assert the block list and the lensed editor follow, the
       list structure survives, and the Direction-1 edit is still there). `Collaboration` does the same
       across two peers. The markdown pane is deliberately the source view — no `decorateMarkdown`.
+- [x] **Every edit is asserted at the position it landed, not merely somewhere in the document.** Each
+      direction pins the exact resulting line (`# One object, two editorsEDIT`,
+      `- So an edit splices that range aloneSYNC`, `items[1].textContent`), because a bare
+      `toContain('SYNC')` passed while the edit had gone into a completely different block (the caret
+      note below). Mutation-checked: dropping the reconcile effect's signature dependency fails both
+      story tests exactly at the sync assertion, so the assertions are load-bearing rather than
+      incidentally true.
 
 ### Notes for whoever runs these
 
@@ -228,8 +235,15 @@ keeps them honest.
   value and never fires `onChange` for the latter. (Selects respond to a plain `change` event, which
   is why they appear to work; text inputs do not.)
 - `userEvent.keyboard('{End}')` goes through `setSelectionRange`, which contenteditable does not
-  implement — it throws in a ProseMirror editor. Click, then type; assert on what the edit did to the
-  _other_ blocks rather than on an exact caret position.
+  implement — it throws in a ProseMirror editor. Click, then type.
+- **`userEvent.click` places the caret at document position 0 in CodeMirror.** It reports no pointer
+  coordinates (`clientX`/`clientY` default to 0), and CodeMirror derives the caret from them — so
+  clicking a specific `.cm-line` still types at the top of the document. This cost a long debugging
+  detour: text typed "into a bullet" landed in front of the `#`, which also silently demoted the
+  heading to a paragraph. Use `userEvent.pointer` with coordinates from the line's bounding rect
+  (`typeAtEndOfLine` in `RichTextLens.stories.tsx`); clicking past the right edge of a line maps to its
+  end. The lesson generalizes: **assert the exact line an edit produced**, never just that the typed
+  text appears somewhere — a document-wide `toContain` cannot tell a working caret from a broken one.
 - Don't hardcode source offsets in assertions; derive them from the fixture. The offsets are the
   claim, so a wrong constant reads as a lens bug.
 - **A lens must not be cached behind a change signal.** `useLensValue` originally memoized the
@@ -238,7 +252,7 @@ keeps them honest.
   _schedule_ and projects on every render — the projection is pure and cheap, and correctness beats the
   saved call. Anything else that caches a lens view owes the same reasoning.
 - **The editor that holds its own document needs three things** to reconcile without fighting the
-  caret: an effect keyed on a *value* signature (`signatureOf`) rather than object identity, a
+  caret: an effect keyed on a _value_ signature (`signatureOf`) rather than object identity, a
   `REMOTE`-marked transaction so `dispatchTransaction` doesn't write an incoming change straight back
   out, and a `blur` handler to apply whatever was skipped while it had focus.
 - Don't assert which block a caret landed in after typing into the other editor. Diagnostics chased a
