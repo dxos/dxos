@@ -373,16 +373,16 @@ const MessageReactions = ({ reactions, onReact, state }: Omit<MessageReactionsPr
   return (
     <div className='flex flex-wrap items-center gap-1 me-4 mt-1' data-testid='thread.message.reactions'>
       {reactions.map(({ emoji, count, self }) => (
-        // `Tag` carries the pill shape and sizing from the theme; the button is the interactive host so
-        // the pill keeps a focus ring and pressed state. The hue stays neutral and the accent ring
-        // alone marks "you reacted" — the palette hues are categorical, not stateful.
-        <Tag key={emoji} asChild>
+        // `Tag`'s button variant carries the pill's shape, pointer, hover and pressed styling; the
+        // button element is the interactive host, so the pill also keeps a focus ring. The hue stays
+        // neutral and `aria-pressed` alone marks "you reacted" — the palette hues are categorical.
+        <Tag key={emoji} variant='button' asChild>
           <button
             type='button'
             data-testid='thread.message.reaction'
             data-emoji={emoji}
             aria-pressed={self}
-            className={mx('flex items-center gap-1 dx-focus-ring', self && 'ring-1 ring-accent-bg')}
+            className='flex items-center gap-1 dx-focus-ring'
             onClick={() => onReact(emoji)}
           >
             <span aria-hidden>{emoji}</span>
@@ -395,10 +395,16 @@ const MessageReactions = ({ reactions, onReact, state }: Omit<MessageReactionsPr
         onOpenChange={(open) => setState((current) => ({ ...current, picking: open ? 'reactions' : undefined }))}
         onSelect={onReact}
       >
-        {/* A trigger rather than an anchor: opened from here the picker belongs to this pill. */}
+        {/* A trigger rather than an anchor: opened from here the picker belongs to this pill. The
+            pill is one of the row — same shape, just narrower for holding no count, and never
+            pressed, since adding a reaction is not a reaction of your own. */}
         <Popover.Trigger asChild>
-          <Tag asChild>
-            <button type='button' data-testid='thread.message.add-reaction' className='dx-focus-ring'>
+          <Tag variant='button' asChild>
+            <button
+              type='button'
+              data-testid='thread.message.add-reaction'
+              className='flex items-center gap-1 dx-focus-ring'
+            >
               <Icon icon='ph--smiley--regular' size={4} classNames='text-subdued' />
               <span className='sr-only'>{t('add-reaction.label')}</span>
             </button>

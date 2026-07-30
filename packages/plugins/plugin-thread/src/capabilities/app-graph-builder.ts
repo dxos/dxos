@@ -60,6 +60,10 @@ const getThreadFallbackLabel = (root: Message.Message): string => {
 export const createChannelThreadsExtension = Effect.fnUntraced(function* () {
   return yield* GraphBuilder.createExtension({
     id: 'channelThreads',
+    // A thread's node id is `<channel node>/thread-<rootId>`, so under the channels section path the
+    // pair encodes as `thread/<channelId>+thread-<rootId>` — the same fixed-depth shape a mailbox
+    // message uses, which is what lets a thread plank be linked to and restored.
+    url: { key: 'thread', kind: 'item', path: [GraphPath.GroupSegments.communications, channelTypename] },
     match: whenChannelNode,
     connector: (channel, get) =>
       Effect.sync(() => {

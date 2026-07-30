@@ -33,3 +33,18 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** The button variant: a pill that acts when clicked, with the pressed state a reaction toggle uses. */
+export const Button: Story = {
+  render: () => (
+    <div>
+      {['👍 3', '🎉 1'].map((label, index) => (
+        <Tag key={label} variant='button' asChild>
+          <button type='button' aria-pressed={index === 0} className='dx-focus-ring'>
+            {label}
+          </button>
+        </Tag>
+      ))}
+    </div>
+  ),
+};

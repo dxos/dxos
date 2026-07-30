@@ -128,4 +128,23 @@
   .dx-tag--error {
     @apply bg-rose-surface text-rose-fg;
   }
+
+  /**
+   * Pills that act rather than label: a reaction toggles, so it takes a pointer, a hover and a
+   * pressed state, none of which the base tag has. Doubled selector so each declaration outweighs
+   * the base `.dx-tag` (which sets `cursor-default`) and the `[data-hue]` surface, whatever order
+   * they land in. Pressed is a ring rather than another fill — the palette hues are categorical, so
+   * a filled state would read as a different kind of tag rather than an active one.
+   */
+  .dx-tag.dx-tag--button {
+    @apply cursor-pointer transition-colors;
+  }
+
+  .dx-tag.dx-tag--button:hover {
+    @apply bg-hover-surface;
+  }
+
+  .dx-tag.dx-tag--button[aria-pressed='true'] {
+    @apply ring-1 ring-inset ring-accent-bg;
+  }
 }
