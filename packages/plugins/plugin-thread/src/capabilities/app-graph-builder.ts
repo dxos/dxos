@@ -10,7 +10,7 @@ import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from
 import { Operation } from '@dxos/compute';
 import { Annotation, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Channel, Message } from '@dxos/types';
 import { Position } from '@dxos/util';
@@ -27,6 +27,14 @@ const channelHue = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getS
 
 /** Graph node type for a thread; distinct from `Message` so it claims its own surface. */
 const THREAD_NODE_TYPE = `${meta.profile.key}/thread`;
+
+/**
+ * A channel's *own* node, not any node that carries a channel: a thread node carries the channel it
+ * belongs to (the thread id is metadata beside it), so matching on the data type alone would hang
+ * every thread of a channel under each of its threads, without end.
+ */
+const whenChannelNode: NodeMatcher.NodeMatcher<Channel.Channel> = (node, get) =>
+  node.type === THREAD_NODE_TYPE ? Option.none() : NodeMatcher.whenEchoType(Channel.Channel)(node, get);
 
 /** Label for an unnamed thread: the text of its root message, else the bare thread id. */
 const getThreadFallbackLabel = (root: Message.Message): string => {
@@ -50,9 +58,9 @@ const getThreadFallbackLabel = (root: Message.Message): string => {
  * entire `child` relation with it, which has emptied the navtree of threads twice without a failure.
  */
 export const createChannelThreadsExtension = Effect.fnUntraced(function* () {
-  return yield* GraphBuilder.createTypeExtension({
+  return yield* GraphBuilder.createExtension({
     id: 'channelThreads',
-    type: Channel.Channel,
+    match: whenChannelNode,
     connector: (channel, get) =>
       Effect.sync(() => {
         const db = Obj.getDatabase(channel);
@@ -142,9 +150,9 @@ export default Capability.makeModule(
 
       createChannelThreadsExtension(),
 
-      GraphBuilder.createTypeExtension({
+      GraphBuilder.createExtension({
         id: 'channelChatCompanion',
-        type: Channel.Channel,
+        match: whenChannelNode,
         connector: (channel, get) => {
           const [callManager] = get(capabilities.atom(CallsCapabilities.Manager));
           if (!callManager) {

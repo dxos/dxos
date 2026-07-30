@@ -162,6 +162,19 @@ describe('channel threads graph extension', () => {
     await expect.poll(() => getThreadNodes().map((node) => node.properties.label)).toEqual(['Release the plan']);
   });
 
+  // A thread node carries its channel as data, so a connector matching on that type alone would hang
+  // the channel's threads under each of its threads, and under those, without end.
+  test('a thread has no threads of its own', async ({ expect }) => {
+    const { append, expand, getConnections, getThreadNodes } = await setupTestContext();
+
+    await append([threadRoot('Release the plan')]);
+    await expect.poll(() => getThreadNodes().length).toEqual(1);
+
+    const [thread] = getThreadNodes();
+    await expand(thread.id);
+    expect(getConnections(thread.id)).toEqual([]);
+  });
+
   test('a thread is listed even though the feed ref resolves after the channel expands', async ({ expect }) => {
     const { append, getThreadNodes } = await setupTestContext({ unresolvedFeedRef: true });
 
