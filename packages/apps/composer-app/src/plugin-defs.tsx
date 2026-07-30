@@ -150,10 +150,10 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 /**
  * Full Composer plugin registry: shared core infrastructure plus every content plugin.
  */
-export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
-  const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = conf;
+export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
+  const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = config;
   return [
-    ...getCorePlugins(conf),
+    ...getCorePlugins(config),
     AssistantPlugin(),
     AtprotoPlugin(),
     BoardPlugin(),
