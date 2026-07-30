@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import type { Client } from '@dxos/client';
-import type { Operation } from '@dxos/compute';
+import type { Credential, Operation } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';
@@ -83,7 +83,7 @@ export type OnTokenCreated = (input: {
    * (Gmail) materialize a fresh target object.
    */
   existingTarget?: Ref.Ref<Obj.Unknown>;
-}) => Effect.Effect<void, never, HttpClient.HttpClient>;
+}) => Effect.Effect<void, never, HttpClient.HttpClient | Credential.CredentialsService>;
 
 /**
  * Hook fired after an external-sync {@link Cursor.Cursor} is created for a target — a single-target
@@ -116,7 +116,7 @@ export type TestConnection = (input: {
   accessToken: AccessToken.AccessToken;
   connection: Connection.Connection;
   client: Client;
-}) => Effect.Effect<void, ConnectionTestError, HttpClient.HttpClient>;
+}) => Effect.Effect<void, ConnectionTestError, HttpClient.HttpClient | Credential.CredentialsService>;
 
 /** OAuth spec for Connector.oauth. */
 export type ConnectorOAuthSpec = {
