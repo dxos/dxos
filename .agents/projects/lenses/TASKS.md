@@ -385,11 +385,17 @@ the mechanism.
       conflict machinery never engages. The fold must detect the semantic conflict itself (target
       property changed since the migration heads) and record it at the application level instead of
       overwriting. Verify the detection, and that neither side is silently lost.
-- [ ] **Claim 6 · fan-out — is a derived id enough?** Split one object into two (or into an object
-      plus a relation) on two peers independently. Derived ids (`hash(sourceId, role)`) should make
-      them converge on one object and make re-running idempotent. `MigrationBuilder.addObject` mints a
-      **random** id today, though the private `_createObject` already accepts one — so this is
-      reachable with a small change.
+- [ ] **Claim 6 · fan-out converges via identity keys + the merge engine — NOT derived ids.**
+      Premise falsified by the object-merging research (PR #12410,
+      `.agents/projects/object-merging/DESIGN.md` §3.1/§4.5): two peers minting the same object id
+      create two Automerge _documents_ with no shared ancestry; `links[id]` is LWW and the losing
+      document is **silently orphaned** — their "collision class 1", an explicit error condition.
+      Corrected mechanism: random id + derived **identity key** (`meta.key+version`,
+      `<lensId>:<sourceId>:<role>`); duplicate creations collapse through their merge engine
+      (min-`EntityId` winner, `mergedInto` redirect, transitive resolver). The migration case is the
+      engine's best case — deterministic transform ⇒ identical duplicate content ⇒ field-granularity
+      lossiness never bites. Their Phase 0 spike IS this claim's test; verify the class-1 orphaning
+      once here (cheap) and otherwise adopt rather than duplicate their harness.
 - [ ] **Claim 7 · what is the stable key for 1 → N?** Splitting a collection into N objects needs a
       per-element key. Position is not stable (a reorder changes it, and two peers whose lists merged
       differently disagree); a content hash is stable until the element is edited, at which point it
@@ -401,18 +407,23 @@ the mechanism.
       simply does not surface; confirm. If it instead errors or blocks the subtree, write ordering
       becomes a hard requirement on the runner rather than a nicety.
 - [ ] **Claim 9 · fan-out under a late write.** The §10.1 scenario applied to a split: an offline peer
-      writes the _source_ property after the object was split. Fold-forward must derive the new
-      object's id, find-or-create, and write there — convergently, from two peers at once. Also
-      settles what happens when the split's transform is partial (an unparseable value should leave
-      the source in place and report, not create a half-populated object).
+      writes the _source_ property after the object was split. With identity keys, fold-forward needs
+      **no find-or-create atomicity**: each folding peer creates with the derived key and the merge
+      engine collapses duplicates ("create with key; the merge repairs races" — object-merging's
+      `db.ensure` pattern reused). Verify the collapse, and settle what happens when the split's
+      transform is partial (an unparseable value should leave the source in place and report, not
+      create a half-populated object).
 - [ ] **Claim 10 · fan-in collides; what resolves it?** Many sources converging on one target
       property contend by construction, where fan-out never does — two relations both supplying
       `assigneeName`. Confirm there is no defensible default and that the migration must declare the
       resolution.
 - [ ] **Claim 11 · can a shared child be absorbed at all?** One `Address` referenced by three
       `Person`s fans in to three copies that then diverge and never reconverge. Fan-in needs referrer
-      cardinality _before_ it runs — the same back-reference scan merge needs, which is the second
-      independent reason to want that index. Decide whether a shared child blocks or duplicates.
+      cardinality _before_ it runs. **The index question is answered**: the object-merging research
+      documents the existing backlink index (SQLite `reverseRef`, surfaced as `Query.referencedBy()`)
+      plus its gaps (markdown links, feed blocks, side maps, relation endpoints as bare EIDs). What
+      remains to decide: whether a shared child blocks or duplicates, and whether the gap list is
+      acceptable for the cardinality check.
 - [ ] **Claim 12 · late entity _creation_, not just late writes.** An offline peer on the old schema
       adds an `Address` to a `Person` after the fan-in ran. Fold-forward must absorb an entity that
       did not exist at migration time. **Fan-out never surfaces this, and it is the most likely thing
@@ -478,15 +489,24 @@ The full thing. Only starts once M0 has answered its claims; its shape depends o
       `put` _is_ the fan-in and rollback is the same operation. It inherits `checkLaws` for free.
       Needs: a declared collision resolution (many sources, one target property), referrer
       cardinality before absorbing a shared child, and absorb-before-delete.
-- [ ] **Derived ids required** — a new object's id is a hash of the source id plus a role, so two
-      peers minting "the `Person` for `Task` X" derive the same id and merge into one. This is also
-      what makes a split idempotent. Reject non-derived ids outright, and expose the id parameter
-      `MigrationBuilder._createObject` already takes.
+- [ ] **Derived identity keys required — depend on the object-merging engine** (PR #12410). A
+      migration-created object gets a random id plus a derived `meta.key+version`
+      (`<lensId>:<sourceId>:<role>`); convergence and idempotence come from that project's merge
+      engine (Phases 1-2: `mergedInto` + resolver redirects + executor), not from id derivation —
+      which their research shows routes through the class-1 LWW-orphaning error path. Reject keyless
+      creation in a migration outright. Shared plumbing: their Phase 1 exposure of
+      `ObjectCore.setSource`/`setTarget` is the same internal API fan-out-to-relation writes need.
+      Flow back to them (DESIGN.md §10.5 "What flows back"): heads-diff folding for straggler edits
+      at property granularity; minimal writes instead of `atomicReplaceObject` in the executor; a
+      lens as the per-type merge policy their open question 3 asks for.
 - [ ] **A stable key for 1 → N**, per M0 claim 7 — likely shared with the rich-text lens's block
       identity work.
-- [ ] **Merge policy** — the surviving id is _declared_ by the migration, not inferred by an
-      arbitrary rule; losers are tombstoned and inbound refs rewritten. Needs an answer for the
-      back-reference scan (is there an index, or must the caller supply the referrers?).
+- [ ] **Merge policy** — split by case per DESIGN.md §10.5: identity-key duplicates take the
+      object-merging engine's min-`EntityId` rule wholesale (pure, proven convergent via monotone
+      redirect chains); a migration-declared merge of distinct entities declares its primary side and
+      reuses the engine's tombstone + redirect + opportunistic-rewrite machinery. The back-reference
+      scan is answered (`Query.referencedBy`), and redirects make rewrite misses non-fatal, so
+      completeness is no longer a correctness requirement.
 - [ ] **Convergence strategy A as the default** (DESIGN.md §10.6): deterministic, idempotent, in
       place, no coordination. Force an explicit opt-out for anything effectful.
 - [ ] **Strategy B where it fits** — don't migrate, read through the lens; the overlay already holds

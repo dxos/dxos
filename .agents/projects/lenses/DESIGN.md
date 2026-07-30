@@ -656,21 +656,47 @@ Note what exists: `MigrationBuilder.addObject` mints a **random** id, though the
 `_createObject` it calls already accepts one. So the plumbing for derived ids is there and simply not
 reachable — a small change, but the semantics below depend on it entirely.
 
-#### Derived ids, and the key problem
+#### Convergent creation — CORRECTED by the object-merging research (PR #12410)
 
-Two peers minting a new object independently produce two objects. The fix is that a created object's
-id is **derived** — `hash(sourceId, role)` — so two peers independently minting "the `Address` for
-`Person` X" land on the same id and Automerge merges them into one. This also makes a split
-**idempotent**: re-running it cannot duplicate, which is the strongest argument for requiring derived
-ids rather than encouraging them. Non-derived ids in a migration should be rejected.
+The first version of this section proposed **derived object ids** — `hash(sourceId, role)` — so two
+peers independently minting "the `Address` for `Person` X" would land on the same id "and Automerge
+merges them into one". The object-merging feasibility research
+(`.agents/projects/object-merging/DESIGN.md`, PR #12410) **falsifies that premise at the storage
+layer**: an object id is a map key in the space root, each creator mints its _own_ Automerge
+document, `links[id]` is LWW, and the losing document is **silently orphaned** — two documents
+without shared ancestry cannot be CRDT-merged (that project's §3.1, citing
+`entity-manager.ts:1340-1346`). Same-id-different-documents is "collision class 1", an _error
+condition_, and their decision log explicitly rejects routing normal operation through it (§4.5).
+Even with deterministically identical content, any edit to the losing document inside the race
+window is lost.
 
-That works cleanly for **1 → 1 auxiliary** (one `Address` per `Person`). It is genuinely unsolved for
-**1 → N from a collection**, and this is the sharp research question:
+The corrected mechanism — and it is _better_, not just safe: the migration mints an ordinary
+**random id** but stamps a **derived identity key** (`meta.key + meta.version`, e.g.
+`<lensId>:<sourceId>:<role>`) on the created object. Two peers splitting concurrently produce two
+objects with the same identity key ("collision class 2"), and the **merge engine** that project
+specifies collapses them deterministically: minimum-`EntityId` winner, pure-function field merge,
+`system.mergedInto` redirect on the loser, resolver following redirects transitively, inbound refs
+rewritten opportunistically via the existing `Query.referencedBy` backlink index. Convergence is
+proven by monotone redirect chains (every edge points to a smaller id). The migration case is the
+engine's _best_ case: both duplicates came from the same source through the same deterministic
+transform, so their content is identical and the field-granularity lossiness of the merge function
+never bites. Idempotence survives the correction — re-running a split re-derives the same key and
+the engine treats the result as a no-op duplicate. Migrations should be **required** to stamp an
+identity key on anything they create.
+
+Fan-out therefore takes a dependency on object-merging Phases 1-2 (the `mergedInto` field, resolver
+redirect-following, and the merge executor) rather than inventing convergence machinery of its own.
+What survives untouched is the **key-derivation problem**: the engine converges objects that carry
+the _same_ key, so everything below about deriving a stable key still decides whether convergence
+happens at all.
+
+**1 → 1 auxiliary** (one `Address` per `Person`) is now clean. **1 → N from a collection** remains
+the sharp research question — as a stable _identity-key seed_ now, rather than a stable id:
 
 - **Position is not a stable key.** A reorder changes it, and two peers whose lists merged in
   different orders derive different ids.
-- **Content hash is stable until the content is edited**, at which point the element mints a _new_
-  object and orphans the old one — the worst outcome, since the edit looks like a delete plus create.
+- **Content hash is stable until the content is edited**, at which point the element derives a _new_
+  key and strands the old object — the worst outcome, since the edit looks like a delete plus create.
 
 The promising direction is that Automerge list elements carry opaque stable identity, which is the
 same primitive the backlog already wants for block identity in the rich-text lens ("stable block
@@ -737,24 +763,34 @@ nothing else does:
   most likely thing to break the bar, and M0 should look at it before the cheaper claims give false
   confidence.
 
-#### Merge (N → 1, same type): deduplication
+#### Merge (N → 1, same type): deduplication — largely the object-merging project
 
-Different from fan-in: both sides are the same type and one survives as itself.
+Different from fan-in: both sides are the same type and one survives as itself. Since this section
+was first written, the object-merging research (PR #12410) has specified exactly this engine, and
+two of the open questions here are closed by it:
 
-- **Which id survives?** It must be deterministic, and it should be _declared_ by the migration (a
-  primary side), not inferred by a rule like "lowest id" that is arbitrary and surprising when you
-  are looking at the data.
-- The non-surviving objects need tombstoning, and **every ref pointing at them has to be rewritten**.
-  That is an unbounded back-reference scan; whether we have an index that makes it tractable is an
-  open question, and if we do not, merge may have to be scoped to cases where the caller supplies the
-  referrers.
+- **The back-reference scan is tractable today.** A backlink index already exists — SQLite
+  `reverseRef`, surfaced as `Query.referencedBy()` — with documented gaps (markdown body links, feed
+  blocks, id-keyed side maps, relation endpoints serialized as bare EIDs). More importantly, the
+  redirect mechanism (`system.mergedInto` + transitive resolver-following) makes rewrite _misses
+  non-fatal_: a ref that escapes rewriting still resolves through the redirect. Completeness stops
+  being a correctness requirement. That also answers fan-in's referrer-cardinality scan above.
+- **Which id survives** splits by case. For _identity-key duplicates_ — two objects that are the same
+  thing — the engine's minimum-`EntityId` rule is right: pure, total, needs no judgment, and its
+  monotone redirect chains are the convergence proof. A _migration-declared_ merge of genuinely
+  distinct entities is the remaining case where the migration should declare the primary side; it
+  then reuses the engine's tombstone + redirect + opportunistic-rewrite machinery rather than
+  shipping its own.
 
 #### Fan-out, fan-in and the losslessness bar
 
 This is where §10.1 bites hardest. `Person.address: string` splits into an `Address` object; an
-offline peer writes `person.address = '10 Main St'` a week later. Fold-forward (§10.3) must derive the
-`Address` id, find-or-create it, parse the value, and write it there — and two peers doing that
-concurrently must converge, which derived ids give.
+offline peer writes `person.address = '10 Main St'` a week later. Fold-forward (§10.3) must create or
+find the `Address` and write the parsed value there — and two peers doing that concurrently must
+converge. With the object-merging engine this needs **no find-or-create atomicity at all**: each
+folding peer just creates with the derived identity key, and duplicate creations collapse through the
+engine. "Create with key; the merge repairs races" is exactly the `db.ensure` pattern that project's
+Phase 1 blesses for app state, reused for migration.
 
 Two consequences:
 
@@ -769,6 +805,30 @@ Fan-in raises the bar further, because a late change there can be an entity that
 the migration ran (see above). **Fold-forward must therefore handle late entity creation, not only
 late property writes** — which is a requirement on the mechanism in §10.3, not a detail of this
 section, and the most likely reason the bar turns out to be unreachable.
+
+#### What flows back to object-merging
+
+The exchange is not one-way; three things from this plan bear on that project:
+
+1. **Straggler edits at property granularity.** Their §4.6 accepts that a concurrent edit on the
+   loser is lost at _field_ granularity (winner-preference merge). Fold-forward's heads-diff
+   (§10.3) is precisely the finer tool: record the merge's heads, diff the loser forward, fold only
+   the late writes into the winner as minimal writes. Their "re-runnable merge" and our "migration
+   as a standing rule" are the same idea; the heads machinery would let their engine keep late
+   edits instead of merely shrinking the window.
+2. **The merge executor writes via `atomicReplaceObject`** — a whole-object replace, the pattern M1
+   retires for migrations because it clobbers concurrent edits to properties it never meant to
+   touch. Harmless for their scoped early adoption (init-state objects, empty edit window), but if
+   migration fan-out leans on the engine for user-data duplicates, the executor should emit minimal
+   writes. Worth raising on PR #12410 before the executor's shape freezes.
+3. **A lens is a principled per-type merge function.** Their open question 3 (is field-wise
+   winner-preference enough, or do types need a declared merge policy?) has a ready answer once
+   lenses are first-class: a type's merge annotation can be a lens-shaped mapping with `checkLaws`
+   behind it, rather than a new ad-hoc annotation vocabulary.
+
+Shared plumbing, so it is built once: their Phase 1 exposes relation-endpoint mutation
+(`ObjectCore.setSource`/`setTarget`) for ref rewriting — the same internal API fan-out-to-relation
+writes need here.
 
 ### 10.6 Convergence between peers
 
