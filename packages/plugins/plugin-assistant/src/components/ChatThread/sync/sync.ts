@@ -19,7 +19,11 @@ export type TextModel = Pick<MarkdownStreamController, 'length' | 'setContent' |
  * space as the CodeMirror document (i.e. what {@link MarkdownStreamController.scrollTo} and
  * {@link MarkdownStreamController.getVisibleRange} operate on).
  */
-export type MessageRange = { id: string; from: number; to: number };
+export type MessageRange = {
+  id: string;
+  from: number;
+  to: number;
+};
 
 /**
  * Renders a block to markdown.
