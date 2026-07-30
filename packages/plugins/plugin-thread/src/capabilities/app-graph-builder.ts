@@ -9,6 +9,9 @@ import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
+// Node's NodeArg/RelationInput appear in the connector's inferred return type; importing it lets
+// TypeScript name them in the emitted .d.ts for createChannelThreadsExtension.
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Channel, Message } from '@dxos/types';
@@ -17,7 +20,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 
 import { getChannelsPath } from '../paths';
-import { Thread, ThreadOperation, foldThreads } from '../types';
+import { Thread, foldThreads } from '../types';
 
 const channelTypename = Type.getTypename(Channel.Channel);
 
