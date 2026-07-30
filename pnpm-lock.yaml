@@ -10446,6 +10446,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-routine':
+        specifier: workspace:*
+        version: link:../plugin-routine
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

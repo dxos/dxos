@@ -22,6 +22,7 @@ import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
+import { autoSyncConnection } from './auto-sync';
 import { createSingleCursor } from './create-single-cursor';
 import { decodeOAuthMessageData, initiateOAuthFlow, openOAuthPopupWindow, openOAuthRedirectWindow } from './oauth';
 import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
@@ -125,12 +126,12 @@ const navigateToNewConnection = (
 
 const openSyncTargetsDialogAfterConnectionCreated = (
   invoker: Operation.OperationService,
-  getSyncTargets: NonNullable<ConnectorEntry['getSyncTargets']>,
+  getTargets: NonNullable<NonNullable<ConnectorEntry['sync']>['getTargets']>,
   persistedConnection: Connection.Connection,
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
-    const { targets } = yield* invoker.invoke(getSyncTargets, {
+    const { targets } = yield* invoker.invoke(getTargets, {
       connection: Ref.make(persistedConnection),
     });
     yield* invoker.invoke(LayoutOperation.UpdateDialog, {
@@ -163,7 +164,7 @@ const finalizePendingEntry = (
       existingTarget,
     });
 
-    if (connector.getSyncTargets) {
+    if (connector.sync?.getTargets) {
       // Multi-target: let the user pick which remote targets to bind.
       yield* Effect.all(
         [
@@ -172,7 +173,7 @@ const finalizePendingEntry = (
           existingTarget ? Effect.void : navigateToNewConnection(invoker, db, persistedConnection.id),
           openSyncTargetsDialogAfterConnectionCreated(
             invoker,
-            connector.getSyncTargets,
+            connector.sync.getTargets,
             persistedConnection,
             existingTarget,
           ),
@@ -185,6 +186,8 @@ const finalizePendingEntry = (
       if (!existingTarget) {
         yield* navigateToNewConnection(invoker, db, persistedConnection.id);
       }
+      // Ordered after navigation so the user lands on the target while the first sync fills it in.
+      yield* autoSyncConnection(invoker, db, connector, persistedConnection);
     }
   });
 
@@ -560,7 +563,20 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
         const connector = yield* resolveConnector(getConnectorEntries, connection.connectorId ?? '');
-        return yield* reconcileCursors({ invoker, db, connection, connector, selected, existingTarget });
+        const { added, removed, existing } = yield* reconcileCursors({
+          invoker,
+          db,
+          connection,
+          connector,
+          selected,
+          existingTarget,
+        });
+        // Initial setup of a multi-target connector: the connection had no bindings until this
+        // submit, so this is the first-sync moment. A later change of targets is left to the user.
+        if (existing === 0 && added > 0) {
+          yield* autoSyncConnection(invoker, db, connector, connection);
+        }
+        return { added, removed };
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
     return Capability.contributes(

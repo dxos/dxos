@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Operation } from '@dxos/compute';
@@ -63,10 +64,18 @@ describe('reconcileCursors', () => {
     ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>,
   );
 
+  // Never invoked here — `ConnectorSync` requires an operation, and this test only exercises
+  // cursor reconciliation.
+  const SyncExampleTarget = Operation.make({
+    meta: { key: DXN.make('org.dxos.test.reconcileCursors.sync') },
+    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    output: Schema.Any,
+  });
+
   const makeConnector = (overrides: Partial<ConnectorEntry> = {}): ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
-    materializeTarget: MaterializeExampleTarget,
+    sync: { operation: SyncExampleTarget, materializeTarget: MaterializeExampleTarget },
     ...overrides,
   });
 
@@ -117,6 +126,21 @@ describe('reconcileCursors', () => {
     expect(cursor.spec.label).toBe('Foo');
     // The target was materialized and the ref resolves to it.
     expect(await loadTarget(db, cursor.spec.target)).toBeDefined();
+  });
+
+  test('reports how many cursors were bound before the submission', async ({ expect }) => {
+    const { db, connection } = await setup();
+
+    // Initial setup: nothing bound yet, which is what the caller keys its first sync off.
+    const first = await reconcile(db, connection, makeConnector(), [{ externalId: 'a', name: 'A' }]);
+    expect(first.existing).toBe(0);
+
+    const second = await reconcile(db, connection, makeConnector(), [
+      { externalId: 'a', name: 'A' },
+      { externalId: 'b', name: 'B' },
+    ]);
+    expect(second.existing).toBe(1);
+    expect(second.added).toBe(1);
   });
 
   test('removes cursors that drop out of the new submission', async ({ expect }) => {
@@ -193,7 +217,7 @@ describe('reconcileCursors', () => {
     const { db, connection } = await setup();
     // A targetless connector (e.g. Google Contacts) has no local root type, so the cursor's target is
     // the connection itself. The remote target is identified by `externalId`.
-    const connector = makeConnector({ materializeTarget: undefined });
+    const connector = makeConnector({ sync: { operation: SyncExampleTarget } });
 
     const result = await reconcile(db, connection, connector, [
       { externalId: 'contactGroups/myContacts', name: 'My Contacts' },

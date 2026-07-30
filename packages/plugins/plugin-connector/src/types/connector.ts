@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import type { Client } from '@dxos/client';
-import type { Credential, Operation } from '@dxos/compute';
+import type { Credential, Operation, Trigger } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';
@@ -29,20 +29,20 @@ export const RemoteTarget = Schema.Struct({
 });
 export interface RemoteTarget extends Schema.Schema.Type<typeof RemoteTarget> {}
 
-/** Input accepted by every {@link ConnectorEntry.getSyncTargets} operation. */
+/** Input accepted by every {@link ConnectorSync.getTargets} operation. */
 export const GetSyncTargetsInput = Schema.Struct({
   connection: Ref.Ref(Connection.Connection),
 });
 export interface GetSyncTargetsInput extends Schema.Schema.Type<typeof GetSyncTargetsInput> {}
 
-/** Output returned by {@link ConnectorEntry.getSyncTargets} discovery operations. */
+/** Output returned by {@link ConnectorSync.getTargets} discovery operations. */
 export const GetSyncTargetsOutput = Schema.Struct({
   targets: Schema.Array(RemoteTarget),
 });
 export interface GetSyncTargetsOutput extends Schema.Schema.Type<typeof GetSyncTargetsOutput> {}
 
 /**
- * Input accepted by every {@link ConnectorEntry.materializeTarget} operation.
+ * Input accepted by every {@link ConnectorSync.materializeTarget} operation.
  * `remoteTarget` is omitted for single-target connectors (e.g. Gmail) that have
  * no remote selection.
  */
@@ -53,7 +53,7 @@ export const MaterializeTargetInput = Schema.Struct({
 export interface MaterializeTargetInput extends Schema.Schema.Type<typeof MaterializeTargetInput> {}
 
 /**
- * Output returned by {@link ConnectorEntry.materializeTarget} operations: a ref
+ * Output returned by {@link ConnectorSync.materializeTarget} operations: a ref
  * to the persisted local root object the binding will reference.
  */
 export const MaterializeTargetOutput = Schema.Struct({
@@ -61,7 +61,7 @@ export const MaterializeTargetOutput = Schema.Struct({
 });
 export interface MaterializeTargetOutput extends Schema.Schema.Type<typeof MaterializeTargetOutput> {}
 
-/** Minimum input for provider {@link ConnectorEntry.sync} operations: one cursor to reconcile. */
+/** Minimum input for provider {@link ConnectorSync.operation} operations: one cursor to reconcile. */
 export type SyncInput = {
   binding: Ref.Ref<Cursor.Cursor>;
 };
@@ -86,18 +86,34 @@ export type OnTokenCreated = (input: {
 }) => Effect.Effect<void, never, HttpClient.HttpClient | Credential.CredentialsService>;
 
 /**
- * Hook fired after an external-sync {@link Cursor.Cursor} is created for a target — a single-target
- * bind (Gmail, JMAP) or one newly-selected multi-target row (Calendar). Connectors use this to set up
- * recurring background sync (a Routine wrapping a timer Trigger, invoking the same {@link sync}
- * operation `ConnectorOperation.SyncConnection` invokes directly) for the target; unlike
- * {@link OnTokenCreated}, this runs once per bound target rather than once per connection.
+ * Everything a connector needs to sync: the per-binding sync operation, how targets are discovered
+ * and materialized, the per-binding options schema, and — when the connector wants its bindings kept
+ * up to date in the background — the trigger spec to schedule that on.
  */
-export type OnCursorCreated = (input: {
-  connection: Connection.Connection;
-  cursor: Cursor.ExternalCursor;
-  target: Obj.Unknown;
-  db: Database.Database;
-}) => Effect.Effect<void, never>;
+export type ConnectorSync = {
+  /** Reconcile one binding's target object with its remote. */
+  operation: Operation.Definition<SyncInput, SyncOutput>;
+  /** Discover remote targets reachable from a connection (multi-target connectors). */
+  getTargets?: Operation.Definition<GetSyncTargetsInput, GetSyncTargetsOutput>;
+  /** Create an empty local root object so a binding can be created eagerly. */
+  materializeTarget?: Operation.Definition<MaterializeTargetInput, MaterializeTargetOutput>;
+  /** Schema describing per-binding `.options`. */
+  optionsSchema?: Schema.Schema<any, any>;
+  /**
+   * Sync a binding as soon as it is created, instead of waiting for the user to ask. Defaults to
+   * false: the first sync of a freshly authorized account is unbounded (full history, every bound
+   * target at once), so a connector opts in only once that is known to be safe for its service.
+   */
+  auto?: boolean;
+  /**
+   * Schedule to keep bindings in sync on — a timer cron, a subscription, whatever the connector
+   * wants. Each new binding gets a Routine wrapping a trigger with this spec, and that trigger is
+   * also what a manual sync force-runs — creating the Routine first if the binding has none — so
+   * scheduled and on-demand syncs share the dispatcher's durable execution. Omit for a connector that
+   * should only sync on demand: {@link operation} is then invoked directly.
+   */
+  trigger?: Trigger.Spec;
+};
 
 /**
  * Probe whether a connection's stored credential is still valid.
@@ -189,14 +205,8 @@ export type ConnectorEntry = {
   /** User-facing label; defaults to `id` when omitted. */
   label?: string;
   oauth?: ConnectorOAuthSpec;
-  /** Discover remote targets reachable from a connection (multi-target connectors). */
-  getSyncTargets?: Operation.Definition<GetSyncTargetsInput, GetSyncTargetsOutput>;
-  /** Create an empty local root object so a binding can be created eagerly. */
-  materializeTarget?: Operation.Definition<MaterializeTargetInput, MaterializeTargetOutput>;
-  /** Reconcile one binding's target object with its remote. */
-  sync?: Operation.Definition<SyncInput, SyncOutput>;
-  /** Schema describing per-binding `.options`. */
-  optionsSchema?: Schema.Schema<any, any>;
+  /** How this connector syncs; absent for a connector that only authenticates. */
+  sync?: ConnectorSync;
   /**
    * Renders before authentication. Use for non-OAuth credentials (custom
    * token, IMAP host/port/user/password) or OAuth pre-flight inputs (atproto
@@ -211,8 +221,6 @@ export type ConnectorEntry = {
    * declares {@link oauth} — the user is offered a reauthenticate action on failure.
    */
   testConnection?: TestConnection;
-  /** Set up recurring background sync for a newly-bound target (see {@link OnCursorCreated}). */
-  onCursorCreated?: OnCursorCreated;
 };
 
 /**
