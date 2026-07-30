@@ -216,10 +216,12 @@ const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
   }
 
   return (
+    // No `Masonry.Content`: it renders a `ScrollArea.Root`, and `Form.Viewport` already scrolls this
+    // surface. Nested, the inner scroll root shrink-wrapped to its scrollbar gutter, so the
+    // viewport's `contentWidth > 0` gate suppressed every tile — the sections rendered their
+    // headings and nothing else.
     <Masonry.Root Tile={ObjectTile} centered={false}>
-      <Masonry.Content centered={false} padding={false}>
-        <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} />
-      </Masonry.Content>
+      <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} scroll={false} />
     </Masonry.Root>
   );
 };

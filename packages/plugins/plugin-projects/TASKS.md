@@ -281,15 +281,14 @@ summaries), and the `stories-projects` storybook strategy.
 - [ ] **UC-A/UC-B still do not process** — both need a model to produce their artifacts, and UC-A is
       additionally blocked by the table-tool gap below (the table skill has no tools). Once that is
       resolved, give each a `Live` variant on the same harness options.
-- [ ] **Routines gallery renders no DOM (Masonry, not data)** — DIAGNOSED 2026-07-29 by probing
-      `ObjectGallery` in the browser: the data path is fine (`refs: 1, loaded: 1, items: 1`,
-      snapshots unwrap to live entities), yet no `.dx-card` and no masonry element reach the DOM.
-      The Routines `Form.Section` and its ancestors measure **width 0** inside the
-      `[grid-column:var(--dx-col,auto)]` form-content container (height 5006), so `Masonry`, which
-      lays out from measured width, emits nothing. Not a harness fault and not ref resolution —
-      it is `Masonry` inside `Form.Section`. Next: either give the gallery an explicit width/measure
-      fallback or drop Masonry for a plain grid in this surface. NOTE the same collapse would hit
-      the app in any narrow/zero-measure container. Story assertions skip the card meanwhile.
+- [ ] **Routines/Artifacts galleries render nothing — upstream width collapse** — REDIAGNOSED
+      2026-07-30. `Masonry.Viewport` gates its grid on `contentWidth > 0`; the measured width is 0.
+      Removing the nested `ScrollArea` (see below) did NOT fix it: the article's own `Form.Viewport`
+      scroll viewport measures **16px** (scrollbar only) and the form-content grid column 0, so any
+      `w-full` child inherits zero. The defect is `Form.Viewport`/`Panel.Content` sizing in this
+      surface, NOT masonry and NOT ref resolution (`refs:1, loaded:1, items:1`). Next: find why the
+      article's scroll viewport has no inline size (suspect `Panel.Content` or the surface cell), then
+      re-check the gallery. Masonry's width gate is only the messenger.
 - [ ] **Evals** — `sender-ledger.eval.ts` RUN LIVE 2026-07-29 (key via `op inject` from the user's
       `~/.env.tpl`; smoke 100% first) and it FAILED — a real finding, not eval noise: the agent's
       own completeJob failure says "Cannot create the Sender Ledger table with available tools".
