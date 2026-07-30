@@ -1,0 +1,91 @@
+---
+id: org.dxos.plugin.atproto
+name: AtprotoPlugin
+version: 0.1.0
+---
+
+A generic, annotation-driven publishing companion for the AT Protocol. It appears beside any ECHO
+object whose type carries an `AtprotoRecordAnnotation`, when the object's space holds an atproto
+connection. It renders the object's public projection with per-field private/public markers, shows
+publish/sync status, and reconciles records (publish / re-publish / unpublish) on the user's PDS.
+
+## Extensions
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+
+## Types
+
+```mdl
+type AtprotoPublication
+  desc: Relation (source=Connection, target=object) recording a published atproto record.
+  fields:
+    uri: string            # AT-URI of the record
+    cid: string            # content id
+    collection: string     # lexicon NSID
+    rkey: string           # record key
+    publishedHash: string  # hash of the last-published encoded record (drives out-of-date check)
+    publishedAt: string    # ISO timestamp
+```
+
+## Features
+
+```mdl
+feat F-1: Conditional companion
+  req F-1.1: The companion appears for an object only when its type carries an AtprotoRecordAnnotation.
+  req F-1.2: The companion appears only when the object's space holds an atproto Connection.
+  req F-1.3: Adding or removing an atproto connection shows/hides the companion reactively.
+
+feat F-2: Public projection with private markers
+  req F-2.1: The companion lists the object's fields with a globe (public) or lock (private) marker.
+  req F-2.2: Private (unmarked) fields are de-emphasized and their values are not shown as network data.
+
+feat F-3: Publish / reconcile
+  req F-3.1: Status is one of Not published / Published (in sync) / Published (out of date).
+  req F-3.2: The first publish of an object requires explicit confirmation; re-publishes are silent.
+  req F-3.3: Publish writes a record via the AtprotoRepo service; Unpublish deletes it.
+  req F-3.4: Out-of-date is computed by comparing hash(encode(object)) to the last-published hash.
+  req F-3.5: Publish stamps an atproto foreign key (source 'atproto', id = record AT-URI) on the object.
+
+feat F-4: PDS browser
+  req F-4.1: A virtual "PDS" node appears in the navigation system section (below Database, above
+    Devtools) only when the space holds an atproto connection.
+  req F-4.2: The browser has an account selector (atproto connections); the first is selected by default.
+  req F-4.3: It lists the repo's collections, marking those a plugin has a schema mapping for.
+  req F-4.4: Any collection's records can be listed and a record's raw JSON viewed.
+  req F-4.5: For a mapped collection, a record decodes to an in-memory ECHO object rendered readonly via
+    its type's surface, with an Import button.
+  req F-4.6: Import adds the object to the space bound as already-published (foreign key + in-sync
+    AtprotoPublication), so the companion shows it published and re-publish overwrites the same record.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Companion visibility
+  given: an object whose type is atproto-annotated
+  when: the space has no atproto connection
+  then: no publishing companion is offered
+  when: an atproto connection is added to the space
+  then: the publishing companion is offered
+
+test T-2: Publish then detect drift (against the mock repo)
+  given: an atproto-annotated object and a mock AtprotoRepo
+  when: the object is published
+  then: an AtprotoPublication exists and status is Published (in sync)
+  when: a published field is edited
+  then: status becomes Published (out of date)
+  when: the object is unpublished
+  then: the record is gone from the repo and no AtprotoPublication remains
+
+test T-3: Browse and import (storybook, mock repo)
+  given: a space with an atproto connection and a mock repo holding a mapped and an unmapped collection
+  then: the PDS browser marks the mapped collection and shows both
+  when: a record in the mapped collection is selected
+  then: it renders as a readonly ECHO object with an Import action
+  when: imported
+  then: the object exists in the space, foreign-key-bound to the record's AT-URI
+```

@@ -223,6 +223,56 @@ Both new operations require `Database.Service` and take a `Ref(Sketch.Sketch)`
    `plugin-sketch/PLUGIN.mdl` to record what was built. PLUGIN.mdl is a record
    of the built system, not a working document.
 
+## Phase 3 as-built: plugin-illustrator base extraction (2026-07-28)
+
+The "Future work" backend-neutrality goal was realised by splitting the plugin along the
+**Game/Chess** axis rather than keeping one plugin with pluggable backends.
+
+- **`@dxos/plugin-illustrator`** (headless host) owns the base `Sketch` object
+  (`org.dxos.type.sketch`, `{name?, canvas: Ref<Obj.Unknown>}`), the scene DSL, the dialect
+  registry, the `org.dxos.skill.sketch` skill, and renderer-agnostic create/read/edit operations.
+- **`IllustratorCapabilities.VariantProvider`** is the extension point: a renderer contributes
+  `{id (canvas typename), label, canvasType, createCanvas, builder, article?, card?}`, where
+  `builder: SketchBuilder` is `{read, apply}` — the DSL↔records mapping. Operations resolve the
+  variant from the canvas typename via `Capability.Service`; containers dispatch surfaces the
+  same way.
+- **`plugin-sketch` → `@dxos/plugin-tldraw`**; `@dxos/plugin-excalidraw` gained an equivalent
+  builder. The same create→edit→read round-trip test runs against both, which is what proves the
+  abstraction rather than the type signatures alone.
+
+Decisions worth remembering:
+
+- **No typename churn.** `Sketch` keeps `org.dxos.type.sketch` and its `canvas` field;
+  `Tldraw.Canvas` keeps `org.dxos.type.canvas`. The ECHO data-migration framework is dormant
+  (composer-app migrations are commented out), so a rename would strand deployed data.
+- **Snapshots vs live objects.** `useObject` returns snapshots, but store adapters call
+  `Doc.createAccessor`, which rejects them — dispatch containers pass `ref.target`.
+- **Capability-dependent operations in tests** need `AssistantTestLayer({extraServices:
+Layer.sync(Capability.Service, …)})`; a plain `Effect.provideService` does not reach handlers,
+  because the ServiceResolver — not ambient context — supplies operation services.
+- **Publishing.** Both new package names are public and were bootstrap-published at `0.10.0`;
+  CI's `check-packages-published` gates on registry existence, and it conflicts with the
+  new-packages-are-private default whenever a publishable package depends on the new one.
+
+## Phase 4 (open): technical-drawing dialect
+
+A mermaid/UML-flavoured text dialect **extended with placement metadata**. Requirements:
+hierarchical with infinite zoom; nodes tied to source (e.g. code) for generation; groups contain
+classes and collapse; automatic layout and line routing with smart slots on nodes; preserve
+straight lines; scenarios (not every arc shown in every scenario — depends on selection,
+toggleable); embedded text. Reference sketch:
+`packages/plugins/plugin-illustrator/docs/drawing.drawio.svg`.
+
+**Unresolved, and blocking**: what is the source of truth?
+
+1. _One-shot compile_ — DSL is agent input; it compiles to scene commands and thereafter the
+   records are ordinary editable shapes. Simple, matches today's `dialect.ts`, but collapse,
+   scenarios and hierarchical zoom cannot survive as live behaviours.
+2. _Live model_ (recommended) — persist the DSL/parsed graph on the object; compile
+   view-state (zoom level, collapsed groups, active scenario, selection) + model → records on the
+   fly. Manual edits are limited to placement hints that round-trip into the placement metadata.
+3. _Hybrid_ — live model plus a "detach to sketch" that bakes the current view into free records.
+
 ### Project log
 
 Token counts summed from this session's transcript

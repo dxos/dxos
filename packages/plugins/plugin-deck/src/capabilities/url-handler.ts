@@ -16,7 +16,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Attention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
-import { DeckCapabilities, type StoredDeckState, defaultDeck } from '#types';
+import { DeckCapabilities, DEFAULT_DECK_ID, type StoredDeckState, defaultDeck } from '#types';
 
 import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, serializeDeckToUrl } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
@@ -84,9 +84,9 @@ export default Capability.makeModule(
       if (pathname === '/reset') {
         updateState((s) => ({
           ...s,
-          activeDeck: 'default',
+          activeDeck: DEFAULT_DECK_ID,
           decks: {
-            default: { ...defaultDeck },
+            [DEFAULT_DECK_ID]: { ...defaultDeck },
           },
         }));
         window.location.pathname = '/';
@@ -113,7 +113,9 @@ export default Capability.makeModule(
       }
 
       const { workspace, pairs } = parsed.value;
-      const workspacePath = GraphPath.getSpacePath(workspace);
+      // `/w/default` was written by builds that serialized the unresolved-workspace sentinel; map it back
+      // to the sentinel rather than to `root/default`, which resolves to no node and so can never heal.
+      const workspacePath = workspace === DEFAULT_DECK_ID ? DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
       const state = getState();
       if (workspacePath !== state.activeDeck) {
         yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath });
@@ -252,11 +254,22 @@ export default Capability.makeModule(
 
     // Sync URL with layout state changes: deck state (active planks, companion open/closed) and the
     // companion's selected variant. Attention is deliberately absent — it is never serialized.
-    // `method: 'replace'` is used once, right after setup, to correct a stale/bare URL against the
+    // `method: 'replace'` is used for the first write, to correct a stale/bare URL against the
     // already-persisted deck without adding a spurious back-history entry; every later firing (a real
-    // state change) pushes.
+    // state change) pushes. `replace` is deferred rather than fixed to the post-setup call because a
+    // fresh profile starts on the sentinel below, whose first real workspace arrives later.
+    let synced = false;
     const syncUrl = (method: 'push' | 'replace' = 'push') => {
       const state = getState();
+      if (state.activeDeck === DEFAULT_DECK_ID) {
+        // The sentinel is not a workspace: serializing it produces `/w/default`, which on the next load
+        // parses as a workspace that resolves to no node, leaving the app with an unavailable workspace.
+        // Leave the URL alone until a real workspace becomes active.
+        return;
+      }
+
+      const effectiveMethod = synced ? method : 'replace';
+      synced = true;
       const deck = getDeck();
       const workspace = bareWorkspace(state.activeDeck);
 
@@ -292,7 +305,7 @@ export default Capability.makeModule(
       // Update only when the derived URL actually differs from the current one — the deck state and
       // companion-variant atoms both funnel into this same recompute, so most firings are no-ops.
       if (`${window.location.pathname}${window.location.search}` !== newUrl) {
-        if (method === 'replace') {
+        if (effectiveMethod === 'replace') {
           history.replaceState(null, '', newUrl);
         } else {
           history.pushState(null, '', newUrl);

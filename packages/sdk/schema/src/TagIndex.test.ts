@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Registry } from '@effect-atom/atom-react';
+import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';

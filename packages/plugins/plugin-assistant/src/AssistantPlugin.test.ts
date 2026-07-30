@@ -3,19 +3,17 @@
 //
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import { type TestContext } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
-import { TestAiService, runMemoizedTests } from '@dxos/ai/testing';
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { AgentService, Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { TestContextService } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -67,13 +65,14 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test.skipIf(!runMemoizedTests())('can memoize ai-service requests', async (ctx) => {
-    const { expect } = ctx;
+  test('resolves a language model through the plugin AI service', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [
         ClientPlugin({}),
         AssistantPlugin({
-          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+          aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+            { parts: [ScriptedLanguageModel.text('Paris is the capital of France.')] },
+          ]),
         }),
       ],
     });
@@ -97,13 +96,15 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test.skipIf(!runMemoizedTests())('can run memoized instructions', { timeout: 120_000 }, async (ctx) => {
-    const { expect } = ctx;
+  test('runs instructions end to end through the plugin', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [
         ClientPlugin({}),
         AssistantPlugin({
-          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+          aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+            { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { capital: 'paris' } })] },
+            { parts: [ScriptedLanguageModel.text('Done.')] },
+          ]),
         }),
         RoutinePlugin(),
       ],
@@ -139,16 +140,17 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test.skipIf(!runMemoizedTests())(
-    'smoke test for agent service with standard skills',
+  test(
+    'boots the agent service with the standard skills and completes a turn',
     { timeout: 120_000 },
-    async (ctx) => {
-      const { expect } = ctx;
+    async ({ expect }) => {
       await using harness = await createComposerTestApp({
         plugins: [
           ClientPlugin({}),
           AssistantPlugin({
-            aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+            aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+              { parts: [ScriptedLanguageModel.text('Hello back.')] },
+            ]),
           }),
           RoutinePlugin(),
         ],
@@ -164,6 +166,7 @@ describe('AssistantPlugin', () => {
             [DatabaseSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
             (_) => Skill.resolve(_.key),
           );
+          expect(skills).toHaveLength(4);
 
           const agent = yield* AgentServiceRuntime.createSession({
             skills,
@@ -184,15 +187,3 @@ describe('AssistantPlugin', () => {
     },
   );
 });
-
-const makeMemoizedAiServiceMiddleware = (
-  ctx: TestContext,
-): Promise<(_upstream: AiService.Service) => AiService.Service> =>
-  AiService.AiService.pipe(
-    Effect.provide(
-      TestAiService({ preset: 'direct' }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
-    ),
-    // Ignoring actual AI service the plugin contructs and using our own.
-    Effect.map((service) => (_upstream: AiService.Service) => service),
-    Effect.runPromise,
-  );

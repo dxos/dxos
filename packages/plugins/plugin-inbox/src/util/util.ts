@@ -7,6 +7,7 @@ import { format, formatDistance, isThisWeek, isThisYear, isToday } from 'date-fn
 import { Obj } from '@dxos/echo';
 import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
 
+import { meta } from '#meta';
 import { type Mailbox } from '#types';
 
 export const REPLY_DELIMITER = '\n\n---';
@@ -169,6 +170,17 @@ export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: 
     return !(message.properties?.sentMessageId && syncedIds.has(message.properties.sentMessageId));
   });
 };
+
+/**
+ * Display label for a message's graph node (the plank heading, and its breadcrumb tail in flat mode).
+ * A compose draft's subject is an empty string rather than absent, so falling back only on `undefined`
+ * would leave the heading blank until the user types one.
+ */
+export const getMessageLabel = (message: Message.Message) =>
+  message.properties?.subject ||
+  (DraftMessage.instanceOf(message)
+    ? (['draft.label', { ns: meta.profile.key }] as const)
+    : (['message.label', { ns: meta.profile.key }] as const));
 
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =

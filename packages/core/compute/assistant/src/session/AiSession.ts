@@ -4,22 +4,24 @@
 
 // @import-as-namespace
 
-import { type Registry as AtomRegistry } from '@effect-atom/atom-react';
+import { type Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { McpServer, Operation, type Skill, Trace } from '@dxos/compute';
+import { type Instructions, McpServer, Operation, type Skill, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
+import { FeedProtocol } from '@dxos/protocols';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
@@ -55,6 +57,11 @@ export type Options = {
   runtime: Runtime.Runtime<Database.Service>;
   /** @effect-atom/atom-react Registry for reactive state. */
   registry?: AtomRegistry.Registry;
+  /**
+   * Instructions steering the conversation (typically the owning `Chat`'s), rendered into the system
+   * prompt on every turn. The session is feed-centric and cannot reach its chat, so these are passed in.
+   */
+  instructions?: readonly Instructions.Instructions[];
 };
 
 /**
@@ -68,18 +75,22 @@ const SUMMARY_THRESHOLD = 80_000;
  * Executes tools based on AI responses and supports cancellation of in-progress requests.
  */
 export class Session extends Resource {
+  private readonly _feed: Feed.Feed;
+  private readonly _runtime: Runtime.Runtime<Database.Service>;
+  readonly #instructions: readonly Instructions.Instructions[];
+
   /**
    * Skills and objects bound to the session.
    */
   private readonly _binder: AiContext.Binder;
-  private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Database.Service>;
+
   private readonly _sessionLoader = new SessionLoader();
 
   public constructor(options: Options) {
     super();
     this._feed = options.feed;
     this._runtime = options.runtime;
+    this.#instructions = options.instructions ?? [];
     invariant(this._feed);
     invariant(this._runtime);
     this._binder = new AiContext.Binder({
@@ -101,11 +112,23 @@ export class Session extends Resource {
     return this._binder;
   }
 
+  /**
+   * The conversation as the model should see it: only the messages reachable from the feed's current
+   * head, so a soft fork's abandoned turns are excluded.
+   */
   public async getHistory(): Promise<Message.Message[]> {
+    const { items: reachable } = Feed.history(await this.#messagesInAppendOrder());
+    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, reachable));
+  }
+
+  /**
+   * Every message in the feed, in append order — what `Feed.history` needs, since it walks lineage
+   * positionally rather than by `created`, a wall clock peers do not agree on.
+   */
+  async #messagesInAppendOrder(): Promise<Message.Message[]> {
     const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
     const items = await queryResult.run();
-    const messages = items.filter(Obj.instanceOf(Message.Message));
-    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, messages));
+    return Array.sort(items.filter(Obj.instanceOf(Message.Message)), byFeedPosition);
   }
 
   getTools(): Effect.Effect<
@@ -133,6 +156,39 @@ export class Session extends Resource {
   }
 
   /**
+   * Appends one of this turn's messages to the feed, consuming a pending rewind if there is one.
+   *
+   * The rewind decision is made in the UI, but the continuation is appended by the agent's process,
+   * which resolves the feed and never sees the chat — so the feed carries the intent and this is where
+   * it becomes lineage. `rewindFrom` names the earliest discarded message, so the new parent is whatever
+   * precedes it; nothing preceding means the continuation starts a fresh line. Only the first message of
+   * a turn finds it set, since the append clears it, so the rest of the turn chains implicitly. Clearing
+   * after the append (rather than before) leaves the rewind pending if the turn fails.
+   */
+  public async appendTurnMessage(message: Message.Message): Promise<void> {
+    const rewindFrom = this._feed.rewindFrom;
+    const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
+
+    return Runtime.runPromise(this._runtime)(
+      Effect.gen(this, function* () {
+        yield* Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined);
+        if (rewindFrom !== undefined) {
+          Obj.update(this._feed, (feed) => {
+            feed.rewindFrom = undefined;
+          });
+        }
+      }),
+    );
+  }
+
+  /** The message preceding `rewindFrom` in append order, which the continuation parents to. */
+  async #parentForRewind(rewindFrom: string): Promise<string | undefined> {
+    const messages = await this.#messagesInAppendOrder();
+    const index = messages.findIndex((message) => message.id === rewindFrom);
+    return index > 0 ? messages[index - 1].id : undefined;
+  }
+
+  /**
    * Creates a new cancelable request effect.
    */
   public createRequest<R = never>(
@@ -153,14 +209,14 @@ export class Session extends Resource {
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
         persist: params.persist,
-        onOutput: (message) =>
-          Effect.promise(() => Runtime.runPromise(this._runtime)(Feed.append(this._feed, [message]))),
+        onOutput: (message) => Effect.promise(() => this.appendTurnMessage(message)),
       });
 
       yield* request.begin({
         history,
         skills,
         objects,
+        instructions: this.#instructions,
         prompt: params.prompt,
         system: params.system,
       });
@@ -189,6 +245,7 @@ export class Session extends Resource {
           system: params.system,
           skills: currentSkills,
           objects: this.context.getObjects(),
+          instructions: this.#instructions,
         }).pipe(Effect.orDie);
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
@@ -293,4 +350,20 @@ const connectMcpServers = (
     ),
     Effect.map(Array.filterMap((_) => Either.getRight(_))),
   );
+};
+
+/**
+ * Orders feed items by the position the server assigned them. Unpositioned blocks (written locally and
+ * not yet acknowledged) sort last, which is what we want: a message just written is the newest.
+ */
+const byFeedPosition = Order.make<Message.Message>((a, b) => {
+  const positionA = feedPosition(a);
+  const positionB = feedPosition(b);
+  return positionA === positionB ? 0 : positionA < positionB ? -1 : 1;
+});
+
+const feedPosition = (message: Message.Message): number => {
+  const key = Obj.getKeys(message, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
+  const position = key !== undefined ? Number(key) : Number.NaN;
+  return Number.isNaN(position) ? Number.POSITIVE_INFINITY : position;
 };

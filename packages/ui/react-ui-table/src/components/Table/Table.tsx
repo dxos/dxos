@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type RefObject, forwardRef, useImperativeHandle, useRef } from 'react';
 

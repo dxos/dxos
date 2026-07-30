@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import { Command } from '@tauri-apps/plugin-shell';

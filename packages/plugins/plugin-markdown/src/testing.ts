@@ -5,9 +5,15 @@
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
+import { Skill } from '@dxos/compute';
+import { Annotation, Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { HasSubject } from '@dxos/types';
+
+import { MarkdownOperationHandlerSet } from '#operations';
+import { Markdown } from '#types';
 
 // Eager re-export of `MarkdownPlugin`. See `@dxos/plugin-testing/src/core.ts`
 // for the rationale. Uses the `#plugin` subpath so the node-only build is
@@ -38,3 +44,13 @@ export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.
   );
 
 export const testToolkit = Toolkit.empty as Toolkit.Toolkit<any>;
+
+/**
+ * Shared layer for the operation tests: every markdown handler and the types they touch, with no
+ * language model. Defined once so a `.test.ts` per handler does not restate it.
+ */
+export const OperationTestLayer = AssistantTestLayer({
+  operationHandlers: MarkdownOperationHandlerSet,
+  types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
+  disableLlmMemoization: true,
+});

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -15,8 +15,8 @@ import { NavTreeCapabilities } from '#types';
 
 import { navTreeOpenAspect } from './nav-tree-view-state';
 
-/** Default item state for new entries. */
-const defaultItemState: NavTreeCapabilities.NavTreeItemState = { open: false, current: false };
+/** Default `open` value for new entries; `current` is derived from the layout when the entry is created. */
+const defaultOpen = false;
 
 /** L0 (top-level workspace) paths are direct children of root — not part of the expandable tree model. */
 const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === Node.RootId;
@@ -34,6 +34,17 @@ export default Capability.makeModule(
     // Persistence backend for per-path expansion (`open`); replaces the hand-rolled localStorage blob.
     const viewState = yield* AttentionCapabilities.ViewState;
 
+    // Mirror of the layout's active planks. An item registers its path only on its first render, which
+    // can happen long after the layout change that made it current, so entries derive `current` from
+    // this at creation time rather than waiting for the next layout notification.
+    let activeIds: readonly string[] = registry.get(layoutAtom).active;
+
+    /** Item state for a path not seen before: `current` follows the layout, `open` starts closed. */
+    const initialItemState = (pathString: string): NavTreeCapabilities.NavTreeItemState => ({
+      open: defaultOpen,
+      current: activeIds.includes(Path.last(pathString)),
+    });
+
     // Backing state (not reactive), seeded from the persisted `open` values; `current` is ephemeral.
     const persistedPaths = viewState.contexts(navTreeOpenAspect);
     const backingState: Map<string, NavTreeCapabilities.NavTreeItemState> =
@@ -42,7 +53,10 @@ export default Capability.makeModule(
         : new Map(
             persistedPaths.map((pathString) => [
               pathString,
-              { open: viewState.get(navTreeOpenAspect, pathString).open, current: false },
+              {
+                open: viewState.get(navTreeOpenAspect, pathString).open,
+                current: activeIds.includes(Path.last(pathString)),
+              },
             ]),
           );
 
@@ -50,15 +64,15 @@ export default Capability.makeModule(
     // keepAlive prevents atoms from being garbage collected when components unmount,
     // ensuring state is preserved across deletion/restoration cycles.
     const itemAtomFamily = Atom.family((pathString: string) =>
-      Atom.make<NavTreeCapabilities.NavTreeItemState>(backingState.get(pathString) ?? { ...defaultItemState }).pipe(
-        Atom.keepAlive,
-      ),
+      Atom.make<NavTreeCapabilities.NavTreeItemState>(
+        backingState.get(pathString) ?? initialItemState(pathString),
+      ).pipe(Atom.keepAlive),
     );
 
     const getItemAtom = (path: string[]): Atom.Atom<NavTreeCapabilities.NavTreeItemState> => {
       const pathString = Path.create(...path);
       if (!backingState.has(pathString)) {
-        backingState.set(pathString, { ...defaultItemState });
+        backingState.set(pathString, initialItemState(pathString));
       }
       return itemAtomFamily(pathString);
     };
@@ -83,10 +97,9 @@ export default Capability.makeModule(
     };
 
     // Subscribe to layout changes to update current state.
-    let previous: string[] = [];
     const unsubscribe = registry.subscribe(layoutAtom, (layout) => {
-      const removed = previous.filter((id) => !layout.active.includes(id));
-      previous = layout.active;
+      const removed = activeIds.filter((id) => !layout.active.includes(id));
+      activeIds = layout.active;
 
       const handleUpdate = () => {
         // Mark removed items as not current.
@@ -106,12 +119,10 @@ export default Capability.makeModule(
         });
       };
 
-      // TODO(wittjosiah): This is setTimeout because there's a race between the keys being initialized.
-      //   Keys are initialized on the first render of an item in the navtree.
-      //   This could be avoided if the location was a path as well and not just an id.
-      // Defer so item path atoms exist and we do not setState during tree render.
-      const timeout = setTimeout(handleUpdate, 500);
-      return () => clearTimeout(timeout);
+      // Deferred only far enough to leave the layout notification (writing item atoms synchronously here
+      // would set state during the tree's render pass). Items whose path is not registered yet no longer
+      // need waiting out — they seed `current` from `activeIds` when they register.
+      queueMicrotask(handleUpdate);
     });
 
     // Once graph is ready, expand every node marked open in state so the graph has children loaded for rendering.

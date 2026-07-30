@@ -5,7 +5,13 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, AutomationTemplates, OperationHandler, SkillDefinition } from '#capabilities';
+import {
+  AppGraphBuilder,
+  AutomationTemplates,
+  OperationHandler,
+  ProjectTemplates,
+  SkillDefinition,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { ProfileOf } from '#types';
@@ -20,6 +26,7 @@ export const CrmPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(AppCapability.schema([ProfileOf.ProfileOf])),
   Plugin.addModule(AutomationTemplates),
+  Plugin.addModule(ProjectTemplates),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

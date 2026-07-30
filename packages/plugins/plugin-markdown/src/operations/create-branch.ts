@@ -8,12 +8,13 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { Branch } from '@dxos/versioning';
 
-import { MarkdownOperation } from '../types';
+import { Markdown, MarkdownOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.CreateBranch> = MarkdownOperation.CreateBranch.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ doc, name }) {
-      const document = yield* Database.load(doc);
+      // LLM-provided ref (may decode without a resolver): resolve through the db, not `ref.tryLoad`.
+      const document = yield* Database.resolve(doc, Markdown.Document);
       const parent = yield* Database.load(document.content);
       const branch = yield* Effect.promise(() => Branch.create(document, { name, parent }));
       // Core branches share the parent Text's object id (the branch is an alternate timeline of

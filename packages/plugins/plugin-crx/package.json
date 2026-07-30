@@ -97,7 +97,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

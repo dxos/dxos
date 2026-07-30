@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'project.article',
         filter: AppSurface.object(AppSurface.Article, Project.Project),
-        component: ({ data, role }) => <ProjectArticle role={role} subject={data.subject} />,
+        component: ({ data, role }) => <ProjectArticle role={role} {...data} />,
       }),
     ]),
   ),

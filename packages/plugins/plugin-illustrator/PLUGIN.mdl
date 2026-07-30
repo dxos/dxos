@@ -1,0 +1,55 @@
+---
+id: org.dxos.plugin.illustrator
+name: IllustratorPlugin
+version: 0.1.0
+---
+
+A headless diagramming host plugin for `DXOS` Composer. Owns the base `Sketch` ECHO type, the
+renderer-neutral scene DSL and dialect registry, and the agent-facing sketch skill/operations.
+Canvas renderers (e.g. plugin-tldraw, plugin-excalidraw) contribute a `SketchVariant` capability
+supplying their canvas schema, a builder that maps the scene DSL onto their records, and surface
+components; plugin-illustrator resolves the variant at runtime and delegates.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type Sketch
+  desc: Named handle around a renderer-specific canvas object.
+  fields:
+    name?: string
+    canvas: Ref<Unknown>   # reference to the renderer-specific canvas (e.g. Tldraw.Canvas)
+```
+
+## Capabilities
+
+```mdl
+component VariantProvider
+  desc: Contributed by renderer plugins; supplies the canvas type, a scene-DSL builder
+        (read/apply), a create factory, and Article/Card surface components.
+```
+
+## Operations
+
+```mdl
+op create
+  desc: Creates a Sketch with an empty canvas for the requested (or default) variant.
+
+op read
+  desc: Returns the current scene of a sketch as world objects with object-local coordinates.
+
+op edit
+  desc: Applies scene commands to a sketch via the variant's builder; returns the resulting scene.
+```

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';

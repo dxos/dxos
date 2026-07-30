@@ -5,6 +5,7 @@
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
 import { InboxCapabilities } from '@dxos/plugin-inbox/types';
+import { ProjectCapabilities } from '@dxos/plugin-projects/types';
 
 import { BrainCapabilities } from '#types';
 
@@ -25,4 +26,9 @@ export const MailboxAction = Capability.lazyModule(
   'MailboxAction',
   { requires: [Capabilities.AtomRegistry], provides: [InboxCapabilities.MailboxAction] },
   () => import('./mailbox-action'),
+);
+export const ProjectTemplates = Capability.lazyModule(
+  'ProjectTemplates',
+  { provides: [ProjectCapabilities.Template] },
+  () => import('./project-templates'),
 );

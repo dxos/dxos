@@ -27,15 +27,22 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       /**
-       * Contributes the Studio navtree entry: a "Studio" section under the `content` group (always
-       * present, so it is the create hub) with a virtual "Artifacts" child node that opens the
-       * ArtifactsArticle. Mirrors plugin-inbox's Mailboxes section + virtual Drafts/Topics nodes.
+       * Contributes the Studio navtree entry: a "Studio" section under the `content` group with a
+       * virtual "Artifacts" child node that opens the ArtifactsArticle. Mirrors plugin-inbox's
+       * Mailboxes section + virtual Drafts/Topics nodes.
        */
       GraphBuilder.createExtension({
         id: 'studioSection',
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
-        connector: (space) =>
-          Effect.succeed([
+        connector: (space, get) => {
+          // The section is elided while the space has no Artifacts (as plugin-inbox does for
+          // Mailboxes), so the first one is created from the space's generic create-object menu.
+          const artifacts = get(space.db.query(Filter.type(Artifact.Artifact)).atom);
+          if (artifacts.length === 0) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
             AppNode.makeSection({
               id: STUDIO_SEGMENT,
               type: STUDIO_SECTION_TYPE,
@@ -45,7 +52,8 @@ export default Capability.makeModule(
               space,
               position: 350,
             }),
-          ]),
+          ]);
+        },
       }),
 
       GraphBuilder.createExtension({

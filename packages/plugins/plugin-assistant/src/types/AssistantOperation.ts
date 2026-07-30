@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Operation } from '@dxos/compute';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Instructions, Operation } from '@dxos/compute';
+import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN, URI } from '@dxos/keys';
 
 import { meta } from '#meta';
@@ -23,6 +23,11 @@ export const CreateChat = Operation.make({
   input: Schema.Struct({
     db: Database.Database,
     name: Schema.optional(Schema.String),
+    /**
+     * Instructions steering the conversation, rendered into the system prompt at request time.
+     * Held by reference so the chat follows later edits to them.
+     */
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions)),
     /** If false, chat is created in-memory only and not added to space. Defaults to true. */
     addToSpace: Schema.optional(Schema.Boolean),
   }),

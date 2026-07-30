@@ -245,10 +245,11 @@ feat F-3: Galleries + lightboxes
   req F-3.3: An Artifact renders as a cover card (CardContent) so it composes into host-laid-out collections/boards.
 
 feat F-4: Navigation hub
-  req F-4.1: A "Studio" section node appears under the navtree `content` group (AppNode.makeSection), always available.
+  req F-4.1: A "Studio" section node appears under the navtree `content` group (AppNode.makeSection) only while the space contains at least one Artifact.
   req F-4.2: A virtual "Artifacts" child node under Studio opens ArtifactsArticle (bound by node data sentinel, not an ECHO object).
   req F-4.3: ArtifactsArticle shows a masonry of all Artifacts in the space; a toolbar kind selector sets the create-kind; Create makes an Artifact of that kind and opens it. Clicking a card opens its ArtifactArticle.
   req F-4.4: ArtifactArticle exposes a Generator selector (GenerationServices for the kind); the choice persists to Artifact.generator and drives op:generate's provider.
+  req F-4.5: Creating an Artifact from the space's generic create menu navigates to it under the Artifacts node, not the database subtree; a caller-supplied target (e.g. a collection) still wins.
 ```
 
 ## Acceptance

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { SERVICES_CONFIG } from '@dxos/ai/testing';
+import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import { Capabilities, Capability, Plugin, PluginManager } from '@dxos/app-framework';
 import { type WithPluginManagerOptions } from '@dxos/app-framework/testing';
 import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
@@ -100,6 +100,13 @@ type DecoratorsProps = {
   onInit?: (props: { client: Client; space: Space }) => Promise<ModuleLayout | void>;
   /** Skill-definition keys to clone into the space and bind into the latest chat's context. */
   skills?: string[];
+  /**
+   * Replace the AI service with a scripted (offline, deterministic) model — see
+   * `ScriptedLanguageModel`. Makes the full-stack story runnable without a network AI service,
+   * e.g. from a `play` function in CI; routed scripts can drive cooperating sessions
+   * (supervisor + sub-agents).
+   */
+  scripted?: ScriptedLanguageModel.Script;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent'>);
 
@@ -115,6 +122,7 @@ const buildPluginManagerOptions = ({
   onChatCreated,
   createAgent,
   config,
+  scripted,
   ...props
 }: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => {
   // The `persistent` config preset (see `config.persistent` below) flags itself via
@@ -203,7 +211,9 @@ const buildPluginManagerOptions = ({
       // User plugins.
       PreviewPlugin(),
       RoutinePlugin(),
-      AssistantPlugin(),
+      AssistantPlugin(
+        scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
+      ),
       TranscriptionPlugin(),
 
       // Test-specific.
@@ -467,7 +477,8 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
 
         if (onChatCreated) {
           const registry = yield* Capabilities.AtomRegistry;
-          const chat = yield* Effect.promise(() => agent.chat!.load());
+          const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
+          invariant(chat, 'Agent chat not found.');
           const feed = yield* Effect.promise(() => chat.feed.load());
           const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });

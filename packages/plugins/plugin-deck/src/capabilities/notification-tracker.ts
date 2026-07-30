@@ -17,6 +17,8 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
 
+import { upsertToast } from '../util';
+
 const NOTIFY_TOAST_DURATION = 5_000;
 const ERROR_TOAST_DURATION = 10_000;
 const UNDO_TOAST_DURATION = 10_000;
@@ -43,7 +45,7 @@ export default Capability.makeModule(
 
     const addToast = (toast: LayoutOperation.Toast) => {
       const state = registry.get(ephemeralAtom);
-      registry.set(ephemeralAtom, { ...state, toasts: [...state.toasts, toast] });
+      registry.set(ephemeralAtom, { ...state, toasts: upsertToast(state.toasts, toast) });
     };
 
     // Run a serialized invocation carried by an error's `notifyOverride` (see `LayoutOperation.NotifyOverride`):
@@ -137,7 +139,7 @@ export default Capability.makeModule(
         return;
       }
       hasShownFailureToast = true;
-      // Replace any stale plugin-failure toast so at most one is ever visible.
+      // The fixed id keeps at most one failure toast visible — `upsertToast` replaces any stale one.
       const toast: LayoutOperation.Toast = {
         id: 'plugin-failure',
         title: ['plugin-failure.title', { ns: meta.profile.key }],
@@ -149,10 +151,7 @@ export default Capability.makeModule(
         onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
       };
       const state = registry.get(ephemeralAtom);
-      registry.set(ephemeralAtom, {
-        ...state,
-        toasts: [...state.toasts.filter((t) => t.id !== 'plugin-failure'), toast],
-      });
+      registry.set(ephemeralAtom, { ...state, toasts: upsertToast(state.toasts, toast) });
     };
 
     const unsubscribeFailures = registry.subscribe(manager.failed, handleFailures);
@@ -177,7 +176,7 @@ export default Capability.makeModule(
         closeLabel: ['undo-close.label', { ns: meta.profile.key }],
         onAction: onUndo,
       };
-      registry.set(ephemeralAtom, { ...state, currentUndoId: undoId, toasts: [...toasts, toast] });
+      registry.set(ephemeralAtom, { ...state, currentUndoId: undoId, toasts: upsertToast(toasts, toast) });
     };
 
     // The history tracker may be contributed after this module activates; `waitFor` resolves

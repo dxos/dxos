@@ -146,10 +146,10 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-preview"
+      "path": "../plugin-illustrator"
     },
     {
-      "path": "../plugin-sketch"
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-space"
@@ -159,6 +159,9 @@
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-tldraw"
     }
   ]
 }

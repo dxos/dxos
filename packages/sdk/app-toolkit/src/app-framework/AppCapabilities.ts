@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';

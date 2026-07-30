@@ -49,6 +49,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@xyflow/react": "catalog:",

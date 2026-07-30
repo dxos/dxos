@@ -111,6 +111,11 @@ describe('Skill binding resolution (registry refs)', () => {
         yield* Effect.promise(() => writer.open());
         yield* Effect.promise(() => writer.bind({ skills: [Ref.make(skill)], objects: [] }));
 
+        // Model a spawned process reading the feed cold: drop the in-memory feed handle so the
+        // reader re-decodes the binding freshly, without the writer's identity-preserved instance
+        // (whose ref still carries the in-memory skill target).
+        yield* Effect.promise(() => db.evictFeedHandle(feed));
+
         const reader = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => reader.open()).pipe(
           Effect.timeoutFail({

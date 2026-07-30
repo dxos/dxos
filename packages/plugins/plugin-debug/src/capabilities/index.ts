@@ -24,3 +24,4 @@ export const StatsPanel = Capability.lazyModule(
   },
   () => import('./stats-panel'),
 );
+export const LogRecording = Capability.lazyModule('LogRecording', { provides: [] }, () => import('./log-recording'));

@@ -12,15 +12,16 @@ import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 import { Channel } from '@dxos/types';
-import { createComment } from '@dxos/ui-editor';
+import { createComment } from '@dxos/ui-editor/headless';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
 
-import { getAnchor } from '../util';
+// Not the `../util` barrel: it re-exports `author-hue`, whose palette lookup is UI-only.
+import { getAnchor } from '../util/message';
 
 /** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
 const whenCommentableObject = NodeMatcher.whenAll(

@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import { type EditorView } from '@codemirror/view';
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 
 import { Capability } from '@dxos/app-framework';
 import { type ViewModeItem } from '@dxos/react-ui-editor';

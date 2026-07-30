@@ -26,7 +26,7 @@ export const EnableSkills = Operation.make({
     key: DXN.make('org.dxos.function.skillManager.enableSkills'),
     name: 'Enable skills',
     description:
-      'Enables skills in the current conversation by their keys. Only skills with agentCanEnable=true can be enabled. Always call [query-skills] first to discover available skill keys.',
+      'Enables skills in the current conversation by their keys. Only skills with agentCanEnable=true can be enabled. The available keys are already listed in the system prompt, so call this directly rather than querying first.',
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({

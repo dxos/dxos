@@ -26,7 +26,6 @@ import {
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
-  Migrations,
   OperationHandler,
   ReactSurface,
   Settings,
@@ -88,7 +87,6 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
     Plugin.addModule(Toolkit),
     Plugin.addModule(AgentHydrator),
     Plugin.addModule(CompanionChatProvisioner),
-    Plugin.addModule(Migrations),
     Plugin.addModule(Connector),
     Plugin.addModule(
       AppCapability.pluginAsset({

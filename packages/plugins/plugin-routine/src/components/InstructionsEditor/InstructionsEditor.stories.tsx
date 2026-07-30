@@ -50,7 +50,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A routine with no skills or context objects: the form shows empty add affordances. */
+/** A routine with no skills: the form shows an empty add affordance. */
 export const Default: Story = {
   decorators: [
     withSeededSpace((space) => {
@@ -59,12 +59,12 @@ export const Default: Story = {
   ],
 };
 
-/** A routine seeded with a context object: the Objects field renders the populated ref slot. */
-export const WithObject: Story = {
+/** A routine seeded with a skill: the Skills field renders the populated ref slot. */
+export const WithSkill: Story = {
   decorators: [
     withSeededSpace((space) => {
-      const subject = space.db.add(Text.make({ content: 'Meeting notes' }));
-      space.db.add(Instructions.make({ name: 'Summarize notes', objects: [Ref.make(subject)] }));
+      const skill = space.db.add(Skill.make({ key: 'org.dxos.test.summarize', name: 'Summarize' }));
+      space.db.add(Instructions.make({ name: 'Summarize notes', skills: [Ref.make(skill)] }));
     }),
   ],
 };

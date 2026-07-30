@@ -23,7 +23,7 @@ describe('Project', () => {
     expect(project.routines).toEqual([]);
   });
 
-  test('contextBindings exposes instructions, skills, and objects', ({ expect }) => {
+  test('contextBindings exposes skills and objects, not the instructions object itself', ({ expect }) => {
     const skillRef = Ref.fromURI(URI.make('dxn:echo:@:skill-1'));
     const doc = Obj.make(TestObject, {});
     const instructions = Instructions.make({ text: 'Test', skills: [skillRef], objects: [Ref.make(doc)] });
@@ -35,7 +35,8 @@ describe('Project', () => {
 
     const bindings = Project.contextBindings(project);
     expect(bindings.skills.map((ref) => ref.uri)).toEqual([skillRef.uri]);
-    expect(bindings.objects.length).toBe(2);
+    // Instructions text reaches the prompt via Chat.instructions, not a binding.
+    expect(bindings.objects.map((ref) => ref.uri)).toEqual([Ref.make(doc).uri]);
   });
 
   test('contextBindings returns empty bindings when instructions is unresolved', ({ expect }) => {

@@ -26,6 +26,8 @@ import {
   MemorySkill,
   PlanningHandlers,
   PlanningSkill,
+  ProjectHandlers,
+  ProjectSkill,
   SkillManagerHandlers,
   SkillManagerSkill,
   WebSearchHandlers,
@@ -53,6 +55,7 @@ const skillDefinition = () =>
     Capability.contribute(AppCapabilities.SkillDefinition, AgentWizardSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, DelegationSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, AlarmSkill),
+    Capability.contribute(AppCapabilities.SkillDefinition, ProjectSkill),
 
     Capability.contribute(Capabilities.OperationHandler, AgentHandlers),
     Capability.contribute(Capabilities.OperationHandler, AgentSkillHandlers),
@@ -63,6 +66,7 @@ const skillDefinition = () =>
     Capability.contribute(Capabilities.OperationHandler, DelegationHandlers),
     Capability.contribute(Capabilities.OperationHandler, PlanningHandlers),
     Capability.contribute(Capabilities.OperationHandler, AlarmHandlers),
+    Capability.contribute(Capabilities.OperationHandler, ProjectHandlers),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).

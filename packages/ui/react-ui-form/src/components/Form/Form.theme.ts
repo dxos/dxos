@@ -21,7 +21,8 @@ const formStyles = tv({
     sectionDescription: 'text-description',
     fieldSet: '',
     field: '',
-    fieldLabel: 'h-8 grid grid-cols-[1fr_auto_auto] items-center select-none',
+    // Columns: label (fills) → optional `labelEnd` readout → error icon (or its spacer) → optional trailing `button`.
+    fieldLabel: 'h-8 grid grid-cols-[1fr_auto_auto_auto] items-center select-none',
     fieldLabelText: '',
     fieldDescription: 'text-description',
     fieldControl: '',

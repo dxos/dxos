@@ -6,14 +6,16 @@ import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
 import { Project } from '@dxos/compute';
 
-import { AppGraphBuilder, CreateObject, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, Templates } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppCapability.schema([Project.Project])),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(Templates),
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,

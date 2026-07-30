@@ -5,7 +5,6 @@
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
@@ -79,11 +78,6 @@ export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
   { provides: [MarkdownCapabilities.ExtensionProvider] },
   () => import('./markdown-extension'),
-);
-export const Migrations = Capability.lazyModule(
-  'AssistantMigrations',
-  { provides: [ClientCapabilities.Migration] },
-  () => import('./migrations'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

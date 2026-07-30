@@ -103,7 +103,6 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
-    "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -120,7 +119,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "@tldraw/tldraw": "catalog:",
     "react-resize-detector": "catalog:"
   },

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { forwardRef, useMemo } from 'react';
@@ -13,7 +13,8 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
-import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
