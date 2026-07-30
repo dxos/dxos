@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -13,8 +13,9 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { Instructions, Project } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed as EchoFeed, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
@@ -22,6 +23,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
+import { Message } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -50,6 +52,63 @@ const WithProjectCommandsStory = () => {
   }
 
   return <ChatArticle role='article' subject={chat} attendableId='story' companionTo={project} />;
+};
+
+const FIRST = 'What is a feed?';
+const ANSWER = 'An append-only log.';
+const ABANDONED_PROMPT = 'Tell me about zebras instead';
+const ABANDONED_ANSWER = 'Zebras are striped.';
+const RETRY = 'How does replication work?';
+
+let clock = 0;
+
+const message = (text: string, sender: 'user' | 'assistant' = 'user') =>
+  Message.make({ created: new Date(clock++).toISOString(), sender, blocks: [{ _tag: 'text', text }] });
+
+/**
+ * Seeds a soft-forked conversation into the chat's feed, then renders it. The fork is seeded rather
+ * than driven through the model so the story stays deterministic and needs no AI call.
+ */
+const RewindStory = () => {
+  const [space] = useSpaces();
+  const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
+  const seeded = useRef(false);
+
+  useEffect(() => {
+    if (!space || !chat || seeded.current) {
+      return;
+    }
+    seeded.current = true;
+
+    const feed = chat.feed.target;
+    if (!feed) {
+      seeded.current = false;
+      return;
+    }
+
+    // Built in order: `created` breaks position ties, so constructing the answer first would date it
+    // before the question it answers.
+    const first = message(FIRST);
+    const answer = message(ANSWER, 'assistant');
+    const abandonedPrompt = message(ABANDONED_PROMPT);
+    const abandonedAnswer = message(ABANDONED_ANSWER, 'assistant');
+    const retry = message(RETRY);
+
+    void EffectEx.runAndForwardErrors(
+      Effect.gen(function* () {
+        yield* EchoFeed.append(feed, [first, answer, abandonedPrompt, abandonedAnswer]);
+        // Continue from the first answer, leaving the two turns after it unreachable.
+        yield* EchoFeed.append(feed, [retry], { parent: answer });
+        yield* Database.flush();
+      }).pipe(Effect.provide(Database.layer(space.db))),
+    );
+  }, [space, chat]);
+
+  if (!chat) {
+    return <Loading />;
+  }
+
+  return <ChatArticle role='article' subject={chat} attendableId='story' />;
 };
 
 const meta = {
@@ -105,6 +164,33 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * Soft fork ("rewind"): the last turn continues from the first answer rather than the feed's tip, so the
+ * two turns in between are unreachable and must not render — while remaining in the log.
+ */
+export const Rewind: Story = {
+  render: RewindStory,
+  play: async ({ canvasElement }) => {
+    const text = () => canvasElement.textContent ?? '';
+
+    await waitFor(
+      () => {
+        void expect(text()).toContain(FIRST);
+        void expect(text()).toContain(ANSWER);
+        void expect(text()).toContain(RETRY);
+      },
+      { timeout: 13_000, interval: 300 },
+    );
+
+    // Rewound past, so unreachable from the head.
+    void expect(text()).not.toContain(ABANDONED_PROMPT);
+    void expect(text()).not.toContain(ABANDONED_ANSWER);
+
+    // One branch toolbar per surviving user prompt.
+    void expect(canvasElement.querySelectorAll('[data-testid="chat.rewind"]')).toHaveLength(2);
+  },
+};
 
 /**
  * The prompt's `$`-trigger completion is sourced from the bound project's instructions.

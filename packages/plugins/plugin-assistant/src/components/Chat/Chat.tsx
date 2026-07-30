@@ -6,12 +6,13 @@ import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
+import * as Order from 'effect/Order';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { getSpace } from '@dxos/client/echo';
-import { type Database, Filter, Obj, Query } from '@dxos/echo';
+import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
@@ -46,6 +47,23 @@ import {
 import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
+
+/**
+ * Append order for `Feed.history`, which walks lineage positionally rather than by time.
+ *
+ * Position is authoritative but server-assigned: locally-written blocks (and every block when no
+ * position authority has acknowledged them) report `+Infinity`, and a query returns an unordered set, so
+ * position alone leaves them arbitrary. `created` breaks those ties — sound locally, where one
+ * conversation's messages come off one clock, and only consulted when position cannot decide.
+ */
+const byAppendOrder: Order.Order<Message.Message> = (a, b) => {
+  const positionA = Feed.getPosition(a);
+  const positionB = Feed.getPosition(b);
+  if (positionA !== positionB) {
+    return positionA < positionB ? -1 : 1;
+  }
+  return a.created < b.created ? -1 : a.created > b.created ? 1 : 0;
+};
 
 //
 // Root
@@ -102,10 +120,22 @@ const ChatRoot = ({
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
   const pendingMessages = useAtomValue(processor.messages);
-  const messages = useMemo(
-    () => Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b),
-    [feedMessages, pendingMessages],
-  );
+  // Render only the turns reachable from the feed's head, so a rewind's abandoned turns disappear.
+  const messages = useMemo(() => {
+    const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
+    const sorted = Array.sort(all, byAppendOrder);
+    const resolved = Feed.history(sorted).items;
+    // eslint-disable-next-line no-console
+    console.log(
+      'CHATORDER>>>',
+      JSON.stringify({
+        raw: all.map((m) => [(m.blocks[0] as any)?.text, m.created, Feed.getPosition(m)]),
+        sorted: sorted.map((m) => (m.blocks[0] as any)?.text),
+        resolved: resolved.map((m) => (m.blocks[0] as any)?.text),
+      }),
+    );
+    return resolved;
+  }, [feedMessages, pendingMessages]);
 
   const dump = useDebug({ processor });
 

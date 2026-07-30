@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 
@@ -261,6 +262,25 @@ const readParent = (item: Entity.Unknown | Entity.Snapshot): { present: boolean;
     return { present: false };
   }
   return EntityId.isValid(id) ? { present: true, id } : { present: true };
+};
+
+/**
+ * The global position a feed item was assigned, or `+Infinity` when it has none — a block written
+ * locally and not yet acknowledged, which sorts last because it is the newest.
+ *
+ * Use this to put items into append order before calling {@link history}: a query returns an unordered
+ * set, and `created` is a wall clock that peers do not agree on.
+ *
+ * @example
+ * ```ts
+ * const inAppendOrder = Array.sort(messages, Order.mapInput(Order.number, Feed.getPosition));
+ * const { items } = Feed.history(inAppendOrder);
+ * ```
+ */
+export const getPosition = (item: Entity.Unknown | Entity.Snapshot): number => {
+  const key = internal.getKeys(item, KEY_QUEUE_POSITION).at(0)?.id;
+  const position = key !== undefined ? Number(key) : Number.NaN;
+  return Number.isNaN(position) ? Number.POSITIVE_INFINITY : position;
 };
 
 /**
