@@ -163,19 +163,38 @@ For objects in the same space sharing an identity key + version:
    Phase 3).
 2. **Choose the winner deterministically**: minimum `EntityId` (ULID sort — also the
    earliest-created, a nice semantic). Pure function of the candidate id set.
-3. **Merge data deterministically**: a pure function `merge(winnerState, loserState)`
-   applied to the winner via an `atomicReplaceObject`-style single change —
-   field-wise winner-preference, `meta.keys` union (the `copyObjectData` semantics,
-   made deterministic). Duplicates never share Automerge ancestry (§3.1), so this
-   function — not an Automerge merge — is the only merge path. Convergent because
-   it is a pure function of the two entity states; lossy at field granularity by
-   design (see risk table).
+3. **Merge data deterministically, over the whole candidate set**: the merged
+   state is a pure function of the **complete set of duplicates visible to the
+   peer**, applied to the winner via an `atomicReplaceObject`-style single change —
+   NOT a pairwise fold. Pairwise winner-preference is not associative (for ids
+   `Z < X < Y` where `Z` lacks field `a`, merging `X` then `Y` into `Z` yields a
+   different `a` than `Y` then `X`), so different application orders would diverge.
+   Instead, per field: take the value from the **smallest-id candidate that defines
+   the field**; `meta.keys`: union deduplicated by `(source, id)` and sorted
+   lexicographically. This is permutation-independent for a given candidate set.
+   Peers with different candidate sets can still transiently write different
+   results — Automerge's field-level conflict resolution keeps the winner document
+   convergent in the interim, and the next merge pass (losers are retained as
+   tombstones, so their states stay available — step 4) recomputes the canonical
+   function once views converge. Duplicates never share Automerge ancestry (§3.1),
+   so this function — not an Automerge merge — is the only merge path; lossy at
+   field granularity by design (see risk table).
 4. **Redirect, don't erase**: write `system.mergedInto: <winnerId>` on the loser and
    tombstone it (`system.deleted = true`). The loser keeps replicating (this is
    essential — late peers must be able to run the same merge and follow the
-   redirect). The ref resolver learns to follow `mergedInto` transitively — this
-   makes the system robust to every rewrite gap in §3.3 (markdown links, feed
-   blocks, cross-space refs, refs created concurrently with the merge).
+   redirect). `mergedInto` is **sticky and authoritative**: `db.add` today
+   un-deletes a tombstoned object (§3.1), so the un-delete path must special-case
+   merged losers — restore/undo of a merged-away object resolves to the winner
+   instead of resurrecting the loser, and a stale offline peer that re-adds or
+   keeps editing the loser has those changes folded by the next merge pass rather
+   than surfaced as a revived duplicate. The ref resolver learns to follow
+   `mergedInto` transitively — this makes the system robust to the **same-space**
+   rewrite gaps in §3.3 (Markdown links, feed blocks, refs created concurrently
+   with the merge). Cross-space inbound refs are explicitly **not** covered:
+   cross-space resolution throws "not yet supported" today
+   (`hypergraph.ts:571-574`), so a redirect on the loser can't be followed from
+   another space; they dangle exactly as they would for any deleted object until
+   cross-space resolution exists.
 5. **Rewrite inbound references opportunistically**: `Query.referencedBy(loser)` →
    rewrite data refs and `meta.tags`; `objectMeta.queryRelations` → rewrite relation
    endpoints (requires exposing the existing `ObjectCore.setSource/setTarget`
@@ -242,6 +261,7 @@ Phase 2's doctor diagnostic can surface them explicitly instead of a log warning
 | Concurrent merge + user edit on the loser loses the edit (field granularity) | Medium       | Re-runnable merges shrink the window; scope early adoption to init-state objects where the concurrent-edit window is empty in practice.             |
 | Proxy identity: live proxies holding the loser                               | Medium       | Loser stays resolvable (tombstone+redirect); optionally rebind cores (`_rebindObjects` precedent) in a later phase.                                 |
 | Merge function semantics disputed per type (arrays: union vs winner)         | Medium       | Ship fixed field-wise semantics first; revisit pluggability (open question 3) only with evidence.                                                   |
+| Mixed client versions: old clients can't follow `mergedInto` redirects       | Medium       | Ref rewriting is the compat path; flag stays off until a min-client-version gate; mixed-version tests (§5.7).                                       |
 | Feed-backed objects                                                          | Out of scope | Feeds already collapse by id at the index (`echo-feed-codec.ts:20-24`); feed-object dedup rides on the same identity-key mechanism if needed later. |
 
 ---
@@ -254,8 +274,11 @@ Determinism and convergence are the product; the tests are the spec.
    - Winner selection: pure, total order, stable under permutation and subsets.
    - Redirect chains: transitive resolution, cycle impossibility (property: every
      edge decreases the id), chain collapse on re-run.
-   - Deterministic merge function: `merge(a,b)` idempotent (`merge(a,a) = a`),
-     deterministic across isolates, `meta.keys` union correctness.
+   - Deterministic merge function: defined over the candidate **set** —
+     idempotent, deterministic across isolates, and **permutation/order
+     independent** (same candidate set in any enumeration or pairwise-application
+     order yields identical results; property-based over random field layouts);
+     `meta.keys` union deduplicated and deterministically ordered.
 2. **Multi-peer convergence (echo-client-e2e, using the existing `EchoTestPeer` +
    replication test harness, cf. `integration.test.ts:290-311`)**
    - k peers (2–4) each create the same keyed object, edit fields concurrently,
@@ -273,14 +296,24 @@ Determinism and convergence are the product; the tests are the spec.
    simulation.
 4. **Proxy/UX behavior**: live proxy on a loser keeps working; `useQuery` /
    `space.properties` observe exactly one object during and after merge; undo/restore
-   of a merged-away object does not resurrect a duplicate.
+   of a merged-away object does not resurrect a duplicate (`mergedInto` is sticky —
+   restore resolves to the winner); a stale offline peer that re-adds/edits the
+   loser has its changes folded on reconnect, never a revived duplicate.
 5. **E2E (composer-app Playwright)**: two clients join a fresh space concurrently,
    both trigger default-content provisioning → exactly one root collection / trace
    feed / README.
 6. **Perf**: detection cost pre/post index; resolver redirect overhead; merge pass on
    a space with N objects (target: no-op pass is O(index lookup)).
-7. **Snapshot compatibility**: proto-guard snapshot for the new `system.mergedInto`
-   field; old clients must tolerate it (unknown `system` fields are already ignored).
+7. **Mixed-version compatibility** — behavioral, not just schema tolerance:
+   proto-guard snapshot for the new `system.mergedInto` field; old clients tolerate
+   the field (unknown `system` fields are already ignored) but **cannot follow the
+   redirect** — to them a merged loser is simply deleted, and any not-yet-rewritten
+   ref dangles. Consequences to design in and test: reference **rewriting** (not the
+   redirect) is the compatibility path old clients benefit from, so rewrite must not
+   be treated as optional where mixed fleets exist; automatic merging stays behind
+   the feature flag until a minimum-client-version gate is agreed; test old/new
+   client pairs replicating the same space (old client reads during and after a
+   merge performed by a new client).
 
 ## 6. Phased rollout plan
 
@@ -316,9 +349,11 @@ Exit criteria: convergence demonstrated in tests; go/no-go with chosen shape.
 ### Phase 2 — Merge engine, flagged
 
 - Duplicate detection (query-based post-filter is fine at this scale).
-- Deterministic merge executor: winner selection, deterministic data merge,
-  tombstone+redirect, opportunistic ref rewrite. Runs on space open + on demand
-  (`space.internal` / doctor action).
+- Deterministic merge executor: winner selection, set-based deterministic data
+  merge, tombstone+redirect, opportunistic ref rewrite. Runs on space open + on
+  demand (`space.internal` / doctor action).
+- Sticky-tombstone guard: `db.add` / restore of an entity with `system.mergedInto`
+  set resolves to the winner instead of un-deleting the loser (§4.1 step 4).
 - Extend `plugin-doctor` with a duplicates diagnostic + "merge now" repair action —
   the manual escape hatch ships before the automatic path. Also surface class-1
   (same-id-two-documents) anomalies as an explicit diagnostic instead of a log
@@ -338,8 +373,14 @@ Exit criteria: convergence demonstrated in tests; go/no-go with chosen shape.
 
 - Convert the known hot spots to keyed creation + merge: trace feed
   (`FeedTraceSink`), persisted schema (`db.addType`), `SHARED` space-order Expando,
-  `SpaceProperties` + root collection (drop the `=== 1` hang and the
-  `CollectionModel` invariant in favor of merge semantics).
+  `SpaceProperties` + root collection. For the latter two, sequence carefully:
+  first a migration **backfills identity keys** onto existing `SpaceProperties` /
+  root-collection objects, then the merge engine demonstrably repairs keyed
+  duplicates, and only then are the `=== 1` resolution rule and the
+  `CollectionModel` invariant relaxed — and they are **converted into diagnostics,
+  not dropped**: duplicates the engine cannot merge (no identity key, mismatched
+  key/version, class-1 same-id collisions) must keep surfacing as explicit errors
+  rather than becoming silently incorrect state.
 - Restore plugin default-content provisioning (`OnCreateSpace` for table/thread/
   assistant) on top of keyed objects — the original motivating feature.
 - Generalize the merge key to `meta.keys` foreign keys; migrate `syncObjects`,
