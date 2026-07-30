@@ -11,7 +11,7 @@ import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
+import { Connection, findBindingForTarget } from '@dxos/plugin-connector';
 import { Tagging } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
@@ -20,7 +20,6 @@ import { meta } from '#meta';
 import { InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { JMAP_MAIL_CONNECTOR_ID } from '../constants';
-import { findBindingForTarget } from '../util';
 
 /**
  * The send callback for the composer: routes the draft to its mailbox's provider, records the provider

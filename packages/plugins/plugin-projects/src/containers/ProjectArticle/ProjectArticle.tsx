@@ -26,6 +26,9 @@ import { ProjectOperation } from '#types';
 const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));
 type HeaderValues = Schema.Schema.Type<typeof HeaderValues>;
 
+// The Context section edits only the instructions' standing context objects.
+const CONTEXT_FIELDS: readonly string[] = ['objects'];
+
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 /**
@@ -73,8 +76,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, artifactsCollection],
   );
 
-  // Routines are linked, not owned: the ref is spliced here and `RemoveObjects` (no target) removes the
-  // object from the space's root collection, where the create flow filed it.
+  // Routines are owned by the project but filed in no collection, so `RemoveObjects` needs no target;
+  // the `routines` ref is spliced here since the cascade only follows parent edges.
   const handleDeleteRoutine = useCallback(
     (object: Obj.Unknown) => {
       updateProject((project) => {
@@ -115,6 +118,14 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 <Form.FieldSet />
 
                 {instructions && <InstructionsEditor db={db} instructions={instructions} />}
+
+                {/* Standing context (inputs bound into every project session) — deliberately a
+                    separate labeled section from Artifacts (outputs the project owns). */}
+                {instructions && (
+                  <Form.Section title={t('context.label')}>
+                    <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
+                  </Form.Section>
+                )}
 
                 <Form.Section title={t('routines.label')}>
                   <ObjectGallery refs={project.routines} onOpen={handleOpen} onDelete={handleDeleteRoutine} />
@@ -187,17 +198,17 @@ type ObjectGalleryProps = {
  */
 const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
   // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`
-  // synchronously would leave the gallery permanently empty.
-  // `useObjects` is the resolution trigger; the live entities are re-read from `.target` because the
-  // card needs the object, not a snapshot.
+  // synchronously would leave the gallery permanently empty. The card needs the live entity, so
+  // unwrap each loaded snapshot rather than re-reading `.target` — the refs come off a snapshot of
+  // the project, which carries no resolver, so `.target` is undefined there even once loaded.
   const loaded = useObjects(refs);
   const items = useMemo<ObjectTileData[]>(
     () =>
-      refs
-        .map((ref) => ref.target)
+      loaded
+        .map((snapshot) => Obj.getReactiveOrUndefined(snapshot))
         .filter((object): object is Obj.Unknown => !!object)
         .map((object) => ({ object, onClick: () => onOpen(object), onDelete: () => onDelete(object) })),
-    [refs, loaded, onOpen, onDelete],
+    [loaded, onOpen, onDelete],
   );
 
   if (items.length === 0) {
@@ -205,10 +216,12 @@ const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
   }
 
   return (
+    // No `Masonry.Content`: it renders a `ScrollArea.Root`, and `Form.Viewport` already scrolls this
+    // surface. Nested, the inner scroll root shrink-wrapped to its scrollbar gutter, so the
+    // viewport's `contentWidth > 0` gate suppressed every tile — the sections rendered their
+    // headings and nothing else.
     <Masonry.Root Tile={ObjectTile} centered={false}>
-      <Masonry.Content centered={false} padding={false}>
-        <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} />
-      </Masonry.Content>
+      <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} scroll={false} />
     </Masonry.Root>
   );
 };

@@ -4,6 +4,7 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import { AtprotoPlugin } from '@dxos/plugin-atproto/plugin';
 import { BloggerPlugin } from '@dxos/plugin-blogger/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
@@ -23,6 +24,7 @@ import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';
 import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
+import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
@@ -31,9 +33,11 @@ import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { HeyGenPlugin } from '@dxos/plugin-heygen/plugin';
 import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
 import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
+import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
+import { LibraryPlugin } from '@dxos/plugin-library/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
 import { MagazinePlugin } from '@dxos/plugin-magazine/plugin';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
@@ -60,7 +64,6 @@ import { SearchPlugin } from '@dxos/plugin-search/plugin';
 import { SequencerPlugin } from '@dxos/plugin-sequencer/plugin';
 import { SheetPlugin } from '@dxos/plugin-sheet/plugin';
 import { SidekickPlugin } from '@dxos/plugin-sidekick/plugin';
-import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
 import { SlackPlugin } from '@dxos/plugin-slack/plugin';
 import { SpacetimePlugin } from '@dxos/plugin-spacetime/plugin';
 import { StackPlugin } from '@dxos/plugin-stack/plugin';
@@ -69,6 +72,7 @@ import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
+import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
 import { TripPlugin } from '@dxos/plugin-trip/plugin';
@@ -97,7 +101,9 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
-    SketchPlugin.meta.profile.key,
+    IllustratorPlugin.meta.profile.key,
+    TldrawPlugin.meta.profile.key,
+    ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
 
@@ -115,6 +121,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MeetingPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
+      LibraryPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
@@ -147,6 +154,7 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
   return [
     ...getCorePlugins(conf),
     AssistantPlugin(),
+    AtprotoPlugin(),
     BoardPlugin(),
     BookmarksPlugin(),
     BrainPlugin(),
@@ -171,6 +179,7 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     GamePlugin(),
     InboxPlugin(),
     KanbanPlugin(),
+    LibraryPlugin(),
     MapPlugin(),
     isLocal && MapPluginSolid(),
     MarkdownPlugin(),
@@ -195,7 +204,9 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     SearchPlugin(),
     (isDev || isLabs) && SidekickPlugin(),
     SheetPlugin(),
-    SketchPlugin(),
+    IllustratorPlugin(),
+    TldrawPlugin(),
+    ExcalidrawPlugin(),
     CodePlugin(),
     StackPlugin(),
     SupportPlugin({ helpSteps: steps }),

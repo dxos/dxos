@@ -108,15 +108,19 @@ export type UpdateCardInput = {
  * Fails with {@link InvalidTrelloAccessTokenError} when the stored token is not
  * exactly two non-empty segments.
  */
-export const credentialsFromAccessToken = (record: {
-  token: string;
-}): Effect.Effect<TrelloCredentialsValue, InvalidTrelloAccessTokenError> => {
-  const parts = record.token.split(':');
+/**
+ * Splits a stored Trello credential into its `<power-up key>:<user token>` halves.
+ * Fails with {@link InvalidTrelloAccessTokenError} when the value is not exactly two non-empty parts.
+ */
+export const credentialsFromToken = (
+  token: string,
+): Effect.Effect<TrelloCredentialsValue, InvalidTrelloAccessTokenError> => {
+  const parts = token.split(':');
   if (parts.length !== 2 || !parts[0] || !parts[1]) {
     return Effect.fail(new InvalidTrelloAccessTokenError());
   }
-  const [key, token] = parts;
-  return Effect.succeed({ key, token });
+  const [key, userToken] = parts;
+  return Effect.succeed({ key, token: userToken });
 };
 
 /**
@@ -138,7 +142,7 @@ export class TrelloCredentials extends Context.Tag('@dxos/plugin-trello/TrelloCr
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
         const accessToken = yield* Database.load(connection.accessToken);
-        return yield* credentialsFromAccessToken(accessToken);
+        return yield* credentialsFromToken(accessToken.token);
       }),
     );
 
@@ -151,7 +155,7 @@ export class TrelloCredentials extends Context.Tag('@dxos/plugin-trello/TrelloCr
       TrelloCredentials,
       Effect.gen(function* () {
         const accessToken = yield* Database.load(accessTokenRef);
-        return yield* credentialsFromAccessToken(accessToken);
+        return yield* credentialsFromToken(accessToken.token);
       }),
     );
 }

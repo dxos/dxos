@@ -15,5 +15,6 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
     dependsOn: ['org.dxos.plugin.markdown'],
+    tags: ['labs'],
   },
 });
