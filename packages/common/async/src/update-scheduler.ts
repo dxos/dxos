@@ -36,13 +36,14 @@ export class UpdateScheduler {
   private _scheduled = false;
 
   /**
-   * Armed by the `trigger` that schedules a runner, woken by that runner when it claims. Lets
+   * Armed by the `trigger` that schedules a runner, woken by that runner when it claims — with the
+   * run's promise, which `Trigger` adopts, so waiters resume when the run *finishes*. Lets
    * `runBlocking` await a run that does not exist in `_currentTask` yet.
    *
    * `reset()` abandons parked waiters, so it may only be armed in `trigger`'s non-coalesced branch:
    * waiters park only while `_scheduled` is true, and that branch requires it false.
    */
-  private _claimed = new Trigger<RunResult>();
+  private _runOutcome = new Trigger<RunResult>();
 
   /** Woken to make the pending runner skip its throttle delay. Replaced at claim time. */
   private _skipDelay = new Trigger();
@@ -64,7 +65,7 @@ export class UpdateScheduler {
     _ctx.onDispose(async () => {
       await this._currentTask; // Context waits for callback to finish.
       // Release `runBlocking` callers parked on a runner that never claimed. NOOP if already woken.
-      this._claimed.wake(Promise.resolve(undefined));
+      this._runOutcome.wake(Promise.resolve(undefined));
     });
   }
 
@@ -81,7 +82,7 @@ export class UpdateScheduler {
       return;
     }
     this._scheduled = true;
-    this._claimed.reset(); // Only here — never on a coalesced trigger (see `_claimed`).
+    this._runOutcome.reset(); // Only here — never on a coalesced trigger (see `_runOutcome`).
 
     // The only claim site. A single await suffices: nothing else claims, so this is the only waiter.
     scheduleMicroTask(this._ctx, async () => {
@@ -115,7 +116,7 @@ export class UpdateScheduler {
       }
 
       if (this._ctx.disposed) {
-        this._claimed.wake(Promise.resolve(undefined));
+        this._runOutcome.wake(Promise.resolve(undefined));
         return;
       }
 
@@ -139,7 +140,7 @@ export class UpdateScheduler {
         }
       });
       this._currentTask = task;
-      this._claimed.wake(run);
+      this._runOutcome.wake(run);
     });
   }
 
@@ -174,7 +175,7 @@ export class UpdateScheduler {
     try {
       this.trigger();
       this._skipDelay.wake();
-      const error = await await this._claimed.wait();
+      const error = await this._runOutcome.wait();
       if (error !== undefined) {
         throw error;
       }

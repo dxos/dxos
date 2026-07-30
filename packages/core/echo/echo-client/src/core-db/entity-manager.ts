@@ -203,9 +203,13 @@ export class EntityManager implements IDatabaseBinding {
    */
   async open(ctx: Context): Promise<void> {
     this._ctx = ctx;
-    this._updateScheduler = new UpdateScheduler(ctx, async () => this._emitDbUpdateEvents(ctx), {
-      maxFrequency: THROTTLED_UPDATE_FREQUENCY,
-    });
+    this._updateScheduler = new UpdateScheduler(
+      ctx,
+      async () => this._emitDbUpdateEvents(ctx),
+      // Throttling is disabled by bypassing it at every call site; configuring a rate and then always
+      // overriding it just made the two disagree.
+      DISABLE_THROTTLING ? {} : { maxFrequency: THROTTLED_UPDATE_FREQUENCY },
+    );
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
@@ -1694,22 +1698,14 @@ export class EntityManager implements IDatabaseBinding {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
-    if (DISABLE_THROTTLING) {
-      this._updateScheduler.forceTrigger();
-    } else {
-      this._updateScheduler.trigger();
-    }
+    this._updateScheduler.trigger();
   }
 
   private _scheduleThrottledDbUpdate(objectId: string[]): void {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
     }
-    if (DISABLE_THROTTLING) {
-      this._updateScheduler.forceTrigger();
-    } else {
-      this._updateScheduler.trigger();
-    }
+    this._updateScheduler.trigger();
   }
 }
 
