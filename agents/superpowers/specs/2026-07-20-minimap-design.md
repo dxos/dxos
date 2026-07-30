@@ -64,7 +64,7 @@ hover to show the wave + popover. Follows the react-ui-components story conventi
 
 ## Unit B — CodeMirror plumbing (react-ui-markdown / plugin-assistant sync)
 
-1. `MessageSyncer` (`plugin-assistant/.../ChatThread/sync.ts`) records the document offset
+1. `MessageSyncer` (`plugin-assistant/.../ChatThread/sync/sync.ts`) records the document offset
    range `[from, to)` of each message as it walks/appends (it already tracks the completed
    block cursor and trailing chars; extend to accumulate a per-message offset table keyed
    by message id). Exposes `getSpans(): { id: string; from: number; to: number }[]`.

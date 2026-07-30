@@ -9,6 +9,7 @@ import * as Stream from 'effect/Stream';
 import { CompleteBlock, PartialBlock } from '@dxos/assistant';
 import { type AgentService, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { Message } from '@dxos/types';
 
 /**
@@ -54,6 +55,16 @@ export const collectEphemeral = (
     };
   });
 
+export class WaitForMessageTimeoutError extends BaseError.extend('WaitForMessageTimeoutError') {
+  constructor(timeout: number, options?: Omit<BaseErrorOptions, 'context'>) {
+    super({
+      message: `Timed out after ${timeout}ms waiting for a matching feed message.`,
+      context: { timeout },
+      ...options,
+    });
+  }
+}
+
 export interface WaitForMessageOptions {
   /** Overall deadline in milliseconds. @default 10_000 */
   timeout?: number;
@@ -71,7 +82,7 @@ export const waitForMessage = (
   feed: Feed.Feed,
   predicate: (message: Message.Message) => boolean,
   { timeout = 10_000, interval = 100 }: WaitForMessageOptions = {},
-): Effect.Effect<Message.Message, Error, Database.Service> =>
+): Effect.Effect<Message.Message, WaitForMessageTimeoutError, Database.Service> =>
   Effect.gen(function* () {
     const deadline = Date.now() + timeout;
     do {
@@ -83,7 +94,7 @@ export const waitForMessage = (
       yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, interval)));
     } while (Date.now() < deadline);
 
-    return yield* Effect.fail(new Error(`Timed out after ${timeout}ms waiting for a matching feed message.`));
+    return yield* Effect.fail(new WaitForMessageTimeoutError(timeout));
   });
 
 /** Convenience predicate: any block's text content contains the substring. */

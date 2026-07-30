@@ -168,8 +168,11 @@ export class MessageSyncer {
         if (rendered.length > this._trailing) {
           buffer += rendered.slice(this._trailing);
         }
-        // The block occupies `[offset, offset + rendered.length)`; extend the message's range.
-        this._saveRange(message.id, offset, offset + rendered.length);
+        // The document never shrinks (see the `_trailing` guard below), so span/offset accounting
+        // must track the document, not a renderer output that regressed below what was appended.
+        const renderedLength = Math.max(rendered.length, this._trailing);
+        // The block occupies `[offset, offset + renderedLength)`; extend the message's range.
+        this._saveRange(message.id, offset, offset + renderedLength);
         if (block.pending) {
           // Stay on this block; record how far we've appended so the next call can resume.
           // `Math.max`-style guard against a non-monotonic renderer output without shrinking the doc.
@@ -180,7 +183,7 @@ export class MessageSyncer {
         }
         this._completed = index + 1;
         this._trailing = 0;
-        offset += rendered.length;
+        offset += renderedLength;
         this._completedOffset = offset;
         index++;
       }
@@ -188,11 +191,11 @@ export class MessageSyncer {
     return buffer;
   }
 
-  /** Record (or extend) the offset range of a message. `from` is preserved across calls. */
+  /** Record (or extend) the offset range of a message. `from` is preserved; `to` never regresses. */
   private _saveRange(id: string, from: number, to: number): void {
     const existing = this._spans.get(id);
     if (existing) {
-      existing.to = to;
+      existing.to = Math.max(existing.to, to);
     } else {
       this._spans.set(id, { from, to });
     }
