@@ -5,28 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation, Trigger } from '@dxos/compute';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
 
 import { type ConnectorEntry, type SyncInput, type SyncOutput } from '../types';
 import { findSyncTriggerForBinding } from './sync-trigger';
-
-/**
- * Finds an existing local record for `definition`, or persists a fresh one via
- * {@link Operation.serialize}. Entirely local — `definition` is the connector's already-registered
- * in-code operation (e.g. `InboxOperation.GoogleMailSync`); nothing is fetched from or deployed to
- * Edge.
- */
-const ensureOperationRecord = (
-  definition: Operation.Definition<SyncInput, SyncOutput>,
-): Effect.Effect<Operation.PersistentOperation, never, Database.Service> =>
-  Effect.gen(function* () {
-    const existing = yield* Database.query(
-      Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(definition.meta.key)),
-    ).run;
-    return existing[0] ?? (yield* Database.add(Operation.serialize(definition)));
-  });
 
 /**
  * Creates the sync Routine for `cursor`: a Routine wrapping a local (`remote` unset) trigger built
@@ -40,7 +24,7 @@ const ensureOperationRecord = (
 export const createSyncRoutine = ({
   target,
   cursor,
-  operation: definition,
+  operation,
   spec,
 }: {
   target: Obj.Unknown;
@@ -57,12 +41,13 @@ export const createSyncRoutine = ({
       }
     }
 
-    const operation = yield* ensureOperationRecord(definition);
     const trigger = Trigger.make({ enabled: true, spec, input: { binding: Ref.make(cursor) } });
 
     const routine = makeRoutine({
       name: 'Sync',
-      spec: { kind: 'runnable', runnable: Ref.make(operation) },
+      // A connector's sync is statically defined and already in the registry, so the routine refers to
+      // it by key rather than persisting a copy of it into the space.
+      spec: { kind: 'runnable', runnable: Ref.fromURI(operation.meta.key) },
       trigger,
     });
 

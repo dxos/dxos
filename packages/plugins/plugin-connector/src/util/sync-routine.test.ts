@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Operation, Routine, Trigger } from '@dxos/compute';
-import { Database, DXN, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Cursor } from '@dxos/link';
@@ -88,6 +88,10 @@ describe('createSyncRoutine', () => {
     expect(Object.keys(trigger?.input ?? {})).toEqual(['binding']);
     expect(trigger?.input?.binding?.uri).toBe(Ref.make(cursor).uri);
     expect(created?.id).toBe(trigger?.id);
+
+    // The action refers to the statically-defined operation by key; nothing is persisted into the space.
+    expect(routine.spec?.kind === 'runnable' && routine.spec.runnable.uri).toBe(TestSync.meta.key);
+    expect(await db.query(Filter.type(Operation.PersistentOperation)).run()).toHaveLength(0);
 
     // The reverse-ref from the cursor is how a manual sync finds this trigger to force-run.
     const found = await findSyncTriggerForBinding(cursor).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);

@@ -111,7 +111,6 @@ describe('SyncConnection', () => {
       AccessToken.AccessToken,
       Trigger.Trigger,
       Routine.Routine,
-      Operation.PersistentOperation,
       Expando.Expando,
     ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok' }));

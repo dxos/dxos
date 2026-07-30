@@ -57,7 +57,6 @@ describe('connectorAuthActions', () => {
       Cursor.Cursor,
       Trigger.Trigger,
       Routine.Routine,
-      Operation.PersistentOperation,
     ]);
     const addConnection = (connectorId: string) => {
       const token = db.add(Obj.make(AccessToken.AccessToken, { source: `${connectorId}.example`, token: 'tok' }));
