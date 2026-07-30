@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Operation, Routine, Trigger } from '@dxos/compute';
-import { Database, DXN, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Cursor } from '@dxos/link';
@@ -15,13 +15,16 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
-
-import { Calendar, Mailbox } from '#types';
+import { Expando } from '@dxos/schema';
 
 import { createSyncRoutine } from './sync-routine';
+import { findSyncTriggerForBinding } from './sync-trigger';
 
-// Stand-in for a connector's `sync` operation (e.g. `InboxOperation.GoogleMailSync`): takes the same
-// `{ binding: Ref<Cursor> }` shape every real connector's `sync` declares.
+/** Stands in for a connector's declared `sync.trigger`. */
+const SYNC_SPEC = Trigger.specTimer('*/10 * * * *');
+
+// Stand-in for a connector's `sync.operation` (e.g. `InboxOperation.GoogleMailSync`): takes the same
+// `{ binding: Ref<Cursor> }` shape every real connector's sync declares.
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.sync'), name: 'Test Sync' },
   input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
@@ -32,10 +35,9 @@ const types = [
   Routine.Routine,
   Trigger.Trigger,
   Operation.PersistentOperation,
-  Mailbox.Mailbox,
-  Calendar.Calendar,
   AccessToken.AccessToken,
   Cursor.Cursor,
+  Expando.Expando,
 ];
 
 const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
@@ -63,20 +65,20 @@ const findSyncRoutine = (db: Database.Database, target: Obj.Unknown) =>
     );
 
 describe('createSyncRoutine', () => {
-  test('creates a routine with a timer trigger referencing a mailbox target', async ({ expect }) => {
+  test('creates a routine with a timer trigger bound to the target’s cursor', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);
 
-    const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
-    const cursor = makeCursor(db, mailbox);
-    const created = await createSyncRoutine({ target: mailbox, cursor, sync: TestSync }).pipe(
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
+    const cursor = makeCursor(db, target);
+    const created = await createSyncRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }).pipe(
       Effect.provide(Database.layer(db)),
       EffectEx.runPromise,
     );
     await db.flush();
 
-    await expect.poll(() => findSyncRoutine(db, mailbox), { timeout: 5_000 }).toHaveLength(1);
-    const [routine] = await findSyncRoutine(db, mailbox);
+    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
+    const [routine] = await findSyncRoutine(db, target);
     const [triggerRef] = routine.triggers;
     const trigger = triggerRef.target;
     expect(trigger?.spec).toEqual({ kind: 'timer', cron: '*/10 * * * *' });
@@ -86,47 +88,57 @@ describe('createSyncRoutine', () => {
     expect(Object.keys(trigger?.input ?? {})).toEqual(['binding']);
     expect(trigger?.input?.binding?.uri).toBe(Ref.make(cursor).uri);
     expect(created?.id).toBe(trigger?.id);
-  });
 
-  test('creates a routine for a calendar target, discovered via the binding cursor', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
-    const db = await initSpace(harness);
+    // The action refers to the statically-defined operation by key; nothing is persisted into the space.
+    expect(routine.spec?.kind === 'runnable' && routine.spec.runnable.uri).toBe(TestSync.meta.key);
+    expect(await db.query(Filter.type(Operation.PersistentOperation)).run()).toHaveLength(0);
 
-    const calendar = db.add(Calendar.make({ name: 'Personal' }));
-    const cursor = makeCursor(db, calendar);
-    await createSyncRoutine({ target: calendar, cursor, sync: TestSync }).pipe(
-      Effect.provide(Database.layer(db)),
-      EffectEx.runPromise,
-    );
-    await db.flush();
-
-    await expect.poll(() => findSyncRoutine(db, calendar), { timeout: 5_000 }).toHaveLength(1);
-    const [routine] = await findSyncRoutine(db, calendar);
-    const trigger = routine.triggers[0].target;
-    expect(Object.keys(trigger?.input ?? {})).toEqual(['binding']);
-    expect(trigger?.input?.binding?.uri).toBe(Ref.make(cursor).uri);
+    // The reverse-ref from the cursor is how a manual sync finds this trigger to force-run.
+    const found = await findSyncTriggerForBinding(cursor).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
+    expect(found?.id).toBe(trigger?.id);
   });
 
   test('is idempotent: a second call is a no-op once a sync routine is connected', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);
 
-    const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
-    const cursor = makeCursor(db, mailbox);
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
+    const cursor = makeCursor(db, target);
     const run = () =>
-      createSyncRoutine({ target: mailbox, cursor, sync: TestSync }).pipe(
+      createSyncRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }).pipe(
         Effect.provide(Database.layer(db)),
         EffectEx.runPromise,
       );
     const first = await run();
     await db.flush();
-    await expect.poll(() => findSyncRoutine(db, mailbox), { timeout: 5_000 }).toHaveLength(1);
+    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
 
     const second = await run();
     await db.flush();
 
-    expect(await findSyncRoutine(db, mailbox)).toHaveLength(1);
+    expect(await findSyncRoutine(db, target)).toHaveLength(1);
     // The second call returns the same, pre-existing trigger rather than creating another.
     expect(second?.id).toBe(first?.id);
+  });
+
+  test('two calls racing on one binding create a single routine', async ({ expect }) => {
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    const db = await initSpace(harness);
+
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
+    const cursor = makeCursor(db, target);
+    // The existence check is an index query, so it cannot see a routine added moments earlier: without
+    // a guard both callers observe none and each persists a schedule, syncing the binding twice a period.
+    const [first, second] = await Effect.all(
+      [
+        createSyncRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }),
+        createSyncRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }),
+      ],
+      { concurrency: 'unbounded' },
+    ).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
+    await db.flush();
+
+    expect(second?.id).toBe(first?.id);
+    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
   });
 });

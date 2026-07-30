@@ -374,6 +374,29 @@ export type OAuthFlowResult =
   | { success: false; reason: string };
 
 /**
+ * Stand-in that EDGE returns (and clients persist on the `AccessToken` object) in place of a real
+ * token for providers whose credentials EDGE custodies. The token itself is never replicated into
+ * a space; holders of this value fetch the live one from `/oauth/token` per use.
+ */
+export const MANAGED_ACCESS_TOKEN = 'dxos:managed-access-token';
+
+/** Whether a stored credential is a {@link MANAGED_ACCESS_TOKEN} placeholder rather than a usable token. */
+export const isManagedAccessToken = (token: string | undefined): boolean => token === MANAGED_ACCESS_TOKEN;
+
+/** Request for the live access token behind a {@link MANAGED_ACCESS_TOKEN} placeholder. */
+export type GetAccessTokenRequest = {
+  spaceId: SpaceId;
+  /** Id of the `AccessToken` object the grant was registered against. */
+  accessTokenId: string;
+};
+
+export type GetAccessTokenResponseBody = {
+  accessToken: string;
+  /** Server-tracked expiry, for client-side caching only. */
+  expiresAtMillis: number;
+};
+
+/**
  * Completes OAuth recovery registration for an existing identity: routes the OAuth refresh token
  * into the personal space and writes the recovery binding.
  */

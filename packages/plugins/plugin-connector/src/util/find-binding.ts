@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Filter, type Obj } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector';
+
+import { isCursorForTarget } from './cursor-predicates';
 
 /**
  * Finds the external-sync {@link Cursor} whose target is the given object (mailbox, calendar, …).
@@ -15,7 +16,7 @@ import { isCursorForTarget } from '@dxos/plugin-connector';
  *
  * `Cursor` has no reverse-ref index on `spec.target` (it's one level below a discriminated-union
  * struct field, which the typed `Query.referencedBy` key doesn't reach), so this scans every cursor
- * in the space and filters — mirrors `@dxos/plugin-connector`'s own cursor lookups.
+ * in the space and filters — mirrors this plugin's other cursor lookups.
  */
 export const findBindingForTarget = (target: Obj.Unknown) =>
   Effect.gen(function* () {

@@ -9,6 +9,9 @@ import { ConnectorCoordinator } from '#types';
 
 export const Coordinator = Capability.lazyModule(
   'ConnectorCoordinator',
-  { requires: [ClientCapabilities.Client, Capabilities.OperationInvoker], provides: [ConnectorCoordinator] },
+  {
+    requires: [ClientCapabilities.Client, Capabilities.OperationInvoker, Capabilities.ServiceResolver],
+    provides: [ConnectorCoordinator],
+  },
   () => import('./connector-coordinator'),
 );

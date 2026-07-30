@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientService } from '@dxos/client';
 import { Credential, LayerSpec } from '@dxos/compute';
-import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import { Database } from '@dxos/echo';
 import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
@@ -74,10 +74,29 @@ const DatabaseLayerSpec = LayerSpec.make(
     ),
 );
 
+/**
+ * Resolves server-custodied access tokens through EDGE. Application-scoped: the resolver's cache is
+ * keyed by token id and is worth sharing across spaces.
+ */
+const AccessTokenResolverLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Capability.Service],
+    provides: [Credential.AccessTokenResolver],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const client = yield* Capability.get(ClientCapabilities.Client);
+        return accessTokenResolverFromEdge(() => client.edge.http);
+      }).pipe(Effect.orDie),
+    ),
+);
+
 const CredentialsLayerSpec = LayerSpec.make(
   {
     affinity: 'space',
-    requires: [Database.Service],
+    requires: [Database.Service, Credential.AccessTokenResolver],
     provides: [Credential.CredentialsService],
   },
   () => credentialsLayerFromDatabase(),
@@ -125,6 +144,7 @@ export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contribute(Capabilities.LayerSpec, ClientLayerSpec),
     Capability.contribute(Capabilities.LayerSpec, DatabaseLayerSpec),
+    Capability.contribute(Capabilities.LayerSpec, AccessTokenResolverLayerSpec),
     Capability.contribute(Capabilities.LayerSpec, CredentialsLayerSpec),
     Capability.contribute(Capabilities.LayerSpec, IdentityLayerSpec),
     Capability.contribute(Capabilities.LayerSpec, SpaceLayerSpec),
