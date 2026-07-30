@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -38,6 +38,93 @@ const getThreadFallbackLabel = (root: Message.Message): string => {
   return text.length ? text : root.id;
 };
 
+/**
+ * Every thread of a channel, as a child of the channel node. Threads have no object of their own — a
+ * thread is the `threadId` partition of the feed, keyed by its root message — so the node carries a
+ * `(channel, threadId)` selection and its own article renders onto it.
+ *
+ * Only threads that exist: one someone declared (a `ThreadRoot` item) or one that already holds
+ * replies. Every root message is a *potential* thread, but treating it as one would list the whole
+ * channel here — creating a thread is a deliberate act.
+ *
+ * Exported so a test can expand the relation for real: a connector that throws takes the channel's
+ * entire `child` relation with it, which has emptied the navtree of threads twice without a failure.
+ */
+export const createChannelThreadsExtension = Effect.fnUntraced(function* () {
+  const capabilities = yield* Capability.Service;
+
+  return yield* GraphBuilder.createTypeExtension({
+    id: 'channelThreads',
+    type: Channel.Channel,
+    connector: (channel, get) =>
+      Effect.sync(() => {
+        const db = Obj.getDatabase(channel);
+        // Read the backend config through its ref atom rather than `Channel.getFeed`: the navtree
+        // expands a channel before anything has resolved that ref, and a connector that returns on an
+        // unresolved `.target` has registered no dependency to bring it back — the channel would list
+        // no threads for the rest of the session.
+        const config = channel.backend.kind === Channel.FeedBackendKind ? get(channel.backend.config.atom) : undefined;
+        const feed = Obj.instanceOf(Feed.Feed, config) ? config : undefined;
+        if (!db || !feed) {
+          return [];
+        }
+
+        const [client] = get(capabilities.atom(ClientCapabilities.Client));
+        const identity = client && get(CreateAtom.fromObservable(client.halo.identity));
+        const messages = get(db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom);
+        const declarations = get(db.query(Query.select(Filter.type(ThreadRoot.ThreadRoot)).from(feed)).atom);
+        const rootsById = new Map(selectRoots(messages).map((message) => [message.id, message]));
+
+        return (
+          [...foldThreads(messages, declarations).values()]
+            // Ordered by most recent activity, so an active thread surfaces without hunting.
+            .toSorted((left, right) => (right.lastActivity ?? '').localeCompare(left.lastActivity ?? ''))
+            .map((thread) => {
+              // Naming writes the caller's own declaration, so anyone may rename — but the write
+              // needs an identity to attribute it to and the root message to target.
+              const root = thread.root ?? rootsById.get(thread.threadId);
+
+              return Node.make({
+                id: getThreadNodeId(thread.threadId),
+                type: THREAD_NODE_TYPE,
+                data: { channel, threadId: thread.threadId } satisfies ThreadSelection,
+                properties: {
+                  label: thread.name ?? (root ? getThreadFallbackLabel(root) : thread.threadId),
+                  icon: 'ph--chats-circle--regular',
+                  // A thread reads as part of its channel, so it takes the Channel type's hue rather
+                  // than one of its own.
+                  ...(channelHue ? { iconHue: channelHue } : {}),
+                  draggable: false,
+                  droppable: false,
+                  testId: 'threadPlugin.thread',
+                },
+                actions:
+                  root && identity
+                    ? [
+                        Node.makeAction({
+                          id: 'rename-thread',
+                          data: (params?: Node.InvokeProps) =>
+                            Operation.invoke(ThreadOperation.RenameThread, {
+                              channel,
+                              message: root,
+                              creator: { identityDid: identity.did },
+                              caller: `${params?.caller}:${params?.parent?.id}`,
+                            }),
+                          properties: {
+                            label: ['rename-thread.label', { ns: meta.profile.key }],
+                            icon: 'ph--pencil-simple--regular',
+                            disposition: 'list-item',
+                          },
+                        }),
+                      ]
+                    : undefined,
+              });
+            })
+        );
+      }),
+  });
+});
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
@@ -55,78 +142,7 @@ export default Capability.makeModule(
           }),
       }),
 
-      // Every thread of a channel, as a child of the channel node. Threads have no object of their
-      // own — a thread is the `threadId` partition of the feed, keyed by its root message — so the
-      // node carries a `(channel, threadId)` selection and its own article renders onto it.
-      //
-      // Only threads that exist: one someone declared (a `ThreadRoot` item) or one that already holds
-      // replies. Every root message is a *potential* thread, but treating it as one would list the
-      // whole channel here — creating a thread is a deliberate act.
-      GraphBuilder.createTypeExtension({
-        id: 'channelThreads',
-        type: Channel.Channel,
-        connector: (channel, get) =>
-          Effect.sync(() => {
-            const db = Obj.getDatabase(channel);
-            const feed = Channel.getFeed(channel);
-            if (!db || !feed) {
-              return [];
-            }
-
-            const [client] = get(capabilities.atom(ClientCapabilities.Client));
-            const identity = client && get(CreateAtom.fromObservable(client.halo.identity));
-            const messages = get(db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom);
-            const declarations = get(db.query(Query.select(Filter.type(ThreadRoot.ThreadRoot)).from(feed)).atom);
-            const rootsById = new Map(selectRoots(messages).map((message) => [message.id, message]));
-
-            return (
-              [...foldThreads(messages, declarations).values()]
-                // Ordered by most recent activity, so an active thread surfaces without hunting.
-                .toSorted((left, right) => (right.lastActivity ?? '').localeCompare(left.lastActivity ?? ''))
-                .map((thread) => {
-                  // Naming writes the caller's own declaration, so anyone may rename — but the write
-                  // needs an identity to attribute it to and the root message to target.
-                  const root = thread.root ?? rootsById.get(thread.threadId);
-
-                  return Node.make({
-                    id: getThreadNodeId(thread.threadId),
-                    type: THREAD_NODE_TYPE,
-                    data: { channel, threadId: thread.threadId } satisfies ThreadSelection,
-                    properties: {
-                      label: thread.name ?? (root ? getThreadFallbackLabel(root) : thread.threadId),
-                      icon: 'ph--chats-circle--regular',
-                      // A thread reads as part of its channel, so it takes the Channel type's hue rather
-                      // than one of its own.
-                      ...(channelHue ? { iconHue: channelHue } : {}),
-                      draggable: false,
-                      droppable: false,
-                      testId: 'threadPlugin.thread',
-                    },
-                    actions:
-                      root && identity
-                        ? [
-                            Node.makeAction({
-                              id: 'rename-thread',
-                              data: (params?: Node.InvokeProps) =>
-                                Operation.invoke(ThreadOperation.RenameThread, {
-                                  channel,
-                                  message: root,
-                                  creator: { identityDid: identity.did },
-                                  caller: `${params?.caller}:${params?.parent?.id}`,
-                                }),
-                              properties: {
-                                label: ['rename-thread.label', { ns: meta.profile.key }],
-                                icon: 'ph--pencil-simple--regular',
-                                disposition: 'list-item',
-                              },
-                            }),
-                          ]
-                        : undefined,
-                  });
-                })
-            );
-          }),
-      }),
+      createChannelThreadsExtension(),
 
       GraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',

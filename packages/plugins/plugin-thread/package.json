@@ -126,6 +126,7 @@
     "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/app-graph": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",

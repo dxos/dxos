@@ -281,6 +281,35 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
       own decorator literal — passing the decorators themselves widens their type
       and costs `Meta`/`StoryObj` inference in the play context.
 
+### Threads stopped loading into the app graph (jdw round 6)
+
+- [x] ROOT CAUSE: the navtree expands a channel before anything has resolved its
+      `backend.config` ref, so `Channel.getFeed` returned undefined and the
+      connector returned `[]` — having registered no reactive dependency, since it
+      returned before reading a single atom. Nothing could bring it back, so that
+      channel listed no threads for the rest of the session however many landed in
+      the feed. The article survives the same race by re-rendering; a connector
+      runs once. Fixed by reading the config through `ref.atom`, which re-runs the
+      connector when the target loads.
+- [x] The connector moved out of the capability module (`createChannelThreadsExtension`)
+      so a test can expand the channel's `child` relation for real. Three
+      different faults have now emptied that relation silently — an id holding
+      `/`, a throwing connector, and this — because a connector that throws or
+      gives up takes the whole relation with it.
+- [x] Same hazard in the feed backend provider, fixed with it: `subscribeType`
+      reported an empty feed forever when subscribed before the ref resolved (a
+      plank restored at startup), and `withFeed` refused the write outright. Both
+      now wait for the config — the subscription retries on `onResolved`, the
+      write `tryLoad`s. Note refs are minted per property access, so the read and
+      the resolution callback must share one instance.
+- [x] Tests: `capabilities/app-graph-builder.test.ts` — declared, named,
+      reply-only, none, and the late-resolving ref (a second client reading the
+      channel from disk, which is the app's state). Verified the last one fails
+      against the old `Channel.getFeed` read.
+- [ ] Follow-up, out of scope here: `plugin-slack`'s sync reads
+      `Channel.getFeed` on a channel it has just resolved by foreign key, so it
+      can refuse a write for the same unresolved-ref reason.
+
 ### Message view (jdw round 3)
 
 - [x] Dropped the stray `border` on the channel's `Thread.Content` — the white
