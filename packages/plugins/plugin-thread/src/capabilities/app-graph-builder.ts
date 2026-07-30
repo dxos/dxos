@@ -3,12 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -21,9 +20,6 @@ import { getChannelsPath } from '../paths';
 import { Thread, ThreadOperation, foldThreads } from '../types';
 
 const channelTypename = Type.getTypename(Channel.Channel);
-
-/** Hue of the Channel type's icon, so a thread's icon matches the channel it belongs to. */
-const channelHue = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(Channel.Channel)))?.hue;
 
 /** The channel node, typed for the connector: `createExtension` infers its subject from the matcher. */
 const whenChannel: NodeMatcher.NodeMatcher<Channel.Channel> = (node, get) =>
@@ -86,37 +82,41 @@ export const createChannelThreadsExtension = Effect.fnUntraced(function* () {
             .flatMap((summary) => (summary.thread ? [{ ...summary, thread: summary.thread }] : []))
             // Ordered by most recent activity, so an active thread surfaces without hunting.
             .toSorted((left, right) => (right.lastActivity ?? '').localeCompare(left.lastActivity ?? ''))
-            .map(({ thread, root, lastActivity: _lastActivity }) => {
-              return Node.make({
-                id: thread.id,
-                type: Type.getTypename(Thread.Thread),
-                data: thread,
-                properties: {
-                  label: thread.name ?? (root ? getThreadFallbackLabel(root) : thread.id),
-                  icon: 'ph--chats-circle--regular',
-                  // A thread reads as part of its channel, so it takes the Channel type's hue rather
-                  // than one of its own.
-                  ...(channelHue ? { iconHue: channelHue } : {}),
-                  draggable: false,
-                  droppable: false,
-                  testId: 'threadPlugin.thread',
+            .flatMap(({ thread, root }) => {
+              // The canonical object node: label (from the type's label annotation), icon and hue
+              // (from its icon annotation), and the object-name placeholder all come from the schema.
+              const node = AppNode.makeObject({ get, db, object: thread, draggable: false, droppable: false });
+              if (!node) {
+                return [];
+              }
+
+              return [
+                {
+                  ...node,
+                  properties: {
+                    ...node.properties,
+                    // Until it is named, a thread reads as the message it branches from — the
+                    // placeholder says only that it is new.
+                    ...(thread.name?.length || !root ? {} : { label: getThreadFallbackLabel(root) }),
+                    testId: 'threadPlugin.thread',
+                  },
+                  actions: [
+                    Node.makeAction({
+                      id: 'rename-thread',
+                      data: (params?: Node.InvokeProps) =>
+                        Operation.invoke(ThreadOperation.RenameThread, {
+                          thread,
+                          caller: `${params?.caller}:${params?.parent?.id}`,
+                        }),
+                      properties: {
+                        label: ['rename-thread.label', { ns: meta.profile.key }],
+                        icon: 'ph--pencil-simple--regular',
+                        disposition: 'list-item',
+                      },
+                    }),
+                  ],
                 },
-                actions: [
-                  Node.makeAction({
-                    id: 'rename-thread',
-                    data: (params?: Node.InvokeProps) =>
-                      Operation.invoke(ThreadOperation.RenameThread, {
-                        thread,
-                        caller: `${params?.caller}:${params?.parent?.id}`,
-                      }),
-                    properties: {
-                      label: ['rename-thread.label', { ns: meta.profile.key }],
-                      icon: 'ph--pencil-simple--regular',
-                      disposition: 'list-item',
-                    },
-                  }),
-                ],
-              });
+              ];
             })
         );
       }),

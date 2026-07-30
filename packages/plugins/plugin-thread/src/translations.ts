@@ -7,11 +7,11 @@ import { type Resource } from '@dxos/react-ui';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
+import { Thread } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      // TODO(burdon): Thread.
       [Type.getTypename(Channel.Channel)]: {
         'typename.label': 'Channel',
         'typename.label_zero': 'Channels',
@@ -22,6 +22,16 @@ export const translations = [
         'rename-object.label': 'Rename channel',
         'delete-object.label': 'Delete channel',
         'object-deleted.label': 'Channel deleted',
+      },
+      [Type.getTypename(Thread.Thread)]: {
+        'typename.label': 'Thread',
+        'typename.label_zero': 'Threads',
+        'typename.label_one': 'Thread',
+        'typename.label_other': 'Threads',
+        'object-name.placeholder': 'New thread',
+        'rename-object.label': 'Rename thread',
+        'delete-object.label': 'Delete thread',
+        'object-deleted.label': 'Thread deleted',
       },
       [meta.profile.key]: {
         'plugin.name': 'Chat',

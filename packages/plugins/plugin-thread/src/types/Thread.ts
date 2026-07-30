@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Message } from '@dxos/types';
 import { type MakeOptional } from '@dxos/util';
 
@@ -24,16 +25,23 @@ import { type MakeOptional } from '@dxos/util';
  */
 export class Thread extends Type.makeObject<Thread>(DXN.make('org.dxos.chat.thread', '0.1.0'))(
   Schema.Struct({
-    /** Message the thread branches from, resolved within the same feed. */
-    target: Ref.Ref(Message.Message),
+    /** Message the thread branches from, resolved within the same feed. Set at creation, never edited. */
+    target: Ref.Ref(Message.Message).pipe(FormInputAnnotation.set(false)),
     /** Display name. (Zulip calls this a topic.) */
     name: Schema.optional(Schema.String),
     /** When the thread was created. NOTE: May differ from the object creation timestamp. */
     created: Schema.String.pipe(
       Schema.annotations({ description: 'ISO date string when the thread was created.' }),
       Annotation.GeneratorAnnotation.set('date.iso8601'),
+      FormInputAnnotation.set(false),
     ),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--chats-circle--regular', hue: 'rose' })),
+  }).pipe(
+    // The name is the thread's label, so the navtree and every other object surface read it through
+    // the canonical label path rather than through anything this plugin passes by hand.
+    LabelAnnotation.set(['name']),
+    // A thread reads as part of its channel, so it takes the same hue Channel's icon has.
+    Annotation.IconAnnotation.set({ icon: 'ph--chats-circle--regular', hue: 'rose' }),
+  ),
 ) {}
 
 export const instanceOf = (value: unknown): value is Thread => Obj.instanceOf(Thread, value);
