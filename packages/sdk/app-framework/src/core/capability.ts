@@ -176,8 +176,8 @@ export interface CapabilityIdentifier<Id extends string, A extends Arity> {
 export interface Contributions<T> {
   /**
    * Reactive atom of the current contributions, for Atom-based composition (e.g. a reactive
-   * `OperationHandlerSet`). The same atom `Capability.atom` resolves to; prefer that helper for a
-   * plain reactive read, and this when the view is already in hand.
+   * `OperationHandlerSet`). The manager memoizes one atom per capability, so this is the same
+   * instance {@link atom} returns for the same capability.
    */
   readonly atom: Atom.Atom<T[]>;
 
