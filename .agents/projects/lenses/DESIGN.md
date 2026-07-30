@@ -161,6 +161,8 @@ TypeScript.
 
 ### D3. base type + target type → **derive the mapping**. Not as inference. Yes as propose-and-verify. **Long-term.**
 
+_Whether to take it on, with a worked example and a recommendation: TASKS.md → "`Lens.generate` — decision note". This section is the why; that one is the call._
+
 Not in the proof of concept — the mappings we need are short enough to write. Recorded because bind
 mode is exactly this feature's input, so nothing here precludes it, and because the _reason_ it
 can't be fully automatic is worth stating once: the failure is structural rather than a matter of a

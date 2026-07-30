@@ -310,13 +310,86 @@ not by being planned.
 - [ ] **Migration support** — `Lens.promote(obj, lens)` draining overlay values into base properties
       that now exist, plus a policy for the window where a field is queryable for some objects and
       not others, plus retiring a lens whose mapping has collapsed to identity. Long-term.
-- [ ] **`Lens.generate(source, target)`** — propose a draft mapping from two declared schemas, with
-      unresolvable value semantics reported as typed holes rather than guessed.
+- [ ] **`Lens.generate(source, target)`** — see [the decision note](#lensgenerate--decision-note)
+      below. **Recommendation: don't take it on yet**; do "Richer source annotations" (Phase 5) first.
 - [ ] Querying _through_ a structural lens (rewrite `Filter` on lensed property names).
 - [ ] Read-only lens as a redaction/capability boundary.
 - [ ] Lens versioning when the base type migrates — including whether the target re-derives
       automatically (DESIGN.md §8.7).
 - [ ] Dropped from scope: Organization → schema.org lens.
+
+## `Lens.generate` — decision note
+
+Recorded at this length because "propose a draft mapping" reads far more valuable than it is, and the
+call turns on _when_ it pays rather than on whether it works. Rationale in DESIGN.md §3 D3; this is
+the version you can decide from.
+
+**What it is.** A scaffolding step run once, in a script, while writing a new lens — not a runtime
+feature and not part of the lens model. It takes two declared types and emits a draft mapping plus a
+list of holes: the correspondences it recovered, and the places it refuses to guess.
+
+```ts
+const draft = Lens.generate(LinearIssue, Task.Task);
+console.log(Lens.printMapping(draft));
+```
+
+```
+// 1 automatic · 1 proposed · 2 holes · 1 dropped
+Lens.make('org.dxos.lens.linear-issue-as-task', LinearIssue, Task.Task, {
+  // title — automatic (String → String, same name). Omitted on purpose.
+
+  // PROPOSED · the literal sets differ in size; 'canceled' has no target. Verify.
+  status: Lens.from('state', Lens.lookup({ backlog: 'todo', started: 'in-progress', completed: 'done' })),
+
+  // HOLE · source `priority` is a bare number 0-4; `Task.priority` is a 5-option SingleSelect.
+  //        Direction and base index are not recoverable from either schema.
+  priority: Lens.hole('priority'),
+
+  // HOLE · `estimateMinutes` and `estimate` are both plain numbers. Neither declares a unit.
+  estimate: Lens.hole('estimateMinutes'),
+})
+// Dropped from the source: assigneeEmail — Task.assigned is Ref(Person), not a string.
+```
+
+You paste it, replace the `Lens.hole(...)` markers, and run `Lens.checkLaws`. `hole` must be a real
+value that throws on `get`, so an unfilled draft fails loudly instead of silently overlaying.
+
+**The value is the split, not the codegen.** Three buckets, and only the middle one costs a human
+anything: recovered for free (identity, renames, identical enum sets — `compatible()` already
+computes this); proposed-but-flagged (an ordered `SingleSelect` option list makes an ordinal map
+plausible, never certain); and holes. A property with _no_ counterpart is silent — it falls through
+to overlay and that is correct. A property with a _plausible_ counterpart whose value mapping cannot
+be inferred must stay an unfilled hole, or it silently overlays and drifts.
+
+**What it can never do**, so nobody re-litigates it: recover value semantics. Nothing in either
+schema says `done === (status === 'done')` rather than `status !== 'todo'`, or that
+`estimate` is minutes. Those two are precisely the interesting content of the Task lens — a useful
+reality check on how much generation can carry.
+
+**Accepting a proposal is only safe because verification is mechanical.** `checkLaws` over instances
+built from the source type's own `GeneratorAnnotation`s (`createProps` in `@dxos/schema/testing`);
+`Task` annotates every property, so it is property-based verification with zero fixtures. A wrong
+`lookup` direction fails there, immediately.
+
+### When to take it on
+
+**Not for one lens.** `GtdLens` is ~15 lines; generating it saves maybe eight. Take it on when the
+count does:
+
+- a connector package with a dozen-plus foreign types to map onto canonical ones (the
+  "External-protocol lenses" backlog item above is the trigger to watch);
+- a migration lensing many types onto their successor shape;
+- an agent authoring lenses — the holes _are_ the prompt (names, `title`s, descriptions are the
+  hints), and panproto already ships an MCP server aimed at this.
+
+**Cost.** Moderate and mostly not novel: mapping resolution and compatibility already exist
+(`lens/mapping.ts`), and panproto ships a `lens generate` for the structural half. The new work is
+the hole vocabulary, the printer, and generator-driven `checkLaws`.
+
+**Do this first instead.** "Richer source annotations" (Phase 5) — starting with units — is what
+would move `estimate` out of the hole bucket entirely, and it pays off in forms, agents, and
+validation whether or not generation is ever built. Building the generator against today's
+annotations mostly produces a tool that reports holes we could have removed at the source.
 
 ## References
 

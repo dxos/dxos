@@ -341,7 +341,10 @@ What is implemented, and what is not:
 Deliberately out of scope, recorded so the shape doesn't preclude them:
 
 - **Generation** — `Lens.generate(source, target)` proposing a draft mapping from two schemas, with
-  unresolvable value semantics reported as typed holes rather than guessed.
+  unresolvable value semantics reported as typed holes rather than guessed. A build-time scaffolding
+  step, not a runtime feature; it pays only once many types need mapping at once. Worked example and
+  the recommendation against taking it on yet: the "`Lens.generate` — decision note" in the project's
+  TASKS.md.
 - **Migration support** — `Lens.promote(obj, lens)` draining overlay values into base properties that
   now exist, plus a policy for the window where a field is queryable for some objects and not others.
 - **Query integration** — `db.query(...).lens(L)` as post-query mapping.
