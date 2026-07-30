@@ -348,6 +348,8 @@ export type MessageReactionsProps = {
   quickReactions?: readonly string[];
   /** Toggles the local identity's reaction. */
   onReact: (emoji: string) => void;
+  /** The message's UI state, which the add-reaction pill opens the picker through. */
+  state: Atom.Writable<MessageState>;
 };
 
 /**
@@ -359,11 +361,7 @@ export type MessageReactionsProps = {
  * is the common move once a row exists, and it should not cost a trip back to the hover toolbar. A
  * message with none carries no pills at all, so adding the first one stays a hover control.
  */
-const MessageReactions = ({
-  reactions,
-  onReact,
-  state,
-}: Omit<MessageReactionsProps, 'quickReactions'> & { state: Atom.Writable<MessageState> }) => {
+const MessageReactions = ({ reactions, onReact, state }: Omit<MessageReactionsProps, 'quickReactions'>) => {
   const { t } = useTranslation(translationKey);
   const { picking } = useAtomValue(state);
   const setState = useAtomSet(state);
@@ -411,6 +409,8 @@ const MessageReactions = ({
   );
 };
 
+MessageReactions.displayName = 'Message.Reactions';
+
 /**
  * The full emoji picker in a popover, positioned against whatever the caller passes as its anchor or
  * trigger — the hover toolbar or a message's reaction row. Escape closes it here rather than falling
@@ -452,8 +452,6 @@ const ReactionPicker = ({
     </Popover.Portal>
   </Popover.Root>
 );
-
-MessageReactions.displayName = 'Message.Reactions';
 
 //
 // Controls
