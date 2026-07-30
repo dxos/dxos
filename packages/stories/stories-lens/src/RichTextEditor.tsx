@@ -263,7 +263,7 @@ export const BlockList = ({ text }: { text: Obj.Unknown }) => {
   const [snapshot] = useObject(text);
 
   return (
-    <Card.Root>
+    <Card.Root fullWidth border={false}>
       <Card.Section title='stored markdown'>
         <Card.Row fullWidth>
           <Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='raw-content'>

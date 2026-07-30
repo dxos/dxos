@@ -196,7 +196,7 @@ export const RawInspector = ({ task }: { task: Obj.Unknown }) => {
 
   return (
     <DemoPanel label='Raw object' testId='inspector-panel'>
-      <Card.Root>
+      <Card.Root fullWidth border={false}>
         <Card.Section title='typename'>
           <Card.Row fullWidth>
             <Card.Text data-testid='inspector-typename'>{Obj.getTypename(task)}</Card.Text>
