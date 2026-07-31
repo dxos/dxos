@@ -2,6 +2,40 @@
 // Copyright 2025 DXOS.org
 //
 
+//
+// The plugin manager owns two loosely-coupled areas, both served by `ManagerImpl`:
+//
+// 1. The plugin catalog — add/remove/enable/disable, lazy plugin resolution, dev-plugin
+//    shadowing, and the declared-dependency closure (`getDependencies`/`getDependents`).
+//
+// 2. The activation scheduler — deciding when each module's `activate` runs. Its model:
+//
+//    - Dependency-mode modules activate in ROUNDS. A round collects candidates, indexes
+//      singleton providers (duplicates error out), runs a satisfiability fixpoint (pends
+//      anything whose provider is not in play), orders survivors into topological WAVES
+//      (hard edges = singleton requires; soft edges = multi requires, best-effort so
+//      same-round contributions are visible to one-shot snapshot reads), and executes
+//      wave by wave. The pure graph math lives in `activation-graph.ts`.
+//      Cascade rounds re-run with an open candidate pool until nothing new is runnable.
+//
+//    - Event-mode modules park until their `activatesOn` event fires (`_activateEvent`),
+//      then activate as an event wave. Inactive dependency-mode providers of their
+//      requires are pulled on demand first (`_pullDependencyProviders`).
+//
+//    - Module loads are MEMOIZED (`_moduleMemoMap`: id -> Deferred). Every activation path
+//      converges on `_loadModule`; concurrent paths await the same deferred. Contribution
+//      to the capability registry (`_contributeCapabilities`) is idempotent per module.
+//
+//    - Rounds RUN CONCURRENTLY (e.g. the startup graph and an event fired mid-startup).
+//      A provider mid-load in one round is invisible to another round's ordering, so
+//      `_settleInflightMultiProviders` awaits in-flight multi providers before a module's
+//      activate runs — the cross-round complement to same-round soft edges.
+//
+//    - Failures are STRUCTURAL, not fatal: missing/duplicate providers and cycles put the
+//      owning plugin into an error state (`failed` atom) and exclude its modules; everything
+//      independent proceeds. Per-module failures skip transitive dependents only.
+//
+
 import { Atom, Registry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
@@ -20,6 +54,7 @@ import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import * as ActivationEvent from './activation-event';
+import * as ActivationGraph from './activation-graph';
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
 import {
@@ -519,6 +554,10 @@ class ManagerImpl implements PluginManager {
     return entry?.shadow;
   }
 
+  //
+  // Plugin catalog — dependency closure, add / enable / remove / disable, dev plugins.
+  //
+
   getDependencies(id: string, opts?: { transitive?: boolean }): readonly string[] {
     const transitive = opts?.transitive !== false;
     if (!transitive) {
@@ -921,6 +960,10 @@ class ManagerImpl implements PluginManager {
     });
   }
 
+  //
+  // Lifecycle — start / activate / deactivate / reset / shutdown.
+  //
+
   start(): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       if (yield* this._isShuttingDown()) {
@@ -1162,6 +1205,10 @@ class ManagerImpl implements PluginManager {
 
   //
   // State helpers
+  //
+
+  //
+  // State helpers and bookkeeping.
   //
 
   private _get<T>(atom: Atom.Atom<T>): T {
@@ -1481,6 +1528,10 @@ class ManagerImpl implements PluginManager {
   // Activation helpers
   //
 
+  //
+  // Activation scheduler — event path, dependency rounds, on-demand pulls.
+  //
+
   private _activateEvent(
     key: string,
     params: { before?: string; after?: string } | undefined,
@@ -1754,104 +1805,74 @@ class ManagerImpl implements PluginManager {
       const anyRegisteredProvider = (identifier: string): boolean =>
         allModules.some((module) => module.activation.provides.some((provided) => provided.identifier === identifier));
 
-      // Satisfiability fixpoint: a candidate is runnable when every unsatisfied singleton
-      // require is provided by another runnable candidate. Everything else pends for a later
-      // cascade round (e.g. providers gated on an event that has not fired yet). Requires with
-      // no possible provider at all are a configuration error recorded against the requiring
-      // plugin.
-      const runnable = new Map(
-        candidates.filter((module) => !structurallyExcluded.has(module.id)).map((module) => [module.id, module]),
-      );
-      let changed = true;
-      while (changed) {
-        changed = false;
-        for (const module of [...runnable.values()]) {
-          for (const capability of module.activation.requires) {
-            if (capability.arity === 'multi' || this.capabilities.getAll(capability).length > 0) {
-              continue;
-            }
-            const provider = providerIndex.get(capability.identifier);
-            if (provider !== undefined && (runnable.has(provider) || active.includes(provider))) {
-              // Ordered within this round, or active (an active provider whose capability
-              // was conditionally skipped resolves via the bounded waitFor bridge).
-              continue;
-            }
-            if (provider === undefined && !anyRegisteredProvider(capability.identifier)) {
-              yield* this._reportStructuralError(
-                [module.id],
-                new MissingProviderError({
-                  capability: capability.identifier,
-                  requiredBy: [module.id],
-                  registered: this.capabilities.listRegisteredIdentifiers(),
-                }),
-              );
-              this._structurallyFailed.add(module.id);
-            }
-            // A provider exists but is not in play (event not fired, module pending in a
-            // different chain, plugin disabled): pend until a cascade round unlocks it.
-            log('module pending on capability', { module: module.id, capability: capability.identifier });
-            runnable.delete(module.id);
-            changed = true;
-            break;
-          }
-        }
+      // Satisfiability fixpoint (pure): everything that pends here is reconsidered by a later
+      // cascade round; requires with no possible provider at all are a configuration error
+      // recorded against the requiring plugin.
+      const { runnable, missing, pended } = ActivationGraph.computeRunnableFixpoint({
+        candidates,
+        excluded: structurallyExcluded,
+        isSatisfied: (capability) => this.capabilities.getAll(capability).length > 0,
+        providerOf: (identifier) => providerIndex.get(identifier),
+        activeIds: active,
+        anyRegisteredProvider,
+      });
+      for (const pend of pended) {
+        log('module pending on capability', { module: pend.module.id, capability: pend.capability });
       }
-      const roundModules = [...runnable.values()];
-      if (roundModules.length === 0) {
+      for (const miss of missing) {
+        yield* this._reportStructuralError(
+          [miss.module.id],
+          new MissingProviderError({
+            capability: miss.capability,
+            requiredBy: [miss.module.id],
+            registered: this.capabilities.listRegisteredIdentifiers(),
+          }),
+        );
+        this._structurallyFailed.add(miss.module.id);
+      }
+      if (runnable.length === 0) {
         return undefined;
       }
-      roundModules.forEach((module) => this._pendingReactivate.delete(module.id));
+      runnable.forEach((module) => this._pendingReactivate.delete(module.id));
 
-      // Multi-capability providers among the round (soft edges only).
-      const multiProviders = new Map<string, string[]>();
-      for (const module of roundModules) {
-        for (const capability of module.activation.provides) {
-          if (capability.arity === 'multi') {
-            const providers = multiProviders.get(capability.identifier) ?? [];
-            providers.push(module.id);
-            multiProviders.set(capability.identifier, providers);
-          }
-        }
+      const runnableIds = new Set(runnable.map((module) => module.id));
+      const { hard: hardEdges, soft: softEdges } = ActivationGraph.buildRoundEdges(runnable, {
+        isSatisfied: (capability) => this.capabilities.getAll(capability).length > 0,
+        providerOf: (identifier) => providerIndex.get(identifier),
+        runnableIds,
+      });
+
+      const ordered = yield* this._orderRoundBreakingCycles(runnable, hardEdges, softEdges);
+      if (ordered === undefined) {
+        return undefined;
       }
+      const { waves, cycleFailed } = ordered;
+      log('dependency activation waves', {
+        waves: waves.map((wave) => wave.map((module) => module.id)),
+      });
 
-      // Edges are provider -> consumer, labelled with the capability identifier.
-      const hardEdges = new Map<string, Map<string, string>>();
-      const softEdges = new Map<string, Map<string, string>>();
-      const addEdge = (edges: Map<string, Map<string, string>>, from: string, to: string, capability: string) => {
-        const targets = edges.get(from) ?? new Map<string, string>();
-        targets.set(to, capability);
-        edges.set(from, targets);
-      };
-      for (const module of roundModules) {
-        for (const capability of module.activation.requires) {
-          if (capability.arity === 'multi') {
-            // Multi capabilities never gate; the soft edge is a best-effort ordering so
-            // same-round providers are visible to one-shot snapshot reads.
-            for (const provider of multiProviders.get(capability.identifier) ?? []) {
-              if (provider !== module.id) {
-                addEdge(softEdges, provider, module.id, capability.identifier);
-              }
-            }
-            continue;
-          }
-          if (this.capabilities.getAll(capability).length > 0) {
-            continue;
-          }
-          const provider = providerIndex.get(capability.identifier);
-          if (provider !== undefined && runnable.has(provider)) {
-            addEdge(hardEdges, provider, module.id, capability.identifier);
-          }
-        }
-      }
+      return yield* this._executeWaves(waves, hardEdges, cycleFailed, key);
+    });
+  }
 
-      // Cycles within the round: record an error state on the involved plugins, exclude
-      // the cycle members (their dependents skip via the failed set below), and continue
-      // with the rest. Repeats until the remaining graph is acyclic.
+  /**
+   * Orders a round's modules into activation waves, repeatedly excising hard-edge cycles
+   * (recorded as an error state on the involved plugins; their dependents skip via the failed
+   * set) until the remaining graph is acyclic. Soft edges are then merged best-effort: if they
+   * cycle, the round falls back to hard-edge order wholesale. Returns `undefined` when nothing
+   * survives cycle excision.
+   */
+  private _orderRoundBreakingCycles(
+    roundModules: Plugin.PluginModule[],
+    hardEdges: ActivationGraph.EdgeMap,
+    softEdges: ActivationGraph.EdgeMap,
+  ): Effect.Effect<{ waves: Plugin.PluginModule[][]; cycleFailed: Set<string> } | undefined, Error> {
+    return Effect.gen(this, function* () {
       const cycleFailed = new Set<string>();
       let runnableModules = roundModules;
-      let hardWaves = computeActivationWaves(runnableModules, hardEdges);
+      let hardWaves = ActivationGraph.computeActivationWaves(runnableModules, hardEdges);
       while (hardWaves === undefined) {
-        const path = findCyclePath(runnableModules, hardEdges);
+        const path = ActivationGraph.findCyclePath(runnableModules, hardEdges);
         yield* this._reportStructuralError(
           path.map((entry) => entry.module),
           new DependencyCycleError({ path }),
@@ -1865,29 +1886,32 @@ class ManagerImpl implements PluginManager {
         if (runnableModules.length === 0) {
           return undefined;
         }
-        hardWaves = computeActivationWaves(runnableModules, hardEdges);
+        hardWaves = ActivationGraph.computeActivationWaves(runnableModules, hardEdges);
       }
-      const combinedEdges = new Map(hardEdges);
-      for (const [from, targets] of softEdges) {
-        const merged = new Map(combinedEdges.get(from) ?? []);
-        targets.forEach((capability, to) => merged.set(to, capability));
-        combinedEdges.set(from, merged);
-      }
-      // Soft edges are best-effort: if they cycle, fall back to hard-edge order wholesale.
-      const combinedWaves = computeActivationWaves(runnableModules, combinedEdges);
+
+      const combinedEdges = ActivationGraph.mergeEdges(hardEdges, softEdges);
+      const combinedWaves = ActivationGraph.computeActivationWaves(runnableModules, combinedEdges);
       if (combinedWaves === undefined && softEdges.size > 0) {
         log('multi-capability soft ordering dropped (cycle)', { modules: runnableModules.map((module) => module.id) });
       }
-      const waves = combinedWaves ?? hardWaves;
+      return { waves: combinedWaves ?? hardWaves, cycleFailed };
+    });
+  }
 
-      log('dependency activation waves', {
-        waves: waves.map((wave) => wave.map((module) => module.id)),
-      });
-
-      // A module whose provider failed is skipped (its requires can never resolve) and
-      // marked failed so its own dependents skip too. Independent modules proceed.
-      // Cycle members count as failed so their dependents skip as well.
-      const failed = new Set<string>(cycleFailed);
+  /**
+   * Activates a round wave by wave (modules within a wave run concurrently). A module whose
+   * hard-edge provider failed is skipped and marked failed so its own dependents skip too;
+   * independent modules proceed. Cycle members arrive pre-failed so their dependents skip as
+   * well. Returns whether every module in the round activated.
+   */
+  private _executeWaves(
+    waves: Plugin.PluginModule[][],
+    hardEdges: ActivationGraph.EdgeMap,
+    preFailed: Set<string>,
+    key: string,
+  ): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
+      const failed = new Set<string>(preFailed);
       const providersOf = (moduleId: string): string[] => {
         const providers: string[] = [];
         for (const [from, targets] of hardEdges) {
@@ -1956,7 +1980,9 @@ class ManagerImpl implements PluginManager {
         }
       }
     }
-    return computeActivationWaves(modules, edges) === undefined ? findCyclePath(modules, edges) : undefined;
+    return ActivationGraph.computeActivationWaves(modules, edges) === undefined
+      ? ActivationGraph.findCyclePath(modules, edges)
+      : undefined;
   }
 
   /**
@@ -2153,6 +2179,10 @@ class ManagerImpl implements PluginManager {
   // Module lifecycle helpers
   //
 
+  //
+  // Module load pipeline — memoized load, validation, contribution, deactivation.
+  //
+
   private _getModuleSemaphore(moduleId: Plugin.PluginModule['id']): Effect.Semaphore {
     let semaphore = this._moduleSemaphores.get(moduleId);
     if (!semaphore) {
@@ -2185,121 +2215,15 @@ class ManagerImpl implements PluginManager {
         this._moduleMemoMap.set(module.id, deferred);
 
         const scope = yield* Scope.make();
-        const loadEffect = Effect.gen(this, function* () {
-          log('loading module', { module: module.id, parentEvent });
-          performance.mark(`module:${module.id}:start`);
-          yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activating', module: module.id });
-          const pluginId = this._getPluginIdForModule(module.id);
-          yield* this._settleInflightMultiProviders(module);
-          const requiresContext = yield* this._resolveRequires(module);
-          const [duration, capabilities] = yield* module.activate().pipe(
-            Effect.provide(requiresContext),
-            Effect.provideService(Capability.Service, this.capabilities),
-            Effect.provideService(Plugin.Service, this),
-            Scope.extend(scope),
-            // Cap activation so a single misbehaving module can't hold the
-            // event chain open. On timeout the failure is recorded against
-            // the plugin and surfaced as `PluginTimeoutError`.
-            Effect.timeoutFail({
-              duration: this._activationTimeout,
-              onTimeout: () =>
-                new PluginTimeoutError({
-                  context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
-                }),
-            }),
-            Effect.timed,
-          );
-          const normalized = CapabilityManager.normalizeActivateResult(capabilities);
-
-          // Runtime provides validation (the authoritative check; the type-level one is
-          // best-effort). Validated on the raw items so an empty provideAll still counts
-          // as covering its capability. Undeclared contributions fail (they would bypass
-          // dependency ordering); missing ones only warn — a provider may legitimately
-          // decide at runtime not to contribute (consumers then surface a bounded
-          // CapabilityNotFoundError instead of silently proceeding).
-          const declared = new Set(module.activation.provides.map((capability) => capability.identifier));
-          const returned = new Set(
-            normalized.map((item) =>
-              CapabilityManager.isContribution(item) ? item.capability.identifier : item.interface.identifier,
-            ),
-          );
-          const missing = [...declared].filter((identifier) => !returned.has(identifier));
-          const undeclared = [...returned].filter((identifier) => !declared.has(identifier));
-          if (undeclared.length > 0) {
-            return yield* Effect.fail(new ProvidesMismatchError({ module: module.id, missing, undeclared }));
-          }
-          if (missing.length > 0) {
-            log.warn('module did not contribute all declared capabilities', { module: module.id, missing });
-          }
-
-          this._moduleScopes.set(module.id, scope);
-          const elapsed = Duration.toMillis(duration);
-          performance.mark(`module:${module.id}:end`);
-          performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
-          yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activated', module: module.id });
-          log('loaded module', {
-            module: module.id,
-            parentEvent,
-            elapsed,
-            failed: false,
-          });
-          return CapabilityManager.expandContributions(normalized);
-        }).pipe(
-          Effect.tapErrorCause(() => Scope.close(scope, Exit.void)),
-          Effect.withSpan('PluginManager._loadModule'),
-          together(
-            Effect.sleep(Duration.seconds(10)).pipe(
-              Effect.andThen(
-                Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: module.id })),
-              ),
-            ),
-          ),
-          Performance.addTrackEntry({
-            name: module.id,
-            devtools: {
-              dataType: 'track-entry',
-              track: 'Module Activation',
-              trackGroup: 'Composer',
-              color: 'primary',
-            },
-          }),
-        );
 
         // Fork the load to run in background, completing the deferred when done.
         const fiber = yield* Effect.forkDaemon(
-          loadEffect.pipe(
+          this._runModuleActivation(module, parentEvent, scope).pipe(
             Effect.tap((result) => Deferred.succeed(deferred, result)),
             Effect.catchAllCause((cause) =>
-              Effect.gen(this, function* () {
-                const error = Cause.squash(cause);
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                const missingCapability =
-                  error instanceof CapabilityNotFoundError ? error.context.identifier : undefined;
-                log.error('module failed to activate', {
-                  module: module.id,
-                  parentEvent,
-                  missingCapability,
-                  registeredCapabilities: this.capabilities.listRegisteredIdentifiers(),
-                  error: errorMessage,
-                  stack: error instanceof Error ? error.stack : undefined,
-                  isDefect: !Cause.isFailure(cause),
-                });
-                const normalizedError = error instanceof Error ? error : new Error(String(error));
-                const pluginId = this._getPluginIdForModule(module.id);
-                if (pluginId !== undefined) {
-                  this._recordFailure(pluginId, 'activation', normalizedError);
-                  this._scheduleAutoDisable(pluginId);
-                }
-                // Symmetric with the 'activating'/'activated' messages published above so boot
-                // UIs subscribed to `activation` observe a failed module, not just a silent stall.
-                yield* PubSub.publish(this.activation, {
-                  event: parentEvent,
-                  state: 'error',
-                  module: module.id,
-                  error: normalizedError,
-                });
-                return yield* Deferred.fail(deferred, normalizedError);
-              }),
+              this._recordModuleActivationFailure(module, parentEvent, cause).pipe(
+                Effect.flatMap((error) => Deferred.fail(deferred, error)),
+              ),
             ),
           ),
         );
@@ -2314,6 +2238,147 @@ class ManagerImpl implements PluginManager {
       // Wait for result outside the semaphore so multiple waiters can proceed concurrently.
       return yield* Deferred.await(deferredToAwait);
     });
+
+  /**
+   * The activation pipeline for one module: settle in-flight multi providers, build the
+   * requires context, run the module's activate under the activation timeout, validate the
+   * result against the declared provides, and expand it to registry entries. Instrumented
+   * with a span, a slow-activation warning, and a devtools track entry.
+   */
+  private _runModuleActivation(
+    module: Plugin.PluginModule,
+    parentEvent: string,
+    scope: Scope.CloseableScope,
+  ): Effect.Effect<Capability.Any[], Error> {
+    return Effect.gen(this, function* () {
+      log('loading module', { module: module.id, parentEvent });
+      performance.mark(`module:${module.id}:start`);
+      yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activating', module: module.id });
+      const pluginId = this._getPluginIdForModule(module.id);
+      yield* this._settleInflightMultiProviders(module);
+      const requiresContext = yield* this._resolveRequires(module);
+      const [duration, capabilities] = yield* module.activate().pipe(
+        Effect.provide(requiresContext),
+        Effect.provideService(Capability.Service, this.capabilities),
+        Effect.provideService(Plugin.Service, this),
+        Scope.extend(scope),
+        // Cap activation so a single misbehaving module can't hold the
+        // event chain open. On timeout the failure is recorded against
+        // the plugin and surfaced as `PluginTimeoutError`.
+        Effect.timeoutFail({
+          duration: this._activationTimeout,
+          onTimeout: () =>
+            new PluginTimeoutError({
+              context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
+            }),
+        }),
+        Effect.timed,
+      );
+      const normalized = CapabilityManager.normalizeActivateResult(capabilities);
+      yield* this._validateProvides(module, normalized);
+
+      this._moduleScopes.set(module.id, scope);
+      const elapsed = Duration.toMillis(duration);
+      performance.mark(`module:${module.id}:end`);
+      performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
+      yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activated', module: module.id });
+      log('loaded module', {
+        module: module.id,
+        parentEvent,
+        elapsed,
+        failed: false,
+      });
+      return CapabilityManager.expandContributions(normalized);
+    }).pipe(
+      Effect.tapErrorCause(() => Scope.close(scope, Exit.void)),
+      Effect.withSpan('PluginManager._loadModule'),
+      together(
+        Effect.sleep(Duration.seconds(10)).pipe(
+          Effect.andThen(
+            Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: module.id })),
+          ),
+        ),
+      ),
+      Performance.addTrackEntry({
+        name: module.id,
+        devtools: {
+          dataType: 'track-entry',
+          track: 'Module Activation',
+          trackGroup: 'Composer',
+          color: 'primary',
+        },
+      }),
+    );
+  }
+
+  /**
+   * Runtime provides validation (the authoritative check; the type-level one is best-effort).
+   * Validated on the raw items so an empty provideAll still counts as covering its capability.
+   * Undeclared contributions fail (they would bypass dependency ordering); missing ones only
+   * warn — a provider may legitimately decide at runtime not to contribute (consumers then
+   * surface a bounded CapabilityNotFoundError instead of silently proceeding).
+   */
+  private _validateProvides(
+    module: Plugin.PluginModule,
+    normalized: Array<Capability.Any | Capability.AnyContribution>,
+  ): Effect.Effect<void, ProvidesMismatchError> {
+    const declared = new Set(module.activation.provides.map((capability) => capability.identifier));
+    const returned = new Set(
+      normalized.map((item) =>
+        CapabilityManager.isContribution(item) ? item.capability.identifier : item.interface.identifier,
+      ),
+    );
+    const missing = [...declared].filter((identifier) => !returned.has(identifier));
+    const undeclared = [...returned].filter((identifier) => !declared.has(identifier));
+    if (undeclared.length > 0) {
+      return Effect.fail(new ProvidesMismatchError({ module: module.id, missing, undeclared }));
+    }
+    if (missing.length > 0) {
+      log.warn('module did not contribute all declared capabilities', { module: module.id, missing });
+    }
+    return Effect.void;
+  }
+
+  /**
+   * Failure bookkeeping for a module whose activation failed or died: logs the cause, records
+   * the failure against the owning plugin (scheduling auto-disable), and publishes an error
+   * activation message — symmetric with the 'activating'/'activated' messages so boot UIs
+   * observe a failed module, not just a silent stall. Returns the normalized error for the
+   * caller to fail the memoized deferred with.
+   */
+  private _recordModuleActivationFailure(
+    module: Plugin.PluginModule,
+    parentEvent: string,
+    cause: Cause.Cause<Error>,
+  ): Effect.Effect<Error> {
+    return Effect.gen(this, function* () {
+      const error = Cause.squash(cause);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const missingCapability = error instanceof CapabilityNotFoundError ? error.context.identifier : undefined;
+      log.error('module failed to activate', {
+        module: module.id,
+        parentEvent,
+        missingCapability,
+        registeredCapabilities: this.capabilities.listRegisteredIdentifiers(),
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
+        isDefect: !Cause.isFailure(cause),
+      });
+      const normalizedError = error instanceof Error ? error : new Error(String(error));
+      const pluginId = this._getPluginIdForModule(module.id);
+      if (pluginId !== undefined) {
+        this._recordFailure(pluginId, 'activation', normalizedError);
+        this._scheduleAutoDisable(pluginId);
+      }
+      yield* PubSub.publish(this.activation, {
+        event: parentEvent,
+        state: 'error',
+        module: module.id,
+        error: normalizedError,
+      });
+      return normalizedError;
+    });
+  }
 
   private _contributeCapabilities(
     module: Plugin.PluginModule,
@@ -2401,92 +2466,3 @@ const together =
       yield* Fiber.interrupt(togetherFiber);
       return result;
     });
-
-/**
- * Kahn's algorithm over the capability graph, returning topological activation waves
- * (modules in the same wave have no edges among them and activate concurrently).
- * Returns `undefined` when the graph is cyclic.
- * Edges are provider -> consumer maps labelled with the capability identifier.
- */
-const computeActivationWaves = (
-  modules: readonly Plugin.PluginModule[],
-  edges: ReadonlyMap<string, ReadonlyMap<string, string>>,
-): Plugin.PluginModule[][] | undefined => {
-  const byId = new Map(modules.map((module) => [module.id, module]));
-  const inDegree = new Map(modules.map((module) => [module.id, 0]));
-  for (const [from, targets] of edges) {
-    if (!byId.has(from)) {
-      continue;
-    }
-    for (const to of targets.keys()) {
-      if (inDegree.has(to)) {
-        inDegree.set(to, (inDegree.get(to) ?? 0) + 1);
-      }
-    }
-  }
-
-  const waves: Plugin.PluginModule[][] = [];
-  let visited = 0;
-  let frontier = modules.filter((module) => (inDegree.get(module.id) ?? 0) === 0);
-  while (frontier.length > 0) {
-    waves.push([...frontier]);
-    visited += frontier.length;
-    const next: Plugin.PluginModule[] = [];
-    for (const module of frontier) {
-      for (const to of edges.get(module.id)?.keys() ?? []) {
-        if (!inDegree.has(to)) {
-          continue;
-        }
-        const remaining = (inDegree.get(to) ?? 0) - 1;
-        inDegree.set(to, remaining);
-        if (remaining === 0) {
-          const target = byId.get(to);
-          if (target) {
-            next.push(target);
-          }
-        }
-      }
-    }
-    frontier = next;
-  }
-  return visited === modules.length ? waves : undefined;
-};
-
-/**
- * Finds one cycle in the capability graph for diagnostics: each entry is a module and the
- * capability identifier on its outgoing edge within the cycle.
- */
-const findCyclePath = (
-  modules: readonly Plugin.PluginModule[],
-  edges: ReadonlyMap<string, ReadonlyMap<string, string>>,
-): Array<{ module: string; capability: string }> => {
-  const state = new Map<string, 'visiting' | 'done'>();
-  let cycle: Array<{ module: string; capability: string }> = [];
-
-  const visit = (id: string, stack: Array<{ module: string; capability: string }>): boolean => {
-    state.set(id, 'visiting');
-    for (const [to, capability] of edges.get(id) ?? []) {
-      if (state.get(to) === 'done') {
-        continue;
-      }
-      const entry = { module: id, capability };
-      if (state.get(to) === 'visiting') {
-        const start = stack.findIndex((frame) => frame.module === to);
-        cycle = [...stack.slice(start === -1 ? 0 : start), entry];
-        return true;
-      }
-      if (visit(to, [...stack, entry])) {
-        return true;
-      }
-    }
-    state.set(id, 'done');
-    return false;
-  };
-
-  for (const module of modules) {
-    if (!state.has(module.id) && visit(module.id, [])) {
-      break;
-    }
-  }
-  return cycle;
-};
