@@ -149,7 +149,9 @@ test.describe.serial('Startup timing harness', () => {
       await primerPage.getByTestId('spacePlugin.addSpace').click();
       await primerPage.getByTestId('spacePlugin.createSpace').click();
       await primerPage.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
-      await primerPage.getByTestId('spacePlugin.createObject').first().click();
+      // Scope to the visible workspace: with two spaces the page-wide `.first()` can resolve to
+      // the hidden Personal-space button, and the click waits on it forever.
+      await primerPage.getByTestId('navtree.workspace.visible').getByTestId('spacePlugin.createObject').first().click();
       await primerPage.getByRole('listbox').getByText('Document').first().click();
       const objectForm = primerPage.getByTestId('create-object-form');
       if (await objectForm.isVisible()) {

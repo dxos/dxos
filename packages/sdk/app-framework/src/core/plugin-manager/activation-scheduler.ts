@@ -131,11 +131,16 @@ export class ActivationScheduler {
         return false;
       }
 
+      // Dispatch-latency split: `requested` → `initialized` is registration wait; `initialized`
+      // → the wave's `event:` measure is provider-join wait (in-flight round-1 loads).
+      performance.mark(`milestone:dispatch:${key}:requested`);
+
       // Wait for the constructor's core/enabled `enable()` chain — including
       // any async dynamic imports for lazy plugins — to finish registering
       // modules. Without this, dispatching to an empty module set is the
       // observable symptom of the race.
       yield* Deferred.await(this.#state.initialized);
+      performance.mark(`milestone:dispatch:${key}:initialized`);
 
       return yield* Effect.withFiberRuntime<boolean, Error, Plugin.Service>((fiber) =>
         this.#activateEvent(key, params, fiber).pipe(
