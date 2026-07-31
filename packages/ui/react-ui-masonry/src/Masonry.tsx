@@ -200,7 +200,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // `maxColumnWidth` and centres them, so no scrollbar/padding math is duplicated here.
     const gapPx = gap * remInPx;
     const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
-    const { rects, columnWidth, height, getTileRef, nodes, measured, measuredIds } = useMasonryLayout({
+    const { rects, columnWidth, height, getTileRef, nodes, measured, knownIds } = useMasonryLayout({
       ids,
       columnCount,
       containerWidth: contentWidth,
@@ -215,14 +215,32 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // poster reserves height a frame later), so the first pass stacks them bunched at the top and
     // only settles over the next few reflows. Debounce on `rects` identity — which changes on every
     // relayout — and reveal once it has been stable for a beat, with a hard deadline as a backstop.
+    //
+    // None of that applies when every tile's height was already known on the first pass (the height
+    // cache is warm from an earlier mount): the layout is final before paint, so waiting for it to
+    // settle would just be a delay. That is the common case after the first visit.
     const [revealed, setRevealed] = useState(false);
+    const firstPass = useRef(true);
     useEffect(() => {
-      if (revealed || !measured) {
+      if (revealed) {
+        return;
+      }
+      // Nothing has been laid out until the viewport reports a width, so this does not count as the
+      // first pass — consuming it here would forfeit the fast path on every mount.
+      if (contentWidth <= 0) {
+        return;
+      }
+      if (!measured) {
+        firstPass.current = false;
+        return;
+      }
+      if (firstPass.current) {
+        setRevealed(true);
         return;
       }
       const timer = setTimeout(() => setRevealed(true), REVEAL_SETTLE_MS);
       return () => clearTimeout(timer);
-    }, [revealed, measured, rects]);
+    }, [revealed, measured, rects, contentWidth]);
     useEffect(() => {
       const deadline = setTimeout(() => setRevealed(true), REVEAL_DEADLINE_MS);
       return () => clearTimeout(deadline);
@@ -267,11 +285,12 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
               const rect = rects[index];
               const selectable = !!onSelect;
               const selected = selectedIds?.has(id) ?? false;
-              // A tile still on the height estimate is positioned by a guess. Once the grid is
-              // revealed the estimate is painted, so swapping the item set wholesale (paging through
-              // duplicate groups) flashed a tile hundreds of pixels out of place before settling.
+              // A tile with no height at all — never measured, nothing remembered — is positioned by
+              // a guess. Painting that guess is what flashed a tile hundreds of pixels out of place
+              // when the item set was swapped wholesale. A remembered height from another width is
+              // close enough to paint, so a resize reflows in place instead of blanking.
               // `visibility` rather than `display`, so the ResizeObserver can still measure it.
-              const estimated = !measuredIds.has(id);
+              const estimated = !knownIds.has(id);
               return (
                 <div
                   key={id}
