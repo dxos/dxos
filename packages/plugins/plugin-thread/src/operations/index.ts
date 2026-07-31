@@ -4,7 +4,9 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const ThreadOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./append-channel-message'),
-  () => import('./create-channel'),
-);
+import { ThreadOperation } from '../types';
+
+export const ThreadOperationHandlerSet = OperationHandlerSet.keyed([
+  [ThreadOperation.AppendChannelMessage, () => import('./append-channel-message')],
+  [ThreadOperation.CreateChannel, () => import('./create-channel')],
+]);

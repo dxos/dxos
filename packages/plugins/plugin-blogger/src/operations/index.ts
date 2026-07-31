@@ -4,10 +4,14 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
+import { SyncPosts } from './definitions';
+import { AddPublication } from './definitions';
+import { AddPost } from './definitions';
+
 export * as BloggerOperation from './definitions';
 
-export const BloggerOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-post'),
-  () => import('./add-publication'),
-  () => import('./sync-posts'),
-);
+export const BloggerOperationHandlerSet = OperationHandlerSet.keyed([
+  [AddPost, () => import('./add-post')],
+  [AddPublication, () => import('./add-publication')],
+  [SyncPosts, () => import('./sync-posts')],
+]);

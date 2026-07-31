@@ -4,13 +4,16 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const SupportOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./capture-feedback'),
-  () => import('./create-ticket'),
-  () => import('./hide-welcome'),
-  () => import('./mark-in-progress'),
-  () => import('./on-create-space'),
-  () => import('./resolve-ticket'),
-  () => import('./search-docs'),
-  () => import('./start'),
-);
+import { SupportOperation } from '#types';
+import { HelpOperation } from '#types';
+
+export const SupportOperationHandlerSet = OperationHandlerSet.keyed([
+  [SupportOperation.CaptureUserFeedback, () => import('./capture-feedback')],
+  [SupportOperation.CreateTicket, () => import('./create-ticket')],
+  [HelpOperation.HideWelcome, () => import('./hide-welcome')],
+  [SupportOperation.MarkInProgress, () => import('./mark-in-progress')],
+  [SupportOperation.OnCreateSpace, () => import('./on-create-space')],
+  [SupportOperation.ResolveTicket, () => import('./resolve-ticket')],
+  [SupportOperation.SearchDocs, () => import('./search-docs')],
+  [HelpOperation.Start, () => import('./start')],
+]);

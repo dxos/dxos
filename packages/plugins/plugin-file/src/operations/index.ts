@@ -4,7 +4,9 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const FileOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create'),
-  () => import('./read'),
-);
+import { FileOperation } from '../types';
+
+export const FileOperationHandlerSet = OperationHandlerSet.keyed([
+  [FileOperation.Create, () => import('./create')],
+  [FileOperation.Read, () => import('./read')],
+]);

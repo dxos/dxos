@@ -78,6 +78,11 @@ const OperationHandlerProviderSpec = LayerSpec.make(
           [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
           getHandlers: () => currentSet().getHandlers(),
           handlers: Effect.suspend(() => currentSet().handlers),
+          // Per-operation resolution: keyed contributions load only the matched operation.
+          getHandlerFor: async (key) => {
+            const set = currentSet();
+            return set.getHandlerFor ? set.getHandlerFor(key) : undefined;
+          },
         };
         return OperationHandlerSet.provide(liveSet);
       }),
@@ -121,18 +126,25 @@ const OpaqueToolkitSpec = LayerSpec.make(
 
 const OperationsToRegistrySpec = LayerSpec.make(
   {
+    // OperationHandlerProvider stays in requires for ordering: its materialization runs the
+    // demand pull that activates policy-parked handler modules before definitions are read.
     affinity: 'space',
-    requires: [Registry.Service, OperationHandlerSet.OperationHandlerProvider],
+    requires: [Registry.Service, OperationHandlerSet.OperationHandlerProvider, Capability.Service],
     provides: [Registry.Service],
   },
   () =>
     Layer.effect(
       Registry.Service,
       Effect.gen(function* () {
-        const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+        const capabilities = yield* Capability.Service;
         const registry = yield* Registry.Service;
-        const handlers = yield* handlerSet.handlers;
-        registry.add(handlers.map(Operation.serialize));
+        // Registration needs only the definitions: keyed sets enumerate them without loading
+        // any handler body; unkeyed sets still force their own handlers (per-set, not global).
+        const sets = capabilities.getAll(Capabilities.OperationHandler);
+        const sources = yield* Effect.promise(() =>
+          Promise.all(sets.map((set) => (set.definitions ? set.definitions() : set.getHandlers()))),
+        );
+        registry.add(sources.flat().map(Operation.serialize));
         return registry;
       }),
     ),

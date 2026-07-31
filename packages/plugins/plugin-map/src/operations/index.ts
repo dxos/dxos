@@ -4,4 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const MapOperationHandlerSet = OperationHandlerSet.lazy(() => import('./toggle'));
+import { MapOperation } from '../types';
+
+export const MapOperationHandlerSet = OperationHandlerSet.keyed([[MapOperation.Toggle, () => import('./toggle')]]);

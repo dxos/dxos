@@ -4,9 +4,11 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const IllustratorOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create'),
-  () => import('./edit'),
-  () => import('./generate'),
-  () => import('./read'),
-);
+import { DrawingOperation } from '../types';
+
+export const IllustratorOperationHandlerSet = OperationHandlerSet.keyed([
+  [DrawingOperation.Create, () => import('./create')],
+  [DrawingOperation.Edit, () => import('./edit')],
+  [DrawingOperation.Generate, () => import('./generate')],
+  [DrawingOperation.Read, () => import('./read')],
+]);

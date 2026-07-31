@@ -4,7 +4,9 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const OutlinerOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create-outline'),
-  () => import('./quick-entry'),
-);
+import { OutlineOperation } from '../types';
+
+export const OutlinerOperationHandlerSet = OperationHandlerSet.keyed([
+  [OutlineOperation.CreateOutline, () => import('./create-outline')],
+  [OutlineOperation.QuickJournalEntry, () => import('./quick-entry')],
+]);

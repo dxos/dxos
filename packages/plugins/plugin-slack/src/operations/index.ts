@@ -4,8 +4,10 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const SlackOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./get-slack-channels'),
-  () => import('./materialize-target'),
-  () => import('./sync'),
-);
+import { SlackOperation } from '../types';
+
+export const SlackOperationHandlerSet = OperationHandlerSet.keyed([
+  [SlackOperation.GetSlackChannels, () => import('./get-slack-channels')],
+  [SlackOperation.MaterializeSlackTarget, () => import('./materialize-target')],
+  [SlackOperation.SyncSlackChannel, () => import('./sync')],
+]);

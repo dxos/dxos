@@ -4,4 +4,8 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const SearchOperationHandlerSet = OperationHandlerSet.lazy(() => import('./open-search'));
+import { SearchOperation } from '../types';
+
+export const SearchOperationHandlerSet = OperationHandlerSet.keyed([
+  [SearchOperation.OpenSearch, () => import('./open-search')],
+]);

@@ -4,13 +4,15 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
+import { IbkrOperation } from '../types';
+
 /** Combined handler set for all IBKR operations; provided to the Composer operation registry. */
-export const IbkrOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./sync-portfolio'),
-  () => import('./import-portfolio'),
-  () => import('./get-portfolio'),
-  () => import('./get-trades'),
-  () => import('./materialize-instrument'),
-  () => import('./get-instrument-fundamentals'),
-  () => import('./sync-lots'),
-);
+export const IbkrOperationHandlerSet = OperationHandlerSet.keyed([
+  [IbkrOperation.SyncPortfolioReport, () => import('./sync-portfolio')],
+  [IbkrOperation.ImportPortfolioReport, () => import('./import-portfolio')],
+  [IbkrOperation.GetPortfolio, () => import('./get-portfolio')],
+  [IbkrOperation.GetTrades, () => import('./get-trades')],
+  [IbkrOperation.MaterializeInstrument, () => import('./materialize-instrument')],
+  [IbkrOperation.GetInstrumentFundamentals, () => import('./get-instrument-fundamentals')],
+  [IbkrOperation.SyncLots, () => import('./sync-lots')],
+]);

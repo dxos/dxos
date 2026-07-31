@@ -4,8 +4,10 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const TicTacToeOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./move'),
-  () => import('./ai-move'),
-  () => import('./print'),
-);
+import { TicTacToeOperation } from '../types';
+
+export const TicTacToeOperationHandlerSet = OperationHandlerSet.keyed([
+  [TicTacToeOperation.MakeMove, () => import('./move')],
+  [TicTacToeOperation.AiMove, () => import('./ai-move')],
+  [TicTacToeOperation.Print, () => import('./print')],
+]);

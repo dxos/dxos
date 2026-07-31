@@ -4,8 +4,10 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const ProjectOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create-chat'),
-  () => import('./create-project'),
-  () => import('./create-routine'),
-);
+import { ProjectOperation } from '#types';
+
+export const ProjectOperationHandlerSet = OperationHandlerSet.keyed([
+  [ProjectOperation.CreateChat, () => import('./create-chat')],
+  [ProjectOperation.Create, () => import('./create-project')],
+  [ProjectOperation.CreateRoutine, () => import('./create-routine')],
+]);

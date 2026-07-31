@@ -4,7 +4,9 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const ObservabilityOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./send-event'),
-  () => import('./toggle'),
-);
+import { ObservabilityOperation } from '../types';
+
+export const ObservabilityOperationHandlerSet = OperationHandlerSet.keyed([
+  [ObservabilityOperation.SendEvent, () => import('./send-event')],
+  [ObservabilityOperation.Toggle, () => import('./toggle')],
+]);

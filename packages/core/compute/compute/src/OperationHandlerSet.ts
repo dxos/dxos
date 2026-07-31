@@ -28,6 +28,21 @@ export interface OperationHandlerSet {
   getHandlers(): Promise<Operation.WithHandler<Operation.Definition.Any>[]>;
 
   /**
+   * The operation definitions this set can resolve, enumerable WITHOUT loading handler bodies.
+   * Implemented by {@link keyed} sets (and compositions of them); consumers that only need
+   * definitions (registry mirrors, pickers) read this instead of forcing {@link handlers}.
+   */
+  definitions?(): readonly Operation.Definition.Any[];
+
+  /**
+   * Resolves a single operation's handler, loading only that operation's module — the
+   * per-operation counterpart to the load-everything {@link handlers}. Resolves `undefined` when
+   * the key is not in this set. Implemented by {@link keyed} sets and their compositions;
+   * {@link getHandler}/{@link getHandlerByKey} prefer this path when present.
+   */
+  getHandlerFor?(key: string): Promise<Operation.WithHandler<Operation.Definition.Any> | undefined>;
+
+  /**
    * Optional demand hook consulted by {@link getHandler}/{@link getHandlerByKey} when a lookup
    * misses: given the operation key, attempt to make the handler available (e.g. activate the
    * plugin module that would contribute it) and resolve `true` if the set may have changed.
@@ -35,6 +50,12 @@ export interface OperationHandlerSet {
    */
   resolveMissing?(key: string): Promise<boolean>;
 }
+
+/**
+ * Normalizes an operation key to a plain NSID so callers can pass either a ToolId (plain NSID)
+ * or a full DXN string.
+ */
+const normalizeKey = (key: string): string => (DXN.isDXN(key) ? DXN.getName(key) : key);
 
 export const isOperationHandlerSet = (value: unknown): value is OperationHandlerSet => {
   return typeof value === 'object' && value !== null && TypeId in value;
@@ -113,6 +134,9 @@ export const reactive = (
     [TypeId]: TypeId,
     getHandlers,
     handlers: Effect.promise(getHandlers),
+    // Per-operation resolution over the CURRENT contributed sets: keyed contributions load only
+    // the matched operation's module; the load-everything paths above stay for enumerators.
+    getHandlerFor: (key) => resolveFromSets(registry.get(atom), key),
   };
 };
 
@@ -132,6 +156,8 @@ export const withResolver = (
     [TypeId]: TypeId,
     getHandlers: () => set.getHandlers(),
     handlers: set.handlers,
+    ...(set.definitions ? { definitions: () => set.definitions!() } : {}),
+    ...(set.getHandlerFor ? { getHandlerFor: (key: string) => set.getHandlerFor!(key) } : {}),
     resolveMissing: (key: string) => {
       let attempt = attempts.get(key);
       if (!attempt) {
@@ -144,16 +170,25 @@ export const withResolver = (
 };
 
 /**
- * Merges multiple operation handler sets into a single set.
- *
+ * Merges multiple operation handler sets into a single set. Per-operation resolution
+ * ({@link OperationHandlerSet.getHandlerFor}) composes across the children; enumerating
+ * {@link OperationHandlerSet.handlers} still forces every child.
  */
 export const merge = (...sets: OperationHandlerSet[]): OperationHandlerSet => {
   assertArgument(sets.every(isOperationHandlerSet), 'sets', 'sets must be an array of OperationHandlerSet');
-  return async(() => Promise.all(sets.map((set) => set.getHandlers())).then((handlers) => handlers.flat()));
+  const base = async(() => Promise.all(sets.map((set) => set.getHandlers())).then((handlers) => handlers.flat()));
+  return {
+    ...base,
+    getHandlerFor: (key) => resolveFromSets(sets, key),
+    ...(sets.every((set) => set.definitions) ? { definitions: () => sets.flatMap((set) => set.definitions!()) } : {}),
+  };
 };
 
 /**
  * Creates a new operation handler set from a list of lazy-loaded modules.
+ *
+ * Prefer {@link keyed}: an unkeyed lazy set can only answer a lookup by importing EVERY module,
+ * so one invocation loads the whole plugin's handlers.
  *
  * @example
  * ```ts
@@ -169,30 +204,108 @@ export const lazy = (
   return async(() => Promise.all(modules.map((module) => module().then(({ default: handler }) => handler))));
 };
 
+/** A {@link keyed} entry: the (statically imported, lightweight) definition + its handler module. */
+export type KeyedEntry = readonly [
+  definition: Operation.Definition.Any,
+  load: () => Promise<{ default: Operation.WithHandler<Operation.Definition.Any> }>,
+];
+
 /**
- * Finds a handler in the set; on a miss, consults the set's optional {@link
- * OperationHandlerSet.resolveMissing} demand hook once and re-reads before giving up.
+ * Creates a handler set keyed by operation definition: definitions are enumerable without
+ * loading any handler body, and resolving an operation imports only that operation's module —
+ * per-operation loading instead of per-plugin. Loaded handlers are cached per key.
+ *
+ * @example
+ * ```ts
+ * const set = OperationHandlerSet.keyed([
+ *   [MarkdownOperation.Create, () => import('./create')],
+ *   [MarkdownOperation.Open, () => import('./open')],
+ * ]);
+ * ```
+ */
+export const keyed = (entries: readonly KeyedEntry[]): OperationHandlerSet => {
+  const loaded = new Map<string, Promise<Operation.WithHandler<Operation.Definition.Any>>>();
+  const loadEntry = ([definition, load]: KeyedEntry): Promise<Operation.WithHandler<Operation.Definition.Any>> => {
+    const key = normalizeKey(definition.meta.key);
+    let promise = loaded.get(key);
+    if (!promise) {
+      promise = load().then(({ default: handler }) => handler);
+      loaded.set(key, promise);
+    }
+    return promise;
+  };
+  const getHandlers = () => Promise.all(entries.map(loadEntry));
+  return {
+    [TypeId]: TypeId,
+    definitions: () => entries.map(([definition]) => definition),
+    getHandlerFor: (key) => {
+      const normalized = normalizeKey(key);
+      const entry = entries.find(([definition]) => normalizeKey(definition.meta.key) === normalized);
+      return entry ? loadEntry(entry) : Promise.resolve(undefined);
+    },
+    getHandlers,
+    handlers: Effect.promise(getHandlers),
+  };
+};
+
+/**
+ * Per-operation resolution across a list of sets: keyed sets answer from their index; unkeyed
+ * sets are forced (their whole handler list loads) only when no keyed set matched first — so
+ * per-operation granularity degrades per-set, not globally, during migration to {@link keyed}.
+ */
+const resolveFromSets = async (
+  sets: readonly OperationHandlerSet[],
+  key: string,
+): Promise<Operation.WithHandler<Operation.Definition.Any> | undefined> => {
+  const normalized = normalizeKey(key);
+  for (const set of sets) {
+    if (set.getHandlerFor) {
+      const handler = await set.getHandlerFor(key);
+      if (handler) {
+        return handler;
+      }
+    }
+  }
+  for (const set of sets) {
+    if (!set.getHandlerFor) {
+      const handlers = await set.getHandlers();
+      const handler = handlers.find((entry) => normalizeKey(entry.meta.key) === normalized);
+      if (handler) {
+        return handler;
+      }
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Finds a handler in the set. Sets implementing {@link OperationHandlerSet.getHandlerFor}
+ * resolve per-operation (only the matched handler's module loads); others force the full list.
+ * On a miss, the set's optional {@link OperationHandlerSet.resolveMissing} demand hook runs once
+ * and the lookup retries before giving up.
  */
 const lookup = (
   set: OperationHandlerSet,
   key: string,
   match: (handler: Operation.WithHandler<Operation.Definition.Any>) => boolean,
-): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> =>
-  Effect.gen(function* () {
-    const handlers = yield* set.handlers;
-    const handler = handlers.find(match);
+): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> => {
+  const attempt = set.getHandlerFor
+    ? Effect.promise(() => set.getHandlerFor!(key))
+    : Effect.map(set.handlers, (handlers) => handlers.find(match));
+  return Effect.gen(function* () {
+    const handler = yield* attempt;
     if (handler) {
       return handler;
     }
     if (set.resolveMissing && (yield* Effect.promise(() => set.resolveMissing!(key)))) {
-      const refreshed = yield* set.handlers;
-      const late = refreshed.find(match);
+      const late = yield* attempt;
       if (late) {
         return late;
       }
     }
     return yield* Effect.fail(new NoHandlerError(key));
   });
+};
 
 /**
  * Gets a handler for an operation by definition.

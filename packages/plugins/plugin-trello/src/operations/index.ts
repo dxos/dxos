@@ -4,8 +4,10 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const TrelloOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./get-trello-boards'),
-  () => import('./materialize-target'),
-  () => import('./sync'),
-);
+import { TrelloOperation } from '../types';
+
+export const TrelloOperationHandlerSet = OperationHandlerSet.keyed([
+  [TrelloOperation.GetTrelloBoards, () => import('./get-trello-boards')],
+  [TrelloOperation.MaterializeTrelloTarget, () => import('./materialize-target')],
+  [TrelloOperation.SyncTrelloBoard, () => import('./sync')],
+]);

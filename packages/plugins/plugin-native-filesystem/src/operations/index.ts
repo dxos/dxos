@@ -4,8 +4,10 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const NativeFilesystemOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./open-directory'),
-  () => import('./close-directory'),
-  () => import('./refresh-directory'),
-);
+import { NativeFilesystemOperation } from '../types';
+
+export const NativeFilesystemOperationHandlerSet = OperationHandlerSet.keyed([
+  [NativeFilesystemOperation.OpenDirectory, () => import('./open-directory')],
+  [NativeFilesystemOperation.CloseDirectory, () => import('./close-directory')],
+  [NativeFilesystemOperation.RefreshDirectory, () => import('./refresh-directory')],
+]);

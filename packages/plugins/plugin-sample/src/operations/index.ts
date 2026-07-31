@@ -3,14 +3,16 @@
 //
 
 // Operations barrel export.
-// `OperationHandlerSet.lazy` registers handler modules for lazy loading.
+// `OperationHandlerSet.keyed` pairs each (lightweight) operation definition with its handler
+// module; the framework loads exactly the invoked operation's module on demand.
 // Each module must `export default` a handler created with `Operation.withHandler`.
-// The framework loads handlers on demand when an operation is invoked.
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const SampleOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create-sample-item'),
-  () => import('./randomize'),
-  () => import('./update-status'),
-);
+import { SampleOperation } from '../types';
+
+export const SampleOperationHandlerSet = OperationHandlerSet.keyed([
+  [SampleOperation.CreateSampleItem, () => import('./create-sample-item')],
+  [SampleOperation.Randomize, () => import('./randomize')],
+  [SampleOperation.UpdateStatus, () => import('./update-status')],
+]);

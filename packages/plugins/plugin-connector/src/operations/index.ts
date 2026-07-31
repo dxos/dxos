@@ -4,7 +4,9 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const ConnectorOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create-connection'),
-  () => import('./sync-connection'),
-);
+import { ConnectorOperation } from '../types';
+
+export const ConnectorOperationHandlerSet = OperationHandlerSet.keyed([
+  [ConnectorOperation.CreateConnection, () => import('./create-connection')],
+  [ConnectorOperation.SyncConnection, () => import('./sync-connection')],
+]);

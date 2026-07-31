@@ -4,7 +4,9 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const ChessComOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./sync-games'),
-  () => import('./clear-synced-games'),
-);
+import { ChessComOperation } from '../types';
+
+export const ChessComOperationHandlerSet = OperationHandlerSet.keyed([
+  [ChessComOperation.SyncGames, () => import('./sync-games')],
+  [ChessComOperation.ClearSyncedGames, () => import('./clear-synced-games')],
+]);

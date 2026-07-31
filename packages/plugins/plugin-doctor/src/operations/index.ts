@@ -4,4 +4,8 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const DoctorOperationHandlerSet = OperationHandlerSet.lazy(() => import('./query-composer-logs'));
+import { DoctorOperation } from '../types';
+
+export const DoctorOperationHandlerSet = OperationHandlerSet.keyed([
+  [DoctorOperation.QueryComposerLogs, () => import('./query-composer-logs')],
+]);

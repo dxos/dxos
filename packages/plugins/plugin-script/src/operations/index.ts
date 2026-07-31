@@ -4,4 +4,8 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const ScriptOperationHandlerSet = OperationHandlerSet.lazy(() => import('./create-script'));
+import { ScriptOperation } from '../types';
+
+export const ScriptOperationHandlerSet = OperationHandlerSet.keyed([
+  [ScriptOperation.CreateScript, () => import('./create-script')],
+]);

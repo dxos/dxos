@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const TestingOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-toast'),
-  () => import('./close'),
-  () => import('./open'),
-  () => import('./scroll-into-view'),
-  () => import('./switch-workspace'),
-  () => import('./update-complementary'),
-  () => import('./update-dialog'),
-  () => import('./update-popover'),
-  () => import('./update-sidebar'),
-);
+export const TestingOperationHandlerSet = OperationHandlerSet.keyed([
+  [LayoutOperation.AddToast, () => import('./add-toast')],
+  [LayoutOperation.Close, () => import('./close')],
+  [LayoutOperation.Open, () => import('./open')],
+  [LayoutOperation.ScrollIntoView, () => import('./scroll-into-view')],
+  [LayoutOperation.SwitchWorkspace, () => import('./switch-workspace')],
+  [LayoutOperation.UpdateComplementary, () => import('./update-complementary')],
+  [LayoutOperation.UpdateDialog, () => import('./update-dialog')],
+  [LayoutOperation.UpdatePopover, () => import('./update-popover')],
+  [LayoutOperation.UpdateSidebar, () => import('./update-sidebar')],
+]);

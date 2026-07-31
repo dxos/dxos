@@ -66,7 +66,11 @@ export default Capability.makeModule(
       operationHandlersAtom,
       async (handlerSets) => {
         try {
-          const handlers = (await Promise.all(handlerSets.map((set) => set.getHandlers()))).flat();
+          // Serialization needs only the definitions: keyed sets enumerate them without loading
+          // any handler body (per-operation loading); unkeyed sets still force their handlers.
+          const handlers = (
+            await Promise.all(handlerSets.map((set) => (set.definitions ? set.definitions() : set.getHandlers())))
+          ).flat();
           const seenKeys = new Set<string>();
           const batch: Operation.PersistentOperation[] = [];
           for (const handler of handlers) {

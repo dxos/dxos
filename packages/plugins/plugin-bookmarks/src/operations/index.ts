@@ -4,7 +4,9 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const BookmarkOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-from-snapshot'),
-  () => import('./summarize'),
-);
+import { BookmarkOperation } from '#types';
+
+export const BookmarkOperationHandlerSet = OperationHandlerSet.keyed([
+  [BookmarkOperation.AddFromSnapshot, () => import('./add-from-snapshot')],
+  [BookmarkOperation.Summarize, () => import('./summarize')],
+]);

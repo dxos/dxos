@@ -4,8 +4,10 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const CrxOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-person-from-snapshot'),
-  () => import('./add-organization-from-snapshot'),
-  () => import('./add-note-from-snapshot'),
-);
+import { CrxOperation } from '#types';
+
+export const CrxOperationHandlerSet = OperationHandlerSet.keyed([
+  [CrxOperation.AddPersonFromSnapshot, () => import('./add-person-from-snapshot')],
+  [CrxOperation.AddOrganizationFromSnapshot, () => import('./add-organization-from-snapshot')],
+  [CrxOperation.AddNoteFromSnapshot, () => import('./add-note-from-snapshot')],
+]);

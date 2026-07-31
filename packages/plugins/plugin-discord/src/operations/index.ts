@@ -4,9 +4,11 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const DiscordOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./get-discord-channels'),
-  () => import('./materialize-target'),
-  () => import('./sync'),
-  () => import('./crawl'),
-);
+import { DiscordOperation } from '../types';
+
+export const DiscordOperationHandlerSet = OperationHandlerSet.keyed([
+  [DiscordOperation.GetDiscordChannels, () => import('./get-discord-channels')],
+  [DiscordOperation.MaterializeDiscordTarget, () => import('./materialize-target')],
+  [DiscordOperation.SyncDiscordChannel, () => import('./sync')],
+  [DiscordOperation.CrawlDiscordChannels, () => import('./crawl')],
+]);

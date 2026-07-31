@@ -2,9 +2,11 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const TableOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-row'),
-  () => import('./create'),
-  () => import('./export-rows'),
-  () => import('./on-schema-added'),
-);
+import { TableOperation } from '../types';
+
+export const TableOperationHandlerSet = OperationHandlerSet.keyed([
+  [TableOperation.AddRow, () => import('./add-row')],
+  [TableOperation.Create, () => import('./create')],
+  [TableOperation.ExportRows, () => import('./export-rows')],
+  [TableOperation.OnTypeAdded, () => import('./on-schema-added')],
+]);

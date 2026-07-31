@@ -4,10 +4,14 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const BlueskyHandlers = OperationHandlerSet.lazy(
-  () => import('./get-bluesky-targets'),
-  () => import('./materialize-target'),
-  () => import('./sync'),
-);
+import { SyncBlueskyTargets } from './definitions';
+import { MaterializeBlueskyTarget } from './definitions';
+import { GetBlueskyTargets } from './definitions';
+
+export const BlueskyHandlers = OperationHandlerSet.keyed([
+  [GetBlueskyTargets, () => import('./get-bluesky-targets')],
+  [MaterializeBlueskyTarget, () => import('./materialize-target')],
+  [SyncBlueskyTargets, () => import('./sync')],
+]);
 
 export * as BlueskyOperation from './definitions';

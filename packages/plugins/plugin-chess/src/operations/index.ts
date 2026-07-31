@@ -4,9 +4,11 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const ChessOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./move'),
-  () => import('./play'),
-  () => import('./print'),
-  () => import('./rebuild-position-index'),
-);
+import { ChessOperation } from '../types';
+
+export const ChessOperationHandlerSet = OperationHandlerSet.keyed([
+  [ChessOperation.Move, () => import('./move')],
+  [ChessOperation.Play, () => import('./play')],
+  [ChessOperation.Print, () => import('./print')],
+  [ChessOperation.RebuildPositionIndex, () => import('./rebuild-position-index')],
+]);

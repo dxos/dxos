@@ -4,13 +4,18 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
+import { RoutingOperation } from '#types';
+
+import { TripOperation } from '../types';
+import { BookingOperation } from '../types';
+
 export * from './extractor';
 
-export const TripOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./extractor/trip-extractor'),
-  () => import('./merge-trip'),
-  () => import('./plan-route'),
-  () => import('./search-bookings'),
-  () => import('./create-trip-from-events'),
-  () => import('./add-segment'),
-);
+export const TripOperationHandlerSet = OperationHandlerSet.keyed([
+  [TripOperation.ExtractTrip, () => import('./extractor/trip-extractor')],
+  [TripOperation.MergeTrip, () => import('./merge-trip')],
+  [RoutingOperation.PlanRoute, () => import('./plan-route')],
+  [BookingOperation.SearchBookings, () => import('./search-bookings')],
+  [TripOperation.CreateTripFromEvents, () => import('./create-trip-from-events')],
+  [TripOperation.AddSegment, () => import('./add-segment')],
+]);

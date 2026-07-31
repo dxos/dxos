@@ -4,9 +4,11 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const VoxelOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-voxels'),
-  () => import('./generate-shape'),
-  () => import('./query-world'),
-  () => import('./remove-voxels'),
-);
+import { VoxelOperation } from '../types';
+
+export const VoxelOperationHandlerSet = OperationHandlerSet.keyed([
+  [VoxelOperation.AddVoxels, () => import('./add-voxels')],
+  [VoxelOperation.GenerateShape, () => import('./generate-shape')],
+  [VoxelOperation.QueryWorld, () => import('./query-world')],
+  [VoxelOperation.RemoveVoxels, () => import('./remove-voxels')],
+]);

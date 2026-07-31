@@ -4,11 +4,13 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const SearchOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./render-page'),
-  () => import('./run-search'),
-  () => import('./run-provider-search'),
-  () => import('./analyze-provider'),
-  () => import('./set-provider-template'),
-  () => import('./generate-provider-template'),
-);
+import { SearchOperation } from '../types';
+
+export const SearchOperationHandlerSet = OperationHandlerSet.keyed([
+  [SearchOperation.RenderPage, () => import('./render-page')],
+  [SearchOperation.RunSearch, () => import('./run-search')],
+  [SearchOperation.RunProviderSearch, () => import('./run-provider-search')],
+  [SearchOperation.AnalyzeProvider, () => import('./analyze-provider')],
+  [SearchOperation.SetProviderTemplate, () => import('./set-provider-template')],
+  [SearchOperation.GenerateProviderTemplate, () => import('./generate-provider-template')],
+]);

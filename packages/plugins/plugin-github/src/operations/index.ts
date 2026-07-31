@@ -4,8 +4,10 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const GitHubOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./get-repositories'),
-  () => import('./materialize-target'),
-  () => import('./sync'),
-);
+import { GitHubOperation } from '../types';
+
+export const GitHubOperationHandlerSet = OperationHandlerSet.keyed([
+  [GitHubOperation.GetGitHubRepositories, () => import('./get-repositories')],
+  [GitHubOperation.MaterializeGitHubTarget, () => import('./materialize-target')],
+  [GitHubOperation.SyncGitHubRepositories, () => import('./sync')],
+]);

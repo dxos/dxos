@@ -2,21 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
+import { CollaborationOperation } from '@dxos/app-toolkit';
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const MarkdownOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./accept-change'),
-  () => import('./create'),
-  () => import('./create-branch'),
-  () => import('./create-checkpoint'),
-  () => import('./create-markdown'),
-  () => import('./get-history'),
-  () => import('./get-selection'),
-  () => import('./merge-branch'),
-  () => import('./open'),
-  () => import('./reject-change'),
-  () => import('./restore-text'),
-  () => import('./scroll-to-anchor'),
-  () => import('./suggest-edit'),
-  () => import('./update-markdown'),
-);
+import { MarkdownOperation } from '../types';
+
+export const MarkdownOperationHandlerSet = OperationHandlerSet.keyed([
+  [CollaborationOperation.AcceptChange, () => import('./accept-change')],
+  [MarkdownOperation.Create, () => import('./create')],
+  [MarkdownOperation.CreateBranch, () => import('./create-branch')],
+  [MarkdownOperation.CreateCheckpoint, () => import('./create-checkpoint')],
+  [MarkdownOperation.CreateMarkdown, () => import('./create-markdown')],
+  [MarkdownOperation.GetHistory, () => import('./get-history')],
+  [MarkdownOperation.GetSelection, () => import('./get-selection')],
+  [MarkdownOperation.MergeBranch, () => import('./merge-branch')],
+  [MarkdownOperation.Open, () => import('./open')],
+  [CollaborationOperation.RejectChange, () => import('./reject-change')],
+  [CollaborationOperation.RestoreText, () => import('./restore-text')],
+  [MarkdownOperation.ScrollToAnchor, () => import('./scroll-to-anchor')],
+  [MarkdownOperation.SuggestEdit, () => import('./suggest-edit')],
+  [MarkdownOperation.Update, () => import('./update-markdown')],
+]);

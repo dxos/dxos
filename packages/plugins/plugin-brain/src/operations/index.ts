@@ -3,9 +3,12 @@
 //
 
 import { OperationHandlerSet } from '@dxos/compute';
+import { InboxOperation } from '@dxos/plugin-inbox/types';
 
-export const BrainOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./query-facts'),
-  () => import('./summarize-subject'),
-  () => import('./generate-reply'),
-);
+import { BrainOperation } from '#types';
+
+export const BrainOperationHandlerSet = OperationHandlerSet.keyed([
+  [BrainOperation.QueryFacts, () => import('./query-facts')],
+  [BrainOperation.SummarizeSubject, () => import('./summarize-subject')],
+  [InboxOperation.GenerateReply, () => import('./generate-reply')],
+]);

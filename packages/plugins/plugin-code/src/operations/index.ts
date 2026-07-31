@@ -4,16 +4,18 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const CodeOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./verify-spec'),
-  () => import('./run-build-agent'),
-  () => import('./list-files'),
-  () => import('./read-file'),
-  () => import('./write-file'),
-  () => import('./delete-file'),
-  () => import('./scaffold-project'),
-  () => import('./hello-world'),
-  () => import('./reset-project'),
-  () => import('./build-project'),
-  () => import('./run-build'),
-);
+import { CodeOperation } from '../types';
+
+export const CodeOperationHandlerSet = OperationHandlerSet.keyed([
+  [CodeOperation.VerifySpec, () => import('./verify-spec')],
+  [CodeOperation.RunBuildAgent, () => import('./run-build-agent')],
+  [CodeOperation.ListFiles, () => import('./list-files')],
+  [CodeOperation.ReadFile, () => import('./read-file')],
+  [CodeOperation.WriteFile, () => import('./write-file')],
+  [CodeOperation.DeleteFile, () => import('./delete-file')],
+  [CodeOperation.ScaffoldProject, () => import('./scaffold-project')],
+  [CodeOperation.HelloWorld, () => import('./hello-world')],
+  [CodeOperation.ResetProject, () => import('./reset-project')],
+  [CodeOperation.BuildProject, () => import('./build-project')],
+  [CodeOperation.RunBuild, () => import('./run-build')],
+]);

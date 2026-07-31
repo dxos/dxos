@@ -4,20 +4,33 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
+import { UpdateProfile } from './definitions';
+import { ShareIdentity } from './definitions';
+import { ResetStorage } from './definitions';
+import { RedeemToken } from './definitions';
+import { RedeemPasskey } from './definitions';
+import { RecoverIdentity } from './definitions';
+import { OpenUsage } from './definitions';
+import { JoinIdentity } from './definitions';
+import { CreateRecoveryCode } from './definitions';
+import { CreatePasskey } from './definitions';
+import { CreateIdentity } from './definitions';
+import { CreateAgent } from './definitions';
+
 export * as ClientOperation from './definitions';
 export * from './errors';
 
-export const ClientOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create-agent'),
-  () => import('./create-identity'),
-  () => import('./create-passkey'),
-  () => import('./create-recovery-code'),
-  () => import('./join-identity'),
-  () => import('./open-usage'),
-  () => import('./recover-identity'),
-  () => import('./redeem-passkey'),
-  () => import('./redeem-token'),
-  () => import('./reset-storage'),
-  () => import('./share-identity'),
-  () => import('./update-profile'),
-);
+export const ClientOperationHandlerSet = OperationHandlerSet.keyed([
+  [CreateAgent, () => import('./create-agent')],
+  [CreateIdentity, () => import('./create-identity')],
+  [CreatePasskey, () => import('./create-passkey')],
+  [CreateRecoveryCode, () => import('./create-recovery-code')],
+  [JoinIdentity, () => import('./join-identity')],
+  [OpenUsage, () => import('./open-usage')],
+  [RecoverIdentity, () => import('./recover-identity')],
+  [RedeemPasskey, () => import('./redeem-passkey')],
+  [RedeemToken, () => import('./redeem-token')],
+  [ResetStorage, () => import('./reset-storage')],
+  [ShareIdentity, () => import('./share-identity')],
+  [UpdateProfile, () => import('./update-profile')],
+]);

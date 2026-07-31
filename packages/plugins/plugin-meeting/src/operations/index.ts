@@ -4,9 +4,11 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const MeetingOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create'),
-  () => import('./handle-payload'),
-  () => import('./set-active'),
-  () => import('./summarize'),
-);
+import { MeetingOperation } from '#types';
+
+export const MeetingOperationHandlerSet = OperationHandlerSet.keyed([
+  [MeetingOperation.Create, () => import('./create')],
+  [MeetingOperation.HandlePayload, () => import('./handle-payload')],
+  [MeetingOperation.SetActive, () => import('./set-active')],
+  [MeetingOperation.Summarize, () => import('./summarize')],
+]);

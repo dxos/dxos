@@ -4,4 +4,8 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const StudioOperationHandlerSet = OperationHandlerSet.lazy(() => import('./generate'));
+import { StudioOperation } from '../types';
+
+export const StudioOperationHandlerSet = OperationHandlerSet.keyed([
+  [StudioOperation.Generate, () => import('./generate')],
+]);
