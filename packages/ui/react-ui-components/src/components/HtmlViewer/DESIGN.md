@@ -84,7 +84,7 @@ the sender's near-black text. Now addressed by the paper sheet below.
 
 | Declaration                                                        | Fixture | Treatment                                                                                                        |
 | ------------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `color-scheme: light dark` + `@media (prefers-color-scheme: dark)` | `m3`    | Adopt the sender's dark design **if its rules actually survived** — otherwise recolor, so it never renders light |
+| `color-scheme: light dark` + `@media (prefers-color-scheme: dark)` | —       | Adopt the sender's dark design **if its rules actually survived** — otherwise recolor, so it never renders light |
 | `color-scheme: light` only                                         | `m2`    | Recolor. The declaration says the sender has no dark design, not that ours is unwelcome                          |
 | Nothing                                                            | `m1`    | Recolor to the app theme, whatever the layout                                                                    |
 
@@ -101,7 +101,7 @@ this.
 - Never `filter: invert()` — it destroys logos and photography (see §4).
 - **Everything is recolored except a sender's dark design that is genuinely on screen (2026-07-31).**
   `applyAuthoredDarkRules` now reports whether it found any dark block; a document that _declares_
-  dark support whose rules sanitization stripped (Gap A — `m3` is exactly this) falls through to the
+  dark support whose rules sanitization stripped (Gap A) falls through to the
   recolor rather than rendering light inside a dark app. The `light`-only branch went the same way: a
   white sheet in a dark app is not a dark mode. The `dx-email-paper` sheet had no remaining caller and
   was removed.
