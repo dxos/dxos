@@ -11,7 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { applyMerge, buildIdentityIndex, findDuplicates, identityKeys, planMerge } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
 
-import { identitySpecs, organizationIdentitySpec, personIdentitySpec } from './identity';
+import { identitySpecs, normalizePhone, organizationIdentitySpec, personIdentitySpec } from './identity';
 
 const GOOGLE = 'google.com/contacts';
 
@@ -332,5 +332,51 @@ describe('IdentityIndex', () => {
 
     const index = await EffectEx.runPromise(buildIdentityIndex(db, identitySpecs));
     expect(index.lookup(Organization.Organization, { email: 'alice@dxos.org' })?.name).toBe('DXOS');
+  });
+});
+
+describe('merge data safety', () => {
+  test('a value that cannot be normalized is kept, not dropped', ({ expect }) => {
+    // The merge deletes the losers, so anything skipped here is destroyed. `normalizePhone` returns
+    // undefined for a value with no digits.
+    const objects = [
+      Person.make({ id: '01000000000000000000000001', emails: [{ value: 'a@dxos.org' }] }),
+      Person.make({
+        id: '01000000000000000000000002',
+        emails: [{ value: 'a@dxos.org' }],
+        phoneNumbers: [{ label: 'ext', value: 'ext. n/a' }, { value: '+1 (415) 555-0100' }],
+      }),
+    ];
+
+    const [group] = findDuplicates(personIdentitySpec, objects);
+    const { preview } = planMerge(personIdentitySpec, group);
+    expect(preview.phoneNumbers?.map((phone) => phone.value)).toEqual(['ext. n/a', '+1 (415) 555-0100']);
+  });
+
+  test('a trailing + is punctuation, not a country code', ({ expect }) => {
+    expect(normalizePhone('+14155550100')).toBe('+14155550100');
+    expect(normalizePhone('14155550100+')).toBe('14155550100');
+    expect(normalizePhone('(415) 555-0100')).toBe('4155550100');
+    expect(normalizePhone('n/a')).toBeUndefined();
+  });
+
+  test('addresses key independently of property order', ({ expect }) => {
+    const ordered = { street: '1 Main St', locality: 'SF', region: 'CA' };
+    const shuffled = { region: 'CA', street: '1 main st ', locality: 'SF' };
+    const objects = [
+      Person.make({
+        id: '01000000000000000000000001',
+        emails: [{ value: 'a@dxos.org' }],
+        addresses: [{ value: ordered }],
+      }),
+      Person.make({
+        id: '01000000000000000000000002',
+        emails: [{ value: 'a@dxos.org' }],
+        addresses: [{ value: shuffled }],
+      }),
+    ];
+
+    const [group] = findDuplicates(personIdentitySpec, objects);
+    expect(planMerge(personIdentitySpec, group).preview.addresses).toHaveLength(1);
   });
 });

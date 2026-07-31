@@ -1,6 +1,6 @@
 # Object deduplication — duplicates from external data sources
 
-- **Status**: phases 1-4 implemented (UI not yet live-verified); phase 5 not started
+- **Status**: phases 1-4 implemented and live-verified in storybook; phase 5 not started
 - **Date**: 2026-07-31
 - **Requested by**: Rich
 - **Branch**: `claude/person-deduplication-plugin-inbox-dbe8b2`
@@ -120,7 +120,9 @@ applyMerge(db, spec, plan): Effect<void>             // the only write
   - arrays of compound values: union by the spec's normalization key, survivor's order first;
   - refs: survivor's when set, else the first non-empty;
   - `Obj.Meta.keys`: union (so the survivor answers every foreign-key lookup afterwards).
-- `applyMerge` copies losers' meta keys onto the survivor, then `db.remove`s the losers.
+- `applyMerge` copies losers' meta keys onto the survivor, then `db.remove`s the losers. A
+  confirmed draft is **assigned** over the result, not merged, so an edit wins even where the
+  survivor already had a value.
 
 **Known limitation (as built)**: references to a loser are not rewritten at all.
 `Message.sender.contact` lives in immutable feed items and cannot be rewritten even in principle,
@@ -163,7 +165,7 @@ gains a third layout value alongside `masonry`/`table`.
   Confirm/Cancel; Confirm invokes `MergeDuplicates` with the edited draft as `overrides`. Nothing
   is written before Confirm.
 - **Skip**: advances without writing. Skips are session state in v1 (not persisted); a persisted
-  "not a duplicate" assertion is phase 4.
+  "not a duplicate" assertion is out of scope (§6).
 
 ## 5. Compound values in the table view
 

@@ -1,12 +1,6 @@
 ---
 '@dxos/extractor': minor
-'@dxos/extractor-lib': minor
-'@dxos/pipeline-email': minor
 '@dxos/plugin-inbox': minor
-'@dxos/plugin-space': minor
-'@dxos/plugin-crm': minor
-'@dxos/react-ui-table': minor
-'@dxos/react-ui-masonry': patch
 ---
 
 One identity rule per type, shared by the extractor's create-vs-merge decision and by a new duplicate scan, plus a Duplicates tab on the database type article for reviewing and merging what has already accumulated.

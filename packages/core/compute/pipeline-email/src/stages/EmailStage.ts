@@ -111,7 +111,9 @@ export type Attachment = {
  *
  * Not every sender earns a record: {@link senderSignals} feeds the allow-list in
  * `shouldExtractContact`, so bulk and automated mail no longer fills the space with contacts nobody
- * will look at.
+ * will look at. NOTE: no provider records an outbound signal yet, so in practice the allow-list is
+ * "the domain matches a known Organization" — stricter than the policy intends. Extracting the
+ * recipients of sent mail is what closes that gap.
  */
 export const extractContacts = (): Stage.Stage<Change, Change, never, Database.Service> => {
   // Run-scoped overlay over the space's shared index: reads see everything committed (including by a

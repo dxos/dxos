@@ -140,6 +140,13 @@ const fillScalars = <T>(target: { [K in keyof T]?: unknown }, source: T, fields:
 };
 
 /**
+ * Detaches a value from whatever object owns it. ECHO refuses to re-parent a nested record, so a
+ * compound entry (an address) taken from a loser has to be copied before it can join the survivor.
+ */
+const copyValue = <V>(value: V): V =>
+  value !== null && typeof value === 'object' ? (JSON.parse(JSON.stringify(value)) as V) : value;
+
+/**
  * Unions two `{ label?, value }` arrays by a normalized form of `value`, keeping the target's
  * entries (and their order) first. `write` optionally rewrites the stored value to its canonical
  * form, so a merge also repairs entries a source stored unnormalized.
@@ -162,7 +169,7 @@ const unionLabelled = <V>(
     if (identity !== undefined) {
       seen.add(identity);
     }
-    const value = write?.(entry.value) ?? entry.value;
+    const value = copyValue(write?.(entry.value) ?? entry.value);
     result.push(entry.label === undefined ? { value } : { label: entry.label, value });
   }
 
