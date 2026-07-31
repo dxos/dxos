@@ -58,12 +58,23 @@ component, which is the coupling the split exists to prevent.
 
 Two gaps in the current behaviour.
 
-**Gap A — dark-capable email is driven by the OS, not the app theme.** `<style>` is not in
-`DEFAULT_FORBID_TAGS` (`Html.tsx`'s `DEFAULT_FORBID_TAGS`), so a sender's own `@media (prefers-color-scheme: dark)` rules
-survive into the shadow root and resolve against the _browser/OS_ preference. `prefers-color-scheme`
-cannot be overridden from the page — `color-scheme` on `:host` affects UA widget rendering, not the
-media query. So app-dark + OS-light renders that email light, and the reverse renders it dark against
-a light app.
+**Gap A — a document's own dark rules never arrive.** CORRECTED 2026-07-31, verified in the browser:
+DOMPurify **strips `<style>` entirely** — by default, and even with `ADD_TAGS: ['style']`. An earlier
+version of this note claimed those rules survive into the shadow root and fire off the OS preference.
+They do not: only inline `style=""` attributes reach us, so a dark-capable document is flattened to its
+light inline styling before we ever see it.
+
+Consequences:
+
+- `applyAuthoredDarkRules` cannot fire as written — there is no sender stylesheet in the shadow root to
+  rewrite. It is dead code until the sanitizer preserves (or we re-inject) the authored CSS.
+- `detectColorScheme` is unaffected and still useful: it reads the raw string, so the `light`-only
+  branch works today (verified — `m2` gets the paper sheet in dark mode).
+- Two ways forward, not yet chosen: (1) allow `<style>` through sanitization, accepting that CSS can
+  still phone home via `background-image` even inside a shadow root, so remote-image blocking would
+  need to extend to CSS urls; or (2) extract just the `@media (prefers-color-scheme: dark)` blocks from
+  the raw markup pre-sanitize and inject that filtered subset into our own stylesheet, keeping the
+  sanitization posture. (2) is safer and is the recommendation.
 
 **Gap B — un-themed email in dark mode.** Theming is skipped for non-personal table layouts and the
 root carries no background, so regions the sender never painted showed the dark app surface underneath

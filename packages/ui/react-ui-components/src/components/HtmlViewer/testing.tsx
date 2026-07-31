@@ -24,7 +24,11 @@ export const HOSTILE_CSS = trim`
   <p>This body tries to restyle everything around it.</p>
 `;
 
-/** Declares its own dark rendering; the base rewrites these rules so the app theme decides, not the OS. */
+/**
+ * Declares its own dark rendering. NOTE: DOMPurify strips `<style>`, so the authored rules never reach
+ * the shadow root and this currently renders unstyled in both panes — the story exists to make that
+ * visible (see DESIGN.md §2, Gap A), not to demonstrate a working rewrite.
+ */
 export const AUTHORED_DARK = trim`
   <meta name="color-scheme" content="light dark" />
   <style>
@@ -145,7 +149,7 @@ export const SANDBOX_SAMPLES: Record<string, Sample> = {
   },
   authoredDark: {
     html: AUTHORED_DARK,
-    note: 'Ships its own dark rules; the app theme decides, not the OS.',
+    note: 'Ships its own dark rules — currently dropped by sanitization; see DESIGN.md Gap A.',
   },
   remoteImage: {
     html: REMOTE_IMAGE,
@@ -170,9 +174,13 @@ export const SANDBOX_SAMPLES: Record<string, Sample> = {
 export const ThemePane = ({ mode, children }: { mode: ColorScheme; children: ReactNode }) => {
   const { tx } = useThemeContext();
   return (
-    <div className={mode}>
+    // `colorScheme` is what actually switches the palette: the theme's tokens are `light-dark(…)`, which
+    // resolves against the computed `color-scheme`, and only `.dark` sets it (there is no `.light` rule)
+    // — so a `light` pane inside a dark storybook would otherwise inherit dark and both panes would match.
+    // The class stays for rules scoped to `.dark`.
+    <div className={mode} style={{ colorScheme: mode }}>
       <ThemeProvider tx={tx} themeMode={mode}>
-        <div className='bg-baseSurface text-baseText p-2 overflow-auto border border-separator rounded'>
+        <div className='bg-base-surface text-base-fg p-2 overflow-auto border border-separator rounded'>
           <div className='pb-1 text-xs uppercase tracking-wide text-description'>{mode}</div>
           {children}
         </div>

@@ -202,6 +202,7 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
     if (!host) {
       return;
     }
+
     const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
 
     const content = document.createElement('div');
