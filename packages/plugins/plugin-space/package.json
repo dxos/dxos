@@ -139,6 +139,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/extractor": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",

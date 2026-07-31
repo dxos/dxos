@@ -37,6 +37,7 @@ export default Capability.makeModule(
       navigableCollections: false,
       viewersByObject: {},
       viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
+      mergePreview: undefined,
     }).pipe(Atom.keepAlive);
 
     const manager = yield* Capability.get(Capabilities.PluginManager);

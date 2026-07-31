@@ -123,9 +123,9 @@ export const planMerge = <S extends Type.AnyObj>(spec: IdentitySpec<S>, group: D
   const ordered = [...group.objects].sort(compareById);
   const [survivor, ...losers] = ordered;
   const preview = spec.makeEmpty();
-  Obj.update(preview, (draft) => {
+  Obj.update(preview, (preview) => {
     for (const object of ordered) {
-      spec.merge(draft, object);
+      spec.merge(preview, object);
     }
   });
 
@@ -150,13 +150,13 @@ export const applyMerge = <S extends Type.AnyObj>(
   overrides?: Type.InstanceType<S>,
 ): Effect.Effect<Type.InstanceType<S>> =>
   Effect.gen(function* () {
-    Obj.update(survivor, (target) => {
+    Obj.update(survivor, (survivor) => {
       for (const loser of losers) {
-        spec.merge(target, loser);
-        transferKeys(target, loser);
+        spec.merge(survivor, loser);
+        transferKeys(survivor, loser);
       }
       // Fold the confirmed preview last so edits made in the confirmation Form win.
-      spec.merge(target, overrides ?? preview);
+      spec.merge(survivor, overrides ?? preview);
     });
 
     for (const loser of losers) {

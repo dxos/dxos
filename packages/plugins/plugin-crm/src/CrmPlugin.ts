@@ -8,6 +8,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import {
   AppGraphBuilder,
   AutomationTemplates,
+  IdentitySpecs,
   OperationHandler,
   ProjectTemplates,
   SkillDefinition,
@@ -29,6 +30,11 @@ export const CrmPlugin = Plugin.define(meta).pipe(
     id: 'crm-automation-templates',
     activatesOn: AppActivationEvents.SetupSchema,
     activate: AutomationTemplates,
+  }),
+  Plugin.addModule({
+    id: 'crm-identity-specs',
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: IdentitySpecs,
   }),
   Plugin.addModule({
     id: 'crm-project-templates',
