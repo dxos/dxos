@@ -2,21 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { GraphPath } from '@dxos/app-toolkit';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
+import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Mailbox, SystemTags } from '@dxos/plugin-inbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { exportFeedMessages, replaceFeed, resetMailbox } from '../testing';
+
+/** Stable fallback so the starred-ids atom stays unconditional while the tag index resolves. */
+const NO_STARRED_IDS = Atom.make<readonly EntityId[]>(() => []);
 
 /** The message's raw email HTML, or undefined for a markdown/plaintext-only body. */
 const getMessageHtml = (message: Message.Message): string | undefined =>
@@ -67,13 +73,16 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
 
   // Starring is how a fixture is nominated: the archive exports exactly the starred messages, so the
   // user curates a set in the Mailbox panel rather than downloading (and later re-importing) the feed.
+  // Membership is read from the tag index's reverse lookup — a per-message `getTagsForMessage` scan
+  // would walk the whole feed on every render of this panel, including every selection change.
   const starredTag = useQuery(space.db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
-  const isStarred = useCallback(
-    (message: Message.Message) =>
-      !!(mailbox && starredTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(starredTag))),
-    [mailbox, starredTag],
+  const tagIndex = mailbox?.tags?.target;
+  const starredIdsAtom = useMemo(
+    () => (tagIndex && starredTag ? TagIndex.taggedIdsAtom(tagIndex, Mailbox.tagUri(starredTag)) : NO_STARRED_IDS),
+    [tagIndex, starredTag],
   );
-  const starredCount = messages.filter(isStarred).length;
+  const starredIds = useAtomValue(starredIdsAtom);
+  const isStarred = useCallback((message: Message.Message) => starredIds.includes(message.id), [starredIds]);
 
   const handleDownload = useCallback(async (): Promise<Blob | null> => {
     if (!feed) {
@@ -146,9 +155,9 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
         <Toolbar.Root>
           <SystemIconButton.Download
             iconOnly
-            label={`Download starred (${starredCount})`}
+            label={`Download starred (${starredIds.length})`}
             filename='mailbox-feed.json'
-            disabled={!feed || busy || starredCount === 0}
+            disabled={!feed || busy || starredIds.length === 0}
             onDownload={handleDownload}
           />
           <SystemIconButton.Download
