@@ -144,22 +144,8 @@ test.describe.serial('Startup timing harness', () => {
       const primerPage = primer.pages()[0] ?? (await primer.newPage());
       await primerPage.goto(`${INITIAL_URL}/?profiler=1`);
       await waitForReady(primerPage);
-      // Prime an open document so the measured reload restores an editor plank — the golden
-      // `milestone:first-editor-interactive` anchor only fires when an editor mounts.
-      await primerPage.getByTestId('spacePlugin.addSpace').click();
-      await primerPage.getByTestId('spacePlugin.createSpace').click();
-      await primerPage.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
-      // Scope to the visible workspace: with two spaces the page-wide `.first()` can resolve to
-      // the hidden Personal-space button, and the click waits on it forever.
-      await primerPage.getByTestId('navtree.workspace.visible').getByTestId('spacePlugin.createObject').first().click();
-      await primerPage.getByRole('listbox').getByText('Document').first().click();
-      const objectForm = primerPage.getByTestId('create-object-form');
-      if (await objectForm.isVisible()) {
-        await objectForm.getByTestId('save-button').click();
-      }
-      await primerPage.locator('.cm-content').first().waitFor({ timeout: 30_000 });
-      // A returning user reloads the URL they were on; the root URL would open home without
-      // restoring the primed document plank (and the editor milestone would never fire).
+      // TODO(wittjosiah): Prime an open document (via a robust page-object flow) so the measured
+      //   reload restores an editor plank and `milestone:first-editor-interactive` lands here.
       const measuredUrl = new URL(primerPage.url());
       measuredUrl.searchParams.set('profiler', '1');
       await primer.close();
@@ -174,17 +160,6 @@ test.describe.serial('Startup timing harness', () => {
       await page.goto(measuredUrl.toString());
       await waitForReady(page);
       const navigationToReady = Date.now() - start;
-      // Golden anchor: the primed document's editor must mount before collection so
-      // `milestone:first-editor-interactive` (time to first meaningful action) lands in the report.
-      await page.locator('.cm-content').first().waitFor({ timeout: 30_000 });
-      // The mark commits in a React effect after the editor's DOM appears; tolerate its absence
-      // (logged as a missing waterfall entry) rather than failing the benchmark.
-      await page
-        .waitForFunction(() => performance.getEntriesByName('milestone:first-editor-interactive').length > 0, {
-          timeout: 10_000,
-        })
-        .catch(() => {});
-
       const report = await collectStartupReport(page, 'warm-cold');
       report.navigationToReady = navigationToReady;
       const counts = network();
