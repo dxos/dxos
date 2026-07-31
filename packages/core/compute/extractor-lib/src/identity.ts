@@ -15,8 +15,14 @@ export const normalizeEmail = (email: string | undefined): string | undefined =>
 
 /** Canonical form of a phone number: digits and a leading `+` only, so formatting never splits an identity. */
 export const normalizePhone = (phone: string | undefined): string | undefined => {
-  const normalized = phone?.replace(/[^\d+]/g, '');
-  return normalized && /\d/.test(normalized) ? normalized : undefined;
+  const trimmed = phone?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  // A `+` anywhere but the front is punctuation, not a country-code marker; keeping it would make
+  // `+1415…` and `1415…+` two identities.
+  const digits = trimmed.replace(/\D/g, '');
+  return digits ? `${trimmed.startsWith('+') ? '+' : ''}${digits}` : undefined;
 };
 
 /**
@@ -63,7 +69,7 @@ export const personIdentitySpec: IdentitySpec<typeof Person.Person> = {
     target.phoneNumbers = unionLabelled(target.phoneNumbers, source.phoneNumbers, normalizePhone);
     target.urls = unionLabelled(target.urls, source.urls, (value) => value?.trim().toLowerCase());
     target.identities = unionLabelled(target.identities, source.identities, (value) => value?.trim());
-    target.addresses = unionLabelled(target.addresses, source.addresses, (value) => JSON.stringify(value));
+    target.addresses = unionLabelled(target.addresses, source.addresses, addressKey);
   },
 };
 
@@ -97,6 +103,18 @@ export const organizationIdentitySpec: IdentitySpec<typeof Organization.Organiza
 
 /** All identity specs this package provides; pass to `fromIdentitySpecs` to build the registry layer. */
 export const identitySpecs = [personIdentitySpec, organizationIdentitySpec];
+
+/**
+ * Order-independent key for a compound address: `JSON.stringify` follows insertion order, so two
+ * equal addresses built by different code paths would key differently and both survive a merge.
+ */
+const addressKey = (value: unknown): string => {
+  const fields = Object.entries((value ?? {}) as Record<string, unknown>)
+    .filter(([, field]) => field !== undefined && field !== '')
+    .map(([name, field]): [string, unknown] => [name, typeof field === 'string' ? field.trim().toLowerCase() : field]);
+  fields.sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0));
+  return JSON.stringify(fields);
+};
 
 /** Hostname of a website (bare domains and full URLs both accepted), or `undefined` when unparseable. */
 const organizationDomain = (website: string | undefined): string | undefined => {
@@ -136,10 +154,14 @@ const unionLabelled = <V>(
   const seen = new Set<string>();
   for (const entry of [...(target ?? []), ...(source ?? [])]) {
     const identity = key(entry.value);
-    if (identity === undefined || seen.has(identity)) {
+    // An unkeyable value cannot be compared to anything, so it is kept rather than lost: the merge
+    // deletes the losers, and dropping it here would destroy data the user never chose to discard.
+    if (identity !== undefined && seen.has(identity)) {
       continue;
     }
-    seen.add(identity);
+    if (identity !== undefined) {
+      seen.add(identity);
+    }
     const value = write?.(entry.value) ?? entry.value;
     result.push(entry.label === undefined ? { value } : { label: entry.label, value });
   }

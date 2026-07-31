@@ -44,6 +44,9 @@ export const getIdentityIndex = (
       // Cache the in-flight build, not just its result: two runs starting together would otherwise
       // both miss, both build, and end up with separate indexes — the split this exists to close.
       pending = EffectEx.runPromise(buildIdentityIndex(db, identitySpecs));
+      // Drop a failed build so the next caller retries. Caching the rejection would disable identity
+      // resolution for this database permanently after one transient query failure.
+      void pending.catch(() => indexes.delete(db));
       indexes.set(db, pending);
     }
 

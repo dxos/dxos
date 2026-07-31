@@ -136,8 +136,8 @@ export const planMerge = <S extends Type.AnyObj>(spec: IdentitySpec<S>, group: D
  * Applies a plan: folds the losers into the survivor, transfers their foreign keys so every
  * external lookup now lands on the survivor, and removes them.
  *
- * `overrides` is the user-edited preview — when supplied it is folded in last, so edits made in
- * the confirmation Form win over the computed merge.
+ * `overrides` is the user-edited preview — when supplied its fields are assigned over the merged
+ * result, so an edit made in the confirmation Form wins even where the survivor already had a value.
  *
  * LIMITATION: references to a loser are not rewritten. `Message.sender.contact` lives in immutable
  * feed items and cannot be rewritten at all; those refs dangle until the next sync re-resolves the
@@ -146,7 +146,7 @@ export const planMerge = <S extends Type.AnyObj>(spec: IdentitySpec<S>, group: D
 export const applyMerge = <S extends Type.AnyObj>(
   db: Database.Database,
   spec: IdentitySpec<S>,
-  { survivor, losers, preview }: MergePlan<S>,
+  { survivor, losers }: MergePlan<S>,
   overrides?: Type.InstanceType<S>,
 ): Effect.Effect<Type.InstanceType<S>> =>
   Effect.gen(function* () {
@@ -155,8 +155,11 @@ export const applyMerge = <S extends Type.AnyObj>(
         spec.merge(survivor, loser);
         transferKeys(survivor, loser);
       }
-      // Fold the confirmed preview last so edits made in the confirmation Form win.
-      spec.merge(survivor, overrides ?? preview);
+      // Assigned, not merged: `spec.merge` only fills gaps, so an edit to a field the survivor
+      // already had was silently discarded. The confirmed draft is the user's decision — it wins.
+      if (overrides) {
+        Obj.updateFrom(survivor, overrides);
+      }
     });
 
     for (const loser of losers) {
