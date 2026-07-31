@@ -277,7 +277,9 @@ export class ActivationScheduler {
    * requires cannot be satisfied by this pass WAIT — they are reconsidered by the next round
    * (each round of contributions, and each event wave, can unlock them). With
    * `candidateModules`, the first round is scoped to those modules (plus any marked for
-   * reactivation); follow-up rounds always consider the full pool.
+   * reactivation); follow-up rounds consider the full pool unless `scopedToCandidates` keeps
+   * them scoped — demand pulls and event waves must not become drain workers for the whole
+   * startup pool (that serializes event dispatch behind unrelated startup work).
    *
    * Structural problems — duplicate singleton providers within a round, capability cycles,
    * or a singleton requirement no registered module of any mode could ever provide — put
@@ -288,6 +290,7 @@ export class ActivationScheduler {
    */
   runDependencyPass(options?: {
     candidateModules?: Plugin.PluginModule[];
+    scopedToCandidates?: boolean;
   }): Effect.Effect<boolean, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       let scoped = options?.candidateModules;
@@ -303,8 +306,9 @@ export class ActivationScheduler {
         }
         ranAny = true;
         allSucceeded = allSucceeded && round;
-        // Follow-up rounds consider everything that might have been unlocked.
-        scoped = undefined;
+        // Follow-up rounds consider everything that might have been unlocked — unless scoped:
+        // a demand pull draining the full pool would block its event wave on unrelated work.
+        scoped = options?.scopedToCandidates ? options?.candidateModules : undefined;
       }
       return ranAny && allSucceeded;
     });
@@ -385,8 +389,9 @@ export class ActivationScheduler {
       yield* PubSub.publish(this.#state.activation, { event: key, state: 'activating' });
 
       // Same-event provider/consumer pairs are topologically ordered with per-module
-      // contribution via the capability-graph machinery.
-      yield* this.runDependencyPass({ candidateModules: modules });
+      // contribution via the capability-graph machinery. Scoped: the post-wave pass in
+      // `#activateEvent` handles unlocking, so the wave never drains the startup pool.
+      yield* this.runDependencyPass({ candidateModules: modules, scopedToCandidates: true });
 
       // A matched module may be mid-load via a concurrent wave (the round filters it as
       // `isLoading` to avoid in-round deadlocks). Await those loads before reporting the event
@@ -770,7 +775,17 @@ export class ActivationScheduler {
 
       if (needed.size > 0) {
         log('pulling dependency providers', { modules: [...needed.keys()] });
-        yield* this.runDependencyPass({ candidateModules: [...needed.values()] });
+        // Providers already mid-load (e.g. via the concurrent startup pass) are joined, not
+        // re-drained — the scoped round below filters them as `isLoading` and would otherwise
+        // return before their capabilities land.
+        const inFlight = [...needed.values()].filter((module) => this.#loader.isLoading(module.id));
+        if (inFlight.length > 0) {
+          yield* Effect.all(
+            inFlight.map((module) => this.#loader.awaitSettled(module.id)),
+            { concurrency: 'unbounded', discard: true },
+          );
+        }
+        yield* this.runDependencyPass({ candidateModules: [...needed.values()], scopedToCandidates: true });
       }
     });
   }

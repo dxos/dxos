@@ -2794,6 +2794,88 @@ describe('PluginManager', () => {
       }),
     );
 
+    it.effect('a demand pull stays scoped and does not drain unrelated runnable startup modules', () =>
+      Effect.gen(function* () {
+        const Event = ActivationEvent.make('org.dxos.test.pullScoped');
+        const gateA = yield* Deferred.make<void>();
+        const gateC = yield* Deferred.make<void>();
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            // Wave 1: blocks the startup round's wave barrier so wave-2 modules stay queued.
+            Plugin.addModule({
+              id: 'slowA',
+              provides: [Total],
+              activate: () =>
+                Effect.gen(function* () {
+                  yield* Deferred.await(gateA);
+                  return [Capability.contribute(Total, { total: 1 })];
+                }),
+            }),
+            Plugin.addModule({
+              id: 'fastB',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'b' })]),
+            }),
+            // Wave 2 (requires fastB): runnable once fastB contributes, but queued behind the
+            // wave barrier while slowA blocks.
+            Plugin.addModule({
+              id: 'pulledProvider',
+              requires: [String],
+              provides: [Number],
+              activate: () => Effect.succeed([Capability.contribute(Number, { number: 2 })]),
+            }),
+            Plugin.addModule({
+              id: 'slowC',
+              requires: [String],
+              provides: [MultiNumber],
+              activate: () =>
+                Effect.gen(function* () {
+                  yield* Deferred.await(gateC);
+                  return [Capability.contribute(MultiNumber, { number: 3 })];
+                }),
+            }),
+            Plugin.addModule({
+              id: 'evt',
+              activatesOn: Event,
+              requires: [Number],
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'evt' })]),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({ pluginLoader, plugins, enabled: [testMeta.profile.key] });
+
+        // Real macrotask hops until the condition holds (bounded): the constructor's enable
+        // chain runs on a separate runtime whose fibers need actual event-loop turns.
+        const settle = (condition: () => boolean) =>
+          Effect.gen(function* () {
+            for (let i = 0; i < 100 && !condition(); i++) {
+              yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve)));
+            }
+          });
+
+        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        yield* settle(() => manager.capabilities.getAll(String).length > 0);
+        assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'b' }]);
+
+        const eventFiber = yield* Effect.fork(manager.activate(Event));
+        yield* settle(() => manager.capabilities.getAll(MultiString).length > 0);
+        // The contract under test: the pull activates only the event module's own transitive
+        // providers (pulledProvider); an unscoped follow-up round would pick up the runnable
+        // slowC and block the wave start behind gateC.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'evt' }]);
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 2 }]);
+
+        yield* Deferred.succeed(gateA, undefined);
+        yield* Deferred.succeed(gateC, undefined);
+        yield* Fiber.join(eventFiber);
+        yield* Fiber.join(startupFiber);
+        // The scoped pull leaves slowC to the startup pass — nothing is orphaned.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiNumber), [{ number: 3 }]);
+      }),
+    );
+
     it.effect('a plugin enabled after its demand event fired activates via pending reset', () =>
       Effect.gen(function* () {
         const Test = Plugin.make(
