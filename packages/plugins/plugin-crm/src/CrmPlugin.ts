@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -20,24 +20,21 @@ import { ProfileOf } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CrmPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSchemaModule({ schema: [ProfileOf.ProfileOf] }),
-  Plugin.addModule({
-    id: 'crm-automation-templates',
-    activatesOn: AppActivationEvents.SetupSchema,
-    activate: AutomationTemplates,
-  }),
-  Plugin.addModule({
-    id: 'crm-project-templates',
-    activatesOn: AppActivationEvents.SetupSchema,
-    activate: ProjectTemplates,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(AppCapability.schema([ProfileOf.ProfileOf])),
+  Plugin.addModule(AutomationTemplates),
+  Plugin.addModule(ProjectTemplates),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

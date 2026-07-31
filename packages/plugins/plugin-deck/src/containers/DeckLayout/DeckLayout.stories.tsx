@@ -10,7 +10,7 @@ import React, { forwardRef, useMemo } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -52,7 +52,7 @@ const storyDeckSettings = Capability.makeModule(() =>
       enableNativeRedirect: false,
     }).pipe(Atom.keepAlive);
 
-    return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
+    return Capability.contribute(DeckCapabilities.Settings, settingsAtom);
   }),
 );
 
@@ -107,9 +107,9 @@ const storyDeckState = Capability.makeModule(() =>
     }).pipe(Atom.keepAlive);
 
     return [
-      Capability.contributes(DeckCapabilities.State, stateAtom),
-      Capability.contributes(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(DeckCapabilities.State, stateAtom),
+      Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );
@@ -146,119 +146,118 @@ const toStoryItemNode = (item: Item, index: number, depth: number): Node.NodeArg
     nodes: (item.children ?? []).map((child, childIndex) => toStoryItemNode(child, childIndex, depth + 1)),
   });
 
-const TestPlugin = Plugin.define(pluginMeta).pipe(
-  Plugin.addModule({
-    id: 'story-deck-settings',
-    activatesOn: AppActivationEvents.SetupSettings,
-    activate: storyDeckSettings,
-  }),
-  Plugin.addModule({
-    id: 'story-deck-state',
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: storyDeckState,
-  }),
-  AppPlugin.addOperationHandlerModule({
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSurfaceModule({
-    id: 'story-surfaces',
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
-          Surface.create({
-            id: 'storyNavigation',
-            filter: Surface.makeFilter(AppSurface.Navigation),
-            component: ({ data, ref }) => (
-              <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />
-            ),
-          }),
-          Surface.create({
-            id: 'storyArticle',
-            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
-            component: ({ data }) => {
-              const subject = (data as any)?.subject;
-              const attendableId = (data as any)?.attendableId as string | undefined;
-              if (subject == null) {
-                return <Loading />;
-              }
+const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
+  Effect.succeed([
+    Capability.contribute(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'storyNavigation',
+        filter: Surface.makeFilter(AppSurface.Navigation),
+        component: ({ data, ref }) => <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />,
+      }),
+      Surface.create({
+        id: 'storyArticle',
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
+        component: ({ data }) => {
+          const subject = (data as any)?.subject;
+          const attendableId = (data as any)?.attendableId as string | undefined;
+          if (subject == null) {
+            return <Loading />;
+          }
 
-              return (
-                <Panel.Root>
-                  <Panel.Content className='grid grid-rows-[min-content_1fr]'>
-                    {attendableId && <ItemComponent id={attendableId} />}
-                    <Syntax.Root data={subject}>
-                      <Syntax.Content>
-                        <Syntax.Filter />
-                        <Syntax.Viewport>
-                          <Syntax.Code />
-                        </Syntax.Viewport>
-                      </Syntax.Content>
-                    </Syntax.Root>
-                  </Panel.Content>
-                </Panel.Root>
-              );
-            },
-          }),
-          Surface.create({
-            id: 'storyArticleCompanion',
-            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
-            component: ({ data: { subject, companionTo, properties, variant } }) => {
-              if (companionTo == null) {
-                return <Loading />;
-              }
-
-              return (
-                <Syntax.Root
-                  data={{
-                    primaryItem: companionTo,
-                    companion: { data: subject, properties, variant },
-                  }}
-                >
+          return (
+            <Panel.Root>
+              <Panel.Content className='grid grid-rows-[min-content_1fr]'>
+                {attendableId && <ItemComponent id={attendableId} />}
+                <Syntax.Root data={subject}>
                   <Syntax.Content>
+                    <Syntax.Filter />
                     <Syntax.Viewport>
                       <Syntax.Code />
                     </Syntax.Viewport>
                   </Syntax.Content>
                 </Syntax.Root>
-              );
-            },
-          }),
-        ]),
-      ),
+              </Panel.Content>
+            </Panel.Root>
+          );
+        },
+      }),
+      Surface.create({
+        id: 'storyArticleCompanion',
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
+        component: ({ data: { subject, companionTo, properties, variant } }) => {
+          if (companionTo == null) {
+            return <Loading />;
+          }
+
+          return (
+            <Syntax.Root
+              data={{
+                primaryItem: companionTo,
+                companion: { data: subject, properties, variant },
+              }}
+            >
+              <Syntax.Content>
+                <Syntax.Viewport>
+                  <Syntax.Code />
+                </Syntax.Viewport>
+              </Syntax.Content>
+            </Syntax.Root>
+          );
+        },
+      }),
+    ]),
+  ]),
+);
+
+const storyGraphBuilder = Capability.inlineModule(
+  'story-graph',
+  { provides: [AppCapabilities.AppGraphBuilder] },
+  Effect.fnUntraced(function* () {
+    const extensions = yield* Effect.all([
+      GraphBuilder.createExtension({
+        id: 'storyItems',
+        match: NodeMatcher.whenRoot,
+        connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
+      }),
+      GraphBuilder.createExtension({
+        id: 'storyItemCompanions',
+        match: NodeMatcher.whenNodeType('story-item'),
+        connector: (node) =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              variant: 'alpha',
+              label: 'Companion Alpha',
+              icon: 'ph--sidebar--regular',
+              data: { variant: 'alpha', parentId: node.id },
+              position: Position.first,
+            }),
+            AppNode.makeCompanion({
+              variant: 'beta',
+              label: 'Companion Beta',
+              icon: 'ph--chat-circle--regular',
+              data: { variant: 'beta', parentId: node.id },
+            }),
+          ]),
+      }),
+    ]);
+    return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat())];
   }),
-  AppPlugin.addAppGraphModule({
-    id: 'story-graph',
-    activate: Effect.fnUntraced(function* () {
-      const extensions = yield* Effect.all([
-        GraphBuilder.createExtension({
-          id: 'storyItems',
-          match: NodeMatcher.whenRoot,
-          connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
-        }),
-        GraphBuilder.createExtension({
-          id: 'storyItemCompanions',
-          match: NodeMatcher.whenNodeType('story-item'),
-          connector: (node) =>
-            Effect.succeed([
-              AppNode.makeCompanion({
-                variant: 'alpha',
-                label: 'Companion Alpha',
-                icon: 'ph--sidebar--regular',
-                data: { variant: 'alpha', parentId: node.id },
-                position: Position.first,
-              }),
-              AppNode.makeCompanion({
-                variant: 'beta',
-                label: 'Companion Beta',
-                icon: 'ph--chat-circle--regular',
-                data: { variant: 'beta', parentId: node.id },
-              }),
-            ]),
-        }),
-      ]);
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
-    }),
+);
+
+const TestPlugin = Plugin.define(pluginMeta).pipe(
+  Plugin.addModule({
+    id: 'story-deck-settings',
+    provides: [DeckCapabilities.Settings],
+    activate: storyDeckSettings,
   }),
+  Plugin.addModule({
+    id: 'story-deck-state',
+    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    activate: storyDeckState,
+  }),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(storySurfaces),
+  Plugin.addModule(storyGraphBuilder),
   Plugin.make,
 );
 
@@ -337,7 +336,6 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
-      setupEvents: [AppActivationEvents.SetupSettings],
     }),
   ],
   parameters: {

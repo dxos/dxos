@@ -147,11 +147,11 @@ export const useReviewExtensions = ({
   );
 
   // Live-resolved suggestion sources for the ambient overlay, fed by the (invisible) provider
-  // bridge in the container; empty until a provider is contributed (plugin-comments) — the overlay
+  // bridge in the container; empty until a provider is contributed — the overlay
   // then simply renders nothing.
   const [suggestionSources, setSuggestionSources] = useState<SuggestionSource[]>([]);
 
-  // The ambient multi-author suggestion overlay (shared with plugin-comments via `@dxos/ui-editor`,
+  // The ambient multi-author suggestion overlay (shared with the markdown editor via `@dxos/ui-editor`,
   // the leaf both depend on) lives in its own compartment, reconfigured live as the resolved sources
   // or the review mode change — it must never remount the editor (which would rebind automerge and
   // lose scroll/selection).

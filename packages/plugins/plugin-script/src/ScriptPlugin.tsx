@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Script } from '@dxos/compute';
 
 import {
@@ -17,30 +17,28 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ScriptEvents } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Script.Script] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
-    activate: ScriptSettings,
-  }),
-  Plugin.addModule({
-    activatesOn: ScriptEvents.SetupCompiler,
-    activate: Compiler,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Script.Script])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(ScriptSettings),
+  Plugin.addModule(Compiler),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

@@ -3,8 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Transcript } from '@dxos/types';
 
 import {
@@ -28,43 +27,28 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addTextContentModule({ activate: TextContent }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Transcript.Transcript] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addSettingsModule({ activate: TranscriptionSettings }),
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addReactContextModule({ activate: TranscriptionDriver }),
-  Plugin.addModule({
-    id: 'transcription',
-    activatesOn: AppActivationEvents.SetupAppGraph,
-    activate: Transcriber,
-  }),
-  Plugin.addModule({
-    id: 'entity-lookup',
-    activatesOn: AppActivationEvents.SetupAppGraph,
-    activate: EntityLookup,
-  }),
-  Plugin.addModule({
-    id: 'recording-session',
-    activatesOn: AppActivationEvents.SetupSettings,
-    activate: RecordingSession,
-  }),
-  Plugin.addModule({
-    id: 'pipeline-status',
-    activatesOn: AppActivationEvents.SetupSettings,
-    activate: PipelineStatus,
-  }),
-  Plugin.addModule({
-    id: 'markdown',
-    activatesOn: MarkdownEvents.SetupExtensions,
-    activate: MarkdownExtension,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(TextContent),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Transcript.Transcript])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(TranscriptionSettings),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(TranscriptionDriver),
+  Plugin.addModule(Transcriber),
+  Plugin.addModule(EntityLookup),
+  Plugin.addModule(RecordingSession),
+  Plugin.addModule(PipelineStatus),
+  Plugin.addModule(MarkdownExtension),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

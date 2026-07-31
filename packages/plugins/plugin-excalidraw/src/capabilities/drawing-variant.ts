@@ -23,5 +23,5 @@ const variant: DrawingVariant = {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(IllustratorCapabilities.VariantProvider, variant)),
+  Effect.succeed(Capability.contribute(IllustratorCapabilities.VariantProvider, variant)),
 );

@@ -52,6 +52,6 @@ export default Capability.makeModule(
         ];
       });
 
-    return Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver);
+    return Capability.contribute(AppCapabilities.NavigationTargetResolver, resolver);
   }),
 );

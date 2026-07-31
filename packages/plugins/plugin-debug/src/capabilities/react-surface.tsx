@@ -87,12 +87,11 @@ type ReactSurfaceOptions = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ logStore }: ReactSurfaceOptions) {
-    const capabilities = yield* Capability.Service;
-    const registry = capabilities.get(Capabilities.AtomRegistry);
-    const settingsAtom = capabilities.get(DebugCapabilities.Settings);
-    const fileUploader = capabilities.getAll(AppCapabilities.FileUploader)[0];
+    const registry = yield* Capabilities.AtomRegistry;
+    const settingsAtom = yield* DebugCapabilities.Settings;
+    const fileUploader = (yield* Capability.getAll(AppCapabilities.FileUploader))[0];
 
-    return Capability.contributes(Capabilities.ReactSurface, [
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),

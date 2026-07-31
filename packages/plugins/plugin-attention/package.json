@@ -64,6 +64,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/keyboard": "workspace:*",

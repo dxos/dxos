@@ -2,23 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents } from '../common';
+import { Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
 import { meta } from './meta';
 
-const ProcessManagerCapability = Capability.lazy('ProcessManager', () => import('./process-manager-capability'));
-const HistoryCapabilities = Capability.lazy('HistoryCapabilities', () => import('./history/capability'));
+const ProcessManagerCapability = Capability.lazyModule(
+  'ProcessManager',
+  {
+    requires: [
+      Capabilities.AtomRegistry,
+      Capabilities.LayerSpec,
+      Capabilities.TraceSink,
+      Capabilities.OperationHandler,
+      Capabilities.RemoteTraceMonitor,
+    ],
+    provides: [
+      Capabilities.ProcessManagerRuntime,
+      Capabilities.ServiceResolver,
+      Capabilities.ProcessMonitor,
+      Capabilities.OperationInvoker,
+    ],
+  },
+  () => import('./process-manager-capability'),
+);
+
+const HistoryCapabilities = Capability.lazyModule(
+  'HistoryCapabilities',
+  {
+    requires: [Capabilities.UndoMapping, Capabilities.OperationInvoker],
+    provides: [Capabilities.UndoRegistry, Capabilities.HistoryTracker],
+  },
+  () => import('./history/capability'),
+);
 
 export const ProcessManagerPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [ActivationEvents.SetupProcessManager],
-    firesAfterActivation: [ActivationEvents.ProcessManagerReady],
-    activate: ProcessManagerCapability,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.ProcessManagerReady,
-    activate: HistoryCapabilities,
-  }),
+  Plugin.addModule(ProcessManagerCapability),
+  Plugin.addModule(HistoryCapabilities),
   Plugin.make,
 );

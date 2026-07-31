@@ -3,6 +3,11 @@
 //
 
 import { Capability } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 
-export const PreviewPopover = Capability.lazy('PreviewPopover', () => import('./preview-popover'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const PreviewPopover = Capability.lazyModule(
+  'PreviewPopover',
+  { provides: [] },
+  () => import('./preview-popover'),
+);
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

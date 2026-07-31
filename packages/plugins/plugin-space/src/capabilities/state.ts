@@ -21,7 +21,7 @@ const defaultSpaceState: SpaceCapabilities.SpaceState = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
 
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
@@ -39,7 +39,7 @@ export default Capability.makeModule(
       viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
     }).pipe(Atom.keepAlive);
 
-    const manager = yield* Capability.get(Capabilities.PluginManager);
+    const manager = yield* Capabilities.PluginManager;
     // Update navigableCollections based on plugin state.
     const updateNavigableCollections = () => {
       const enabled =
@@ -55,8 +55,8 @@ export default Capability.makeModule(
     const unsubscribe = registry.subscribe(manager.enabled, updateNavigableCollections);
 
     return [
-      Capability.contributes(SpaceCapabilities.State, stateAtom),
-      Capability.contributes(SpaceCapabilities.EphemeralState, ephemeralAtom, () =>
+      Capability.contribute(SpaceCapabilities.State, stateAtom),
+      Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralAtom, () =>
         Effect.sync(() => {
           unsubscribe();
         }),

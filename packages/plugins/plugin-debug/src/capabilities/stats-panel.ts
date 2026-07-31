@@ -26,7 +26,7 @@ const STORAGE_KEY = `${meta.profile.key}.statsPanel`;
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ persist = true }: StatsPanelOptions = {}) {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
     const canPersist = persist && typeof localStorage !== 'undefined';
 
     const hydrate = (): Record<string, unknown> => {
@@ -55,7 +55,7 @@ export default Capability.makeModule(
       }
     };
 
-    return Capability.contributes(AppCapabilities.StatsPanel, {
+    return Capability.contribute(AppCapabilities.StatsPanel, {
       statsAtom,
       get: (pluginKey) => registry.get(statsAtom)[pluginKey],
       compartment: (pluginKey) => ({

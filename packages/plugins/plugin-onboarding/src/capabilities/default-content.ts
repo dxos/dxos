@@ -28,17 +28,13 @@ export default Capability.makeModule(
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
     const {
       AppAnnotation: { RootCollectionAnnotation },
-      AppSpace: { getPersonalSpace },
     } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
 
-    const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const operationInvoker = yield* Capabilities.OperationInvoker;
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const client = yield* ClientCapabilities.Client;
+    const personalSpace = yield* SpaceCapabilities.PersonalSpace;
 
-    const personalSpace = getPersonalSpace(client);
-    if (!personalSpace) {
-      return Capability.contributes(Capabilities.Null, null);
-    }
     Obj.update(personalSpace.properties, (obj) => {
       obj.icon = PERSONAL_SPACE_ICON;
       obj.iconHue = PERSONAL_SPACE_ICON_HUE;
@@ -82,5 +78,7 @@ export default Capability.makeModule(
     } else {
       graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(personalSpace.id, 'child'));
     }
+
+    return [];
   }),
 );

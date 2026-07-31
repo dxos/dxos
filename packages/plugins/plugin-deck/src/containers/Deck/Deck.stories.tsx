@@ -11,7 +11,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -53,7 +53,7 @@ const storyDeckSettings = Capability.makeModule(() =>
       enableNativeRedirect: false,
     }).pipe(Atom.keepAlive);
 
-    return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
+    return Capability.contribute(DeckCapabilities.Settings, settingsAtom);
   }),
 );
 
@@ -103,73 +103,74 @@ const storyDeckState = Capability.makeModule(() =>
     }).pipe(Atom.keepAlive);
 
     return [
-      Capability.contributes(DeckCapabilities.State, stateAtom),
-      Capability.contributes(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(DeckCapabilities.State, stateAtom),
+      Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
+  }),
+);
+
+const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
+  Effect.succeed(
+    Capability.contribute(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'storyArticle',
+        filter: Surface.makeFilter(AppSurface.Article),
+        component: ({ data }) => {
+          const subject: StoryItem | undefined = data.subject;
+          const title = subject?.title ?? data.attendableId;
+          return (
+            <div className='grid content-start gap-2 p-4'>
+              <p className='text-sm text-description'>Story article surface</p>
+              <p>
+                Placeholder content for <span className='font-medium'>{title}</span> (
+                <span className='font-mono text-xs'>{data.attendableId}</span>).
+              </p>
+            </div>
+          );
+        },
+      }),
+    ]),
+  ),
+);
+
+const storyGraphBuilder = Capability.inlineModule(
+  'story-graph',
+  { provides: [AppCapabilities.AppGraphBuilder] },
+  Effect.fnUntraced(function* () {
+    const extensions = yield* GraphBuilder.createExtension({
+      id: 'storyItems',
+      match: NodeMatcher.whenRoot,
+      connector: () =>
+        Effect.succeed(
+          STORY_ITEMS.map((item) =>
+            Node.make({
+              id: item.id,
+              type: 'story-item',
+              data: item,
+              properties: { label: item.title, icon: item.icon },
+            }),
+          ),
+        ),
+    });
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
     id: 'story-deck-settings',
-    activatesOn: AppActivationEvents.SetupSettings,
+    provides: [DeckCapabilities.Settings],
     activate: storyDeckSettings,
   }),
   Plugin.addModule({
     id: 'story-deck-state',
-    activatesOn: AppActivationEvents.AppGraphReady,
+    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
     activate: storyDeckState,
   }),
-  AppPlugin.addOperationHandlerModule({
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSurfaceModule({
-    id: 'story-surfaces',
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
-          Surface.create({
-            id: 'storyArticle',
-            filter: Surface.makeFilter(AppSurface.Article),
-            component: ({ data }) => {
-              const subject = data.subject as StoryItem | undefined;
-              const title = subject?.title ?? data.attendableId;
-              return (
-                <div className='grid content-start gap-2 p-4'>
-                  <p className='text-sm text-description'>Story article surface</p>
-                  <p>
-                    Placeholder content for <span className='font-medium'>{title}</span> (
-                    <span className='font-mono text-xs'>{data.attendableId}</span>).
-                  </p>
-                </div>
-              );
-            },
-          }),
-        ]),
-      ),
-  }),
-  AppPlugin.addAppGraphModule({
-    id: 'story-graph',
-    activate: Effect.fnUntraced(function* () {
-      const extensions = yield* GraphBuilder.createExtension({
-        id: 'storyItems',
-        match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed(
-            STORY_ITEMS.map((item) =>
-              Node.make({
-                id: item.id,
-                type: 'story-item',
-                data: item,
-                properties: { label: item.title, icon: item.icon },
-              }),
-            ),
-          ),
-      });
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
-    }),
-  }),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(storySurfaces),
+  Plugin.addModule(storyGraphBuilder),
   Plugin.make,
 );
 
@@ -254,7 +255,6 @@ const meta = {
     withMosaic(),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
-      setupEvents: [AppActivationEvents.SetupSettings],
     }),
   ],
   parameters: {

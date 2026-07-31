@@ -20,8 +20,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(ExcalidrawCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.contribute(ExcalidrawCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,

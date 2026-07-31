@@ -37,8 +37,8 @@ const parseAppearance = (value: string | null): Settings.Appearance => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ tx: propsTx = defaultTx, noCache, platform }: ThemePluginOptions = {}) {
-    const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const settingsAtom = yield* Capability.get(ThemeCapabilities.Settings);
+    const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
+    const settingsAtom = yield* ThemeCapabilities.Settings;
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
 
     const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -72,7 +72,7 @@ export default Capability.makeModule(
     };
     window.addEventListener('storage', handleStorage);
 
-    return Capability.contributes(
+    return Capability.contribute(
       Capabilities.ReactContext,
       {
         id: meta.profile.key,

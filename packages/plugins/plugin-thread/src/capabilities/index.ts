@@ -3,13 +3,20 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import { SpaceCapability } from '@dxos/plugin-space';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const ChannelBackendFeed = Capability.lazy('ChannelBackendFeed', () => import('./channel-backend-feed'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { ThreadCapabilities } from '#types';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  requires: [CallsCapabilities.Manager],
+});
+export const ChannelBackendFeed = Capability.lazyModule(
+  'ChannelBackendFeed',
+  { provides: [ThreadCapabilities.ChannelBackend] },
+  () => import('./channel-backend-feed'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

@@ -25,7 +25,7 @@ import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'bundled',
         filter: AppSurface.literal(AppSurface.Article, 'bundled'),

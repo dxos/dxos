@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
@@ -199,7 +199,6 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

@@ -3,8 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { BeaconServiceModule, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -12,16 +11,13 @@ import { translations } from '#translations';
 
 export const IrohBeaconPlugin = Plugin.define(meta).pipe(
   // Beacon service: creates transport + starts broadcasting.
-  Plugin.addModule({
-    activatesOn: ClientEvents.SpacesReady,
-    activate: BeaconServiceModule,
-  }),
+  Plugin.addModule(BeaconServiceModule),
 
   // Status indicator surface.
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  Plugin.addModule(ReactSurface),
 
   // Translations.
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule(AppCapability.translations(translations)),
 
   Plugin.make,
 );

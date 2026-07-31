@@ -3,13 +3,19 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
+import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { PresenterCapabilities } from '#types';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const MarkdownExtension = Capability.lazyModule(
+  'MarkdownExtension',
+  { provides: [MarkdownCapabilities.ExtensionProvider] },
+  () => import('./markdown-extension'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const PresenterSettings = Capability.lazy('PresenterSettings', () => import('./settings'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const PresenterSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [PresenterCapabilities.Settings],
+});

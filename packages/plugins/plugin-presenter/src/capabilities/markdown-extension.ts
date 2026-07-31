@@ -19,7 +19,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
+    return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document }) => {
         if (!document) {
           return undefined;

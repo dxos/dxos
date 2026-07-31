@@ -3,14 +3,10 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder } from '#capabilities';
 import { meta } from '#meta';
 
-export const DevtoolsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Plugin.make,
-);
+export const DevtoolsPlugin = Plugin.define(meta).pipe(Plugin.addModule(AppGraphBuilder), Plugin.make);
 
 export default DevtoolsPlugin;

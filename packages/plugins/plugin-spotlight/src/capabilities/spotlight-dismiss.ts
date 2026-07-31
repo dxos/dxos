@@ -7,7 +7,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
@@ -15,50 +15,56 @@ import { isTauri } from '@dxos/util';
  * Capability that sets up spotlight panel dismiss behavior.
  * Listens for focus loss and Escape key to dismiss the spotlight panel.
  */
-export default Capability.makeModule(() =>
-  Effect.promise(async () => {
-    if (!isTauri()) {
-      return [];
-    }
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const cleanup = yield* Effect.promise(async () => {
+      if (!isTauri()) {
+        return undefined;
+      }
 
-    const { getCurrentWindow } = await import('@tauri-apps/api/window');
-    const { invoke } = await import('@tauri-apps/api/core');
-    const win = getCurrentWindow();
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      const { invoke } = await import('@tauri-apps/api/core');
+      const win = getCurrentWindow();
 
-    // Hide spotlight when the panel loses focus.
-    let focusCleanup: (() => void) | undefined;
-    try {
-      focusCleanup = await win.onFocusChanged(async ({ payload }: { payload: boolean }) => {
-        if (!payload) {
+      // Hide spotlight when the panel loses focus.
+      let focusCleanup: (() => void) | undefined;
+      try {
+        focusCleanup = await win.onFocusChanged(async ({ payload }: { payload: boolean }) => {
+          if (!payload) {
+            try {
+              await invoke('hide_spotlight');
+            } catch (err) {
+              log.catch(err);
+            }
+          }
+        });
+      } catch (err) {
+        log.catch(err);
+      }
+
+      // Escape key listener.
+      const handleKeyDown = async (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
           try {
             await invoke('hide_spotlight');
           } catch (err) {
             log.catch(err);
           }
         }
-      });
-    } catch (err) {
-      log.catch(err);
-    }
+      };
+      window.addEventListener('keydown', handleKeyDown);
 
-    // Escape key listener.
-    const handleKeyDown = async (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        try {
-          await invoke('hide_spotlight');
-        } catch (err) {
-          log.catch(err);
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
-    return Capability.contributes(Capabilities.Null, null, () =>
-      Effect.sync(() => {
+      return () => {
         focusCleanup?.();
         window.removeEventListener('keydown', handleKeyDown);
-      }),
-    );
+      };
+    });
+
+    if (cleanup) {
+      yield* Effect.addFinalizer(() => Effect.sync(cleanup));
+    }
+
+    return [];
   }),
 );

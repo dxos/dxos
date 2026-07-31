@@ -2,10 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const DebugSettings = Capability.lazy('DebugSettings', () => import('./settings'));
-export const StatsPanel = Capability.lazy('StatsPanel', () => import('./stats-panel'));
-export const LogRecording = Capability.lazy('LogRecording', () => import('./log-recording'));
+import { DebugCapabilities, type DebugPluginOptions } from '#types';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  requires: [Capabilities.AtomRegistry, DebugCapabilities.Settings, AppCapabilities.FileUploader],
+  props: ({ logStore }: DebugPluginOptions) => ({ logStore }),
+});
+export const DebugSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [DebugCapabilities.Settings],
+});
+export const StatsPanel = Capability.lazyModule(
+  'StatsPanel',
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [AppCapabilities.StatsPanel],
+    props: ({ persistStats }: DebugPluginOptions) => ({ persist: persistStats ?? true }),
+  },
+  () => import('./stats-panel'),
+);
+export const LogRecording = Capability.lazyModule('LogRecording', { provides: [] }, () => import('./log-recording'));

@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const ReactContext = Capability.lazy('ReactContext', () => import('./react-context'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  requires: [AppCapabilities.AppGraph],
+});
+export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

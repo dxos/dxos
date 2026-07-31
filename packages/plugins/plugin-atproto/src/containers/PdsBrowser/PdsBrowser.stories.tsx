@@ -85,11 +85,11 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [
-        Capability.contributes(AppCapabilities.Translations, translations),
+        Capability.contribute(AppCapabilities.Translations, translations),
         // The browser reads via ReadRepoLayer (by handle). The seeded `alice.test` account resolves to the
         // in-memory mock (deterministic, with a mapped collection to preview/import); any other handle hits
         // the real public repo so entering your own handle actually browses that PDS.
-        Capability.contributes(AtprotoCapabilities.ReadRepoLayer, (handle: string) =>
+        Capability.contribute(AtprotoCapabilities.ReadRepoLayer, (handle: string) =>
           handle === MOCK_HANDLE ? AtprotoRepo.layerMock(mock) : AtprotoRepo.layerPublic(handle),
         ),
       ],

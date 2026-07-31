@@ -10,9 +10,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { ComposerSkill, SupportSkill } from '#skills';
 
 const skillDefinition = () =>
-  Effect.succeed([
-    Capability.contributes(AppCapabilities.SkillDefinition, SupportSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, ComposerSkill),
-  ]);
+  Effect.succeed([Capability.contributeAll(AppCapabilities.SkillDefinition, [SupportSkill, ComposerSkill])]);
 
 export default skillDefinition;

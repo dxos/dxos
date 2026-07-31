@@ -34,7 +34,7 @@ export type OllamaCapabilities =
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
 
     const runtime = ManagedRuntime.make(OllamaSidecar.layerLive);
 
@@ -262,12 +262,12 @@ export default Capability.makeModule(
     return [
       // The runtime-dispose finalizer lives on the resolver contribution only; the manager closes
       // over the same runtime, so there is a single disposal path.
-      Capability.contributes(
+      Capability.contribute(
         AppCapabilities.AiModelResolver,
         OllamaSidecarModelResolver.pipe(Layer.provide(sidecarLayer)),
         () => Effect.tryPromise(() => runtime.dispose()),
       ),
-      Capability.contributes(AssistantCapabilities.OllamaManager, manager),
+      Capability.contribute(AssistantCapabilities.OllamaManager, manager),
     ];
   }),
 );

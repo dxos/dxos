@@ -74,7 +74,7 @@ type ReactSurfaceOptions = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
-    return Capability.contributes(Capabilities.ReactSurface, [
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'spaceHome',
         filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),

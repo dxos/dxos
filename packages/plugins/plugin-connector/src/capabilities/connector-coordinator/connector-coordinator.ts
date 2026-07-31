@@ -193,9 +193,9 @@ const finalizePendingEntry = (
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const serviceResolver = yield* Capability.get(Capabilities.ServiceResolver);
+    const client = yield* ClientCapabilities.Client;
+    const invoker = yield* Capabilities.OperationInvoker;
+    const serviceResolver = yield* Capabilities.ServiceResolver;
     const pluginContext = yield* Capability.Service;
 
     let cachedEdgeClient: EdgeHttpClient | undefined;
@@ -579,7 +579,7 @@ export default Capability.makeModule(
         return { added, removed };
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
-    return Capability.contributes(
+    return Capability.contribute(
       ConnectorCoordinator,
       {
         createConnection,

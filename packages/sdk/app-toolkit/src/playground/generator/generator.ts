@@ -9,9 +9,7 @@ import { ActivationEvent, Capabilities, Capability, Plugin } from '@dxos/app-fra
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
 
-import { AppPlugin } from '../../app-framework';
-
-export const Number = Capability.make<number>('org.dxos.test.generator.number');
+export const Number = Capability.make<number>()('org.dxos.test.generator.number');
 
 export const CountEvent = ActivationEvent.make('org.dxos.test.generator.count');
 
@@ -30,22 +28,23 @@ export const createNumberPlugin = (id: string) => {
   const AlertOperation = createAlertOperation(pluginId);
 
   return Plugin.define(Plugin.makeMeta({ key: pluginId, name: `Plugin ${DXN.getName(pluginId)}` })).pipe(
-    AppPlugin.addOperationHandlerModule({
-      activate: () =>
-        Effect.succeed(
-          Capability.contributes(
+    Plugin.addModule(
+      Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
+        Effect.succeed([
+          Capability.contribute(
             Capabilities.OperationHandler,
             OperationHandlerSet.make(
               Operation.withHandler(AlertOperation, () => Effect.sync(() => window.alert(JSON.stringify({ number })))),
             ),
           ),
-        ),
-    }),
-    Plugin.addModule({
-      id: 'Main',
-      activatesOn: CountEvent,
-      activate: () => Effect.succeed(Capability.contributes(Number, number)),
-    }),
+        ]),
+      ),
+    ),
+    Plugin.addModule(
+      Capability.inlineModule('Main', { provides: [Number], activatesOn: CountEvent }, () =>
+        Effect.succeed([Capability.contribute(Number, number)]),
+      ),
+    ),
     Plugin.make,
   )();
 };

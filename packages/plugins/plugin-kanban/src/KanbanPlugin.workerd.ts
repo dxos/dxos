@@ -3,15 +3,15 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 import { Kanban } from '#types';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Kanban.Kanban] }),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Kanban.Kanban])),
   Plugin.make,
 );
 

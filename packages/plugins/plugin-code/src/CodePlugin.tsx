@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -22,21 +22,23 @@ import { CodeProject, SourceFile, Spec } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CodePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile] }),
-  AppPlugin.addSettingsModule({ activate: SettingsCapability }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.Startup,
-    activate: BuildRunState,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile])),
+  Plugin.addModule(SettingsCapability),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(BuildRunState),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

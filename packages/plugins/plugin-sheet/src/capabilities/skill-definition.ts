@@ -10,5 +10,5 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { SheetSkill } from '#skills';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(AppCapabilities.SkillDefinition, SheetSkill)),
+  Effect.succeed(Capability.contribute(AppCapabilities.SkillDefinition, SheetSkill)),
 );

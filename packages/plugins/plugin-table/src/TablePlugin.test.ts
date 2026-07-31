@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -21,14 +20,10 @@ describe('TablePlugin', () => {
       plugins: [ClientPlugin({}), TablePlugin()],
     });
 
-    // After autoStart: OperationHandler auto-cascades from ProcessManagerPlugin.
-    // schema auto-cascades from ClientPlugin.
+    // After autoStart: OperationHandler, schema, and SkillDefinition are dependency-mode roots and
+    // all activate immediately.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('OperationHandler'), moduleId('schema')]),
+      expect.arrayContaining([moduleId('OperationHandler'), moduleId('schema'), moduleId('SkillDefinition')]),
     );
-
-    // SkillDefinition fires when AssistantPlugin loads skill definitions.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
   });
 });

@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { AccessToken } from '@dxos/link';
 
 import { OperationHandler, SkillDefinition } from '#capabilities';
@@ -14,12 +14,17 @@ import { Sandbox } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SandboxPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Sandbox.Sandbox, AccessToken.AccessToken] }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Sandbox.Sandbox, AccessToken.AccessToken])),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

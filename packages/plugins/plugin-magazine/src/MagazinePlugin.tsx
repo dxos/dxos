@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Instructions } from '@dxos/compute';
-import { AttentionEvents } from '@dxos/plugin-attention';
 import { StateMap, TagIndex } from '@dxos/schema';
 
 import {
@@ -24,17 +23,19 @@ import { Magazine, Subscription } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MagazinePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
-  AppPlugin.addSchemaModule({
-    schema: [
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
+  Plugin.addModule(
+    AppCapability.schema([
       Subscription.Subscription,
       Subscription.Post,
       Subscription.PostContent,
@@ -42,16 +43,12 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
       Instructions.Instructions,
       StateMap.StateMap,
       TagIndex.TagIndex,
-    ],
-  }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'magazine-automation-templates',
-    activatesOn: AppActivationEvents.SetupSchema,
-    activate: RoutineTemplates,
-  }),
+    ]),
+  ),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(RoutineTemplates),
   Plugin.make,
 );
 

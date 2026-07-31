@@ -3,10 +3,12 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
+import { GameCapabilities } from '@dxos/plugin-game/types';
 
-export const GameVariant = Capability.lazy('GameVariant', () => import('./game-variant'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const GameVariant = Capability.lazyModule(
+  'GameVariant',
+  { provides: [GameCapabilities.VariantProvider] },
+  () => import('./game-variant'),
 );
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

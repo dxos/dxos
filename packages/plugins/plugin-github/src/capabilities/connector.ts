@@ -67,7 +67,7 @@ const testConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(Connector, [
       {
         id: GITHUB_PROVIDER_ID,
         source: GITHUB_SOURCE,

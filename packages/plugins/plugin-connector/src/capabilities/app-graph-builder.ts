@@ -59,13 +59,17 @@ const whenObjectHasCursor: NodeMatcher.NodeMatcher<Cursor.Cursor> = (node, get) 
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Hoisted so the connector-reading extensions below establish a reactive dependency instead of
+    // reading the capability manager synchronously (graph-extension bodies must never sync-get).
+    const connectorAtom = yield* Capability.atom(Connector);
+
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'connectionActions',
         match: (node) => (Connection.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        actions: (connection) =>
+        actions: (connection, get) =>
           Effect.gen(function* () {
-            const connectors = (yield* Capability.Service).getAll(Connector).flat();
+            const connectors = get(connectorAtom).flat();
             const connector = connectors.find((entry) => entry.id === connection.connectorId);
             const spaceId = Obj.getDatabase(connection)?.spaceId;
             const actions = [];
@@ -196,7 +200,7 @@ export default Capability.makeModule(
               // Connected: the owning plugin's own sync/generate action covers this state.
               return [];
             }
-            const allConnectors = capabilities.getAll(Connector).flat();
+            const allConnectors = get(connectorAtom).flat();
             return connectorAuthActions({
               connectorIds,
               db,
@@ -233,6 +237,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

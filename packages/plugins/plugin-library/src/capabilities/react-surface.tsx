@@ -17,7 +17,7 @@ import { NOTES_COMPANION_VARIANT } from './app-graph-builder';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'bookArticle',
         // The main article only — not a companion plank (which carries a `variant`).

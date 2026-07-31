@@ -2,12 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 
-export const Keyboard = Capability.lazy('Keyboard', () => import('./keyboard'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { AttentionCapabilities } from '#types';
+
+export const Attention = Capability.lazyModule(
+  'attention',
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [AttentionCapabilities.Attention, AttentionCapabilities.ViewState],
+  },
+  () => import('./attention'),
 );
-export const ReactContext = Capability.lazy('ReactContext', () => import('./react-context'));
+export const Keyboard = Capability.lazyModule(
+  'Keyboard',
+  { requires: [AppCapabilities.AppGraph, AttentionCapabilities.Attention], provides: [] },
+  () => import('./keyboard'),
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactContext = AppCapability.reactContext(() => import('./react-context'));

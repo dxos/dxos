@@ -24,10 +24,10 @@ export type TestAppOptions = {
   plugins: Plugin.Plugin[];
   /** Plugin ids that are enabled by default in addition to core. Defaults to all non-system plugin ids. */
   enabled?: string[];
-  /** Additional activation events fired alongside SetupReactSurface. */
+  /** Additional activation events fired before Startup. */
   setupEvents?: ActivationEvent.ActivationEvent[];
   /**
-   * Whether to automatically fire SetupReactSurface + Startup during setup.
+   * Whether to automatically fire Startup during setup.
    * Defaults to true.
    */
   autoStart?: boolean;
@@ -132,7 +132,6 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
       await EffectEx.runAndForwardErrors(
         Effect.all([
           ...setupEvents.map((event) => manager.activate(event)),
-          manager.activate(ActivationEvents.SetupReactSurface),
           manager.activate(ActivationEvents.Startup),
         ]),
       );

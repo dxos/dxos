@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { KanbanPlugin } from '#plugin';
@@ -19,13 +18,10 @@ describe('KanbanPlugin', () => {
       plugins: [KanbanPlugin()],
     });
 
-    // After autoStart: OperationHandler and UndoMappings auto-cascade from ProcessManagerPlugin.
+    // OperationHandler, UndoMappings, and SkillDefinition are all dependency-mode roots, so they all
+    // activate immediately.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('OperationHandler'), moduleId('UndoMappings')]),
+      expect.arrayContaining([moduleId('OperationHandler'), moduleId('UndoMappings'), moduleId('SkillDefinition')]),
     );
-
-    // SkillDefinition fires when AssistantPlugin loads skill definitions.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
   });
 });

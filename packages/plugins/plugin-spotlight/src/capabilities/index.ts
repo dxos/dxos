@@ -3,12 +3,19 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { SpotlightCapabilities } from '#types';
+
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
+export const SpotlightDismiss = Capability.lazyModule(
+  'SpotlightDismiss',
+  { provides: [] },
+  () => import('./spotlight-dismiss'),
 );
-export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root'));
-export const SpotlightDismiss = Capability.lazy('SpotlightDismiss', () => import('./spotlight-dismiss'));
-export const State = Capability.lazy('State', () => import('./state'));
+export const State = Capability.lazyModule(
+  'State',
+  { provides: [SpotlightCapabilities.State, AppCapabilities.Layout] },
+  () => import('./state'),
+);

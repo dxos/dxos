@@ -12,8 +12,8 @@ import type { DrawingVariant } from './types';
 
 /**
  * A drawing variant contribution. Each renderer plugin (tldraw, excalidraw, ...) contributes one
- * via `Capability.contributes(IllustratorCapabilities.VariantProvider, variant)`.
+ * via `Capability.contribute(IllustratorCapabilities.VariantProvider, variant)`.
  * Consumers iterate via `Capability.getAll(IllustratorCapabilities.VariantProvider)` (Effect) or
  * `useCapabilities(IllustratorCapabilities.VariantProvider)` (React).
  */
-export const VariantProvider = Capability.make<DrawingVariant>(`${meta.profile.key}.capability.variant`);
+export const VariantProvider = Capability.make<DrawingVariant>()(`${meta.profile.key}.capability.variant`);

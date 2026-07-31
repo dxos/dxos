@@ -95,8 +95,8 @@ export default Capability.makeModule(
     );
 
     return [
-      Capability.contributes(BrainCapabilities.FactStoreRegistry, registry),
-      Capability.contributes(Capabilities.LayerSpec, factStoreSpec),
+      Capability.contribute(BrainCapabilities.FactStoreRegistry, registry),
+      Capability.contribute(Capabilities.LayerSpec, factStoreSpec),
     ];
   }),
 );

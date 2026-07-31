@@ -8,7 +8,6 @@ import React, { useMemo } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type Node } from '@dxos/plugin-graph';
@@ -28,18 +27,12 @@ import { Plank } from './Plank';
 random.seed(99);
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
-  Plugin.addModule({
-    id: Capability.getModuleTag(DeckState),
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: () => DeckState(),
-  }),
-  AppPlugin.addOperationHandlerModule({
-    activate: OperationHandler,
-  }),
+  Plugin.addModule(DeckState),
+  Plugin.addModule(OperationHandler),
   Plugin.make,
 );
 
-const TestExtension = Capability.contributes(
+const TestExtension = Capability.contribute(
   Capabilities.ReactSurface,
   Surface.create({
     id: 'storyArticle',

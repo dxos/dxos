@@ -15,7 +15,7 @@ import { Game } from '../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'game',
         filter: AppSurface.oneOf(

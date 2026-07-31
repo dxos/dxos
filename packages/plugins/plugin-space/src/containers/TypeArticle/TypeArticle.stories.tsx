@@ -69,7 +69,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
+      capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),

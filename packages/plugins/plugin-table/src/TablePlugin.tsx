@@ -2,47 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { CommentConfig, CreateObject, OperationHandler, ReactSurface, SkillDefinition } from '#capabilities';
+import {
+  CommentConfig,
+  CreateObject,
+  OnTypeAdded,
+  OperationHandler,
+  ReactSurface,
+  SkillDefinition,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { TableOperation } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TablePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Table.Table] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({
-    translations: [...translations, ...formTranslations, ...tableTranslations],
-  }),
-  Plugin.addModule({
-    id: 'on-type-added',
-    activatesOn: SpaceEvents.TypeAdded,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnTypeAdded, ({ db, type, show }) =>
-          Operation.invoke(TableOperation.OnTypeAdded, { db, type, show }),
-        ),
-      ),
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CommentConfig),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Table.Table])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations([...translations, ...formTranslations, ...tableTranslations])),
+  Plugin.addModule(OnTypeAdded),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

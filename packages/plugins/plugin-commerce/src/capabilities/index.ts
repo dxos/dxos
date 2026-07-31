@@ -2,8 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default as AppGraphBuilder } from './app-graph-builder';
-export { default as OperationHandler } from './operation-handler';
-export { default as SkillDefinition } from './skill-definition';
-export { default as CreateObject } from './create-object';
-export { default as ReactSurface } from './react-surface';
+import { AppCapability } from '@dxos/app-toolkit';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { SpaceCapability } from '@dxos/plugin-space';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  requires: [AttentionCapabilities.Attention],
+});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

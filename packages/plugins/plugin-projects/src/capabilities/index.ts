@@ -3,13 +3,17 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
+import { SpaceCapability } from '@dxos/plugin-space';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { ProjectCapabilities } from '#types';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const Templates = Capability.lazyModule(
+  'Templates',
+  { provides: [ProjectCapabilities.Template] },
+  () => import('./templates'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const Templates = Capability.lazy('Templates', () => import('./templates'));

@@ -24,7 +24,7 @@ const EDGE_EXISTENCE_TIMEOUT = '3 seconds';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const client = yield* ClientCapabilities.Client;
 
     // Remote existence check (does not materialize a local node); reuses the shared edge checker.
     const checkRemote = NotFound.createEdgeExistenceChecker((spaceId, body) =>
@@ -65,6 +65,6 @@ export default Capability.makeModule(
         }),
     };
 
-    return Capability.contributes(AppCapabilities.NavigationTargetLoader, loader);
+    return Capability.contribute(AppCapabilities.NavigationTargetLoader, loader);
   }),
 );

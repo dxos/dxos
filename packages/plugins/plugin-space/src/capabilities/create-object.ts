@@ -17,73 +17,75 @@ import { SpaceCapabilities } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Collection.Collection),
-        inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Collection.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Type.Type),
-        inputSchema: SpaceOperation.StoredSchemaForm,
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const result = yield* Operation.invoke(SpaceOperation.AddType, {
-              db: options.db,
-              name: props.name,
-              type: createDefaultSchema(),
-            });
-            return {
-              id: result.id,
-              subject: [],
-              object: result.object,
-            };
-          }),
-      }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Organization.Organization),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Organization.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Person.Person),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Person.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Task.Task),
-        inputSchema: Type.getSchema(Task.Task),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Task.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
+      Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
+        {
+          id: Type.getTypename(Collection.Collection),
+          inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Collection.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+            }),
+        },
+        {
+          id: Type.getTypename(Type.Type),
+          inputSchema: SpaceOperation.StoredSchemaForm,
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const result = yield* Operation.invoke(SpaceOperation.AddType, {
+                db: options.db,
+                name: props.name,
+                type: createDefaultSchema(),
+              });
+              return {
+                id: result.id,
+                subject: [],
+                object: result.object,
+              };
+            }),
+        },
+        {
+          id: Type.getTypename(Organization.Organization),
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Organization.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+            }),
+        },
+        {
+          id: Type.getTypename(Person.Person),
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Person.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+            }),
+        },
+        {
+          id: Type.getTypename(Task.Task),
+          inputSchema: Type.getSchema(Task.Task),
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Task.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+            }),
+        },
+      ]),
     ];
   }),
 );

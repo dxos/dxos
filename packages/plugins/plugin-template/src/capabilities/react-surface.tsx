@@ -14,7 +14,7 @@ import { Template } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(
+    Capability.contribute(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'root',

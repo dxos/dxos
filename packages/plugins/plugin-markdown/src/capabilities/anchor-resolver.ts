@@ -14,7 +14,7 @@ import { getMarkdownAnchorText } from '../model/selection';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(AppCapabilities.AnchorResolver, {
+    Capability.contribute(AppCapabilities.AnchorResolver, {
       key: Type.getTypename(Markdown.Document),
       getText: getMarkdownAnchorText,
     }),

@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
@@ -17,10 +17,10 @@ import { Drawing } from '#types';
  * downstream bundlers don't resolve cleanly under nested pnpm symlinks.
  */
 export const IllustratorPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Drawing.Drawing] }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Drawing.Drawing])),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

@@ -16,6 +16,11 @@ import { DeckCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Read reactively so the extension establishes a dependency and heals once these
+    // capabilities land (dependency modules contribute individually, not batched per wave).
+    const attentionAtom = yield* Capability.atom(AttentionCapabilities.Attention);
+    const deckStateAtom = yield* Capability.atom(DeckCapabilities.State);
+
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'notFound',
@@ -28,10 +33,15 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         actions: (_node, get) =>
           Effect.gen(function* () {
+            const [attention] = get(attentionAtom);
+            const [stateAtom] = get(deckStateAtom);
+            if (!attention || !stateAtom) {
+              return [];
+            }
+
             const closeCurrent = {
               id: `${LayoutOperation.Close.meta.key}.current`,
               data: Effect.fnUntraced(function* () {
-                const attention = yield* Capability.get(AttentionCapabilities.Attention);
                 const attended = attention.getCurrent().at(-1);
                 if (attended) {
                   yield* Operation.invoke(LayoutOperation.Close, { subject: [attended] });
@@ -46,7 +56,6 @@ export default Capability.makeModule(
             const closeOthers = {
               id: `${LayoutOperation.Close.meta.key}.others`,
               data: Effect.fnUntraced(function* () {
-                const attention = yield* Capability.get(AttentionCapabilities.Attention);
                 const deck = yield* DeckCapabilities.getDeck();
                 const attended = attention.getCurrent().at(-1);
                 const ids = deck.active.filter((id: string) => id !== attended) ?? [];
@@ -70,7 +79,7 @@ export default Capability.makeModule(
               },
             };
 
-            const state = get(yield* Capability.get(DeckCapabilities.State));
+            const state = get(stateAtom);
             const deck = state.decks[state.activeDeck];
 
             const toggleSidebar = {
@@ -103,6 +112,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

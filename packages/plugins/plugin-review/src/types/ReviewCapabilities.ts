@@ -89,8 +89,8 @@ export namespace ReviewCapabilities {
       ? { showSuggestions: false, showComments: true, editable: false }
       : { showSuggestions: true, showComments: true, editable: true };
 
-  export const ReviewRenderPolicy = Capability.make<ReviewRenderPolicyFn>(
-    `${meta.profile.key}.capability.review-render-policy`,
+  export const ReviewRenderPolicy = Capability.make<ReviewRenderPolicyFn>()(
+    `${meta.profile.key}.capability.reviewRenderPolicy`,
   );
 
   /**
@@ -101,5 +101,5 @@ export namespace ReviewCapabilities {
     id: string;
     getTarget: (object: Obj.Unknown) => Text.Text | undefined;
   }>;
-  export const HistoryProvider = Capability.make<HistoryProvider>(`${meta.profile.key}.capability.history-provider`);
+  export const HistoryProvider = Capability.make<HistoryProvider>()(`${meta.profile.key}.capability.historyProvider`);
 }

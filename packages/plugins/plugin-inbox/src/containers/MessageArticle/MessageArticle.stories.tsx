@@ -8,7 +8,6 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -62,7 +61,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { length = 8 } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

@@ -18,6 +18,7 @@ import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules';
 import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
+
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Documents',
   render: ModuleContainer,

@@ -3,19 +3,16 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
-import OperationHandler from './capabilities/operation-handler';
-import SkillDefinition from './capabilities/skill-definition';
-
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ id: 'skill-definition', activate: SkillDefinition }),
-  AppPlugin.addOperationHandlerModule({ id: 'operation-handler', activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
+  Plugin.addModule(AppCapability.skillDefinition(() => import('./capabilities/skill-definition'))),
+  Plugin.addModule(AppCapability.operationHandler(() => import('./capabilities/operation-handler'))),
+  Plugin.addModule(AppCapability.schema([Markdown.Document, Text.Text])),
   Plugin.make,
 );
 

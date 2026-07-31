@@ -3,15 +3,21 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
+import { SpaceCapability } from '@dxos/plugin-space';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-export const BuildRunState = Capability.lazy('BuildRunState', () => import('./build-run-state'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { CodeCapabilities } from '#types';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  requires: [AppCapabilities.PluginAsset],
+});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const BuildRunState = Capability.lazyModule(
+  'BuildRunState',
+  { provides: [CodeCapabilities.BuildRun] },
+  () => import('./build-run-state'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const Settings = Capability.lazy('Settings', () => import('./settings'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const Settings = AppCapability.settings(() => import('./settings'));

@@ -57,6 +57,6 @@ export default Capability.makeModule(
             ),
     });
 
-    return Capability.contributes(Capabilities.RemoteTraceMonitor, monitor);
+    return Capability.contribute(Capabilities.RemoteTraceMonitor, monitor);
   }),
 );

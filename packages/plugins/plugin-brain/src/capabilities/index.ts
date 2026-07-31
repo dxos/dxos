@@ -2,18 +2,33 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { type OperationHandlerSet } from '@dxos/compute';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
+import { InboxCapabilities } from '@dxos/plugin-inbox/types';
+import { ProjectCapabilities } from '@dxos/plugin-projects/types';
+
+import { BrainCapabilities } from '#types';
 
 export * from './fact-store';
 
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const FactStore = Capability.lazyModule(
+  'FactStore',
+  { provides: [BrainCapabilities.FactStoreRegistry, Capabilities.LayerSpec] },
+  () => import('./fact-store'),
 );
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-export const FactStore = Capability.lazy('FactStore', () => import('./fact-store'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const Settings = Capability.lazy('Settings', () => import('./settings'));
-export const MailboxAction = Capability.lazy('MailboxAction', () => import('./mailbox-action'));
-export const ProjectTemplates = Capability.lazy('ProjectTemplates', () => import('./project-templates'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const Settings = AppCapability.settings(() => import('./settings'), {
+  provides: [BrainCapabilities.Settings],
+});
+export const MailboxAction = Capability.lazyModule(
+  'MailboxAction',
+  { requires: [Capabilities.AtomRegistry], provides: [InboxCapabilities.MailboxAction] },
+  () => import('./mailbox-action'),
+);
+export const ProjectTemplates = Capability.lazyModule(
+  'ProjectTemplates',
+  { provides: [ProjectCapabilities.Template] },
+  () => import('./project-templates'),
+);

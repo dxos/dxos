@@ -39,7 +39,7 @@ const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
 /** A single non-draft message or a non-empty conversation (thread) of them. */
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'subscriptions',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {

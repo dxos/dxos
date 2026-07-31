@@ -3,17 +3,24 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
+import { ProjectCapabilities } from '@dxos/plugin-projects/types';
+import { RoutineCapabilities } from '@dxos/plugin-routine';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 
-export const AutomationTemplates = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
-
-export const ProjectTemplates = Capability.lazy('ProjectTemplates', () => import('./project-templates'));
-
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const AutomationTemplates = Capability.lazyModule(
+  'AutomationTemplates',
+  { provides: [RoutineCapabilities.Template] },
+  () => import('./automation-templates'),
 );
+
+export const ProjectTemplates = Capability.lazyModule(
+  'ProjectTemplates',
+  { provides: [ProjectCapabilities.Template] },
+  () => import('./project-templates'),
+);
+
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

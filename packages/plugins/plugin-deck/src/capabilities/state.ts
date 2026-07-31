@@ -87,9 +87,9 @@ export default Capability.makeModule(
     }).pipe(Atom.keepAlive);
 
     return [
-      Capability.contributes(DeckCapabilities.State, stateAtom),
-      Capability.contributes(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(DeckCapabilities.State, stateAtom),
+      Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );

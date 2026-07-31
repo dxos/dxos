@@ -15,7 +15,7 @@ import { ProjectArticle } from '#containers';
 /** React surfaces contributed by plugin-projects — the Project detail article. */
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'project.article',
         filter: AppSurface.object(AppSurface.Article, Project.Project),

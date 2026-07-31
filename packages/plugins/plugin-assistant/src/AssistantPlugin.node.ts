@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Instructions, Skill } from '@dxos/compute';
@@ -26,16 +26,16 @@ import {
   Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
-import { AssistantEvents, type AssistantPluginOptions } from '#types';
+import { type AssistantPluginOptions } from '#types';
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
-    AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-    AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-    AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-    AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-    AppPlugin.addSchemaModule({
-      schema: [
+    Plugin.addModule(AppGraphBuilder),
+    Plugin.addModule(SkillDefinition),
+    Plugin.addModule(CreateObject),
+    Plugin.addModule(OperationHandler),
+    Plugin.addModule(
+      AppCapability.schema([
         Chat.Chat,
         Chat.CompanionTo,
         Skill.Skill,
@@ -50,41 +50,15 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Sequence.Sequence,
         Memory.Memory,
         Text.Text,
-      ],
-    }),
-    Plugin.addModule({
-      activatesOn: AssistantEvents.SetupAiServiceProviders,
-      activate: EdgeModelResolver,
-    }),
-    Plugin.addModule({
-      activatesOn: AssistantEvents.SetupAiServiceProviders,
-      activate: LocalModelResolver,
-    }),
-    Plugin.addModule((options) => ({
-      id: Capability.getModuleTag(AiService),
-      firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
-      activatesOn: ActivationEvents.SetupProcessManager,
-      activate: () => AiService(options),
-    })),
-    Plugin.addModule({
-      activatesOn: ActivationEvents.SetupProcessManager,
-      activate: AiContextCapability,
-    }),
-    Plugin.addModule({
-      activatesOn: ActivationEvents.Startup,
-      activate: Toolkit,
-    }),
-    Plugin.addModule({
-      activatesOn: ActivationEvents.SetupProcessManager,
-      activate: AgentRuntime,
-    }),
+      ]),
+    ),
+    Plugin.addModule(EdgeModelResolver),
+    Plugin.addModule(LocalModelResolver),
+    Plugin.addModule(AiService),
+    Plugin.addModule(AiContextCapability),
+    Plugin.addModule(Toolkit),
+    Plugin.addModule(AgentRuntime),
   )
-  .pipe(
-    Plugin.addModule({
-      activatesOn: ActivationEvents.ProcessManagerReady,
-      activate: AgentHydrator,
-    }),
-    Plugin.make,
-  );
+  .pipe(Plugin.addModule(AgentHydrator), Plugin.make);
 
 export default AssistantPlugin;

@@ -94,6 +94,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

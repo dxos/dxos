@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
@@ -43,7 +42,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { withToken = false } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

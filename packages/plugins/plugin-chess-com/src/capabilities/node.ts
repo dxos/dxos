@@ -2,15 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
+import { SpaceCapability } from '@dxos/plugin-space';
 
-// The capabilities `ChessComPlugin.node` activates, and only those. `Capability.lazy` defers the
-// import at runtime but a bundler still walks it, so listing the React surfaces here would pull
-// the plugin's components into every node and bun build.
+// The capabilities `ChessComPlugin.node` activates, and only those. A lazy module defers its import
+// at runtime but a bundler still walks it, so listing the React surfaces here would pull the
+// plugin's components into every node and bun build.
 
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
-);
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

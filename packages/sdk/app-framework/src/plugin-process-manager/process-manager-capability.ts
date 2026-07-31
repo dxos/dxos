@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 // alias instead of a relative `node_modules` path (TS2883).
 import { OperationInvoker } from '@dxos/operation';
 
-import { ActivationEvents, Capabilities } from '../common';
+import { Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
 import { layerIdb } from './idb-key-value-store';
 
@@ -31,9 +31,8 @@ import { layerIdb } from './idb-key-value-store';
 // Hosts the {@link ProcessManager} runtime for the plugin system.
 //
 // Workflow:
-// 1. Activates {@link ActivationEvents.SetupProcessManager} so plugins can
-//    contribute {@link Capabilities.LayerSpec} entries and
-//    {@link Capabilities.OperationHandler} sets.
+// 1. Requires {@link Capabilities.LayerSpec} and {@link Capabilities.OperationHandler}
+//    contributions from dependency-mode modules.
 // 2. Collects all contributed {@link LayerSpec.LayerSpec}s and builds a
 //    {@link LayerStack} whose {@link ServiceResolver} drives process-scoped
 //    service resolution.
@@ -51,14 +50,18 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
     const pluginManager = yield* Plugin.Service;
-    const atomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
+    const atomRegistry = yield* Capabilities.AtomRegistry;
 
-    yield* Plugin.activate(ActivationEvents.SetupProcessManager);
-
-    const layerSpecs = yield* Capability.getAll(Capabilities.LayerSpec);
-    const traceSinkFactories = yield* Capability.getAll(Capabilities.TraceSink);
+    const layerSpecContributions = yield* Capabilities.LayerSpec;
+    const traceSinkContributions = yield* Capabilities.TraceSink;
+    const operationHandlerContributions = yield* Capabilities.OperationHandler;
+    const remoteTraceMonitorContributions = yield* Capabilities.RemoteTraceMonitor;
+    // One-shot snapshot: startup soft-ordering makes same-pass providers visible; entries
+    // contributed by plugins enabled later do not join the stack (same as the event window).
+    const layerSpecs = layerSpecContributions.get();
+    const traceSinkFactories = traceSinkContributions.get();
     // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
-    const remoteTraceMonitors = yield* Capability.getAll(Capabilities.RemoteTraceMonitor);
+    const remoteTraceMonitors = remoteTraceMonitorContributions.get();
 
     log.info('setup process manager', { traceSinkFactories });
 
@@ -103,10 +106,7 @@ export default Capability.makeModule(
     const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
-    const handlerSet = OperationHandlerSet.reactive(
-      atomRegistry,
-      capabilityManager.atom(Capabilities.OperationHandler),
-    );
+    const handlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
 
     const traceSinks = traceSinkFactories.map((factory) => factory({ resolver: serviceResolver }));
     const mergedTraceSink = Trace.mergeSinks(traceSinks);
@@ -148,11 +148,11 @@ export default Capability.makeModule(
 
     const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 
-    // TODO(dmaretskyi): Capability modules don't currently expose a teardown
-    // hook (`makeModule` only allows `Service | Plugin.Service` in the effect's
-    // requirements, ruling out `Effect.addFinalizer`). Once the plugin
-    // framework grows a shutdown lifecycle, dispose `managedRuntime` and then
-    // call `layerStack.destroy()` to tear down keep-alive slices.
+    // The module scope closes on deactivation/shutdown: dispose the runtime, then tear
+    // down the stack's keep-alive slices.
+    yield* Effect.addFinalizer(() =>
+      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(Effect.promise(() => layerStack.destroy()))),
+    );
 
     const processManagerRuntime: Capabilities.ProcessManagerRuntime = {
       runPromise: (effect, options) => managedRuntime.runPromise(effect as Effect.Effect<any, any, any>, options),
@@ -192,10 +192,10 @@ export default Capability.makeModule(
     );
 
     return [
-      Capability.contributes(Capabilities.ProcessManagerRuntime, processManagerRuntime),
-      Capability.contributes(Capabilities.ServiceResolver, serviceResolver),
-      Capability.contributes(Capabilities.ProcessMonitor, processMonitor),
-      Capability.contributes(Capabilities.OperationInvoker, operationInvoker),
+      Capability.contribute(Capabilities.ProcessManagerRuntime, processManagerRuntime),
+      Capability.contribute(Capabilities.ServiceResolver, serviceResolver),
+      Capability.contribute(Capabilities.ProcessMonitor, processMonitor),
+      Capability.contribute(Capabilities.OperationInvoker, operationInvoker),
     ];
   }),
 );

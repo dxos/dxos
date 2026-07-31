@@ -10,7 +10,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { AiService } from '@dxos/ai';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
@@ -44,10 +44,10 @@ const MockDeckOperationsPlugin = Plugin.define(
     name: 'Mock Deck Ops',
   }),
 ).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+  Plugin.addModule(
+    Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed([
+        Capability.contribute(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(
             Operation.withHandler(LayoutOperation.Select, () => Effect.void),
@@ -55,8 +55,9 @@ const MockDeckOperationsPlugin = Plugin.define(
             Operation.withHandler(LayoutOperation.Open, () => Effect.succeed([])),
           ),
         ),
-      ),
-  }),
+      ]),
+    ),
+  ),
   Plugin.make,
 );
 
@@ -91,9 +92,9 @@ const ImportantExtractorPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'extractor',
-    activatesOn: ActivationEvents.Startup,
+    provides: [InboxCapabilities.ObjectExtractor],
     activate: () =>
-      Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, ImportantMessageExtractor)),
+      Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, ImportantMessageExtractor)]),
   }),
   Plugin.make,
 );
@@ -142,10 +143,10 @@ const MockAiServicePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ai-service',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    provides: [Capabilities.LayerSpec],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+      Effect.succeed([
+        Capability.contribute(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
             // Mock model: `generateText` returns a static summary (for SummarizeMessageExtractor),
@@ -154,7 +155,7 @@ const MockAiServicePlugin = Plugin.define(
             mockAiService({ text: MOCK_SUMMARY, object: MOCK_FLIGHT_PAYLOAD }),
           ),
         ),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -221,7 +222,6 @@ const meta = {
     withTheme(),
     withPluginManager({
       setupEvents: [
-        AppActivationEvents.SetupSettings,
         // TripPlugin contributes TripMessageExtractor on Startup; fire it explicitly so the
         // capability is contributed before MessageArticle's toolbar reads the extractor list.
         ActivationEvents.Startup,

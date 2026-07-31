@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Instructions, Skill } from '@dxos/compute';
@@ -12,22 +12,15 @@ import { Feed } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
+import { OperationHandler, SkillDefinition, Toolkit } from '#capabilities';
 import { meta } from '#meta';
 
-import OperationHandler from './capabilities/operation-handler';
-import SkillDefinition from './capabilities/skill-definition';
-import Toolkit from './capabilities/toolkit';
-
 export const AssistantPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ id: 'skill-definition', activate: SkillDefinition }),
-  AppPlugin.addOperationHandlerModule({ id: 'operation-handler', activate: OperationHandler }),
-  Plugin.addModule({
-    id: 'toolkit',
-    activatesOn: ActivationEvents.Startup,
-    activate: Toolkit,
-  }),
-  AppPlugin.addSchemaModule({
-    schema: [
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Toolkit),
+  Plugin.addModule(
+    AppCapability.schema([
       Chat.Chat,
       Chat.CompanionTo,
       Skill.Skill,
@@ -42,8 +35,8 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Sequence.Sequence,
       Memory.Memory,
       Text.Text,
-    ],
-  }),
+    ]),
+  ),
   Plugin.make,
 );
 

@@ -123,7 +123,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(Connector, [
       {
         id: GMAIL_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,

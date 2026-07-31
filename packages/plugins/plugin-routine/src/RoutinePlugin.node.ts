@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Operation, Routine, Trace, Trigger } from '@dxos/compute';
-import { ClientEvents } from '@dxos/plugin-client';
 
 import {
   AppGraphBuilder,
@@ -20,27 +19,18 @@ import { meta } from '#meta';
 import { trigger } from './commands';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addCommandModule({ commands: [trigger] }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({
-    schema: [Routine.Routine, Operation.PersistentOperation, Trigger.Trigger, Trace.Message],
-  }),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(AppCapability.commands([trigger])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
+    AppCapability.schema([Routine.Routine, Operation.PersistentOperation, Trigger.Trigger, Trace.Message]),
+  ),
   // CreateRoutine (in OperationHandler) resolves RoutineCapabilities.Template, so the template
   // provider must be present wherever the handler is exported.
-  Plugin.addModule({ id: 'automation-templates', activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.SetupProcessManager,
-    activate: LayerSpecs,
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    activate: RegistrySync,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),
-    activate: TriggerRuntimeController,
-  }),
+  Plugin.addModule(Templates),
+  Plugin.addModule(LayerSpecs),
+  Plugin.addModule(RegistrySync),
+  Plugin.addModule(TriggerRuntimeController),
   Plugin.make,
 );
 

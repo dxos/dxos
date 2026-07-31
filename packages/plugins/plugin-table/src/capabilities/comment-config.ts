@@ -10,10 +10,12 @@ import { Type } from '@dxos/echo';
 import { Table } from '@dxos/react-ui-table/types';
 
 const activate = Effect.fnUntraced(function* () {
-  return Capability.contributes(AppCapabilities.CommentConfig, {
-    id: Type.getTypename(Table.Table),
-    comments: 'unanchored',
-  });
+  return [
+    Capability.contribute(AppCapabilities.CommentConfig, {
+      id: Type.getTypename(Table.Table),
+      comments: 'unanchored',
+    }),
+  ];
 });
 
 export default activate;

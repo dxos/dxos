@@ -25,7 +25,7 @@ export type NavigationHandlerOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ invitationProp = 'spaceInvitationCode' }: NavigationHandlerOptions = {}) {
     const capabilities = yield* Capability.Service;
-    const operationService = yield* Capability.get(Capabilities.OperationInvoker);
+    const operationService = yield* Capabilities.OperationInvoker;
 
     const handler: AppCapabilities.NavigationHandler = (url: URL) =>
       Effect.gen(function* () {
@@ -49,7 +49,7 @@ export default Capability.makeModule(
         Effect.orDie,
       );
 
-    return Capability.contributes(AppCapabilities.NavigationHandler, handler);
+    return Capability.contribute(AppCapabilities.NavigationHandler, handler);
   }),
 );
 

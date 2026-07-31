@@ -2,11 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Effect from 'effect/Effect';
 
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
+
+import { Layout } from '#components';
+import { StorybookCapabilities } from '#types';
+
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactContext = Capability.inlineModule('storybook-layout', { provides: [Capabilities.ReactContext] }, () =>
+  Effect.succeed([
+    Capability.contribute(Capabilities.ReactContext, {
+      id: 'storybook-layout',
+      context: Layout,
+    }),
+  ]),
 );
-export const State = Capability.lazy('State', () => import('./state'));
+export const State = Capability.lazyModule(
+  'State',
+  { provides: [StorybookCapabilities.LayoutState, AppCapabilities.Layout] },
+  () => import('./state'),
+);

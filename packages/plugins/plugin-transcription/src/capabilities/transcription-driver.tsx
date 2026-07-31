@@ -250,7 +250,7 @@ const TranscriptionDriver = () => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.ReactContext, {
+    return Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }) => (
         <Fragment>

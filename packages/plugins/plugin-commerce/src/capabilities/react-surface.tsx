@@ -15,7 +15,7 @@ import { Provider, Result, Search } from '../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'resultCard',
         position: Position.first,

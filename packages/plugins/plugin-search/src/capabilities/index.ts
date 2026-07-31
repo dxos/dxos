@@ -2,12 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
-);
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

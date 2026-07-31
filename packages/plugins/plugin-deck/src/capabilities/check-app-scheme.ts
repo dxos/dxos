@@ -81,16 +81,6 @@ const tryOpenNativeApp = (): Promise<boolean> => {
   });
 };
 
-/** Dispatch all NavigationHandler contributions with the current page URL. */
-const dispatchNavigationHandlers = Effect.fn(function* () {
-  const url = new URL(window.location.href);
-  const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-  yield* Effect.all(
-    handlers.map((handler) => handler(url)),
-    { concurrency: 'unbounded' },
-  );
-});
-
 /**
  * Checks whether the native redirect setting is enabled and the redirect should be attempted.
  * Exported for the URL handler to decide whether to defer NavigationHandler dispatch.
@@ -110,13 +100,22 @@ export const shouldDeferNavigationHandlers = (): boolean => {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-    const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invoke } = yield* Capabilities.OperationInvoker;
+    const navigationHandlers = yield* AppCapabilities.NavigationHandler;
     const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
     if (!settings?.enableNativeRedirect || !shouldDeferNavigationHandlers()) {
-      return;
+      return [];
     }
+
+    /** Dispatch all NavigationHandler contributions with the current page URL. */
+    const dispatchNavigationHandlers = () => {
+      const url = new URL(window.location.href);
+      return Effect.all(
+        navigationHandlers.get().map((handler) => handler(url)),
+        { concurrency: 'unbounded' },
+      );
+    };
 
     const appOpened = yield* Effect.promise(() => tryOpenNativeApp());
     if (appOpened) {
@@ -124,7 +123,7 @@ export default Capability.makeModule(
         Effect.gen(function* () {
           yield* dispatchNavigationHandlers();
           yield* invoke(LayoutOperation.UpdateDialog, { state: false });
-        }).pipe(Effect.provideService(Capability.Service, capabilities), EffectEx.runAndForwardErrors);
+        }).pipe(EffectEx.runAndForwardErrors);
 
       yield* invoke(LayoutOperation.UpdateDialog, {
         subject: NATIVE_REDIRECT_DIALOG,
@@ -135,5 +134,7 @@ export default Capability.makeModule(
     } else {
       yield* dispatchNavigationHandlers();
     }
+
+    return [];
   }),
 );

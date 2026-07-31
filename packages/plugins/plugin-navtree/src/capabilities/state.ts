@@ -29,10 +29,10 @@ const defaultStateEntries: [string, NavTreeCapabilities.NavTreeItemState][] = [
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
+    const registry = yield* Capabilities.AtomRegistry;
+    const layoutAtom = yield* AppCapabilities.Layout;
     // Persistence backend for per-path expansion (`open`); replaces the hand-rolled localStorage blob.
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const viewState = yield* AttentionCapabilities.ViewState;
 
     // Mirror of the layout's active planks. An item registers its path only on its first render, which
     // can happen long after the layout change that made it current, so entries derive `current` from
@@ -149,7 +149,7 @@ export default Capability.makeModule(
       }
     }).pipe(Effect.forkDaemon);
 
-    return Capability.contributes(
+    return Capability.contribute(
       NavTreeCapabilities.State,
       {
         getItem,

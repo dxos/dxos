@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { CreateObject, ReactSurface, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
@@ -14,14 +14,19 @@ import { Voxel } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const VoxelPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addSchemaModule({ schema: [Voxel.World] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppCapability.schema([Voxel.World])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

@@ -2,20 +2,40 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import * as Effect from 'effect/Effect';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const Connector = Capability.lazy('Connector', () => import('./connector'));
-export const NavigationTargetResolver = Capability.lazy(
-  'NavigationTargetResolver',
-  () => import('./navigation-target-resolver'),
+import { Capability } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
+import { SpaceCapability } from '@dxos/plugin-space';
+
+import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
+import { InboxCapabilities } from '#types';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const Connector = Capability.lazyModule(
+  'Connector',
+  { provides: [ConnectorCapability] },
+  () => import('./connector'),
 );
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const ContactExtractor = Capability.inlineModule(
+  'contact-extractor',
+  { provides: [InboxCapabilities.ObjectExtractor] },
+  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)]),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const InboxSettings = Capability.lazy('InboxSettings', () => import('./settings'));
+export const SummarizeExtractor = Capability.inlineModule(
+  'summarize-extractor',
+  { provides: [InboxCapabilities.ObjectExtractor] },
+  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
+);
+export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
+  requires: [ClientCapabilities.Client],
+});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const InboxSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [InboxCapabilities.Settings],
+});

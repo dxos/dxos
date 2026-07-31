@@ -11,7 +11,6 @@ import {
   ATMOSPHERE_SOURCE,
   ATPROTO_OAUTH_SCOPES,
   Connector,
-  type ConnectorEntry,
   type CredentialForm,
 } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
@@ -34,12 +33,11 @@ const atprotoCredentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPre
 /**
  * The generic "Atmosphere" atproto connector: connects an atproto account (credential-only, no sync
  * targets) and is the connector the OAuth account-recovery flow routes its Connection to. Owned by
- * this plugin so the atproto connection capability lives with the rest of the atproto integration;
- * contributed on `SetupConnectors` like every other connector.
+ * this plugin so the atproto connection capability lives with the rest of the atproto integration.
  */
-export default Capability.makeModule<ConnectorEntry[]>(
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(Connector, [
       {
         id: ATMOSPHERE_PROVIDER_ID,
         source: ATMOSPHERE_SOURCE,

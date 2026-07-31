@@ -64,7 +64,7 @@ const CreateBook = Schema.Struct({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Book.Book),
       inputSchema: CreateBook,
       // The embedded catalog is filled from the selected hive book on submit; its `hiveId` is what

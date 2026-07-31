@@ -4,12 +4,13 @@
 
 // Plugin definition — the main entry point for the plugin.
 // `Plugin.define(meta)` creates a plugin builder with the plugin's identity.
-// `.pipe()` chains module registrations. Each `AppPlugin.add*Module()` helper
-// registers a capability module that activates at the appropriate lifecycle event.
+// `.pipe()` chains module registrations. Each `Plugin.addModule()` call registers a
+// capability module (authored via an `AppCapability.*` maker or `Capability.lazyModule`)
+// that activates at the appropriate lifecycle event.
 // `Plugin.make` finalizes the plugin (must be the last call in the chain).
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings } from '#capabilities';
 import { meta } from '#meta';
@@ -21,33 +22,38 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers graph builder extensions (actions, connectors, companions).
-  // Activates during `SetupAppGraph` event.
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  // Activates when the app graph builder capability can be resolved.
+  Plugin.addModule(AppGraphBuilder),
 
   // Registers type metadata for the framework's object system.
   // `createObject` is the factory called when users create this type via the UI.
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  Plugin.addModule(CreateObject),
 
-  // Registers operation handlers. Activates during `SetupProcessManager` event.
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  // Registers operation handlers.
+  Plugin.addModule(OperationHandler),
 
   // Registers ECHO schemas so the framework knows about this type.
   // Required for queries, serialization, and type resolution.
-  AppPlugin.addSchemaModule({ schema: [SampleItem.SampleItem] }),
+  Plugin.addModule(AppCapability.schema([SampleItem.SampleItem])),
 
-  // Registers the settings module. Activates during `SetupSettings` event.
-  AppPlugin.addSettingsModule({ activate: SampleSettings }),
+  // Registers the settings module.
+  Plugin.addModule(SampleSettings),
 
-  // Registers React surface contributions. Activates during `SetupReactSurface` event.
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  // Registers React surface contributions.
+  Plugin.addModule(ReactSurface),
 
   // Registers i18n translations.
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule(AppCapability.translations(translations)),
 
   // Finalizes the plugin. Must be the last call in the chain.
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

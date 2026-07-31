@@ -23,8 +23,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(RegistryCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.contribute(RegistryCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: RegistrySettingsSchema,
         atom: settingsAtom,

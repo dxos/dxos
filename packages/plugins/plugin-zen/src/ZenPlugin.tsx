@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -14,13 +14,18 @@ import { Dream } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ZenPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addSchemaModule({ schema: [Dream.Dream] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppCapability.schema([Dream.Dream])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

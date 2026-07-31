@@ -27,9 +27,16 @@ import { log } from '@dxos/log';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
-    const monitor = yield* Capability.get(Capabilities.ProcessMonitor);
-    const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
-    const resolver = yield* Capability.get(Capabilities.ServiceResolver);
+
+    // Optional: without a progress registry there is nowhere to project into, so subscribe to
+    // nothing rather than run a sink that resolves undefined on every message.
+    if (capabilityManager.getAll(AppCapabilities.ProgressRegistry).length === 0) {
+      return [];
+    }
+
+    const monitor = yield* Capabilities.ProcessMonitor;
+    const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
+    const resolver = yield* Capabilities.ServiceResolver;
 
     // Edge-only cancel. Soft-fails (the meter has already cleared locally), but never silently: an
     // unresolvable manager or a rejected request means the run may still be going on the edge.
@@ -80,5 +87,6 @@ export default Capability.makeModule(
     );
 
     yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
+    return [];
   }),
 );

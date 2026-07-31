@@ -29,7 +29,7 @@ import { editorViewModeAspect } from './editor-view-state';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'surface.document',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.

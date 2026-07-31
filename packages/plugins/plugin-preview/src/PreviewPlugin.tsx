@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Organization, Person } from '@dxos/types';
 
 import { PreviewPopover, ReactSurface } from '#capabilities';
@@ -11,14 +11,10 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const PreviewPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Person.Person, Organization.Organization] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'preview-popover',
-    activatesOn: ActivationEvents.Startup,
-    activate: PreviewPopover,
-  }),
+  Plugin.addModule(AppCapability.schema([Person.Person, Organization.Organization])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(PreviewPopover),
   Plugin.make,
 );
 

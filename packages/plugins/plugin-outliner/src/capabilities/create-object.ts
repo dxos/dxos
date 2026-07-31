@@ -15,30 +15,32 @@ import { Journal, Outline } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Journal.Journal),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Journal.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Outline.Outline),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Outline.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
+      Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
+        {
+          id: Type.getTypename(Journal.Journal),
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Journal.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+            }),
+        },
+        {
+          id: Type.getTypename(Outline.Outline),
+          createObject: (props, options) =>
+            Effect.gen(function* () {
+              const object = Outline.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                targetNodeId: options.targetNodeId,
+              });
+            }),
+        },
+      ]),
     ];
   }),
 );

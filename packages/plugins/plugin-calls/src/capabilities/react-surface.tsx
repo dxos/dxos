@@ -22,7 +22,7 @@ const isCallData = (data: unknown): data is CallRoomData => {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'activeCallCompanion',
         filter: Surface.makeFilter(AppSurface.deckCompanion('activeCall')),

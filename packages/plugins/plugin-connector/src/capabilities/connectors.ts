@@ -10,7 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { AccessToken } from '@dxos/link';
 
-import { Connection, Connector, type ConnectorEntry } from '#types';
+import { Connection, Connector } from '#types';
 
 import { CUSTOM_PROVIDER_ID } from '../constants';
 
@@ -34,11 +34,11 @@ const CustomTokenForm = Schema.Struct({
 /**
  * Built-in {@link Connector} entries: just the manual-token connector.
  * Service-specific connectors (atproto/Atmosphere in `@dxos/plugin-atproto`, Bluesky, Trello,
- * GitHub, …) live in their own plugins and contribute on `SetupConnectors`.
+ * GitHub, …) live in their own plugins and contribute from their own dependency-mode modules.
  */
-export default Capability.makeModule<ConnectorEntry[]>(
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(Connector, [
       {
         id: CUSTOM_PROVIDER_ID,
         // The user enters the source in the dialog; we don't know it ahead of time.
@@ -64,8 +64,8 @@ export default Capability.makeModule<ConnectorEntry[]>(
         },
       },
       // Atmosphere (atproto), Bluesky, GitHub, Linear, and Slack are implemented as dedicated plugins
-      // (`@dxos/plugin-atproto`, `@dxos/plugin-bluesky`, `@dxos/plugin-github`, …) and contribute on
-      // `SetupConnectors`.
+      // (`@dxos/plugin-atproto`, `@dxos/plugin-bluesky`, `@dxos/plugin-github`, …) that contribute
+      // from their own dependency-mode modules.
     ]);
   }),
 );

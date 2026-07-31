@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AttentionEvents } from '@dxos/plugin-attention';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { Text } from '@dxos/schema';
 
@@ -22,40 +21,21 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Markdown, MarkdownEvents } from '#types';
+import { Markdown } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
-  AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
-  AppPlugin.addSurfaceModule({
-    activate: ReactSurface,
-    firesBeforeActivation: [MarkdownEvents.SetupExtensions],
-  }),
-  AppPlugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
-    activate: MarkdownSettings,
-  }),
-  Plugin.addModule({
-    id: 'state',
-    // Wait for AttentionEvents.AttentionReady so Manager is available when the module
-    // resolves AttentionCapabilities.ViewState to build the editor state store.
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AttentionEvents.AttentionReady),
-    activate: MarkdownState,
-  }),
-  Plugin.addModule({
-    // TODO(wittjosiah): More relevant event?
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: AnchorSort,
-  }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: AnchorResolver,
-  }),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CommentConfig),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(UndoMappings),
+  Plugin.addModule(AppCapability.schema([Markdown.Document, Text.Text])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations([...translations, ...editorTranslations])),
+  Plugin.addModule(MarkdownSettings),
+  Plugin.addModule(MarkdownState),
+  Plugin.addModule(AnchorSort),
+  Plugin.addModule(AnchorResolver),
   Plugin.make,
 );
 

@@ -13,7 +13,7 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
 import { ActivationEvents, Capabilities } from '../common';
-import { type ActivationEvent, Capability, type CapabilityManager, Plugin, PluginManager } from '../core';
+import { type ActivationEvent, Capability, CapabilityManager, Plugin, PluginManager } from '../core';
 import { type UseAppOptions, useApp } from '../ui';
 import { StorybookErrorFallback } from './StorybookErrorFallback';
 
@@ -38,13 +38,17 @@ export const setupPluginManager = ({
   });
 
   if (capabilities) {
-    getProviderValue(capabilities, pluginManager.capabilities).forEach((capability) => {
-      pluginManager.capabilities.contribute({
-        interface: capability.interface,
-        implementation: capability.implementation,
-        module: 'story',
-      });
-    });
+    // Fixtures hand us `Contribution`s (from `Capability.contribute`); expand them to the raw
+    // interface/implementation entries the manager ingests — the same path module activation uses.
+    CapabilityManager.expandContributions(getProviderValue(capabilities, pluginManager.capabilities)).forEach(
+      (capability) => {
+        pluginManager.capabilities.contribute({
+          interface: capability.interface,
+          implementation: capability.implementation,
+          module: 'story',
+        });
+      },
+    );
   }
 
   return pluginManager;
@@ -60,7 +64,7 @@ type ManagedPluginManagerState = {
 
 export type WithPluginManagerOptions = UseAppOptions & {
   /** @deprecated */
-  capabilities?: MaybeProvider<Capability.Any[], CapabilityManager.CapabilityManager>;
+  capabilities?: MaybeProvider<Capability.AnyContribution[], CapabilityManager.CapabilityManager>;
   /** @deprecated */
   fireEvents?: (ActivationEvent.ActivationEvent | string)[];
 };
@@ -82,13 +86,16 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
     // Storybook replaces the full context object often, so key manager ownership by story id.
     useEffect(() => {
       const pluginManager = setupPluginManager(options);
-      const capability = Capability.contributes(Capabilities.ReactRoot, {
-        id: storyId,
-        root: () => <Story />,
-      });
+      const [capability] = CapabilityManager.expandContributions([
+        Capability.contribute(Capabilities.ReactRoot, {
+          id: storyId,
+          root: () => <Story />,
+        }),
+      ]);
 
       pluginManager.capabilities.contribute({
-        ...capability,
+        interface: capability.interface,
+        implementation: capability.implementation,
         module: 'org.dxos.app-framework.with-plugin-manager',
       });
 

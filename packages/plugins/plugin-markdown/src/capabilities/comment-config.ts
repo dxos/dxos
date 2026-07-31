@@ -18,7 +18,7 @@ const activate = Effect.fnUntraced(function* () {
     selectionMode: 'multi-range',
     scrollToAnchor: MarkdownOperation.ScrollToAnchor,
   };
-  return Capability.contributes(AppCapabilities.CommentConfig, config);
+  return [Capability.contribute(AppCapabilities.CommentConfig, config)];
 });
 
 export default activate;

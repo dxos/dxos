@@ -3,22 +3,22 @@
 //
 
 // Capabilities barrel with lazy-loaded modules.
-// `Capability.lazy()` defers module loading until the framework activates the module.
-// This enables code-splitting: the graph builder, surfaces, and settings modules
-// are only loaded when their activation events fire.
-// The string argument is a debug tag used in error messages and tracing.
+// `AppCapability.*` makers pair a capability's requires/provides spec (evaluated before the
+// module's code loads) with the deferred loader, enabling code-splitting; plugin-local
+// capabilities that have no maker use `Capability.lazyModule()` directly.
 
-import { Capability } from '@dxos/app-framework';
-import { type OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
+import { SpaceCapability } from '@dxos/plugin-space';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+import { SampleCapabilities } from '#types';
 
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 
-export const SampleSettings = Capability.lazy('SampleSettings', () => import('./settings'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+
+export const SampleSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [SampleCapabilities.Settings],
+});

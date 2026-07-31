@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken, Cursor } from '@dxos/link';
@@ -99,7 +98,6 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

@@ -5,12 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
 
 import { OutlinerOperationHandlerSet } from '#operations';
 
-export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.OperationHandler, OutlinerOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, OutlinerOperationHandlerSet);
   }),
 );

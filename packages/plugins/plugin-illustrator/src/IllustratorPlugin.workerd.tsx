@@ -3,13 +3,13 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 import { Drawing } from '#types';
 
 export const IllustratorPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Drawing.Drawing] }),
+  Plugin.addModule(AppCapability.schema([Drawing.Drawing])),
   Plugin.make,
 );
 

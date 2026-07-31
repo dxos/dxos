@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -14,13 +14,18 @@ import { Terra, TerraObject } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TerraPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addSchemaModule({ schema: [Terra.Terra, TerraObject.TerraObject] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppCapability.schema([Terra.Terra, TerraObject.TerraObject])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

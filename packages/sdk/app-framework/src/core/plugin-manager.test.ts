@@ -5,6 +5,7 @@
 import { type Atom, Registry } from '@effect-atom/atom';
 import { afterEach, assert, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
+import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -22,13 +23,17 @@ import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 import { ActivationEvents } from '../common';
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
-import type * as CapabilityManager from './capability-manager';
+import { DependencyCycleError, DuplicateProviderError, MissingProviderError, ProvidesMismatchError } from './errors';
 import * as Plugin from './plugin';
 import * as PluginManager from './plugin-manager';
 
-const String = Capability.make<{ string: string }>('org.dxos.test.string');
-const Number = Capability.make<{ number: number }>('org.dxos.test.number');
-const Total = Capability.make<{ total: number }>('org.dxos.test.total');
+const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
+const Number = Capability.makeSingleton<{ number: number }>()('org.dxos.test.number');
+const Total = Capability.makeSingleton<{ total: number }>()('org.dxos.test.total');
+// Multi-arity variants for scenarios exercising several concurrent providers of the same
+// conceptual capability (event latching / reactivity plumbing tests, not capability typing).
+const MultiString = Capability.make<{ string: string }>()('org.dxos.test.multiString');
+const MultiNumber = Capability.make<{ number: number }>()('org.dxos.test.multiNumber');
 
 const CountEvent = ActivationEvent.make('org.dxos.test.count');
 const FailEvent = ActivationEvent.make('org.dxos.test.fail');
@@ -117,7 +122,8 @@ describe('PluginManager', () => {
           Plugin.addModule({
             id: 'Prod',
             activatesOn: ActivationEvents.Startup,
-            activate: () => Effect.succeed(Capability.contributes(String, { string: 'prod' })),
+            provides: [MultiString],
+            activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'prod' })]),
           }),
         ),
       )();
@@ -126,7 +132,8 @@ describe('PluginManager', () => {
           Plugin.addModule({
             id: 'Dev',
             activatesOn: ActivationEvents.Startup,
-            activate: () => Effect.succeed(Capability.contributes(String, { string: 'dev' })),
+            provides: [MultiString],
+            activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'dev' })]),
           }),
         ),
       )();
@@ -146,7 +153,7 @@ describe('PluginManager', () => {
       yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(
-        manager.capabilities.getAll(String).map((value) => value.string),
+        manager.capabilities.getAll(MultiString).map((value) => value.string),
         ['prod'],
       );
 
@@ -159,7 +166,7 @@ describe('PluginManager', () => {
       );
       yield* manager.reset(ActivationEvents.Startup);
       assert.deepStrictEqual(
-        manager.capabilities.getAll(String).map((value) => value.string),
+        manager.capabilities.getAll(MultiString).map((value) => value.string),
         ['dev'],
       );
 
@@ -173,7 +180,7 @@ describe('PluginManager', () => {
       assert.isTrue(manager.getEnabled().includes(testMeta.profile.key));
       yield* manager.reset(ActivationEvents.Startup);
       assert.deepStrictEqual(
-        manager.capabilities.getAll(String).map((value) => value.string),
+        manager.capabilities.getAll(MultiString).map((value) => value.string),
         ['prod'],
       );
     }),
@@ -217,12 +224,14 @@ describe('PluginManager', () => {
         Plugin.addModule((options: TestPluginOptions) => ({
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed(Capability.contributes(String, { string: `hello-${options.count}` })),
+          provides: [MultiString],
+          activate: () => Effect.succeed([Capability.contribute(MultiString, { string: `hello-${options.count}` })]),
         })),
         Plugin.addModule({
           id: 'World',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed(Capability.contributes(String, { string: 'world' })),
+          provides: [MultiString],
+          activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'world' })]),
         }),
         Plugin.make,
       );
@@ -233,10 +242,9 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ plugins: [plugin], pluginLoader });
       yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
-      const strings = manager.capabilities.getAll(String);
+      const strings = manager.capabilities.getAll(MultiString);
       assert.strictEqual(strings.length, 2);
-      assert.strictEqual(strings[0].string, 'hello-5');
-      assert.strictEqual(strings[1].string, 'world');
+      assert.deepStrictEqual(strings.map((value) => value.string).sort(), ['hello-5', 'world']);
     }),
   );
 
@@ -244,9 +252,10 @@ describe('PluginManager', () => {
     Effect.gen(function* () {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       );
@@ -266,9 +275,10 @@ describe('PluginManager', () => {
     Effect.gen(function* () {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       );
@@ -291,6 +301,7 @@ describe('PluginManager', () => {
     Effect.gen(function* () {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [],
           id: 'NoCapabilities',
           activatesOn: ActivationEvents.Startup,
           activate: Effect.fnUntraced(function* () {}),
@@ -309,11 +320,12 @@ describe('PluginManager', () => {
     }),
   );
 
-  it.effect('should propagate errors thrown by module activate callbacks', () =>
+  it.effect('records errors thrown by module activate callbacks (per-module isolation)', () =>
     Effect.gen(function* () {
       plugins = [
         Plugin.define(testMeta).pipe(
           Plugin.addModule({
+            provides: [],
             activatesOn: FailEvent,
             id: 'Fail',
             activate: () => Effect.fail(new Error('test')),
@@ -325,8 +337,14 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.profile.key);
       yield* manager.enable(testMeta.profile.key);
-      const error = yield* Effect.flip(manager.activate(FailEvent));
-      assert.strictEqual(error.message, 'test');
+      // A single module's failure is isolated to its plugin — it does not fail the caller's
+      // `activate(event)` (which reports whether any modules were found to process, not
+      // whether they all succeeded), matching the startup-continues-on-failure contract.
+      const result = yield* manager.activate(FailEvent);
+      assert.isTrue(result);
+      const failed = manager.getFailed();
+      assert.strictEqual(failed.length, 1);
+      assert.strictEqual(failed[0].error.message, 'test');
     }),
   );
 
@@ -343,6 +361,7 @@ describe('PluginManager', () => {
       plugins = [
         Plugin.define(testMeta).pipe(
           Plugin.addModule({
+            provides: [],
             activatesOn: DefectEvent,
             id: 'DefectInEffectSync',
             activate: () =>
@@ -358,10 +377,12 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.profile.key);
       yield* manager.enable(testMeta.profile.key);
-      const error = yield* Effect.flip(manager.activate(DefectEvent));
-
-      // Verify the error was caught and propagated.
-      assert.strictEqual(error.message, 'defect in Effect.sync');
+      // A single module's defect is isolated to its plugin — recorded via `getFailed`, not
+      // thrown from `activate(event)`.
+      yield* manager.activate(DefectEvent);
+      const failed = manager.getFailed();
+      assert.strictEqual(failed.length, 1);
+      assert.strictEqual(failed[0].error.message, 'defect in Effect.sync');
 
       // Verify the error was logged with isDefect: true.
       const defectLog = capturedErrors.find(
@@ -389,6 +410,7 @@ describe('PluginManager', () => {
       plugins = [
         Plugin.define(testMeta).pipe(
           Plugin.addModule({
+            provides: [],
             activatesOn: DefectEvent,
             id: 'DefectImmediate',
             activate: (): Effect.Effect<void> => {
@@ -404,10 +426,12 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.profile.key);
       yield* manager.enable(testMeta.profile.key);
-      const error = yield* Effect.flip(manager.activate(DefectEvent));
-
-      // Verify the error was caught and propagated.
-      assert.strictEqual(error.message, 'immediate throw before Effect');
+      // A single module's defect is isolated to its plugin — recorded via `getFailed`, not
+      // thrown from `activate(event)`.
+      yield* manager.activate(DefectEvent);
+      const failed = manager.getFailed();
+      assert.strictEqual(failed.length, 1);
+      assert.strictEqual(failed[0].error.message, 'immediate throw before Effect');
 
       // Verify the error was logged with isDefect: true.
       const defectLog = capturedErrors.find(
@@ -431,11 +455,13 @@ describe('PluginManager', () => {
       plugins = [
         Plugin.define(testMeta).pipe(
           Plugin.addModule({
+            provides: [String],
             id: 'Hello',
             activatesOn: ActivationEvents.Startup,
-            activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+            activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
           }),
           Plugin.addModule({
+            provides: [],
             activatesOn: FailEvent,
             id: 'Fail',
             activate: () => Effect.fail(new Error('test')),
@@ -503,11 +529,12 @@ describe('PluginManager', () => {
       let count = 0;
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
           activate: () => {
             count++;
-            return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
+            return Effect.succeed([Capability.contribute(String, { string: 'hello' })]);
           },
         }),
         Plugin.make,
@@ -554,7 +581,8 @@ describe('PluginManager', () => {
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
-          activate: () => Effect.succeed([Capability.contributes(Number, { number: 1 })]),
+          provides: [MultiNumber],
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 1 })]),
         }),
         Plugin.make,
       );
@@ -562,7 +590,8 @@ describe('PluginManager', () => {
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
-          activate: () => Effect.succeed([Capability.contributes(Number, { number: 2 })]),
+          provides: [MultiNumber],
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 2 })]),
         }),
         Plugin.make,
       );
@@ -570,7 +599,8 @@ describe('PluginManager', () => {
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
-          activate: () => Effect.succeed([Capability.contributes(Number, { number: 3 })]),
+          provides: [MultiNumber],
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 3 })]),
         }),
         Plugin.make,
       );
@@ -581,19 +611,19 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       assert.deepStrictEqual(manager.getActive(), []);
-      assert.strictEqual(manager.capabilities.getAll(Number).length, 0);
+      assert.strictEqual(manager.capabilities.getAll(MultiNumber).length, 0);
 
       yield* manager.add(Plugin1.meta.profile.key);
       yield* manager.enable(Plugin1.meta.profile.key);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [plugin1.modules[0].id]);
-      assert.strictEqual(manager.capabilities.getAll(Number).length, 1);
+      assert.strictEqual(manager.capabilities.getAll(MultiNumber).length, 1);
 
       yield* manager.add(Plugin2.meta.profile.key);
       yield* manager.enable(Plugin2.meta.profile.key);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [plugin1.modules[0].id, plugin2.modules[0].id]);
-      assert.strictEqual(manager.capabilities.getAll(Number).length, 2);
+      assert.strictEqual(manager.capabilities.getAll(MultiNumber).length, 2);
 
       yield* manager.add(Plugin3.meta.profile.key);
       yield* manager.enable(Plugin3.meta.profile.key);
@@ -603,7 +633,7 @@ describe('PluginManager', () => {
         plugin2.modules[0].id,
         plugin3.modules[0].id,
       ]);
-      assert.strictEqual(manager.capabilities.getAll(Number).length, 3);
+      assert.strictEqual(manager.capabilities.getAll(MultiNumber).length, 3);
     }),
   );
 
@@ -611,10 +641,11 @@ describe('PluginManager', () => {
     Effect.gen(function* () {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           activatesOn: ActivationEvent.allOf(ActivationEvents.Startup, CountEvent),
           id: 'Hello',
           activate: () => {
-            return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
+            return Effect.succeed([Capability.contribute(String, { string: 'hello' })]);
           },
         }),
         Plugin.make,
@@ -643,11 +674,12 @@ describe('PluginManager', () => {
       let count = 0;
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvent.oneOf(ActivationEvents.Startup, CountEvent),
           activate: () => {
             count++;
-            return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
+            return Effect.succeed([Capability.contribute(String, { string: 'hello' })]);
           },
         }),
         Plugin.make,
@@ -677,20 +709,20 @@ describe('PluginManager', () => {
   it.effect('should be able to disable and re-enable an active plugin', () =>
     Effect.gen(function* () {
       const state = { total: 0 };
-      const computeTotal = (capabilityManager: CapabilityManager.CapabilityManager) => {
-        const numbers = capabilityManager.getAll(Number);
-        state.total = numbers.reduce((acc: number, n: { number: number }) => acc + n.number, 0);
-      };
 
+      // `Count` is a chain member: it requires the multi `MultiNumber` capability, so it
+      // activates within the same `CountEvent` wave as `Test1`/`Test2`/`Test3`, ordered after
+      // them by the soft multi-provider edge.
       const Count = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.count'), name: 'Count' })).pipe(
         Plugin.addModule({
           id: 'Count',
-          activatesOn: ActivationEvents.Startup,
-          firesBeforeActivation: [CountEvent],
+          activatesOn: CountEvent,
+          requires: [MultiNumber],
+          provides: [Total],
           activate: Effect.fnUntraced(function* () {
-            const capabilityManager = yield* Capability.Service;
-            computeTotal(capabilityManager);
-            return Capability.contributes(Total, state);
+            const numbers = yield* Capability.getAll(MultiNumber);
+            state.total = numbers.reduce((acc, n) => acc + n.number, 0);
+            return [Capability.contribute(Total, state)];
           }),
         }),
         Plugin.make,
@@ -700,17 +732,20 @@ describe('PluginManager', () => {
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Test1',
-          activate: () => Effect.succeed(Capability.contributes(Number, { number: 1 })),
+          provides: [MultiNumber],
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 1 })]),
         }),
         Plugin.addModule({
           id: 'Test2',
           activatesOn: CountEvent,
-          activate: () => Effect.succeed(Capability.contributes(Number, { number: 2 })),
+          provides: [MultiNumber],
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 2 })]),
         }),
         Plugin.addModule({
           id: 'Test3',
           activatesOn: CountEvent,
-          activate: () => Effect.succeed(Capability.contributes(Number, { number: 3 })),
+          provides: [MultiNumber],
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 3 })]),
         }),
         Plugin.make,
       );
@@ -724,7 +759,7 @@ describe('PluginManager', () => {
         yield* manager.enable(Test.meta.profile.key);
         yield* manager.add(Count.meta.profile.key);
         yield* manager.enable(Count.meta.profile.key);
-        yield* manager.activate(ActivationEvents.Startup);
+        yield* manager.activate(CountEvent);
         assert.deepStrictEqual(manager.getActive(), [
           ...testPlugin.modules.map((m) => m.id),
           countPlugin.modules[0].id,
@@ -768,7 +803,8 @@ describe('PluginManager', () => {
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
-          activate: () => Effect.succeed([Capability.contributes(Number, { number: 1 })]),
+          provides: [MultiNumber],
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 1 })]),
         }),
         Plugin.make,
       );
@@ -776,7 +812,8 @@ describe('PluginManager', () => {
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
-          activate: () => Effect.succeed([Capability.contributes(Number, { number: 2 })]),
+          provides: [MultiNumber],
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 2 })]),
         }),
         Plugin.make,
       );
@@ -784,7 +821,8 @@ describe('PluginManager', () => {
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
-          activate: () => Effect.succeed([Capability.contributes(Number, { number: 3 })]),
+          provides: [MultiNumber],
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 3 })]),
         }),
         Plugin.make,
       );
@@ -898,12 +936,13 @@ describe('PluginManager', () => {
         Plugin.makeMeta({ key: DXN.make('org.dxos.test.slowPlugin'), name: 'Slow Plugin' }),
       ).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'SlowModule',
           activatesOn: SlowEvent,
           activate: Effect.fnUntraced(function* () {
             // Simulate a slow activation that takes 15 seconds.
             yield* Effect.sleep(Duration.seconds(15));
-            return Capability.contributes(String, { string: 'slow' });
+            return [Capability.contribute(String, { string: 'slow' })];
           }),
         }),
         Plugin.make,
@@ -950,6 +989,7 @@ describe('PluginManager', () => {
         }),
       ).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'ConcurrentModule',
           // Module activates on either event - this allows two different events to race.
           activatesOn: ActivationEvent.oneOf(EventA, EventB),
@@ -957,7 +997,7 @@ describe('PluginManager', () => {
             activateCallCount++;
             // Simulate slow activation to create window for race condition.
             yield* Effect.sleep(Duration.seconds(5));
-            return Capability.contributes(String, { string: 'concurrent' });
+            return [Capability.contribute(String, { string: 'concurrent' })];
           }),
         }),
         Plugin.make,
@@ -997,17 +1037,19 @@ describe('PluginManager', () => {
     Effect.gen(function* () {
       const Plugin1 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' })).pipe(
         Plugin.addModule({
+          provides: [String],
           activatesOn: ActivationEvents.Startup,
           id: 'Plugin1',
-          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       );
       const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
+          provides: [Number],
           activatesOn: ActivationEvents.Startup,
           id: 'Plugin2',
-          activate: () => Effect.succeed(Capability.contributes(Number, { number: 42 })),
+          activate: () => Effect.succeed([Capability.contribute(Number, { number: 42 })]),
         }),
         Plugin.make,
       );
@@ -1038,6 +1080,7 @@ describe('PluginManager', () => {
       let scopeClosed = false;
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'WithScope',
           activatesOn: ActivationEvents.Startup,
           activate: () =>
@@ -1049,7 +1092,7 @@ describe('PluginManager', () => {
                   scopeClosed = true;
                 }),
               );
-              return Capability.contributes(String, { string: 'hello' });
+              return [Capability.contribute(String, { string: 'hello' })];
             }),
         }),
         Plugin.make,
@@ -1073,16 +1116,17 @@ describe('PluginManager', () => {
       let deactivated = false;
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'WithDeactivate',
           activatesOn: ActivationEvents.Startup,
           activate: () =>
-            Effect.succeed(
-              Capability.contributes(String, { string: 'hello' }, () =>
+            Effect.succeed([
+              Capability.contribute(String, { string: 'hello' }, () =>
                 Effect.sync(() => {
                   deactivated = true;
                 }),
               ),
-            ),
+            ]),
         }),
         Plugin.make,
       );
@@ -1105,31 +1149,39 @@ describe('PluginManager', () => {
       const deactivationOrder: string[] = [];
       const Plugin1 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' })).pipe(
         Plugin.addModule({
+          provides: [String],
           activatesOn: ActivationEvents.Startup,
           id: 'First',
           activate: () =>
-            Effect.succeed(
-              Capability.contributes(String, { string: 'first' }, () =>
+            Effect.succeed([
+              Capability.contribute(String, { string: 'first' }, () =>
                 Effect.sync(() => {
                   deactivationOrder.push('First');
                 }),
               ),
-            ),
+            ]),
         }),
         Plugin.make,
       );
+      // `Second` requires `String` (provided by `First`), giving a deterministic hard-edge
+      // activation order — necessary since two independent same-wave event-mode modules
+      // otherwise activate concurrently with no ordering guarantee.
       const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
+          requires: [String],
+          provides: [Number],
           activatesOn: ActivationEvents.Startup,
           id: 'Second',
-          activate: () =>
-            Effect.succeed(
-              Capability.contributes(Number, { number: 2 }, () =>
+          activate: Effect.fnUntraced(function* () {
+            yield* String;
+            return [
+              Capability.contribute(Number, { number: 2 }, () =>
                 Effect.sync(() => {
                   deactivationOrder.push('Second');
                 }),
               ),
-            ),
+            ];
+          }),
         }),
         Plugin.make,
       );
@@ -1151,9 +1203,10 @@ describe('PluginManager', () => {
     Effect.gen(function* () {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       );
@@ -1179,13 +1232,14 @@ describe('PluginManager', () => {
       const allowActivationToComplete = yield* Effect.makeLatch(false);
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
           activate: () =>
             Effect.gen(function* () {
               yield* activationStarted.open;
               yield* allowActivationToComplete.await;
-              return Capability.contributes(String, { string: 'hello' });
+              return [Capability.contribute(String, { string: 'hello' })];
             }),
         }),
         Plugin.make,
@@ -1221,9 +1275,10 @@ describe('PluginManager', () => {
     Effect.gen(function* () {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       );
@@ -1254,11 +1309,12 @@ describe('PluginManager', () => {
       let activateCount = 0;
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
+          provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
           activate: () => {
             activateCount++;
-            return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
+            return Effect.succeed([Capability.contribute(String, { string: 'hello' })]);
           },
         }),
         Plugin.make,
@@ -1310,9 +1366,10 @@ describe('PluginManager', () => {
         let loaderCalls = 0;
         const Real = Plugin.define(lazyMeta).pipe(
           Plugin.addModule({
+            provides: [String],
             id: 'Hello',
             activatesOn: ActivationEvents.Startup,
-            activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+            activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
           }),
           Plugin.make,
         );
@@ -1370,9 +1427,10 @@ describe('PluginManager', () => {
         const RealFactory = (opts: Opts) =>
           Plugin.define(lazyMeta).pipe(
             Plugin.addModule({
+              provides: [String],
               id: 'Hello',
               activatesOn: ActivationEvents.Startup,
-              activate: () => Effect.succeed(Capability.contributes(String, { string: opts.greeting })),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: opts.greeting })]),
             }),
             Plugin.make,
           )(undefined as void);
@@ -1452,9 +1510,10 @@ describe('PluginManager', () => {
           const inner = Plugin.make(
             Plugin.define<void>(coreLazyMeta).pipe(
               Plugin.addModule({
+                provides: [String],
                 id: 'Hello',
                 activatesOn: ActivationEvents.Startup,
-                activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+                activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
               }),
             ),
           );
@@ -1537,11 +1596,12 @@ describe('PluginManager', () => {
           }),
         ).pipe(
           Plugin.addModule({
+            provides: [String],
             id: 'Slow',
             activatesOn: SlowEvent,
             activate: Effect.fnUntraced(function* () {
               yield* Effect.sleep(Duration.seconds(60));
-              return Capability.contributes(String, { string: 'never' });
+              return [Capability.contribute(String, { string: 'never' })];
             }),
           }),
           Plugin.make,
@@ -1562,7 +1622,9 @@ describe('PluginManager', () => {
         // TestClock too, so the timeout fires deterministically.
         yield* TestClock.adjust(Duration.seconds(3));
         const exit = yield* Fiber.await(fiber);
-        assert.isTrue(Exit.isFailure(exit));
+        // The timeout is isolated to the owning plugin — recorded via `getFailed`, not thrown
+        // from `activate(event)`.
+        assert.isTrue(Exit.isSuccess(exit));
 
         const failed = manager.getFailed();
         assert.strictEqual(failed.length, 1);
@@ -1627,6 +1689,7 @@ describe('PluginManager', () => {
           Plugin.makeMeta({ key: DXN.make('org.dxos.test.failing'), name: 'Failing' }),
         ).pipe(
           Plugin.addModule({
+            provides: [],
             id: 'Boom',
             activatesOn: FailingEvent,
             activate: () => Effect.fail(new Error('boom')),
@@ -1640,8 +1703,10 @@ describe('PluginManager', () => {
         yield* manager.add(FailingPlugin.meta.profile.key);
         yield* manager.enable(FailingPlugin.meta.profile.key);
 
+        // The failure is isolated to the owning plugin — recorded via `getFailed`, not thrown
+        // from `activate(event)`.
         const exit = yield* Effect.exit(manager.activate(FailingEvent));
-        assert.isTrue(Exit.isFailure(exit));
+        assert.isTrue(Exit.isSuccess(exit));
 
         const failed = manager.getFailed();
         assert.strictEqual(failed.length, 1);
@@ -1659,6 +1724,7 @@ describe('PluginManager', () => {
           Plugin.makeMeta({ key: DXN.make('org.dxos.test.core'), name: 'Core', tags: ['system'] }),
         ).pipe(
           Plugin.addModule({
+            provides: [],
             id: 'Boom',
             activatesOn: FailingEvent,
             activate: () => Effect.fail(new Error('boom')),
@@ -1674,7 +1740,7 @@ describe('PluginManager', () => {
         });
         // Core is auto-enabled via the constructor's enable chain.
         const exit = yield* Effect.exit(manager.activate(FailingEvent));
-        assert.isTrue(Exit.isFailure(exit));
+        assert.isTrue(Exit.isSuccess(exit));
 
         assert.strictEqual(manager.getFailed().length, 1);
         // Core stays enabled; host opted into it being non-removable.
@@ -1690,12 +1756,13 @@ describe('PluginManager', () => {
           Plugin.makeMeta({ key: DXN.make('org.dxos.test.flaky'), name: 'Flaky' }),
         ).pipe(
           Plugin.addModule({
+            provides: [String],
             id: 'Maybe',
             activatesOn: Event,
             activate: () =>
               shouldFail
                 ? Effect.fail(new Error('first try'))
-                : Effect.succeed(Capability.contributes(String, { string: 'ok' })),
+                : Effect.succeed([Capability.contribute(String, { string: 'ok' })]),
           }),
           Plugin.make,
         );
@@ -1955,6 +2022,697 @@ describe('PluginManager', () => {
         assert.strictEqual(failures[0].id, 'dependent');
         assert.instanceOf(failures[0].error, Plugin.PluginDependencyError);
       }),
+    );
+  });
+
+  describe('capability dependency activation', () => {
+    const Widget = Capability.make<{ widget: string }>()('org.dxos.test.widget');
+
+    const startupKey = ActivationEvent.eventKey(ActivationEvent.Startup);
+
+    const makeManagerWith = (...factories: Array<{ (): Plugin.Plugin; meta: Plugin.Meta }>) => {
+      const instances = factories.map((factory) => factory());
+      return PluginManager.make({
+        plugins: instances,
+        enabled: instances.map((plugin) => plugin.meta.profile.key),
+        pluginLoader,
+      });
+    };
+
+    it.effect('activates a provider chain in topological order and yields the implementations', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            // Registered consumer-first to prove ordering comes from the graph.
+            Plugin.addModule({
+              id: 'total',
+              requires: [String, Number],
+              provides: [Total],
+              activate: Effect.fnUntraced(function* () {
+                const { string } = yield* String;
+                const { number } = yield* Number;
+                return [Capability.contribute(Total, { total: string.length + number })];
+              }),
+            }),
+            Plugin.addModule({
+              id: 'number',
+              requires: [String],
+              provides: [Number],
+              activate: Effect.fnUntraced(function* () {
+                const { string } = yield* String;
+                return [Capability.contribute(Number, { number: string.length })];
+              }),
+            }),
+            Plugin.addModule({
+              id: 'string',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'abc' })]),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        const result = yield* manager.start();
+        assert.isTrue(result);
+        assert.deepStrictEqual(manager.getActive(), [
+          'org.dxos.plugin.test.module.string',
+          'org.dxos.plugin.test.module.number',
+          'org.dxos.plugin.test.module.total',
+        ]);
+        assert.deepStrictEqual(manager.capabilities.get(Total), { total: 6 });
+      }),
+    );
+
+    it.effect('activates independent modules in the same wave concurrently', () =>
+      Effect.gen(function* () {
+        const first = yield* Deferred.make<void>();
+        const second = yield* Deferred.make<void>();
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'a',
+              provides: [String],
+              activate: Effect.fnUntraced(function* () {
+                yield* Deferred.succeed(first, undefined);
+                // Completes only if the sibling runs concurrently.
+                yield* Deferred.await(second);
+                return [Capability.contribute(String, { string: 'a' })];
+              }),
+            }),
+            Plugin.addModule({
+              id: 'b',
+              provides: [Number],
+              activate: Effect.fnUntraced(function* () {
+                yield* Deferred.succeed(second, undefined);
+                yield* Deferred.await(first);
+                return [Capability.contribute(Number, { number: 1 })];
+              }),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        assert.isTrue(yield* manager.start());
+        assert.strictEqual(manager.getActive().length, 2);
+      }),
+    );
+
+    it.effect('a module with empty provides is a startup root', () =>
+      Effect.gen(function* () {
+        let activated = false;
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'root',
+              provides: [],
+              activate: Effect.fnUntraced(function* () {
+                activated = true;
+              }),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        yield* manager.start();
+        assert.isTrue(activated);
+        assert.deepStrictEqual(manager.getActive(), ['org.dxos.plugin.test.module.root']);
+      }),
+    );
+
+    it.effect('records MissingProviderError when a singleton has no possible provider', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'consumer',
+              requires: [String],
+              provides: [],
+              activate: Effect.fnUntraced(function* () {
+                yield* String;
+              }),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        // Structural problems put the plugin into an error state; startup continues.
+        yield* manager.start();
+        assert.deepStrictEqual(manager.getActive(), []);
+        const failures = manager.getFailed();
+        assert.strictEqual(failures.length, 1);
+        assert.instanceOf(failures[0].error, MissingProviderError);
+        assert.strictEqual(failures[0].error.context.capability, String.identifier);
+      }),
+    );
+
+    it.effect('consumers of event-gated providers pend until the event fires', () =>
+      Effect.gen(function* () {
+        let received: string | undefined;
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'consumer',
+              requires: [String],
+              provides: [],
+              activate: Effect.fnUntraced(function* () {
+                const { string } = yield* String;
+                received = string;
+              }),
+            }),
+            Plugin.addModule({
+              id: 'gated-provider',
+              activatesOn: CountEvent,
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'gated' })]),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        // The consumer's chain roots at the provider's event: it pends through startup...
+        assert.isFalse(yield* manager.start());
+        assert.deepStrictEqual(manager.getActive(), []);
+        assert.deepStrictEqual(manager.getFailed(), []);
+
+        // ...and cascades alive once the event fires and the provider contributes.
+        yield* manager.activate(CountEvent);
+        assert.strictEqual(received, 'gated');
+        assert.includeMembers(
+          [...manager.getActive()],
+          ['org.dxos.plugin.test.module.gated-provider', 'org.dxos.plugin.test.module.consumer'],
+        );
+      }),
+    );
+
+    it.effect('puts cycle members into an error state and continues', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'a',
+              requires: [Number],
+              provides: [String],
+              activate: Effect.fnUntraced(function* () {
+                yield* Number;
+                return [Capability.contribute(String, { string: 'a' })];
+              }),
+            }),
+            Plugin.addModule({
+              id: 'b',
+              requires: [String],
+              provides: [Number],
+              activate: Effect.fnUntraced(function* () {
+                yield* String;
+                return [Capability.contribute(Number, { number: 1 })];
+              }),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        yield* manager.start();
+        assert.deepStrictEqual(manager.getActive(), []);
+        const failures = manager.getFailed();
+        assert.isAbove(failures.length, 0);
+        assert.instanceOf(failures[0].error, DependencyCycleError);
+        const path = failures[0].error.context.path;
+        assert.isArray(path);
+        assert.isAbove((path as unknown[]).length, 0);
+      }),
+    );
+
+    it.effect('puts duplicate singleton providers into an error state and continues', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'a',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'a' })]),
+            }),
+            Plugin.addModule({
+              id: 'b',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'b' })]),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        yield* manager.start();
+        assert.deepStrictEqual(manager.getActive(), []);
+        const failures = manager.getFailed();
+        assert.isAbove(failures.length, 0);
+        assert.instanceOf(failures[0].error, DuplicateProviderError);
+        assert.strictEqual(failures[0].error.context.capability, String.identifier);
+      }),
+    );
+
+    it.effect('records ProvidesMismatchError for undeclared contributions', () =>
+      Effect.gen(function* () {
+        // Authored through the erased ModuleEntry escape hatch: the typed addModule overload
+        // rejects this shape at compile time; the runtime validator is the backstop under test.
+        const undeclaredEntry: Plugin.ModuleEntry = {
+          id: 'undeclared',
+          provides: [],
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'sneaky' })]),
+        };
+        const builder = Plugin.define(testMeta);
+        builder.addModule(undeclaredEntry);
+        const Undeclared = Plugin.make(builder);
+
+        const manager = makeManagerWith(Undeclared);
+        assert.isFalse(yield* manager.start());
+        const failures = manager.getFailed();
+        assert.strictEqual(failures.length, 1);
+        assert.instanceOf(failures[0].error, ProvidesMismatchError);
+        assert.deepStrictEqual(failures[0].error.context.undeclared, [String.identifier]);
+      }),
+    );
+
+    it.effect('a conditional provider may skip a declared capability (warn only)', () =>
+      Effect.gen(function* () {
+        // Erased entry: an always-empty return is a static coverage error (see plugin.test.ts);
+        // the runtime warn-only behavior for conditional providers is what is under test.
+        const conditionalEntry: Plugin.ModuleEntry = {
+          id: 'conditional',
+          provides: [String],
+          activate: () => Effect.succeed([]),
+        };
+        const builder = Plugin.define(testMeta);
+        builder.addModule(conditionalEntry);
+        const Conditional = Plugin.make(builder);
+
+        const manager = makeManagerWith(Conditional);
+        assert.isTrue(yield* manager.start());
+        assert.deepStrictEqual(manager.getActive(), ['org.dxos.plugin.test.module.conditional']);
+        assert.deepStrictEqual(manager.capabilities.getAll(String), []);
+      }),
+    );
+
+    it.effect('multi capabilities never gate and stay live', () =>
+      Effect.gen(function* () {
+        let snapshot: readonly { widget: string }[] = [];
+        const Consumer = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'consumer',
+              requires: [Widget],
+              provides: [],
+              activate: Effect.fnUntraced(function* () {
+                const contributions = yield* Widget;
+                snapshot = contributions.get();
+              }),
+            }),
+            Plugin.addModule({
+              id: 'provider',
+              provides: [Widget],
+              activate: () =>
+                Effect.succeed([Capability.contributeAll(Widget, [{ widget: 'one' }, { widget: 'two' }])]),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Consumer);
+        assert.isTrue(yield* manager.start());
+        // Soft ordering: the same-pass provider activated first, so the snapshot saw it.
+        assert.deepStrictEqual(snapshot, [{ widget: 'one' }, { widget: 'two' }]);
+
+        // The collection is live: later contributions appear without reactivation.
+        manager.capabilities.contribute({ module: 'external', interface: Widget, implementation: { widget: 'three' } });
+        assert.strictEqual(manager.capabilities.contributions(Widget).get().length, 3);
+      }),
+    );
+
+    it.effect('an event-pulled snapshot consumer waits for a multi provider in flight in the startup round', () =>
+      Effect.gen(function* () {
+        // Regression: an event fired while the startup dependency round is still activating pulls
+        // its providers into a *separate* scoped round. A multi provider mid-load in the startup
+        // round is dropped from that round's candidates (memoized load), taking its soft edge with
+        // it — so a snapshot consumer (e.g. the process manager reading `Capabilities.LayerSpec`)
+        // could take its one-shot `.get()` before the provider contributed.
+        const EventX = ActivationEvent.make('org.dxos.test.snapshotRace');
+        const providerStarted = yield* Deferred.make<void>();
+        const providerGate = yield* Deferred.make<void>();
+        let snapshot: readonly { widget: string }[] = [];
+
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            // Startup root, held open by the gate to keep the startup round in flight.
+            Plugin.addModule({
+              id: 'provider',
+              provides: [Widget],
+              activate: () =>
+                Effect.gen(function* () {
+                  yield* Deferred.succeed(providerStarted, undefined);
+                  yield* Deferred.await(providerGate);
+                  return [Capability.contribute(Widget, { widget: 'one' })];
+                }),
+            }),
+            // Snapshot consumer: singleton provider pulled on demand by the event below.
+            Plugin.addModule({
+              id: 'snapshotter',
+              requires: [Widget],
+              provides: [String],
+              activate: Effect.fnUntraced(function* () {
+                const contributions = yield* Widget;
+                snapshot = contributions.get();
+                return Capability.contribute(String, { string: 'snapshot' });
+              }),
+            }),
+            Plugin.addModule({
+              id: 'listener',
+              activatesOn: EventX,
+              requires: [String],
+              activate: () => Effect.succeed([]),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        const startFiber = yield* Effect.fork(manager.start());
+        yield* Deferred.await(providerStarted);
+
+        // Fire the event mid-startup: the pull round runs concurrently with the held-open
+        // startup round.
+        const eventFiber = yield* Effect.fork(manager.activate(EventX));
+        // Let the event fiber run to its snapshot (broken) or its provider wait (fixed) before
+        // the provider is released — otherwise the race can accidentally resolve correctly.
+        yield* Effect.yieldNow().pipe(Effect.repeatN(50));
+        yield* Deferred.succeed(providerGate, undefined);
+        yield* Fiber.join(eventFiber);
+        yield* Fiber.join(startFiber);
+
+        assert.deepStrictEqual(snapshot, [{ widget: 'one' }]);
+      }),
+    );
+
+    it.effect('a multi consumer activates with an empty collection when no providers exist', () =>
+      Effect.gen(function* () {
+        let count = -1;
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'consumer',
+              requires: [Widget],
+              provides: [],
+              activate: Effect.fnUntraced(function* () {
+                const contributions = yield* Widget;
+                count = contributions.get().length;
+              }),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        assert.isTrue(yield* manager.start());
+        assert.strictEqual(count, 0);
+      }),
+    );
+
+    it.effect('event-mode modules activate on their event and pull inactive providers on demand', () =>
+      Effect.gen(function* () {
+        let received: string | undefined;
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'provider',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'pulled' })]),
+            }),
+            Plugin.addModule({
+              id: 'listener',
+              activatesOn: CountEvent,
+              requires: [String],
+              provides: [Number],
+              activate: Effect.fnUntraced(function* () {
+                const { string } = yield* String;
+                received = string;
+                return [Capability.contribute(Number, { number: string.length })];
+              }),
+            }),
+          ),
+        );
+
+        const instance = Test();
+        const manager = PluginManager.make({ plugins: [instance], enabled: [testMeta.profile.key], pluginLoader });
+        // Not started: the event pulls the provider on demand without a startup pass.
+        yield* manager.activate(CountEvent);
+        assert.strictEqual(received, 'pulled');
+        assert.deepStrictEqual(manager.capabilities.get(Number), { number: 6 });
+        // Both the pulled provider and the listener are active.
+        assert.includeMembers(
+          [...manager.getActive()],
+          ['org.dxos.plugin.test.module.provider', 'org.dxos.plugin.test.module.listener'],
+        );
+      }),
+    );
+
+    it.effect('event-mode provides satisfy later on-demand requires but not startup', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'gated-provider',
+              activatesOn: CountEvent,
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'gated' })]),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        yield* manager.start();
+        assert.deepStrictEqual(manager.getActive(), []);
+        yield* manager.activate(CountEvent);
+        assert.deepStrictEqual(manager.capabilities.get(String), { string: 'gated' });
+      }),
+    );
+
+    it.effect('enable after start runs an incremental dependency pass', () =>
+      Effect.gen(function* () {
+        const Provider = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'provider',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'base' })]),
+            }),
+          ),
+        );
+        const lateMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.late'), name: 'Late' });
+        const Late = Plugin.make(
+          Plugin.define(lateMeta).pipe(
+            Plugin.addModule({
+              id: 'late-consumer',
+              requires: [String],
+              provides: [Number],
+              activate: Effect.fnUntraced(function* () {
+                const { string } = yield* String;
+                return [Capability.contribute(Number, { number: string.length })];
+              }),
+            }),
+          ),
+        );
+
+        const providerInstance = Provider();
+        const lateInstance = Late();
+        plugins = [providerInstance, lateInstance];
+        const manager = PluginManager.make({
+          plugins: [providerInstance],
+          enabled: [testMeta.profile.key],
+          pluginLoader,
+        });
+        yield* manager.start();
+        assert.deepStrictEqual(manager.getActive(), ['org.dxos.plugin.test.module.provider']);
+
+        yield* manager.add(lateMeta.profile.key);
+        yield* manager.enable(lateMeta.profile.key);
+        assert.deepStrictEqual(manager.capabilities.get(Number), { number: 4 });
+      }),
+    );
+
+    it.effect('enable after start with a missing provider fails only that plugin', () =>
+      Effect.gen(function* () {
+        const Base = Plugin.make(Plugin.define(testMeta));
+        const lateMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.late'), name: 'Late' });
+        const Late = Plugin.make(
+          Plugin.define(lateMeta).pipe(
+            Plugin.addModule({
+              id: 'late-consumer',
+              requires: [String],
+              provides: [],
+              activate: Effect.fnUntraced(function* () {
+                yield* String;
+              }),
+            }),
+          ),
+        );
+
+        const baseInstance = Base();
+        const lateInstance = Late();
+        plugins = [baseInstance, lateInstance];
+        const manager = PluginManager.make({ plugins: [baseInstance], enabled: [testMeta.profile.key], pluginLoader });
+        yield* manager.start();
+
+        yield* manager.add(lateMeta.profile.key);
+        const enabled = yield* manager.enable(lateMeta.profile.key);
+        assert.isTrue(enabled);
+        const failures = manager.getFailed();
+        assert.strictEqual(failures.length, 1);
+        assert.strictEqual(failures[0].id, lateMeta.profile.key);
+        assert.instanceOf(failures[0].error, MissingProviderError);
+      }),
+    );
+
+    it.effect('disabling a provider deactivates dependents first and reactivates them on re-enable', () =>
+      Effect.gen(function* () {
+        const deactivations: string[] = [];
+        const providerMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.provider'), name: 'Provider' });
+        const Provider = Plugin.make(
+          Plugin.define(providerMeta).pipe(
+            Plugin.addModule({
+              id: 'provider',
+              provides: [String],
+              activate: () =>
+                Effect.succeed([
+                  Capability.contribute(String, { string: 'base' }, () =>
+                    Effect.sync(() => {
+                      deactivations.push('provider');
+                    }),
+                  ),
+                ]),
+            }),
+          ),
+        );
+        const Consumer = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'consumer',
+              requires: [String],
+              provides: [Number],
+              activate: Effect.fnUntraced(function* () {
+                const { string } = yield* String;
+                return [
+                  Capability.contribute(Number, { number: string.length }, () =>
+                    Effect.sync(() => {
+                      deactivations.push('consumer');
+                    }),
+                  ),
+                ];
+              }),
+            }),
+          ),
+        );
+
+        const providerInstance = Provider();
+        const consumerInstance = Consumer();
+        plugins = [providerInstance, consumerInstance];
+        const manager = PluginManager.make({
+          plugins: [providerInstance, consumerInstance],
+          enabled: [providerMeta.profile.key, testMeta.profile.key],
+          pluginLoader,
+        });
+        yield* manager.start();
+        assert.strictEqual(manager.getActive().length, 2);
+
+        yield* manager.disable(providerMeta.profile.key);
+        // Dependent deactivated before its provider.
+        assert.deepStrictEqual(deactivations, ['consumer', 'provider']);
+        assert.deepStrictEqual(manager.getActive(), []);
+
+        yield* manager.enable(providerMeta.profile.key);
+        // Provider reactivates and the pending dependent reactivates with it.
+        assert.strictEqual(manager.getActive().length, 2);
+        assert.deepStrictEqual(manager.capabilities.get(Number), { number: 4 });
+      }),
+    );
+
+    it.effect('shutdown deactivates mixed event-mode and dependency-mode modules in reverse order', () =>
+      Effect.gen(function* () {
+        const deactivations: string[] = [];
+        const track = (name: string) => () =>
+          Effect.sync(() => {
+            deactivations.push(name);
+          });
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'provider',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'p' }, track('provider'))]),
+            }),
+            Plugin.addModule({
+              id: 'consumer',
+              requires: [String],
+              provides: [Number],
+              activate: Effect.fnUntraced(function* () {
+                const { string } = yield* String;
+                return [Capability.contribute(Number, { number: string.length }, track('consumer'))];
+              }),
+            }),
+            Plugin.addModule({
+              id: 'event-root',
+              provides: [Total],
+              activatesOn: ActivationEvents.Startup,
+              activate: () => Effect.succeed([Capability.contribute(Total, { total: 0 }, track('event-root'))]),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        yield* manager.start();
+        assert.strictEqual(manager.getActive().length, 3);
+
+        yield* manager.shutdown();
+        assert.deepStrictEqual(manager.getActive(), []);
+        // Reverse activation order; consumer always before its provider.
+        assert.isBelow(deactivations.indexOf('consumer'), deactivations.indexOf('provider'));
+        assert.strictEqual(deactivations.length, 3);
+      }),
+    );
+
+    it.effect('publishes the event-level Startup message only after the dependency pass', () =>
+      Effect.gen(function* () {
+        const messages: Array<{ event: string; module?: string }> = [];
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'provider',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'p' })]),
+            }),
+            Plugin.addModule({
+              id: 'event-root',
+              provides: [Total],
+              activatesOn: ActivationEvents.Startup,
+              activate: () => Effect.succeed([Capability.contribute(Total, { total: 0 })]),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        const subscription = yield* PubSub.subscribe(manager.activation);
+        yield* manager.start();
+        while (true) {
+          const message = yield* Queue.poll(subscription);
+          if (message._tag === 'None') {
+            break;
+          }
+          if (message.value.state === 'activated') {
+            messages.push({ event: message.value.event, module: message.value.module });
+          }
+        }
+
+        const readyIndex = messages.findIndex((message) => message.event === startupKey && !message.module);
+        const providerIndex = messages.findIndex(
+          (message) => message.module === 'org.dxos.plugin.test.module.provider',
+        );
+        assert.isAbove(readyIndex, -1);
+        assert.isAbove(providerIndex, -1);
+        // The app-ready signal publishes after every dependency-mode module activated.
+        assert.isAbove(readyIndex, providerIndex);
+      }).pipe(Effect.scoped),
     );
   });
 });

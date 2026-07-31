@@ -7,7 +7,6 @@ import { useLayoutEffect } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
@@ -34,7 +33,6 @@ const storyConfig = new Config({
  */
 export const withCallManager = () =>
   withPluginManager({
-    setupEvents: [AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({

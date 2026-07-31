@@ -25,15 +25,6 @@ import { shouldDeferNavigationHandlers } from './check-app-scheme';
 const RESOLVE_RETRY_ATTEMPTS = 15;
 const RESOLVE_RETRY_INTERVAL = '150 millis';
 
-/** Dispatch all NavigationHandler contributions with a given URL. */
-const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
-  const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-  yield* Effect.all(
-    handlers.map((handler) => handler(url)),
-    { concurrency: 'unbounded' },
-  );
-});
-
 /** Strip the `root/` prefix off a qualified workspace path, back to the bare `UrlPath` workspace token. */
 const bareWorkspace = (qualifiedWorkspace: string): string => {
   const [, workspace] = qualifiedWorkspace.split('/');
@@ -42,18 +33,26 @@ const bareWorkspace = (qualifiedWorkspace: string): string => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const operationService = yield* Capability.get(Capabilities.OperationInvoker);
-    const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const stateAtom = yield* Capability.get(DeckCapabilities.State);
-    const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const operationService = yield* Capabilities.OperationInvoker;
+    const navigationHandlers = yield* AppCapabilities.NavigationHandler;
+    const navigationTargetLoaders = yield* AppCapabilities.NavigationTargetLoader;
+    const registry = yield* Capabilities.AtomRegistry;
+    const stateAtom = yield* DeckCapabilities.State;
+    const settingsAtom = yield* DeckCapabilities.Settings;
+    const viewState = yield* AttentionCapabilities.ViewState;
+    // The graph builder is contributed once by plugin-graph and is stable for the app's lifetime,
+    // so both the inbound (URL -> state) resolution and the outbound sync below share this handle.
+    const builder = yield* AppCapabilities.AppGraph;
 
-    const provideServices = <A, E>(effect: Effect.Effect<A, E, Capability.Service | Operation.Service>) =>
-      effect.pipe(
-        Effect.provideService(Capability.Service, capabilities),
-        Effect.provideService(Operation.Service, operationService),
+    /** Dispatch all NavigationHandler contributions with a given URL. */
+    const dispatchNavigationHandlers = (url: URL) =>
+      Effect.all(
+        navigationHandlers.get().map((handler) => handler(url)),
+        { concurrency: 'unbounded' },
       );
+
+    const provideServices = <A, E>(effect: Effect.Effect<A, E, Operation.Service>) =>
+      effect.pipe(Effect.provideService(Operation.Service, operationService));
 
     // Helper to get state.
     const getState = () => registry.get(stateAtom);
@@ -72,7 +71,6 @@ export default Capability.makeModule(
     };
 
     const handleNavigation = Effect.fn(function* (url?: URL) {
-      const builder = yield* Capability.get(AppCapabilities.AppGraph);
       const resolvedUrl = url ?? new URL(window.location.href);
       // When native redirect is active, check-app-scheme owns the initial dispatch
       // to prevent one-time tokens from being consumed before the native app can use them.
@@ -135,7 +133,7 @@ export default Capability.makeModule(
       // dependency; absent (e.g. headless), resolution simply falls back to its guided search. The
       // per-pair boolean records which planks the loader confirmed exist, gating the resolve retry
       // below so a genuine 404 fails fast instead of waiting out the timeout.
-      const loaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
+      const loaders = navigationTargetLoaders.get();
       const confirmed = new Array<boolean>(pairs.length).fill(false);
       if (loaders.length > 0) {
         yield* Effect.forEach(
@@ -254,11 +252,6 @@ export default Capability.makeModule(
       );
     }
 
-    // The graph builder instance is stable for the app's lifetime once contributed (it's created once
-    // by plugin-graph); handleNavigation above already required it to be ready, so it's safe to read
-    // once more here for the outbound (state -> URL) sync closures below.
-    const builder = yield* Capability.get(AppCapabilities.AppGraph);
-
     // Sync URL with layout state changes: deck state (active planks, companion open/closed) and the
     // companion's selected variant. Attention is deliberately absent — it is never serialized.
     // `method: 'replace'` is used for the first write, to correct a stale/bare URL against the
@@ -327,7 +320,7 @@ export default Capability.makeModule(
     // Correct a bare/stale URL against the already-persisted deck on load (see the note above).
     syncUrl('replace');
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
         if ('navigation' in window) {
@@ -338,6 +331,7 @@ export default Capability.makeModule(
         unlistenDeepLink?.();
       }),
     );
+    return [];
   }),
 );
 

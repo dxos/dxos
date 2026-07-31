@@ -7,8 +7,8 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
 
@@ -23,15 +23,16 @@ export const StorySyncPlugin = Plugin.define(
     name: 'Mailbox Sync Story',
   }),
 ).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+  Plugin.addModule(
+    Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed([
+        Capability.contribute(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
         ),
-      ),
-  }),
+      ]),
+    ),
+  ),
   Plugin.make,
 );
 
@@ -48,19 +49,17 @@ export const StoryAiPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'story-ai',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    provides: [Capabilities.LayerSpec],
     activate: Capability.makeModule(
       Effect.fnUntraced(function* () {
-        return [
-          Capability.contributes(
-            Capabilities.LayerSpec,
-            LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
-              // `orDie`: a layer-construction ConfigError is a story setup fault, not a recoverable
-              // operation error, and `LayerSpec` requires an empty error channel.
-              AiServiceTestingPreset('ollama').pipe(Layer.orDie),
-            ),
+        return Capability.contribute(
+          Capabilities.LayerSpec,
+          LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
+            // `orDie`: a layer-construction ConfigError is a story setup fault, not a recoverable
+            // operation error, and `LayerSpec` requires an empty error channel.
+            AiServiceTestingPreset('ollama').pipe(Layer.orDie),
           ),
-        ];
+        );
       }),
     ),
   }),

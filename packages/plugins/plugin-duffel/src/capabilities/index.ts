@@ -2,6 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
+import { TripCapabilities } from '@dxos/plugin-trip/types';
 
-export const Duffel = Capability.lazy('Duffel', () => import('./duffel'));
+import { DuffelCapabilities } from '#types';
+
+export const Duffel = AppCapability.settings(() => import('./duffel'), {
+  requires: [Capabilities.AtomRegistry],
+  provides: [DuffelCapabilities.Settings, TripCapabilities.BookingService],
+});

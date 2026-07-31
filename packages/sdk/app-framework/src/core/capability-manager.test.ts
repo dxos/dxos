@@ -8,20 +8,21 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
+import { CapabilityNotFoundError } from './errors';
 
 describe('CapabilityManager', () => {
   it('should return empty array if no capabilities are contributed', () => {
     const registry = Registry.make();
     const capabilityManager = CapabilityManager.make({ registry });
-    const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = Capability.makeSingleton<{ example: string }>()('org.dxos.test.example');
     expect(capabilityManager.getAll(interfaceDef)).toEqual([]);
   });
 
   it('should throw when getCapability is called and no capability exists', () => {
     const registry = Registry.make();
     const capabilityManager = CapabilityManager.make({ registry });
-    const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
-    expect(() => capabilityManager.get(interfaceDef)).toThrow('No capability found');
+    const interfaceDef = Capability.makeSingleton<{ example: string }>()('org.dxos.test.example');
+    expect(() => capabilityManager.get(interfaceDef)).toThrow(CapabilityNotFoundError);
     expect(capabilityManager.listRegisteredIdentifiers()).toEqual([]);
   });
 
@@ -29,7 +30,7 @@ describe('CapabilityManager', () => {
     Effect.gen(function* () {
       const registry = Registry.make();
       const capabilityManager = CapabilityManager.make({ registry });
-      const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+      const interfaceDef = Capability.makeSingleton<{ example: string }>()('org.dxos.test.example');
 
       const result = yield* Capability.get(interfaceDef).pipe(
         Effect.provideService(Capability.Service, capabilityManager),
@@ -37,13 +38,17 @@ describe('CapabilityManager', () => {
       );
 
       expect(result._tag).toEqual('Left');
+      if (result._tag === 'Left') {
+        expect(result.left).toBeInstanceOf(CapabilityNotFoundError);
+        expect(result.left.context.identifier).toEqual(interfaceDef.identifier);
+      }
     }),
   );
 
   it('should be able to contribute and request capabilities', () => {
     const registry = Registry.make();
     const capabilityManager = CapabilityManager.make({ registry });
-    const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = Capability.makeSingleton<{ example: string }>()('org.dxos.test.example');
     const implementation = { example: 'identifier' };
     capabilityManager.contribute({ interface: interfaceDef, implementation, module: 'test' });
     expect(capabilityManager.getAll(interfaceDef)).toEqual([implementation]);
@@ -53,7 +58,7 @@ describe('CapabilityManager', () => {
   it('should be able to remove capabilities', () => {
     const registry = Registry.make();
     const capabilityManager = CapabilityManager.make({ registry });
-    const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = Capability.makeSingleton<{ example: string }>()('org.dxos.test.example');
     const implementation = { example: 'identifier' };
     capabilityManager.contribute({ interface: interfaceDef, implementation, module: 'test' });
     expect(capabilityManager.getAll(interfaceDef)).toEqual([implementation]);
@@ -65,7 +70,7 @@ describe('CapabilityManager', () => {
   it('should be able to contribute and request multiple implementations', () => {
     const registry = Registry.make();
     const capabilityManager = CapabilityManager.make({ registry });
-    const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = Capability.makeSingleton<{ example: string }>()('org.dxos.test.example');
     const implementation1 = { example: 'first' };
     const implementation2 = { example: 'second' };
     capabilityManager.contribute({ interface: interfaceDef, implementation: implementation1, module: 'test' });
@@ -76,8 +81,8 @@ describe('CapabilityManager', () => {
   it('should be able to request multiple capabilities', () => {
     const registry = Registry.make();
     const capabilityManager = CapabilityManager.make({ registry });
-    const interfaceDef1 = Capability.make<{ one: number }>('@dxos/app-framework/test/one');
-    const interfaceDef2 = Capability.make<{ two: number }>('@dxos/app-framework/test/two');
+    const interfaceDef1 = Capability.makeSingleton<{ one: number }>()('org.dxos.test.one');
+    const interfaceDef2 = Capability.makeSingleton<{ two: number }>()('org.dxos.test.two');
     const implementation1 = { one: 1 };
     const implementation2 = { two: 2 };
     capabilityManager.contribute({ interface: interfaceDef1, implementation: implementation1, module: 'test' });
@@ -89,7 +94,7 @@ describe('CapabilityManager', () => {
   it('should be reactive', () => {
     const registry = Registry.make();
     const capabilityManager = CapabilityManager.make({ registry });
-    const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = Capability.makeSingleton<{ example: string }>()('org.dxos.test.example');
 
     let count = 0;
     const cancel = registry.subscribe(capabilityManager.atom(interfaceDef), () => {
@@ -112,7 +117,7 @@ describe('CapabilityManager', () => {
   it('should not be reactive to changes within the implementation', () => {
     const registry = Registry.make();
     const capabilityManager = CapabilityManager.make({ registry });
-    const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = Capability.makeSingleton<{ example: string }>()('org.dxos.test.example');
 
     let count = 0;
     const cancel = registry.subscribe(capabilityManager.atom(interfaceDef), () => {
@@ -141,7 +146,7 @@ describe('CapabilityManager', () => {
     Effect.gen(function* () {
       const registry = Registry.make();
       const capabilityManager = CapabilityManager.make({ registry });
-      const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+      const interfaceDef = Capability.makeSingleton<{ example: string }>()('org.dxos.test.example');
 
       expect(capabilityManager.getAll(interfaceDef)).toHaveLength(0);
       const capability = capabilityManager.waitFor(interfaceDef);
@@ -151,4 +156,37 @@ describe('CapabilityManager', () => {
       expect(yield* capability).toEqual(implementation);
     }),
   );
+
+  describe('contributions', () => {
+    it('should provide a live view over multi capability contributions', () => {
+      const registry = Registry.make();
+      const capabilityManager = CapabilityManager.make({ registry });
+      const multi = Capability.make<{ example: string }>()('org.dxos.test.example');
+
+      const view = capabilityManager.contributions(multi);
+      expect(view.get()).toEqual([]);
+
+      const values: (readonly { example: string }[])[] = [];
+      const cancel = view.subscribe((current) => values.push(current));
+      onTestFinished(() => cancel());
+
+      const first = { example: 'first' };
+      const second = { example: 'second' };
+      capabilityManager.contribute({ interface: multi, implementation: first, module: 'test-1' });
+      expect(view.get()).toEqual([first]);
+      capabilityManager.contribute({ interface: multi, implementation: second, module: 'test-2' });
+      expect(view.get()).toEqual([first, second]);
+      expect(values.at(-1)).toEqual([first, second]);
+
+      capabilityManager.remove(multi, first);
+      expect(view.get()).toEqual([second]);
+    });
+
+    it('should return a stable view per interface', () => {
+      const registry = Registry.make();
+      const capabilityManager = CapabilityManager.make({ registry });
+      const multi = Capability.make<{ example: string }>()('org.dxos.test.example');
+      expect(capabilityManager.contributions(multi)).toBe(capabilityManager.contributions(multi));
+    });
+  });
 });

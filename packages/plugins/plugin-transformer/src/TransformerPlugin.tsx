@@ -3,9 +3,8 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
-// import { IntentResolver } from './capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -13,16 +12,16 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TransformerPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [] }),
-  AppPlugin.addTranslationsModule({ translations }),
-  // Plugin.addModule({
-  //   id: 'intent-resolver',
-  //   activatesOn: Events.SetupIntentResolver,
-  //   activate: IntentResolver,
-  // }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(AppCapability.schema([])),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

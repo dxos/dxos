@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 
 import { moduleSurfaces } from '../modules';
@@ -18,8 +18,8 @@ export const StoryModulesPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'inbox-story-modules',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => Effect.succeed(Capability.contributes(Capabilities.ReactSurface, moduleSurfaces)),
+    provides: [Capabilities.ReactSurface],
+    activate: () => Effect.succeed([Capability.contribute(Capabilities.ReactSurface, moduleSurfaces)]),
   }),
   Plugin.make,
 );

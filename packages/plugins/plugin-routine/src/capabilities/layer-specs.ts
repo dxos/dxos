@@ -151,7 +151,7 @@ const FeedTraceSinkSpec = LayerSpec.make(
  * binding (the edge routes them); otherwise they are scoped to the space. The
  * config is read inside the factory — at slice-materialisation time, once
  * `ClientService` is available — so the owning module does not need the client
- * at activation time and can activate on `SetupProcessManager`.
+ * at activation time.
  */
 const RemoteOperationInvokerSpec = LayerSpec.make(
   {
@@ -240,17 +240,19 @@ const TriggerMonitorSpec = LayerSpec.make(
 
 export default Capability.makeModule(() =>
   Effect.succeed([
-    Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
-    Capability.contributes(Capabilities.LayerSpec, RegistrySpec),
-    Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
-    Capability.contributes(Capabilities.LayerSpec, OperationsToRegistrySpec),
-    Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
-    Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
-    Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),
-    Capability.contributes(Capabilities.LayerSpec, RemoteTriggerManagerSpec),
-    Capability.contributes(Capabilities.LayerSpec, TriggerMonitorSpec),
-    Capability.contributes(Capabilities.LayerSpec, RemoteOperationInvokerSpec),
-    Capability.contributes(Capabilities.LayerSpec, RemoteProcessManagerSpec),
-    Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
+    Capability.contributeAll(Capabilities.LayerSpec, [
+      OperationHandlerProviderSpec,
+      RegistrySpec,
+      OpaqueToolkitSpec,
+      OperationsToRegistrySpec,
+      TriggerStateStoreSpec,
+      FeedTraceSinkSpec,
+      TriggerDispatcherSpec,
+      RemoteTriggerManagerSpec,
+      TriggerMonitorSpec,
+      RemoteOperationInvokerSpec,
+      RemoteProcessManagerSpec,
+    ]),
+    Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),
 );

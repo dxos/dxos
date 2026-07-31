@@ -9,6 +9,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { DrawingSkill } from '#skills';
 
-const skillDefinition = () => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, DrawingSkill)]);
+const skillDefinition = () => Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, DrawingSkill)]);
 
 export default skillDefinition;

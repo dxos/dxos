@@ -96,9 +96,9 @@ const decorators = (options: SeedOptions) => [
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
     capabilities: [
-      Capability.contributes(AppCapabilities.Translations, translations),
+      Capability.contribute(AppCapabilities.Translations, translations),
       // Mock repo — no network; publish/unpublish mutate the in-memory store.
-      Capability.contributes(AtprotoCapabilities.RepoLayer, () => AtprotoRepo.layerMock()),
+      Capability.contribute(AtprotoCapabilities.RepoLayer, () => AtprotoRepo.layerMock()),
     ],
     plugins: [
       ...corePlugins(),

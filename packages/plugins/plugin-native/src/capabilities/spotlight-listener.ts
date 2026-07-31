@@ -19,7 +19,7 @@ type SpotlightInvokePayload = {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
 
     const unlisten = yield* Effect.promise(async () => {
       const { listen } = await import('@tauri-apps/api/event');
@@ -49,10 +49,11 @@ export default Capability.makeModule(
       });
     });
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unlisten();
       }),
     );
+    return [];
   }),
 );

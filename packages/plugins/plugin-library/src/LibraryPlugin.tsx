@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -14,14 +14,19 @@ import { Book } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const LibraryPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activatesOn: AppActivationEvents.SetupAppGraph, activate: AppGraphBuilder }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addSchemaModule({ schema: [Book.Book] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppCapability.schema([Book.Book])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 
