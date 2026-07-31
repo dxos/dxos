@@ -10,10 +10,10 @@ import { ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { emailDialect } from './email';
 import m1 from './fixtures/m1.html?raw';
 import m2 from './fixtures/m2.html?raw';
 import { Html, type HtmlSrcResolver } from './Html';
+import { emailDialect } from './transform-email';
 
 //
 // Samples
@@ -309,12 +309,14 @@ const findShadowHost = (root: Element): Element | undefined => {
   if (root.shadowRoot) {
     return root;
   }
+
   for (const child of Array.from(root.children)) {
     const found = findShadowHost(child);
     if (found) {
       return found;
     }
   }
+
   return undefined;
 };
 

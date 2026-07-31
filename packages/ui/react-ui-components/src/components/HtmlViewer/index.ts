@@ -3,5 +3,5 @@
 //
 
 export * from './Html';
-export * from './email';
+export * from './transform-email';
 export * from './transform-colors';

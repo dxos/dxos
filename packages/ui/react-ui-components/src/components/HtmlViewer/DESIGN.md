@@ -9,7 +9,7 @@ declaration (`ColorScheme`/`detectColorScheme`) and the authored-dark-rule rewri
 a dialect never needs the raw markup or the theme context. Concretely: sanitized content in a Shadow DOM host, so the content's (often
 aggressive) CSS cannot reach the app while it still flows in the app layout — no iframe, no height
 measurement. Script safety is DOMPurify's, since a shadow root isolates style but does not sandbox
-execution. `useEmailDialect.ts` is the email configuration of that sandbox; `transform-colors.ts` is
+execution. `email.ts` is the email configuration of that sandbox; `transform-colors.ts` is
 the email recoloring policy. Implemented 2026-07-31 — §1 and §2 below describe what the code now does,
 except where marked open.
 
