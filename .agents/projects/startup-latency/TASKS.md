@@ -66,20 +66,36 @@ Move `operationHandler`, `reactSurface`, `createObject`, `skillDefinition` off s
 (131 chunk-bearing modules of 244 total; combined removal measured at 6.1 MB of the 21.5 MB
 boot JS). Substrate per SUBSTRATE.md:
 
-- [ ] `MakerOptions`/`ModuleSpec` declaration field (`roles`, `handles`) next to `activatesOn`
-- [ ] operationHandler → on-demand per operation: invoker `NoHandlerError` → pull-then-retry
-      hook; un-pin the three `requires` barriers (`ProcessManagerPlugin.ts:16` drop,
-      `plugin-routine` RegistrySync + `plugin-deck` NotificationTracker → event-mode on
-      SpacesReady); fix the `layer-specs.ts:55` one-shot snapshot
-- [ ] reactSurface → activation event per declared role; surface-miss → activate → suspend on
-      the existing `placeholder`; `Surface.useIsAvailable` consults declared roles; follow-up:
-      `React.lazy` component split (surface chunks statically import containers today)
-- [ ] createObject → event on create-flow open; fix the untracked `getAll` in
-      `plugin-space/.../extensions/database.ts:346` first
-- [ ] skillDefinition → assistant-activation event; headless-routine caveat: toolkit
-      materialization must pull (or fire the event) so trigger-fired routines keep skills
-- [ ] Validate each flip with the startup harness (cold + warm-cold) and the
-      first-interaction-latency probe on the deferred path
+Implementation (2026-07-31, commits 7faebffdab + ebb39a92e3) took a safer shape than the
+pre-authored plan: instead of a per-module declaration field, an app-supplied
+**`activationPolicy`** on `PluginManager` parks whole families at registration (module
+definitions stay runtime-neutral; CLI/workerd unaffected), and handler loading became
+**per-operation** via `OperationHandlerSet.keyed` (user direction — not per plugin).
+
+- [x] Activation-policy substrate: `ManagerOptions.activationPolicy` +
+      `Plugin.withActivatesOn`, applied at `_addModule`; enable-path uses effective modules;
+      pending-reset refires already-fired demand events for late-enabled plugins (3 unit tests)
+- [x] operationHandler → **per-operation**: `OperationHandlerSet.keyed([definition, loader])` —
+      definitions enumerate chunk-free, resolution imports one operation's module; all 58
+      operations barrels codemodded; `getHandler`/`getHandlerByKey` keyed fast-path;
+      `withResolver` demand hook (pull by plugin prefix → all-plugins fallback) wired in the
+      process manager + deck notification tracker; registry mirrors (routine registry-sync,
+      operations-to-registry spec, doctor diagnostics) read definitions, not bodies. The three
+      `requires` barriers needed NO un-pinning: policy-parked providers are event-mode, so the
+      soft edges no-op
+- [ ] reactSurface → per-role events — NOT in this round (needs per-module `roles`
+      declarations + the surface-miss hook; next wave-1 PR)
+- [x] createObject → `SpaceEvents.CreateObjectRequested` fired from CreateObjectDialog,
+      DefaultProperties, and schema-actions evaluation (untracked `getAll` → tracked read)
+- [x] skillDefinition → `ActivationEvents.SkillsRequested` fired from chat-service resolution
+      and the routine editor; headless routines covered: the handler-provider layer slice pulls
+      skills + all handlers at materialization and exposes a live view (snapshot fix included)
+- [x] Validated: cold profilerTotal **13,613 → 7,735 ms (−43%)**, navToReady
+      **18,481 → 12,470 ms (−33%)**, transfer 38.1 → 32.7 MB; warm-cold profilerTotal −43%;
+      70 modules parked (27 handler + 25 create-object + 18 skill); e2e `create document`
+      exercises the demand-pull loop green. `reset device` e2e fails in-container on
+      unreachable signaling (network teardown timeout; no deferral signature in trace) —
+      re-verify on real hardware. First-interaction-latency probe on deferred paths still owed
 
 ### Wave 2 — lightweight operation definitions ([DEFINITIONS-AUDIT.md](./DEFINITIONS-AUDIT.md))
 
