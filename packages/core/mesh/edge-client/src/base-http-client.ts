@@ -262,8 +262,9 @@ export abstract class BaseHttpClient {
  * Whether a response carries a VerifiablePresentation challenge we can actually answer.
  *
  * Header *presence* is not enough: a 401 forwarded from upstream may carry an unrelated scheme
- * (`Bearer realm="…"`), which yields no VP challenge. Retrying those through the auth path would
- * fail on a missing challenge and mask the real upstream error.
+ * (`Bearer realm="…"`), and edge itself emits `challenge=""` when its server keypair is
+ * unconfigured. Neither yields something signable, and retrying those through the auth path would
+ * fail on the missing challenge and mask the real error.
  */
 const hasVpChallenge = (response: Response): boolean =>
   parseChallengeHeader(response.headers.get('WWW-Authenticate')) !== undefined;
