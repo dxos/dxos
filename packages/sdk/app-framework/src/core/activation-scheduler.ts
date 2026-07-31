@@ -194,6 +194,19 @@ export class ActivationScheduler {
       // contribution via the capability-graph machinery.
       yield* this.runDependencyPass({ candidateModules: modules });
 
+      // A matched module may be mid-load via a concurrent wave (the round filters it as
+      // `isLoading` to avoid in-round deadlocks). Await those loads before reporting the event
+      // activated — demand pulls rely on "activate resolved ⇒ matched modules contributed"
+      // (a lookup retry that runs earlier misses the handlers and fails a one-shot invocation).
+      // Bounded: every load settles its deferred under the activation timeout.
+      const inFlight = modules.filter((module) => this.#loader.isLoading(module.id));
+      if (inFlight.length > 0) {
+        yield* Effect.all(
+          inFlight.map((module) => this.#loader.load(module, key).pipe(Effect.ignore)),
+          { concurrency: 'unbounded', discard: true },
+        );
+      }
+
       this.#state.markEventFired(key);
 
       performance.mark(`event:${key}:end`);

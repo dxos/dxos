@@ -2748,6 +2748,52 @@ describe('PluginManager', () => {
       }),
     );
 
+    it.effect('an event wave awaits a matched module already loading via a concurrent wave', () =>
+      Effect.gen(function* () {
+        const SlowEvent = ActivationEvent.make('org.dxos.test.slowDemand');
+        const OtherEvent = ActivationEvent.make('org.dxos.test.otherDemand');
+        const started = yield* Deferred.make<void>();
+        const gate = yield* Deferred.make<void>();
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'slowGated',
+              activatesOn: ActivationEvent.oneOf(SlowEvent, OtherEvent),
+              provides: [MultiString],
+              activate: () =>
+                Effect.gen(function* () {
+                  yield* Deferred.succeed(started, undefined);
+                  yield* Deferred.await(gate);
+                  return [Capability.contribute(MultiString, { string: 'slow' })];
+                }),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({ pluginLoader, plugins, enabled: [testMeta.profile.key] });
+        yield* manager.activate(ActivationEvents.Startup);
+
+        // Wave A claims the module and blocks in its activate body.
+        const fiberA = yield* Effect.fork(manager.activate(SlowEvent));
+        yield* Deferred.await(started);
+
+        // Wave B matches the same module mid-load. The round filters it (`isLoading`), so
+        // without the post-pass await B would resolve here — before the handlers exist —
+        // breaking the demand-pull contract (a lookup retry then misses and hard-fails).
+        const fiberB = yield* Effect.fork(manager.activate(OtherEvent));
+        for (let i = 0; i < 10; i++) {
+          yield* Effect.yieldNow();
+        }
+        assert.strictEqual((yield* Fiber.poll(fiberB))._tag, 'None');
+
+        yield* Deferred.succeed(gate, undefined);
+        yield* Fiber.join(fiberB);
+        // The contract under test: when activate(OtherEvent) resolves, the contribution is visible.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'slow' }]);
+        yield* Fiber.join(fiberA);
+      }),
+    );
+
     it.effect('a plugin enabled after its demand event fired activates via pending reset', () =>
       Effect.gen(function* () {
         const Test = Plugin.make(

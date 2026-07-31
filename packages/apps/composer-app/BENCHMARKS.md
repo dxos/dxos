@@ -119,3 +119,7 @@ Auto-recorded by `src/playwright/startup.spec.ts`. One row per scenario per harn
 | 2026-07-31T13:56:29Z | 5539f037e0 |   ⚠   | warm-cold | chromium |          7047 |      11923 |  384 |       29.6 |     330 | `org.dxos.plugin.client.module.Client` (3468)                        |
 | 2026-07-31T13:56:55Z | 5539f037e0 |   ⚠   | cold      | chromium |          6581 |      12199 |  328 |       29.6 |     332 | `org.dxos.plugin.client.module.Client` (3452)                        |
 | 2026-07-31T13:57:23Z | 5539f037e0 |   ⚠   | warm-cold | chromium |          6400 |      11592 |  424 |       29.6 |     330 | `org.dxos.plugin.client.module.Client` (3222)                        |
+| 2026-07-31T14:15:57Z | b8886d064f |       | cold      | chromium |          7347 |      13455 |  444 |       29.7 |     332 | `org.dxos.plugin.client.module.Client` (3696)                        |
+| 2026-07-31T14:16:22Z | b8886d064f |   ⚠   | warm-cold | chromium |          6777 |      11252 |  392 |       29.6 |     330 | `org.dxos.plugin.client.module.Client` (3453)                        |
+| 2026-07-31T14:16:49Z | b8886d064f |   ⚠   | cold      | chromium |          6858 |      13148 |  352 |       29.7 |     332 | `org.dxos.plugin.client.module.Client` (3397)                        |
+| 2026-07-31T14:17:15Z | b8886d064f |   ⚠   | warm-cold | chromium |          7079 |      11939 |  372 |       29.6 |     330 | `org.dxos.plugin.client.module.Client` (3422)                        |
