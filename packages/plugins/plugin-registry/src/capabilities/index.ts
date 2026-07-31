@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
 
 import { RegistryCapabilities } from '../types';
@@ -13,7 +13,14 @@ export const DevPluginLoader = Capability.lazyModule(
   { requires: [Capabilities.PluginManager, Capabilities.AtomRegistry, RegistryCapabilities.Settings], provides: [] },
   () => import('./dev-plugin-loader'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+// Also gated on the foreign namespace's demand event: this plugin handles settings-namespace operations,
+// so the handler-set resolver's targeted pull reaches this module without a fallback flood.
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvent.oneOf(
+    ActivationEvents.OwnOperationHandlersRequested,
+    ActivationEvents.OperationHandlersRequested('org.dxos.plugin.settings'),
+  ),
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
 export const RegistrySettings = AppCapability.settings(() => import('./settings'), {
   provides: [RegistryCapabilities.Settings],

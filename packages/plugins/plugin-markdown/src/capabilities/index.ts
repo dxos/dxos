@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { SpaceCapability } from '@dxos/plugin-space';
@@ -24,7 +24,14 @@ export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort')
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+// Also gated on the foreign namespace's demand event: collaboration operations are defined in app-toolkit,
+// so the handler-set resolver's targeted pull reaches this module without a fallback flood.
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvent.oneOf(
+    ActivationEvents.OwnOperationHandlersRequested,
+    ActivationEvents.OperationHandlersRequested('org.dxos.app-framework.collaboration'),
+  ),
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
 export const MarkdownSettings = AppCapability.settings(() => import('./settings'), {
   provides: [MarkdownCapabilities.Settings],

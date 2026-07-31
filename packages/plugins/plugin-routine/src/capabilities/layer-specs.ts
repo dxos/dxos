@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Capabilities, Capability, Plugin, makeOperationHandlerPull } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { LayerSpec, Operation, OperationHandlerSet, Trigger } from '@dxos/compute';
@@ -23,6 +23,7 @@ import {
 } from '@dxos/compute-runtime';
 import { Database, Registry } from '@dxos/echo';
 import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 //
@@ -54,20 +55,6 @@ const OperationHandlerProviderSpec = LayerSpec.make(
       Effect.gen(function* () {
         const capabilities = yield* Capability.Service;
         const pluginManager = yield* Plugin.Service;
-        // This slice materializes when process execution first needs the full operation surface
-        // (a routine run, registry binding) — the demand point for everything an activation
-        // policy parked: pull skills and every plugin's handler modules before the set is read.
-        yield* pluginManager.activate(ActivationEvents.SkillsRequested).pipe(Effect.ignore);
-        yield* Effect.all(
-          pluginManager
-            .getPlugins()
-            .map((plugin) =>
-              pluginManager
-                .activate(ActivationEvents.OperationHandlersRequested(plugin.meta.profile.key))
-                .pipe(Effect.ignore),
-            ),
-          { concurrency: 'unbounded', discard: true },
-        );
         // Live view (not a one-shot snapshot): handlers contributed after materialization —
         // e.g. by a plugin enabled later — still reach subsequent reads.
         const currentSet = () => {
@@ -84,7 +71,19 @@ const OperationHandlerProviderSpec = LayerSpec.make(
             return set.getHandlerFor ? set.getHandlerFor(key) : undefined;
           },
         };
-        return OperationHandlerSet.provide(liveSet);
+        // Per-key demand pull (NOT a blanket activation): this slice materializes as soon as the
+        // trigger dispatcher starts — on every boot — so pulling everything here would defeat the
+        // default demand gates. A routine executing an operation of a gated module pulls exactly
+        // that plugin's handlers; skills ride the same event via RegistrySync's reactive mirror.
+        return OperationHandlerSet.provide(
+          OperationHandlerSet.withResolver(
+            liveSet,
+            makeOperationHandlerPull(pluginManager, async (key) => {
+              const nsid = key.replace(/^dxn:/, '');
+              return (await liveSet.getHandlers()).some((handler) => handler.meta.key.replace(/^dxn:/, '') === nsid);
+            }),
+          ),
+        );
       }),
     ),
 );
@@ -107,15 +106,26 @@ const RegistrySpec = LayerSpec.make(
 const OpaqueToolkitSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [Capability.Service],
+    requires: [Capability.Service, Plugin.Service],
     provides: [OpaqueToolkit.OpaqueToolkitProvider],
   },
   () =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
         const capabilities = yield* Capability.Service;
+        const pluginManager = yield* Plugin.Service;
+        let skillsRequested = false;
         return Layer.succeed(OpaqueToolkit.OpaqueToolkitProvider, {
           getToolkit: () => {
+            // Toolkit materialization is the headless demand signal for gated skill modules
+            // (a trigger-fired routine reaches here with no assistant UI open). Fire-and-forget:
+            // the read below stays sync and later reads see the registered skills.
+            if (!skillsRequested) {
+              skillsRequested = true;
+              void EffectEx.runAndForwardErrors(
+                pluginManager.activate(ActivationEvents.SkillsRequested).pipe(Effect.ignore),
+              );
+            }
             const toolkits = capabilities.getAll(AppCapabilities.Toolkit);
             return OpaqueToolkit.merge(...toolkits);
           },
