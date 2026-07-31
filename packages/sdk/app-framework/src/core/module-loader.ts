@@ -36,8 +36,6 @@ export type ModuleLoaderContext = {
   /** Marks a module active/inactive on the manager's `active` atom. */
   setActive: (moduleId: string, active: boolean) => void;
   activationTimeout: Duration.DurationInput;
-  /** Builds the requires context for a module (owned by the scheduler side of the manager). */
-  resolveRequires: (module: Plugin.PluginModule) => Effect.Effect<Context.Context<never>, Error>;
   /** In-flight fiber bookkeeping (the manager interrupts these on shutdown). */
   trackFiber: (fiber: Fiber.Fiber<unknown, unknown>) => Effect.Effect<void>;
   untrackFiber: (fiber: Fiber.Fiber<unknown, unknown>) => Effect.Effect<void>;
@@ -173,6 +171,44 @@ export class ModuleLoader {
     });
   }
 
+  /**
+   * Builds the Effect context for a module's declared requires: singleton capabilities
+   * resolve to their implementation (waiting — bounded by the activation timeout — for
+   * concurrent providers), multi capabilities to their live contributions view.
+   */
+  #resolveRequires(module: Plugin.PluginModule): Effect.Effect<Context.Context<never>, Error> {
+    return Effect.gen(this, function* () {
+      const spec = module.activation;
+      if (spec.requires.length === 0) {
+        return Context.empty();
+      }
+
+      const services = new Map<string, unknown>();
+      for (const capability of spec.requires) {
+        if (capability.arity === 'multi') {
+          services.set(capability.key, this.#ctx.capabilities.contributions(capability));
+          continue;
+        }
+        const [existing] = this.#ctx.capabilities.getAll(capability);
+        const implementation =
+          existing !== undefined
+            ? existing
+            : yield* this.#ctx.capabilities.waitFor(capability).pipe(
+                Effect.timeoutFail({
+                  duration: this.#ctx.activationTimeout,
+                  onTimeout: () =>
+                    new CapabilityNotFoundError({
+                      identifier: capability.identifier,
+                      registered: this.#ctx.capabilities.listRegisteredIdentifiers(),
+                    }),
+                }),
+              );
+        services.set(capability.key, implementation);
+      }
+      return Context.unsafeMake(services);
+    });
+  }
+
   #semaphore(moduleId: Plugin.PluginModule['id']): Effect.Semaphore {
     let semaphore = this.#semaphores.get(moduleId);
     if (!semaphore) {
@@ -199,7 +235,7 @@ export class ModuleLoader {
       yield* this.#ctx.publish({ event: parentEvent, state: 'activating', module: module.id });
       const pluginId = this.#ctx.getPluginIdForModule(module.id);
       yield* this.#settleInflightMultiProviders(module);
-      const requiresContext = yield* this.#ctx.resolveRequires(module);
+      const requiresContext = yield* this.#resolveRequires(module);
       const [duration, capabilities] = yield* module.activate().pipe(
         Effect.provide(requiresContext),
         Effect.provideService(Capability.Service, this.#ctx.capabilities),
