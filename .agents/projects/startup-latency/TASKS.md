@@ -83,12 +83,20 @@ definitions stay runtime-neutral; CLI/workerd unaffected), and handler loading b
       operations-to-registry spec, doctor diagnostics) read definitions, not bodies. The three
       `requires` barriers needed NO un-pinning: policy-parked providers are event-mode, so the
       soft edges no-op
-- [ ] reactSurface → per-role events — IN PROGRESS (2026-07-31): `SurfacesRequested(role)`
+- [x] reactSurface → per-role events (2026-07-31): `SurfacesRequested(role)`
       composite-key event; `surface` maker `roles` option derives the `oneOf` gate;
       `SurfaceComponent` fires the role's event on mount (per-manager dedup) and
       `useIsAvailable` fires on miss (self-healing — the callback is non-reactive, a later
       check sees the loaded module); 49 modules' roles codemodded from a live-probe ground
-      truth (`roles-probe.spec.ts` → surface-roles.json), not hand-extracted. Known shape
+      truth (`roles-probe.spec.ts` → surface-roles.json), not hand-extracted. **Validated:
+      cold profilerTotal 7,566 → 6,588 median (−52% vs the 13,613 baseline), navToReady
+      12,951 → 12,282, boot activations 373 → 331 (−42); warm-cold 6,613 / 11,592. Bytes
+      flat at 31.1 MB — deferred surface chunks are re-fetched by the boot-visible-role
+      pulls after ready and/or shared with still-eager closures, so the surface win is
+      critical-path time, not wire bytes (the byte win needs wave 2/3). e2e basic suite
+      green (reset-device fails on container-blocked signaling, pre-existing); the
+      demand-load path is unit-tested (gated module loads on first Surface render;
+      availability miss self-heals).** Known shape
       limits, deliberate for this round: (a) a module binding any boot-visible role
       (statusIndicator etc.) loads at boot — per-role module SPLITS are the follow-up
       refinement; (b) opening any article pulls all article-binding surface modules — the
