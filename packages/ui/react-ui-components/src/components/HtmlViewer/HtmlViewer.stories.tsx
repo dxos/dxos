@@ -8,10 +8,17 @@ import { expect, waitFor } from 'storybook/test';
 
 import { Blob, Ref } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Message } from '@dxos/types';
 
+import m1 from './fixtures/m1.html?raw';
+import m2 from './fixtures/m2.html?raw';
 import { HtmlViewer } from './HtmlViewer';
+
+//
+// Samples
+//
 
 // A simple/personal email (no layout tables) — recolored to the app theme so it reads in light/dark.
 const PERSONAL_EMAIL = `
@@ -77,31 +84,125 @@ This is a plain-text email, shown verbatim.
 Regards,
 Sam`;
 
+/**
+ * Named bodies the story renders. The hand-written ones isolate a single behaviour; `m1`/`m2` are real
+ * captured mail (saved from the MailboxSync story's Archive panel) carrying what actually breaks
+ * rendering — sender stylesheets, nested layout tables, explicit `color-scheme` declarations.
+ */
+const SAMPLES = {
+  personal: { html: PERSONAL_EMAIL, note: 'Simple body, no tables — recolored to the app theme.' },
+  reply: { html: REPLY_EMAIL, note: 'Quoted history collapsed behind the "•••" toggle.' },
+  marketing: { html: MARKETING_EMAIL, note: 'Layout tables — left as authored unless flagged personal.' },
+  plaintext: { html: PLAINTEXT_EMAIL, note: 'Not markup; shown verbatim in a <pre>.' },
+  remoteImage: { html: REMOTE_IMAGE_EMAIL, note: 'Remote image, blocked unless images are loaded.' },
+  m1: { html: m1, note: 'Captured: table layout, one sender stylesheet, no color-scheme declaration.' },
+  m2: { html: m2, note: 'Captured: declares color-scheme light — the sender has no dark rendering.' },
+};
+
+type SampleId = keyof typeof SAMPLES;
+
+//
+// Story
+//
+
+/**
+ * One body rendered in a pinned theme, regardless of the storybook theme global. Both the DOM class
+ * (which resolves the `--color-*` custom properties the recolor transform probes) and the React
+ * `ThemeProvider` are set, since `HtmlViewer` reads the mode from context while `readThemeParams` reads
+ * the computed values off the DOM.
+ */
+const ThemePane = ({
+  mode,
+  html,
+  isPersonal,
+  loadRemoteImages,
+}: {
+  mode: 'light' | 'dark';
+  html: string;
+  isPersonal?: boolean;
+  loadRemoteImages?: boolean;
+}) => {
+  const { tx } = useThemeContext();
+  return (
+    <div className={mode}>
+      <ThemeProvider tx={tx} themeMode={mode}>
+        <div className='bg-baseSurface text-baseText p-2 overflow-auto'>
+          <div className='pb-1 text-xs uppercase tracking-wide text-description'>{mode}</div>
+          <HtmlViewer html={html} isPersonal={isPersonal} loadRemoteImages={loadRemoteImages} />
+        </div>
+      </ThemeProvider>
+    </div>
+  );
+};
+
+type StoryProps = {
+  sample: SampleId;
+  isPersonal?: boolean;
+  loadRemoteImages?: boolean;
+  /**
+   * Renders light and dark side by side. The failure mode this component has is a body that reads fine
+   * in one mode and is illegible in the other, which is only obvious with both on screen at once.
+   */
+  compare?: boolean;
+};
+
+const DefaultStory = ({ sample, isPersonal, loadRemoteImages, compare }: StoryProps) => {
+  const { html, note } = SAMPLES[sample];
+  return (
+    <div className='flex flex-col gap-1 p-2'>
+      <div className='text-xs text-description'>{note}</div>
+      {compare ? (
+        <div className='grid grid-cols-2 gap-2 border border-separator rounded overflow-hidden'>
+          <ThemePane mode='light' html={html} isPersonal={isPersonal} loadRemoteImages={loadRemoteImages} />
+          <ThemePane mode='dark' html={html} isPersonal={isPersonal} loadRemoteImages={loadRemoteImages} />
+        </div>
+      ) : (
+        <HtmlViewer html={html} isPersonal={isPersonal} loadRemoteImages={loadRemoteImages} />
+      )}
+    </div>
+  );
+};
+
 const meta = {
-  title: 'plugins/plugin-inbox/components/HtmlViewer',
-  component: HtmlViewer,
+  title: 'ui/react-ui-components/HtmlViewer',
+  component: DefaultStory,
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: { layout: 'fullscreen' },
-} satisfies Meta<typeof HtmlViewer>;
+  argTypes: {
+    sample: { control: 'select', options: Object.keys(SAMPLES) },
+  },
+  args: { sample: 'personal' },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Personal: Story = { args: { html: PERSONAL_EMAIL, isPersonal: true } };
+export const Personal: Story = { args: { sample: 'personal', isPersonal: true } };
 
-export const Reply: Story = { args: { html: REPLY_EMAIL, isPersonal: true } };
+export const Reply: Story = { args: { sample: 'reply', isPersonal: true } };
 
-export const Marketing: Story = { args: { html: MARKETING_EMAIL } };
+export const Marketing: Story = { args: { sample: 'marketing' } };
 
-// A table-based email flagged personal — themed anyway (vs `Marketing`, which is left as authored).
-export const PersonalTable: Story = { args: { html: MARKETING_EMAIL, isPersonal: true } };
+/** A table-based body flagged personal — themed anyway, unlike `Marketing`. */
+export const PersonalTable: Story = { args: { sample: 'marketing', isPersonal: true } };
 
-export const Plaintext: Story = { args: { html: PLAINTEXT_EMAIL } };
+export const Plaintext: Story = { args: { sample: 'plaintext' } };
 
-export const RemoteImagesBlocked: Story = { args: { html: REMOTE_IMAGE_EMAIL, loadRemoteImages: false } };
+export const RemoteImagesBlocked: Story = { args: { sample: 'remoteImage', loadRemoteImages: false } };
 
-export const RemoteImagesLoaded: Story = { args: { html: REMOTE_IMAGE_EMAIL, loadRemoteImages: true } };
+export const RemoteImagesLoaded: Story = { args: { sample: 'remoteImage', loadRemoteImages: true } };
+
+/** Real mail, light vs dark. As delivered: a table layout is left as authored, so the app surface bleeds through. */
+export const Captured: Story = { args: { sample: 'm1', compare: true } };
+
+/** The same bodies with the recolor transform forced on, to judge it against real sender markup. */
+export const CapturedThemed: Story = { args: { sample: 'm1', isPersonal: true, compare: true } };
+
+//
+// Inline cid: image
+//
 
 // A signature image referenced inline via `cid:` (RFC 2392), as Gmail/JMAP attach it — resolved
 // against the message's `attachments` (see `EmailStage.processAttachments`/`AttachmentMetadata.contentId`).
@@ -152,9 +253,11 @@ const findShadowHost = (root: Element): Element | undefined => {
   return undefined;
 };
 
+/**
+ * The one story that can't be driven by args: the attachment has to be minted into a live space before
+ * the body can resolve its `cid:` reference, so it supplies its own subject and client provider.
+ */
 export const InlineCidImage: Story = {
-  // `render` supplies its own html/attachments; `args.html` only satisfies the story's required args.
-  args: { html: INLINE_IMAGE_EMAIL },
   render: () => <InlineCidImageStory />,
   decorators: [withClientProvider({ types: [Blob.Blob], createIdentity: true, createSpace: true })],
   play: async ({ canvasElement }) => {
