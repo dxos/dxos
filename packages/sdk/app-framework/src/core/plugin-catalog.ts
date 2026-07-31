@@ -10,35 +10,25 @@ import * as PubSub from 'effect/PubSub';
 import { log } from '@dxos/log';
 
 import { type ActivationScheduler } from './activation-scheduler';
-import { type FiberTracker, type ManagerState } from './manager-state';
-import { type ActivationMessage, type PluginFailurePhase, PluginTimeoutError } from './manager-types';
+import { type ManagerState } from './manager-state';
+import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
 import * as Plugin from './plugin';
+import type * as PluginRegistry from './registry';
 
+/** Host configuration passed through from `ManagerOptions`. */
 export type PluginCatalogOptions = {
   pluginLoader: (id: string) => Effect.Effect<{ plugin: Plugin.Plugin; dev?: boolean }, Error>;
   loadTimeout: Duration.DurationInput;
-  /** Entries of the cached registry catalog (owned by the manager's `pluginRegistry`). */
-  getCatalogEntries: () => readonly Plugin.Meta[];
-  /**
-   * Fires an activation event. An orchestration cycle by design: enabling a plugin replays
-   * events that already fired so its modules activate, and event dispatch is manager-owned
-   * (it waits for constructor initialization).
-   */
-  fireEvent: (event: string) => Effect.Effect<boolean, Error>;
-  /**
-   * Plugin-level deactivation. Manager-owned because it also tears down capability dependents
-   * of the plugin's modules (via the loader) before the modules themselves.
-   */
-  deactivatePlugin: (id: string) => Effect.Effect<boolean, Error>;
   onRemove?: (id: string) => Effect.Effect<void, unknown>;
 };
 
 /**
  * The plugin catalog: add / enable / disable / remove, lazy plugin resolution, dev-plugin
  * shadowing, and the declared-dependency closure (`getDependencies` / `getDependents`).
- * Enabling resolves declared dependencies (installing catalog-only entries), enables in
- * dependency-first order, and — after startup — runs an incremental activation pass for the
- * newly enabled modules. Disabling tears down dependents first.
+ * Enabling resolves declared dependencies (installing registry-catalog-only entries), enables
+ * in dependency-first order, and — after startup — runs an incremental activation pass for the
+ * newly enabled modules. Disabling tears down dependents first, delegating plugin-level
+ * deactivation to the scheduler.
  */
 export class PluginCatalog {
   /** Coalesces concurrent lazy-plugin resolutions per plugin id. */
@@ -47,21 +37,18 @@ export class PluginCatalog {
   readonly #devPlugins = new Map<string, { shadow?: { plugin: Plugin.Plugin; wasEnabled: boolean } }>();
   readonly #state: ManagerState;
   readonly #scheduler: ActivationScheduler;
-  readonly #activation: PubSub.PubSub<ActivationMessage>;
-  readonly #fibers: FiberTracker;
+  readonly #pluginRegistry: PluginRegistry.Manager;
   readonly #options: PluginCatalogOptions;
 
   constructor(
     state: ManagerState,
     scheduler: ActivationScheduler,
-    activation: PubSub.PubSub<ActivationMessage>,
-    fibers: FiberTracker,
+    pluginRegistry: PluginRegistry.Manager,
     options: PluginCatalogOptions,
   ) {
     this.#state = state;
     this.#scheduler = scheduler;
-    this.#activation = activation;
-    this.#fibers = fibers;
+    this.#pluginRegistry = pluginRegistry;
     this.#options = options;
   }
 
@@ -77,7 +64,7 @@ export class PluginCatalog {
       return;
     }
     if (!this.#state.isCore(id) && this.#state.isEnabled(id)) {
-      this.#fibers.fork(
+      this.#state.fibers.fork(
         this.disable(id).pipe(
           Effect.tap(() => Effect.sync(() => log.error('plugin auto-disabled', { id }))),
           Effect.tapError((error) => Effect.sync(() => log.warn('auto-disable failed', { id, error }))),
@@ -178,7 +165,7 @@ export class PluginCatalog {
    * @param id The id of the plugin.
    * @param opts See {@link PluginManager.enable}.
    */
-  enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error> {
+  enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error, Plugin.Service> {
     const resolveDependencies = opts?.resolveDependencies !== false;
     return Effect.gen(this, function* () {
       log('enable plugin', { id, resolveDependencies });
@@ -285,7 +272,7 @@ export class PluginCatalog {
    * the very first `enable(id)` for those plugins sees `alreadyEnabled`-style
    * state but still needs to perform the module registration and activation.
    */
-  #enableOne(id: string): Effect.Effect<boolean, Error> {
+  #enableOne(id: string): Effect.Effect<boolean, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       const stub = this.#state.getPlugin(id);
       if (!stub) {
@@ -308,8 +295,9 @@ export class PluginCatalog {
       });
 
       log('pending reset', { events: [...this.#state.getPendingReset()] });
+      // Replay events that already fired so the newly registered modules activate.
       yield* Effect.all(
-        this.#state.getPendingReset().map((event) => this.#options.fireEvent(event)),
+        this.#state.getPendingReset().map((event) => this.#scheduler.activate(event)),
         { concurrency: 'unbounded' },
       );
 
@@ -358,7 +346,7 @@ export class PluginCatalog {
 
       return yield* Effect.gen(this, function* () {
         log('resolving lazy plugin', { id });
-        yield* PubSub.publish(this.#activation, { event: '', state: 'activating', module: `lazy:${id}` });
+        yield* PubSub.publish(this.#state.activation, { event: '', state: 'activating', module: `lazy:${id}` });
         const resolvedPlugin = yield* Plugin.resolveLazy(plugin).pipe(
           // Cap how long a remote import can hang. Without this the host can
           // sit on a pending dynamic `import()` indefinitely if the plugin's
@@ -374,12 +362,12 @@ export class PluginCatalog {
           }),
         );
         this.#state.replacePlugin(id, resolvedPlugin);
-        yield* PubSub.publish(this.#activation, { event: '', state: 'activated', module: `lazy:${id}` });
+        yield* PubSub.publish(this.#state.activation, { event: '', state: 'activated', module: `lazy:${id}` });
         return resolvedPlugin;
       }).pipe(
         Effect.tapError((error) =>
           Effect.gen(this, function* () {
-            yield* PubSub.publish(this.#activation, { event: '', state: 'error', module: `lazy:${id}`, error });
+            yield* PubSub.publish(this.#state.activation, { event: '', state: 'error', module: `lazy:${id}`, error });
             this.#state.recordFailure(id, 'load', error);
             this.scheduleAutoDisable(id);
           }),
@@ -396,7 +384,7 @@ export class PluginCatalog {
    * @param id The id of the plugin.
    * @param opts See {@link PluginManager.remove}.
    */
-  remove(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error> {
+  remove(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       log('remove plugin', { id });
       const wasDev = this.#devPlugins.has(id);
@@ -407,7 +395,7 @@ export class PluginCatalog {
 
       this.#state.unregisterPlugin(id);
       if (this.#options.onRemove) {
-        this.#fibers.fork(
+        this.#state.fibers.fork(
           this.#options.onRemove(id).pipe(
             Effect.tapError((error) => Effect.sync(() => log.warn('plugin remove hook failed', { id, error }))),
             Effect.ignore,
@@ -492,7 +480,7 @@ export class PluginCatalog {
       const enabledIndex = this.#state.read(this.#state.enabled).findIndex((enabled) => enabled === id);
       if (enabledIndex !== -1) {
         this.#state.markDisabled(id);
-        yield* this.#options.deactivatePlugin(id);
+        yield* this.#scheduler.deactivatePlugin(id);
         plugin.modules.forEach((module) => {
           this.#state.removeModule(module.id);
         });
@@ -501,9 +489,14 @@ export class PluginCatalog {
     });
   }
 
+  /** Entries of the cached registry catalog. */
+  #catalogEntries(): readonly Plugin.Meta[] {
+    return this.#state.read(this.#pluginRegistry.plugins).entries;
+  }
+
   /** Looks up an id in the cached registry catalog, returning the entry or `undefined`. */
   #getCatalogEntry(id: string): Plugin.Meta | undefined {
-    return this.#options.getCatalogEntries().find((entry) => entry.profile.key === id);
+    return this.#catalogEntries().find((entry) => entry.profile.key === id);
   }
 
   /**
@@ -547,7 +540,7 @@ export class PluginCatalog {
 
     const knownIds = new Set<string>([
       ...this.#state.getPlugins().map((plugin) => plugin.meta.profile.key),
-      ...this.#options.getCatalogEntries().map((entry) => entry.profile.key),
+      ...this.#catalogEntries().map((entry) => entry.profile.key),
     ]);
 
     const visit = (currentId: string): void => {

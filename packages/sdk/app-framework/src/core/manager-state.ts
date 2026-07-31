@@ -3,29 +3,34 @@
 //
 
 import { Atom, type Registry } from '@effect-atom/atom';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
 import { log } from '@dxos/log';
 
 import * as ActivationEvent from './activation-event';
 import {
+  type ActivationMessage,
   type PluginFailure,
   type PluginFailurePhase,
   type PluginFailureReason,
+  type PluginInitializationError,
   PluginTimeoutError,
 } from './manager-types';
 import type * as Plugin from './plugin';
 
 /**
- * The plugin manager's observable state, shared by the manager and its collaborating units
- * (catalog, scheduler, loader). One object with named operations instead of per-unit getter and
- * setter callbacks: this IS shared mutable state, and giving it a single home makes the sharing
- * visible and its invariants enforceable.
+ * The plugin manager's shared substrate, owned by no single unit: the observable state, the
+ * activation status channel, the fiber tracker, and the lifecycle flags the manager and its
+ * collaborating units (catalog, scheduler, loader) coordinate through. One object with named
+ * operations instead of per-unit getter and setter callbacks: this IS shared mutable state, and
+ * giving it a single home makes the sharing visible and its invariants enforceable.
  *
  * The atoms are the manager's public reactive surface (exposed via the `PluginManager`
- * interface); everything else is internal bookkeeping the units coordinate through.
+ * interface); everything else is internal bookkeeping.
  */
 export class ManagerState {
   /** All registered plugins (enabled or not). */
@@ -47,8 +52,19 @@ export class ManagerState {
   /** Ids of currently-registered dev-sourced plugins. */
   readonly devPluginIds: Atom.Writable<string[]>;
 
+  /** Status channel: `activating`/`activated`/`error` messages per event and module. */
+  readonly activation = Effect.runSync(PubSub.unbounded<ActivationMessage>());
+  /** Fibers forked by the units, so shutdown can interrupt in-flight work. */
+  readonly fibers = new FiberTracker();
+  /**
+   * Completed when the constructor's core/enabled `enable()` chain has registered all
+   * modules; event dispatch awaits it so lazy plugin imports can't race activation.
+   */
+  readonly initialized = Effect.runSync(Deferred.make<void, PluginInitializationError>());
   /** Whether `start()` has run — gates incremental activation on later enables. */
   readonly started = Effect.runSync(Ref.make(false));
+  /** Set for the duration of `shutdown()` — new starts/activations are skipped meanwhile. */
+  readonly shuttingDown = Effect.runSync(Ref.make(false));
   /**
    * Modules deactivated because a singleton capability they require lost its provider
    * (provider plugin disabled). Re-included as candidates in the next dependency pass.
@@ -225,6 +241,10 @@ export class ManagerState {
 
   isStarted(): Effect.Effect<boolean> {
     return Ref.get(this.started);
+  }
+
+  isShuttingDown(): Effect.Effect<boolean> {
+    return Ref.get(this.shuttingDown);
   }
 
   //

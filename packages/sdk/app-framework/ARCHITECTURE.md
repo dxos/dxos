@@ -177,10 +177,10 @@ must be camelCase (`DXN.Name`).
 | -------------------------------------------------------------------- | -------------------------------------------------------- |
 | Tags, arity, `Contribution`, `contribute`, module makers             | `src/core/capability.ts`                                 |
 | `Plugin`, `PluginModule`, `ActivationSpec`, the builder              | `src/core/plugin.ts`                                     |
-| Public manager API, lifecycle, unit composition                      | `src/core/plugin-manager.ts`                             |
-| Shared state: atoms + activation bookkeeping (`ManagerState`)        | `src/core/manager-state.ts`                              |
+| Public manager API, unit composition, shutdown, failure policy       | `src/core/plugin-manager.ts`                             |
+| Shared substrate: atoms, status channel, fibers (`ManagerState`)     | `src/core/manager-state.ts`                              |
 | Catalog: add/enable/disable, lazy resolution, dependency closure     | `src/core/plugin-catalog.ts`                             |
-| Rounds, waves, event bridging, on-demand pulls                       | `src/core/activation-scheduler.ts`                       |
+| Lifecycle engine: start/activate/deactivate/reset, rounds, waves     | `src/core/activation-scheduler.ts`                       |
 | Ordering logic (runnable selection, waves, cycles), on `@dxos/graph` | `src/core/activation-graph.ts`                           |
 | Memoized module loads, provides validation, deactivation             | `src/core/module-loader.ts`                              |
 | The NSID-keyed registry and its reactive views                       | `src/core/capability-manager.ts`                         |

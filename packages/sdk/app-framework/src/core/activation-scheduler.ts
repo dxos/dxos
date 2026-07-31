@@ -3,11 +3,14 @@
 //
 
 import * as Array from 'effect/Array';
+import * as Deferred from 'effect/Deferred';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
+import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import * as ActivationEvent from './activation-event';
@@ -15,20 +18,21 @@ import * as ActivationGraph from './activation-graph';
 import type * as Capability from './capability';
 import type * as CapabilityManager from './capability-manager';
 import { DependencyCycleError, DuplicateProviderError, MissingProviderError } from './errors';
-import { type FiberTracker, type ManagerState } from './manager-state';
-import { type ActivationMessage } from './manager-types';
-import { type ModuleLoader } from './module-loader';
+import { type ManagerState } from './manager-state';
+import { type ModuleLoader, together } from './module-loader';
 import type * as Plugin from './plugin';
 
 /**
- * Decides when each module's `activate` runs. Two coexisting paths:
+ * The activation lifecycle engine: owns {@link start} / {@link activate} /
+ * {@link deactivatePlugin} / {@link resetEvent} and decides when each module's `activate`
+ * runs. Two coexisting activation paths:
  *
  * - {@link runDependencyPass}: dependency-mode modules activate in rounds over the capability
  *   graph (vocabulary and ordering logic in `activation-graph.ts`), repeated until nothing new
  *   is runnable — each round's contributions (or a concurrent event wave's) can unlock modules
  *   that were waiting.
- * - {@link activateEvent}: event-mode modules park until their `activatesOn` fires, then run as
- *   an event wave; inactive dependency-mode providers of their requires are pulled on demand
+ * - Event dispatch: event-mode modules park until their `activatesOn` fires, then run as an
+ *   event wave; inactive dependency-mode providers of their requires are pulled on demand
  *   first.
  *
  * Structural problems (cycles, duplicate or missing singleton providers) put the offending
@@ -42,25 +46,169 @@ export class ActivationScheduler {
   readonly #state: ManagerState;
   readonly #capabilities: CapabilityManager.CapabilityManager;
   readonly #loader: ModuleLoader;
-  readonly #activation: PubSub.PubSub<ActivationMessage>;
-  readonly #fibers: FiberTracker;
 
-  constructor(
-    state: ManagerState,
-    capabilities: CapabilityManager.CapabilityManager,
-    loader: ModuleLoader,
-    activation: PubSub.PubSub<ActivationMessage>,
-    fibers: FiberTracker,
-  ) {
+  constructor(state: ManagerState, capabilities: CapabilityManager.CapabilityManager, loader: ModuleLoader) {
     this.#state = state;
     this.#capabilities = capabilities;
     this.#loader = loader;
-    this.#activation = activation;
-    this.#fibers = fibers;
+  }
+
+  /**
+   * Runs startup: the capability-dependency resolution pass for dependency-mode modules,
+   * concurrently with the event dispatch for any module explicitly targeting the Startup
+   * event. The event-level Startup `activated` message publishes only after both passes
+   * complete. Idempotent — subsequent calls activate whatever registered since.
+   */
+  start(): Effect.Effect<boolean, Error, Plugin.Service> {
+    return Effect.gen(this, function* () {
+      if (yield* this.#state.isShuttingDown()) {
+        log('skipping start during shutdown');
+        return false;
+      }
+
+      // Wait for the constructor's core/enabled `enable()` chain to finish registering
+      // modules (see the note in `activate`).
+      yield* Deferred.await(this.#state.initialized);
+      yield* Ref.set(this.#state.started, true);
+
+      const key = ActivationEvent.eventKey(ActivationEvent.Startup);
+
+      // A capability cycle spanning event boundaries would leave both chains pending
+      // forever. Surface the lock (error state on the involved plugins) and continue —
+      // the cycle members simply never activate; everything else proceeds.
+      yield* this.#reportGlobalCycle();
+
+      // The dependency pass and the event dispatch (for any module explicitly targeting
+      // Startup) run concurrently — both observe each other through the shared capability
+      // manager, and sequencing them would delay whichever pass runs second.
+      const results = yield* Effect.withFiberRuntime<[boolean, boolean], Error, Plugin.Service>((fiber) =>
+        Effect.all(
+          [
+            // Graph-level failures (missing provider, duplicate provider, cycle) fail the
+            // start call; publish them so boot UIs surface the root cause instead of a
+            // silent hang behind their own watchdog.
+            this.runDependencyPass().pipe(
+              Effect.tapError((error) =>
+                Effect.gen(this, function* () {
+                  log.error('dependency activation failed', { error: String(error) });
+                  yield* PubSub.publish(this.#state.activation, { event: key, state: 'error', error });
+                }),
+              ),
+            ),
+            this.#activateEvent(key, undefined, fiber, { suppressEventMessage: true }),
+          ],
+          { concurrency: 'unbounded' },
+        ),
+      );
+
+      // The event-level Startup `activated` message (no `module` field) is the app-ready
+      // signal (see useApp); it must not publish before dependency-mode modules finish.
+      this.#state.markEventFired(key);
+      yield* PubSub.publish(this.#state.activation, { event: key, state: 'activated' });
+
+      return results.some(Boolean);
+    });
+  }
+
+  /**
+   * Runs an activation event end to end. Startup delegates to {@link start}; anything else
+   * waits for the manager's initialization, then dispatches the event.
+   */
+  activate(
+    event: ActivationEvent.ActivationEvent | string,
+    params?: { before?: string; after?: string },
+  ): Effect.Effect<boolean, Error, Plugin.Service> {
+    const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
+    return Effect.gen(this, function* () {
+      // Startup is not a plain event: it triggers the dependency pass alongside the event
+      // dispatch. Delegating keeps useApp/harness/cli call sites unchanged.
+      if (key === ActivationEvent.eventKey(ActivationEvent.Startup)) {
+        return yield* this.start();
+      }
+
+      if (yield* this.#state.isShuttingDown()) {
+        log('skipping activation during shutdown', { key, ...params });
+        return false;
+      }
+
+      // Wait for the constructor's core/enabled `enable()` chain — including
+      // any async dynamic imports for lazy plugins — to finish registering
+      // modules. Without this, dispatching to an empty module set is the
+      // observable symptom of the race.
+      yield* Deferred.await(this.#state.initialized);
+
+      return yield* Effect.withFiberRuntime<boolean, Error, Plugin.Service>((fiber) =>
+        this.#activateEvent(key, params, fiber).pipe(
+          together(
+            Effect.sleep(Duration.seconds(15)).pipe(
+              Effect.andThen(Effect.sync(() => log.warn('event activation is taking a long time', { event: key }))),
+            ),
+          ),
+          Performance.addTrackEntry({
+            name: key,
+            devtools: {
+              dataType: 'track-entry',
+              track: 'Event Activation',
+              trackGroup: 'Composer',
+              color: 'primary',
+            },
+          }),
+        ),
+      );
+    });
+  }
+
+  /**
+   * Deactivates all of a plugin's modules. Active modules elsewhere that require a singleton
+   * capability provided by this plugin are deactivated first (reverse activation order) and
+   * marked for reactivation when a provider returns.
+   */
+  deactivatePlugin(id: string): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
+      const plugin = this.#state.getPlugin(id);
+      if (!plugin) {
+        return false;
+      }
+
+      const modules = plugin.modules;
+
+      const dependents = this.#collectCapabilityDependents(modules);
+      for (const dependent of dependents) {
+        yield* this.#loader.deactivate(dependent);
+        this.#state.reactivateOnNextPass.add(dependent.id);
+      }
+
+      const results = yield* Effect.all(
+        modules.map((module) => this.#loader.deactivate(module)),
+        { concurrency: 'unbounded' },
+      );
+      return results.every((result) => result);
+    });
+  }
+
+  /**
+   * Re-activates the modules that were activated by the event.
+   */
+  resetEvent(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error, Plugin.Service> {
+    return Effect.gen(this, function* () {
+      const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
+      log('reset', { key });
+      const modules = this.#state.getActiveModulesByEvent(key);
+      const results = yield* Effect.all(
+        modules.map((module) => this.#loader.deactivate(module)),
+        { concurrency: 'unbounded' },
+      );
+
+      if (results.every((result) => result)) {
+        return yield* this.activate(key);
+      } else {
+        return false;
+      }
+    });
   }
 
   /** Shutdown support: forget in-flight event/module claims. */
-  reset(): Effect.Effect<void> {
+  clearClaims(): Effect.Effect<void> {
     return Effect.all([Ref.set(this.#activatingEvents, []), Ref.set(this.#activatingModules, [])]).pipe(Effect.asVoid);
   }
 
@@ -70,14 +218,14 @@ export class ActivationScheduler {
    * them, then re-runs the dependency pass so contributions made here can unlock modules that
    * were waiting.
    */
-  activateEvent(
+  #activateEvent(
     key: string,
     params: { before?: string; after?: string } | undefined,
     fiber: Fiber.Fiber<unknown, unknown>,
     opts?: { suppressEventMessage?: boolean },
-  ): Effect.Effect<boolean, Error> {
+  ): Effect.Effect<boolean, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
-      yield* this.#fibers.track(fiber);
+      yield* this.#state.fibers.track(fiber);
       log('activating', { key, ...params });
       yield* Ref.update(this.#activatingEvents, (activating) => Array.append(activating, key));
       this.#state.clearPendingReset(key);
@@ -110,7 +258,7 @@ export class ActivationScheduler {
     }).pipe(
       Effect.ensuring(
         Effect.all([
-          this.#fibers.untrack(fiber),
+          this.#state.fibers.untrack(fiber),
           Ref.update(this.#activatingEvents, (activating) => Array.filter(activating, (event) => event !== key)),
         ]),
       ),
@@ -133,7 +281,9 @@ export class ActivationScheduler {
    * failures are recorded per plugin (via the loader) and skip that module's transitive
    * dependents without aborting independent modules.
    */
-  runDependencyPass(options?: { candidateModules?: Plugin.PluginModule[] }): Effect.Effect<boolean, Error> {
+  runDependencyPass(options?: {
+    candidateModules?: Plugin.PluginModule[];
+  }): Effect.Effect<boolean, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       let scoped = options?.candidateModules;
       let ranAny = false;
@@ -158,11 +308,11 @@ export class ActivationScheduler {
   /**
    * Detects capability cycles across the FULL module set, regardless of event gating.
    * Two modules on different activation events that require each other's provides would
-   * otherwise pend forever (neither chain can start); this surfaces the lock at startup:
+   * otherwise wait forever (neither chain can start); this surfaces the lock at startup:
    * the members are put into an error state and excluded — they simply never activate,
    * and everything else proceeds.
    */
-  reportGlobalCycle(): Effect.Effect<void> {
+  #reportGlobalCycle(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       const graph = ActivationGraph.buildSingletonGraph(this.#state.getModules());
       if (ActivationGraph.computeActivationWaves(graph, ['hard']) !== undefined) {
@@ -177,18 +327,57 @@ export class ActivationScheduler {
     });
   }
 
+  /**
+   * Collects active modules (outside the given set) whose declared requires include a
+   * singleton capability provided by the given modules, transitively. Returned in reverse
+   * activation order, which is reverse topological order (safe deactivation order).
+   */
+  #collectCapabilityDependents(modules: readonly Plugin.PluginModule[]): Plugin.PluginModule[] {
+    const active = this.#state.getActiveIds();
+    const allModules = this.#state.getModules();
+    const ownIds = new Set(modules.map((module) => module.id));
+    const providedIds = new Set<string>();
+    const collectProvides = (module: Plugin.PluginModule) => {
+      for (const capability of module.activation.provides) {
+        if (capability.arity === 'single') {
+          providedIds.add(capability.identifier);
+        }
+      }
+    };
+    modules.filter((module) => active.includes(module.id)).forEach(collectProvides);
+
+    const dependents = new Map<string, Plugin.PluginModule>();
+    let changed = providedIds.size > 0;
+    while (changed) {
+      changed = false;
+      for (const module of allModules) {
+        if (ownIds.has(module.id) || dependents.has(module.id) || !active.includes(module.id)) {
+          continue;
+        }
+        if (module.activation.requires.some((capability) => providedIds.has(capability.identifier))) {
+          dependents.set(module.id, module);
+          collectProvides(module);
+          changed = true;
+        }
+      }
+    }
+
+    const order = this.#state.getActiveIds();
+    return [...dependents.values()].sort((a, b) => order.indexOf(b.id) - order.indexOf(a.id));
+  }
+
   #activateModulesForEvent(
     key: string,
     modules: Plugin.PluginModule[],
     opts?: { suppressEventMessage?: boolean },
-  ): Effect.Effect<boolean, Error> {
+  ): Effect.Effect<boolean, Error, Plugin.Service> {
     const activatingModuleIds = modules.map((module) => module.id);
     return Effect.gen(this, function* () {
       yield* Ref.update(this.#activatingModules, (activating) => Array.appendAll(activating, activatingModuleIds));
 
       log('activation wave', { event: key, modules: activatingModuleIds });
       performance.mark(`event:${key}:start`);
-      yield* PubSub.publish(this.#activation, { event: key, state: 'activating' });
+      yield* PubSub.publish(this.#state.activation, { event: key, state: 'activating' });
 
       // Same-event provider/consumer pairs are topologically ordered with per-module
       // contribution via the capability-graph machinery.
@@ -201,7 +390,7 @@ export class ActivationScheduler {
       // `start()` suppresses the event-level message for Startup and publishes it itself
       // once the concurrent dependency pass has also completed (the useApp ready gate).
       if (!opts?.suppressEventMessage) {
-        yield* PubSub.publish(this.#activation, { event: key, state: 'activated' });
+        yield* PubSub.publish(this.#state.activation, { event: key, state: 'activated' });
       }
       log('activated', { key });
 
@@ -260,7 +449,7 @@ export class ActivationScheduler {
         }
       }
       plugins.forEach((pluginId) => this.#state.recordFailure(pluginId, 'activation', error));
-      yield* PubSub.publish(this.#activation, {
+      yield* PubSub.publish(this.#state.activation, {
         event: ActivationEvent.eventKey(ActivationEvent.Startup),
         state: 'error',
         error,
@@ -271,7 +460,9 @@ export class ActivationScheduler {
   /**
    * One topological activation round. Returns `undefined` when nothing is runnable.
    */
-  #runRound(candidateModules: Plugin.PluginModule[] | undefined): Effect.Effect<boolean | undefined, Error> {
+  #runRound(
+    candidateModules: Plugin.PluginModule[] | undefined,
+  ): Effect.Effect<boolean | undefined, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       const key = ActivationEvent.eventKey(ActivationEvent.Startup);
       const active = this.#state.getActiveIds();
@@ -449,7 +640,7 @@ export class ActivationScheduler {
     graph: ActivationGraph.ActivationGraphModel,
     preFailed: Set<string>,
     key: string,
-  ): Effect.Effect<boolean, Error> {
+  ): Effect.Effect<boolean, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       const failed = new Set<string>(preFailed);
       const providersOf = (moduleId: string): string[] => ActivationGraph.requiredProviderIds(graph, moduleId);
@@ -482,7 +673,7 @@ export class ActivationScheduler {
    * Loads and contributes a single dependency-mode module. Contribution happens as the module
    * completes (not batched per wave), so singleton gating is exactly wave ordering.
    */
-  #activateModule(module: Plugin.PluginModule, parentEvent: string): Effect.Effect<void, Error> {
+  #activateModule(module: Plugin.PluginModule, parentEvent: string): Effect.Effect<void, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       if (this.#state.getActiveIds().includes(module.id)) {
         return;
@@ -505,7 +696,7 @@ export class ActivationScheduler {
    * narrow pull (this provider alone) skips that ordering entirely and the snapshot can be
    * taken before sibling providers have contributed.
    */
-  #pullDependencyProviders(modules: Plugin.PluginModule[]): Effect.Effect<void, Error> {
+  #pullDependencyProviders(modules: Plugin.PluginModule[]): Effect.Effect<void, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       const active = this.#state.getActiveIds();
       const allModules = this.#state.getModules();

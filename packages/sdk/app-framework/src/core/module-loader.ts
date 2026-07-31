@@ -18,23 +18,19 @@ import { log } from '@dxos/log';
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
 import { CapabilityNotFoundError, ProvidesMismatchError } from './errors';
-import { type FiberTracker, type ManagerState } from './manager-state';
-import { type ActivationMessage, type PluginFailurePhase, PluginTimeoutError } from './manager-types';
+import { type ManagerState } from './manager-state';
+import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
 import * as Plugin from './plugin';
-
-export type ModuleLoaderOptions = {
-  /** The manager instance provided to module bodies as `Plugin.Service`. */
-  pluginService: () => Context.Tag.Service<typeof Plugin.Service>;
-  activationTimeout: Duration.DurationInput;
-  /** Policy hook for a module whose activation failed (failure recording, auto-disable). */
-  onFailure: (pluginId: string, error: Error) => void;
-};
 
 /**
  * Owns the per-module load pipeline and its bookkeeping: memoized loads (id -> Deferred),
  * per-module semaphores, activation scopes, and the contributed-capability index. Every
  * activation path (dependency round, event wave, on-demand pull) converges on {@link load};
  * concurrent paths await the same deferred, and {@link contribute} is idempotent per module.
+ *
+ * Module bodies run with the manager as the ambient `Plugin.Service`; the loader carries that
+ * as a typed requirement (`R = Plugin.Service`) rather than holding a manager reference — the
+ * manager satisfies it once at its public boundary.
  */
 export class ModuleLoader {
   readonly #memo = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
@@ -43,22 +39,16 @@ export class ModuleLoader {
   readonly #contributed = new Map<string, Capability.Any[]>();
   readonly #state: ManagerState;
   readonly #capabilities: CapabilityManager.CapabilityManager;
-  readonly #activation: PubSub.PubSub<ActivationMessage>;
-  readonly #fibers: FiberTracker;
-  readonly #options: ModuleLoaderOptions;
+  readonly #activationTimeout: Duration.DurationInput;
 
   constructor(
     state: ManagerState,
     capabilities: CapabilityManager.CapabilityManager,
-    activation: PubSub.PubSub<ActivationMessage>,
-    fibers: FiberTracker,
-    options: ModuleLoaderOptions,
+    activationTimeout: Duration.DurationInput,
   ) {
     this.#state = state;
     this.#capabilities = capabilities;
-    this.#activation = activation;
-    this.#fibers = fibers;
-    this.#options = options;
+    this.#activationTimeout = activationTimeout;
   }
 
   /** Whether the module's load has started (memoized) — settled or not. */
@@ -77,7 +67,7 @@ export class ModuleLoader {
    * loader's status listener) can associate a module with its triggering event; later paths
    * await the cached deferred without re-publishing.
    */
-  load = (module: Plugin.PluginModule, parentEvent: string): Effect.Effect<Capability.Any[], Error> =>
+  load = (module: Plugin.PluginModule, parentEvent: string): Effect.Effect<Capability.Any[], Error, Plugin.Service> =>
     Effect.gen(this, function* () {
       const semaphore = this.#semaphore(module.id);
 
@@ -105,8 +95,8 @@ export class ModuleLoader {
             ),
           ),
         );
-        yield* this.#fibers.track(fiber);
-        yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this.#fibers.untrack(fiber))));
+        yield* this.#state.fibers.track(fiber);
+        yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this.#state.fibers.untrack(fiber))));
 
         return deferred;
       }).pipe(semaphore.withPermits(1));
@@ -198,7 +188,7 @@ export class ModuleLoader {
             ? existing
             : yield* this.#capabilities.waitFor(capability).pipe(
                 Effect.timeoutFail({
-                  duration: this.#options.activationTimeout,
+                  duration: this.#activationTimeout,
                   onTimeout: () =>
                     new CapabilityNotFoundError({
                       identifier: capability.identifier,
@@ -231,24 +221,23 @@ export class ModuleLoader {
     module: Plugin.PluginModule,
     parentEvent: string,
     scope: Scope.CloseableScope,
-  ): Effect.Effect<Capability.Any[], Error> {
+  ): Effect.Effect<Capability.Any[], Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       log('loading module', { module: module.id, parentEvent });
       performance.mark(`module:${module.id}:start`);
-      yield* PubSub.publish(this.#activation, { event: parentEvent, state: 'activating', module: module.id });
+      yield* PubSub.publish(this.#state.activation, { event: parentEvent, state: 'activating', module: module.id });
       const pluginId = this.#state.pluginIdOfModule(module.id);
       yield* this.#awaitProvidersInFlight(module);
       const requiresContext = yield* this.#resolveRequires(module);
       const [duration, capabilities] = yield* module.activate().pipe(
         Effect.provide(requiresContext),
         Effect.provideService(Capability.Service, this.#capabilities),
-        Effect.provideService(Plugin.Service, this.#options.pluginService()),
         Scope.extend(scope),
         // Cap activation so a single misbehaving module can't hold the
         // event chain open. On timeout the failure is recorded against
         // the plugin and surfaced as `PluginTimeoutError`.
         Effect.timeoutFail({
-          duration: this.#options.activationTimeout,
+          duration: this.#activationTimeout,
           onTimeout: () =>
             new PluginTimeoutError({
               context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
@@ -263,7 +252,7 @@ export class ModuleLoader {
       const elapsed = Duration.toMillis(duration);
       performance.mark(`module:${module.id}:end`);
       performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
-      yield* PubSub.publish(this.#activation, { event: parentEvent, state: 'activated', module: module.id });
+      yield* PubSub.publish(this.#state.activation, { event: parentEvent, state: 'activated', module: module.id });
       log('loaded module', {
         module: module.id,
         parentEvent,
@@ -346,7 +335,7 @@ export class ModuleLoader {
           ),
         { concurrency: 'unbounded', discard: true },
       ).pipe(
-        Effect.timeout(this.#options.activationTimeout),
+        Effect.timeout(this.#activationTimeout),
         Effect.catchAll(() =>
           Effect.sync(() =>
             log.warn('proceeding without in-flight multi providers', {
@@ -389,10 +378,10 @@ export class ModuleLoader {
 
   /**
    * Failure bookkeeping for a module whose activation failed or died: logs the cause, records
-   * the failure against the owning plugin (scheduling auto-disable), and publishes an error
-   * activation message — symmetric with the 'activating'/'activated' messages so boot UIs
-   * observe a failed module, not just a silent stall. Returns the normalized error for the
-   * caller to fail the memoized deferred with.
+   * the failure against the owning plugin, and publishes an error activation message —
+   * symmetric with the 'activating'/'activated' messages so boot UIs observe a failed module,
+   * not just a silent stall (the manager's auto-disable policy also watches these messages).
+   * Returns the normalized error for the caller to fail the memoized deferred with.
    */
   #recordActivationFailure(
     module: Plugin.PluginModule,
@@ -415,9 +404,9 @@ export class ModuleLoader {
       const normalizedError = error instanceof Error ? error : new Error(String(error));
       const pluginId = this.#state.pluginIdOfModule(module.id);
       if (pluginId !== undefined) {
-        this.#options.onFailure(pluginId, normalizedError);
+        this.#state.recordFailure(pluginId, 'activation', normalizedError);
       }
-      yield* PubSub.publish(this.#activation, {
+      yield* PubSub.publish(this.#state.activation, {
         event: parentEvent,
         state: 'error',
         module: module.id,
