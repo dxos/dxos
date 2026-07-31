@@ -102,6 +102,13 @@ definitions stay runtime-neutral; CLI/workerd unaffected), and handler loading b
       (its earlier blanket pull re-loaded everything at boot — caught by the harness); toolkit
       materialization fires SkillsRequested for headless routines; the CLI create-entry snapshot
       fires the create event
+- [x] Ablation (2026-07-31, reverted): eager handler sets + keyed bodies — the "keyed barrel is
+      a trivial map" hypothesis measured FALSE today: cold profilerTotal 9,803–10,301 (vs 7,566
+      gated), navToReady 14,514–15,603 (vs 12,951), +1.6 MB wire, +34 module activations. The
+      barrels still drag their operation-definition closures (the wave-2 ~576-file floor), so the
+      gates stay until definitions are thin. **Wave-2 exit criterion: re-run this ablation; when
+      the delta is noise, flip handler sets eager and delete the handler demand machinery**
+      (foreign-namespace gates, per-key resolver pulls, `OperationHandlersRequested`)
 - [x] Validated (fixed spec-default build): cold profilerTotal **13,613 → 7,566 ms (−44%)**,
       navToReady **18,481 → 12,951 ms (−30%)**; warm-cold profilerTotal −45%, navToReady −32%;
       **83 modules gated** (34 handler + 27 create-object + 18 skill + 4 event-mode); boot pulls
