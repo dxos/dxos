@@ -17,7 +17,9 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.samplePanel', 'org.dxos.role.objectProperties', 'org.dxos.role.section', 'org.dxos.role.statusIndicator'],
+});
 
 export const SampleSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SampleCapabilities.Settings],

@@ -16,4 +16,6 @@ export const PageActionProvider = Capability.lazyModule(
   () => import('./page-action'),
 );
 
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
+});

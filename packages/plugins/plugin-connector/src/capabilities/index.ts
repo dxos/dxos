@@ -25,4 +25,6 @@ export const OAuthRedirect = Capability.lazyModule(
   () => import('./oauth-redirect'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.formInput'],
+});

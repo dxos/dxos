@@ -45,8 +45,11 @@ export const MarkdownBinding = Capability.lazyModule(
   () => import('./markdown-binding'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});
 export const HistorySurface = AppCapability.surface(() => import('./history-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
   name: 'HistorySurface',
 });
 export const CommentsSettings = AppCapability.settings(() => import('./settings'), {

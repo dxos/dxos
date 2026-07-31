@@ -15,5 +15,7 @@ export const Migrations = Capability.lazyModule(
   () => import('./migrations'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));

@@ -31,7 +31,9 @@ export const Markdown = Capability.lazyModule(
   () => import('./markdown-extension'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],
+});
 export const SheetState = Capability.lazyModule(
   'SheetState',
   { provides: [SheetCapabilities.GridInstances] },

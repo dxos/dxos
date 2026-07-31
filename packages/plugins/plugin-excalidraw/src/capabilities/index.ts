@@ -18,4 +18,6 @@ export const ExcalidrawSettings = AppCapability.settings(() => import('./setting
   provides: [ExcalidrawCapabilities.Settings],
 });
 
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});

@@ -32,7 +32,9 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
     ActivationEvents.OperationHandlersRequested('org.dxos.app-framework.collaboration'),
   ),
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
+});
 export const MarkdownSettings = AppCapability.settings(() => import('./settings'), {
   provides: [MarkdownCapabilities.Settings],
 });

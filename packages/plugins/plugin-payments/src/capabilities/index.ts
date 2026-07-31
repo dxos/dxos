@@ -9,4 +9,6 @@ import { PaymentsCapabilities } from '#types';
 export const Settings = AppCapability.settings(() => import('./settings'), {
   provides: [PaymentsCapabilities.Settings],
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});

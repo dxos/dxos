@@ -8,4 +8,6 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
   requires: [AppCapabilities.AppGraph],
 });
 export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.devtoolsOverview'],
+});

@@ -9,6 +9,7 @@ import { DebugCapabilities, type DebugPluginOptions } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.plugin.debug.surface.stats', 'org.dxos.role.article', 'org.dxos.role.deckCompanion.logs', 'org.dxos.role.deckCompanion.spaceObjects', 'org.dxos.role.section', 'org.dxos.role.statusIndicator'],
   requires: [Capabilities.AtomRegistry, DebugCapabilities.Settings, AppCapabilities.FileUploader],
   props: ({ logStore }: DebugPluginOptions) => ({ logStore }),
 });

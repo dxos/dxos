@@ -41,7 +41,9 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
   ),
 });
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});
 export const DeckSettings = AppCapability.settings(() => import('./settings'), {
   provides: [DeckCapabilities.Settings],
 });

@@ -5,12 +5,12 @@
 import { act } from '@testing-library/react';
 import * as Effect from 'effect/Effect';
 import React, { Profiler, useState } from 'react';
-import { describe, test } from 'vitest';
+import { describe, test, vi } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { Capabilities } from '../../../common';
+import { ActivationEvents, Capabilities } from '../../../common';
 import * as Role from '../../../common/Role';
 import { Capability, Plugin } from '../../../core';
 import { createTestApp } from '../../../testing/harness';
@@ -85,6 +85,55 @@ describe('SurfaceComponent dispatch', () => {
     await using harness = await createTestApp({ plugins: [InvalidIdPlugin()] });
     const view = render(harness, <SurfaceComponent type={RoleA} />);
     expect(view.queryByTestId('invalid')).toBeNull();
+  });
+});
+
+const RoleGated = Role.make<Record<string, unknown>>('org.dxos.test.role.gated');
+
+const gatedMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfaceGated'), name: 'SurfaceGatedTest' });
+
+// The surface module parks on its role's demand event instead of activating at startup —
+// the shape the surface maker's `roles` option produces.
+const GatedPlugin = Plugin.define(gatedMeta).pipe(
+  Plugin.addModule({
+    id: 'surfaces',
+    provides: [Capabilities.ReactSurface],
+    activatesOn: ActivationEvents.SurfacesRequested(RoleGated.role),
+    activate: () =>
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
+          create({ id: 'gated', filter: makeFilter(RoleGated), component: () => <span data-testid='gated' /> }),
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+describe('SurfaceComponent demand activation', () => {
+  test('a role-gated module loads when a surface for its role first renders', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [GatedPlugin()] });
+    const view = render(harness, <SurfaceComponent type={RoleGated} />);
+    // The mount fires SurfacesRequested(role); the module activates and its contribution
+    // re-renders the surface through the candidates atom.
+    expect(await view.findByTestId('gated')).toBeTruthy();
+  });
+
+  test('an availability miss fires the demand event so later checks see the module', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [GatedPlugin()] });
+    let bump: () => void = () => {};
+    const Probe = () => {
+      const isSurfaceAvailable = useIsSurfaceAvailable();
+      const [, setN] = useState(0);
+      bump = () => setN((n) => n + 1);
+      return <span data-testid='gated-available'>{String(isSurfaceAvailable({ type: RoleGated }))}</span>;
+    };
+    const view = render(harness, <Probe />);
+    expect((await view.findByTestId('gated-available')).textContent).toBe('false');
+    // The returned callback is deliberately non-reactive, so re-check on a fresh render.
+    await vi.waitFor(() => {
+      act(() => bump());
+      expect(view.getByTestId('gated-available').textContent).toBe('true');
+    });
   });
 });
 

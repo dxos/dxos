@@ -17,12 +17,14 @@ import React, {
   useRef,
 } from 'react';
 
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
 
-import { Capabilities, Role } from '../../../common';
-import { usePluginManager } from '../PluginManager';
+import { ActivationEvents, Capabilities, Role } from '../../../common';
+import { type PluginManager } from '../../../core';
+import { useOptionalPluginManager, usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
 import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
 import { useSurfaceManager } from './SurfaceManagerContext';
@@ -33,6 +35,30 @@ import { type Definition, type Props, type TypedProps, type WebComponentDefiniti
 const DEBUG = import.meta.env?.VITE_DEBUG;
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
+
+// One demand fire per (manager, role): Surface instances are numerous (every card in a grid
+// mounts one), so the local dedup keeps mount cost flat instead of re-entering the scheduler.
+const requestedRoles = new WeakMap<PluginManager.PluginManager, Set<string>>();
+
+/**
+ * Fires the role's surface demand event so modules gated on it load (see the `roles` option of
+ * the surface module maker). Safe to call repeatedly; re-fires are deduped per manager.
+ */
+const requestSurfaces = (manager: PluginManager.PluginManager | undefined, role: string): void => {
+  if (!manager || role === '') {
+    return;
+  }
+  let requested = requestedRoles.get(manager);
+  if (!requested) {
+    requested = new Set();
+    requestedRoles.set(manager, requested);
+  }
+  if (requested.has(role)) {
+    return;
+  }
+  requested.add(role);
+  void EffectEx.runAndForwardErrors(manager.activate(ActivationEvents.SurfacesRequested(role)));
+};
 
 /**
  * Wrapper component for rendering Web Component surfaces.
@@ -195,6 +221,13 @@ export const SurfaceComponent = memo(
     const effectiveRole = type?.role ?? '';
     const roleCandidates = useAtomValue(surfaceManager.candidatesAtom(effectiveRole));
 
+    // Rendering a surface for a role is the demand signal for role-gated modules: their
+    // contributions land in the candidates atom and re-render this surface.
+    const pluginManager = useOptionalPluginManager();
+    useEffect(() => {
+      requestSurfaces(pluginManager, effectiveRole);
+    }, [pluginManager, effectiveRole]);
+
     // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
     const definitions = matchCandidates(roleCandidates, effectiveRole, data);
     // `limit != null` (not truthiness) so an explicit `limit={0}` renders nothing.
@@ -310,6 +343,7 @@ type IsSurfaceAvailable = <TToken extends Role.Role<any>>(args: { type: TToken; 
  */
 export const useIsSurfaceAvailable = (): IsSurfaceAvailable => {
   const surfaceManager = useSurfaceManager();
+  const pluginManager = useOptionalPluginManager();
   const registry = useContext(RegistryContext);
   return useCallback<IsSurfaceAvailable>(
     (args: { type: Role.Role<any>; data?: Props['data'] }) => {
@@ -324,8 +358,14 @@ export const useIsSurfaceAvailable = (): IsSurfaceAvailable => {
         args.data,
       );
 
+      if (candidates.length === 0) {
+        // A miss may mean the role's modules are gated and not yet loaded: fire the demand
+        // event so a later check (or a mounted Surface) sees the loaded contributions.
+        requestSurfaces(pluginManager, effectiveRole);
+      }
+
       return candidates.length > 0;
     },
-    [surfaceManager, registry],
+    [surfaceManager, pluginManager, registry],
   );
 };

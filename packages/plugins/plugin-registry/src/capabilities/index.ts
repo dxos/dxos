@@ -21,7 +21,9 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
     ActivationEvents.OperationHandlersRequested('org.dxos.plugin.settings'),
   ),
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+});
 export const RegistrySettings = AppCapability.settings(() => import('./settings'), {
   provides: [RegistryCapabilities.Settings],
 });

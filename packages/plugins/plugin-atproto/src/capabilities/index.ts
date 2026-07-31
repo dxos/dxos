@@ -15,7 +15,9 @@ export const AtprotoConnector = Capability.lazyModule(
   { provides: [Connector] },
   () => import('./connector'),
 );
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});
 export const RepoLayer = Capability.lazyModule(
   'RepoLayer',
   {

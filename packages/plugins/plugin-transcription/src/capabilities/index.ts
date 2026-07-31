@@ -33,7 +33,9 @@ export const TranscriptionDriver = AppCapability.reactContext(() => import('./tr
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const TextContent = AppCapability.textContent(() => import('./text-content'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+});
 export const Transcriber = Capability.lazyModule(
   'Transcriber',
   {

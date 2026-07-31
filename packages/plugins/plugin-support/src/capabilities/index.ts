@@ -26,7 +26,9 @@ export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
   /** Maps the plugin's configured tour steps to the body's props. */
   props: (options: { helpSteps?: Tour.Step[] }) => options.helpSteps,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.plugin.space.role.homeContent', 'org.dxos.plugin.support.role.hints', 'org.dxos.plugin.support.role.keyshortcuts', 'org.dxos.role.article', 'org.dxos.role.deckCompanion.discord', 'org.dxos.role.deckCompanion.help', 'org.dxos.role.dialog', 'org.dxos.role.section', 'org.dxos.role.statusIndicator'],
+});
 export const SupportSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SupportCapabilities.Settings],
 });

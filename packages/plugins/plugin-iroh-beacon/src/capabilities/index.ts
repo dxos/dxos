@@ -20,4 +20,6 @@ export const BeaconServiceModule = Capability.lazyModule(
   () => import('./beacon-service'),
 );
 
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.statusIndicator'],
+});

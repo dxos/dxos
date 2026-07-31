@@ -81,7 +81,9 @@ export const MarkdownExtension = Capability.lazyModule(
   () => import('./markdown-extension'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.plugin.assistant.role.chatSurface', 'org.dxos.plugin.space.role.homeContent', 'org.dxos.plugin.space.role.homePinBottom', 'org.dxos.role.article', 'org.dxos.role.deckCompanion.trace', 'org.dxos.role.dialog', 'org.dxos.role.objectProperties', 'org.dxos.role.statusIndicator'],
+});
 export const Settings = AppCapability.settings(() => import('./settings'), {
   provides: [AssistantCapabilities.Settings],
 });

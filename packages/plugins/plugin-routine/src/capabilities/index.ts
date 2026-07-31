@@ -17,7 +17,9 @@ export const LayerSpecs = Capability.lazyModule(
   () => import('./layer-specs'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
+});
 export const RegistrySync = Capability.lazyModule(
   'RegistrySync',
   {

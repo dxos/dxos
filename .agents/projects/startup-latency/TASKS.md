@@ -83,8 +83,18 @@ definitions stay runtime-neutral; CLI/workerd unaffected), and handler loading b
       operations-to-registry spec, doctor diagnostics) read definitions, not bodies. The three
       `requires` barriers needed NO un-pinning: policy-parked providers are event-mode, so the
       soft edges no-op
-- [ ] reactSurface → per-role events — NOT in this round (needs per-module `roles`
-      declarations + the surface-miss hook; next wave-1 PR)
+- [ ] reactSurface → per-role events — IN PROGRESS (2026-07-31): `SurfacesRequested(role)`
+      composite-key event; `surface` maker `roles` option derives the `oneOf` gate;
+      `SurfaceComponent` fires the role's event on mount (per-manager dedup) and
+      `useIsAvailable` fires on miss (self-healing — the callback is non-reactive, a later
+      check sees the loaded module); 49 modules' roles codemodded from a live-probe ground
+      truth (`roles-probe.spec.ts` → surface-roles.json), not hand-extracted. Known shape
+      limits, deliberate for this round: (a) a module binding any boot-visible role
+      (statusIndicator etc.) loads at boot — per-role module SPLITS are the follow-up
+      refinement; (b) opening any article pulls all article-binding surface modules — the
+      React.lazy component split (ratified secondary axis) is the fix; (c) plugins not
+      enabled at boot have no declarations and stay eager-on-enable; (d) plugin-progress
+      contributes its surface via a value module (stays eager, boot statusIndicator anyway)
 - [x] createObject → `SpaceEvents.CreateObjectRequested` fired from CreateObjectDialog,
       DefaultProperties, and schema-actions evaluation (untracked `getAll` → tracked read)
 - [x] skillDefinition → `ActivationEvents.SkillsRequested` fired from chat-service resolution

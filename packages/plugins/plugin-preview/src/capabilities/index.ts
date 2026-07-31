@@ -10,4 +10,6 @@ export const PreviewPopover = Capability.lazyModule(
   { provides: [] },
   () => import('./preview-popover'),
 );
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.cardContent'],
+});

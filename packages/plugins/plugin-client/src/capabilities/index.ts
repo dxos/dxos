@@ -50,6 +50,7 @@ export const NavigationTargetLoader = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
   props: ({
     shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
     invitationPath = '/',

@@ -25,7 +25,9 @@ export const MarkerProvider = Capability.lazyModule(
   () => import('./marker-provider'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+});
 export const Settings = AppCapability.settings(() => import('./settings'), {
   requires: [Capabilities.AtomRegistry],
 });

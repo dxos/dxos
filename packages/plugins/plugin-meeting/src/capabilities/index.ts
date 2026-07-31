@@ -22,7 +22,9 @@ export const MeetingSettings = Capability.lazyModule(
   () => import('./settings'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});
 export const MeetingState = Capability.lazyModule(
   'MeetingState',
   { requires: [Capabilities.AtomRegistry], provides: [MeetingCapabilities.State] },

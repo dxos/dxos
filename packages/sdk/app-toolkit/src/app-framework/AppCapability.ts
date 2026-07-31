@@ -7,7 +7,7 @@
 import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capabilities, Capability as Capability$ } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capabilities, Capability as Capability$ } from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
 
 import { type Translations } from '../app';
@@ -98,11 +98,37 @@ export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> 
   AppCapabilities.NavigationHandler,
 );
 
-/** Module maker contributing React surfaces. */
-export const surface: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
+const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
   'ReactSurface',
   Capabilities.ReactSurface,
 );
+
+/**
+ * Module maker contributing React surfaces. Declaring `roles` (the role NSIDs the module's
+ * surfaces bind) gates the module on those roles' demand events
+ * ({@link ActivationEvents.SurfacesRequested}) — it loads when a `Surface` for one of its roles
+ * first renders instead of at startup. Modules without declared roles stay eager; an explicit
+ * `activatesOn` wins over the derived gate.
+ */
+export const surface = <
+  Props = void,
+  Options = Props,
+  const Requires extends readonly Capability$.AnyTag[] = readonly [],
+  const Extra extends readonly Capability$.AnyTag[] = readonly [],
+>(
+  loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.ReactSurface, ...Extra]>,
+  options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] },
+): Capability$.Module<Options> => {
+  const { roles, ...rest } = options ?? {};
+  return surfaceMaker(loader, {
+    ...rest,
+    activatesOn:
+      rest.activatesOn ??
+      (roles?.length
+        ? ActivationEvent.oneOf(...roles.map((role) => ActivationEvents.SurfacesRequested(role)))
+        : undefined),
+  });
+};
 
 /** Module maker contributing a comment configuration. */
 export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capability$.moduleMaker(
