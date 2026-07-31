@@ -42,6 +42,7 @@ import { Atom, Registry } from '@effect-atom/atom';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
@@ -288,6 +289,8 @@ class ManagerImpl implements PluginManager {
   private readonly _scheduler: ActivationScheduler;
   private readonly _catalog: PluginCatalog;
   private readonly _shutdownSemaphore = Effect.runSync(Effect.makeSemaphore(1));
+  /** The failure-supervision fiber; stopped by `shutdown`, restarted by `_withRuntime`. */
+  private _supervisor: Fiber.RuntimeFiber<never> | undefined;
 
   constructor({
     pluginLoader,
@@ -349,37 +352,49 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Cross-unit failure policy, wired at the composition root: the loader publishes a module
-   * error message for every failed activation; the catalog owns disabling. Deliberately not
-   * tracked by the fiber tracker — shutdown interrupts in-flight work, but the policy must
-   * survive shutdown so a restarted manager keeps it.
+   * error message for every failed activation; the catalog owns disabling. Idempotent —
+   * a supervisor that is already running is kept.
    */
   private _superviseFailures(): void {
-    Effect.runFork(
-      Effect.scoped(
-        Effect.gen(this, function* () {
-          const subscription = yield* PubSub.subscribe(this._state.activation);
-          for (;;) {
-            const message = yield* Queue.take(subscription);
-            if (message.state === 'error' && message.module !== undefined) {
-              // Non-module ids (e.g. a lazy plugin load) resolve to undefined and are
-              // handled by their own paths.
-              const pluginId = this._state.pluginIdOfModule(message.module);
-              if (pluginId !== undefined) {
-                this._catalog.scheduleAutoDisable(pluginId);
-              }
-            }
-          }
-        }),
+    if (this._supervisor !== undefined) {
+      return;
+    }
+    this._supervisor = PubSub.subscribe(this._state.activation).pipe(
+      Effect.flatMap((subscription) =>
+        Queue.take(subscription).pipe(
+          Effect.tap((message) => Effect.sync(() => this._autoDisableOnModuleError(message))),
+          Effect.forever,
+        ),
       ),
+      Effect.scoped,
+      Effect.runFork,
     );
   }
 
   /**
-   * Module bodies receive this manager as the ambient `Plugin.Service`; the collaborating
-   * units carry that as a typed requirement, satisfied once here at the public boundary.
+   * Auto-disables the plugin owning a failed module. Error messages without a registered
+   * module id (structural failures, lazy plugin loads) are handled by their own paths.
    */
-  private readonly _providePluginService = <A, E>(effect: Effect.Effect<A, E, Plugin.Service>): Effect.Effect<A, E> => {
-    return Effect.provideService(effect, Plugin.Service, this);
+  private _autoDisableOnModuleError(message: ActivationMessage): void {
+    if (message.state !== 'error' || message.module === undefined) {
+      return;
+    }
+    const pluginId = this._state.pluginIdOfModule(message.module);
+    if (pluginId !== undefined) {
+      this._catalog.scheduleAutoDisable(pluginId);
+    }
+  }
+
+  /**
+   * Entry wrapper for the unit effects that can run module activations: provides this manager
+   * as the ambient `Plugin.Service` (the typed requirement carried by the units) and ensures
+   * the failure supervisor is running (shutdown stops it).
+   */
+  private readonly _withRuntime = <A, E>(effect: Effect.Effect<A, E, Plugin.Service>): Effect.Effect<A, E> => {
+    return Effect.suspend(() => {
+      this._superviseFailures();
+      return Effect.provideService(effect, Plugin.Service, this);
+    });
   };
 
   get plugins(): Atom.Atom<readonly Plugin.Plugin[]> {
@@ -492,11 +507,11 @@ class ManagerImpl implements PluginManager {
   }
 
   enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error> {
-    return this._catalog.enable(id, opts).pipe(this._providePluginService);
+    return this._catalog.enable(id, opts).pipe(this._withRuntime);
   }
 
   remove(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error> {
-    return this._catalog.remove(id, opts).pipe(this._providePluginService);
+    return this._catalog.remove(id, opts).pipe(this._withRuntime);
   }
 
   disable(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error> {
@@ -508,14 +523,14 @@ class ManagerImpl implements PluginManager {
   //
 
   start(): Effect.Effect<boolean, Error> {
-    return this._scheduler.start().pipe(this._providePluginService);
+    return this._scheduler.start().pipe(this._withRuntime);
   }
 
   activate(
     event: ActivationEvent.ActivationEvent | string,
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error> {
-    return this._scheduler.activate(event, params).pipe(this._providePluginService);
+    return this._scheduler.activate(event, params).pipe(this._withRuntime);
   }
 
   deactivate(id: string): Effect.Effect<boolean, Error> {
@@ -523,7 +538,7 @@ class ManagerImpl implements PluginManager {
   }
 
   reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error> {
-    return this._scheduler.resetEvent(event).pipe(this._providePluginService);
+    return this._scheduler.resetEvent(event).pipe(this._withRuntime);
   }
 
   shutdown(): Effect.Effect<boolean, Error> {
@@ -532,6 +547,10 @@ class ManagerImpl implements PluginManager {
         yield* Ref.set(this._state.shuttingDown, true);
         log('shutdown');
 
+        if (this._supervisor !== undefined) {
+          yield* Fiber.interrupt(this._supervisor);
+          this._supervisor = undefined;
+        }
         yield* this._state.fibers.interruptAll();
 
         const activeIds = [...this._state.getActiveIds()].reverse();
