@@ -13,10 +13,6 @@ import { findTypeSectionPath } from './type-section-path';
 const spaceId = Key.SpaceId.random();
 const objectId = Key.EntityId.random();
 
-const staticBinding = (path: string[], kind: 'item' | 'singleton' = 'item') => ({
-  url: { key: path.at(-1) ?? 'key', kind, path },
-});
-
 describe('findTypeSectionPath', () => {
   test('matches a grouped section by its trailing typename segment', ({ expect }) => {
     const extensions = [staticBinding(['system', 'database']), staticBinding(['ai', 'dxos.org.type.Chat'])];
@@ -44,4 +40,9 @@ describe('findTypeSectionPath', () => {
     ];
     expect(findTypeSectionPath(extensions, { spaceId, typename: 'dxos.org.type.Chat', objectId })).toBeUndefined();
   });
+});
+
+/** A static url binding as `createTypeSectionExtension` declares one. */
+const staticBinding = (path: string[], kind: 'item' | 'singleton' = 'item') => ({
+  url: { key: path.at(-1) ?? 'key', kind, path },
 });
