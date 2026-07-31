@@ -177,7 +177,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
           {/* Own Root: `Panel.Toolbar` is a plain flex container here, and `Toolbar.Button` needs
               the roving-focus group a `Toolbar.Root` provides. */}
           {layout === 'table' && selectedIds.length > 0 && (
-            <Toolbar.Root classNames='w-auto !p-0 !bg-transparent'>
+            <Toolbar.Root classNames='w-auto! shrink-0 p-0! bg-transparent!'>
               <Toolbar.Button variant='ghost' onClick={handleDeleteSelected}>
                 <Icon icon='ph--trash--regular' />
                 <span>{t('delete-selected.label', { count: selectedIds.length })}</span>

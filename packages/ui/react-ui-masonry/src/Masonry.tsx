@@ -200,7 +200,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // `maxColumnWidth` and centres them, so no scrollbar/padding math is duplicated here.
     const gapPx = gap * remInPx;
     const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
-    const { rects, columnWidth, height, getTileRef, nodes, measured } = useMasonryLayout({
+    const { rects, columnWidth, height, getTileRef, nodes, measured, measuredIds } = useMasonryLayout({
       ids,
       columnCount,
       containerWidth: contentWidth,
@@ -267,6 +267,11 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
               const rect = rects[index];
               const selectable = !!onSelect;
               const selected = selectedIds?.has(id) ?? false;
+              // A tile still on the height estimate is positioned by a guess. Once the grid is
+              // revealed the estimate is painted, so swapping the item set wholesale (paging through
+              // duplicate groups) flashed a tile hundreds of pixels out of place before settling.
+              // `visibility` rather than `display`, so the ResizeObserver can still measure it.
+              const estimated = !measuredIds.has(id);
               return (
                 <div
                   key={id}
@@ -290,6 +295,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
                     insetInlineStart: 0,
                     width: `${columnWidth}px`,
                     transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
+                    visibility: estimated ? 'hidden' : undefined,
                   }}
                 >
                   <Tile index={index} data={item} selected={selected} />

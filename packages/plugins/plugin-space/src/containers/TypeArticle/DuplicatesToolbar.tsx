@@ -39,20 +39,40 @@ export const DuplicatesToolbar = ({ typename, typeUri, duplicates }: DuplicatesT
     }));
   }, [updateEphemeral, spec, current, typeUri, typename]);
 
+  // Every control that changes which group is under review drops the staged preview: it belongs to
+  // the group it was raised from, and leaving it up would show the companion previewing one group
+  // while the article shows another.
+  const clearPreview = useCallback(
+    () => updateEphemeral((state) => ({ ...state, mergePreview: undefined })),
+    [updateEphemeral],
+  );
+
   const handleSkip = useCallback(() => {
-    updateEphemeral((state) => ({ ...state, mergePreview: undefined }));
+    clearPreview();
     next();
-  }, [updateEphemeral, next]);
+  }, [clearPreview, next]);
+
+  const handleNext = useCallback(() => {
+    clearPreview();
+    next();
+  }, [clearPreview, next]);
+
+  const handlePrevious = useCallback(() => {
+    clearPreview();
+    previous();
+  }, [clearPreview, previous]);
 
   const handleRefresh = useCallback(() => {
-    updateEphemeral((state) => ({ ...state, mergePreview: undefined }));
+    clearPreview();
     refresh();
-  }, [updateEphemeral, refresh]);
+  }, [clearPreview, refresh]);
 
   return (
     // Own `Toolbar.Root`: `Panel.Toolbar` here is a plain flex container (it hosts the search input
     // in the other layouts), and `Toolbar.Button` needs the roving-focus group a Root provides.
-    <Toolbar.Root classNames='grow !p-0 !bg-transparent'>
+    // `w-auto!` overrides the toolbar theme's `w-full`, which would otherwise claim the whole row and
+    // push the layout toggle past the panel's edge; `min-w-0` lets it scroll its own overflow instead.
+    <Toolbar.Root classNames='w-auto! grow min-w-0 p-0! bg-transparent!'>
       <Toolbar.Button variant='primary' disabled={current.length < 2} onClick={handleMerge}>
         {t('merge-duplicates.label')}
       </Toolbar.Button>
@@ -60,13 +80,13 @@ export const DuplicatesToolbar = ({ typename, typeUri, duplicates }: DuplicatesT
         {t('skip-duplicates.label')}
       </Toolbar.Button>
       <Toolbar.Separator />
-      <Toolbar.Button variant='ghost' disabled={position <= 1} onClick={previous}>
+      <Toolbar.Button variant='ghost' disabled={position <= 1} onClick={handlePrevious}>
         <Icon icon='ph--caret-left--regular' />
       </Toolbar.Button>
       <span className='text-description text-sm tabular-nums'>
         {total === 0 ? t('duplicates-none.label') : `${position} / ${total}`}
       </span>
-      <Toolbar.Button variant='ghost' disabled={position >= total} onClick={next}>
+      <Toolbar.Button variant='ghost' disabled={position >= total} onClick={handleNext}>
         <Icon icon='ph--caret-right--regular' />
       </Toolbar.Button>
       <Toolbar.Button variant='ghost' onClick={handleRefresh}>

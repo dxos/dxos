@@ -15,6 +15,8 @@ const ESTIMATED_TILE_HEIGHT = 280;
 export type MasonryLayout = LayoutResult & {
   /** True once every tile has reported a height, so positions are final (not the all-zero stack). */
   measured: boolean;
+  /** Ids whose height is a real measurement; the rest are sitting at an estimate. */
+  measuredIds: ReadonlySet<string>;
   /** Stable ref callback for the tile wrapper of `id` (measures + registers it). */
   getTileRef: (id: string) => (element: HTMLElement | null) => void;
   /** Live map of currently-mounted tile wrappers by id (for FLIP positioning). */
@@ -48,6 +50,10 @@ export const useMasonryLayout = ({
   centered,
 }: UseMasonryLayoutOptions): MasonryLayout => {
   const heights = useRef(new Map<string, number>());
+  // Survives pruning, unlike `heights`: when the item set is replaced wholesale (paging through
+  // duplicate groups) every id is new, and without a remembered average the estimate would fall back
+  // to the ~280px default and paint the swap hundreds of pixels out before the real heights land.
+  const estimate = useRef(ESTIMATED_TILE_HEIGHT);
   const nodes = useRef(new Map<string, HTMLElement>());
   const elementIds = useRef(new WeakMap<Element, string>());
   const refCallbacks = useRef(new Map<string, (element: HTMLElement | null) => void>());
@@ -75,6 +81,10 @@ export const useMasonryLayout = ({
         }
       }
       if (changed) {
+        const values = [...heights.current.values()];
+        if (values.length > 0) {
+          estimate.current = values.reduce((sum, value) => sum + value, 0) / values.length;
+        }
         setVersion((value) => value + 1);
       }
     });
@@ -125,20 +135,17 @@ export const useMasonryLayout = ({
       }
     }
 
-    // Unmeasured tiles fall back to an estimate — the running average of measured tiles, else a
-    // default — so the first layout spaces every tile out instead of stacking them all at y≈0 (the
-    // source of the initial bunched/overlapping flash). Real heights replace the estimate as they
-    // arrive, and the estimate tracks the actual card size, so the correcting reflow stays small.
-    const measuredValues = [...heights.current.values()];
-    const estimate = measuredValues.length
-      ? measuredValues.reduce((sum, value) => sum + value, 0) / measuredValues.length
-      : ESTIMATED_TILE_HEIGHT;
-    const tileHeights = ids.map((id) => heights.current.get(id) ?? estimate);
+    // Unmeasured tiles fall back to the running average of every tile measured so far (see
+    // `estimate`), so the first layout spaces them out instead of stacking them all at y≈0 — the
+    // source of the initial bunched/overlapping flash. Real heights replace the estimate as they
+    // arrive, and the average tracks the actual card size, so the correcting reflow stays small.
+    const tileHeights = ids.map((id) => heights.current.get(id) ?? estimate.current);
     // Positions are final only once every tile has contributed a real height.
-    const measured = ids.every((id) => heights.current.has(id));
+    const measuredIds = new Set(ids.filter((id) => heights.current.has(id)));
     return {
       ...layout({ heights: tileHeights, columnCount, containerWidth, gapPx, maxColumnWidthPx, centered }),
-      measured,
+      measured: measuredIds.size === ids.length,
+      measuredIds,
     };
     // `version` re-runs layout when a measured height changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -115,11 +115,9 @@ const seedPeople = (space: Space) => {
 
 type StoryArgs = {
   type: Type.AnyObj;
-  /** Render the Selected companion beside the article (selection + merge preview live there). */
-  companion?: boolean;
 };
 
-const DefaultStory = ({ type, companion }: StoryArgs) => {
+const DefaultStory = ({ type }: StoryArgs) => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   if (!space) {
@@ -129,7 +127,7 @@ const DefaultStory = ({ type, companion }: StoryArgs) => {
   return (
     <div role='none' className='w-full grid grid-cols-2'>
       <TypeArticle role='article' space={space} type={type} attendableId='story' />
-      {companion && <StoryCompanion space={space} type={type} />}
+      <StoryCompanion space={space} type={type} />
     </div>
   );
 };
@@ -229,8 +227,7 @@ export const WithCardContent: Story = {
 
 /**
  * Person, whose identity rule (email + foreign key) is registered — so the toolbar offers the
- * Duplicates tab. The Selected companion is rendered beside the article, since selection and the
- * merge preview both surface there.
+ * Duplicates tab. Selection and the merge preview both surface in the companion beside the article.
  *
  * Test:
  * 1. Switch to the third toolbar tab (the copy icon). The filter is replaced by
@@ -256,6 +253,5 @@ export const WithCardContent: Story = {
 export const Duplicates: Story = {
   args: {
     type: Person.Person,
-    companion: true,
   },
 };
