@@ -48,35 +48,29 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** No tables and flagged personal: recolored to the app ink in both modes. */
+/** A simple body with no declaration: recolored to the app ink in both modes. */
 export const Personal: Story = {
   args: {
     sample: 'personal',
   },
 };
 
-/** Quoted history collapsed behind the "•••" toggle; the open state survives a theme change. */
+/** Quoted history collapsed behind the toggle; the open state survives a theme change. */
 export const Reply: Story = {
   args: {
     sample: 'reply',
   },
 };
 
-/** Table layout, not personal: left as authored, on a light sheet in dark mode. */
+/** A table layout that declares nothing — recolored like any other undeclared body since the layout
+ * exemption was dropped. Authored colored backgrounds (header, button) survive; only light ones go. */
 export const Marketing: Story = {
   args: {
     sample: 'marketing',
   },
 };
 
-/** The same table body flagged personal — recolored anyway, which is the trade the flag buys. */
-export const MarketingThemed: Story = {
-  args: {
-    sample: 'marketing',
-  },
-};
-
-/** Real mail: a table layout that declares nothing, so it takes the heuristic. */
+/** Real mail, undeclared: the case that motivated dropping the layout exemption. */
 export const CapturedUndeclared: Story = {
   args: {
     sample: 'm1',
@@ -85,7 +79,7 @@ export const CapturedUndeclared: Story = {
 
 /**
  * Real mail declaring `color-scheme: light` — the sender stating it has no dark rendering. The dark pane
- * must show the light sheet, not a recolor: an explicit declaration outranks our heuristic.
+ * must show the light sheet, not a recolor: an explicit declaration outranks anything we would infer.
  */
 export const CapturedLightOnly: Story = {
   args: {

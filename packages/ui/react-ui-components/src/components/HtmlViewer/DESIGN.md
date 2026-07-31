@@ -9,7 +9,7 @@ declaration (`ColorScheme`/`detectColorScheme`) and the authored-dark-rule rewri
 a dialect never needs the raw markup or the theme context. Concretely: sanitized content in a Shadow DOM host, so the content's (often
 aggressive) CSS cannot reach the app while it still flows in the app layout — no iframe, no height
 measurement. Script safety is DOMPurify's, since a shadow root isolates style but does not sandbox
-execution. `email.ts` is the email configuration of that sandbox; `transform-colors.ts` is
+execution. `transform-email.ts` is the email configuration of that sandbox; `transform-colors.ts` is
 the email recoloring policy. Implemented 2026-07-31 — §1 and §2 below describe what the code now does,
 except where marked open.
 
@@ -17,7 +17,7 @@ except where marked open.
 
 `Html` and the email layer are not a base and a subclass. Nothing in the email layer overrides,
 extends, or specializes `Html` — it _configures_ it, with data. Every email-specific thing is a value passed through an
-existing seam: a CSS string, an ordered transform list, a `cid:` resolver, and a theming predicate.
+existing seam: a CSS string, an ordered transform list, a `cid:` resolver, and a theming policy.
 That is a dialect, not a subclass.
 
 The shape to converge on is one component plus dialect packs:
@@ -31,7 +31,7 @@ type HtmlDialect = {
 };
 ```
 
-A dialect is a **plain function**, not a hook: `emailDialect({ isPersonal, resolveSrc })`, built inline
+A dialect is a **plain function**, not a hook: `emailDialect({ resolveSrc })`, built inline
 on every render. Two things in the base had to change to allow that, and both were flaws in the generic
 layer rather than anything email-specific:
 

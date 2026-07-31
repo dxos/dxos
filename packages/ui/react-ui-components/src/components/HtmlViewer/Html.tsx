@@ -104,8 +104,8 @@ export type HtmlSrcResolver = (src: string) => Promise<string | undefined>;
 export type HtmlDialect = {
   /**
    * Identifies this dialect *configuration*. Rebuild the content when it changes — so it must capture
-   * every option that changes what the transforms do (e.g. `email:personal`). Omit for a dialect whose
-   * behaviour never varies.
+   * every option that changes what the transforms do. Omit for a dialect whose behaviour never varies —
+   * as the email dialect now is, since only the document's own declaration steers it.
    */
   key?: string;
   /** Extra CSS injected into the shadow root, after the base rules. */
