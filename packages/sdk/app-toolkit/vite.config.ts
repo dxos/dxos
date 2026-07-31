@@ -23,6 +23,7 @@ export default defineConfig({
     'echo/TypeOptions': 'src/echo/TypeOptions.ts',
     'operations/CollaborationOperation': 'src/operations/CollaborationOperation.ts',
     'operations/LayoutOperation': 'src/operations/LayoutOperation.ts',
+    'operations/NavigationOperation': 'src/operations/NavigationOperation.ts',
     'operations/SettingsOperation': 'src/operations/SettingsOperation.ts',
     'types/CollectionModel': 'src/types/CollectionModel.ts',
     'types/ConnectorSync': 'src/types/ConnectorSync.ts',

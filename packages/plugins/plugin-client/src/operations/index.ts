@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { UpdateProfile } from './definitions';
@@ -32,5 +33,6 @@ export const ClientOperationHandlerSet = OperationHandlerSet.keyed([
   [RedeemToken, () => import('./redeem-token')],
   [ResetStorage, () => import('./reset-storage')],
   [ShareIdentity, () => import('./share-identity')],
+  [NavigationOperation.ResolveNavigationTargets, () => import('./resolve-navigation-targets')],
   [UpdateProfile, () => import('./update-profile')],
 ]);

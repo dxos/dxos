@@ -12,7 +12,6 @@ export const AssistantOperationHandlerSet = OperationHandlerSet.keyed([
   [AssistantOperation.EnsureCompanionChat, () => import('./ensure-companion-chat')],
   [AssistantOperation.ForkChat, () => import('./fork-chat')],
   [AssistantOperation.GenerateHomeSuggestions, () => import('./generate-home-suggestions')],
-  [AssistantOperation.ResolveNavigationTargets, () => import('./resolve-navigation-targets')],
   [RoutineOperation.RunPromptInNewChat, () => import('./run-prompt-in-new-chat')],
   [AssistantOperation.SetCurrentChat, () => import('./set-current-chat')],
   [AssistantOperation.ToggleTracePanelDebug, () => import('./toggle-trace-panel-debug')],

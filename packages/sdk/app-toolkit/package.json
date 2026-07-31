@@ -86,6 +86,11 @@
       "types": "./dist/types/src/app/NativePasskey.d.ts",
       "import": "./dist/lib/app/NativePasskey.mjs"
     },
+    "./NavigationOperation": {
+      "source": "./src/operations/NavigationOperation.ts",
+      "types": "./dist/types/src/operations/NavigationOperation.d.ts",
+      "import": "./dist/lib/operations/NavigationOperation.mjs"
+    },
     "./NotFound": {
       "source": "./src/app/NotFound.ts",
       "types": "./dist/types/src/app/NotFound.d.ts",

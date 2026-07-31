@@ -25,8 +25,7 @@ const handler: Operation.WithHandler<typeof ChessOperation.Move> = ChessOperatio
       chess.move(move, { strict: false });
       const pgn = chess.pgn();
       Obj.update(variant, (variant) => {
-        const mutable = variant as Obj.Mutable<typeof variant>;
-        mutable.pgn = pgn;
+        variant.pgn = pgn;
       });
       return { pgn };
     }),

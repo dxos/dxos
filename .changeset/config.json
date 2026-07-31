@@ -309,7 +309,6 @@
       "@dxos/plugin-testing",
       "@dxos/plugin-theme",
       "@dxos/plugin-thread",
-      "@dxos/plugin-tictactoe",
       "@dxos/plugin-tldraw",
       "@dxos/plugin-transcription",
       "@dxos/plugin-transformer",

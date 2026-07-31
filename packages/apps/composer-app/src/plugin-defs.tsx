@@ -70,7 +70,6 @@ import { StudioPlugin } from '@dxos/plugin-studio/plugin';
 import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
-import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
 import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
@@ -222,7 +221,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     SequencerPlugin(),
     SlackPlugin(),
     SpacetimePlugin(),
-    TicTacToePlugin(),
     TrelloPlugin(),
     TripPlugin(),
     TypefullyPlugin(),

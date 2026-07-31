@@ -13,7 +13,7 @@ export default defineConfig({
     'common/capabilities': 'src/common/capabilities.ts',
     'core/capability': 'src/core/capability.ts',
     'core/plugin': 'src/core/plugin.ts',
-    'core/plugin-manager': 'src/core/plugin-manager.ts',
+    'core/plugin-manager': 'src/core/plugin-manager/index.ts',
     'core/url-loader': 'src/core/url-loader.ts',
     'config': 'src/config/index.ts',
     'cli': 'src/cli/index.ts',
