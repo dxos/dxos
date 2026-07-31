@@ -4,7 +4,6 @@
 
 import react from '@vitejs/plugin-react';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { cp } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -20,7 +19,7 @@ import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plug
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin, PhosphorAssetsPlugin } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
@@ -597,7 +596,9 @@ export default defineConfig((env) => ({
       // verbose: true,
     }),
 
-    phosphorAssetsPlugin({ assetsDir: phosphorIconsCore }),
+    // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
+    // into the build output and cached at runtime by sw.ts (excluded from the precache).
+    PhosphorAssetsPlugin({ assetsDir: phosphorIconsCore }),
 
     ThemePlugin({}),
   ]
@@ -606,58 +607,6 @@ export default defineConfig((env) => ({
 
   ...createTestConfig({ dirname, node: true, storybook: true }),
 }));
-
-/**
- * Serves the full Phosphor icon catalog as individual SVGs under `/phosphor/{weight}/{name}.svg`,
- * so the runtime icon resolver in @dxos/react-ui can fetch glyphs that weren't statically
- * referenced (e.g. icons used only by runtime-loaded plugins).
- *
- * In dev: middleware streams from node_modules. In build: assets are copied into the output dir.
- *
- * TODO(wittjosiah): Roll this into @dxos/vite-plugin-icons so other apps (tasks-app,
- *   testbench-app, composer-crx) get the same behavior without duplicating the plugin.
- */
-function phosphorAssetsPlugin({ assetsDir }: { assetsDir: string }): PluginOption {
-  let outDir: string | undefined;
-  return {
-    name: 'dxos:phosphor-assets',
-    configResolved: (config) => {
-      outDir = path.resolve(config.root, config.build.outDir);
-    },
-    configureServer: (server) => {
-      server.middlewares.use('/phosphor', (req, res, next) => {
-        if (req.method !== 'GET' && req.method !== 'HEAD') {
-          return next();
-        }
-        const rawPath = (req.url ?? '').split('?')[0];
-        if (rawPath.includes('..')) {
-          res.statusCode = 400;
-          res.end();
-          return;
-        }
-        const filePath = path.join(assetsDir, rawPath);
-        if (!filePath.startsWith(assetsDir) || !existsSync(filePath)) {
-          return next();
-        }
-        try {
-          const content = readFileSync(filePath);
-          res.setHeader('Content-Type', 'image/svg+xml');
-          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-          res.end(content);
-        } catch {
-          next();
-        }
-      });
-    },
-    closeBundle: async () => {
-      if (!outDir || !existsSync(assetsDir)) {
-        return;
-      }
-      const dest = path.join(outDir, 'phosphor');
-      await cp(assetsDir, dest, { recursive: true });
-    },
-  };
-}
 
 /**
  * Generate nicer chunk names.
