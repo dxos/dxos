@@ -149,3 +149,15 @@ Auto-recorded by `src/playwright/startup.spec.ts`. One row per scenario per harn
 | 2026-07-31T18:08:17Z | 32fc405b5d | ⚠ | warm-cold | chromium | 7337 | 11383 | 360 | 27.5 | 330 | `org.dxos.plugin.client.module.Client` (3535) |
 | 2026-07-31T18:08:42Z | 32fc405b5d | ⚠ | cold | chromium | 8086 | 13858 | 308 | 27.5 | 332 | `org.dxos.plugin.client.module.Client` (3906) |
 | 2026-07-31T18:09:09Z | 32fc405b5d | ⚠ | warm-cold | chromium | 8301 | 12890 | 352 | 27.5 | 330 | `org.dxos.plugin.client.module.Client` (3872) |
+| 2026-07-31T18:15:18Z | e6414d9401 | ⚠ | cold | chromium | 7585 | 12587 | 348 | 27.5 | 332 | `org.dxos.plugin.client.module.Client` (3586) |
+| 2026-07-31T18:15:45Z | e6414d9401 | ⚠ | warm-cold | chromium | 9195 | 13258 | 364 | 27.5 | 330 | `org.dxos.plugin.client.module.Client` (3914) |
+| 2026-07-31T18:16:10Z | e6414d9401 | ⚠ | cold | chromium | 7878 | 13067 | 312 | 27.5 | 332 | `org.dxos.plugin.client.module.Client` (3532) |
+| 2026-07-31T18:16:35Z | e6414d9401 | ⚠ | warm-cold | chromium | 7265 | 11588 | 368 | 27.5 | 330 | `org.dxos.plugin.client.module.Client` (3384) |
+| 2026-07-31T18:16:59Z | e6414d9401 | ⚠ | cold | chromium | 7373 | 12426 | 280 | 27.5 | 332 | `org.dxos.plugin.client.module.Client` (3554) |
+| 2026-07-31T18:17:24Z | e6414d9401 | ⚠ | warm-cold | chromium | 6985 | 11314 | 364 | 27.5 | 330 | `org.dxos.plugin.client.module.Client` (3223) |
+| 2026-07-31T18:20:01Z | e6414d9401 | ⚠ | cold | chromium | 8630 | 13865 | 308 | 28.1 | 366 | `org.dxos.plugin.client.module.Client` (3653) |
+| 2026-07-31T18:20:31Z | e6414d9401 | ⚠ | warm-cold | chromium | 9196 | 13670 | 344 | 29.5 | 416 | `org.dxos.plugin.client.module.Client` (3533) |
+| 2026-07-31T18:20:57Z | e6414d9401 | ⚠ | cold | chromium | 9398 | 14321 | 360 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3643) |
+| 2026-07-31T18:21:27Z | e6414d9401 | ⚠ | warm-cold | chromium | 8992 | 14365 | 412 | 29.6 | 419 | `org.dxos.plugin.client.module.Client` (3489) |
+| 2026-07-31T18:21:52Z | e6414d9401 | ⚠ | cold | chromium | 9206 | 13550 | 304 | 27.8 | 365 | `org.dxos.plugin.client.module.Client` (3713) |
+| 2026-07-31T18:22:22Z | e6414d9401 | ⚠ | warm-cold | chromium | 9385 | 14697 | 372 | 29.5 | 421 | `org.dxos.plugin.client.module.Client` (3647) |

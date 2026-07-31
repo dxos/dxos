@@ -139,6 +139,15 @@ definitions stay runtime-neutral; CLI/workerd unaffected), and handler loading b
       gates stay until definitions are thin. **Wave-2 exit criterion: re-run this ablation; when
       the delta is noise, flip handler sets eager and delete the handler demand machinery**
       (foreign-namespace gates, per-key resolver pulls, `OperationHandlersRequested`)
+      **RE-RUN on thin definitions (2026-07-31, after the full wave-2 batch; reverted again):
+      still a real regression — cold +1.6 s profilerTotal (7,585 → 9,206) / +1.3 s navToReady /
+      +34 activations / +0.4 MB; warm-cold +1.9 s / +2.8 s / +86 activations / +2.2 MB (a
+      persisted identity fires the IdentityCreated/spaces chains, which eager registration
+      drags into the boot window). Diagnosis CHANGED: round 1's cost was definition bytes
+      (fixed); the remaining cost is the round-1 fan-out CONTENTION — extra activations cost
+      wall-clock even when thin. Eager sets are byte-viable now but not activation-viable;
+      the path there is scheduling (fan-out contention), not further definition thinning.
+      Gates remain the shape.**
 - [x] Validated (fixed spec-default build): cold profilerTotal **13,613 → 7,566 ms (−44%)**,
       navToReady **18,481 → 12,951 ms (−30%)**; warm-cold profilerTotal −45%, navToReady −32%;
       **83 modules gated** (34 handler + 27 create-object + 18 skill + 4 event-mode); boot pulls
