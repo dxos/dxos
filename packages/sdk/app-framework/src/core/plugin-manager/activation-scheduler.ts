@@ -39,6 +39,9 @@ import { type ModuleLoader, together } from './module-loader';
  * plugins into an error state and exclude their modules; everything independent proceeds.
  */
 export class ActivationScheduler {
+  /** Per-wave activation concurrency cap — see the note at the `#executeWaves` call site. */
+  static readonly WAVE_CONCURRENCY = 16;
+
   /** Events currently mid-activation (an `allOf` gate counts them as already fired). */
   readonly #activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   /** Modules currently claimed by an event wave (excluded from re-matching). */
@@ -667,10 +670,15 @@ export class ActivationScheduler {
     return Effect.gen(this, function* () {
       const failed = new Set<string>(preFailed);
       const providersOf = (moduleId: string): string[] => ActivationGraph.requiredProviderIds(graph, moduleId);
+      // Singleton providers gate dependents (in this round or a later pass), so under the
+      // concurrency cap they claim the first slots instead of queuing behind leaf modules.
+      const singletonProvides = (module: Plugin.PluginModule): number =>
+        module.activation.provides.filter((capability) => capability.arity === 'single').length;
       let allSucceeded = true;
       for (const wave of waves) {
+        const ordered = [...wave].sort((a, b) => singletonProvides(b) - singletonProvides(a));
         yield* Effect.all(
-          wave.map((module) =>
+          ordered.map((module) =>
             Effect.gen(this, function* () {
               if (providersOf(module.id).some((provider) => failed.has(provider))) {
                 log.warn('skipping module: provider failed', { module: module.id });
@@ -685,7 +693,10 @@ export class ActivationScheduler {
               }
             }),
           ),
-          { concurrency: 'unbounded' },
+          // Bounded: a 350-wide unbounded fan-out oversubscribes import/parse and stretches
+          // every module's wall clock (the measured contention plateau); small waves and
+          // tests (which gate concurrent modules on each other) stay fully concurrent.
+          { concurrency: ActivationScheduler.WAVE_CONCURRENCY },
         );
       }
       return allSucceeded;
