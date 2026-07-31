@@ -1,5 +1,12 @@
 # Tasks — startup latency (demand-driven activation)
 
+_Resume: start wave 2 (lightweight operation definitions, DEFINITIONS-AUDIT.md rules 1–5) —
+first target the plugin.ts stub operations re-exports (rule 5, biggest single lever: every
+registered plugin's operations graph enters main's closure) and the pipeline-rdf FactStore
+tag/implementation split (rule 1 exemplar). Uncommitted: none. Last: wave 1 complete at −52%
+cold profilerTotal (e7151b9f9f); scheduler concurrent-wave race fixed (492a7f4675); base
+branch merged; PR #12415 body current._
+
 Spec + phase definitions: [DESIGN.md](./DESIGN.md). Successor to the
 app-framework-capability-activation deferral follow-up; implementation starts after that branch's
 PR lands.
