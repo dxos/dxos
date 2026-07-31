@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
-import { applyMerge, planMerge } from '@dxos/extractor';
+import { applyMerge, findDuplicates, planMerge } from '@dxos/extractor';
 import { invariant } from '@dxos/invariant';
 
 import { SpaceOperation } from './definitions';
@@ -30,7 +30,16 @@ const handler: Operation.WithHandler<typeof SpaceOperation.MergeDuplicates> = Sp
         `Every member of a merge must be a ${typename}.`,
       );
 
-      const plan = planMerge(spec, { keys: [], objects });
+      // The merge deletes the losers, so being asked to merge is not enough — the members must
+      // actually share identity. Re-deriving the group over just these objects (not the whole space)
+      // rejects a set that is unrelated or only partly connected, and yields the real shared keys.
+      const [group, ...rest] = findDuplicates(spec, objects);
+      invariant(
+        group && rest.length === 0 && group.objects.length === objects.length,
+        'A merge must be applied to a single duplicate group.',
+      );
+
+      const plan = planMerge(spec, group);
       const survivor = yield* applyMerge(db, spec, plan, overrides);
       yield* Database.flush({ indexes: true });
 

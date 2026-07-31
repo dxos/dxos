@@ -405,3 +405,29 @@ describe('domain normalization', () => {
     expect(normalizeDomain(undefined)).toBeUndefined();
   });
 });
+
+describe('merge group validation', () => {
+  // The `MergeDuplicates` handler gates on this: `planMerge` folds whatever it is given, so the
+  // caller's set has to be checked against the identity rule before anything is deleted.
+  const alice = () => Person.make({ fullName: 'Alice', emails: [{ value: 'alice@dxos.org' }] });
+  const bob = () => Person.make({ fullName: 'Bob', emails: [{ value: 'bob@dxos.org' }] });
+
+  test('two unrelated people do not form a group', ({ expect }) => {
+    expect(findDuplicates(personIdentitySpec, [alice(), bob()])).toEqual([]);
+  });
+
+  test('a partly-connected set does not form one group', ({ expect }) => {
+    // Two Alices plus an unrelated Bob: one group of two, and Bob is not in it.
+    const groups = findDuplicates(personIdentitySpec, [alice(), alice(), bob()]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].objects).toHaveLength(2);
+  });
+
+  test('a real group covers every member and carries the shared key', ({ expect }) => {
+    const objects = [alice(), alice()];
+    const groups = findDuplicates(personIdentitySpec, objects);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].objects).toHaveLength(objects.length);
+    expect(groups[0].keys).toEqual(['email:alice@dxos.org']);
+  });
+});
