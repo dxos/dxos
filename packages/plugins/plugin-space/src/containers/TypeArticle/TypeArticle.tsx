@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useState } from 'react';
 
@@ -16,7 +15,7 @@ import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
 import { CardAnnotation } from '@dxos/schema';
@@ -133,48 +132,45 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
   // One action graph for the whole toolbar: the mode-specific actions first, then the layout toggle.
   // Composing several `Toolbar.Root`s instead would each need their own roving-focus group and would
   // fight over the row's width.
-  const actionsAtom = useMemo(
+  const menuActions = useMenuBuilder(
     () =>
-      Atom.make(() =>
-        MenuBuilder.make()
-          .subgraph(layout === 'duplicates' && duplicatesGroup)
-          .subgraph(
-            layout === 'table' &&
-              selectedIds.length > 0 &&
-              ((builder) => {
-                builder
-                  .action(
-                    'delete-selected',
-                    {
-                      label: ['delete-selected.label', { ns: meta.profile.key, count: selectedIds.length }],
-                      icon: 'ph--trash--regular',
-                    },
-                    handleDeleteSelected,
-                  )
-                  .separator('gap');
-              }),
-          )
-          .group(
-            'layout',
-            {
-              variant: 'toggleGroup',
-              selectCardinality: 'single',
-              value: layout,
-              label: ['layout.label', { ns: meta.profile.key }],
-            },
-            (group) => {
-              layouts.forEach(({ value, icon }) => {
-                group.action(value, { label: [`layout-${value}.label`, { ns: meta.profile.key }], icon }, () =>
-                  setLayout(value),
-                );
-              });
-            },
-          )
-          .build(),
-      ),
+      MenuBuilder.make()
+        .subgraph(layout === 'duplicates' && duplicatesGroup)
+        .subgraph(
+          layout === 'table' &&
+            selectedIds.length > 0 &&
+            ((builder) => {
+              builder
+                .action(
+                  'delete-selected',
+                  {
+                    label: ['delete-selected.label', { ns: meta.profile.key, count: selectedIds.length }],
+                    icon: 'ph--trash--regular',
+                  },
+                  handleDeleteSelected,
+                )
+                .separator('gap');
+            }),
+        )
+        .group(
+          'layout',
+          {
+            variant: 'toggleGroup',
+            selectCardinality: 'single',
+            value: layout,
+            label: ['layout.label', { ns: meta.profile.key }],
+          },
+          (group) => {
+            layouts.forEach(({ value, icon }) => {
+              group.action(value, { label: [`layout-${value}.label`, { ns: meta.profile.key }], icon }, () =>
+                setLayout(value),
+              );
+            });
+          },
+        )
+        .build(),
     [layout, layouts, duplicatesGroup, selectedIds.length, handleDeleteSelected],
   );
-  const menuActions = useMenuActions(actionsAtom);
 
   // In duplicates mode the masonry shows only the group under review, so the user compares the
   // candidates side by side instead of hunting for them in the full list.
@@ -194,15 +190,12 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root role={role}>
-        <Panel.Toolbar classNames='flex items-center gap-2'>
-          {/* The review owns the whole row; the other layouts give the filter the left and constrain
-              the menu to its content. `alwaysActive` keeps the toolbar full-opacity — it needs no
-              attention gating. */}
+        <Panel.Toolbar classNames='flex'>
           {layout !== 'duplicates' && (
-            <SearchList.Input placeholder={t('search-placeholder.label')} classNames='grow' />
+            <SearchList.Input placeholder={t('search-placeholder.label')} classNames='border grow' />
           )}
           <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-            <Menu.Toolbar classNames={layout === 'duplicates' ? undefined : 'w-auto!'} />
+            <Menu.Toolbar />
           </Menu.Root>
         </Panel.Toolbar>
         <Panel.Content>
