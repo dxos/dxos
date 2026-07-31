@@ -175,6 +175,13 @@ test.describe.serial('Startup timing harness', () => {
       // Golden anchor: the primed document's editor must mount before collection so
       // `milestone:first-editor-interactive` (time to first meaningful action) lands in the report.
       await page.locator('.cm-content').first().waitFor({ timeout: 30_000 });
+      // The mark commits in a React effect after the editor's DOM appears; tolerate its absence
+      // (logged as a missing waterfall entry) rather than failing the benchmark.
+      await page
+        .waitForFunction(() => performance.getEntriesByName('milestone:first-editor-interactive').length > 0, {
+          timeout: 10_000,
+        })
+        .catch(() => {});
 
       const report = await collectStartupReport(page, 'warm-cold');
       report.navigationToReady = navigationToReady;
