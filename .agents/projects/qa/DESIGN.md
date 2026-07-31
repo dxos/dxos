@@ -57,6 +57,100 @@ plugin-inbox composing the email transforms. The split only holds if the policy 
 behind that seam — otherwise `react-ui-html` becomes an email renderer with a general
 name.
 
+**Superseded 2026-07-31.** `react-ui-html` was dropped; both files now live in
+`react-ui-components/src/components/HtmlViewer/`. See §4.
+
+## 4. Core + dialects, not base + variant
+
+`Html` and `HtmlViewer` are not a base class and a subclass — the relationship is a fixed
+core plus one _dialect_ of content. `Html` owns the sandbox (shadow root, sanitize, remote
+image blocking, rebuild-on-theme) and has exactly two seams (`transforms`, `resolveSrc`)
+plus `css`/`forbidTags`. Everything in `HtmlViewer` is email-flavoured configuration of
+those seams: a CSS string, an ordered transform list, a `cid:` resolver, and a theming
+predicate. Nothing is overridden, extended, or specialized — which is what a base class
+would be for.
+
+So the shape to converge on is one component plus dialect packs:
+
+```ts
+type HtmlDialect = {
+  css?: string;
+  transforms?: readonly HtmlTransform[];
+  resolveSrc?: HtmlSrcResolver;
+  forbidTags?: readonly string[];
+};
+```
+
+A dialect carries React state (the quoted-reply expand ref, memoized resolvers), so it is
+produced by a hook — `useEmailDialect({ isPersonal, attachments, db })` — not a constant.
+`HtmlViewer` then dissolves: plugin-inbox renders `<Html html dialect={useEmailDialect(…)} />`.
+This also removes the ECHO coupling from the shared package, since the `cid:` resolver is
+built where the database already is.
+
+Do NOT model this as class inheritance or as `variant='email'` — a variant enum puts every
+future dialect's knowledge back inside the shared component, which is the coupling the
+split exists to prevent.
+
+## 5. Emails that declare their own color scheme
+
+The two captured fixtures show the taxonomy is three-way, not two-way:
+
+| Declaration                                                        | Example | Correct treatment                                                                                             |
+| ------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------- |
+| `color-scheme: light dark` + `@media (prefers-color-scheme: dark)` | —       | Adopt the sender's own dark design: hoist the dark block's rules when the app is dark, delete them when light |
+| `color-scheme: light` only                                         | `m2`    | The sender is stating it has no dark rendering. Do not recolor — render on an explicit light paper sheet      |
+| Nothing                                                            | `m1`    | Our heuristic (the current `isPersonal`/table path)                                                           |
+
+The middle row is the finding: `content="light"` is an explicit instruction _not to try_, and
+today it is ignored twice over — `<meta>` is in `FORBID_TAGS`, so the declaration is destroyed
+before anything can read it. Detection has to run on the raw string, before sanitization.
+
+Note the sender's `@media (prefers-color-scheme: dark)` rules resolve against the OS, not the
+app theme, and `prefers-color-scheme` cannot be overridden from the page (`color-scheme` on
+`:host` affects UA widget rendering, not the media query). Rewriting the CSSOM is the only
+way to make the app theme win — which is available to us precisely because we own the shadow
+root's stylesheet.
+
+## 6. Other HTML sources
+
+- **RSS — already shipping, unsandboxed.** `Card.Html` (`react-ui/src/components/Card/Card.tsx:455`)
+  is a second sanitize-and-render path, documented as being for RSS feed content. It uses
+  bare `dangerouslySetInnerHTML`: no shadow isolation (feed CSS reaches the app), no remote
+  image blocking (feed trackers fire), no theming. The strongest candidate to migrate onto
+  `Html`, and the one with an actual privacy consequence today.
+- **Calendar events — the decision was already made at ingest.** Google Calendar returns HTML
+  descriptions, but `operations/calendar/google/mapper.ts:65` runs `normalizeText()` on the way
+  in, so ECHO stores markdown/text and `Event.tsx` renders `MarkdownViewer`. That is a
+  legitimate choice (fidelity traded for uniformity) but it is invisible and unrecorded — worth
+  a deliberate ruling rather than leaving it as an accident of the mapper.
+- **Agent/LLM-produced HTML and web clips** — future dialects; the same sandbox, different packs.
+
+## 7. Prior art for HTML → dark mode
+
+**Dark Reader's Dynamic Theme mode** is the reference implementation. Transferable principles:
+
+- Modify colors rather than invert: analyze the site's colors and reduce lightness where
+  needed, so hue relationships survive.
+- Leave photographs alone. Invert _only_ dark icons/diagrams/charts that would vanish on a
+  dark background — Dark Reader drives this from a per-site fix config listing selectors,
+  i.e. they concluded it cannot be inferred reliably.
+- Analyze background images to decide whether they need treatment.
+- Their earlier filter mode (CSS `invert` + `hue-rotate`) was abandoned because it blurred
+  text, washed out colors, and broke sub-pixel rendering — which is the direct evidence for
+  the "never `filter: invert()`" rule already recorded in §1.
+
+Adoption caveat: the `darkreader` npm package is document-scoped (it manages the document's
+stylesheets and mutations, and `exportGeneratedCSS()` emits CSS for the whole page). It has no
+API for "theme this shadow root only", so borrow the algorithm rather than the library. Verify
+its license before vendoring any code.
+
+For the email-specific half, the practitioner literature (Litmus, Email on Acid, Parcel) is the
+better source: it documents that clients split into three camps — full inversion, partial
+inversion (backgrounds only), and honouring `prefers-color-scheme` (Apple Mail, Outlook 2019+,
+Samsung, Thunderbird) — and that Gmail applies its own logic and largely ignores the meta tags.
+Our position is unusual and better: we control the shadow root, so we can adopt the sender's
+dark design instead of guessing at it.
+
 ## 3. Mailbox "Sync" routine with no visible Operation
 
 **Not a failed creation.** `createSyncRoutine`
