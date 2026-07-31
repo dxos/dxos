@@ -96,7 +96,12 @@ definitions stay runtime-neutral; CLI/workerd unaffected), and handler loading b
       critical-path time, not wire bytes (the byte win needs wave 2/3). e2e basic suite
       green (reset-device fails on container-blocked signaling, pre-existing); the
       demand-load path is unit-tested (gated module loads on first Surface render;
-      availability miss self-heals).** Known shape
+      availability miss self-heals).** Surfaced and fixed a latent scheduler race
+      (492a7f4675): an event wave resolved without awaiting matched modules already loading
+      in a concurrent wave, so a demand pull racing another pull of the same module failed
+      its one-shot lookup retry with NoHandlerError (create-space dialog never opened —
+      caught by the basic e2e suite, 2-of-3 failing; 3-of-3 green after the fix, regression
+      test fails on the unfixed scheduler). Known shape
       limits, deliberate for this round: (a) a module binding any boot-visible role
       (statusIndicator etc.) loads at boot — per-role module SPLITS are the follow-up
       refinement; (b) opening any article pulls all article-binding surface modules — the
