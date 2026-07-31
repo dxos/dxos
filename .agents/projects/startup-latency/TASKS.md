@@ -237,6 +237,13 @@ timed-out module after auto-disable cleared the memo — the wave now joins via
 Measurement strategy (load-perf brief, adapted: authenticated local-first SPA — CWV thresholds
 are defaults, not goals; TTI-style metrics retired):
 
+**Golden scenario = warm-cold** (user directive 2026-07-31): persisted identity, fresh browser
+process — the real returning-user load. In practice users either hit the login gate or already
+have an identity, so identity creation is not part of the load being optimized; the cold
+scenario (fresh identity) stays as a secondary diagnostic for testing flows. All headline
+numbers, lever comparisons, and CI thresholds key on warm-cold; its
+`milestone:first-editor-interactive` is the time-to-first-meaningful-action anchor.
+
 - [ ] Boot waterfall: stitch navigationStart → ready from existing marks + new milestones
       (identity created, default space ready, ECHO available, first plank interactive); emit
       from `collectStartupReport` as one timeline — decomposes the un-itemized ~5 s outside
