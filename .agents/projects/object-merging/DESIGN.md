@@ -1,7 +1,7 @@
 # ECHO-level object merging — feasibility research
 
-- **Status**: research / pre-spike (no implementation)
-- **Date**: 2026-07-30
+- **Status**: implemented through Phase 2 + worker automation (§4.8); backlog in TASKS.md
+- **Date**: 2026-07-30, revised 2026-07-31
 - **Requested by**: Josiah
 - **Goal**: allow application state to be initialized into a space independently by
   multiple peers, without coordination, such that objects carrying the same identity
