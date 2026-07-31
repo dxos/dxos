@@ -8,7 +8,14 @@ import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import {
+  ATTR_DELETED,
+  ATTR_META,
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+} from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
@@ -72,6 +79,8 @@ export const EntityMeta = Schema.Struct({
   target: Schema.NullOr(EID.Schema),
   /** Parent object id (nullable). */
   parent: Schema.NullOr(EID.Schema),
+  /** Caller-supplied domain identity from `meta.naturalKey` (nullable); duplicates sharing one merge. */
+  naturalKey: Schema.NullOr(Schema.String),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
   /** Unix ms timestamp when the object was first indexed. */
@@ -129,6 +138,7 @@ export class EntityMetaIndex implements Index {
       source TEXT,
       target TEXT,
       parent TEXT,
+      naturalKey TEXT,
       version INTEGER NOT NULL,
       createdAt INTEGER,
       updatedAt INTEGER
@@ -136,6 +146,8 @@ export class EntityMetaIndex implements Index {
 
     // Add `parent` column for tables created before it was introduced.
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
+    // Add `naturalKey` column for tables created before it was introduced.
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN naturalKey TEXT`, () => Effect.void);
     // Add timestamp columns for tables created before they were introduced.
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER`, () => Effect.void);
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER`, () => Effect.void);
@@ -149,9 +161,33 @@ export class EntityMetaIndex implements Index {
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDXN ON objectMeta(spaceId, typeDXN)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_naturalKey ON objectMeta(spaceId, naturalKey)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_createdAt ON objectMeta(createdAt)`;
   });
+
+  /**
+   * Live (non-deleted, non-queue) rows carrying any of the given natural keys in one space.
+   *
+   * The detection point-lookup for natural-key merging: called with only the keys seen in a just
+   * indexed batch, so its cost is proportional to writes that carry a natural key — a key that
+   * comes back with more than one row is a duplicate group.
+   */
+  queryByNaturalKeys = Effect.fn('EntityMetaIndex.queryByNaturalKeys')(
+    (
+      spaceId: SpaceId,
+      naturalKeys: readonly string[],
+    ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (naturalKeys.length === 0) {
+          return [];
+        }
+        const sql = yield* SqlClient.SqlClient;
+        const rows =
+          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${sql.in('naturalKey', naturalKeys)} AND deleted = 0 AND queueId = ''`;
+        return rows.map((row) => ({ ...row, deleted: !!row.deleted }));
+      }),
+  );
 
   query = Effect.fn('EntityMetaIndex.query')(
     (
@@ -313,14 +349,15 @@ export class EntityMetaIndex implements Index {
                 source: string | null;
                 target: string | null;
                 parent: string | null;
+                naturalKey: string | null;
               };
               let existing: readonly ExistingRow[];
               if (documentId) {
                 existing =
-                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, naturalKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
               } else if (queueId) {
                 existing =
-                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, naturalKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
               } else {
                 // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
                 existing = [];
@@ -369,6 +406,10 @@ export class EntityMetaIndex implements Index {
                   : null;
               // Parent (nullable).
               const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
+              // Natural key (nullable) — from the meta section of the serialized object.
+              const naturalKey = preserveBody
+                ? priorRow.naturalKey
+                : ((castData[ATTR_META] as { naturalKey?: string } | undefined)?.naturalKey ?? null);
 
               const updatedAtTimestamp = object.updatedAt;
               // Prefer the creation timestamp stored in the document (survives compaction/migrations).
@@ -390,6 +431,7 @@ export class EntityMetaIndex implements Index {
                     source = ${source},
                     target = ${target},
                     parent = ${parent},
+                    naturalKey = ${naturalKey},
                     updatedAt = ${updatedAtTimestamp}
                   WHERE recordId = ${existing[0].recordId}
                 `;
@@ -397,12 +439,12 @@ export class EntityMetaIndex implements Index {
                 yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
-                    entityKind, typeDXN, deleted, source, target, parent, version,
+                    entityKind, typeDXN, deleted, source, target, parent, naturalKey, version,
                     createdAt, updatedAt
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
-                    ${source}, ${target}, ${parent}, ${version},
+                    ${source}, ${target}, ${parent}, ${naturalKey}, ${version},
                     ${createdAtTimestamp}, ${updatedAtTimestamp}
                   )
                 `;

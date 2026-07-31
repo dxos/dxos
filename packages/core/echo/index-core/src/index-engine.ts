@@ -7,7 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
-import { ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import type { EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -36,6 +36,11 @@ export type IndexingResult = {
   documents: ReadonlySet<string>;
   types: ReadonlySet<string>;
   objects: ReadonlySet<EntityId>;
+  /**
+   * Natural keys seen on document-backed objects in this batch, per space — the trigger set for
+   * natural-key duplicate merging. Almost always empty.
+   */
+  naturalKeys: ReadonlyMap<SpaceId, ReadonlySet<string>>;
 };
 
 type MutableIndexingResult = {
@@ -46,6 +51,7 @@ type MutableIndexingResult = {
   documents: Set<string>;
   types: Set<string>;
   objects: Set<EntityId>;
+  naturalKeys: Map<SpaceId, Set<string>>;
 };
 
 const makeEmptyIndexingResult = (): MutableIndexingResult => ({
@@ -56,6 +62,7 @@ const makeEmptyIndexingResult = (): MutableIndexingResult => ({
   documents: new Set(),
   types: new Set(),
   objects: new Set(),
+  naturalKeys: new Map(),
 });
 
 const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly IndexerObject[]) => {
@@ -73,6 +80,15 @@ const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly 
     }
     if (obj.data.id) {
       acc.objects.add(obj.data.id as EntityId);
+    }
+    // Queue (feed) entities are out of merge scope — they have no automerge document to merge.
+    if (obj.documentId) {
+      const naturalKey = (obj.data[ATTR_META] as { naturalKey?: string } | undefined)?.naturalKey;
+      if (typeof naturalKey === 'string') {
+        const keys = acc.naturalKeys.get(obj.spaceId) ?? new Set();
+        keys.add(naturalKey);
+        acc.naturalKeys.set(obj.spaceId, keys);
+      }
     }
   }
 };
@@ -161,6 +177,17 @@ export class IndexEngine {
    */
   querySnapshotsJSON(recordIds: number[]) {
     return this.#ftsIndex.querySnapshotsJSON(recordIds);
+  }
+
+  /**
+   * Live rows carrying any of the given natural keys in one space — the detection point-lookup
+   * for natural-key merging.
+   */
+  queryByNaturalKeys(
+    spaceId: SpaceId,
+    naturalKeys: readonly string[],
+  ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryByNaturalKeys(spaceId, naturalKeys);
   }
 
   queryType(

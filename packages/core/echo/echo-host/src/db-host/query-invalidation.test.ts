@@ -67,6 +67,7 @@ describe('hintFromIndexingResult', () => {
       documents: new Set(),
       types: new Set(),
       objects: new Set(),
+      naturalKeys: new Map(),
     });
     expect(result).toBeUndefined();
   });
@@ -82,6 +83,7 @@ describe('hintFromIndexingResult', () => {
       documents: new Set(['doc-1']),
       types: new Set([PERSON_DXN]),
       objects: new Set([objectId]),
+      naturalKeys: new Map(),
     });
     expect(result).toBeDefined();
     expect(result!.spaceIds?.has(spaceId)).toBe(true);
@@ -104,6 +106,7 @@ describe('hintFromIndexingResult', () => {
       documents: new Set(),
       types: new Set([PERSON_DXN, ORG_DXN]),
       objects: new Set(),
+      naturalKeys: new Map(),
     });
     expect(result!.typenames).toEqual(new Set([PERSON_TYPENAME, ORG_TYPENAME]));
   });

@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { getDeep, isNonNullable } from '@dxos/util';
 
-import { isMergedAway, mergeDuplicates } from '../merge';
+import { isMergedAway } from '../merge';
 import { type QueryContext, type SourceEntry } from './query-context';
 
 /**
@@ -254,51 +254,23 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   }
 
   /**
-   * Collapse entities that declare the same natural key, so a caller never observes two where
-   * there should be one — the failure this exists to prevent is code that reads `results.length`
-   * or asserts a singleton and breaks on a duplicate it did not create.
+   * Drop entities that were merged away, so a caller never observes a duplicate alongside its
+   * survivor — the failure this prevents is code that reads `results.length` or asserts a
+   * singleton and breaks on a duplicate it did not create.
    *
-   * Runs here rather than in the query plan because the plan executes host-side over raw document
-   * structures, while merging needs live entities. By this point the working set is materialized,
-   * so the whole pass is over entities already in hand: no extra load, no index lookup, and no
-   * cost at all for results that declare no natural key.
-   *
-   * The merge writes, which invalidates the query and recomputes this. That terminates rather than
-   * loops because the merge is idempotent — the second pass sees one live entity per key and
-   * writes nothing.
+   * Read-only by design: the merge itself runs in the worker off the indexing stream (see
+   * `echo-host`'s natural-key merge), and its tombstones leave query results through ordinary
+   * deleted-filtering once re-indexed. This filter only covers the gap in between — an entity
+   * whose redirect has replicated but whose tombstone the index has not caught up with yet.
    */
   private _collapseDuplicates(entries: SourceEntry<T>[]): SourceEntry<T>[] {
     // A query that explicitly asks for tombstones is asking to see what was merged away, so
-    // collapsing would defeat it — this is how a diagnostic inspects the losers.
+    // filtering would defeat it — this is how a diagnostic inspects the losers.
     if (_queryIncludesDeleted(this._query.ast)) {
       return entries;
     }
 
-    // Objects only: relations and persisted types are not merge subjects yet, and reading meta off
-    // a non-object throws — which would take out unrelated queries, including the schema preload
-    // that runs on database open.
-    const objects: Obj.Unknown[] = [];
-    for (const { result } of entries) {
-      if (Obj.isObject(result)) {
-        objects.push(result);
-      }
-    }
-    if (objects.length < 2) {
-      return entries;
-    }
-
-    const { merged } = mergeDuplicates(objects);
-
-    // Drop every entity that redirects, not only the ones this pass merged: the tombstone reaches
-    // the index a moment after the redirect is written, so an earlier merge's loser can still be
-    // in these results.
-    const mergedAway = new Set(objects.filter(isMergedAway).map(({ id }) => id));
-    if (mergedAway.size === 0) {
-      return entries;
-    }
-
-    log('collapsed duplicates during query', { groups: merged.length, dropped: mergedAway.size });
-    return entries.filter(({ result }) => !(Obj.isObject(result) && mergedAway.has(result.id)));
+    return entries.filter(({ result }) => !(Obj.isObject(result) && isMergedAway(result)));
   }
 
   private _uniqueObjects(entries: SourceEntry<T>[]): T[] {
