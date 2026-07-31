@@ -38,6 +38,34 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/person-deduplication-plugin-inb
 - [x] 3a.2 Card tab: clicking a card selects/deselects it; Open moved to the card menu.
 - [x] 3a.3 Masonry scrollbar padding — done by the user directly.
 
+### Review round (CodeRabbit, 2026-07-31) — all fixed
+
+Four were real bugs in the merge engine, and writing a test for one found a fifth:
+
+- a confirmed draft was folded through `spec.merge` (gap-fill), so an edit to a field the survivor
+  already had was discarded — the opposite of DESIGN §4. Assigned via `Obj.updateFrom` now.
+- `unionLabelled` dropped entries it could not normalize; the merge then deletes the losers, so the
+  data was destroyed.
+- writing that test surfaced worse: merging a compound value (an address) threw, because ECHO
+  refuses to re-parent a nested record. Values are copied first.
+- a rejected `buildIdentityIndex` stayed cached for the database's lifetime, permanently disabling
+  identity resolution after one transient failure.
+- `normalizePhone` kept a `+` anywhere; addresses keyed by insertion-ordered `JSON.stringify`.
+
+Second round (UI/robustness):
+
+- the masonry height cache was keyed on raw tile id, and ids default to the array index — one grid
+  could serve another's height and reveal an unmeasured tile. Scoped by a required `cacheKey`
+  (`TypeArticle` passes the type URI); a grid without one keeps heights per-instance.
+- Skip on the last group produced an out-of-range counter ("3 / 2"); `next` clamps and Skip is
+  disabled at the end.
+- Confirm could be double-clicked into a second merge over already-removed ids, and a failure was an
+  unhandled rejection. In-flight guard + the preview stays up on failure.
+- `FindDuplicates` responses could land out of order (rescan is a button); newest request wins, and
+  Rescan is disabled while scanning.
+- `MergeDuplicates` accepted any resolvable id set; it now requires every distinct id to resolve and
+  every object to match the spec's type.
+
 ### Defects found by the live walkthrough (fixed)
 
 - `Toolbar.Button` rendered outside a `Toolbar.Root` — `Panel.Toolbar` on this article is a plain

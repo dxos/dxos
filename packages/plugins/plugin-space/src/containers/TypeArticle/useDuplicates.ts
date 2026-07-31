@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Type } from '@dxos/echo';
@@ -53,6 +53,9 @@ export const useDuplicates = ({ space, type, objects, enabled }: UseDuplicatesPr
   const [groups, setGroups] = useState<readonly SpaceOperation.DuplicateGroupResult[]>([]);
   const [index, setIndex] = useState(0);
   const [scanning, setScanning] = useState(false);
+  // Rescan is a button a user can hit repeatedly, and a merge triggers its own refresh, so responses
+  // can land out of order; only the newest request is allowed to write.
+  const request = useRef(0);
   const { lastMergeAt } = useAtomCapability(SpaceCapabilities.EphemeralState);
 
   const refresh = useCallback(() => {
@@ -60,12 +63,20 @@ export const useDuplicates = ({ space, type, objects, enabled }: UseDuplicatesPr
       return;
     }
     setScanning(true);
+    const current = ++request.current;
     void invokePromise(SpaceOperation.FindDuplicates, { typename }, { spaceId: space.id })
       .then(({ data }) => {
+        if (current !== request.current) {
+          return;
+        }
         setGroups(data?.groups ?? []);
         setIndex(0);
       })
-      .finally(() => setScanning(false));
+      .finally(() => {
+        if (current === request.current) {
+          setScanning(false);
+        }
+      });
   }, [invokePromise, spec, typename, space.id]);
 
   // `lastMergeAt` is a dependency, not a read: a committed merge invalidates the scan.
@@ -87,7 +98,9 @@ export const useDuplicates = ({ space, type, objects, enabled }: UseDuplicatesPr
     position: groups.length === 0 ? 0 : index + 1,
     total: groups.length,
     scanning,
-    next: useCallback(() => setIndex((value) => Math.min(value + 1, groups.length)), [groups.length]),
+    // Clamp at the last valid index, not at `groups.length`: `position` is `index + 1`, so one past
+    // the end rendered an impossible counter ("4 / 3") when Skip was pressed on the last group.
+    next: useCallback(() => setIndex((value) => Math.min(value + 1, Math.max(groups.length - 1, 0))), [groups.length]),
     previous: useCallback(() => setIndex((value) => Math.max(value - 1, 0)), []),
     refresh,
   };

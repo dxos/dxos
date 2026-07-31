@@ -234,7 +234,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
             <LayoutPanel value='masonry' empty={noResults}>
               <Masonry.Root Tile={TileAdapter}>
                 <Masonry.Content>
-                  <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+                  <Masonry.Viewport cacheKey={typeUri} getId={(data) => Obj.getURI(data.object)} items={tileItems} />
                 </Masonry.Content>
               </Masonry.Root>
             </LayoutPanel>
@@ -255,7 +255,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
               <LayoutPanel value='duplicates' empty={noDuplicates}>
                 <Masonry.Root Tile={TileAdapter}>
                   <Masonry.Content>
-                    <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+                    <Masonry.Viewport cacheKey={typeUri} getId={(data) => Obj.getURI(data.object)} items={tileItems} />
                   </Masonry.Content>
                 </Masonry.Root>
               </LayoutPanel>

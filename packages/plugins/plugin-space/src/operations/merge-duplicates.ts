@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Query } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { applyMerge, planMerge } from '@dxos/extractor';
 import { invariant } from '@dxos/invariant';
 
@@ -20,7 +20,15 @@ const handler: Operation.WithHandler<typeof SpaceOperation.MergeDuplicates> = Sp
       // Re-resolve live proxies by id: the caller's objects crossed the operation boundary as
       // snapshots, and a merge must mutate the reactive object the space actually holds.
       const objects = yield* Database.query(Query.select(Filter.id(...objectIds))).run;
-      invariant(objects.length > 1, 'A merge needs at least two members.');
+      // The input arrives from a client that may be acting on a stale scan. Refuse a partial or
+      // mistyped set rather than merging whatever happened to resolve.
+      const requested = new Set(objectIds);
+      invariant(requested.size > 1, 'A merge needs at least two distinct members.');
+      invariant(objects.length === requested.size, 'Every member of a merge must still exist.');
+      invariant(
+        objects.every((object) => Obj.instanceOf(spec.type, object)),
+        `Every member of a merge must be a ${typename}.`,
+      );
 
       const plan = planMerge(spec, { keys: [], objects });
       const survivor = yield* applyMerge(db, spec, plan, overrides);

@@ -34,7 +34,7 @@ export const useDuplicatesGroup = ({
   duplicates,
 }: UseDuplicatesGroupOptions): ActionGroupBuilderFn => {
   const [, updateEphemeral] = useAtomCapabilityState(SpaceCapabilities.EphemeralState);
-  const { spec, current, position, total, next, previous, refresh } = duplicates;
+  const { spec, current, position, total, scanning, next, previous, refresh } = duplicates;
 
   // Every control that changes which group is under review drops the staged preview: it belongs to
   // the group it was raised from, and leaving it up would show the companion previewing one group
@@ -90,7 +90,8 @@ export const useDuplicatesGroup = ({
           {
             label: ['skip-duplicates.label', { ns: meta.profile.key }],
             iconOnly: false,
-            disabled: total === 0,
+            // Same bound as the next arrow: skipping past the last group left the counter out of range.
+            disabled: position >= total,
           },
           handleAdvance,
         )
@@ -99,6 +100,8 @@ export const useDuplicatesGroup = ({
           {
             label: ['rescan-duplicates.label', { ns: meta.profile.key }],
             icon: 'ph--arrows-clockwise--regular',
+            disabled: scanning,
+            spin: scanning,
           },
           handleRefresh,
         )
@@ -142,6 +145,6 @@ export const useDuplicatesGroup = ({
         )
         .separator();
     },
-    [current.length, position, total, handleMerge, handleAdvance, handlePrevious, handleRefresh],
+    [current.length, position, total, scanning, handleMerge, handleAdvance, handlePrevious, handleRefresh],
   );
 };

@@ -158,6 +158,12 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
   getId?: (data: Item) => string;
   /**
+   * Scope for remembering tile heights across mounts, e.g. the collection's URI. With one, a
+   * remount renders on the first frame instead of waiting for the layout to settle. Omit it when
+   * `getId` is omitted: the default index ids are not unique across grids.
+   */
+  cacheKey?: string;
+  /**
    * Ids of the currently-selected tiles. When `onSelect` is also provided the grid becomes
    * selectable: selected tiles render an outline + `aria-selected`, and clicking a tile emits
    * {@link onSelect}. Selection STATE (single/multi semantics) is owned by the consumer — pair this
@@ -178,7 +184,7 @@ type MasonryViewportProps<Item> = ThemedClassName<{
 }>;
 
 const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
-  ({ items, getId, selectedIds, onSelect, scroll = true, ...props }, forwardedRef) => {
+  ({ items, getId, cacheKey, selectedIds, onSelect, scroll = true, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, centered } =
       useMasonryContext('Masonry.Viewport');
     const remInPx = usePx(1);
@@ -207,6 +213,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       gapPx,
       maxColumnWidthPx: maxColumnWidth * remInPx,
       centered,
+      cacheKey,
     });
     useFlip({ nodes, ids, rects, columnCount, containerWidth: contentWidth, enabled: animate });
 
