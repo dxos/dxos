@@ -40,6 +40,7 @@ export type ExportArgs = {
   format: Format;
 };
 
+/** Exports a space in the given archive format and writes it to disk. */
 export const handler = Effect.fn(function* ({ spaceId, output, format }: ExportArgs) {
   const { json } = yield* CommandConfig;
   const fs = yield* FileSystem.FileSystem;

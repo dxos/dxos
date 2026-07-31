@@ -19,30 +19,6 @@ import { handler as importSpace } from './import';
 
 const ImportTestLayer = Layer.mergeAll(TestLayer, NodeContext.layer);
 
-const lastOutput = Effect.fn(function* () {
-  const logger = yield* TestConsole.TestConsole;
-  return TestConsole.parseJson<{ spaceId: string; name?: string; tags: string[]; path: string }>(
-    logger.logs[logger.logs.length - 1],
-  );
-});
-
-/** Exports a named space and returns the archive path, so import has a real archive to read. */
-const exportFixture = Effect.fn(function* (format: Format) {
-  const fs = yield* FileSystem.FileSystem;
-  const client = yield* ClientService;
-  yield* Effect.tryPromise(() => client.halo.createIdentity());
-  const space = yield* Effect.tryPromise(() => client.spaces.create());
-  yield* Effect.tryPromise(() => space.waitUntilReady());
-  Obj.update(space.properties, (obj) => {
-    obj.name = 'original';
-  });
-  yield* Effect.tryPromise(() => space.db.flush());
-
-  const outputDir = yield* fs.makeTempDirectoryScoped();
-  yield* exportSpace({ spaceId: Option.some(space.id), output: Option.some(outputDir), format });
-  return { space, path: (yield* lastOutput()).path };
-});
-
 describe('space import', () => {
   it('should import a json archive as a new space', () =>
     Effect.gen(function* () {
@@ -77,4 +53,28 @@ describe('space import', () => {
 
       expect((yield* lastOutput()).tags).toContain('imported');
     }).pipe(Effect.provide(ImportTestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
+});
+
+const lastOutput = Effect.fn(function* () {
+  const logger = yield* TestConsole.TestConsole;
+  return TestConsole.parseJson<{ spaceId: string; name?: string; tags: string[]; path: string }>(
+    logger.logs[logger.logs.length - 1],
+  );
+});
+
+/** Exports a named space and returns the archive path, so import has a real archive to read. */
+const exportFixture = Effect.fn(function* (format: Format) {
+  const fs = yield* FileSystem.FileSystem;
+  const client = yield* ClientService;
+  yield* Effect.tryPromise(() => client.halo.createIdentity());
+  const space = yield* Effect.tryPromise(() => client.spaces.create());
+  yield* Effect.tryPromise(() => space.waitUntilReady());
+  Obj.update(space.properties, (obj) => {
+    obj.name = 'original';
+  });
+  yield* Effect.tryPromise(() => space.db.flush());
+
+  const outputDir = yield* fs.makeTempDirectoryScoped();
+  yield* exportSpace({ spaceId: Option.some(space.id), output: Option.some(outputDir), format });
+  return { space, path: (yield* lastOutput()).path };
 });

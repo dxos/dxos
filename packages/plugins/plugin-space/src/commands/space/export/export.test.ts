@@ -19,19 +19,6 @@ const ExportTestLayer = Layer.mergeAll(TestLayer, NodeContext.layer);
 
 type ExportOutput = { spaceId: string; format: string; path: string; size: number };
 
-const createSpace = Effect.fn(function* () {
-  const client = yield* ClientService;
-  yield* Effect.tryPromise(() => client.halo.createIdentity());
-  const space = yield* Effect.tryPromise(() => client.spaces.create());
-  yield* Effect.tryPromise(() => space.waitUntilReady());
-  return space;
-});
-
-const lastOutput = Effect.fn(function* () {
-  const logger = yield* TestConsole.TestConsole;
-  return TestConsole.parseJson<ExportOutput>(logger.logs[logger.logs.length - 1]);
-});
-
 describe('space export', () => {
   it('should write a json export into an output directory', () =>
     Effect.gen(function* () {
@@ -65,4 +52,17 @@ describe('space export', () => {
       expect(path).toEqual(outputPath);
       expect((yield* fs.stat(outputPath)).type).toEqual('File');
     }).pipe(Effect.provide(ExportTestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
+});
+
+const createSpace = Effect.fn(function* () {
+  const client = yield* ClientService;
+  yield* Effect.tryPromise(() => client.halo.createIdentity());
+  const space = yield* Effect.tryPromise(() => client.spaces.create());
+  yield* Effect.tryPromise(() => space.waitUntilReady());
+  return space;
+});
+
+const lastOutput = Effect.fn(function* () {
+  const logger = yield* TestConsole.TestConsole;
+  return TestConsole.parseJson<ExportOutput>(logger.logs[logger.logs.length - 1]);
 });

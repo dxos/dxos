@@ -19,6 +19,7 @@ export type ImportArgs = {
   tags: ReadonlyArray<string>;
 };
 
+/** Reads an archive of either format from disk and creates a new space from it. */
 export const handler = Effect.fn(function* ({ file, tags }: ImportArgs) {
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
