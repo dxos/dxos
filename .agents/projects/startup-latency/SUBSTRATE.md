@@ -82,7 +82,7 @@ Verified against source on this branch (post capability-activation refactor).
   (`AppCapability.ts:129-133`, `schema-defs.ts:18-25`). Schema-stays-eager is what makes this
   substrate free.
 - Parameterized activation events already exist and are unexercised: `ActivationEvent.specifier`
-  + `compositeKey` (`activation-event.ts:14,33-44`).
+  - `compositeKey` (`activation-event.ts:14,33-44`).
 - **Minimal substrate:** (1) `SpaceEvents.TypePresent` specifier-keyed by typename;
   content-type modules declare `activatesOn: TypePresent(typename)`; (2) a type-presence watcher
   in plugin-space on SpacesReady: per SPACE_READY space, one reactive

@@ -72,6 +72,7 @@ test.describe.serial('Dev server startup harness', () => {
     const counts = network();
     report.transferredBytes = counts.bytes;
     report.responseCount = counts.responses;
+    report.fetchedUrls = counts.urls;
 
     writeReport(`startup-dev-cold-${browserName}.json`, report);
     appendBenchmarkRow(report);

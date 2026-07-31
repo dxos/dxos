@@ -6,7 +6,7 @@ import { type Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as FiberRef from 'effect/FiberRef';
-import { globalValue } from 'effect/GlobalValue';
+import * as GlobalValue from 'effect/GlobalValue';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
@@ -36,7 +36,7 @@ export class Service extends Context.Tag('@dxos/app-framework/CapabilityManager'
  * `activate` so instrumentation inside module bodies (e.g. {@link lazyModule}'s chunk-import
  * timing) can attribute itself to the module without threading the id through every body.
  */
-export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = globalValue(
+export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValue.globalValue(
   Symbol.for('@dxos/app-framework/Capability/CurrentModuleId'),
   () => FiberRef.unsafeMake<string | undefined>(undefined),
 );

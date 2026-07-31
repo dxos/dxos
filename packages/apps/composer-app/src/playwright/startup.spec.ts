@@ -46,6 +46,7 @@ test.describe.serial('Startup timing harness', () => {
     const counts = network();
     report.transferredBytes = counts.bytes;
     report.responseCount = counts.responses;
+    report.fetchedUrls = counts.urls;
 
     writeReport(`startup-cold-${browserName}.json`, report);
     appendBenchmarkRow(report);
@@ -88,6 +89,7 @@ test.describe.serial('Startup timing harness', () => {
     const counts = network();
     report.transferredBytes = counts.bytes;
     report.responseCount = counts.responses;
+    report.fetchedUrls = counts.urls;
 
     writeReport(`startup-warm-${browserName}.json`, report);
     appendBenchmarkRow(report);
@@ -137,6 +139,7 @@ test.describe.serial('Startup timing harness', () => {
       const counts = network();
       report.transferredBytes = counts.bytes;
       report.responseCount = counts.responses;
+      report.fetchedUrls = counts.urls;
 
       writeReport(`startup-warm-cold-${browserName}.json`, report);
       appendBenchmarkRow(report);
@@ -207,6 +210,7 @@ test.describe.serial('Startup timing harness', () => {
     const counts = network();
     report.transferredBytes = counts.bytes;
     report.responseCount = counts.responses;
+    report.fetchedUrls = counts.urls;
 
     writeReport(`startup-throttled-cold-${browserName}.json`, report);
     appendBenchmarkRow(report);

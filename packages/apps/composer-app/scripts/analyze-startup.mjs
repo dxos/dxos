@@ -100,10 +100,15 @@ if (existsSync(chunkStatsPath)) {
   chunkStats = JSON.parse(readFileSync(chunkStatsPath, 'utf8'));
 }
 const chunkByFile = new Map((chunkStats?.chunks ?? []).map((chunk) => [chunk.fileName, chunk]));
-// Resources fetched during startup (before the report was collected), any report.
+// Resources fetched during startup (before the report was collected), any report. Prefer the
+// node-side `fetchedUrls` accounting (complete) over `resources` (capped at the browser's
+// resource-timing buffer size).
 const fetched = new Map();
 for (const report of reports) {
-  for (const resource of report.resources ?? []) {
+  const entries = report.fetchedUrls?.length
+    ? report.fetchedUrls.map((entry) => ({ name: entry.url, bytes: entry.bytes }))
+    : (report.resources ?? []);
+  for (const resource of entries) {
     const fileName = resource.name.replace(/^[a-z]+:\/\/[^/]+\//, '').split('?')[0];
     if (!fetched.has(fileName)) {
       fetched.set(fileName, resource);

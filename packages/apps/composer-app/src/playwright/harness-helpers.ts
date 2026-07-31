@@ -93,6 +93,8 @@ export type StartupReport = {
   transferredBytes: number;
   /** Number of network responses received. */
   responseCount: number;
+  /** Complete per-URL byte accounting from `trackNetwork` (immune to the resource-timing buffer cap). */
+  fetchedUrls: Array<{ url: string; bytes: number }>;
 };
 
 const REPORT_DIR = path.join(here, '..', '..', '..', '..', '..', 'test-results', 'composer-app');
@@ -107,29 +109,37 @@ export const waitForReady = async (page: Page, timeout = 30_000): Promise<void> 
 };
 
 /**
- * Hooks `response` to count bytes and responses; the closure returned reads the
- * accumulated counters.
+ * Hooks `response` to count bytes and responses; the closure returned reads the accumulated
+ * counters. Tracked node-side (not via the page's resource-timing entries, whose default
+ * 250-entry buffer silently truncates composer's several-hundred-chunk startup), so the per-URL
+ * list is complete for byte attribution.
  */
-export const trackNetwork = (page: Page): (() => { bytes: number; responses: number }) => {
+export const trackNetwork = (
+  page: Page,
+): (() => { bytes: number; responses: number; urls: Array<{ url: string; bytes: number }> }) => {
   let bytes = 0;
   let responses = 0;
+  const urls: Array<{ url: string; bytes: number }> = [];
   page.on('response', async (response) => {
     responses += 1;
     try {
       const lengthHeader = response.headers()['content-length'];
+      let size = 0;
       if (lengthHeader) {
-        bytes += parseInt(lengthHeader, 10) || 0;
+        size = parseInt(lengthHeader, 10) || 0;
       } else {
         const body = await response.body().catch(() => null);
         if (body) {
-          bytes += body.byteLength;
+          size = body.byteLength;
         }
       }
+      bytes += size;
+      urls.push({ url: response.url(), bytes: size });
     } catch {
       // Ignore — some redirect / preflight responses can't be read.
     }
   });
-  return () => ({ bytes, responses });
+  return () => ({ bytes, responses, urls });
 };
 
 export const collectStartupReport = async (page: Page, scenario: Scenario): Promise<StartupReport> => {
@@ -235,6 +245,7 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
     resources: data.resources,
     transferredBytes: 0, // populated by caller
     responseCount: 0,
+    fetchedUrls: [], // populated by caller
   };
 };
 
