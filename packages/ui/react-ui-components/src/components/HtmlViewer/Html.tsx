@@ -136,7 +136,31 @@ const BASE_CSS = [
   'img{max-width:100%!important;height:auto!important;}',
   'table{max-width:100%;}',
   'pre.dx-plain{white-space:pre-wrap;font-family:inherit;margin:0;}',
+  // An <img> we will not load must not draw the browser's broken-image placeholder (and, inside a
+  // link, leave its alt text sitting there underlined). Removing `src` alone is not enough.
+  'img[data-dx-hidden]{display:none!important;}',
 ].join('');
+
+/**
+ * Whether loading this `src` would hit the network. Protocol-relative (`//host/…`) counts: it is a
+ * remote fetch, and matching only `https?:` would let a tracking pixel through.
+ */
+const isNetworkSrc = (src: string): boolean => /^(https?:)?\/\//i.test(src);
+
+/** Inline payloads — already in the document, so nothing is fetched. */
+const isInlineSrc = (src: string): boolean => /^(data|blob):/i.test(src);
+
+/**
+ * Marks an image as not-to-be-rendered. `blockedSrc` preserves the original so a caller can offer to
+ * load it later; the element stays in the DOM so enabling images can restore it in place.
+ */
+const hideImage = (img: Element, blockedSrc?: string): void => {
+  if (blockedSrc) {
+    img.setAttribute('data-dx-blocked-src', blockedSrc);
+  }
+  img.setAttribute('data-dx-hidden', '');
+  img.removeAttribute('src');
+};
 
 /** Escapes text so a non-HTML payload can be shown verbatim. */
 const escapeHtml = (text: string): string => text.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
@@ -209,15 +233,19 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
     content.className = 'dx-html-root';
     content.innerHTML = sanitized;
 
-    // Block remote images (privacy) by removing their src until the user opts in. The original is
-    // kept so a caller can surface "images blocked" affordances.
-    if (!loadRemoteImages) {
-      for (const img of content.querySelectorAll('img')) {
-        const src = img.getAttribute('src');
-        if (src && /^https?:/i.test(src)) {
-          img.setAttribute('data-dx-blocked-src', src);
-          img.removeAttribute('src');
+    // Decide what each image may render. Remote fetches are blocked until the user opts in (privacy);
+    // anything left with a src nobody can resolve is hidden rather than drawn broken.
+    for (const img of content.querySelectorAll('img')) {
+      const src = img.getAttribute('src');
+      if (!src) {
+        hideImage(img);
+      } else if (isNetworkSrc(src)) {
+        if (!loadRemoteImages) {
+          hideImage(img, src);
         }
+      } else if (!isInlineSrc(src) && !dialectRef.current?.resolveSrc) {
+        // e.g. a `cid:` attachment in a context with no resolver.
+        hideImage(img);
       }
     }
 
@@ -260,6 +288,9 @@ const resolvePendingSrc = (content: HTMLElement, resolveSrc: HtmlSrcResolver, ca
       if (url) {
         cache.set(src, url);
         img.setAttribute('src', url);
+      } else {
+        // Nothing to show: hide rather than leave the unresolved src to render broken.
+        hideImage(img);
       }
     });
   }

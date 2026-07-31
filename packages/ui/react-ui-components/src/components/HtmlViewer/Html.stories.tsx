@@ -60,6 +60,26 @@ export const RemoteImagesBlocked: Story = { args: { sample: 'remoteImage', loadR
 export const RemoteImagesLoaded: Story = { args: { sample: 'remoteImage', loadRemoteImages: true } };
 
 /**
+ * Nothing here can be shown, so nothing is drawn — no broken-image placeholder, and no stray alt text
+ * left underlined inside its link. The protocol-relative image counts as a remote fetch, so it is
+ * blocked like any other.
+ */
+export const UnloadableImages: Story = {
+  args: { sample: 'unloadableImages' },
+  play: async ({ canvasElement }) => {
+    await waitFor(async () => {
+      const host = findShadowHost(canvasElement);
+      const images = Array.from(host?.shadowRoot?.querySelectorAll('img') ?? []);
+      await expect(images).toHaveLength(3);
+      for (const image of images) {
+        await expect(image.hasAttribute('data-dx-hidden')).toBe(true);
+        await expect(image.getBoundingClientRect().height).toBe(0);
+      }
+    });
+  },
+};
+
+/**
  * The document ships its own dark rules. `prefers-color-scheme` resolves against the OS and cannot be
  * overridden from the page, so the base rewrites those rules — the two panes must differ, and must
  * follow the app mode rather than whatever the OS is set to.

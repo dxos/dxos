@@ -86,3 +86,9 @@ export const CapturedLightOnly: Story = {
     sample: 'm2',
   },
 };
+
+export const M3: Story = {
+  args: {
+    sample: 'm3',
+  },
+};

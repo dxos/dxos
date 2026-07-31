@@ -48,6 +48,19 @@ export const REMOTE_IMAGE = trim`
   </div>
 `;
 
+/**
+ * The shapes that used to render as a broken-image placeholder: a *linked* image (whose alt text is
+ * left underlined beside the placeholder), a protocol-relative target (a remote fetch that a
+ * `^https?:` test misses entirely), and a `cid:` attachment with nobody to resolve it.
+ */
+export const UNLOADABLE_IMAGES = trim`
+  <div style="font-family:Arial">
+    <p><a href="https://example.com"><img src="https://example.com/logo.png" alt="Kit logo" /></a></p>
+    <p><img src="//cdn.example.com/tracker.gif" alt="protocol-relative" /></p>
+    <p><img src="cid:missing-attachment" alt="inline attachment" /></p>
+  </div>
+`;
+
 export const PLAINTEXT = trim`
 Hello,
 
@@ -154,6 +167,10 @@ export const SANDBOX_SAMPLES: Record<string, Sample> = {
   remoteImage: {
     html: REMOTE_IMAGE,
     note: 'Remote image, blocked unless images are loaded.',
+  },
+  unloadableImages: {
+    html: UNLOADABLE_IMAGES,
+    note: 'Linked, protocol-relative and unresolvable cid: images — hidden, never drawn broken.',
   },
   plaintext: {
     html: PLAINTEXT,
