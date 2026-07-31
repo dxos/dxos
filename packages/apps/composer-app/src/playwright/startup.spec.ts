@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type CDPSession, expect, test } from '@playwright/test';
+import { type CDPSession, type Page, expect, test } from '@playwright/test';
 import { rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -21,6 +21,26 @@ test.beforeAll(() => {
   }
 });
 
+/**
+ * Registers a `longtask` PerformanceObserver before any page script runs — `collectStartupReport`
+ * reads the accumulated entries from `window.__longTasks` to compute Total Blocking Time.
+ */
+const observeLongTasks = (page: Page): Promise<void> =>
+  page.addInitScript(() => {
+    (window as any).__longTasks = [];
+    try {
+      if (PerformanceObserver.supportedEntryTypes?.includes('longtask')) {
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            (window as any).__longTasks.push({ start: entry.startTime, duration: entry.duration });
+          }
+        }).observe({ type: 'longtask', buffered: true });
+      }
+    } catch {
+      // Long Tasks API unsupported in this browser (firefox/webkit) — `__longTasks` stays empty.
+    }
+  });
+
 test.describe.serial('Startup timing harness', () => {
   // First-paint and module-graph evaluation each take real wall clock; webkit can be much slower.
   test.setTimeout(120_000);
@@ -35,6 +55,7 @@ test.describe.serial('Startup timing harness', () => {
     const context = await browser.newContext();
     const page = await context.newPage();
     const network = trackNetwork(page);
+    await observeLongTasks(page);
 
     const start = Date.now();
     await page.goto(`${INITIAL_URL}/?profiler=1`);
@@ -79,6 +100,7 @@ test.describe.serial('Startup timing harness', () => {
 
     // Warm reload: navigate again, measure.
     const network = trackNetwork(page);
+    await observeLongTasks(page);
     const start = Date.now();
     await page.reload();
     await waitForReady(page);
@@ -122,6 +144,18 @@ test.describe.serial('Startup timing harness', () => {
       const primerPage = primer.pages()[0] ?? (await primer.newPage());
       await primerPage.goto(`${INITIAL_URL}/?profiler=1`);
       await waitForReady(primerPage);
+      // Prime an open document so the measured reload restores an editor plank — the golden
+      // `milestone:first-editor-interactive` anchor only fires when an editor mounts.
+      await primerPage.getByTestId('spacePlugin.addSpace').click();
+      await primerPage.getByTestId('spacePlugin.createSpace').click();
+      await primerPage.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
+      await primerPage.getByTestId('spacePlugin.createObject').first().click();
+      await primerPage.getByRole('listbox').getByText('Document').first().click();
+      const objectForm = primerPage.getByTestId('create-object-form');
+      if (await objectForm.isVisible()) {
+        await objectForm.getByTestId('save-button').click();
+      }
+      await primerPage.locator('.cm-content').first().waitFor({ timeout: 30_000 });
       await primer.close();
 
       // Re-launch with the same `userDataDir`. IDB persists; module cache is
@@ -129,10 +163,14 @@ test.describe.serial('Startup timing harness', () => {
       const context = await browserType.launchPersistentContext(userDataDir);
       const page = context.pages()[0] ?? (await context.newPage());
       const network = trackNetwork(page);
+      await observeLongTasks(page);
       const start = Date.now();
       await page.goto(`${INITIAL_URL}/?profiler=1`);
       await waitForReady(page);
       const navigationToReady = Date.now() - start;
+      // Golden anchor: the primed document's editor must mount before collection so
+      // `milestone:first-editor-interactive` (time to first meaningful action) lands in the report.
+      await page.locator('.cm-content').first().waitFor({ timeout: 30_000 });
 
       const report = await collectStartupReport(page, 'warm-cold');
       report.navigationToReady = navigationToReady;
@@ -200,6 +238,7 @@ test.describe.serial('Startup timing harness', () => {
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 2 });
 
     const network = trackNetwork(page);
+    await observeLongTasks(page);
     const start = Date.now();
     await page.goto(`${INITIAL_URL}/?profiler=1`);
     await waitForReady(page, 300_000);

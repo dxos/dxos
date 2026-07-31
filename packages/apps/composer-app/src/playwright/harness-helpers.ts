@@ -95,6 +95,12 @@ export type StartupReport = {
   responseCount: number;
   /** Complete per-URL byte accounting from `trackNetwork` (immune to the resource-timing buffer cap). */
   fetchedUrls: Array<{ url: string; bytes: number }>;
+  /** Total Blocking Time (Lighthouse definition): sum of `duration - 50ms` for long tasks starting after first contentful paint; our trace ends at collection time. */
+  tbt: number;
+  /** Raw Long Tasks API stats over the page's lifetime so far (not gated to the FCP→end window `tbt` uses). */
+  longTasks: { count: number; max: number; total: number };
+  /** Stitched boot waterfall — named marks/measures sorted by start, ms relative to `navigationStart`. */
+  waterfall: Array<{ name: string; start: number; end?: number }>;
 };
 
 const REPORT_DIR = path.join(here, '..', '..', '..', '..', '..', 'test-results', 'composer-app');
@@ -192,6 +198,55 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
       decodedBodySize: entry.decodedBodySize,
     }));
 
+    // Populated by the `addInitScript`-registered PerformanceObserver; absent (falls back to `[]`)
+    // on browsers without Long Tasks API support.
+    const longTasks = ((window as any).__longTasks ?? []) as Array<{ start: number; duration: number }>;
+    const fcpStart = fcp ? fcp.startTime : 0;
+    const tbt = longTasks
+      .filter((task) => task.start > fcpStart)
+      .reduce((sum, task) => sum + Math.max(0, task.duration - 50), 0);
+    const longTaskStats = {
+      count: longTasks.length,
+      max: longTasks.length ? Math.max(...longTasks.map((task) => task.duration)) : 0,
+      total: longTasks.reduce((sum, task) => sum + task.duration, 0),
+    };
+
+    // `main:start` is looked up under both names since the profiler namespaces its marks under `startup:`.
+    const mainStartMark =
+      performance.getEntriesByName('main:start')[0] ?? performance.getEntriesByName('startup:main:start')[0];
+    const eventMeasures = performance.getEntriesByType('measure').filter((entry) => entry.name.startsWith('event:'));
+    const milestoneMarks = performance.getEntriesByType('mark').filter((entry) => entry.name.startsWith('milestone:'));
+
+    const waterfall: Array<{ name: string; start: number; end?: number }> = [{ name: 'navigationStart', start: 0 }];
+    if (nav) {
+      waterfall.push({ name: 'TTFB', start: nav.responseStart });
+    }
+    if (nav) {
+      waterfall.push({ name: 'domContentLoaded', start: nav.domContentLoadedEventEnd });
+    }
+    if (bootMark) {
+      waterfall.push({ name: 'boot:html-parsed', start: bootMark.startTime });
+    }
+    if (fp) {
+      waterfall.push({ name: 'first-paint', start: fp.startTime });
+    }
+    if (fcp) {
+      waterfall.push({ name: 'first-contentful-paint', start: fcp.startTime });
+    }
+    if (mainStartMark) {
+      waterfall.push({ name: 'main:start', start: mainStartMark.startTime });
+    }
+    for (const entry of eventMeasures) {
+      waterfall.push({ name: entry.name, start: entry.startTime, end: entry.startTime + entry.duration });
+    }
+    if (firstInteractiveMark) {
+      waterfall.push({ name: 'app-framework:first-interactive', start: firstInteractiveMark.startTime });
+    }
+    for (const entry of milestoneMarks) {
+      waterfall.push({ name: entry.name, start: entry.startTime });
+    }
+    waterfall.sort((first, second) => first.start - second.start);
+
     return {
       snapshot,
       inventory,
@@ -201,6 +256,9 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
       domContentLoaded: nav ? Math.round(nav.domContentLoadedEventEnd) : 0,
       bootLoaderVisible: bootMark ? Math.round(bootMark.startTime) : null,
       firstInteractive: firstInteractiveMark ? Math.round(firstInteractiveMark.startTime) : null,
+      tbt: Math.round(tbt),
+      longTasks: longTaskStats,
+      waterfall,
     };
   });
 
@@ -246,6 +304,9 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
     transferredBytes: 0, // populated by caller
     responseCount: 0,
     fetchedUrls: [], // populated by caller
+    tbt: data.tbt,
+    longTasks: data.longTasks,
+    waterfall: data.waterfall,
   };
 };
 
@@ -263,10 +324,11 @@ const BENCHMARKS_HEADER = [
   '`profilerTotal` = `composer.profiler` (`main:start` → `Startup` activated).',
   '`navToReady` = wall-clock from `page.goto` until the user-account testid is visible.',
   '`fcp` = first contentful paint (the boot loader). `bytes` = sum of response bodies.',
+  '`tbtMs` = Total Blocking Time (Lighthouse definition, FCP → trace end).',
   '`top1` = slowest single module activation in this run.',
   '',
-  '| timestamp (UTC) | git | dirty | scenario | browser | profilerTotal | navToReady | fcp | bytes (MB) | modules | top1 |',
-  '| --- | --- | :---: | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |',
+  '| timestamp (UTC) | git | dirty | scenario | browser | profilerTotal | navToReady | fcp | tbtMs | bytes (MB) | modules | top1 |',
+  '| --- | --- | :---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
   '',
 ].join('\n');
 
@@ -293,6 +355,7 @@ const formatBenchmarkRow = (report: StartupReport): string => {
     report.profilerTotal,
     report.navigationToReady,
     report.firstContentfulPaint,
+    report.tbt,
     (report.transferredBytes / 1024 / 1024).toFixed(1),
     report.profile.moduleCount,
     topLabel,
