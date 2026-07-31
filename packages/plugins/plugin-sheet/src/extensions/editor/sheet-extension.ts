@@ -167,10 +167,13 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
       activateOnTyping: true,
       closeOnBlur: !debug,
       icons: false,
+      // Cosmetics only. The tooltip is `position: fixed` and CodeMirror computes its coordinates from
+      // the cursor, so overriding `left`/`top` here measures them against the viewport instead of the
+      // cell — which pinned the completion list to the top-left corner of the window.
       tooltipClass: () =>
         mx(
-          '!-left-[1px] !top-[33px] !-m-0 border border-h-0! [&>ul]:!min-w-[198px]',
-          '[&>ul>li[aria-selected]]:!bg-accent-bg',
+          '-m-0! border border-h-0! [&>ul]:min-w-[198px]!',
+          '[&>ul>li[aria-selected]]:bg-accent-bg!',
           'border-separator',
         ),
     }),
