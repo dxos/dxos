@@ -27,5 +27,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sheet',
     spec: 'PLUGIN.mdl',
     screenshots: [{ dark: 'https://dxos.network/plugin-details-sheet-dark.png' }],
+    tags: ['alpha'],
   },
 });

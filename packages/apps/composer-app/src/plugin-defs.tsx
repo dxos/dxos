@@ -53,7 +53,6 @@ import { PaymentsPlugin } from '@dxos/plugin-payments/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
 import { ReviewPlugin } from '@dxos/plugin-review/plugin';
@@ -71,7 +70,6 @@ import { StudioPlugin } from '@dxos/plugin-studio/plugin';
 import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
-import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
 import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
@@ -100,7 +98,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     InboxPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
-    SearchPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
@@ -150,10 +147,10 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 /**
  * Full Composer plugin registry: shared core infrastructure plus every content plugin.
  */
-export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
-  const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = conf;
+export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
+  const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = config;
   return [
-    ...getCorePlugins(conf),
+    ...getCorePlugins(config),
     AssistantPlugin(),
     AtprotoPlugin(),
     BoardPlugin(),
@@ -194,7 +191,6 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
-    ProgressPlugin(),
     ProjectsPlugin(),
     CommercePlugin(),
     CrmPlugin(),
@@ -225,7 +221,6 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     SequencerPlugin(),
     SlackPlugin(),
     SpacetimePlugin(),
-    TicTacToePlugin(),
     TrelloPlugin(),
     TripPlugin(),
     TypefullyPlugin(),

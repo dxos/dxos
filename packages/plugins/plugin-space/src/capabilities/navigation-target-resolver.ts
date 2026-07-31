@@ -9,11 +9,16 @@ import { AppCapabilities, type AppCapabilities as AppCaps, GraphPath } from '@dx
 import { Database, Entity } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
+import { resolveCollectionObjectPath } from '../collection-path';
+import { resolveTypeSectionPath } from '../type-section-path';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
     const resolver: AppCaps.NavigationTargetResolver = (query) =>
       Effect.gen(function* () {
         if (!query?.uri) {
@@ -43,11 +48,26 @@ export default Capability.makeModule(
           return [];
         }
 
+        const label = Entity.getLabel(object) ?? '';
+
+        // Where the tree actually shows the object: its place in the collection tree, or the sidebar
+        // section its type declares (Chat, Project, …). Both precede the database path, which every
+        // object has but no visible node bears — hence `Position.last`.
+        const collectionPath = yield* resolveCollectionObjectPath({ objectId: object.id });
+        const sectionPath = resolveTypeSectionPath(capabilities, {
+          spaceId: db.spaceId,
+          typename,
+          objectId: object.id,
+        });
+
         return [
+          ...(collectionPath ? [{ path: collectionPath, label, type: typename }] : []),
+          ...(sectionPath ? [{ path: sectionPath, label, type: typename }] : []),
           {
             path: GraphPath.getObjectPath(db.spaceId, typename, object.id),
-            label: Entity.getLabel(object) ?? '',
+            label,
             type: typename,
+            position: Position.last,
           },
         ];
       });

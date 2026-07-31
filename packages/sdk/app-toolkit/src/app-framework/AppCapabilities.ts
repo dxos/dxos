@@ -20,6 +20,7 @@ import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
+import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations';
@@ -292,6 +293,14 @@ export type NavigationTarget = {
   label: string;
   /** Object type. */
   type: string;
+  /**
+   * Sort order among the targets resolved for one query. A resolver that only produces a generic path —
+   * the database subtree, which guarantees every ECHO object *a* path but is not where the tree shows
+   * it — declares `Position.last`, so a resolver that knows the object's canonical home (its collection,
+   * a type section) is preferred. Only the resolver knows how specific its answer is, hence a declared
+   * position rather than path sniffing by the caller.
+   */
+  position?: Position.Position;
 };
 
 export type NavigationQuery = {
@@ -304,7 +313,8 @@ export type NavigationQuery = {
  * When called without a query, returns the plugin's default navigable pages.
  *
  * Requires `Database.Service`: a resolver turns an object URI into a path, which means loading the
- * object. The caller derives the database from the query's space and provides the layer.
+ * object. The caller derives the database from the query's space and provides the layer — see
+ * `NavigationOperation.ResolveNavigationTargets`, the one entry point that runs every resolver.
  * @category Capability
  */
 export type NavigationTargetResolver = (

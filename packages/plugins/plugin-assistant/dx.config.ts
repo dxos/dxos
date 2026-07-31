@@ -34,5 +34,6 @@ export default Config2.make({
     icon: { key: 'ph--sparkle--regular', hue: 'sky' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-assistant',
     spec: 'PLUGIN.mdl',
+    tags: ['alpha'],
   },
 });
