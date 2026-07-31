@@ -3,47 +3,40 @@
 //
 
 //
-// The manager composes three collaborating units behind one public API, plus the lifecycle
-// and state it owns itself (atoms, failure records, in-flight fibers, shutdown):
+// The manager composes collaborating units behind one public API. All of them share ONE
+// state object — `ManagerState` (`manager-state.ts`), which owns the reactive atoms and the
+// activation bookkeeping — so unit boundaries carry behaviour, not state plumbing:
 //
 // 1. The plugin catalog (`plugin-catalog.ts`) — add/remove/enable/disable, lazy plugin
 //    resolution, dev-plugin shadowing, and the declared-dependency closure
 //    (`getDependencies`/`getDependents`).
 //
 // 2. The activation scheduler (`activation-scheduler.ts`) — deciding when each module's
-//    `activate` runs. Its model:
-//
-//    - Dependency-mode modules activate in rounds. A round collects candidates, indexes
-//      singleton providers (duplicates error out), selects what can run now (anything whose
-//      provider is not in play waits for a later round), orders the selection so providers
-//      run before consumers, and executes it in concurrent batches. The ordering logic and
-//      its vocabulary (rounds, waves, edge kinds) live in `activation-graph.ts`. Rounds
-//      repeat until one activates nothing new.
-//
-//    - Event-mode modules park until their `activatesOn` event fires, then activate
-//      together. Inactive dependency-mode providers of their requires are pulled on
-//      demand first.
+//    `activate` runs. Dependency-mode modules activate in rounds (ordering logic and
+//    vocabulary in `activation-graph.ts`), repeated until one activates nothing new;
+//    event-mode modules park until their `activatesOn` fires, with inactive dependency
+//    providers pulled on demand first.
 //
 // 3. The module loader (`module-loader.ts`) — the per-module load pipeline. Loads are
 //    memoized (id -> Deferred): every activation path converges on `loader.load`, concurrent
-//    paths await the same deferred, and contribution is idempotent per module.
+//    paths await the same deferred, and contribution is idempotent per module. Because
+//    rounds run concurrently (the startup pass and an event fired mid-startup), the loader
+//    also waits for in-flight multi providers before a module's activate runs.
 //
-//    - Rounds RUN CONCURRENTLY (e.g. the startup pass and an event fired mid-startup).
-//      A provider mid-load in one round is invisible to another round's ordering, so the
-//      loader waits for in-flight multi providers before a module's activate runs — the
-//      cross-round complement to the ordering within a round.
+// Failures are STRUCTURAL, not fatal: missing/duplicate providers and cycles put the owning
+// plugin into an error state (the `failed` atom) and exclude its modules; everything
+// independent proceeds. Per-module failures skip transitive dependents only.
 //
-//    - Failures are STRUCTURAL, not fatal: missing/duplicate providers and cycles put the
-//      owning plugin into an error state (`failed` atom) and exclude its modules; everything
-//      independent proceeds. Per-module failures skip transitive dependents only.
+// The manager itself keeps only the public API, the lifecycle (start / activate / deactivate
+// / reset / shutdown), and the composition: units receive the state object, their
+// collaborators, and a small options bag — the two catalog options that call back into the
+// manager (`fireEvent`, `deactivatePlugin`) are documented orchestration cycles.
 //
 
 import { Atom, Registry } from '@effect-atom/atom';
-import * as Array from 'effect/Array';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
@@ -53,13 +46,12 @@ import { log } from '@dxos/log';
 import * as ActivationEvent from './activation-event';
 import { ActivationScheduler } from './activation-scheduler';
 import * as CapabilityManager from './capability-manager';
+import { FiberTracker, ManagerState } from './manager-state';
 import {
   type ActivationMessage,
   DEFAULT_ACTIVATION_TIMEOUT,
   DEFAULT_LOAD_TIMEOUT,
   type PluginFailure,
-  type PluginFailurePhase,
-  type PluginFailureReason,
   PluginInitializationError,
   PluginTimeoutError,
 } from './manager-types';
@@ -286,31 +278,11 @@ class ManagerImpl implements PluginManager {
   readonly registry: Registry.Registry;
   readonly pluginRegistry: PluginRegistry.Manager;
 
-  private readonly _pluginsAtom: Atom.Writable<Plugin.Plugin[]>;
-  private readonly _coreAtom: Atom.Writable<string[]>;
-  private readonly _enabledAtom: Atom.Writable<string[]>;
-  private readonly _modulesAtom: Atom.Writable<Plugin.PluginModule[]>;
-  private readonly _activeAtom: Atom.Writable<string[]>;
-  private readonly _eventsFiredAtom: Atom.Writable<string[]>;
-  private readonly _pendingResetAtom: Atom.Writable<string[]>;
-  private readonly _failedAtom: Atom.Writable<PluginFailure[]>;
-  private readonly _pluginLoader: ManagerOptions['pluginLoader'];
-  private readonly _onRemove: ManagerOptions['onRemove'];
-  private readonly _loadTimeout: Duration.DurationInput;
-  private readonly _activationTimeout: Duration.DurationInput;
+  private readonly _state: ManagerState;
+  private readonly _fibers = new FiberTracker();
   private readonly _loader: ModuleLoader;
   private readonly _scheduler: ActivationScheduler;
   private readonly _catalog: PluginCatalog;
-  private readonly _devPluginIdsAtom: Atom.Writable<string[]>;
-  // Set by `start()`; gates the incremental dependency pass on later `enable()` calls.
-  private readonly _started = Effect.runSync(Ref.make(false));
-  // Modules deactivated because a singleton capability they require lost its provider
-  // (provider plugin disabled). Re-included as candidates in the next dependency pass.
-  private readonly _pendingReactivate = new Set<string>();
-  // Modules in a structural error state (cycle member, duplicate provider, impossible
-  // require): excluded from activation rounds until a plugin-set change re-evaluates them.
-  private readonly _structurallyFailed = new Set<string>();
-  private readonly _inFlightFibers = Effect.runSync(Ref.make<Array<Fiber.Fiber<unknown, unknown>>>([]));
   private readonly _shutdownSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   private readonly _shuttingDown = Effect.runSync(Ref.make(false));
   // Tracks the constructor-launched core/enabled `enable()` calls so that
@@ -344,88 +316,32 @@ class ManagerImpl implements PluginManager {
     });
     this.pluginRegistry = new PluginRegistry.Manager(pluginRegistryProvider, this.registry);
 
-    this._pluginLoader = pluginLoader;
-    this._onRemove = onRemove;
-    this._loadTimeout = loadTimeout;
-    this._activationTimeout = activationTimeout;
-    this._loader = new ModuleLoader({
-      capabilities: this.capabilities,
+    this._state = new ManagerState(this.registry, { plugins, core, enabled });
+    this._loader = new ModuleLoader(this._state, this.capabilities, this.activation, this._fibers, {
       pluginService: () => this,
-      getModules: () => this._get(this._modulesAtom),
-      getPluginIdForModule: (moduleId) => this._getPluginIdForModule(moduleId),
-      onActivationFailure: (pluginId, error) => {
-        this._recordFailure(pluginId, 'activation', error);
-        this._scheduleAutoDisable(pluginId);
-      },
-      publish: (message) => PubSub.publish(this.activation, message).pipe(Effect.asVoid),
-      setActive: (moduleId, active) =>
-        this._update(this._activeAtom, (ids) => (active ? [...ids, moduleId] : ids.filter((id) => id !== moduleId))),
       activationTimeout,
-      trackFiber: (fiber) => this._trackFiber(this._inFlightFibers, fiber),
-      untrackFiber: (fiber) => this._untrackFiber(this._inFlightFibers, fiber),
-    });
-    this._scheduler = new ActivationScheduler({
-      capabilities: this.capabilities,
-      loader: this._loader,
-      publish: (message) => PubSub.publish(this.activation, message).pipe(Effect.asVoid),
-      getActive: () => this._get(this._activeAtom),
-      getModules: () => this._get(this._modulesAtom),
-      getInactiveModulesByEvent: (key) => this._getInactiveModulesByEvent(key),
-      eventsFired: {
-        has: (key) => this._get(this._eventsFiredAtom).includes(key),
-        markFired: (key) => {
-          if (!this._get(this._eventsFiredAtom).includes(key)) {
-            this._update(this._eventsFiredAtom, (events) => [...events, key]);
-          }
-        },
+      // Failure policy: record it, then let the catalog decide whether to auto-disable.
+      // (The catalog is constructed after the loader; the closure defers the access.)
+      onFailure: (pluginId, error) => {
+        this._state.recordFailure(pluginId, 'activation', error);
+        this._catalog.scheduleAutoDisable(pluginId);
       },
-      isStarted: () => Ref.get(this._started),
-      clearPendingReset: (key) => this._clearPendingReset(key),
-      pendingReactivate: this._pendingReactivate,
-      structurallyFailed: this._structurallyFailed,
-      getPluginIdForModule: (moduleId) => this._getPluginIdForModule(moduleId),
-      recordFailure: (pluginId, error) => this._recordFailure(pluginId, 'activation', error),
-      trackFiber: (fiber) => this._trackFiber(this._inFlightFibers, fiber),
-      untrackFiber: (fiber) => this._untrackFiber(this._inFlightFibers, fiber),
     });
-    this._catalog = new PluginCatalog({
-      pluginLoader: this._pluginLoader,
-      loadTimeout: this._loadTimeout,
-      getPlugins: () => this._get(this._pluginsAtom),
-      updatePlugins: (fn) => this._update(this._pluginsAtom, fn),
-      getCore: () => this._get(this._coreAtom),
-      getEnabled: () => this._get(this._enabledAtom),
-      updateEnabled: (fn) => this._update(this._enabledAtom, fn),
-      updateDevPluginIds: (fn) => this._update(this._devPluginIdsAtom, fn),
-      getCatalogEntries: () => this._get(this.pluginRegistry.plugins).entries,
-      registerPlugin: (plugin) => this._addPlugin(plugin),
-      unregisterPlugin: (id) => this._removePlugin(id),
-      addModule: (module) => this._addModule(module),
-      removeModule: (moduleId) => this._removeModule(moduleId),
-      setPendingResetByModule: (module) => this._setPendingResetByModule(module),
-      getPendingReset: () => this.getPendingReset(),
-      activate: (event) => this.activate(event),
-      deactivate: (id) => this.deactivate(id),
-      isStarted: () => Ref.get(this._started),
-      runDependencyPass: (options) => this._scheduler.runDependencyPass(options),
-      recordFailure: (id, phase, error) => this._recordFailure(id, phase, error),
-      clearFailure: (id) => this.clearFailure(id),
-      scheduleAutoDisable: (id) => this._scheduleAutoDisable(id),
-      structurallyFailed: this._structurallyFailed,
-      publish: (message) => PubSub.publish(this.activation, message).pipe(Effect.asVoid),
-      runForked: (effect) => this._runForkedFiber(effect),
-      onRemove: this._onRemove,
+    this._scheduler = new ActivationScheduler(
+      this._state,
+      this.capabilities,
+      this._loader,
+      this.activation,
+      this._fibers,
+    );
+    this._catalog = new PluginCatalog(this._state, this._scheduler, this.activation, this._fibers, {
+      pluginLoader,
+      loadTimeout,
+      getCatalogEntries: () => this._state.read(this.pluginRegistry.plugins).entries,
+      fireEvent: (event) => this.activate(event),
+      deactivatePlugin: (id) => this.deactivate(id),
+      onRemove,
     });
-    this._pluginsAtom = Atom.make(plugins).pipe(Atom.keepAlive);
-    this._coreAtom = Atom.make(core).pipe(Atom.keepAlive);
-    this._enabledAtom = Atom.make(enabled).pipe(Atom.keepAlive);
-    this._modulesAtom = Atom.make<Plugin.PluginModule[]>([]).pipe(Atom.keepAlive);
-    this._activeAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
-    this._eventsFiredAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
-    this._pendingResetAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
-    this._failedAtom = Atom.make<PluginFailure[]>([]).pipe(Atom.keepAlive);
-    this._devPluginIdsAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
-    plugins.forEach((plugin) => this._addPlugin(plugin));
     // Dedupe before mapping to `enable` — `core` and `enabled` may overlap (an
     // app-supplied plugin can be in both), and concurrent `enable(id)` calls
     // for the same id are not idempotent (each would re-run the lazy resolve
@@ -442,108 +358,100 @@ class ManagerImpl implements PluginManager {
   }
 
   get plugins(): Atom.Atom<readonly Plugin.Plugin[]> {
-    return this._pluginsAtom;
+    return this._state.plugins;
   }
 
   get core(): Atom.Atom<readonly string[]> {
-    return this._coreAtom;
+    return this._state.core;
   }
 
   /**
    * Ids of plugins that are currently enabled.
    */
   get enabled(): Atom.Atom<readonly string[]> {
-    return this._enabledAtom;
+    return this._state.enabled;
   }
 
   /**
    * Modules of plugins which are currently enabled.
    */
   get modules(): Atom.Atom<readonly Plugin.PluginModule[]> {
-    return this._modulesAtom;
+    return this._state.modules;
   }
 
   /**
    * Ids of modules which are currently active.
    */
   get active(): Atom.Atom<readonly string[]> {
-    return this._activeAtom;
+    return this._state.active;
   }
 
   /**
    * Ids of events which have been fired.
    */
   get eventsFired(): Atom.Atom<readonly string[]> {
-    return this._eventsFiredAtom;
+    return this._state.eventsFired;
   }
 
   /**
    * Ids of modules which are pending reset.
    */
   get pendingReset(): Atom.Atom<readonly string[]> {
-    return this._pendingResetAtom;
+    return this._state.pendingReset;
   }
 
   /**
    * Plugins that failed to load or activate.
    */
   get failed(): Atom.Atom<readonly PluginFailure[]> {
-    return this._failedAtom;
+    return this._state.failed;
   }
 
   /**
    * Ids of currently-registered plugins that came from a dev source.
    */
   get devPluginIds(): Atom.Atom<readonly string[]> {
-    return this._devPluginIdsAtom;
+    return this._state.devPluginIds;
   }
 
   getPlugins(): readonly Plugin.Plugin[] {
-    return this._get(this._pluginsAtom);
+    return this._state.getPlugins();
   }
 
   getCore(): readonly string[] {
-    return this._get(this._coreAtom);
+    return this._state.read(this._state.core);
   }
 
   getEnabled(): readonly string[] {
-    return this._get(this._enabledAtom);
+    return this._state.read(this._state.enabled);
   }
 
   getModules(): readonly Plugin.PluginModule[] {
-    return this._get(this._modulesAtom);
+    return this._state.getModules();
   }
 
   getActive(): readonly string[] {
-    return this._get(this._activeAtom);
+    return this._state.getActiveIds();
   }
 
   getEventsFired(): readonly string[] {
-    return this._get(this._eventsFiredAtom);
+    return this._state.read(this._state.eventsFired);
   }
 
   getPendingReset(): readonly string[] {
-    return this._get(this._pendingResetAtom);
+    return this._state.getPendingReset();
   }
 
   getFailed(): readonly PluginFailure[] {
-    return this._get(this._failedAtom);
+    return this._state.getFailures();
   }
 
   getDevPluginIds(): readonly string[] {
-    return this._get(this._devPluginIdsAtom);
+    return this._state.read(this._state.devPluginIds);
   }
 
   clearFailure(id: string): boolean {
-    const current = this._get(this._failedAtom);
-    if (!current.some((failure) => failure.id === id)) {
-      return false;
-    }
-    this._set(
-      this._failedAtom,
-      current.filter((failure) => failure.id !== id),
-    );
-    return true;
+    return this._state.clearFailure(id);
   }
 
   getDependencies(id: string, opts?: { transitive?: boolean }): readonly string[] {
@@ -584,7 +492,7 @@ class ManagerImpl implements PluginManager {
       // Wait for the constructor's core/enabled `enable()` chain to finish registering
       // modules (see the note in `activate`).
       yield* Deferred.await(this._initialization);
-      yield* Ref.set(this._started, true);
+      yield* Ref.set(this._state.started, true);
 
       const key = ActivationEvent.eventKey(ActivationEvent.Startup);
 
@@ -618,9 +526,7 @@ class ManagerImpl implements PluginManager {
 
       // The event-level Startup `activated` message (no `module` field) is the app-ready
       // signal (see useApp); it must not publish before dependency-mode modules finish.
-      if (!this._get(this._eventsFiredAtom).includes(key)) {
-        this._update(this._eventsFiredAtom, (events) => [...events, key]);
-      }
+      this._state.markEventFired(key);
       yield* PubSub.publish(this.activation, { event: key, state: 'activated' });
 
       return results.some(Boolean);
@@ -683,7 +589,7 @@ class ManagerImpl implements PluginManager {
    */
   deactivate(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
-      const plugin = this._getPlugin(id);
+      const plugin = this._state.getPlugin(id);
       if (!plugin) {
         return false;
       }
@@ -696,7 +602,7 @@ class ManagerImpl implements PluginManager {
       const dependents = this._collectCapabilityDependents(modules);
       for (const dependent of dependents) {
         yield* this._loader.deactivate(dependent);
-        this._pendingReactivate.add(dependent.id);
+        this._state.reactivateOnNextPass.add(dependent.id);
       }
 
       const results = yield* Effect.all(
@@ -713,8 +619,8 @@ class ManagerImpl implements PluginManager {
    * activation order, which is reverse topological order (safe deactivation order).
    */
   private _collectCapabilityDependents(modules: readonly Plugin.PluginModule[]): Plugin.PluginModule[] {
-    const active = this._get(this._activeAtom);
-    const allModules = this._get(this._modulesAtom);
+    const active = this._state.getActiveIds();
+    const allModules = this._state.getModules();
     const ownIds = new Set(modules.map((module) => module.id));
     const providedIds = new Set<string>();
     const collectProvides = (module: Plugin.PluginModule) => {
@@ -742,7 +648,7 @@ class ManagerImpl implements PluginManager {
       }
     }
 
-    const order = this._get(this._activeAtom);
+    const order = this._state.getActiveIds();
     return [...dependents.values()].sort((a, b) => order.indexOf(b.id) - order.indexOf(a.id));
   }
 
@@ -755,7 +661,7 @@ class ManagerImpl implements PluginManager {
     return Effect.gen(this, function* () {
       const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
       log('reset', { key });
-      const modules = this._getActiveModulesByEvent(key);
+      const modules = this._state.getActiveModulesByEvent(key);
       const results = yield* Effect.all(
         modules.map((module) => this._loader.deactivate(module)),
         { concurrency: 'unbounded' },
@@ -775,10 +681,10 @@ class ManagerImpl implements PluginManager {
         yield* Ref.set(this._shuttingDown, true);
         log('shutdown');
 
-        yield* this._interruptInFlightActivations();
+        yield* this._fibers.interruptAll();
 
-        const activeIds = [...this._get(this._activeAtom)].reverse();
-        const allModules = this._get(this._modulesAtom);
+        const activeIds = [...this._state.getActiveIds()].reverse();
+        const allModules = this._state.getModules();
         const modulesToDeactivate = activeIds
           .map((id) => allModules.find((module) => module.id === id))
           .filter((module): module is Plugin.PluginModule => module != null);
@@ -787,13 +693,13 @@ class ManagerImpl implements PluginManager {
           yield* this._loader.deactivate(module);
         }
 
-        this._set(this._eventsFiredAtom, []);
-        this._set(this._pendingResetAtom, []);
+        this._state.clearEventsFired();
+        this._state.clearAllPendingReset();
         yield* this._loader.clear();
         yield* this._scheduler.reset();
-        yield* Ref.set(this._started, false);
-        this._pendingReactivate.clear();
-        this._structurallyFailed.clear();
+        yield* Ref.set(this._state.started, false);
+        this._state.reactivateOnNextPass.clear();
+        this._state.structurallyFailed.clear();
 
         log('shutdown complete');
         return true;
@@ -809,188 +715,17 @@ class ManagerImpl implements PluginManager {
   // State helpers and bookkeeping.
   //
 
-  private _get<T>(atom: Atom.Atom<T>): T {
-    return this.registry.get(atom);
-  }
-
-  private _set<T>(atom: Atom.Writable<T>, value: T): void {
-    this.registry.set(atom, value);
-  }
-
-  private _update<T>(atom: Atom.Writable<T>, updater: (current: T) => T): void {
-    this._set(atom, updater(this._get(atom)));
-  }
-
   private _isShuttingDown(): Effect.Effect<boolean> {
     return Ref.get(this._shuttingDown);
-  }
-
-  private _getPlugin(id: string): Plugin.Plugin | undefined {
-    return this._get(this._pluginsAtom).find((plugin) => plugin.meta.profile.key === id);
-  }
-
-  private _getPluginIdForModule(moduleId: string): string | undefined {
-    return this._get(this._pluginsAtom).find((plugin) => plugin.modules.some((module) => module.id === moduleId))?.meta
-      .profile.key;
-  }
-
-  /**
-   * Records a failure for a plugin. Latest failure wins so the registry UI
-   * always sees the most recent reason. Walks the `cause` chain when checking
-   * for timeouts: lazy-load timeouts arrive wrapped in `LazyPluginError` (the
-   * timeout is the cause), but the operator-visible reason should still be
-   * `'timeout'`.
-   */
-  private _recordFailure(id: string, phase: PluginFailurePhase, error: Error): void {
-    const reason: PluginFailureReason = isTimeoutCause(error) ? 'timeout' : 'error';
-    const failure: PluginFailure = { id, phase, reason, error, timestamp: Date.now() };
-    log.warn('plugin failed to activate', { id, phase, reason, error: error.message });
-    this._update(this._failedAtom, (current) => [...current.filter((entry) => entry.id !== id), failure]);
-  }
-
-  /**
-   * Fire-and-forget disable of a failed plugin. Forked because a failure can
-   * happen mid-activation chain — yielding a `disable` inline would deadlock
-   * on the shared semaphores. Core plugins are skipped (the host opted into
-   * them being non-removable; the failure record is enough signal).
-   */
-  private _scheduleAutoDisable(id: string): void {
-    if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
-      // Transient HMR failures must not persist; skip auto-disable in dev server.
-      return;
-    }
-    if (this._get(this._coreAtom).includes(id)) {
-      return;
-    }
-    if (!this._get(this._enabledAtom).includes(id)) {
-      return;
-    }
-    this._runForkedFiber(
-      this.disable(id).pipe(
-        Effect.tap(() => Effect.sync(() => log.error('plugin auto-disabled', { id }))),
-        Effect.tapError((error) => Effect.sync(() => log.warn('auto-disable failed', { id, error }))),
-        Effect.ignore,
-      ),
-    );
-  }
-
-  private _getActiveModules(): Plugin.PluginModule[] {
-    const active = this._get(this._activeAtom);
-    return this._get(this._modulesAtom).filter((module) => active.includes(module.id));
-  }
-
-  private _getInactiveModules(): Plugin.PluginModule[] {
-    const active = this._get(this._activeAtom);
-    return this._get(this._modulesAtom).filter((module) => !active.includes(module.id));
-  }
-
-  private _getActiveModulesByEvent(key: string): Plugin.PluginModule[] {
-    return this._getActiveModules().filter(
-      (module) =>
-        module.activation.mode !== 'dependency' &&
-        ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
-    );
-  }
-
-  private _getInactiveModulesByEvent(key: string): Plugin.PluginModule[] {
-    return this._getInactiveModules().filter(
-      (module) =>
-        module.activation.mode !== 'dependency' &&
-        ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
-    );
-  }
-
-  private _setPendingResetByModule(module: Plugin.PluginModule): void {
-    // Dependency-mode modules do not participate in event-keyed resets.
-    if (module.activation.mode === 'dependency') {
-      return;
-    }
-
-    const activationEvents = ActivationEvent.getEvents(module.activation.activatesOn)
-      .map(ActivationEvent.eventKey)
-      .filter((key) => this._get(this._eventsFiredAtom).includes(key));
-
-    const pendingReset = Array.fromIterable(new Set(activationEvents)).filter((event) => {
-      const pending = this._get(this._pendingResetAtom);
-      return !pending.includes(event);
-    });
-    if (pendingReset.length > 0) {
-      log('pending reset', { events: pendingReset });
-      this._update(this._pendingResetAtom, (current) => [...current, ...pendingReset]);
-    }
-  }
-
-  private _clearPendingReset(key: string): void {
-    const pendingIndex = this._get(this._pendingResetAtom).findIndex((event) => event === key);
-    if (pendingIndex !== -1) {
-      this._update(this._pendingResetAtom, (pending) => pending.filter((event) => event !== key));
-    }
   }
 
   //
   // Fiber helpers
   //
 
-  private _interruptInFlightActivations(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
-      const inFlightFibers = yield* Ref.get(this._inFlightFibers);
-      yield* Effect.forEach(inFlightFibers, (fiber) => Fiber.interrupt(fiber), {
-        concurrency: 'unbounded',
-      });
-    });
-  }
-
-  private _trackFiber(
-    ref: Ref.Ref<Array<Fiber.Fiber<unknown, unknown>>>,
-    fiber: Fiber.Fiber<unknown, unknown>,
-  ): Effect.Effect<void> {
-    return Ref.update(ref, (fibers) => [...fibers, fiber]);
-  }
-
-  private _untrackFiber(
-    ref: Ref.Ref<Array<Fiber.Fiber<unknown, unknown>>>,
-    fiber: Fiber.Fiber<unknown, unknown>,
-  ): Effect.Effect<void> {
-    return Ref.update(ref, (fibers) => fibers.filter((trackedFiber) => trackedFiber !== fiber));
-  }
-
-  /**
-   * Spawns an effect on the default runtime and registers the resulting fiber in
-   * `_inFlightFibers` so {@link shutdown} can interrupt it. Used from sync entry
-   * points like {@link remove} where there is no enclosing Effect to fork from;
-   * inside an Effect chain prefer the existing track/await/untrack pattern.
-   */
-  private _runForkedFiber<E>(effect: Effect.Effect<void, E>): void {
-    const fiber = Effect.runFork(effect);
-    Effect.runSync(this._trackFiber(this._inFlightFibers, fiber));
-    Effect.runFork(Fiber.await(fiber).pipe(Effect.andThen(() => this._untrackFiber(this._inFlightFibers, fiber))));
-  }
-
   //
   // Registration helpers
   //
-
-  private _addPlugin(plugin: Plugin.Plugin): void {
-    log('add plugin', { id: plugin.meta.profile.key });
-    // TODO(wittjosiah): Find a way to add a warning for duplicate plugins that doesn't cause log spam.
-    this._update(this._pluginsAtom, (plugins) => (plugins.includes(plugin) ? plugins : [...plugins, plugin]));
-  }
-
-  private _removePlugin(id: string): void {
-    log('remove plugin', { id });
-    this._update(this._pluginsAtom, (plugins) => plugins.filter((plugin) => plugin.meta.profile.key !== id));
-  }
-
-  private _addModule(module: Plugin.PluginModule): void {
-    log('add module', { id: module.id });
-    // TODO(wittjosiah): Find a way to add a warning for duplicate modules that doesn't cause log spam.
-    this._update(this._modulesAtom, (modules) => (modules.includes(module) ? modules : [...modules, module]));
-  }
-
-  private _removeModule(id: string): void {
-    log('remove module', { id });
-    this._update(this._modulesAtom, (modules) => modules.filter((module) => module.id !== id));
-  }
 
   //
   // Activation scheduling is delegated to the ActivationScheduler (`activation-scheduler.ts`).
@@ -1017,19 +752,3 @@ class ManagerImpl implements PluginManager {
  * Creates a new Plugin Manager instance.
  */
 export const make = (options: ManagerOptions): PluginManager => new ManagerImpl(options);
-
-/**
- * True when `error` (or anything along its `cause` chain) is a
- * {@link PluginTimeoutError}. Lazy-load timeouts wrap the timeout inside
- * `LazyPluginError`, so a shallow check on the outer error misses them.
- * Bounded depth so a circular chain can't loop forever.
- */
-const isTimeoutCause = (error: unknown, depth = 0): boolean => {
-  if (depth > 5 || !(error instanceof Error)) {
-    return false;
-  }
-  if (PluginTimeoutError.is(error)) {
-    return true;
-  }
-  return isTimeoutCause((error as Error & { cause?: unknown }).cause, depth + 1);
-};

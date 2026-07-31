@@ -5,6 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
 import { log } from '@dxos/log';
@@ -14,40 +15,10 @@ import * as ActivationGraph from './activation-graph';
 import type * as Capability from './capability';
 import type * as CapabilityManager from './capability-manager';
 import { DependencyCycleError, DuplicateProviderError, MissingProviderError } from './errors';
+import { type FiberTracker, type ManagerState } from './manager-state';
 import { type ActivationMessage } from './manager-types';
 import { type ModuleLoader } from './module-loader';
 import type * as Plugin from './plugin';
-
-/**
- * Everything the scheduler needs from its owner. Callbacks rather than a manager reference so
- * the scheduling decisions' true inputs stay visible. The two shared Sets are mutable state
- * co-owned with the manager: the catalog marks modules for reactivation (re-enable flows) and
- * clears structural failures on enable; the scheduler consumes and repopulates them.
- */
-export type ActivationSchedulerContext = {
-  capabilities: CapabilityManager.CapabilityManager;
-  loader: ModuleLoader;
-  publish: (message: ActivationMessage) => Effect.Effect<void>;
-  getActive: () => readonly string[];
-  getModules: () => readonly Plugin.PluginModule[];
-  /** Inactive modules whose `activatesOn` includes the event. */
-  getInactiveModulesByEvent: (key: string) => Plugin.PluginModule[];
-  eventsFired: { has: (key: string) => boolean; markFired: (key: string) => void };
-  /** Whether `start()` has completed registration — gates event-wave cascades. */
-  isStarted: () => Effect.Effect<boolean>;
-  /** Clears a pending-reset marker when its event re-fires (owned by the reset flow). */
-  clearPendingReset: (key: string) => void;
-  /** Modules to re-admit into the next round (marked by disable/re-enable flows). */
-  pendingReactivate: Set<string>;
-  /** Modules excluded from all rounds by a structural error (cycle, duplicate, missing). */
-  structurallyFailed: Set<string>;
-  getPluginIdForModule: (moduleId: string) => string | undefined;
-  /** Records a structural activation failure against the owning plugin. */
-  recordFailure: (pluginId: string, error: Error) => void;
-  /** In-flight fiber bookkeeping (the manager interrupts these on shutdown). */
-  trackFiber: (fiber: Fiber.Fiber<unknown, unknown>) => Effect.Effect<void>;
-  untrackFiber: (fiber: Fiber.Fiber<unknown, unknown>) => Effect.Effect<void>;
-};
 
 /**
  * Decides when each module's `activate` runs. Two coexisting paths:
@@ -68,10 +39,24 @@ export class ActivationScheduler {
   readonly #activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   /** Modules currently claimed by an event wave (excluded from re-matching). */
   readonly #activatingModules = Effect.runSync(Ref.make<string[]>([]));
-  readonly #ctx: ActivationSchedulerContext;
+  readonly #state: ManagerState;
+  readonly #capabilities: CapabilityManager.CapabilityManager;
+  readonly #loader: ModuleLoader;
+  readonly #activation: PubSub.PubSub<ActivationMessage>;
+  readonly #fibers: FiberTracker;
 
-  constructor(ctx: ActivationSchedulerContext) {
-    this.#ctx = ctx;
+  constructor(
+    state: ManagerState,
+    capabilities: CapabilityManager.CapabilityManager,
+    loader: ModuleLoader,
+    activation: PubSub.PubSub<ActivationMessage>,
+    fibers: FiberTracker,
+  ) {
+    this.#state = state;
+    this.#capabilities = capabilities;
+    this.#loader = loader;
+    this.#activation = activation;
+    this.#fibers = fibers;
   }
 
   /** Shutdown support: forget in-flight event/module claims. */
@@ -92,17 +77,17 @@ export class ActivationScheduler {
     opts?: { suppressEventMessage?: boolean },
   ): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
-      yield* this.#ctx.trackFiber(fiber);
+      yield* this.#fibers.track(fiber);
       log('activating', { key, ...params });
       yield* Ref.update(this.#activatingEvents, (activating) => Array.append(activating, key));
-      this.#ctx.clearPendingReset(key);
+      this.#state.clearPendingReset(key);
 
       const activatingEvents = yield* this.#activatingEvents;
       const activatingModules = yield* this.#activatingModules;
       const modules = this.#getModulesForActivation(key, activatingEvents, activatingModules);
       if (modules.length === 0) {
         log('no modules to activate', { key });
-        this.#ctx.eventsFired.markFired(key);
+        this.#state.markEventFired(key);
         return false;
       }
 
@@ -117,7 +102,7 @@ export class ActivationScheduler {
 
       // Follow-up pass: contributions made by this event may unlock modules that were waiting
       // on them. Cheap no-op when nothing became runnable.
-      if (yield* this.#ctx.isStarted()) {
+      if (yield* this.#state.isStarted()) {
         yield* this.runDependencyPass({});
       }
 
@@ -125,7 +110,7 @@ export class ActivationScheduler {
     }).pipe(
       Effect.ensuring(
         Effect.all([
-          this.#ctx.untrackFiber(fiber),
+          this.#fibers.untrack(fiber),
           Ref.update(this.#activatingEvents, (activating) => Array.filter(activating, (event) => event !== key)),
         ]),
       ),
@@ -179,7 +164,7 @@ export class ActivationScheduler {
    */
   reportGlobalCycle(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
-      const graph = ActivationGraph.buildSingletonGraph(this.#ctx.getModules());
+      const graph = ActivationGraph.buildSingletonGraph(this.#state.getModules());
       if (ActivationGraph.computeActivationWaves(graph, ['hard']) !== undefined) {
         return;
       }
@@ -188,7 +173,7 @@ export class ActivationScheduler {
         path.map((entry) => entry.module),
         new DependencyCycleError({ path }),
       );
-      path.forEach((entry) => this.#ctx.structurallyFailed.add(entry.module));
+      path.forEach((entry) => this.#state.structurallyFailed.add(entry.module));
     });
   }
 
@@ -203,20 +188,20 @@ export class ActivationScheduler {
 
       log('activation wave', { event: key, modules: activatingModuleIds });
       performance.mark(`event:${key}:start`);
-      yield* this.#ctx.publish({ event: key, state: 'activating' });
+      yield* PubSub.publish(this.#activation, { event: key, state: 'activating' });
 
       // Same-event provider/consumer pairs are topologically ordered with per-module
       // contribution via the capability-graph machinery.
       yield* this.runDependencyPass({ candidateModules: modules });
 
-      this.#ctx.eventsFired.markFired(key);
+      this.#state.markEventFired(key);
 
       performance.mark(`event:${key}:end`);
       performance.measure(`event:${key}`, `event:${key}:start`, `event:${key}:end`);
       // `start()` suppresses the event-level message for Startup and publishes it itself
       // once the concurrent dependency pass has also completed (the useApp ready gate).
       if (!opts?.suppressEventMessage) {
-        yield* this.#ctx.publish({ event: key, state: 'activated' });
+        yield* PubSub.publish(this.#activation, { event: key, state: 'activated' });
       }
       log('activated', { key });
 
@@ -235,7 +220,7 @@ export class ActivationScheduler {
     activatingEvents: string[],
     activatingModules: string[],
   ): Plugin.PluginModule[] {
-    return this.#ctx.getInactiveModulesByEvent(key).filter((module) => {
+    return this.#state.getInactiveModulesByEvent(key).filter((module) => {
       const spec = module.activation;
       if (spec.mode === 'dependency') {
         return false;
@@ -253,7 +238,7 @@ export class ActivationScheduler {
       return (
         events.every(
           (event) =>
-            this.#ctx.eventsFired.has(ActivationEvent.eventKey(event)) ||
+            this.#state.eventFired(ActivationEvent.eventKey(event)) ||
             activatingEvents.includes(ActivationEvent.eventKey(event)),
         ) && !activatingModules.includes(module.id)
       );
@@ -269,13 +254,13 @@ export class ActivationScheduler {
       log.error('dependency graph error', { error: String(error), modules: moduleIds });
       const plugins = new Set<string>();
       for (const moduleId of moduleIds) {
-        const pluginId = this.#ctx.getPluginIdForModule(moduleId);
+        const pluginId = this.#state.pluginIdOfModule(moduleId);
         if (pluginId !== undefined) {
           plugins.add(pluginId);
         }
       }
-      plugins.forEach((pluginId) => this.#ctx.recordFailure(pluginId, error));
-      yield* this.#ctx.publish({
+      plugins.forEach((pluginId) => this.#state.recordFailure(pluginId, 'activation', error));
+      yield* PubSub.publish(this.#activation, {
         event: ActivationEvent.eventKey(ActivationEvent.Startup),
         state: 'error',
         error,
@@ -289,8 +274,8 @@ export class ActivationScheduler {
   #runRound(candidateModules: Plugin.PluginModule[] | undefined): Effect.Effect<boolean | undefined, Error> {
     return Effect.gen(this, function* () {
       const key = ActivationEvent.eventKey(ActivationEvent.Startup);
-      const active = this.#ctx.getActive();
-      const allModules = this.#ctx.getModules();
+      const active = this.#state.getActiveIds();
+      const allModules = this.#state.getModules();
 
       // Event-mode modules join a round once their activation events have fired.
       const eventSatisfied = (module: Plugin.PluginModule): boolean => {
@@ -300,11 +285,11 @@ export class ActivationScheduler {
         }
         const events = ActivationEvent.getEvents(spec.activatesOn).map(ActivationEvent.eventKey);
         return ActivationEvent.isAllOf(spec.activatesOn)
-          ? events.every((event) => this.#ctx.eventsFired.has(event))
-          : events.some((event) => this.#ctx.eventsFired.has(event));
+          ? events.every((event) => this.#state.eventFired(event))
+          : events.some((event) => this.#state.eventFired(event));
       };
 
-      const reactivations = allModules.filter((module) => this.#ctx.pendingReactivate.has(module.id));
+      const reactivations = allModules.filter((module) => this.#state.reactivateOnNextPass.has(module.id));
       // Explicitly passed candidates are trusted to be triggered (an event wave passes its
       // matched modules before the event is marked fired); pooled candidates must be
       // dependency-mode or have their events already fired.
@@ -315,10 +300,10 @@ export class ActivationScheduler {
         if (
           active.includes(module.id) ||
           seen.has(module.id) ||
-          this.#ctx.structurallyFailed.has(module.id) ||
+          this.#state.structurallyFailed.has(module.id) ||
           // Already loading via another path (memoized): awaiting it here could deadlock —
           // e.g. a cascade triggered by an event wave that an in-flight module itself fired.
-          this.#ctx.loader.isLoading(module.id)
+          this.#loader.isLoading(module.id)
         ) {
           return false;
         }
@@ -353,8 +338,8 @@ export class ActivationScheduler {
             yield* this.#reportStructuralError([existing, module.id], error);
             structurallyExcluded.add(existing);
             structurallyExcluded.add(module.id);
-            this.#ctx.structurallyFailed.add(existing);
-            this.#ctx.structurallyFailed.add(module.id);
+            this.#state.structurallyFailed.add(existing);
+            this.#state.structurallyFailed.add(module.id);
             providerIndex.delete(capability.identifier);
             continue;
           }
@@ -372,7 +357,7 @@ export class ActivationScheduler {
       const { runnable, missing, waiting } = ActivationGraph.selectRunnableModules({
         candidates,
         excluded: structurallyExcluded,
-        isSatisfied: (capability) => this.#ctx.capabilities.getAll(capability).length > 0,
+        isSatisfied: (capability) => this.#capabilities.getAll(capability).length > 0,
         providerOf: (identifier) => providerIndex.get(identifier),
         activeIds: [...active],
         anyRegisteredProvider,
@@ -386,18 +371,18 @@ export class ActivationScheduler {
           new MissingProviderError({
             capability: miss.capability,
             requiredBy: [miss.module.id],
-            registered: this.#ctx.capabilities.listRegisteredIdentifiers(),
+            registered: this.#capabilities.listRegisteredIdentifiers(),
           }),
         );
-        this.#ctx.structurallyFailed.add(miss.module.id);
+        this.#state.structurallyFailed.add(miss.module.id);
       }
       if (runnable.length === 0) {
         return undefined;
       }
-      runnable.forEach((module) => this.#ctx.pendingReactivate.delete(module.id));
+      runnable.forEach((module) => this.#state.reactivateOnNextPass.delete(module.id));
 
       const graph = ActivationGraph.buildRoundGraph(runnable, {
-        isSatisfied: (capability) => this.#ctx.capabilities.getAll(capability).length > 0,
+        isSatisfied: (capability) => this.#capabilities.getAll(capability).length > 0,
         providerOf: (identifier) => providerIndex.get(identifier),
       });
 
@@ -436,7 +421,7 @@ export class ActivationScheduler {
         const members = path.map((entry) => entry.module);
         members.forEach((member) => {
           cycleFailed.add(member);
-          this.#ctx.structurallyFailed.add(member);
+          this.#state.structurallyFailed.add(member);
         });
         graph.removeNodes(members);
         if (graph.nodes.length === 0) {
@@ -499,11 +484,11 @@ export class ActivationScheduler {
    */
   #activateModule(module: Plugin.PluginModule, parentEvent: string): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {
-      if (this.#ctx.getActive().includes(module.id)) {
+      if (this.#state.getActiveIds().includes(module.id)) {
         return;
       }
-      const capabilities = yield* this.#ctx.loader.load(module, parentEvent);
-      yield* this.#ctx.loader.contribute(module, capabilities);
+      const capabilities = yield* this.#loader.load(module, parentEvent);
+      yield* this.#loader.contribute(module, capabilities);
     });
   }
 
@@ -522,8 +507,8 @@ export class ActivationScheduler {
    */
   #pullDependencyProviders(modules: Plugin.PluginModule[]): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {
-      const active = this.#ctx.getActive();
-      const allModules = this.#ctx.getModules();
+      const active = this.#state.getActiveIds();
+      const allModules = this.#state.getModules();
       const providerIndex = new Map<string, Plugin.PluginModule>();
       const multiProviderIndex = new Map<string, Plugin.PluginModule[]>();
       for (const module of allModules) {
@@ -558,7 +543,7 @@ export class ActivationScheduler {
             }
             continue;
           }
-          if (this.#ctx.capabilities.getAll(capability).length > 0) {
+          if (this.#capabilities.getAll(capability).length > 0) {
             continue;
           }
           const provider = providerIndex.get(capability.identifier);

@@ -5,48 +5,31 @@
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as PubSub from 'effect/PubSub';
 
 import { log } from '@dxos/log';
 
+import { type ActivationScheduler } from './activation-scheduler';
+import { type FiberTracker, type ManagerState } from './manager-state';
 import { type ActivationMessage, type PluginFailurePhase, PluginTimeoutError } from './manager-types';
 import * as Plugin from './plugin';
 
-/**
- * Everything the catalog needs from its owner. Callbacks rather than a manager reference so
- * each operation's true dependencies stay visible.
- */
-export type PluginCatalogContext = {
+export type PluginCatalogOptions = {
   pluginLoader: (id: string) => Effect.Effect<{ plugin: Plugin.Plugin; dev?: boolean }, Error>;
   loadTimeout: Duration.DurationInput;
-  getPlugins: () => readonly Plugin.Plugin[];
-  updatePlugins: (fn: (plugins: Plugin.Plugin[]) => Plugin.Plugin[]) => void;
-  getCore: () => readonly string[];
-  getEnabled: () => readonly string[];
-  updateEnabled: (fn: (enabled: string[]) => string[]) => void;
-  updateDevPluginIds: (fn: (ids: string[]) => string[]) => void;
-  /** Entries of the cached registry catalog. */
+  /** Entries of the cached registry catalog (owned by the manager's `pluginRegistry`). */
   getCatalogEntries: () => readonly Plugin.Meta[];
-  registerPlugin: (plugin: Plugin.Plugin) => void;
-  unregisterPlugin: (id: string) => void;
-  addModule: (module: Plugin.PluginModule) => void;
-  removeModule: (moduleId: string) => void;
-  setPendingResetByModule: (module: Plugin.PluginModule) => void;
-  getPendingReset: () => readonly string[];
-  /** Fires an activation event (used to replay pending resets on enable). */
-  activate: (event: string) => Effect.Effect<boolean, Error>;
-  /** Plugin-level deactivation (owned by the manager's lifecycle). */
-  deactivate: (id: string) => Effect.Effect<boolean, Error>;
-  isStarted: () => Effect.Effect<boolean>;
-  /** Incremental dependency pass for a plugin enabled after startup. */
-  runDependencyPass: (options: { candidateModules: Plugin.PluginModule[] }) => Effect.Effect<boolean, Error>;
-  recordFailure: (id: string, phase: PluginFailurePhase, error: Error) => void;
-  clearFailure: (id: string) => boolean;
-  scheduleAutoDisable: (id: string) => void;
-  /** Modules excluded by a structural error — cleared on enable so a retry re-evaluates. */
-  structurallyFailed: Set<string>;
-  publish: (message: ActivationMessage) => Effect.Effect<void>;
-  /** Fire-and-forget effect tracked by the manager (used for the onRemove hook). */
-  runForked: (effect: Effect.Effect<unknown>) => void;
+  /**
+   * Fires an activation event. An orchestration cycle by design: enabling a plugin replays
+   * events that already fired so its modules activate, and event dispatch is manager-owned
+   * (it waits for constructor initialization).
+   */
+  fireEvent: (event: string) => Effect.Effect<boolean, Error>;
+  /**
+   * Plugin-level deactivation. Manager-owned because it also tears down capability dependents
+   * of the plugin's modules (via the loader) before the modules themselves.
+   */
+  deactivatePlugin: (id: string) => Effect.Effect<boolean, Error>;
   onRemove?: (id: string) => Effect.Effect<void, unknown>;
 };
 
@@ -62,19 +45,51 @@ export class PluginCatalog {
   readonly #resolving = new Map<string, Deferred.Deferred<Plugin.Plugin, Plugin.LazyPluginError>>();
   /** Dev-sourced plugin ids, with the shadowed original (if any) for restoration on remove. */
   readonly #devPlugins = new Map<string, { shadow?: { plugin: Plugin.Plugin; wasEnabled: boolean } }>();
-  readonly #ctx: PluginCatalogContext;
+  readonly #state: ManagerState;
+  readonly #scheduler: ActivationScheduler;
+  readonly #activation: PubSub.PubSub<ActivationMessage>;
+  readonly #fibers: FiberTracker;
+  readonly #options: PluginCatalogOptions;
 
-  constructor(ctx: PluginCatalogContext) {
-    this.#ctx = ctx;
+  constructor(
+    state: ManagerState,
+    scheduler: ActivationScheduler,
+    activation: PubSub.PubSub<ActivationMessage>,
+    fibers: FiberTracker,
+    options: PluginCatalogOptions,
+  ) {
+    this.#state = state;
+    this.#scheduler = scheduler;
+    this.#activation = activation;
+    this.#fibers = fibers;
+    this.#options = options;
+  }
+
+  /**
+   * Fire-and-forget disable of a failed plugin. Forked because a failure can
+   * happen mid-activation chain — yielding a `disable` inline would deadlock
+   * on the shared semaphores. Core plugins are skipped (the host opted into
+   * them being non-removable; the failure record is enough signal).
+   */
+  scheduleAutoDisable(id: string): void {
+    if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
+      // Transient HMR failures must not persist; skip auto-disable in dev server.
+      return;
+    }
+    if (!this.#state.isCore(id) && this.#state.isEnabled(id)) {
+      this.#fibers.fork(
+        this.disable(id).pipe(
+          Effect.tap(() => Effect.sync(() => log.error('plugin auto-disabled', { id }))),
+          Effect.tapError((error) => Effect.sync(() => log.warn('auto-disable failed', { id, error }))),
+          Effect.ignore,
+        ),
+      );
+    }
   }
 
   /** Whether the id is currently dev-sourced. */
   isDev(id: string): boolean {
     return this.#devPlugins.has(id);
-  }
-
-  #getPlugin(id: string): Plugin.Plugin | undefined {
-    return this.#ctx.getPlugins().find((plugin) => plugin.meta.profile.key === id);
   }
 
   /**
@@ -88,14 +103,14 @@ export class PluginCatalog {
       return;
     }
     this.#devPlugins.set(id, { shadow });
-    this.#ctx.updateDevPluginIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
+    this.#state.markDevPlugin(id);
   }
 
   /** Drops the dev-plugin entry and returns its shadow data (if any) for restoration. */
   #unmarkDev(id: string): { plugin: Plugin.Plugin; wasEnabled: boolean } | undefined {
     const entry = this.#devPlugins.get(id);
     this.#devPlugins.delete(id);
-    this.#ctx.updateDevPluginIds((ids) => ids.filter((existing) => existing !== id));
+    this.#state.unmarkDevPlugin(id);
     return entry?.shadow;
   }
 
@@ -129,9 +144,9 @@ export class PluginCatalog {
   add(id: string): Effect.Effect<Plugin.Plugin, Error> {
     return Effect.gen(this, function* () {
       log('add plugin', { id });
-      const { plugin, dev = false } = yield* this.#ctx.pluginLoader(id);
+      const { plugin, dev = false } = yield* this.#options.pluginLoader(id);
       const pluginId = plugin.meta.profile.key;
-      const existing = this.#getPlugin(pluginId);
+      const existing = this.#state.getPlugin(pluginId);
 
       if (dev && existing && existing !== plugin) {
         // Shadow path: a plugin with this id is already registered (a builtin,
@@ -141,14 +156,14 @@ export class PluginCatalog {
         // Marking as dev is a no-op when the id is already tracked, so a dev-plugin
         // reload (after editing source) keeps the *original* shadow target —
         // removal restores the real underlying plugin, not an intermediate build.
-        const wasEnabled = this.#ctx.getEnabled().includes(pluginId);
+        const wasEnabled = this.#state.isEnabled(pluginId);
         if (wasEnabled) {
           yield* this.disable(pluginId);
         }
         this.#markDev(pluginId, { plugin: existing, wasEnabled });
-        this.#ctx.updatePlugins((plugins) => plugins.map((p) => (p.meta.profile.key === pluginId ? plugin : p)));
+        this.#state.replacePlugin(pluginId, plugin);
       } else {
-        this.#ctx.registerPlugin(plugin);
+        this.#state.registerPlugin(plugin);
         if (dev) {
           this.#markDev(pluginId);
         }
@@ -177,7 +192,7 @@ export class PluginCatalog {
       // This preserves the prior contract for persisted `enabled` entries
       // whose plugins are no longer bundled, instead of recording a confusing
       // "missing self-dependency" failure.
-      if (!this.#getPlugin(id) && !this.#getCatalogEntry(id)) {
+      if (!this.#state.getPlugin(id) && !this.#getCatalogEntry(id)) {
         return yield* this.#enableOne(id);
       }
 
@@ -186,7 +201,7 @@ export class PluginCatalog {
       // target plugin is left disabled.
       const walk = this.#computeDependencyClosure(id);
       if (walk.cycle) {
-        this.#ctx.recordFailure(
+        this.#state.recordFailure(
           id,
           'load',
           new Plugin.PluginDependencyError({ context: { id, reason: 'cycle', path: walk.cycle } }),
@@ -194,7 +209,7 @@ export class PluginCatalog {
         return false;
       }
       if (walk.missing.length > 0) {
-        this.#ctx.recordFailure(
+        this.#state.recordFailure(
           id,
           'load',
           new Plugin.PluginDependencyError({ context: { id, reason: 'missing', missing: walk.missing } }),
@@ -208,12 +223,12 @@ export class PluginCatalog {
       let queue = walk.toInstall.slice();
       const installed = new Set<string>();
       for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
-        if (installed.has(next) || this.#getPlugin(next)) {
+        if (installed.has(next) || this.#state.getPlugin(next)) {
           continue;
         }
         const installResult = yield* this.add(next).pipe(Effect.either);
         if (installResult._tag === 'Left') {
-          this.#ctx.recordFailure(
+          this.#state.recordFailure(
             id,
             'load',
             new Plugin.PluginDependencyError({
@@ -226,7 +241,7 @@ export class PluginCatalog {
         installed.add(next);
         const rewalk = this.#computeDependencyClosure(id);
         if (rewalk.cycle) {
-          this.#ctx.recordFailure(
+          this.#state.recordFailure(
             id,
             'load',
             new Plugin.PluginDependencyError({ context: { id, reason: 'cycle', path: rewalk.cycle } }),
@@ -234,7 +249,7 @@ export class PluginCatalog {
           return false;
         }
         if (rewalk.missing.length > 0) {
-          this.#ctx.recordFailure(
+          this.#state.recordFailure(
             id,
             'load',
             new Plugin.PluginDependencyError({ context: { id, reason: 'missing', missing: rewalk.missing } }),
@@ -272,7 +287,7 @@ export class PluginCatalog {
    */
   #enableOne(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
-      const stub = this.#getPlugin(id);
+      const stub = this.#state.getPlugin(id);
       if (!stub) {
         return false;
       }
@@ -280,32 +295,32 @@ export class PluginCatalog {
       // Clear any prior failure record so a retry starts from a clean slate.
       // The failure stays on the atom only if this attempt also fails. Structural
       // exclusions are re-evaluated too: a newly enabled plugin may resolve them.
-      this.#ctx.clearFailure(id);
-      this.#ctx.structurallyFailed.clear();
+      this.#state.clearFailure(id);
+      this.#state.structurallyFailed.clear();
 
       const plugin = yield* this.#resolveLazy(stub);
 
-      this.#ctx.updateEnabled((enabled) => (enabled.includes(id) ? enabled : [...enabled, id]));
+      this.#state.markEnabled(id);
 
       plugin.modules.forEach((module) => {
-        this.#ctx.addModule(module);
-        this.#ctx.setPendingResetByModule(module);
+        this.#state.addModule(module);
+        this.#state.markPendingResetFor(module);
       });
 
-      log('pending reset', { events: [...this.#ctx.getPendingReset()] });
+      log('pending reset', { events: [...this.#state.getPendingReset()] });
       yield* Effect.all(
-        this.#ctx.getPendingReset().map((event) => this.#ctx.activate(event)),
+        this.#state.getPendingReset().map((event) => this.#options.fireEvent(event)),
         { concurrency: 'unbounded' },
       );
 
       // After startup, newly enabled dependency-mode modules activate incrementally against
       // the already-contributed capability set. Failures are scoped to this plugin.
-      if (yield* this.#ctx.isStarted()) {
-        const result = yield* this.#ctx
+      if (yield* this.#state.isStarted()) {
+        const result = yield* this.#scheduler
           .runDependencyPass({ candidateModules: [...plugin.modules] })
           .pipe(Effect.either);
         if (result._tag === 'Left') {
-          this.#ctx.recordFailure(id, 'activation', result.left);
+          this.#state.recordFailure(id, 'activation', result.left);
         }
       }
 
@@ -343,14 +358,14 @@ export class PluginCatalog {
 
       return yield* Effect.gen(this, function* () {
         log('resolving lazy plugin', { id });
-        yield* this.#ctx.publish({ event: '', state: 'activating', module: `lazy:${id}` });
+        yield* PubSub.publish(this.#activation, { event: '', state: 'activating', module: `lazy:${id}` });
         const resolvedPlugin = yield* Plugin.resolveLazy(plugin).pipe(
           // Cap how long a remote import can hang. Without this the host can
           // sit on a pending dynamic `import()` indefinitely if the plugin's
           // server is unreachable, which stalls every caller awaiting
           // `enable(id)` and (transitively) the manager's initialization.
           Effect.timeoutFail({
-            duration: this.#ctx.loadTimeout,
+            duration: this.#options.loadTimeout,
             onTimeout: () =>
               new Plugin.LazyPluginError({
                 context: { id, reason: 'load-failed' },
@@ -358,15 +373,15 @@ export class PluginCatalog {
               }),
           }),
         );
-        this.#ctx.updatePlugins((plugins) => plugins.map((p) => (p.meta.profile.key === id ? resolvedPlugin : p)));
-        yield* this.#ctx.publish({ event: '', state: 'activated', module: `lazy:${id}` });
+        this.#state.replacePlugin(id, resolvedPlugin);
+        yield* PubSub.publish(this.#activation, { event: '', state: 'activated', module: `lazy:${id}` });
         return resolvedPlugin;
       }).pipe(
         Effect.tapError((error) =>
           Effect.gen(this, function* () {
-            yield* this.#ctx.publish({ event: '', state: 'error', module: `lazy:${id}`, error });
-            this.#ctx.recordFailure(id, 'load', error);
-            this.#ctx.scheduleAutoDisable(id);
+            yield* PubSub.publish(this.#activation, { event: '', state: 'error', module: `lazy:${id}`, error });
+            this.#state.recordFailure(id, 'load', error);
+            this.scheduleAutoDisable(id);
           }),
         ),
         Effect.tap((value) => Deferred.succeed(deferred, value)),
@@ -390,10 +405,10 @@ export class PluginCatalog {
         return false;
       }
 
-      this.#ctx.unregisterPlugin(id);
-      if (this.#ctx.onRemove) {
-        this.#ctx.runForked(
-          this.#ctx.onRemove(id).pipe(
+      this.#state.unregisterPlugin(id);
+      if (this.#options.onRemove) {
+        this.#fibers.fork(
+          this.#options.onRemove(id).pipe(
             Effect.tapError((error) => Effect.sync(() => log.warn('plugin remove hook failed', { id, error }))),
             Effect.ignore,
           ),
@@ -408,7 +423,7 @@ export class PluginCatalog {
       if (wasDev) {
         const shadow = this.#unmarkDev(id);
         if (shadow) {
-          this.#ctx.registerPlugin(shadow.plugin);
+          this.#state.registerPlugin(shadow.plugin);
           if (shadow.wasEnabled) {
             yield* this.enable(id);
           }
@@ -426,11 +441,11 @@ export class PluginCatalog {
   disable(id: string, { cascade = true }: { cascade?: boolean } = {}): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       log('disable plugin', { id, cascade });
-      if (this.#ctx.getCore().includes(id)) {
+      if (this.#state.isCore(id)) {
         return false;
       }
 
-      const plugin = this.#getPlugin(id);
+      const plugin = this.#state.getPlugin(id);
       if (!plugin) {
         return false;
       }
@@ -438,7 +453,7 @@ export class PluginCatalog {
       if (cascade) {
         const enabledDependents = this.#collectDependents(id, { transitive: true, enabledOnly: true });
         if (enabledDependents.length > 0) {
-          const coreDependent = enabledDependents.find((dependentId) => this.#ctx.getCore().includes(dependentId));
+          const coreDependent = enabledDependents.find((dependentId) => this.#state.isCore(dependentId));
           if (coreDependent) {
             return yield* Effect.fail(
               new Plugin.PluginDependencyError({
@@ -467,19 +482,19 @@ export class PluginCatalog {
    */
   #disableOne(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
-      if (this.#ctx.getCore().includes(id)) {
+      if (this.#state.isCore(id)) {
         return false;
       }
-      const plugin = this.#getPlugin(id);
+      const plugin = this.#state.getPlugin(id);
       if (!plugin) {
         return false;
       }
-      const enabledIndex = this.#ctx.getEnabled().findIndex((enabled) => enabled === id);
+      const enabledIndex = this.#state.read(this.#state.enabled).findIndex((enabled) => enabled === id);
       if (enabledIndex !== -1) {
-        this.#ctx.updateEnabled((enabled) => enabled.filter((item) => item !== id));
-        yield* this.#ctx.deactivate(id);
+        this.#state.markDisabled(id);
+        yield* this.#options.deactivatePlugin(id);
         plugin.modules.forEach((module) => {
-          this.#ctx.removeModule(module.id);
+          this.#state.removeModule(module.id);
         });
       }
       return true;
@@ -488,7 +503,7 @@ export class PluginCatalog {
 
   /** Looks up an id in the cached registry catalog, returning the entry or `undefined`. */
   #getCatalogEntry(id: string): Plugin.Meta | undefined {
-    return this.#ctx.getCatalogEntries().find((entry) => entry.profile.key === id);
+    return this.#options.getCatalogEntries().find((entry) => entry.profile.key === id);
   }
 
   /**
@@ -498,7 +513,7 @@ export class PluginCatalog {
    * separately).
    */
   #directDependencies(id: string): string[] {
-    const plugin = this.#getPlugin(id);
+    const plugin = this.#state.getPlugin(id);
     if (plugin) {
       return [...(plugin.meta.profile.dependsOn ?? [])];
     }
@@ -531,8 +546,8 @@ export class PluginCatalog {
     let cycle: string[] | undefined;
 
     const knownIds = new Set<string>([
-      ...this.#ctx.getPlugins().map((plugin) => plugin.meta.profile.key),
-      ...this.#ctx.getCatalogEntries().map((entry) => entry.profile.key),
+      ...this.#state.getPlugins().map((plugin) => plugin.meta.profile.key),
+      ...this.#options.getCatalogEntries().map((entry) => entry.profile.key),
     ]);
 
     const visit = (currentId: string): void => {
@@ -552,7 +567,7 @@ export class PluginCatalog {
 
       if (!knownIds.has(currentId)) {
         missing.push(currentId);
-      } else if (!this.#getPlugin(currentId)) {
+      } else if (!this.#state.getPlugin(currentId)) {
         toInstall.push(currentId);
       }
 
@@ -582,13 +597,13 @@ export class PluginCatalog {
    * can iterate and tear down leaves first.
    */
   #collectDependents(id: string, opts: { transitive: boolean; enabledOnly: boolean }): string[] {
-    const direct = this.#ctx
+    const direct = this.#state
       .getPlugins()
       .filter((plugin) => plugin.meta.profile.dependsOn?.some((dep) => dep === id))
       .map((plugin) => plugin.meta.profile.key);
 
     if (!opts.transitive) {
-      return opts.enabledOnly ? direct.filter((dependentId) => this.#ctx.getEnabled().includes(dependentId)) : direct;
+      return opts.enabledOnly ? direct.filter((dependentId) => this.#state.isEnabled(dependentId)) : direct;
     }
 
     const result: string[] = [];
@@ -598,7 +613,7 @@ export class PluginCatalog {
         return;
       }
       visited.add(currentId);
-      const parents = this.#ctx
+      const parents = this.#state
         .getPlugins()
         .filter((plugin) => plugin.meta.profile.dependsOn?.some((dep) => dep === currentId))
         .map((plugin) => plugin.meta.profile.key);
@@ -611,6 +626,6 @@ export class PluginCatalog {
     };
     visit(id);
 
-    return opts.enabledOnly ? result.filter((dependentId) => this.#ctx.getEnabled().includes(dependentId)) : result;
+    return opts.enabledOnly ? result.filter((dependentId) => this.#state.isEnabled(dependentId)) : result;
   }
 }
