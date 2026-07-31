@@ -56,6 +56,8 @@ export namespace SpaceCapabilities {
     viewersByObject: Record<string, ComplexMap<PublicKey, ObjectViewerProps>>;
     viewersByIdentity: ComplexMap<PublicKey, Set<string>>;
     mergePreview: MergePreview | undefined;
+    /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
+    lastMergeAt: number | undefined;
   };
 
   /** Transient/ephemeral state (not persisted). */

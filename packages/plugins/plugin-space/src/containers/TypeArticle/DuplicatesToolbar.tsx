@@ -50,7 +50,9 @@ export const DuplicatesToolbar = ({ typename, typeUri, duplicates }: DuplicatesT
   }, [updateEphemeral, refresh]);
 
   return (
-    <div role='none' className='flex items-center gap-1 grow'>
+    // Own `Toolbar.Root`: `Panel.Toolbar` here is a plain flex container (it hosts the search input
+    // in the other layouts), and `Toolbar.Button` needs the roving-focus group a Root provides.
+    <Toolbar.Root classNames='grow !p-0 !bg-transparent'>
       <Toolbar.Button variant='primary' disabled={current.length < 2} onClick={handleMerge}>
         {t('merge-duplicates.label')}
       </Toolbar.Button>
@@ -70,7 +72,7 @@ export const DuplicatesToolbar = ({ typename, typeUri, duplicates }: DuplicatesT
       <Toolbar.Button variant='ghost' onClick={handleRefresh}>
         <Icon icon='ph--arrows-clockwise--regular' />
       </Toolbar.Button>
-    </div>
+    </Toolbar.Root>
   );
 };
 

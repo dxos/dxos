@@ -137,10 +137,10 @@ typename to its spec needs `Capability.Service`, and pulling `@dxos/app-framewor
 on. Both definitions and handlers therefore live in `plugin-space`, next to the capability and the
 UI, and call the generic engine.
 
-| Operation         | Input                                 | Output                             |
-| ----------------- | ------------------------------------- | ---------------------------------- |
+| Operation         | Input                                 | Output                              |
+| ----------------- | ------------------------------------- | ----------------------------------- |
 | `FindDuplicates`  | `{ typename }`                        | `{ groups: { keys, objectIds }[] }` |
-| `MergeDuplicates` | `{ typename, objectIds, overrides? }` | `{ survivorId, removedIds }`       |
+| `MergeDuplicates` | `{ typename, objectIds, overrides? }` | `{ survivorId, removedIds }`        |
 
 Specs reach `plugin-space` through `SpaceCapabilities.IdentitySpec`, contributed by `plugin-crm`
 for Person/Organization — mirroring `InboxCapabilities.ObjectExtractor`. The Duplicates tab is

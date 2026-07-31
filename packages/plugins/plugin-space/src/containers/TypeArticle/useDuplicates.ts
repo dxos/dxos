@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Type } from '@dxos/echo';
 import { type IdentitySpec, planMerge } from '@dxos/extractor';
 import { type Space } from '@dxos/react-client/echo';
@@ -53,6 +53,7 @@ export const useDuplicates = ({ space, type, objects, enabled }: UseDuplicatesPr
   const [groups, setGroups] = useState<readonly SpaceOperation.DuplicateGroupResult[]>([]);
   const [index, setIndex] = useState(0);
   const [scanning, setScanning] = useState(false);
+  const { lastMergeAt } = useAtomCapability(SpaceCapabilities.EphemeralState);
 
   const refresh = useCallback(() => {
     if (!spec) {
@@ -67,11 +68,12 @@ export const useDuplicates = ({ space, type, objects, enabled }: UseDuplicatesPr
       .finally(() => setScanning(false));
   }, [invokePromise, spec, typename, space.id]);
 
+  // `lastMergeAt` is a dependency, not a read: a committed merge invalidates the scan.
   useEffect(() => {
     if (enabled) {
       refresh();
     }
-  }, [enabled, refresh]);
+  }, [enabled, refresh, lastMergeAt]);
 
   const byId = useMemo(() => new Map(objects.map((object) => [object.id, object])), [objects]);
   const current = useMemo(() => {

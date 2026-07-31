@@ -174,11 +174,15 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
           ) : (
             <SearchList.Input placeholder={t('search-placeholder.label')} classNames='grow' />
           )}
+          {/* Own Root: `Panel.Toolbar` is a plain flex container here, and `Toolbar.Button` needs
+              the roving-focus group a `Toolbar.Root` provides. */}
           {layout === 'table' && selectedIds.length > 0 && (
-            <Toolbar.Button variant='ghost' onClick={handleDeleteSelected}>
-              <Icon icon='ph--trash--regular' />
-              <span>{t('delete-selected.label', { count: selectedIds.length })}</span>
-            </Toolbar.Button>
+            <Toolbar.Root classNames='w-auto !p-0 !bg-transparent'>
+              <Toolbar.Button variant='ghost' onClick={handleDeleteSelected}>
+                <Icon icon='ph--trash--regular' />
+                <span>{t('delete-selected.label', { count: selectedIds.length })}</span>
+              </Toolbar.Button>
+            </Toolbar.Root>
           )}
           {/* Constrain the menu toolbar to its content so the search input fills the left.
               `alwaysActive` keeps the layout toggle full-opacity; it needs no attention gating. */}

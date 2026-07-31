@@ -21,12 +21,15 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/person-deduplication-plugin-inb
 - [x] 2.2 `SpaceCapabilities.IdentitySpec` + handlers in `plugin-space`.
 - [x] 2.3 `plugin-crm` contributes the Person/Organization specs.
 
-## Phase 3 — UI (built, NOT live-verified)
+## Phase 3 — UI ✅ (live-verified in storybook)
 
 - [x] 3.1 `duplicates` layout value on `TypeArticle` (hidden with no spec).
 - [x] 3.2 Duplicates toolbar (Merge / Skip / counter / prev-next / rescan).
 - [x] 3.3 Merge-preview companion (Form over the uncommitted draft, Confirm/Cancel).
-- [ ] 3.4 Storybook + play test — **still owed**; nothing here has been rendered yet.
+- [x] 3.4 `TypeArticle.stories.tsx` `Duplicates` story — seeds an email group, a foreign-key group
+      and a deliberate non-duplicate pair, registers the operation handlers + identity specs, and
+      renders a stand-in Selected companion. Walked end to end with Playwright; two defects found
+      and fixed that way (see below). Play test not written — the manual `Test:` block is on the story.
 
 ### 3a — `TypeArticle` fixes requested alongside (2026-07-31)
 
@@ -34,6 +37,13 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/person-deduplication-plugin-inb
       `SpaceOperation.RemoveObjects`).
 - [x] 3a.2 Card tab: clicking a card selects/deselects it; Open moved to the card menu.
 - [x] 3a.3 Masonry scrollbar padding — done by the user directly.
+
+### Defects found by the live walkthrough (fixed)
+
+- `Toolbar.Button` rendered outside a `Toolbar.Root` — `Panel.Toolbar` on this article is a plain
+  flex container, so the roving-focus context was missing and the tab threw on open.
+- Confirming a merge left the review on the merged group (`1 / 2` with one member). Committing now
+  bumps `lastMergeAt` on the space plugin's ephemeral state, which the scan depends on.
 
 ## Phase 4 — fix the sources (F1–F4)
 

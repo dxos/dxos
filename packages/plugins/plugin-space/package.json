@@ -182,6 +182,7 @@
   "devDependencies": {
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@babel/core": "catalog:",
+    "@dxos/extractor-lib": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

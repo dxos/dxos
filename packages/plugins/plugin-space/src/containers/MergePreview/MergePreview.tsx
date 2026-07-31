@@ -42,8 +42,12 @@ export const MergePreview = forwardRef<HTMLDivElement, MergePreviewProps>(
         SpaceOperation.MergeDuplicates,
         { typename: preview.typename, objectIds: preview.objectIds, overrides: preview.preview },
         { spaceId },
-      ).then(clear);
-    }, [invokePromise, preview, spaceId, clear]);
+      ).then(() =>
+        // Bumping the timestamp is what tells the open review to rescan; without it the group the
+        // user just merged stays on screen as a one-member "duplicate".
+        updateEphemeral((state) => ({ ...state, mergePreview: undefined, lastMergeAt: Date.now() })),
+      );
+    }, [invokePromise, preview, spaceId, updateEphemeral]);
 
     return (
       <Panel.Root ref={forwardedRef}>
