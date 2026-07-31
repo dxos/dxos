@@ -5,100 +5,54 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Database, Filter, Query, Type } from '@dxos/echo';
-import { Resolver } from '@dxos/extractor';
-import { Organization, Person } from '@dxos/types';
+import { Database, type Obj } from '@dxos/echo';
+import { type IdentityIndex, Resolver, buildIdentityIndex, makeIdentityIndex } from '@dxos/extractor';
+import { type Organization, type Person } from '@dxos/types';
 
-import { extractDomain, matchesDomain } from './domain';
+import { identitySpecs } from './identity';
 
 export type HasEmail = { email: string };
 
-export type ResolverFunction<T> = (input: HasEmail) => Effect.Effect<T | undefined>;
-
-export type ResolverMap = Record<string, ResolverFunction<any>>;
-
 /**
- * Resolves an existing Organization from a sender email by matching its domain against known
- * Organization websites. Queries the space once and caches the result.
- */
-export const createOrganizationResolver = Effect.gen(function* () {
-  const organizations = yield* Database.query(Query.select(Filter.type(Organization.Organization))).run;
-  const resolver: ResolverFunction<Organization.Organization> = ({ email }: HasEmail) => {
-    const domain = extractDomain(email);
-    return Effect.succeed(
-      domain
-        ? organizations.find((organization) => organization.website && matchesDomain(organization.website, domain))
-        : undefined,
-    );
-  };
-
-  return resolver;
-});
-
-/**
- * Resolves an existing Person from a sender email by matching one of its email addresses. Queries
- * the space once and caches the result.
- */
-export const createPersonResolver = Effect.gen(function* () {
-  const contacts = yield* Database.query(Query.select(Filter.type(Person.Person))).run;
-  const resolver: ResolverFunction<Person.Person> = ({ email }: HasEmail) => {
-    // Case-insensitive, to match the domain-based Organization resolver (which lower-cases).
-    const normalizedEmail = email.toLowerCase();
-    return Effect.succeed(
-      contacts.find((contact) => contact.emails?.some(({ value }) => value?.toLowerCase() === normalizedEmail)),
-    );
-  };
-
-  return resolver;
-});
-
-/**
- * Live resolver backed by the space database: resolves Person by email and Organization by
- * email domain.
+ * Live resolver backed by the space database. Identity comes from the shared {@link IdentitySpec}s
+ * (Person by email, Organization by website domain, either by foreign key), so a resolver lookup,
+ * an extractor's create-vs-merge decision and the duplicate scan can never disagree.
+ *
+ * The index is mutable: {@link registerResolved} adds an object built during the run, closing the
+ * window where an uncommitted object was invisible and a repeat sender forked a second Person.
  */
 export const Live = Layer.effect(
   Resolver,
   Effect.gen(function* () {
-    const personResolver = yield* createPersonResolver;
-    const organizationResolver = yield* createOrganizationResolver;
-    const resolvers: ResolverMap = {
-      [Type.getTypename(Person.Person)]: personResolver,
-      [Type.getTypename(Organization.Organization)]: organizationResolver,
-    };
+    const { db } = yield* Database.Service;
+    const index = yield* buildIdentityIndex(db, identitySpecs);
+    indexes.set(db, index);
 
     return Resolver.of({
-      resolve: (schema, input: any) => {
-        const typename = Type.getTypename(schema);
-        const resolver = resolvers[typename];
-        if (resolver) {
-          return resolver(input);
-        }
-
-        return Effect.succeed(undefined);
-      },
+      resolve: (type, input: unknown) => Effect.succeed(index.lookup(type, input)),
     });
   }),
 );
 
-/** In-memory resolver over fixed Person/Organization lists (Person by email, Organization by domain). */
-export const Mock = (data: { people?: Person.Person[]; organizations?: Organization.Organization[] } = {}) =>
-  Layer.succeed(
+/**
+ * Records an object against the index backing the database's live resolver, so a just-built object
+ * resolves before it is committed. A no-op when no resolver has been built for that database.
+ */
+export const registerResolved = (db: Database.Database, object: Obj.Unknown): void => {
+  indexes.get(db)?.register(object);
+};
+
+/** In-memory resolver over fixed Person/Organization lists, for tests and stories. */
+export const Mock = (data: { people?: Person.Person[]; organizations?: Organization.Organization[] } = {}) => {
+  const index = makeIdentityIndex(identitySpecs);
+  [...(data.people ?? []), ...(data.organizations ?? [])].forEach((object) => index.register(object));
+  return Layer.succeed(
     Resolver,
     Resolver.of({
-      resolve: (schema, input: any) => {
-        const typename = Type.getTypename(schema);
-        if (typename === Type.getTypename(Person.Person)) {
-          const person = data.people?.find((p) => p.emails?.some((e) => e.value === input.email || e.value === input));
-          return Effect.succeed(person as any);
-        } else if (typename === Type.getTypename(Organization.Organization)) {
-          const domain = extractDomain(input.email);
-          if (domain) {
-            const org = data.organizations?.find((o) => o.website && matchesDomain(o.website, domain));
-            return Effect.succeed(org as any);
-          }
-        }
-
-        return Effect.succeed(undefined);
-      },
+      resolve: (type, input: unknown) => Effect.succeed(index.lookup(type, input)),
     }),
   );
+};
+
+/** Per-database index, so concurrent work in one process shares one answer rather than one each. */
+const indexes = new WeakMap<Database.Database, IdentityIndex>();

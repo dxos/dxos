@@ -8,10 +8,10 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { applyMerge, findDuplicates, identityKeys, planMerge } from '@dxos/extractor';
+import { applyMerge, buildIdentityIndex, findDuplicates, identityKeys, planMerge } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
 
-import { organizationIdentitySpec, personIdentitySpec } from './identity';
+import { identitySpecs, organizationIdentitySpec, personIdentitySpec } from './identity';
 
 const GOOGLE = 'google.com/contacts';
 
@@ -277,5 +277,60 @@ describe('organizationIdentitySpec', () => {
     const person = Person.make({ emails: [{ value: 'alice@dxos.org' }], organization: Ref.make(organization) });
     // Specs are per-type: a Person's organization ref never contributes an Organization key.
     expect(personIdentitySpec.keys(person)).toEqual(['email:alice@dxos.org']);
+  });
+});
+
+describe('IdentityIndex', () => {
+  let builder: EchoTestBuilder;
+  let db: EchoDatabase;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person] }));
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('resolves a person by any of its emails, however the input is cased', async ({ expect }) => {
+    db.add(Person.make({ fullName: 'Alice', emails: [{ value: 'alice@dxos.org' }, { value: 'a@dxos.org' }] }));
+    await db.flush({ indexes: true });
+
+    const index = await EffectEx.runPromise(buildIdentityIndex(db, identitySpecs));
+    expect(index.lookup(Person.Person, { email: ' A@DXOS.org ' })?.fullName).toBe('Alice');
+    expect(index.lookup(Person.Person, { email: 'bob@dxos.org' })).toBeUndefined();
+  });
+
+  test('an object registered mid-run resolves before it is committed', async ({ expect }) => {
+    const index = await EffectEx.runPromise(buildIdentityIndex(db, identitySpecs));
+    // Not added to the database — this is the window in which the old per-run caches forked a duplicate.
+    const contact = Person.make({ fullName: 'Alice', emails: [{ value: 'alice@dxos.org' }] });
+    index.register(contact);
+    expect(index.lookup(Person.Person, { email: 'alice@dxos.org' })?.fullName).toBe('Alice');
+  });
+
+  test('the Google resource name of a mail-sourced person resolves to that person', async ({ expect }) => {
+    // F2: the contacts sync keys on `resourceName` only; once the key is on the mail-created Person
+    // both stages agree, and the second sync updates instead of creating.
+    const person = db.add(
+      Person.make({
+        [Obj.Meta]: { keys: [{ source: GOOGLE, id: 'people/c1' }] },
+        fullName: 'Alice',
+        emails: [{ value: 'alice@dxos.org' }],
+      }),
+    );
+    await db.flush({ indexes: true });
+
+    const index = await EffectEx.runPromise(buildIdentityIndex(db, identitySpecs));
+    expect(index.lookup(Person.Person, { email: 'alice@dxos.org' })?.id).toBe(person.id);
+  });
+
+  test('organizations resolve by the domain of a sender email', async ({ expect }) => {
+    db.add(Organization.make({ name: 'DXOS', website: 'https://dxos.org' }));
+    await db.flush({ indexes: true });
+
+    const index = await EffectEx.runPromise(buildIdentityIndex(db, identitySpecs));
+    expect(index.lookup(Organization.Organization, { email: 'alice@dxos.org' })?.name).toBe('DXOS');
   });
 });
