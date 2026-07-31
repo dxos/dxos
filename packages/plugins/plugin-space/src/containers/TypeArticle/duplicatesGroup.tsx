@@ -7,12 +7,12 @@ import React, { useCallback, useMemo } from 'react';
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
+import { meta } from '#meta';
+
 import { SpaceCapabilities } from '../../types';
 import { type UseDuplicatesResult, buildMergePreview } from './useDuplicates';
 
 export type UseDuplicatesGroupOptions = {
-  /** Translation namespace for the action labels. */
-  ns: string;
   /** URI of the type under review; scopes the staged preview to this article. */
   typeUri: string;
   typename: string;
@@ -29,7 +29,6 @@ export type UseDuplicatesGroupOptions = {
  * several nested `Toolbar.Root`s.
  */
 export const useDuplicatesGroup = ({
-  ns,
   typeUri,
   typename,
   duplicates,
@@ -78,11 +77,9 @@ export const useDuplicatesGroup = ({
         .action(
           'merge',
           {
-            label: ['merge-duplicates.label', { ns }],
+            label: ['merge-duplicates.label', { ns: meta.profile.key }],
             icon: 'ph--arrows-merge--regular',
             variant: 'primary',
-            // The two decisions the review exists to collect read as words, not glyphs; the
-            // navigation around them stays icon-only.
             iconOnly: false,
             disabled: current.length < 2,
           },
@@ -91,8 +88,7 @@ export const useDuplicatesGroup = ({
         .action(
           'skip',
           {
-            label: ['skip-duplicates.label', { ns }],
-            icon: 'ph--skip-forward--regular',
+            label: ['skip-duplicates.label', { ns: meta.profile.key }],
             iconOnly: false,
             disabled: total === 0,
           },
@@ -100,7 +96,10 @@ export const useDuplicatesGroup = ({
         )
         .action(
           'rescan',
-          { label: ['rescan-duplicates.label', { ns }], icon: 'ph--arrows-clockwise--regular' },
+          {
+            label: ['rescan-duplicates.label', { ns: meta.profile.key }],
+            icon: 'ph--arrows-clockwise--regular',
+          },
           handleRefresh,
         )
         .subgraph((builder) =>
@@ -110,19 +109,19 @@ export const useDuplicatesGroup = ({
                 .action(
                   'previous',
                   {
-                    label: ['previous-duplicate.label', { ns }],
+                    label: ['previous-duplicate.label', { ns: meta.profile.key }],
                     icon: 'ph--caret-left--regular',
                     disabled: position <= 1,
                   },
                   handlePrevious,
                 )
-                // The group counter is not an action; `custom` lets the graph carry it so the toolbar stays
-                // a single menu rather than a menu plus a hand-rolled toolbar for one label.
                 .action(
                   'position',
                   {
-                    label: ['duplicates-position.label', { ns }],
+                    // The group counter is not an action; `custom` lets the graph carry it so the toolbar stays
+                    // a single menu rather than a menu plus a hand-rolled toolbar for one label.
                     variant: 'custom',
+                    label: ['duplicates-position.label', { ns: meta.profile.key }],
                     render: () => (
                       <span className='text-description text-sm tabular-nums'>
                         {position} / {total}
@@ -134,7 +133,7 @@ export const useDuplicatesGroup = ({
                 .action(
                   'next',
                   {
-                    label: ['next-duplicate.label', { ns }],
+                    label: ['next-duplicate.label', { ns: meta.profile.key }],
                     icon: 'ph--caret-right--regular',
                     disabled: position >= total,
                   },
@@ -143,6 +142,6 @@ export const useDuplicatesGroup = ({
         )
         .separator();
     },
-    [ns, current.length, position, total, handleMerge, handleAdvance, handlePrevious, handleRefresh],
+    [current.length, position, total, handleMerge, handleAdvance, handlePrevious, handleRefresh],
   );
 };

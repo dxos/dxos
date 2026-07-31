@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
@@ -18,6 +18,7 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
+import { Tabs } from '@dxos/react-ui-tabs';
 import { CardAnnotation } from '@dxos/schema';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -70,6 +71,11 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
   // TODO(burdon): Factor out as an aspect?
   const duplicates = useDuplicates({ space, type, objects, enabled: layout === 'duplicates' });
+  const duplicatesGroup = useDuplicatesGroup({
+    typeUri,
+    typename: Type.getTypename(type),
+    duplicates,
+  });
 
   // Duplicates is offered only for types some plugin registered an identity rule for:
   // there is nothing to scan otherwise.
@@ -77,13 +83,6 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     () => LAYOUTS.filter(({ value }) => value !== 'duplicates' || duplicates.spec),
     [duplicates.spec],
   );
-
-  const duplicatesGroup = useDuplicatesGroup({
-    ns: meta.profile.key,
-    typeUri,
-    typename: Type.getTypename(type),
-    duplicates,
-  });
 
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
@@ -182,11 +181,11 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
           },
         )
         .build(),
-    [layout, layouts, duplicatesGroup, selectedIds.length, handleDeleteSelected],
+    [layout, layouts, selectedIds.length, duplicatesGroup, handleDeleteSelected],
   );
 
-  // In duplicates mode the masonry shows only the group under review, so the user compares the
-  // candidates side by side instead of hunting for them in the full list.
+  // The card grid backs two layouts — every object for `masonry`, only the group under review for
+  // `duplicates` — so the items are resolved here and the grid itself is declared once.
   const tiles = layout === 'duplicates' ? duplicates.current : results;
   const tileItems = useMemo<TileData[]>(
     () =>
@@ -199,58 +198,75 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
       })),
     [tiles, selectedIds, toggleSelected, handleOpen, handleDelete],
   );
+  const cards = (
+    <Masonry.Root Tile={TileAdapter}>
+      <Masonry.Content>
+        <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+      </Masonry.Content>
+    </Masonry.Root>
+  );
+
+  // A type with no objects at all has nothing for any layout to show; past that each layout says
+  // when it is empty for its own reason.
+  const noObjects = objects.length === 0 ? t('type-collection-empty.message') : undefined;
+  const noResults = noObjects ?? (results.length === 0 ? t('search-no-results.message') : undefined);
+  const noDuplicates =
+    noObjects ??
+    (duplicates.current.length === 0
+      ? duplicates.scanning
+        ? t('duplicates-scanning.message')
+        : t('duplicates-none.message')
+      : undefined);
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
-          {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
-          <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-            <Menu.Toolbar />
-          </Menu.Root>
-        </Panel.Toolbar>
-        <Panel.Content>
-          {objects.length === 0 ? (
-            <Empty classNames='h-full' label={t('type-collection-empty.message')} />
-          ) : layout === 'duplicates' ? (
-            duplicates.current.length === 0 ? (
-              <Empty
-                classNames='h-full'
-                label={duplicates.scanning ? t('duplicates-scanning.message') : t('duplicates-none.message')}
+      {/* One panel per layout, so each is a self-contained unit rather than a branch of a nested
+          conditional. Radix unmounts inactive panels, so only the active layout is ever mounted.
+          `asChild` keeps the tabs root off the DOM — an extra wrapper would break the height chain
+          the masonry and table size themselves against. */}
+      <Tabs.Root asChild value={layout} onValueChange={(value) => setLayout(value as Layout)}>
+        <Panel.Root role={role}>
+          <Panel.Toolbar classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
+            {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
+            <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
+              <Menu.Toolbar />
+            </Menu.Root>
+          </Panel.Toolbar>
+          <Panel.Content>
+            <LayoutPanel value='masonry' empty={noResults}>
+              {cards}
+            </LayoutPanel>
+            <LayoutPanel value='table' empty={noResults}>
+              <DynamicTable
+                type={type}
+                rows={results}
+                features={tableFeatures}
+                rowActions={rowActions}
+                // Seed from the shared selection so switching card → table keeps what was selected;
+                // the table otherwise starts from its own empty model.
+                selection={selectedIds}
+                onRowAction={handleRowAction}
+                onSelectionChanged={setSelectedObjects}
               />
-            ) : (
-              <Masonry.Root Tile={TileAdapter}>
-                <Masonry.Content>
-                  <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
-                </Masonry.Content>
-              </Masonry.Root>
-            )
-          ) : results.length === 0 ? (
-            <Empty classNames='h-full' label={t('search-no-results.message')} />
-          ) : layout === 'table' ? (
-            <DynamicTable
-              type={type}
-              rows={results}
-              features={tableFeatures}
-              rowActions={rowActions}
-              // Seed from the shared selection so switching card → table keeps what was selected;
-              // the table otherwise starts from its own empty model.
-              selection={selectedIds}
-              onRowAction={handleRowAction}
-              onSelectionChanged={setSelectedObjects}
-            />
-          ) : (
-            <Masonry.Root Tile={TileAdapter}>
-              <Masonry.Content>
-                <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
-              </Masonry.Content>
-            </Masonry.Root>
-          )}
-        </Panel.Content>
-      </Panel.Root>
+            </LayoutPanel>
+            {duplicates.spec && (
+              <LayoutPanel value='duplicates' empty={noDuplicates}>
+                {cards}
+              </LayoutPanel>
+            )}
+          </Panel.Content>
+        </Panel.Root>
+      </Tabs.Root>
     </SearchList.Root>
   );
 };
+
+/** One layout's content, or the message standing in for it when the layout has nothing to show. */
+const LayoutPanel = ({ value, empty, children }: PropsWithChildren<{ value: Layout; empty?: string }>) => (
+  <Tabs.Panel value={value} classNames='contents'>
+    {empty ? <Empty classNames='h-full' label={empty} /> : children}
+  </Tabs.Panel>
+);
 
 type TileData = {
   object: Obj.Unknown;
