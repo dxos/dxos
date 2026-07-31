@@ -46,7 +46,7 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
-import { useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -282,12 +282,15 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const skillDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
   const [space] = useSpaces();
+  // Reactive: the chat is created asynchronously (module.setup on SpacesReady), and skill
+  // definitions may all be contributed before this mounts — a one-shot query that finds no chat
+  // would never re-run, leaving the chat without its story-declared skills.
+  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
 
   useAsyncEffect(async () => {
     if (!space) {
       return;
     }
-    const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
     const chat = chats.at(-1);
     if (!chat) {
       return;
@@ -310,7 +313,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
     );
     const binder = new AiContext.Binder({ feed, runtime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ skills: skillObjects.map((skill) => Ref.make(skill)) }));
-  }, [space, skills, skillDefinitions]);
+  }, [space, chats, skills, skillDefinitions]);
 
   return <>{children}</>;
 };
