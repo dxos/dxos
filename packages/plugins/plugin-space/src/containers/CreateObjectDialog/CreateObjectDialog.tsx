@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppSpace, LayoutOperation, TypeOptions } from '@dxos/app-toolkit';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Operation } from '@dxos/compute';
@@ -24,7 +24,7 @@ import { CollectionItemAnnotation, ViewAnnotation } from '@dxos/schema';
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
 import { meta } from '#meta';
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, SpaceEvents } from '#types';
 
 import { getSpaceDisplayName } from '../../util';
 
@@ -48,6 +48,9 @@ export const CreateObjectDialog = ({
 }: CreateObjectDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
+  // Demand signal: load policy-parked CreateObjectEntry providers; the picker below reads them
+  // reactively, so entries pop in as their chunks arrive.
+  useActivationSignal(SpaceEvents.CreateObjectRequested);
   const operationInvoker = useOperationInvoker();
   const { invoke } = operationInvoker;
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);

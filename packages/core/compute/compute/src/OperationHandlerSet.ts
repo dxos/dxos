@@ -26,6 +26,14 @@ export interface OperationHandlerSet {
   readonly handlers: Effect.Effect<Operation.WithHandler<Operation.Definition.Any>[]>;
 
   getHandlers(): Promise<Operation.WithHandler<Operation.Definition.Any>[]>;
+
+  /**
+   * Optional demand hook consulted by {@link getHandler}/{@link getHandlerByKey} when a lookup
+   * misses: given the operation key, attempt to make the handler available (e.g. activate the
+   * plugin module that would contribute it) and resolve `true` if the set may have changed.
+   * The lookup then re-reads the set once before failing. See {@link withResolver}.
+   */
+  resolveMissing?(key: string): Promise<boolean>;
 }
 
 export const isOperationHandlerSet = (value: unknown): value is OperationHandlerSet => {
@@ -109,6 +117,33 @@ export const reactive = (
 };
 
 /**
+ * Attaches a demand resolver to a set: on a lookup miss the resolver runs once (deduplicated per
+ * key) before the lookup fails, so handlers whose modules are deferred by an activation policy
+ * load exactly when their operation is first invoked.
+ */
+export const withResolver = (
+  set: OperationHandlerSet,
+  resolveMissing: (key: string) => Promise<boolean>,
+): OperationHandlerSet => {
+  // One in-flight resolution per key: concurrent misses await the same attempt, and a completed
+  // attempt is not repeated (a key that failed to resolve once fails fast afterwards).
+  const attempts = new Map<string, Promise<boolean>>();
+  return {
+    [TypeId]: TypeId,
+    getHandlers: () => set.getHandlers(),
+    handlers: set.handlers,
+    resolveMissing: (key: string) => {
+      let attempt = attempts.get(key);
+      if (!attempt) {
+        attempt = resolveMissing(key);
+        attempts.set(key, attempt);
+      }
+      return attempt;
+    },
+  };
+};
+
+/**
  * Merges multiple operation handler sets into a single set.
  *
  */
@@ -135,20 +170,41 @@ export const lazy = (
 };
 
 /**
+ * Finds a handler in the set; on a miss, consults the set's optional {@link
+ * OperationHandlerSet.resolveMissing} demand hook once and re-reads before giving up.
+ */
+const lookup = (
+  set: OperationHandlerSet,
+  key: string,
+  match: (handler: Operation.WithHandler<Operation.Definition.Any>) => boolean,
+): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> =>
+  Effect.gen(function* () {
+    const handlers = yield* set.handlers;
+    const handler = handlers.find(match);
+    if (handler) {
+      return handler;
+    }
+    if (set.resolveMissing && (yield* Effect.promise(() => set.resolveMissing!(key)))) {
+      const refreshed = yield* set.handlers;
+      const late = refreshed.find(match);
+      if (late) {
+        return late;
+      }
+    }
+    return yield* Effect.fail(new NoHandlerError(key));
+  });
+
+/**
  * Gets a handler for an operation by definition.
  */
 export const getHandler = <const Op extends Operation.Definition.Any>(
   set: OperationHandlerSet,
   definition: Op,
 ): Effect.Effect<Operation.WithHandler<Op>, NoHandlerError> =>
-  Effect.gen(function* () {
-    const handlers = yield* set.handlers;
-    const handler = handlers.find((handler) => handler.meta.key === definition.meta.key);
-    if (!handler) {
-      return yield* Effect.fail(new NoHandlerError(definition.meta.key));
-    }
-    return handler as any;
-  });
+  lookup(set, definition.meta.key, (handler) => handler.meta.key === definition.meta.key) as Effect.Effect<
+    Operation.WithHandler<Op>,
+    NoHandlerError
+  >;
 
 /**
  * Gets a handler for an operation by key.
@@ -158,19 +214,13 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
 export const getHandlerByKey = (
   set: OperationHandlerSet,
   key: string,
-): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> =>
-  Effect.gen(function* () {
-    const handlers = yield* set.handlers;
-    // Normalize both sides to plain NSID for comparison so callers can pass
-    // either a ToolId (plain NSID) or a full DXN string.
-    const normalizeKey = (k: string) => (DXN.isDXN(k) ? DXN.getName(k) : k);
-    const normalizedKey = normalizeKey(key);
-    const handler = handlers.find((handler) => normalizeKey(handler.meta.key) === normalizedKey);
-    if (!handler) {
-      return yield* Effect.fail(new NoHandlerError(key));
-    }
-    return handler as any;
-  });
+): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> => {
+  // Normalize both sides to plain NSID for comparison so callers can pass
+  // either a ToolId (plain NSID) or a full DXN string.
+  const normalizeKey = (k: string) => (DXN.isDXN(k) ? DXN.getName(k) : k);
+  const normalizedKey = normalizeKey(key);
+  return lookup(set, key, (handler) => normalizeKey(handler.meta.key) === normalizedKey);
+};
 
 export class OperationHandlerProvider extends Context.Tag('@dxos/operation/OperationHandlerProvider')<
   OperationHandlerProvider,

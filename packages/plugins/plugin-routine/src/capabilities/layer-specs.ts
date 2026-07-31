@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { LayerSpec, Operation, OperationHandlerSet, Trigger } from '@dxos/compute';
@@ -46,18 +46,40 @@ import { invariant } from '@dxos/invariant';
 const OperationHandlerProviderSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [Capability.Service],
+    requires: [Capability.Service, Plugin.Service],
     provides: [OperationHandlerSet.OperationHandlerProvider],
   },
   () =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
-        const operationHandlerSets = yield* Capability.getAll(Capabilities.OperationHandler);
-        const mergedOperationHandlers =
-          operationHandlerSets.length === 0
-            ? OperationHandlerSet.empty
-            : OperationHandlerSet.merge(...operationHandlerSets);
-        return OperationHandlerSet.provide(mergedOperationHandlers);
+        const capabilities = yield* Capability.Service;
+        const pluginManager = yield* Plugin.Service;
+        // This slice materializes when process execution first needs the full operation surface
+        // (a routine run, registry binding) — the demand point for everything an activation
+        // policy parked: pull skills and every plugin's handler modules before the set is read.
+        yield* pluginManager.activate(ActivationEvents.SkillsRequested).pipe(Effect.ignore);
+        yield* Effect.all(
+          pluginManager
+            .getPlugins()
+            .map((plugin) =>
+              pluginManager
+                .activate(ActivationEvents.OperationHandlersRequested(plugin.meta.profile.key))
+                .pipe(Effect.ignore),
+            ),
+          { concurrency: 'unbounded', discard: true },
+        );
+        // Live view (not a one-shot snapshot): handlers contributed after materialization —
+        // e.g. by a plugin enabled later — still reach subsequent reads.
+        const currentSet = () => {
+          const sets = capabilities.getAll(Capabilities.OperationHandler);
+          return sets.length === 0 ? OperationHandlerSet.empty : OperationHandlerSet.merge(...sets);
+        };
+        const liveSet: OperationHandlerSet.OperationHandlerSet = {
+          [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+          getHandlers: () => currentSet().getHandlers(),
+          handlers: Effect.suspend(() => currentSet().handlers),
+        };
+        return OperationHandlerSet.provide(liveSet);
       }),
     ),
 );

@@ -3,13 +3,16 @@
 //
 
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
-import React, { useCallback, useContext, useMemo } from 'react';
+import * as Effect from 'effect/Effect';
+import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { ActivationEvents } from '@dxos/app-framework';
+import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Routine } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -29,6 +32,22 @@ export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>
  */
 export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticleProps) => {
   const { invokePromise } = useOperationInvoker();
+  const manager = usePluginManager();
+  // Editing a routine needs the full operation/skill surface in the registry (the form's pickers
+  // list registry-synced operations), so pull everything an activation policy parked.
+  useActivationSignal(ActivationEvents.SkillsRequested);
+  useEffect(() => {
+    void EffectEx.runAndForwardErrors(
+      Effect.all(
+        manager
+          .getPlugins()
+          .map((plugin) =>
+            manager.activate(ActivationEvents.OperationHandlersRequested(plugin.meta.profile.key)).pipe(Effect.ignore),
+          ),
+        { concurrency: 'unbounded', discard: true },
+      ),
+    );
+  }, [manager]);
   const registry = useContext(RegistryContext);
   // Subscribe so the run affordance tracks the routine's action (`spec`).
   const [routine] = useObject(subject);

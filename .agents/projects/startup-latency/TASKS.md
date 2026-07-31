@@ -98,6 +98,14 @@ wire in the eager core). Fix rules 1–5 in the audit doc:
       `plugin.ts` stubs (sole external consumer is the node CLI — give it its own entry)
 - [ ] Promote `audit-opdefs.py` to a CI budget check (fails on new heavy externals / closure
       growth) — prerequisite hardening for the `handles` declaration field
+- [ ] **Non-enabled plugins load metadata only.** Verify the invariant: a registered-but-disabled
+      plugin contributes nothing to the boot fetch beyond its meta + `Plugin.lazy` code pointer —
+      at startup or ever. Plugin definitions themselves must be lightweight (metadata + module
+      pointers), same discipline as operation definitions. Known violation: all 97 `plugin.ts`
+      stubs statically re-export `XOperationHandlerSet from './operations'` (plugin-defs.tsx
+      imports every stub, so every registered plugin's operations graph enters `main`'s closure
+      whether enabled or not). Add a measured check: chunk-graph closure of each `plugin.ts`
+      stub ≈ meta only.
 
 ### Wave 3 — eager-core UI laziness audit
 

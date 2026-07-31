@@ -7,7 +7,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
+import { Capabilities, Capability, type PluginManager, makeOperationHandlerPull } from '@dxos/app-framework';
 import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { type Operation, OperationHandlerSet, Process } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
@@ -54,7 +54,22 @@ export default Capability.makeModule(
     const runInvocation = (action: Operation.SerializedInvocation) =>
       void EffectEx.runPromise(
         Effect.gen(function* () {
-          const handlers = OperationHandlerSet.merge(...operationHandlers.get());
+          const merged = () => OperationHandlerSet.merge(...operationHandlers.get());
+          // Live view over the reactive contributions (a one-shot merge would miss handlers
+          // contributed by the pull below), plus the demand-pull: the handler's module may be
+          // parked by the activation policy, and the toast action is precisely its demand signal.
+          const live: OperationHandlerSet.OperationHandlerSet = {
+            [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+            getHandlers: () => merged().getHandlers(),
+            handlers: Effect.suspend(() => merged().handlers),
+          };
+          const handlers = OperationHandlerSet.withResolver(
+            live,
+            makeOperationHandlerPull(manager, async (key) => {
+              const nsid = key.replace(/^dxn:/, '');
+              return (await merged().getHandlers()).some((handler) => handler.meta.key.replace(/^dxn:/, '') === nsid);
+            }),
+          );
           const operation = yield* OperationHandlerSet.getHandlerByKey(handlers, action.operation);
           yield* invoker.invoke(operation, action.input);
         }),

@@ -230,6 +230,24 @@ class PluginModuleImpl implements PluginModule {
 }
 
 /**
+ * Returns a copy of the module parked on the given activation events (event mode), with
+ * requires/provides/activate unchanged. Used by the manager's activation policy so a host app can
+ * defer families of modules without touching the module definitions — which stay runtime-neutral
+ * for hosts (CLI, workerd) that activate everything eagerly.
+ */
+export const withActivatesOn = (module: PluginModule, activatesOn: ActivationEvent.Events): PluginModule =>
+  new PluginModuleImpl({
+    id: module.id,
+    activation: {
+      mode: 'event',
+      activatesOn,
+      requires: module.activation.requires,
+      provides: module.activation.provides,
+    },
+    activate: module.activate,
+  });
+
+/**
  * Runtime plugin metadata, derived from the `@dxos/protocols` registry schemas (protocols owns the
  * config + registry schemas; the runtime projection lives here).
  *

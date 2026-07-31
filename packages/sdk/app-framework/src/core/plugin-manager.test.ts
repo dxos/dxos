@@ -2715,4 +2715,95 @@ describe('PluginManager', () => {
       }).pipe(Effect.scoped),
     );
   });
+
+  describe('activation policy', () => {
+    const DemandEvent = ActivationEvent.make('org.dxos.test.demand');
+
+    const makePolicyPlugin = () =>
+      Plugin.make(
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            id: 'parked',
+            provides: [MultiString],
+            activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'parked' })]),
+          }),
+          Plugin.addModule({
+            id: 'eager',
+            provides: [MultiNumber],
+            activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 1 })]),
+          }),
+        ),
+      )();
+
+    it.effect('parked modules skip startup and activate on their demand event', () =>
+      Effect.gen(function* () {
+        plugins = [makePolicyPlugin()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key],
+          activationPolicy: (module) => (module.id.endsWith('.parked') ? DemandEvent : undefined),
+        });
+
+        yield* manager.activate(ActivationEvents.Startup);
+        // The eager module ran in the startup pass; the parked one did not.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiNumber), [{ number: 1 }]);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
+
+        yield* manager.activate(DemandEvent);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'parked' }]);
+      }),
+    );
+
+    it.effect('a plugin enabled after its demand event fired activates via pending reset', () =>
+      Effect.gen(function* () {
+        plugins = [makePolicyPlugin()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          activationPolicy: (module) => (module.id.endsWith('.parked') ? DemandEvent : undefined),
+        });
+
+        yield* manager.activate(ActivationEvents.Startup);
+        yield* manager.activate(DemandEvent);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
+
+        yield* manager.add(testMeta.profile.key);
+        yield* manager.enable(testMeta.profile.key);
+        // The parked module joined after its event fired; pending-reset refired it on enable.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'parked' }]);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiNumber), [{ number: 1 }]);
+      }),
+    );
+
+    it.effect('declared event-mode modules keep their own gating under a policy', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'declared',
+              activatesOn: CountEvent,
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'declared' })]),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key],
+          // A policy that would claim everything must not re-park declared event modules.
+          activationPolicy: () => DemandEvent,
+        });
+
+        yield* manager.activate(ActivationEvents.Startup);
+        yield* manager.activate(DemandEvent);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
+
+        yield* manager.activate(CountEvent);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'declared' }]);
+      }),
+    );
+  });
 });

@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 // alias instead of a relative `node_modules` path (TS2883).
 import { OperationInvoker } from '@dxos/operation';
 
-import { Capabilities } from '../common';
+import { Capabilities, makeOperationHandlerPull } from '../common';
 import { Capability, Plugin } from '../core';
 import { layerIdb } from './idb-key-value-store';
 
@@ -106,7 +106,16 @@ export default Capability.makeModule(
     const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
-    const handlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
+    // On a handler miss, pull the plugin modules an activation policy parked (targeted by the
+    // operation key's plugin prefix, then all-plugins fallback) before the lookup fails.
+    const baseHandlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
+    const handlerSet = OperationHandlerSet.withResolver(
+      baseHandlerSet,
+      makeOperationHandlerPull(pluginManager, async (key) => {
+        const nsid = key.replace(/^dxn:/, '');
+        return (await baseHandlerSet.getHandlers()).some((handler) => handler.meta.key.replace(/^dxn:/, '') === nsid);
+      }),
+    );
 
     const traceSinks = traceSinkFactories.map((factory) => factory({ resolver: serviceResolver }));
     const mergedTraceSink = Trace.mergeSinks(traceSinks);

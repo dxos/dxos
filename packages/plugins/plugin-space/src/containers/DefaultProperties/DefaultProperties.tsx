@@ -6,14 +6,20 @@ import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { Capability } from '@dxos/app-framework';
-import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import {
+  Surface,
+  useActivationSignal,
+  useCapabilities,
+  useOperationInvoker,
+  usePluginManager,
+} from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Operation } from '@dxos/compute';
 import { type Database, type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { type CreateEntryOverride, ObjectProperties } from '@dxos/react-ui-form';
 
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, SpaceEvents } from '#types';
 
 export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
 
@@ -26,6 +32,8 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
   ({ role, subject: object }, forwardedRef) => {
     const manager = usePluginManager();
     const operationInvoker = useOperationInvoker();
+    // Demand signal: this companion can create related objects, so pull parked entry providers.
+    useActivationSignal(SpaceEvents.CreateObjectRequested);
     const createEntries = useCapabilities(SpaceCapabilities.CreateObjectEntry);
     const data = useMemo<AppSurface.ObjectPropertiesData>(() => ({ subject: object }), [object]);
 

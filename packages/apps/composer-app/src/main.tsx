@@ -31,6 +31,7 @@ import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dx
 
 import { ResetDialog } from './components';
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
+import { getActivationPolicy } from './plugin-defs.core';
 import {
   APP_KEY,
   LOG_STORE_DB_NAME,
@@ -506,6 +507,11 @@ const main = async () => {
     );
   };
 
+  // Startup-latency wave 1: park content plugins' handler/skill/create-object modules on their
+  // demand events. Safe mode keeps everything eager for debuggability. Hoisted so the reference
+  // is stable across renders (it participates in useApp's manager memo).
+  const activationPolicy = safeMode ? undefined : getActivationPolicy(conf);
+
   const Main = () => {
     const App = useApp({
       fallback: Fallback,
@@ -515,6 +521,7 @@ const main = async () => {
       pluginLoader,
       onPluginRemove,
       pluginRegistryProvider,
+      activationPolicy,
       plugins,
       defaults,
       cacheEnabled: true,
