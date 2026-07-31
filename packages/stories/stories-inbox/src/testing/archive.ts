@@ -19,12 +19,20 @@ import { Message } from '@dxos/types';
  * into the space it came from without id collisions.
  */
 
-/** Serializes every message in the feed to plain JSON (the download payload). */
-export const exportFeedMessages = async (feed: Feed.Feed, db: Database.Database): Promise<Obj.JSON[]> => {
+/**
+ * Serializes the feed's messages to plain JSON (the download payload). `filter` narrows the export to a
+ * curated subset — the story passes the starred predicate so an archive holds only the messages the user
+ * deliberately marked as fixtures.
+ */
+export const exportFeedMessages = async (
+  feed: Feed.Feed,
+  db: Database.Database,
+  filter?: (message: Message.Message) => boolean,
+): Promise<Obj.JSON[]> => {
   const messages = await EffectEx.runPromise(
     Feed.query(feed, Filter.type(Message.Message)).run.pipe(Effect.provide(Database.layer(db))),
   );
-  return messages.map((message) => Obj.toJSON(message));
+  return messages.filter((message) => filter?.(message) ?? true).map((message) => Obj.toJSON(message));
 };
 
 // Data fields lifted from a serialized message. Identity/system fields (`id`, `@type`, `@meta`) and

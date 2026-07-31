@@ -4,16 +4,32 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { GraphPath } from '@dxos/app-toolkit';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Mailbox } from '@dxos/plugin-inbox';
+import { Mailbox, SystemTags } from '@dxos/plugin-inbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
+import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { exportFeedMessages, replaceFeed, resetMailbox } from '../testing';
+
+/** The message's raw email HTML, or undefined for a markdown/plaintext-only body. */
+const getMessageHtml = (message: Message.Message): string | undefined =>
+  message.blocks
+    .filter((block): block is ContentBlock.Text => block._tag === 'text')
+    .find((block) => block.mimeType === 'text/html')?.text;
+
+/** Filesystem-safe fixture name derived from the sender and date, e.g. `2026-07-30-alex-example-com`. */
+const getFixtureName = (message: Message.Message): string => {
+  const date = (message.created ?? '').slice(0, 10);
+  const sender = (message.sender?.email ?? message.sender?.name ?? 'unknown').toLowerCase();
+  return [date, sender.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')].filter(Boolean).join('-');
+};
 
 /**
  * Download the mailbox feed to a local JSON file, replace it from one, or reset it. The exported
@@ -37,15 +53,51 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
   const [status, setStatus] = useState<{ action: string; count: number } | undefined>();
   const [busy, setBusy] = useState(false);
 
+  // The message selected in the Mailbox panel — read under the mailbox object's context, matching
+  // `MessageModule` (sibling `ModuleContainer` cells have independent attention targets).
+  const messages = useQuery(
+    space.db,
+    feed
+      ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc'))
+      : Query.select(Filter.nothing()),
+  );
+  const selectedId = useSelection(mailbox ? GraphPath.getObjectPathFromObject(mailbox) : undefined, 'single');
+  const selected = messages.find((candidate) => candidate.id === selectedId);
+  const selectedHtml = selected && getMessageHtml(selected);
+
+  // Starring is how a fixture is nominated: the archive exports exactly the starred messages, so the
+  // user curates a set in the Mailbox panel rather than downloading (and later re-importing) the feed.
+  const starredTag = useQuery(space.db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
+  const isStarred = useCallback(
+    (message: Message.Message) =>
+      !!(mailbox && starredTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(starredTag))),
+    [mailbox, starredTag],
+  );
+  const starredCount = messages.filter(isStarred).length;
+
   const handleDownload = useCallback(async (): Promise<Blob | null> => {
     if (!feed) {
       return null;
     }
 
-    const serialized = await exportFeedMessages(feed, space.db);
-    setStatus({ action: 'downloaded', count: serialized.length });
+    const serialized = await exportFeedMessages(feed, space.db, isStarred);
+    setStatus({ action: 'downloaded starred', count: serialized.length });
     return new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' });
-  }, [feed, space.db]);
+  }, [feed, space.db, isStarred]);
+
+  // Saves the selected message as a single fixture: its raw email HTML when it has an html body (what
+  // the HtmlViewer work needs), else the serialized message so a markdown/plaintext body is still
+  // capturable.
+  const handleDownloadMessage = useCallback((): Blob | null => {
+    if (!selected) {
+      return null;
+    }
+
+    setStatus({ action: selectedHtml ? 'saved message html' : 'saved message json', count: 1 });
+    return selectedHtml
+      ? new Blob([selectedHtml], { type: 'text/html' })
+      : new Blob([JSON.stringify(Obj.toJSON(selected), null, 2)], { type: 'application/json' });
+  }, [selected, selectedHtml]);
 
   const handleUpload = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     async (event) => {
@@ -94,10 +146,17 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
         <Toolbar.Root>
           <SystemIconButton.Download
             iconOnly
-            label='Download feed'
+            label={`Download starred (${starredCount})`}
             filename='mailbox-feed.json'
-            disabled={!feed || busy}
+            disabled={!feed || busy || starredCount === 0}
             onDownload={handleDownload}
+          />
+          <SystemIconButton.Download
+            iconOnly
+            label={selectedHtml ? 'Save message HTML' : 'Save message'}
+            filename={selected ? `${getFixtureName(selected)}.${selectedHtml ? 'html' : 'json'}` : 'message.json'}
+            disabled={!selected || busy}
+            onDownload={handleDownloadMessage}
           />
           <SystemIconButton.Upload
             iconOnly
