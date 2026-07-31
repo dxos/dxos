@@ -177,7 +177,8 @@ must be camelCase (`DXN.Name`).
 | -------------------------------------------------------------------- | -------------------------------------------------------- |
 | Tags, arity, `Contribution`, `contribute`, module makers             | `src/core/capability.ts`                                 |
 | `Plugin`, `PluginModule`, `ActivationSpec`, the builder              | `src/core/plugin.ts`                                     |
-| Public manager API, catalog (enable/disable), lifecycle              | `src/core/plugin-manager.ts`                             |
+| Public manager API, state, lifecycle (start/shutdown)                | `src/core/plugin-manager.ts`                             |
+| Catalog: add/enable/disable, lazy resolution, dependency closure     | `src/core/plugin-catalog.ts`                             |
 | Rounds, waves, event bridging, on-demand pulls                       | `src/core/activation-scheduler.ts`                       |
 | Ordering logic (runnable selection, waves, cycles), on `@dxos/graph` | `src/core/activation-graph.ts`                           |
 | Memoized module loads, provides validation, deactivation             | `src/core/module-loader.ts`                              |
