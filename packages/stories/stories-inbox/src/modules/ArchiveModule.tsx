@@ -24,6 +24,17 @@ import { exportFeedMessages, replaceFeed, resetMailbox } from '../testing';
 /** Stable fallback so the starred-ids atom stays unconditional while the tag index resolves. */
 const NO_STARRED_IDS = Atom.make<readonly EntityId[]>(() => []);
 
+// `SystemIconButton.Download` fixes its own glyph, which would make the message save visually
+// identical to the feed export beside it; this drives a distinct button instead.
+const downloadBlob = (blob: Blob, filename: string): void => {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+};
+
 /** The message's raw email HTML, or undefined for a markdown/plaintext-only body. */
 const getMessageHtml = (message: Message.Message): string | undefined =>
   message.blocks
@@ -97,15 +108,16 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
   // Saves the selected message as a single fixture: its raw email HTML when it has an html body (what
   // the HtmlViewer work needs), else the serialized message so a markdown/plaintext body is still
   // capturable.
-  const handleDownloadMessage = useCallback((): Blob | null => {
+  const handleDownloadMessage = useCallback((): void => {
     if (!selected) {
-      return null;
+      return;
     }
 
-    setStatus({ action: selectedHtml ? 'saved message html' : 'saved message json', count: 1 });
-    return selectedHtml
+    const blob = selectedHtml
       ? new Blob([selectedHtml], { type: 'text/html' })
       : new Blob([JSON.stringify(Obj.toJSON(selected), null, 2)], { type: 'application/json' });
+    downloadBlob(blob, `${getFixtureName(selected)}.${selectedHtml ? 'html' : 'json'}`);
+    setStatus({ action: selectedHtml ? 'saved message html' : 'saved message json', count: 1 });
   }, [selected, selectedHtml]);
 
   const handleUpload = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
@@ -160,12 +172,12 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             disabled={!feed || busy || starredIds.length === 0}
             onDownload={handleDownload}
           />
-          <SystemIconButton.Download
+          <IconButton
             iconOnly
-            label={selectedHtml ? 'Save message HTML' : 'Save message'}
-            filename={selected ? `${getFixtureName(selected)}.${selectedHtml ? 'html' : 'json'}` : 'message.json'}
+            icon='ph--envelope-simple--regular'
+            label={selected ? `Save message (${selectedHtml ? 'html' : 'json'})` : 'Save message — select one first'}
             disabled={!selected || busy}
-            onDownload={handleDownloadMessage}
+            onClick={handleDownloadMessage}
           />
           <SystemIconButton.Upload
             iconOnly
