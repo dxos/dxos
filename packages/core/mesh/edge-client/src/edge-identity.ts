@@ -32,6 +32,11 @@ const VP_SCHEME = 'VerifiablePresentation';
  * whenever both auth methods are allowed. Values may be quoted or a bare token; base64's `/` and
  * `=` are not `tchar`, so a real nonce is always quoted, while the historical `challenge=TODO`
  * placeholder is not.
+ *
+ * An empty challenge (`challenge=""`) is reported as absent rather than as the empty string. Edge
+ * emits exactly that when its server keypair is unconfigured, and there is nothing a caller can
+ * sign — treating it as present would route the request through the auth path only to fail on the
+ * missing challenge, masking the original response.
  */
 export const parseChallengeHeader = (header: string | null | undefined): string | undefined => {
   if (!header) {
@@ -41,7 +46,7 @@ export const parseChallengeHeader = (header: string | null | undefined): string 
   if (!match) {
     return undefined;
   }
-  return match[1] ?? match[2] ?? undefined;
+  return (match[1] ?? match[2]) || undefined;
 };
 
 /**

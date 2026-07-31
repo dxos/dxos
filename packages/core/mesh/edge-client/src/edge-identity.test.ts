@@ -43,6 +43,14 @@ describe('parseChallengeHeader', () => {
     expect(parseChallengeHeader('')).toBeUndefined();
     expect(parseChallengeHeader(null)).toBeUndefined();
   });
+
+  test('an empty challenge is reported as absent, not as an empty string', ({ expect }) => {
+    // Edge emits `challenge=""` when its server keypair is unconfigured. Returning '' would be
+    // truthy-adjacent enough to slip past a `!== undefined` guard and route the request into the
+    // auth path, where it fails on the missing challenge and masks the original response.
+    expect(parseChallengeHeader('VerifiablePresentation challenge=""')).toBeUndefined();
+    expect(parseChallengeHeader('Bearer realm="dxos", VerifiablePresentation challenge=""')).toBeUndefined();
+  });
 });
 
 describe('readAuthChallenge', () => {
