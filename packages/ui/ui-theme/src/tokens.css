@@ -1,0 +1,21 @@
+/**
+ * Design tokens, for stylesheets compiled outside this repo.
+ *
+ * A plugin loaded from the registry is not scanned by the host's Tailwind build, so it compiles its
+ * own stylesheet and must be able to generate every utility it uses — including token-backed ones
+ * like `bg-base-surface`. Importing this registers the token names with Tailwind so those utilities
+ * resolve; the values themselves still come from the host at runtime, which is what keeps a plugin
+ * following the active theme.
+ *
+ * Tokens only — no base, component, or layout rules, which the host already applies.
+ *
+ * `main.css` imports this too, so the host and external plugins compile against one token set.
+ */
+
+@import './css/theme/animation.css';
+@import './css/theme/border.css';
+@import './css/theme/palette.css';
+@import './css/theme/semantic.css';
+@import './css/theme/spacing.css';
+@import './css/theme/styles.css';
+@import './css/theme/text.css';
