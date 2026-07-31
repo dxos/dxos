@@ -225,6 +225,41 @@ Components loaded before `main()` that should be lazy. Known from the chunk grap
       (298 KB) — investigate whether the Arbitrary path is test-only upstream, can be
       externalized/stubbed in the build, or needs an upstream issue
 
+## Phase 3 — measurement discipline + activation optimization (directives 2026-07-31)
+
+Handler sets are EAGER by user decision (df134607d0; the accepted ~1.6 s in-container cost is
+the optimization target, not a reason for indirection). Base branch's plugin-manager refactor
+merged (86c9ebb065) — real unit contracts are the substrate for scheduler work. Merge surfaced
+and fixed a second scheduler hazard: joining an in-flight load via `load()` could RESTART a
+timed-out module after auto-disable cleared the memo — the wave now joins via
+`ModuleLoader.awaitSettled` (start-nothing join).
+
+Measurement strategy (load-perf brief, adapted: authenticated local-first SPA — CWV thresholds
+are defaults, not goals; TTI-style metrics retired):
+
+- [ ] Boot waterfall: stitch navigationStart → ready from existing marks + new milestones
+      (identity created, default space ready, ECHO available, first plank interactive); emit
+      from `collectStartupReport` as one timeline — decomposes the un-itemized ~5 s outside
+      the activation window
+- [ ] Lab TBT: longtask observer in the harness (sum blockage >50 ms between FCP and ready);
+      the INP-risk proxy and the direct measure of fan-out main-thread damage
+- [ ] Time-to-first-meaningful-action marks per entry path (returning: editor accepts input;
+      first-run: identity + home actionable)
+- [ ] RUM prerequisite: extend observability `composer.startup` with the waterfall marks +
+      web-vitals (LCP/INP/CLS) so field p75 exists before claiming wins
+- [ ] CI budget gate = our harness (not Lighthouse): thresholds on boot bytes, activations,
+      lab TBT, definition-closure budget (audit-opdefs); alert thresholds below pass line;
+      p75-style reporting over N runs on a fixed runner
+
+Activation optimization (each lever measured individually via harness + TBT):
+
+- [ ] Long-task chunking: yield between module activations — converts fan-out blocks into
+      <50 ms tasks (TBT/INP win + browser interleaves paint/fetch)
+- [ ] Rounds-as-barriers → readiness-driven starts (a module starts when its requires are
+      satisfiable; the measured ClientReady → 4 s stall)
+- [ ] Bounded activation concurrency (the 395-wide unbounded fan-out produced the 81× overlap
+      contention plateau)
+
 ### Later / standing
 
 - [ ] Critical-chain membership fixes (MAP.md P0): `observability.ClientReady` async body,
