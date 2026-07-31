@@ -10,6 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
@@ -54,7 +55,11 @@ const openObject = (
     // profile without plugin-space — where opening the database path still beats doing nothing.
     const path = targets[0]?.path ?? GraphPath.getObjectPathFromObject(subject);
     yield* invoke(LayoutOperation.Open, { subject: [path], disposition: 'add', ...options });
-  }).pipe(Effect.ignore);
+  }).pipe(
+    // A click must never throw, but a swallowed Open failure reads as "nothing happened" — leave a trace.
+    Effect.tapErrorCause((cause) => Effect.sync(() => log.warn('failed to open object', { id: subject.id, cause }))),
+    Effect.ignore,
+  );
 
 /**
  * Helper for card content that opens objects (e.g. a related-object link): attach `ref` to the card's

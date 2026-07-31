@@ -25,7 +25,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 type NavTreeItemState
   fields:
     open: boolean          # whether the tree node is expanded
-    current: boolean       # whether an active plank addresses the node's object (matched by identity)
+    current: boolean       # whether the node is in the active layout
 ```
 
 ```mdl
@@ -201,11 +201,10 @@ feat F-3: Item Selection
           (the Open handler upgrades any disposition to 'add' when shift is held)
   req F-3.2:
     when: user option-clicks a currently active item
-    then: LayoutOperation.Close is invoked for the plank holding that item — the active entry whose
-          identity matches the node's, which need not be the node's own path (see F-6.3)
+    then: LayoutOperation.Close is invoked for that item
   req F-3.3:
     when: user clicks a currently active item without option key
-    then: LayoutOperation.ScrollIntoView is invoked for that same plank
+    then: LayoutOperation.ScrollIntoView is invoked
   req F-3.4:
     when: item has a default disposition action
     then: that action is run after navigation
@@ -249,18 +248,10 @@ feat F-6: State Persistence
 
   req F-6.1: Per-path open/current state is stored in an atom family keyed by path string.
   req F-6.2: Open state (not current) is persisted to localStorage on every change.
-  req F-6.3: Current state reflects active layout items and is never persisted. Items are matched by
-             identity (`GraphPath.getIdentityKey`) rather than by node id, since one object is reachable
-             through several subgraphs and a plank may address it by a path the tree never shows — card
-             navigation opens the hidden `…/system/database/<type>/<id>` path. A node with no object
-             identity (a space, a section) matches on its path alone.
+  req F-6.3: Current state reflects active layout items and is never persisted.
   req F-6.4:
     when: layout.active changes
-    then: every registered path is re-evaluated against the active identities — those that no longer
-          match are marked not-current, those that do are marked current
-  req F-6.5:
-    when: an item registers its path after the layout change that made it current
-    then: it seeds `current` from the active identities, so a later-rendered item is not left unhighlighted
+    then: removed items are marked not-current; newly active items are marked current
 ```
 
 ## Acceptance
@@ -300,18 +291,6 @@ test T-4: Select item
   when: user selects a tree item
   then: LayoutOperation.Open is invoked with the item id, disposition 'solo' and the shift modifier
         forwarded (shift-click therefore adds a plank instead of navigating)
-```
-
-```mdl
-test T-4a: Card-opened object is current under the path the tree shows
-  tags: [F-6]
-  given: object X is shown in the tree under a collection, and a card navigation opened it as the plank
-         `root/<space>/system/database/<type>/X` (the hidden database path)
-  then:
-    - the collection's X item is current (identities match, paths do not)
-    - option-clicking it closes the `…/system/database/…` plank, not a plank named by the tree path
-  when: object Y in the same collection is opened instead
-  then: X's item is not current
 ```
 
 ```mdl

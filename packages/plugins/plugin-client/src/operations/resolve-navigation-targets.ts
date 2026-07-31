@@ -22,11 +22,16 @@ const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigatio
         );
 
         // Resolvers read a space database to derive a navigation path, so this handler lives with the
-        // client: it is the only place that can turn a URI's space id into a database to provide.
+        // client: it is the only place that can turn a URI's space id into a database to provide. When
+        // the query names a space that is not available, resolve nothing — falling back to the active
+        // space would resolve the id against the wrong database (a ref can reach across spaces). The
+        // active space serves only space-less queries (`dxn:` URIs, local EIDs, no query).
         const eid = query?.uri ? EID.tryParse(query.uri) : undefined;
         const spaceId = eid ? EID.getSpaceId(eid) : undefined;
         const space = client
-          ? ((spaceId ? client.spaces.get(spaceId) : undefined) ?? AppSpace.getActiveSpace(client, capabilities))
+          ? spaceId
+            ? client.spaces.get(spaceId)
+            : AppSpace.getActiveSpace(client, capabilities)
           : undefined;
 
         // Resolvers require `Database.Service`, and an unbound service is a defect rather than a failure
@@ -43,10 +48,20 @@ const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigatio
 
         // Best-first, as the operation's output promises. Sort is stable, so resolvers that declare no
         // position keep contribution order; `position` itself is resolver metadata and not returned.
+        // Two resolvers can name the same path (the generic type-section lookup and a type's own
+        // resolver), so paths are deduped keeping the best-placed occurrence.
+        const seen = new Set<string>();
         return {
           targets: results
             .flat()
             .sort(Position.compare)
+            .filter(({ path }) => {
+              if (seen.has(path)) {
+                return false;
+              }
+              seen.add(path);
+              return true;
+            })
             .map(({ path, label, type }) => ({ path, label, type })),
         };
       }),
