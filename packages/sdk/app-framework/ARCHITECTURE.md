@@ -173,13 +173,16 @@ must be camelCase (`DXN.Name`).
 
 ## Where things live
 
-| Concept                                                     | File                                                     |
-| ----------------------------------------------------------- | -------------------------------------------------------- |
-| Tags, arity, `Contribution`, `contribute`, module makers    | `src/core/capability.ts`                                 |
-| `Plugin`, `PluginModule`, `ActivationSpec`, the builder     | `src/core/plugin.ts`                                     |
-| Topological ordering, activation waves, event bridging      | `src/core/plugin-manager.ts`                             |
-| The NSID-keyed registry and its reactive views              | `src/core/capability-manager.ts`                         |
-| Tagged errors (cycle, missing/duplicate provider, mismatch) | `src/core/errors.ts`                                     |
-| Per-capability module makers (`surface`, `settings`, …)     | `@dxos/app-toolkit` `src/app-framework/AppCapability.ts` |
+| Concept                                                          | File                                                     |
+| ---------------------------------------------------------------- | -------------------------------------------------------- |
+| Tags, arity, `Contribution`, `contribute`, module makers         | `src/core/capability.ts`                                 |
+| `Plugin`, `PluginModule`, `ActivationSpec`, the builder          | `src/core/plugin.ts`                                     |
+| Public manager API, catalog (enable/disable), lifecycle          | `src/core/plugin-manager.ts`                             |
+| Rounds, waves, event bridging, on-demand pulls                   | `src/core/activation-scheduler.ts`                       |
+| Pure graph math (fixpoint, Kahn waves, cycles), on `@dxos/graph` | `src/core/activation-graph.ts`                           |
+| Memoized module loads, provides validation, deactivation         | `src/core/module-loader.ts`                              |
+| The NSID-keyed registry and its reactive views                   | `src/core/capability-manager.ts`                         |
+| Tagged errors (cycle, missing/duplicate provider, mismatch)      | `src/core/errors.ts`                                     |
+| Per-capability module makers (`surface`, `settings`, …)          | `@dxos/app-toolkit` `src/app-framework/AppCapability.ts` |
 
 Worked examples: `@dxos/plugin-client` and `@dxos/plugin-markdown`.
