@@ -87,7 +87,6 @@ type RegistryState = {
   // Permanent misses (unsupported prefix, 404, malformed source) — never re-fetched, so a
   // component that re-renders with a bad icon name doesn't produce repeated network churn.
   failed: Set<string>;
-  staticReady: Promise<void>;
 };
 
 const ingestSvgChildrenAsSymbol = (sourceSvg: Element, id: string): SVGSymbolElement | undefined => {
@@ -133,9 +132,9 @@ const loadStaticSprite = async (state: RegistryState): Promise<void> => {
   }
 };
 
-const resolveDynamic = async (state: RegistryState, name: string): Promise<void> => {
+const resolveDynamic = async (state: RegistryState, staticReady: Promise<void>, name: string): Promise<void> => {
   // Wait until the static sprite has been ingested before deciding to fetch — the icon may already be present.
-  await state.staticReady;
+  await staticReady;
   if (state.loaded.has(name)) {
     return;
   }
@@ -183,9 +182,8 @@ const createRegistry = (): RegistryHandle => {
     loaded: new Set<string>(),
     inflight: new Map<string, Promise<void>>(),
     failed: new Set<string>(),
-    staticReady: undefined as unknown as Promise<void>,
   };
-  state.staticReady = loadStaticSprite(state).then(notify);
+  const staticReady = loadStaticSprite(state).then(notify);
 
   const registry: IconRegistry = {
     hasIcon: (name) => state.loaded.has(name),
@@ -193,7 +191,7 @@ const createRegistry = (): RegistryHandle => {
       if (state.loaded.has(name) || state.inflight.has(name) || state.failed.has(name)) {
         return;
       }
-      const promise = resolveDynamic(state, name)
+      const promise = resolveDynamic(state, staticReady, name)
         .then(notify)
         .finally(() => {
           state.inflight.delete(name);
@@ -217,6 +215,40 @@ const createRegistry = (): RegistryHandle => {
   };
 };
 
+// Refcounted document-level singleton: ThemeProvider mounts many times in one document
+// (editor tooltip roots, the shell, dialogs), and a registry per mount would re-fetch the
+// static sprite and duplicate every symbol id in the DOM on each mount.
+type SharedRegistry = RegistryHandle & { refCount: number };
+
+let sharedRegistry: SharedRegistry | undefined;
+
+const acquireRegistry = (): { registry: IconRegistry; release: () => void } => {
+  if (!sharedRegistry) {
+    sharedRegistry = { ...createRegistry(), refCount: 0 };
+    setActiveRegistry(sharedRegistry.registry);
+  }
+  const handle = sharedRegistry;
+  handle.refCount += 1;
+  let released = false;
+  return {
+    registry: handle.registry,
+    release: () => {
+      if (released) {
+        return;
+      }
+      released = true;
+      handle.refCount -= 1;
+      if (handle.refCount === 0 && sharedRegistry === handle) {
+        sharedRegistry = undefined;
+        if (getIconRegistry() === handle.registry) {
+          setActiveRegistry(undefined);
+        }
+        handle.dispose();
+      }
+    },
+  };
+};
+
 export const IconRegistryProvider = ({ children }: PropsWithChildren) => {
   const [registry, setRegistry] = useState<IconRegistry>(NoopRegistry);
 
@@ -224,18 +256,9 @@ export const IconRegistryProvider = ({ children }: PropsWithChildren) => {
     if (typeof document === 'undefined') {
       return;
     }
-    // Nested/multi-root mounts: remember the registry that was active before this provider so
-    // non-React consumers (e.g. <dx-icon>) fall back to it — not to nothing — on unmount.
-    const previousRegistry = getHost()[REGISTRY_GLOBAL];
-    const handle = createRegistry();
-    setActiveRegistry(handle.registry);
-    setRegistry(handle.registry);
-    return () => {
-      if (getIconRegistry() === handle.registry) {
-        setActiveRegistry(previousRegistry);
-      }
-      handle.dispose();
-    };
+    const { registry, release } = acquireRegistry();
+    setRegistry(registry);
+    return release;
   }, []);
 
   return <IconRegistryContext.Provider value={registry}>{children}</IconRegistryContext.Provider>;

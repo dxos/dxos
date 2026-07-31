@@ -498,10 +498,11 @@ export default defineConfig((env) => ({
       injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
-        // The full Phosphor catalog (~9,000 SVGs in /phosphor/) is included in the precache so
-        // that icons resolved on demand by runtime-loaded plugins (e.g. the YouTube plugin from
-        // the external registry) keep working offline after first install. One-time install
-        // cost is a few hundred KB gzipped; subsequent navigations pay nothing.
+        // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
+        // manifest entries alone would add one install-time request per file, slowing every
+        // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
+        // so any icon the app has rendered once stays available offline.
+        globIgnores: ['**/phosphor/**'],
       },
       includeAssets: ['favicon.ico'],
       manifest: {

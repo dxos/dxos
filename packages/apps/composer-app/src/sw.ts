@@ -102,6 +102,29 @@ cleanupOutdatedCaches();
 // resolves the route client-side.
 registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
 
+const PHOSPHOR_CACHE = 'dxos-phosphor-icons-v1';
+
+// Cache-first for the on-demand Phosphor catalog served under /phosphor/ (see
+// phosphorAssetsPlugin in vite.config.ts). The catalog is ~9,000 immutable SVGs — far too
+// many to precache without an install-time request per file — so each icon is cached on
+// first fetch, making every icon the app has actually rendered available offline.
+registerRoute(
+  ({ url, request }) =>
+    request.method === 'GET' && url.origin === self.location.origin && url.pathname.startsWith('/phosphor/'),
+  async ({ request }) => {
+    const cache = await caches.open(PHOSPHOR_CACHE);
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    const response = await fetch(request);
+    if (response.ok) {
+      void cache.put(request, response.clone());
+    }
+    return response;
+  },
+);
+
 const PLUGIN_ASSET_CACHE = 'dxos-plugin-assets-v1';
 const INDEX_DB_NAME = 'dxos-plugin-asset-index';
 const INDEX_STORE = 'plugin-urls';

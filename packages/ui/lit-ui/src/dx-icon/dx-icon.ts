@@ -13,6 +13,7 @@ const REGISTRY_GLOBAL = '__dxIconRegistry';
 type IconRegistry = {
   hasIcon(name: string): boolean;
   requestIcon(name: string): void;
+  subscribe(listener: () => void): () => void;
 };
 
 type RegistryHost = { [REGISTRY_GLOBAL]?: IconRegistry };
@@ -32,16 +33,44 @@ export class DxIcon extends LitElement {
   @property({ type: Boolean })
   noCache: boolean = true;
 
+  #unsubscribe?: () => void;
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#unwatchRegistry();
+  }
+
   override render() {
     const registry = getRegistry();
     if (registry && !registry.hasIcon(this.icon)) {
       registry.requestIcon(this.icon);
+      // Omit the <use> while unresolved, mirroring useIconHref: the subscription re-renders
+      // once the symbol lands rather than leaving a transient broken ref in the DOM.
+      this.#watchRegistry(registry);
+      return svg`<svg class="dx-icon" data-size=${this.size}></svg>`;
     }
+    this.#unwatchRegistry();
     const href = `#${this.icon}`;
     return svg`<svg class="dx-icon" data-size=${this.size}><use href=${href} /></svg>`;
   }
 
   override createRenderRoot(): this {
     return this;
+  }
+
+  #watchRegistry(registry: IconRegistry): void {
+    if (this.#unsubscribe) {
+      return;
+    }
+    this.#unsubscribe = registry.subscribe(() => {
+      if (registry.hasIcon(this.icon)) {
+        this.requestUpdate();
+      }
+    });
+  }
+
+  #unwatchRegistry(): void {
+    this.#unsubscribe?.();
+    this.#unsubscribe = undefined;
   }
 }
