@@ -19,7 +19,7 @@ import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plug
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
-import { IconsPlugin, PhosphorAssetsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
@@ -593,12 +593,11 @@ export default defineConfig((env) => ({
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
         path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
+      // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
+      // into the build output and cached at runtime by sw.ts (excluded from the precache).
+      assets: [{ route: '/phosphor', dir: phosphorIconsCore }],
       // verbose: true,
     }),
-
-    // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
-    // into the build output and cached at runtime by sw.ts (excluded from the precache).
-    PhosphorAssetsPlugin({ assetsDir: phosphorIconsCore }),
 
     ThemePlugin({}),
   ]

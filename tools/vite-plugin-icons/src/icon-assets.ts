@@ -7,24 +7,24 @@ import { cp } from 'fs/promises';
 import { join, resolve } from 'path';
 import type { Plugin } from 'vite';
 
-export type PhosphorAssetsPluginParams = {
-  /** Directory containing the Phosphor catalog, e.g. `node_modules/@phosphor-icons/core/assets`. */
-  assetsDir: string;
-  /** Public route prefix the catalog is served under. */
-  route?: string;
+export type IconAssets = {
+  /** Public route prefix the catalog is served under, e.g. `/phosphor`. */
+  route: string;
+  /** Directory containing the icon-set catalog, e.g. `node_modules/@phosphor-icons/core/assets`. */
+  dir: string;
 };
 
 /**
- * Serves the full Phosphor icon catalog as individual SVGs under `{route}/{weight}/{name}.svg`,
- * so the runtime icon resolver in @dxos/react-ui can fetch glyphs that weren't statically
- * referenced (e.g. icons used only by runtime-loaded plugins).
+ * Serves an icon-set catalog as individual SVGs under `{route}/...`, so runtime icon
+ * resolvers (e.g. @dxos/react-ui's IconRegistry) can fetch glyphs that weren't statically
+ * referenced — icons used only by runtime-loaded plugins.
  *
- * In dev: middleware streams from `assetsDir`. In build: assets are copied into the output dir.
+ * In dev: middleware streams from `dir`. In build: assets are copied into the output dir.
  */
-export const PhosphorAssetsPlugin = ({ assetsDir, route = '/phosphor' }: PhosphorAssetsPluginParams): Plugin => {
+export const iconAssetsPlugin = ({ route, dir }: IconAssets): Plugin => {
   let outDir: string | undefined;
   return {
-    name: 'dxos:phosphor-assets',
+    name: `dxos:icon-assets${route}`,
     configResolved: (config) => {
       outDir = resolve(config.root, config.build.outDir);
     },
@@ -39,8 +39,8 @@ export const PhosphorAssetsPlugin = ({ assetsDir, route = '/phosphor' }: Phospho
           res.end();
           return;
         }
-        const filePath = join(assetsDir, rawPath);
-        if (!filePath.startsWith(assetsDir) || !existsSync(filePath)) {
+        const filePath = join(dir, rawPath);
+        if (!filePath.startsWith(dir) || !existsSync(filePath)) {
           return next();
         }
         try {
@@ -54,11 +54,11 @@ export const PhosphorAssetsPlugin = ({ assetsDir, route = '/phosphor' }: Phospho
       });
     },
     closeBundle: async () => {
-      if (!outDir || !existsSync(assetsDir)) {
+      if (!outDir || !existsSync(dir)) {
         return;
       }
       const dest = join(outDir, route.replace(/^\//, ''));
-      await cp(assetsDir, dest, { recursive: true });
+      await cp(dir, dest, { recursive: true });
     },
   };
 };

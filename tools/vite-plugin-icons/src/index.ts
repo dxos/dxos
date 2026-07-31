@@ -6,13 +6,15 @@
 
 // TODO(burdon): Replace with https://github.com/vnphanquang/phosphor-icons-tailwindcss
 
-export * from './phosphor-assets';
-
 import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import fs from 'fs';
 import { join, resolve } from 'path';
 import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
+
+import { type IconAssets, iconAssetsPlugin } from './icon-assets';
+
+export type { IconAssets };
 
 export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & {
   spriteFile: string;
@@ -23,6 +25,13 @@ export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & {
    * composer-crx page actions).
    */
   scanPaths?: string[];
+  /**
+   * Icon-set catalogs to expose as individual SVGs (dev middleware + build-output copy)
+   * for runtime icon resolution — icons referenced only by runtime-loaded code that the
+   * scanner never sees. Opt-in: hosts that only need the static sprite omit this (e.g.
+   * composer-crx, where copying a full catalog would bloat the packaged extension).
+   */
+  assets?: IconAssets[];
   verbose?: boolean;
 };
 
@@ -32,6 +41,7 @@ export const IconsPlugin = ({
   spriteFile,
   contentPaths,
   scanPaths,
+  assets,
   config,
   verbose,
 }: IconsPluginParams): Plugin[] => {
@@ -237,5 +247,6 @@ export const IconsPlugin = ({
         await flushSprite();
       },
     },
+    ...(assets ?? []).map(iconAssetsPlugin),
   ] satisfies Plugin[];
 };
