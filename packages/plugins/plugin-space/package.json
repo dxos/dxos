@@ -190,6 +190,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
+    "@effect/platform-node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
