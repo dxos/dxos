@@ -65,7 +65,7 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/person-deduplication-plugin-inb
       `senderSignals`, which reads the `noReply`/`listUnsubscribe` flags the provider mappers
       already record. 8 unit tests.
 - [ ] 4.5a **Outbound signal not wired.** `SenderSignals.outbound` exists and is honoured, but
-      nothing sets it: "we replied to this address" means extracting the *recipients* of sent mail,
+      nothing sets it: "we replied to this address" means extracting the _recipients_ of sent mail,
       and recipients are not extracted at all today. Until that lands, the allow-list is effectively
       "domain matches a known Organization", which is stricter than intended.
 
