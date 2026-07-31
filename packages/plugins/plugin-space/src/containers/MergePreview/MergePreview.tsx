@@ -12,7 +12,7 @@ import { ObjectForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
-import { SpaceOperation } from '../../operations/definitions';
+import { SpaceOperation } from '../../operations';
 import { SpaceCapabilities } from '../../types';
 
 export type MergePreviewProps = {

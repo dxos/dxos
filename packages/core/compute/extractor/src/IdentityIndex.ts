@@ -63,15 +63,33 @@ export const makeIdentityIndex = (specs: ReadonlyArray<IdentitySpec<any>>): Iden
 };
 
 /**
- * Builds the index by querying each spec's type once. Do this once per run and share it — one
- * query per type instead of one per candidate is what keeps a large sync from going quadratic.
+ * A child index that reads through to `parent` but keeps its own registrations.
+ *
+ * Use it for objects built but not yet committed. Registering those into a shared, long-lived index
+ * would make an aborted run poison it: the index would go on claiming an object the space never
+ * received, and the sender would never get one. An overlay is discarded with the run.
  */
-export const buildIdentityIndex = (
+export const overlayIdentityIndex = (specs: ReadonlyArray<IdentitySpec<any>>, parent: IdentityIndex): IdentityIndex => {
+  const own = makeIdentityIndex(specs);
+  return {
+    lookup: (type, input) => own.lookup(type, input) ?? parent.lookup(type, input),
+    register: (object) => own.register(object),
+  };
+};
+
+/**
+ * Indexes everything the space already holds for each spec's type — one query per type rather than
+ * one per candidate, which is what keeps a large sync from going quadratic.
+ *
+ * Safe to re-run on a live index: `register` is first-writer-wins, so this adds what other writers
+ * have committed since without displacing anything the caller registered itself.
+ */
+export const seedIdentityIndex = (
   db: Database.Database,
   specs: ReadonlyArray<IdentitySpec<any>>,
-): Effect.Effect<IdentityIndex> =>
+  index: IdentityIndex,
+): Effect.Effect<void> =>
   Effect.gen(function* () {
-    const index = makeIdentityIndex(specs);
     for (const spec of specs) {
       const existing = yield* Effect.promise(() => db.query(Filter.type(spec.type)).run());
       for (const object of existing) {
@@ -80,7 +98,16 @@ export const buildIdentityIndex = (
         }
       }
     }
+  });
 
+/** A new index seeded from the space. */
+export const buildIdentityIndex = (
+  db: Database.Database,
+  specs: ReadonlyArray<IdentitySpec<any>>,
+): Effect.Effect<IdentityIndex> =>
+  Effect.gen(function* () {
+    const index = makeIdentityIndex(specs);
+    yield* seedIdentityIndex(db, specs, index);
     return index;
   });
 

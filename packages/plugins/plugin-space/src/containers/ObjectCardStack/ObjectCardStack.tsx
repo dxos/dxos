@@ -58,7 +58,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
               <ScrollArea.Root orientation='vertical' centered padding>
                 <ScrollArea.Viewport ref={setViewport}>
                   <Mosaic.Stack
-                    classNames='gap-trim-md'
+                    classNames='py-trim-md gap-trim-md'
                     draggable={false}
                     items={selectedObjects}
                     getId={(obj) => obj.id}

@@ -91,6 +91,37 @@ export const seedMailboxBinding = async (
 };
 
 /**
+ * Gives every sender in a generated dataset an Organization at its domain.
+ *
+ * Contact extraction is an allow-list — an unknown individual is not materialised (see
+ * `shouldExtractContact`) — and these fixtures generate senders at random domains. Tests about the
+ * sync pipeline wiring contacts through call this so they exercise that wiring rather than the
+ * extraction policy, which has its own tests in `@dxos/extractor-lib`.
+ */
+export const seedSenderOrganizations = async (
+  db: Database.Database,
+  dataset: GmailDataset | JmapDataset,
+): Promise<void> => {
+  const domains = new Set(senderDomainsOf(dataset));
+  for (const domain of domains) {
+    db.add(Organization.make({ name: domain, website: domain }));
+  }
+  await db.flush({ indexes: true });
+};
+
+/** Sender domains in a dataset — Gmail records the From header, JMAP a structured `from` list. */
+const senderDomainsOf = (dataset: GmailDataset | JmapDataset): string[] =>
+  [...(('messages' in dataset ? dataset.messages : dataset.emails) ?? [])]
+    .map((message) => {
+      const from =
+        'payload' in message
+          ? message.payload?.headers?.find((header) => header.name === 'From')?.value
+          : message.from?.[0]?.email;
+      return from?.match(/[\w.+-]+@([\w.-]+)/)?.[1];
+    })
+    .filter((domain): domain is string => !!domain);
+
+/**
  * The db + resolver + operation ambient services shared by both providers' mock-sync tests. The
  * seeded mailbox has no on-arrival extractors, so the `onArrivalExtractors` stage short-circuits and
  * never touches `Operation` — it is provided (unavailable invoker) only to satisfy the requirement

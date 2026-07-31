@@ -48,4 +48,23 @@ describe('buildContactFromActor', () => {
     const contact = await EffectEx.runPromise(buildContactFromActor({ email: 'alice@dxos.org' }, db));
     expect(contact).toBeUndefined();
   });
+
+  test('a repeat sender within a run does not build a second contact', async ({ expect }) => {
+    const first = await EffectEx.runPromise(buildContactFromActor({ email: 'alice@dxos.org' }, db));
+    // Deliberately NOT committed: an uncommitted contact is invisible to a query, which is what made
+    // the second message from a sender fork a duplicate.
+    const second = await EffectEx.runPromise(buildContactFromActor({ email: 'ALICE@dxos.org' }, db));
+    expect(first).toBeDefined();
+    expect(second).toBeUndefined();
+  });
+
+  test('concurrent runs over one database share an index, so only one contact is built', async ({ expect }) => {
+    // F1: each sync used to hold its own snapshot, so two mailboxes seeing the same sender at once
+    // both missed and both created.
+    const [first, second] = await Promise.all([
+      EffectEx.runPromise(buildContactFromActor({ email: 'alice@dxos.org' }, db)),
+      EffectEx.runPromise(buildContactFromActor({ email: 'alice@dxos.org' }, db)),
+    ]);
+    expect([first, second].filter(Boolean)).toHaveLength(1);
+  });
 });

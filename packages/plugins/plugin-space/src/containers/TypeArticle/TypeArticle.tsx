@@ -32,9 +32,18 @@ import { useDuplicates } from './useDuplicates';
 type Layout = 'masonry' | 'table' | 'duplicates';
 
 const LAYOUTS: { value: Layout; icon: string }[] = [
-  { value: 'masonry', icon: 'ph--squares-four--regular' },
-  { value: 'table', icon: 'ph--table--regular' },
-  { value: 'duplicates', icon: 'ph--copy--regular' },
+  {
+    value: 'masonry',
+    icon: 'ph--squares-four--regular',
+  },
+  {
+    value: 'table',
+    icon: 'ph--table--regular',
+  },
+  {
+    value: 'duplicates',
+    icon: 'ph--copy--regular',
+  },
 ];
 
 export type TypeArticleProps = {
@@ -46,16 +55,16 @@ export type TypeArticleProps = {
 
 /**
  * List view rendered when a type node is selected: a toolbar with a Masonry/Table layout switch and a
- * text filter over every object of the type. Selecting an item opens it as a sibling plank. Objects are
- * not enumerated in the nav tree; each navigated object becomes a hidden child of the type node resolved
- * on demand.
+ * text filter over every object of the type. Selecting an item opens it as a sibling plank.
+ *
+ * Objects are not enumerated in the nav tree; each navigated object becomes a hidden child of the
+ * type node resolved on demand.
  */
 export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [layout, setLayout] = useState<Layout>('masonry');
   const typeUri = Type.getURI(type);
-
   const objects = useQuery(space.db, Filter.type(typeUri));
 
   // Text filter over the object labels; feeds both the masonry tiles and the table rows.
@@ -198,13 +207,6 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
       })),
     [tiles, selectedIds, toggleSelected, handleOpen, handleDelete],
   );
-  const cards = (
-    <Masonry.Root Tile={TileAdapter}>
-      <Masonry.Content>
-        <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
-      </Masonry.Content>
-    </Masonry.Root>
-  );
 
   // A type with no objects at all has nothing for any layout to show; past that each layout says
   // when it is empty for its own reason.
@@ -220,10 +222,6 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      {/* One panel per layout, so each is a self-contained unit rather than a branch of a nested
-          conditional. Radix unmounts inactive panels, so only the active layout is ever mounted.
-          `asChild` keeps the tabs root off the DOM — an extra wrapper would break the height chain
-          the masonry and table size themselves against. */}
       <Tabs.Root asChild value={layout} onValueChange={(value) => setLayout(value as Layout)}>
         <Panel.Root role={role}>
           <Panel.Toolbar classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
@@ -234,7 +232,11 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
           </Panel.Toolbar>
           <Panel.Content>
             <LayoutPanel value='masonry' empty={noResults}>
-              {cards}
+              <Masonry.Root Tile={TileAdapter}>
+                <Masonry.Content>
+                  <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+                </Masonry.Content>
+              </Masonry.Root>
             </LayoutPanel>
             <LayoutPanel value='table' empty={noResults}>
               <DynamicTable
@@ -251,7 +253,11 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
             </LayoutPanel>
             {duplicates.spec && (
               <LayoutPanel value='duplicates' empty={noDuplicates}>
-                {cards}
+                <Masonry.Root Tile={TileAdapter}>
+                  <Masonry.Content>
+                    <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+                  </Masonry.Content>
+                </Masonry.Root>
               </LayoutPanel>
             )}
           </Panel.Content>
@@ -281,11 +287,11 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
     return null;
   }
 
-  return <TypeTile {...data} />;
+  return <ObjectTile {...data} />;
 };
 
 /** Selectable header-only card for a single object. */
-const TypeTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
+const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
   const { t } = useTranslation(meta.profile.key);
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
@@ -310,10 +316,18 @@ const TypeTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => 
 
   const menuItems = useMemo(
     () => [
-      { label: t('open-object.label'), onClick: () => onOpen(object) },
+      {
+        icon: 'ph--arrow-square-out--regular',
+        label: t('open-object.label', {
+          ns: typename ?? meta.profile.key,
+          defaultValue: t('open-object.label'),
+        }),
+        onClick: () => onOpen(object),
+      },
       ...(onDelete
         ? [
             {
+              icon: 'ph--trash--regular',
               label: t('delete-object.label', {
                 ns: typename ?? meta.profile.key,
                 defaultValue: t('delete-object.label'),

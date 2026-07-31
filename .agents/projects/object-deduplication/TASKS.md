@@ -52,14 +52,22 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/person-deduplication-plugin-inb
 - [x] 4.3 Google `upsertPerson`: two-stage resolution (foreign key → identity index), stamps the
       resource name onto the person it finds, and merges via `personIdentitySpec.merge` instead of
       clobbering `emails`/`phoneNumbers`/`addresses`/`urls`. Fixes **F2**.
-- [ ] 4.2 Delete `ContactLookup`; `buildContactFromActor` takes the index. **F1 is still open** —
-      two concurrently-syncing mailboxes still hold separate caches.
+- [x] 4.2 `ContactLookup` deleted. One `IdentityIndex` per database (`getIdentityIndex`), re-seeded
+      at the start of each run, with a run-scoped `overlayIdentityIndex` for objects built but not
+      yet committed. **F1 closed** for committed contacts: two mailboxes syncing at once now read
+      one index instead of one snapshot each. The overlay is what keeps an aborted run from leaving
+      the shared index claiming a contact the space never received — the recovery test caught that.
 - [ ] 4.4 Audit `plugin-github/sync`, `assistant-toolkit/linear/sync-issues`.
-- [ ] 4.5 **Selective extraction** — a type-specific `shouldExtract` on the spec/extractor, so the
-      cheapest fix for duplicate volume is not creating the object at all. Person rules:
-      extract when we send or reply to the address; extract when the domain matches an existing
-      Organization; never extract `no-reply@`/`noreply@`/`donotreply@`, bulk/list mail
-      (`List-Unsubscribe`, `Precedence: bulk`), or automated-sender patterns.
+- [x] 4.5 **Selective extraction** — `shouldExtractContact` (extractor-lib/selection.ts) is an
+      allow-list: a sender is materialised only when we sent/replied to it or its domain matches a
+      known Organization, and never when the address or message is automated (no-reply, bounce,
+      role mailbox, `List-Unsubscribe`, bulk). Deny beats allow. Wired into the email pipeline via
+      `senderSignals`, which reads the `noReply`/`listUnsubscribe` flags the provider mappers
+      already record. 8 unit tests.
+- [ ] 4.5a **Outbound signal not wired.** `SenderSignals.outbound` exists and is honoured, but
+      nothing sets it: "we replied to this address" means extracting the *recipients* of sent mail,
+      and recipients are not extracted at all today. Until that lands, the allow-list is effectively
+      "domain matches a known Organization", which is stricter than intended.
 
 ## Phase 5 — compound table cells
 
