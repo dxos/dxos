@@ -113,15 +113,11 @@ where fixtures get captured. Three defects found while wiring that up.
 - [x] **Starred state no longer scans the feed per render** — `ArchiveModule` read
       `getTagsForMessage` for every message on every render (including every selection
       change). Now uses `TagIndex.taggedIdsAtom`, the tag index's reverse lookup.
-- [ ] **>1s from clicking a message to it displaying** — the scan above was one cause but
-      probably not all of it. Unmeasured candidates, in order of suspicion:
-  - `processEmailColors` calls `getComputedStyle` per element and again per text-node
-    ancestor walk (`transform-colors.ts` 123/144/164/172) — a forced style recalc per node,
-    synchronous, for every newly rendered body. Gated by `shouldTheme`, so it hits personal
-    mail and any non-table body.
-  - Each selection is a new thread query in `MessageArticle` (`threadId` changes the AST, so
-    `useQuery` resubscribes) plus per-expanded-message tag/extracted-object queries.
-  - Needs instrumenting before any fix — do not guess again.
+- [x] **>1s from clicking a message to it displaying** — RESOLVED by the scan fix above,
+      user-confirmed. The whole delay was the per-render feed walk: every selection change
+      re-rendered `ArchiveModule`, which called `getTagsForMessage` once per message in the
+      feed. The other suspects (`processEmailColors`' per-node `getComputedStyle`, the new
+      thread query per selection) were not contributors at this feed size.
 - [ ] **`StoryRole.Connector` always reports not connected** — NOT fixed; the empty state
       now prints the mailbox count and every cursor's `spec.target` uri so the next run says
       which half of `isCursorForTarget` fails. Leading hypothesis: two Mailbox objects (the
