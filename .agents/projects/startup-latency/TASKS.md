@@ -180,8 +180,15 @@ definition pays only @effect/platform (tree-shaken via compute barrel) + date-fn
       app-toolkit needs a light subpath for what types files actually use**
 - [x] Type directories value-free — `ui-editor/src/types/types.ts` exemplar already type-only
       (verified); remaining violations are the group-(c) items above
-- [ ] `Operation` importable without the `@dxos/compute` barrel (subpath, or decouple
-      `Header.ts` from `@effect/platform/HttpClient`) — decision owed: subpath vs decouple
+- [x] `Operation` importable without the `@dxos/compute` barrel — RESOLVED as per-API subpath
+      entrypoints (user-ratified, 52e2b889cc): Effect-style exports for all 24 compute
+      namespaces + the autofixing `dxos-subpath-imports` lint rule (allowlist-driven, reads
+      the target package's exports map; package must export ./package.json) migrated ~1,100
+      files. Definition floor 445 → **322 files**; @effect/platform and date-fns GONE from
+      every definition; remaining floor = echo type system + semver (echo Filter/match).
+      Bundle bytes flat (tree-shaking already pruned the wire); the win is structural — graph
+      walk cost and shake fragility. Next allowlist candidates: @dxos/echo (subpaths exist),
+      @dxos/app-framework; flat error names ride the barrel until an errors mapping is added
 - [x] Drop the static `export { XOperationHandlerSet } from './operations'` from `plugin.ts`
       stubs — 49 stubs stripped; CLI/stories import via new `./operations` subpath on the 10
       consumed plugins (magazine's `plugin.workerd.ts` re-export kept for the edge host)
