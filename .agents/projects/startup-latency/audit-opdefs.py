@@ -84,6 +84,12 @@ def file_imports(path):
         line = m.group(0)
         if TYPE_ONLY.match(line):
             continue
+        # An import whose specifiers are ALL inline-`type` is elided at emit — not a value edge.
+        braces = re.search(r"\{([^}]*)\}", line)
+        if braces:
+            specs = [s.strip() for s in braces.group(1).split(',') if s.strip()]
+            if specs and all(s.startswith('type ') for s in specs) and not re.search(r"import\s+[\w$]+\s*,", line):
+                continue
         spec = m.group(1) or m.group(2)
         out.append((spec, line.strip()[:120]))
     return out

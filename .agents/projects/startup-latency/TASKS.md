@@ -168,16 +168,17 @@ definition pays only @effect/platform (tree-shaken via compute barrel) + date-fn
       files + all 97 metas import from `/Capability` and `/Plugin` subpaths; the
       compute-runtime/edge-client chain (bip39, protobuf, wa-sqlite) left definition closures
       (DeckOperation 580 → 452 files)
-- [ ] Definitions never import a plugin's main barrel — **offender list enumerated
-      (2026-07-31): 19 definitions with UI in closure. Three offense groups: (a)
-      `@dxos/app-toolkit` main barrel from types files (~73-ui-file shared floor: inbox
-      Mailbox/Calendar, sheet, markdown, chess, space types/form, sequencer, magazine,
-      commerce, support, trip, review); (b) cross-plugin main barrels (trip→inbox,
-      table→space, review/presenter→markdown, slack/blogger/studio/ibkr/inbox→connector,
-      script templates→chess/game/markdown); (c) react-ui value imports in types dirs
-      (sheet→react-ui-grid/react-ui, markdown→react-ui-editor/ui-editor,
-      studio→react-ui-form/react-ui-board). plugin-connector's `/types` fix pays off 5×;
-      app-toolkit needs a light subpath for what types files actually use**
+- [x] Definitions never import a plugin's main barrel — ALL 19 offenders resolved
+      (2026-07-31, dd867248cc + 32fc405b5d): (a) the `@dxos/app-toolkit` barrel floor fell
+      to the subpath migration (types files import `/AppAnnotation` etc.); (b) cross-plugin
+      main barrels swapped to `/types` at 13 sites (connector×6, markdown×3, inbox, chess×2,
+      game×2); (c) the react-ui "value imports" in types dirs were inline-`type` imports —
+      elided at emit, an audit artifact (the script now skips all-inline-type statements;
+      verified against the built chunk-types.mjs: markdown's /types entry emits no
+      codemirror/react edges). Corrected audit: **zero definitions with UI in closure**;
+      remaining heavy rows are the script/sandbox function skills and assistant-toolkit
+      skill definitions (~600–900 files via their own @effect/ai chains — all gated behind
+      SkillsRequested at runtime, lower priority)
 - [x] Type directories value-free — `ui-editor/src/types/types.ts` exemplar already type-only
       (verified); remaining violations are the group-(c) items above
 - [x] `Operation` importable without the `@dxos/compute` barrel — RESOLVED as per-API subpath
