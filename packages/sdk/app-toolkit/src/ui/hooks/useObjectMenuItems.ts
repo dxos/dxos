@@ -2,20 +2,64 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { type MouseEvent, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
+import { EID } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { GraphPath } from '../../app';
-import { LayoutOperation } from '../../operations';
+import { LayoutOperation, NavigationOperation } from '../../operations';
 
 const OPEN_ICON = 'ph--arrow-square-out--regular';
+
+type Invoke = ReturnType<typeof useOperationInvoker>['invoke'];
+
+/**
+ * Open an object from a card, beside the plank the card lives in. A card holds an object and has no idea
+ * where the nav tree shows it, so ask: {@link NavigationOperation.ResolveNavigationTargets} answers
+ * best-first, so an object's canonical home (its collection, a type section) wins over the generic
+ * database path. The space id has to come from the object's database — a bare `Ref` URI carries only an
+ * entity id, which would resolve against the *active* space and so mis-resolve a card showing an object
+ * from elsewhere.
+ */
+const openObject = (
+  subject: Obj.Unknown,
+  invoke: Invoke,
+  options: { pivotId?: string; modifiers?: { shift?: boolean } },
+): Effect.Effect<void> =>
+  Effect.gen(function* () {
+    // `canNavigateToSubject` guarantees a database; without one there is nothing to address.
+    const db = Obj.getDatabase(subject);
+    if (!db) {
+      return;
+    }
+
+    const targets = yield* invoke(NavigationOperation.ResolveNavigationTargets, {
+      query: { uri: EID.make({ spaceId: db.spaceId, entityId: subject.id }) },
+    }).pipe(
+      Effect.map(({ targets }) => targets),
+      Effect.orElseSucceed(() => []),
+    );
+
+    // plugin-space answers for any loadable object, so a loaded app always gets at least the database
+    // path here. The fallback is for when no resolver answers at all — an unregistered handler, or a
+    // profile without plugin-space — where opening the database path still beats doing nothing.
+    const path = targets[0]?.path ?? GraphPath.getObjectPathFromObject(subject);
+    yield* invoke(LayoutOperation.Open, { subject: [path], disposition: 'add', ...options });
+  }).pipe(
+    // A click must never throw, but a swallowed Open failure reads as "nothing happened" — leave a trace.
+    Effect.tapErrorCause((cause) => Effect.sync(() => log.warn('failed to open object', { id: subject.id, cause }))),
+    Effect.ignore,
+  );
 
 /**
  * Helper for card content that opens objects (e.g. a related-object link): attach `ref` to the card's
@@ -51,25 +95,24 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
  * Returns an onClick handler that opens the subject in the layout, or undefined if the subject is not navigable
  * (e.g. not an Echo object or has hidden annotation). Use with Card.Title for object cards.
  * A card lives inside a plank, so opening its object always adds a plank beside that plank (`add`), never
- * replacing it. The origin plank is resolved structurally from the click target via {@link Attention.getRootAttendableId}.
+ * replacing it. The origin plank is resolved structurally from the click target via {@link Attention.getRootAttendableId},
+ * and the destination path via {@link openObject}.
  */
 export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLElement>) => void) | undefined => {
-  const { invokePromise } = useOperationInvoker();
+  const { invoke } = useOperationInvoker();
 
   return useMemo(() => {
     if (!canNavigateToSubject(subject)) {
       return;
     }
 
-    const subjectPath = GraphPath.getObjectPathFromObject(subject);
     return (event: MouseEvent<HTMLElement>) => {
-      void invokePromise(LayoutOperation.Open, {
-        subject: [subjectPath],
-        pivotId: Attention.getRootAttendableId(event.currentTarget),
-        disposition: 'add',
-      });
+      // `currentTarget` is only valid while the event is dispatching, so read the pivot before the
+      // resolution the program awaits.
+      const pivotId = Attention.getRootAttendableId(event.currentTarget);
+      void EffectEx.runPromise(openObject(subject, invoke, { pivotId }));
     };
-  }, [subject, invokePromise]);
+  }, [subject, invoke]);
 };
 
 /**
@@ -82,7 +125,7 @@ export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLEle
  * own element.
  */
 export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[] => {
-  const { invokePromise } = useOperationInvoker();
+  const { invoke } = useOperationInvoker();
   const { t } = useTranslation(osTranslations);
 
   return useMemo(() => {
@@ -90,25 +133,18 @@ export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[]
       return [];
     }
 
-    const subjectPath = GraphPath.getObjectPathFromObject(subject);
     return [
       createMenuAction(
         'navigate',
-        (params) => {
-          void invokePromise(LayoutOperation.Open, {
-            subject: [subjectPath],
-            pivotId: pivot,
-            disposition: 'add',
-            modifiers: params?.modifiers,
-          });
-        },
+        (params) =>
+          void EffectEx.runPromise(openObject(subject, invoke, { pivotId: pivot, modifiers: params?.modifiers })),
         {
           label: t('open.label'),
           icon: OPEN_ICON,
         },
       ),
     ];
-  }, [subject, invokePromise, t, pivot]);
+  }, [subject, invoke, t, pivot]);
 };
 
 /** ID for object-actions (Open/Navigate). Use with useMenu(CONTRIBUTOR_NAME).addMenuItems. */

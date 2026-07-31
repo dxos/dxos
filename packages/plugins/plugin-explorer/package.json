@@ -118,6 +118,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@observablehq/plot": "catalog:",
     "@radix-ui/react-context": "catalog:",

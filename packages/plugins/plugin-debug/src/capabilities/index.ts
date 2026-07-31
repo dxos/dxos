@@ -8,3 +8,4 @@ export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const DebugSettings = Capability.lazy('DebugSettings', () => import('./settings'));
 export const StatsPanel = Capability.lazy('StatsPanel', () => import('./stats-panel'));
+export const LogRecording = Capability.lazy('LogRecording', () => import('./log-recording'));

@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-toolkit';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Instructions, Operation } from '@dxos/compute';
+import { Instructions, Operation, Project } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -35,6 +35,23 @@ import { getChatsPath } from '../paths';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [RunInstructions] as const;
+
+/**
+ * Chats belonging to the top-level Chats section: every chat minus the two kinds that already appear
+ * elsewhere in the tree. A chat sourcing a `CompanionTo` relation belongs to its primary object's
+ * companion panel; a chat parented to a `Project` is that project's navtree child (plugin-projects
+ * `projectChats`). Without the second exclusion a project chat appears twice.
+ *
+ * The project exclusion subtracts every project child rather than just chats — `children()` takes no
+ * type filter, and subtracting a non-chat from a chat-typed source is a no-op.
+ */
+export const standaloneChatsQuery = Query.without(
+  Query.without(
+    Query.select(Filter.type(Chat.Chat)),
+    Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
+  ),
+  Query.select(Filter.type(Project.Project)).children(),
+);
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(
@@ -197,14 +214,9 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Section node: standalone Chat.Chat objects per AI group (companions are excluded).
+      // Section node: standalone Chat.Chat objects per AI group (companions and project chats excluded).
       TypeSection.createTypeSectionExtension(Chat.Chat, {
-        // Exclude chats that are the source of a CompanionTo relation; those belong to
-        // their primary object's companion panel and should not appear in the top-level list.
-        query: Query.without(
-          Query.select(Filter.type(Chat.Chat)),
-          Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
-        ),
+        query: standaloneChatsQuery,
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
         groupSegment: GraphPath.GroupSegments.ai,
         urlKey: 'chat',

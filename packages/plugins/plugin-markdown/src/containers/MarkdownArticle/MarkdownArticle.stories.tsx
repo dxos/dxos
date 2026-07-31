@@ -16,12 +16,15 @@ import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { Drawing } from '@dxos/plugin-illustrator';
+import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { Sketch, SketchModel } from '@dxos/plugin-sketch';
-import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { TldrawModel } from '@dxos/plugin-tldraw';
+import { Tldraw } from '@dxos/plugin-tldraw';
+import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -41,7 +44,7 @@ random.seed(1);
 const generator: ValueGenerator = random as any;
 
 // A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test sketch.
-const SKETCH_CONTENT = new SketchModel.SketchBuilder()
+const SKETCH_CONTENT = new TldrawModel.RecordBuilder()
   .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
   .build();
 
@@ -93,15 +96,23 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { title = 'Testing', content = '', objects: showObjects = false } }) => ({
-      // SketchPlugin's section surface reads its Settings atom, contributed on SetupSettings.
+      // TldrawPlugin's section surface reads its Settings atom, contributed on SetupSettings.
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),
         MarkdownExtensionsPlugin(),
-        SketchPlugin(),
+        IllustratorPlugin(),
+        TldrawPlugin(),
         ClientPlugin({
-          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Sketch.Sketch, Sketch.Canvas],
+          types: [
+            Markdown.Document,
+            Text.Text,
+            Person.Person,
+            Organization.Organization,
+            Drawing.Drawing,
+            Drawing.Canvas,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
@@ -123,11 +134,9 @@ const meta = {
                 );
 
                 objects.push(
-                  Sketch.make({
+                  Drawing.make({
                     name: 'Test Sketch',
-                    canvas: {
-                      content: SKETCH_CONTENT,
-                    },
+                    canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: SKETCH_CONTENT }),
                   }),
                 );
 

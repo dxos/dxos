@@ -52,7 +52,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@effect/rpc": "catalog:",

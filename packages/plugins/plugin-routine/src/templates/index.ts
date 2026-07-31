@@ -9,7 +9,7 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { Instructions, Skill, Trigger } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 
-import { type RoutineCapabilities } from '#types';
+import { RoutineCapabilities } from '#types';
 
 import { makeRoutine } from '../util';
 
@@ -20,7 +20,7 @@ import { makeRoutine } from '../util';
  * (no subject) starts with bare instructions.
  */
 export const blank: RoutineCapabilities.Template = {
-  id: 'org.dxos.routine.blank',
+  id: RoutineCapabilities.BlankTemplateId,
   label: 'Blank',
   icon: 'ph--lightning--regular',
   scaffold: ({ name, subject }) =>

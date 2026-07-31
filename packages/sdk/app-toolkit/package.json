@@ -68,6 +68,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
     "@tauri-apps/api": "catalog:"
   },

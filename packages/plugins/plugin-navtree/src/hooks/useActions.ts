@@ -5,7 +5,8 @@
 import { useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, Node, useActions as useGraphActions } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
 import { applyPresentation } from '@dxos/react-ui-menu';
 
 import { type FlattenedActions } from '#types';

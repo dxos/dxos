@@ -13,6 +13,7 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-blogger',
     icon: { key: 'ph--pen-nib--regular', hue: 'amber' },
     spec: 'PLUGIN.mdl',
+    tags: ['labs'],
     dependsOn: ['org.dxos.plugin.markdown'],
   },
 });

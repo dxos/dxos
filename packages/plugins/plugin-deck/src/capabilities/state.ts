@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
@@ -11,7 +11,14 @@ import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
-import { DeckCapabilities, type EphemeralDeckState, StoredDeckState, defaultDeck, getMode } from '#types';
+import {
+  DeckCapabilities,
+  DEFAULT_DECK_ID,
+  type EphemeralDeckState,
+  StoredDeckState,
+  defaultDeck,
+  getMode,
+} from '#types';
 
 import { migratePersistedState } from '../util';
 
@@ -22,10 +29,10 @@ const defaultDeckState: StoredDeckState = {
   sidebarState: 'expanded',
   complementarySidebarState: 'collapsed',
   complementarySidebarPanel: undefined,
-  activeDeck: 'default',
-  previousDeck: 'default',
+  activeDeck: DEFAULT_DECK_ID,
+  previousDeck: DEFAULT_DECK_ID,
   decks: {
-    default: { ...defaultDeck },
+    [DEFAULT_DECK_ID]: { ...defaultDeck },
   },
 };
 

@@ -5,7 +5,7 @@
 // Import from the focused constants module rather than the `../util` barrel: the barrel re-exports
 // modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
 // esbuild cannot load. The Worker only needs this one constant.
-import { FEEDBACK_LOGS_MAX_SIZE } from '../util/constants';
+import { LOG_STORE_MAX_BYTES } from '../util/constants';
 
 type Env = {
   ASSETS: Fetcher;
@@ -16,7 +16,7 @@ type Env = {
 };
 
 const OTEL_MAX_BODY_SIZE = 800 * 1024 * 1024; // 800MB.
-const FEEDBACK_LOGS_MAX_BODY_SIZE = FEEDBACK_LOGS_MAX_SIZE;
+const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 
 const ALLOWED_ORIGINS = new Set([
   'https://composer.space',
@@ -47,27 +47,41 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
     return new Response('Feedback logs storage not configured', { status: 503 });
   }
 
-  const contentLength = Number(request.headers.get('content-length') ?? 0);
+  // R2 only accepts a known-length stream, so Content-Length is required rather than advisory: it
+  // is both the size guard and what lets the body go straight to R2 unbuffered.
+  const contentLengthHeader = request.headers.get('content-length');
+  const contentLength = contentLengthHeader === null ? Number.NaN : Number(contentLengthHeader);
+  if (!Number.isInteger(contentLength) || contentLength < 0) {
+    return new Response('Content-Length required', { status: 411 });
+  }
+
+  if (contentLength === 0) {
+    return new Response('Empty body', { status: 400 });
+  }
+
   if (contentLength > FEEDBACK_LOGS_MAX_BODY_SIZE) {
     return new Response('Payload too large', { status: 413 });
   }
 
-  const bodyBuffer = await request.arrayBuffer();
-  if (bodyBuffer.byteLength === 0) {
+  if (!request.body) {
     return new Response('Empty body', { status: 400 });
-  }
-
-  if (bodyBuffer.byteLength > FEEDBACK_LOGS_MAX_BODY_SIZE) {
-    return new Response('Payload too large', { status: 413 });
   }
 
   const date = new Date().toISOString().slice(0, 10);
   const id = crypto.randomUUID();
   const key = `logs/${date}/${id}.ndjson`;
 
-  await env.FEEDBACK_LOGS.put(key, bodyBuffer, {
-    httpMetadata: { contentType: 'application/x-ndjson' },
-  });
+  try {
+    // Hand R2 the request body itself: `arrayBuffer()` would hold the whole dump in the isolate,
+    // near its memory limit, and a Worker torn down that way resets the connection — the client
+    // then sees a rejected `fetch` with no status rather than an error response.
+    await env.FEEDBACK_LOGS.put(key, request.body, {
+      httpMetadata: { contentType: 'application/x-ndjson' },
+    });
+  } catch {
+    // R2 rejects a body that does not match Content-Length, as well as its own failures.
+    return new Response('Failed to store feedback logs', { status: 502 });
+  }
 
   return new Response(JSON.stringify({ key }), {
     status: 200,

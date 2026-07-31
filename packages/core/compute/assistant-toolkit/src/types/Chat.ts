@@ -17,14 +17,17 @@ import { HarnessContextError } from '../errors';
 import * as Plan from './Plan';
 
 /**
- * AI chat.
+ * AI chat session.
  */
-// TODO(burdon): This is badly named.
 export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistant.chat', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
     viewType: Schema.String.pipe(Schema.optional),
+
+    /**
+     * Message feed.
+     */
+    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
 
     /**
      * Instructions steering this conversation, rendered into the system prompt at request time.
@@ -36,7 +39,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * Session plan for tracking task progress within this conversation.
      * Created lazily when the first task is recorded.
      */
-    // TODO(burdon): Generalize to artifact associated with a skill?
+    // TODO(burdon): Generalize to artifact associated with a skill.
     plan: Schema.optional(Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false))),
   }).pipe(
     LabelAnnotation.set(['name']),
@@ -62,6 +65,7 @@ export const ensurePlan = (chat: Chat): Effect.Effect<Plan.Plan, EntityNotFoundE
     Obj.update(chat, (chat) => {
       chat.plan = Ref.make(plan);
     });
+
     yield* Database.flush();
     return plan;
   });
@@ -83,20 +87,9 @@ export const getFromContext: Effect.Effect<
   return chats[0];
 });
 
-/** @deprecated Use CompanionTo instead. */
-export class LegacyCompanionTo extends Type.makeRelation<LegacyCompanionTo>(
-  DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
-)({
-  source: Chat,
-  target: Obj.Unknown,
-})(
-  Schema.Struct({
-    id: Obj.ID,
-  }),
-) {}
-
 /**
- * Relation between a Chat and companion objects (e.g., artifacts).
+ * Relation between a Chat and companion objects (e.g., artifacts, or the agent identity the
+ * conversation runs as — see `Agent.loadForChat`).
  */
 export class CompanionTo extends Type.makeRelation<CompanionTo>(
   DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),

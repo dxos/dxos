@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import type { ComponentType } from 'react';

@@ -44,14 +44,8 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/NavTreePlugin.workerd.ts",
-        "node": "./src/NavTreePlugin.node.ts",
-        "default": "./src/NavTreePlugin.tsx"
-      },
+      "source": "./src/NavTreePlugin.tsx",
       "types": "./dist/types/src/NavTreePlugin.d.ts",
-      "workerd": "./dist/lib/NavTreePlugin.workerd.mjs",
-      "node": "./dist/lib/NavTreePlugin.node.mjs",
       "default": "./dist/lib/NavTreePlugin.mjs"
     },
     "#testing": {
@@ -117,7 +111,8 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-attention": "workspace:*",

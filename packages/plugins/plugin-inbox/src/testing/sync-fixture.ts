@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import { Registry } from '@effect-atom/atom';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability, CapabilityManager } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
+import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import { Blob, Database, Ref, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as InboxResolver from '@dxos/extractor-lib';
@@ -125,17 +126,16 @@ export const inboxSyncTestServices = (
  * (no EDGE / function deployment). The connection's access token must carry a valid Gmail OAuth token.
  */
 export const inboxSyncLiveServices = (db: Database.Database, connectionRef: Ref.Ref<Connection.Connection>) => {
-  // `GoogleCredentials.fromConnection` short-circuits with the connection's cached token, so the
-  // CredentialsService is never called — but it stays in the requirement channel, so a stub satisfies it.
-  const unusedCredentials = Layer.succeed(Credential.CredentialsService, {
-    queryCredentials: () => Promise.reject(new Error('unused: connection carries a cached token')),
-    getCredential: () => Promise.reject(new Error('unused: connection carries a cached token')),
-  });
+  // The fixture connection carries a real token on the object, so no credential resolves through EDGE.
+  const credentials = credentialsLayerFromDatabase().pipe(
+    Layer.provide(Database.layer(db)),
+    Layer.provide(Credential.AccessTokenResolver.notAvailable),
+  );
   return Layer.mergeAll(
     GoogleMailApi.Live.pipe(
       Layer.provide(FetchHttpClient.layer),
       Layer.provide(GoogleCredentials.fromConnection(connectionRef).pipe(Layer.provide(Database.layer(db)))),
-      Layer.provide(unusedCredentials),
+      Layer.provide(credentials),
     ),
     ambientSyncServices(db),
   );

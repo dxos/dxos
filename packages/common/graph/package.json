@@ -29,7 +29,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:"
+    "@effect-atom/atom": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",

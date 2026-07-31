@@ -11,7 +11,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
+import { Connection, isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { DraftMessage, Event, Message } from '@dxos/types';
@@ -26,12 +26,13 @@ import {
   getAllMailId,
   getCalendarsPath,
   getDraftsId,
+  getMailboxDraftsPath,
   getMailboxesPath,
   getMailboxesSectionId,
   getSentId,
   getSubscriptionsId,
 } from '../paths';
-import { syncTarget } from '../util';
+import { getMessageLabel } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -209,7 +210,13 @@ export default Capability.makeModule(
           return Effect.succeed([
             Node.makeAction({
               id: 'createDraft',
-              data: () => Operation.invoke(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
+              data: () =>
+                Operation.invoke(InboxOperation.DraftEmailAndOpen, {
+                  db,
+                  mailbox,
+                  // This action hangs off the Drafts view, so the draft opens as a plank beside it.
+                  contextId: getMailboxDraftsPath(db.spaceId, mailbox.id),
+                }),
               properties: {
                 label: ['create-draft.label', { ns: meta.profile.key }],
                 icon: 'ph--plus--regular',
@@ -249,8 +256,8 @@ export default Capability.makeModule(
                 type: Type.getTypename(Message.Message),
                 data: message,
                 properties: {
-                  label: message.properties?.subject ?? ['message.label', { ns: meta.profile.key }],
-                  icon: 'ph--envelope-open--regular',
+                  label: getMessageLabel(message),
+                  icon: DraftMessage.instanceOf(message) ? 'ph--pencil-simple--regular' : 'ph--envelope-open--regular',
                   disposition: 'hidden',
                 },
               }),
@@ -380,6 +387,8 @@ export default Capability.makeModule(
                   // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  // The toolbar emits `data-testid` only for actions that set one; browser-e2e waits on it.
+                  testId: 'inbox.mailbox.sync',
                 },
               },
             ];
