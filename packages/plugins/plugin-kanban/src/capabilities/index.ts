@@ -9,6 +9,11 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.formInput', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],
+  roles: [
+    'org.dxos.role.article',
+    'org.dxos.role.formInput',
+    'org.dxos.role.objectProperties',
+    'org.dxos.role.section',
+  ],
 });
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'));

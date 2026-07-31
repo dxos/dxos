@@ -9,6 +9,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as PubSub from 'effect/PubSub';
 import * as Scope from 'effect/Scope';
 
 import { Performance } from '@dxos/effect';
@@ -17,28 +18,16 @@ import { log } from '@dxos/log';
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
 import { CapabilityNotFoundError, ProvidesMismatchError } from './errors';
+import { type FiberTracker, type ManagerState } from './manager-state';
 import { type ActivationMessage, type PluginFailurePhase, PluginTimeoutError } from './manager-types';
 import * as Plugin from './plugin';
 
-/**
- * Everything the loader needs from its owner. Callbacks rather than a manager reference so the
- * load pipeline's true dependencies stay visible (and the loader stays testable in isolation).
- */
-export type ModuleLoaderContext = {
-  capabilities: CapabilityManager.CapabilityManager;
+export type ModuleLoaderOptions = {
   /** The manager instance provided to module bodies as `Plugin.Service`. */
   pluginService: () => Context.Tag.Service<typeof Plugin.Service>;
-  getModules: () => readonly Plugin.PluginModule[];
-  getPluginIdForModule: (moduleId: string) => string | undefined;
-  /** Records the failure against the owning plugin and schedules auto-disable. */
-  onActivationFailure: (pluginId: string, error: Error) => void;
-  publish: (message: ActivationMessage) => Effect.Effect<void>;
-  /** Marks a module active/inactive on the manager's `active` atom. */
-  setActive: (moduleId: string, active: boolean) => void;
   activationTimeout: Duration.DurationInput;
-  /** In-flight fiber bookkeeping (the manager interrupts these on shutdown). */
-  trackFiber: (fiber: Fiber.Fiber<unknown, unknown>) => Effect.Effect<void>;
-  untrackFiber: (fiber: Fiber.Fiber<unknown, unknown>) => Effect.Effect<void>;
+  /** Policy hook for a module whose activation failed (failure recording, auto-disable). */
+  onFailure: (pluginId: string, error: Error) => void;
 };
 
 /**
@@ -52,10 +41,24 @@ export class ModuleLoader {
   readonly #semaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
   readonly #scopes = new Map<string, Scope.CloseableScope>();
   readonly #contributed = new Map<string, Capability.Any[]>();
-  readonly #ctx: ModuleLoaderContext;
+  readonly #state: ManagerState;
+  readonly #capabilities: CapabilityManager.CapabilityManager;
+  readonly #activation: PubSub.PubSub<ActivationMessage>;
+  readonly #fibers: FiberTracker;
+  readonly #options: ModuleLoaderOptions;
 
-  constructor(ctx: ModuleLoaderContext) {
-    this.#ctx = ctx;
+  constructor(
+    state: ManagerState,
+    capabilities: CapabilityManager.CapabilityManager,
+    activation: PubSub.PubSub<ActivationMessage>,
+    fibers: FiberTracker,
+    options: ModuleLoaderOptions,
+  ) {
+    this.#state = state;
+    this.#capabilities = capabilities;
+    this.#activation = activation;
+    this.#fibers = fibers;
+    this.#options = options;
   }
 
   /** Whether the module's load has started (memoized) — settled or not. */
@@ -102,8 +105,8 @@ export class ModuleLoader {
             ),
           ),
         );
-        yield* this.#ctx.trackFiber(fiber);
-        yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this.#ctx.untrackFiber(fiber))));
+        yield* this.#fibers.track(fiber);
+        yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this.#fibers.untrack(fiber))));
 
         return deferred;
       }).pipe(semaphore.withPermits(1));
@@ -123,9 +126,9 @@ export class ModuleLoader {
         return;
       }
       capabilities.forEach((capability) => {
-        this.#ctx.capabilities.contribute({ module: module.id, ...capability });
+        this.#capabilities.contribute({ module: module.id, ...capability });
       });
-      this.#ctx.setActive(module.id, true);
+      this.#state.markActive(module.id);
       this.#contributed.set(module.id, capabilities);
     });
   }
@@ -140,7 +143,7 @@ export class ModuleLoader {
       const capabilities = this.#contributed.get(id);
       if (capabilities) {
         for (const capability of capabilities) {
-          this.#ctx.capabilities.remove(capability.interface, capability.implementation);
+          this.#capabilities.remove(capability.interface, capability.implementation);
           const program = capability.deactivate?.() ?? Effect.succeed(undefined);
           yield* program;
         }
@@ -153,7 +156,7 @@ export class ModuleLoader {
         this.#scopes.delete(id);
       }
 
-      this.#ctx.setActive(id, false);
+      this.#state.markInactive(id);
 
       log('deactivated', { id });
       return true;
@@ -186,20 +189,20 @@ export class ModuleLoader {
       const services = new Map<string, unknown>();
       for (const capability of spec.requires) {
         if (capability.arity === 'multi') {
-          services.set(capability.key, this.#ctx.capabilities.contributions(capability));
+          services.set(capability.key, this.#capabilities.contributions(capability));
           continue;
         }
-        const [existing] = this.#ctx.capabilities.getAll(capability);
+        const [existing] = this.#capabilities.getAll(capability);
         const implementation =
           existing !== undefined
             ? existing
-            : yield* this.#ctx.capabilities.waitFor(capability).pipe(
+            : yield* this.#capabilities.waitFor(capability).pipe(
                 Effect.timeoutFail({
-                  duration: this.#ctx.activationTimeout,
+                  duration: this.#options.activationTimeout,
                   onTimeout: () =>
                     new CapabilityNotFoundError({
                       identifier: capability.identifier,
-                      registered: this.#ctx.capabilities.listRegisteredIdentifiers(),
+                      registered: this.#capabilities.listRegisteredIdentifiers(),
                     }),
                 }),
               );
@@ -232,8 +235,8 @@ export class ModuleLoader {
     return Effect.gen(this, function* () {
       log('loading module', { module: module.id, parentEvent });
       performance.mark(`module:${module.id}:start`);
-      yield* this.#ctx.publish({ event: parentEvent, state: 'activating', module: module.id });
-      const pluginId = this.#ctx.getPluginIdForModule(module.id);
+      yield* PubSub.publish(this.#activation, { event: parentEvent, state: 'activating', module: module.id });
+      const pluginId = this.#state.pluginIdOfModule(module.id);
       yield* this.#awaitProvidersInFlight(module);
       const requiresContext = yield* this.#resolveRequires(module);
       // Wait/run split: `module:<id>` spans the whole pipeline, so scheduling delay (in-flight
@@ -242,15 +245,15 @@ export class ModuleLoader {
       performance.measure(`module-wait:${module.id}`, `module:${module.id}:start`, `module:${module.id}:run`);
       const [duration, capabilities] = yield* module.activate().pipe(
         Effect.provide(requiresContext),
-        Effect.provideService(Capability.Service, this.#ctx.capabilities),
-        Effect.provideService(Plugin.Service, this.#ctx.pluginService()),
+        Effect.provideService(Capability.Service, this.#capabilities),
+        Effect.provideService(Plugin.Service, this.#options.pluginService()),
         Effect.locally(Capability.CurrentModuleId, module.id),
         Scope.extend(scope),
         // Cap activation so a single misbehaving module can't hold the
         // event chain open. On timeout the failure is recorded against
         // the plugin and surfaced as `PluginTimeoutError`.
         Effect.timeoutFail({
-          duration: this.#ctx.activationTimeout,
+          duration: this.#options.activationTimeout,
           onTimeout: () =>
             new PluginTimeoutError({
               context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
@@ -266,7 +269,7 @@ export class ModuleLoader {
       performance.mark(`module:${module.id}:end`);
       performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
       performance.measure(`module-run:${module.id}`, `module:${module.id}:run`, `module:${module.id}:end`);
-      yield* this.#ctx.publish({ event: parentEvent, state: 'activated', module: module.id });
+      yield* PubSub.publish(this.#activation, { event: parentEvent, state: 'activated', module: module.id });
       log('loaded module', {
         module: module.id,
         parentEvent,
@@ -317,7 +320,7 @@ export class ModuleLoader {
       if (multiIdentifiers.size === 0) {
         return;
       }
-      const inflight = this.#ctx
+      const inflight = this.#state
         .getModules()
         .filter(
           (provider) =>
@@ -349,7 +352,7 @@ export class ModuleLoader {
           ),
         { concurrency: 'unbounded', discard: true },
       ).pipe(
-        Effect.timeout(this.#ctx.activationTimeout),
+        Effect.timeout(this.#options.activationTimeout),
         Effect.catchAll(() =>
           Effect.sync(() =>
             log.warn('proceeding without in-flight multi providers', {
@@ -410,17 +413,17 @@ export class ModuleLoader {
         module: module.id,
         parentEvent,
         missingCapability,
-        registeredCapabilities: this.#ctx.capabilities.listRegisteredIdentifiers(),
+        registeredCapabilities: this.#capabilities.listRegisteredIdentifiers(),
         error: errorMessage,
         stack: error instanceof Error ? error.stack : undefined,
         isDefect: !Cause.isFailure(cause),
       });
       const normalizedError = error instanceof Error ? error : new Error(String(error));
-      const pluginId = this.#ctx.getPluginIdForModule(module.id);
+      const pluginId = this.#state.pluginIdOfModule(module.id);
       if (pluginId !== undefined) {
-        this.#ctx.onActivationFailure(pluginId, normalizedError);
+        this.#options.onFailure(pluginId, normalizedError);
       }
-      yield* this.#ctx.publish({
+      yield* PubSub.publish(this.#activation, {
         event: parentEvent,
         state: 'error',
         module: module.id,

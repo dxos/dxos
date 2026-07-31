@@ -36,7 +36,14 @@ export const NavigationTargetResolver = AppCapability.navigationResolver(() => i
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.objectProperties', 'org.dxos.role.popover', 'org.dxos.role.related', 'org.dxos.role.section'],
+  roles: [
+    'org.dxos.role.article',
+    'org.dxos.role.cardContent',
+    'org.dxos.role.objectProperties',
+    'org.dxos.role.popover',
+    'org.dxos.role.related',
+    'org.dxos.role.section',
+  ],
 });
 export const InboxSettings = AppCapability.settings(() => import('./settings'), {
   provides: [InboxCapabilities.Settings],

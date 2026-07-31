@@ -37,7 +37,12 @@ export const Keyboard = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  roles: ['org.dxos.role.dialog', 'org.dxos.role.documentTitle', 'org.dxos.role.navigation', 'org.dxos.role.searchInput'],
+  roles: [
+    'org.dxos.role.dialog',
+    'org.dxos.role.documentTitle',
+    'org.dxos.role.navigation',
+    'org.dxos.role.searchInput',
+  ],
 });
 export const State = Capability.lazyModule(
   'State',

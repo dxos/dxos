@@ -34,7 +34,18 @@ export const NavigationTargetResolver = AppCapability.navigationResolver(() => i
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  roles: ['org.dxos.plugin.space.role.homeContent', 'org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.formInput', 'org.dxos.role.navbarEnd', 'org.dxos.role.navtreeItemEnd', 'org.dxos.role.objectProperties', 'org.dxos.role.popover', 'org.dxos.role.section', 'org.dxos.role.statusIndicator'],
+  roles: [
+    'org.dxos.plugin.space.role.homeContent',
+    'org.dxos.role.article',
+    'org.dxos.role.dialog',
+    'org.dxos.role.formInput',
+    'org.dxos.role.navbarEnd',
+    'org.dxos.role.navtreeItemEnd',
+    'org.dxos.role.objectProperties',
+    'org.dxos.role.popover',
+    'org.dxos.role.section',
+    'org.dxos.role.statusIndicator',
+  ],
   props: (options: SpacePluginOptions) => ({ createInvitationUrl: makeCreateInvitationUrl(options) }),
 });
 export const Repair = Capability.lazyModule(
