@@ -28,7 +28,6 @@ import { translations as progressTranslations } from '@dxos/plugin-progress/tran
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/storybook-testing';
@@ -60,10 +59,6 @@ const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'main' }))
 const DECORATORS = [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
-  // Without this the `ModuleContainer` cells' `AttendableContainer`s have no attention manager to
-  // register with, so no panel is ever attended and attention-gated UI (toolbar menus, selection)
-  // never activates.
-  withAttention(),
   withPluginManager(() => ({
     setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
     plugins: [
