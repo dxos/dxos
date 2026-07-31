@@ -9,13 +9,10 @@ import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 /**
- * What the document said about color schemes:
- * - `dark` — ships its own dark rendering (a `prefers-color-scheme: dark` block, or a declaration
- *   naming `dark`). Adopt it rather than recoloring.
- * - `light` — explicitly states it has no dark rendering. An instruction not to try.
- * - `unknown` — said nothing.
+ * A rendering mode. Used for both the app's current mode and a document's declared support, so the two
+ * are always comparable; `undefined` (never a sentinel string) means a document declared nothing.
  */
-export type ColorScheme = 'dark' | 'light' | 'unknown';
+export type ColorScheme = 'light' | 'dark';
 
 const META_COLOR_SCHEME_RE = /<meta[^>]+name=["']?(?:supported-)?color-scheme["']?[^>]*>/gi;
 const CONTENT_RE = /content=["']([^"']*)["']/i;
@@ -26,7 +23,7 @@ const DARK_MEDIA_RE = /prefers-color-scheme\s*:\s*dark/i;
  * sanitization: `meta` is a forbidden tag, so the declaration is gone by then. Not email-specific —
  * `color-scheme` and `prefers-color-scheme` are how any HTML document states its intent.
  */
-export const detectColorScheme = (html: string): ColorScheme => {
+export const detectColorScheme = (html: string): ColorScheme | undefined => {
   if (DARK_MEDIA_RE.test(html)) {
     return 'dark';
   }
@@ -38,7 +35,7 @@ export const detectColorScheme = (html: string): ColorScheme => {
     return 'dark';
   }
 
-  return declared.includes('light') ? 'light' : 'unknown';
+  return declared.includes('light') ? 'light' : undefined;
 };
 
 /**
@@ -48,7 +45,7 @@ export const detectColorScheme = (html: string): ColorScheme => {
  * matches; in light mode it is deleted, so an OS-dark browser can't dark-render inside a light app.
  * Owning the shadow root's stylesheet is what makes this possible.
  */
-export const applyAuthoredDarkRules = (root: HTMLElement, dark: boolean): void => {
+export const applyAuthoredDarkRules = (root: HTMLElement, mode: ColorScheme): void => {
   for (const style of root.querySelectorAll('style')) {
     const sheet = style.sheet;
     if (!sheet) {
@@ -66,7 +63,7 @@ export const applyAuthoredDarkRules = (root: HTMLElement, dark: boolean): void =
         .map((cssRule) => cssRule.cssText)
         .join('');
       sheet.deleteRule(index);
-      if (dark && inner) {
+      if (mode === 'dark' && inner) {
         sheet.insertRule(`@media all{${inner}}`, index);
       }
     }
@@ -75,10 +72,10 @@ export const applyAuthoredDarkRules = (root: HTMLElement, dark: boolean): void =
 
 /** What the sandbox knows about the document, handed to every transform so a dialect stays pure. */
 export type HtmlTransformContext = {
-  /** The document's own declaration, read before sanitization stripped it. */
-  colorScheme: ColorScheme;
-  /** Whether the app (not the OS) is rendering dark. */
-  dark: boolean;
+  /** What the document declared, read before sanitization stripped it; `undefined` if it said nothing. */
+  colorScheme: ColorScheme | undefined;
+  /** The mode the app (not the OS) is rendering in. */
+  mode: ColorScheme;
 };
 
 /**
@@ -228,7 +225,7 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
     shadow.replaceChildren(style, content);
 
     // Attached first: transforms may read `getComputedStyle`, which needs the subtree in the document.
-    const context: HtmlTransformContext = { colorScheme, dark: themeMode === 'dark' };
+    const context: HtmlTransformContext = { colorScheme, mode: themeMode === 'dark' ? 'dark' : 'light' };
     for (const transform of dialectRef.current?.transforms ?? []) {
       transform(content, context);
     }

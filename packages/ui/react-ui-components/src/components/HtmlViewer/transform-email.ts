@@ -115,7 +115,14 @@ const readThemeParams = (container: Element): ThemeColorParams | undefined => {
   const panel = resolve('--color-base-surface');
   container.removeChild(probe);
 
-  return ink && panel ? { inkL: ink.l, inkC: ink.c, inkH: ink.h, panelL: panel.l } : undefined;
+  return ink && panel
+    ? {
+        inkL: ink.l,
+        inkC: ink.c,
+        inkH: ink.h,
+        panelL: panel.l,
+      }
+    : undefined;
 };
 
 /**
@@ -129,15 +136,15 @@ const readThemeParams = (container: Element): ThemeColorParams | undefined => {
  */
 const themeBody =
   (isPersonal: boolean): HtmlTransform =>
-  (root, { colorScheme, dark }) => {
+  (root, { colorScheme, mode }) => {
     if (colorScheme === 'dark') {
-      applyAuthoredDarkRules(root, dark);
+      applyAuthoredDarkRules(root, mode);
       return;
     }
 
     const recolor = colorScheme !== 'light' && (isPersonal || root.querySelector('table') === null);
     if (!recolor) {
-      if (dark) {
+      if (mode === 'dark') {
         root.classList.add('dx-email-paper');
       }
       return;
