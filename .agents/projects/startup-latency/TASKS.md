@@ -1,11 +1,11 @@
 # Tasks — startup latency (demand-driven activation)
 
-_Resume: start wave 2 (lightweight operation definitions, DEFINITIONS-AUDIT.md rules 1–5) —
-first target the plugin.ts stub operations re-exports (rule 5, biggest single lever: every
-registered plugin's operations graph enters main's closure) and the pipeline-rdf FactStore
-tag/implementation split (rule 1 exemplar). Uncommitted: none. Last: wave 1 complete at −52%
-cold profilerTotal (e7151b9f9f); scheduler concurrent-wave race fixed (492a7f4675); base
-branch merged; PR #12415 body current._
+_Resume: wave 2 batch 2 — the rule-2 offender list (19 definitions, three offense groups in
+the Wave 2 section): start with plugin-connector `/types` (pays off 5×) and the app-toolkit
+light subpath, then rule 4 (compute barrel Header decouple) and the audit-opdefs CI budget
+check; after that, re-run the eager-handler-sets ablation (exit criterion). Uncommitted:
+none. Last: wave-2 batch 1 landed (6017b2ce78) — boot fetch 31.1 → 28.8 MB, −40 requests,
+definition floor 576 → 445 files; timing flat within the container contention plateau._
 
 Spec + phase definitions: [DESIGN.md](./DESIGN.md). Successor to the
 app-framework-capability-activation deferral follow-up; implementation starts after that branch's
@@ -153,16 +153,38 @@ definitions stay runtime-neutral; CLI/workerd unaffected), and handler loading b
 No definition file is lightweight today (~576-file floor; confirmed-shipping leaks ≈ 2–2.5 MB
 wire in the eager core). Fix rules 1–5 in the audit doc:
 
-- [ ] Tag/implementation split for services referenced by definitions (pipeline-rdf `FactStore`
-      exemplar — the 1.5 MB SPARQL chunk; `@dxos/ai` resolvers unreachable from its type surface)
-- [ ] Definitions never import a plugin's main barrel — cross-plugin refs via `/types`
-      (`Mailbox.ts` → plugin-connector barrel is the exemplar)
-- [ ] Type directories value-free (`ui-editor/src/types/types.ts` value-imports
-      `@codemirror/view` — 510 KB of CodeMirror at boot)
+**Batch 1 landed (6017b2ce78, 2026-07-31): boot fetch 31.1 → 28.8 MB (−2.3 MB), −40 requests;
+in-container timing unchanged within the contention plateau (no phase-level regression —
+sub-second deltas need the real-hardware run).** Floor now ~445 files (was ~576): every
+definition pays only @effect/platform (tree-shaken via compute barrel) + date-fns + semver.
+
+- [x] Tag/implementation split for pipeline-rdf `FactStore` — pure tag at
+      `@dxos/pipeline-rdf/fact-store`, sqlite/memory layers moved to `FactStoreLive` (~18 call
+      sites); SPARQL stack out of every definition closure. Also `AnthropicWebSearchTool`
+      moved off the `@dxos/ai` barrel into `resolvers/anthropic` — its
+      `@effect/ai-anthropic/Generated` value import (181 files) reached every definition via
+      compute → Skill → @dxos/ai
+- [x] Definitions and plugin `meta.ts` bypass the `@dxos/app-framework` barrel — 33 definition
+      files + all 97 metas import from `/Capability` and `/Plugin` subpaths; the
+      compute-runtime/edge-client chain (bip39, protobuf, wa-sqlite) left definition closures
+      (DeckOperation 580 → 452 files)
+- [ ] Definitions never import a plugin's main barrel — **offender list enumerated
+      (2026-07-31): 19 definitions with UI in closure. Three offense groups: (a)
+      `@dxos/app-toolkit` main barrel from types files (~73-ui-file shared floor: inbox
+      Mailbox/Calendar, sheet, markdown, chess, space types/form, sequencer, magazine,
+      commerce, support, trip, review); (b) cross-plugin main barrels (trip→inbox,
+      table→space, review/presenter→markdown, slack/blogger/studio/ibkr/inbox→connector,
+      script templates→chess/game/markdown); (c) react-ui value imports in types dirs
+      (sheet→react-ui-grid/react-ui, markdown→react-ui-editor/ui-editor,
+      studio→react-ui-form/react-ui-board). plugin-connector's `/types` fix pays off 5×;
+      app-toolkit needs a light subpath for what types files actually use**
+- [x] Type directories value-free — `ui-editor/src/types/types.ts` exemplar already type-only
+      (verified); remaining violations are the group-(c) items above
 - [ ] `Operation` importable without the `@dxos/compute` barrel (subpath, or decouple
       `Header.ts` from `@effect/platform/HttpClient`) — decision owed: subpath vs decouple
-- [ ] Drop the static `export { XOperationHandlerSet } from './operations'` from all 97
-      `plugin.ts` stubs (sole external consumer is the node CLI — give it its own entry)
+- [x] Drop the static `export { XOperationHandlerSet } from './operations'` from `plugin.ts`
+      stubs — 49 stubs stripped; CLI/stories import via new `./operations` subpath on the 10
+      consumed plugins (magazine's `plugin.workerd.ts` re-export kept for the edge host)
 - [ ] Promote `audit-opdefs.py` to a CI budget check (fails on new heavy externals / closure
       growth) — prerequisite hardening for the `handles` declaration field
 - [ ] **Non-enabled plugins load metadata only.** Verify the invariant: a registered-but-disabled
