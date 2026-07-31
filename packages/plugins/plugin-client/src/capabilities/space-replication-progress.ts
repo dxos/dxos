@@ -11,7 +11,7 @@ import * as Stream from 'effect/Stream';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { ServiceResolver } from '@dxos/compute';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database } from '@dxos/echo';
 
 import { ClientCapabilities } from '#types';

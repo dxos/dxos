@@ -4,8 +4,8 @@
 
 import React, { Fragment, useEffect, useState } from 'react';
 
-import { type Skill } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Skill from '@dxos/compute/Skill';
 import { type Database, Filter, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';

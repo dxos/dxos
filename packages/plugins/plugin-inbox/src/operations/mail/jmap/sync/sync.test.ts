@@ -9,7 +9,9 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Operation, RunAgainError, Trace } from '@dxos/compute';
+import { RunAgainError } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';

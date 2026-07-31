@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { CollectionModel } from '@dxos/app-toolkit';
-import { Operation, Script } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { Create } from './definitions';

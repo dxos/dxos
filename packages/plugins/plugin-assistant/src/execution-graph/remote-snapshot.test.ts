@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 
 import { buildExecutionGraph } from './execution-graph';

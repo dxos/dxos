@@ -15,7 +15,11 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Instructions, McpServer, Operation, type Skill, Trace } from '@dxos/compute';
+import type * as Instructions from '@dxos/compute/Instructions';
+import * as McpServer from '@dxos/compute/McpServer';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Skill from '@dxos/compute/Skill';
+import * as Trace from '@dxos/compute/Trace';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 
 import { type Thread } from '../types';
 import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts';

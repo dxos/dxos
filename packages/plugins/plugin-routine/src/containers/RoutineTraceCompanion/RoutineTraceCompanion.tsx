@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Routine } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
 import { Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Accordion, Empty, Listbox } from '@dxos/react-ui-list';

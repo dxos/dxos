@@ -4,7 +4,11 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Instructions, Operation, Routine, Trace, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
 
 import {
   AppGraphBuilder,

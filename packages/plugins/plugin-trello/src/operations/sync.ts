@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { ConnectorSync, LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
 
 const { mergeDeep, mergeField, snapshotField } = ConnectorSync;
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';

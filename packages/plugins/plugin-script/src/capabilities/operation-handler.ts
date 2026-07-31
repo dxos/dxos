@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { ScriptOperationHandlerSet } from '#operations';
 

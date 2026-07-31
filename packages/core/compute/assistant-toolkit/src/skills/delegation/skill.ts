@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 
 import { DelegateTask } from './operations/delegate-task';
 

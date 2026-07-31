@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
-import { FactPipeline, FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactPipeline, FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 import { mockAiService } from '@dxos/pipeline-rdf/testing';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';

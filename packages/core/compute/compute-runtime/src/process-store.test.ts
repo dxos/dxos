@@ -7,7 +7,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 
 import { ProcessStore } from './process-store';
 

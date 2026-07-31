@@ -13,7 +13,7 @@ import { Capabilities } from '@dxos/app-framework';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';

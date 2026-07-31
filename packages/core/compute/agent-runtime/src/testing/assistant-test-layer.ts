@@ -14,19 +14,7 @@ import * as Match from 'effect/Match';
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Harness } from '@dxos/assistant';
-import {
-  AgentService,
-  Credential,
-  Instructions,
-  Operation,
-  OperationHandlerSet,
-  Process,
-  ServiceNotAvailableError,
-  ServiceResolver,
-  Skill,
-  Trace,
-  Trigger,
-} from '@dxos/compute';
+import { ServiceNotAvailableError } from '@dxos/compute';
 import {
   FeedTraceSink,
   ProcessManager,
@@ -38,6 +26,16 @@ import {
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
+import * as AgentService from '@dxos/compute/AgentService';
+import * as Credential from '@dxos/compute/Credential';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
 import { type TestContextService } from '@dxos/effect/testing';

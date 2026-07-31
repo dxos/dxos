@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
-import { Credential } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
 import { Database, Query } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { isManagedAccessToken } from '@dxos/protocols';

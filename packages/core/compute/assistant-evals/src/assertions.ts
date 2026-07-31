@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { CompleteBlock } from '@dxos/assistant';
-import { Trace } from '@dxos/compute';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Query, type Type } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 

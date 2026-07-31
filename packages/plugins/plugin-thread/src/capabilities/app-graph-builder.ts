@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Type } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { GraphBuilder } from '@dxos/plugin-graph';

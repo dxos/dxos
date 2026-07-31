@@ -14,7 +14,7 @@ import { AiService } from '@dxos/ai';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { LayerSpec } from '@dxos/compute';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';

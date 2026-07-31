@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import {

@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import { useCallback } from 'react';
 
 import { type Capabilities } from '@dxos/app-framework';
-import { Operation, ServiceResolver } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';

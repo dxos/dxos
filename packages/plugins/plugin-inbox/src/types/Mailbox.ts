@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';

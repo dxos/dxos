@@ -13,7 +13,7 @@ import { Database, Obj } from '@dxos/echo';
 import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Message } from '@dxos/types';
 

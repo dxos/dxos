@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Instructions, Routine, type Trigger } from '@dxos/compute';
+import type * as Instructions from '@dxos/compute/Instructions';
+import * as Routine from '@dxos/compute/Routine';
+import type * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref } from '@dxos/echo';
 
 import { runInstructionsRef } from './run-instructions';

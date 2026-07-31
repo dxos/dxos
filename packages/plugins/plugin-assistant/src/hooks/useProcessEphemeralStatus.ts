@@ -11,8 +11,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { Process, ServiceResolver, type Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import type * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
 
 import { resolveEphemeralStatusUpdate } from '#execution-graph';

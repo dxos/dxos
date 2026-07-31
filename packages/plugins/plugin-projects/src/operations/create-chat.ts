@@ -8,7 +8,9 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { ProjectSkill } from '@dxos/assistant-toolkit';
-import { Operation, Project, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { AssistantOperation } from '@dxos/plugin-assistant';
 

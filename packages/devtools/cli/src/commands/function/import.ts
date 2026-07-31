@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, flushAndSync, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/edge-compute';

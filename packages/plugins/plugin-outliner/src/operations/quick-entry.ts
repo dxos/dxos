@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppSpace } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 

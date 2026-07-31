@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
-import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
 import { queryFacts } from './FactsCompanion';
 

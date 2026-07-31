@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { StateMap, TagIndex } from '@dxos/schema';
 
 import {

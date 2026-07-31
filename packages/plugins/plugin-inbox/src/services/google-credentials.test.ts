@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Credential } from '@dxos/compute';
 import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
 import { Database, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';

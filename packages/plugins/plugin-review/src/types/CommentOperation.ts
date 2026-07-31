@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 // Person is referenced in Actor.Actor's inferred type; importing it allows TypeScript to name

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { CollaborationOperation } from '@dxos/app-toolkit';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { getObjectOnBranch, toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';

@@ -7,7 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Instructions, Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';

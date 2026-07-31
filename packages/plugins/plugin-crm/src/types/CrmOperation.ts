@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation, Trace } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 

@@ -7,7 +7,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 
 /**
  * Internal tag carrying the monotonic clock created by {@link collectTraceEvents}. Nested

@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation, Project } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 

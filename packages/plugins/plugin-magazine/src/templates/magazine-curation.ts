@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { makeRoutine } from '@dxos/plugin-routine';

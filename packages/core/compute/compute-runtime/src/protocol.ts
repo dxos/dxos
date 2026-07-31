@@ -10,15 +10,11 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import {
-  Credential,
-  FunctionError,
-  Header,
-  InvalidOperationInputError,
-  InvalidOperationOutputError,
-  Operation,
-  Trace,
-} from '@dxos/compute';
+import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Header from '@dxos/compute/Header';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';

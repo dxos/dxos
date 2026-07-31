@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 
 // A child-exit event flattened to a JSON-serializable shape. Exit/Cause are not

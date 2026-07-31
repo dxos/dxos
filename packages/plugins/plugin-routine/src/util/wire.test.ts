@@ -4,7 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { Instructions, Operation, Routine, Runnable, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Runnable from '@dxos/compute/Runnable';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref } from '@dxos/echo';
 
 import { blank } from '../templates';

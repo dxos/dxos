@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useEffect } from 'react';
 
-import { Trigger, TriggerEvent } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { VoidInput } from '@dxos/conductor';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/Obj';

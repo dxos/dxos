@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { EffectEx } from '@dxos/effect';
-import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
 import { queryCompactFacts } from './query-facts';
 import { summarizeSubject } from './summarize-subject';

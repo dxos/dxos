@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Routine } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
 import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';

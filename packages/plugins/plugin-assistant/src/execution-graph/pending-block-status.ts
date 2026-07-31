@@ -3,7 +3,7 @@
 //
 
 import { PartialBlock } from '@dxos/assistant';
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { type ContentBlock } from '@dxos/types';
 
 /**

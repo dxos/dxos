@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';

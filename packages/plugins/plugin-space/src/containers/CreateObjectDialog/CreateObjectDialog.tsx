@@ -11,7 +11,7 @@ import { Capability } from '@dxos/app-framework';
 import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppSpace, LayoutOperation, TypeOptions } from '@dxos/app-toolkit';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';

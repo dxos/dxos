@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, URI } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Selection } from '@dxos/react-ui-attention/types';

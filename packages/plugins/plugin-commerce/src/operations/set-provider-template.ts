@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, JsonSchema, Obj, Ref } from '@dxos/echo';
 
 import { Provider, SearchOperation } from '../types';

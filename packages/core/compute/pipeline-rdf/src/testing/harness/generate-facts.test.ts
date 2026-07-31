@@ -10,7 +10,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { FactStore, FactStoreLive } from '../../store';
+import { FactStoreLive } from '../../store';
 import { type ExtractDocument } from '../../types';
 import { queuedAiService } from '../index';
 import { generateFacts } from './generate-facts';

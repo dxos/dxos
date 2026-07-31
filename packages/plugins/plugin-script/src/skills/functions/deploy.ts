@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import { ClientService } from '@dxos/client';
-import { Operation, Script } from '@dxos/compute';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute';

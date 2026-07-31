@@ -10,7 +10,10 @@ import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation, OperationHandlerSet, Routine, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 

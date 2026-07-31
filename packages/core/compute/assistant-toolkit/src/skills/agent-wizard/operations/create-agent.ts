@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Obj, Ref } from '@dxos/echo';
 
 import { Agent } from '../../../types';

@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, GraphPath, LayoutOperation, NotFound } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';

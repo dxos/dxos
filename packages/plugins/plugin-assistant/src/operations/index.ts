@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { RoutineOperation } from '@dxos/plugin-routine/types';
 
 import { AssistantOperation } from '#types';

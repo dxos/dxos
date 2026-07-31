@@ -3,7 +3,7 @@
 //
 
 import { SettingsOperation } from '@dxos/app-toolkit';
-import { OperationHandlerSet } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 export const SettingsOperationHandlerSet = OperationHandlerSet.keyed([
   [SettingsOperation.Open, () => import('./open')],

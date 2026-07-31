@@ -10,7 +10,7 @@ import { vi } from 'vitest';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';

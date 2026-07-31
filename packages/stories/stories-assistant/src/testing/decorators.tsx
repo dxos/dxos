@@ -25,8 +25,13 @@ import {
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';
-import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
 import { ExampleHandlers } from '@dxos/compute/testing';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';

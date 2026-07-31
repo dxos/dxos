@@ -5,7 +5,7 @@
 import * as Predicate from 'effect/Predicate';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { BaseError } from '@dxos/errors';
 
 const NO_CONNECTOR_MESSAGE = 'No Connector registered with id.' as const;

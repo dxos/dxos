@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Skill, Trigger } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';

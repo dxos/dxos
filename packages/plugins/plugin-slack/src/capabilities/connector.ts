@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
-import { Credential } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
 import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';

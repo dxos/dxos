@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
 import { Harness } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
 import { SetAlarm } from './definitions';
 import { resolveWakeAt } from './resolve-wake-at';

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type AiToolNotFoundError, OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { type Skill } from '@dxos/compute';
+import type * as Skill from '@dxos/compute/Skill';
 import { isTruthy } from '@dxos/util';
 
 export type CreateToolkitProps = {

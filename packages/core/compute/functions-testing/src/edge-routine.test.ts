@@ -6,7 +6,10 @@ import { describe, test } from 'vitest';
 
 import { Chat, DatabaseSkill, RunInstructions } from '@dxos/assistant-toolkit';
 import { Client } from '@dxos/client';
-import { Instructions, Operation, Skill, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';

@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 

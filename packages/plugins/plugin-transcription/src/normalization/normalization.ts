@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 // Imported so TypeScript can name these types in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports

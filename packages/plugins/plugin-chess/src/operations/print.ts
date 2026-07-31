@@ -5,7 +5,7 @@
 import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
 import { ChessOperation } from '../types';
 

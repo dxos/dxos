@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Script } from '@dxos/compute';
+import type * as Script from '@dxos/compute/Script';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';

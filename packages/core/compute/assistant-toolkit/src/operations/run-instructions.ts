@@ -17,7 +17,9 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { Operation, Template, Trace } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Template from '@dxos/compute/Template';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

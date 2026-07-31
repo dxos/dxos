@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
 import { FACT_STORE_FIXTURE } from '../config';
 

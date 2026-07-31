@@ -7,7 +7,8 @@ import * as Layer from 'effect/Layer';
 import { OpaqueToolkit } from '@dxos/ai';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
-import { OperationHandlerSet, Skill } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
 import { Feed, Tag, type Type } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 // Narrow subpath imports (`/skills` and `/types`) so the CLI's

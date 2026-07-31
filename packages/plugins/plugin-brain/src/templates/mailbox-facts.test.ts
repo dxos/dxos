@@ -5,7 +5,11 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Instructions, Project, Routine, Skill, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
+import * as Routine from '@dxos/compute/Routine';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Feed, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';

@@ -6,7 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
-import { Script, Skill, Template } from '@dxos/compute';
+import * as Script from '@dxos/compute/Script';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { Filter, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AssistantSkill } from '@dxos/plugin-assistant';

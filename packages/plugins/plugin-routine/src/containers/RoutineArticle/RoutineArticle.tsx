@@ -9,7 +9,7 @@ import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 import { ActivationEvents } from '@dxos/app-framework';
 import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Routine } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';

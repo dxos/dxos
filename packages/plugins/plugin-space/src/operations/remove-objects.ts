@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import { Capabilities } from '@dxos/app-framework';
 import { AppAnnotation, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';

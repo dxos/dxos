@@ -7,7 +7,8 @@ import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Process, Trace } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { EntityId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';

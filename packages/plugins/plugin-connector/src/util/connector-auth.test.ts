@@ -5,7 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Operation, Routine, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';

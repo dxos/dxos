@@ -6,7 +6,8 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as FiberId from 'effect/FiberId';
 
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';

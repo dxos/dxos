@@ -11,7 +11,7 @@ import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { Header } from '@dxos/compute';
+import * as Header from '@dxos/compute/Header';
 import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';

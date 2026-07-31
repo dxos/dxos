@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Ref, Type } from '@dxos/echo';
 import { createObject } from '@dxos/echo-client';
 import { PublicKey } from '@dxos/keys';

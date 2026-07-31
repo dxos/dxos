@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Harness } from '@dxos/assistant';
-import { type LayerSpec } from '@dxos/compute';
+import type * as LayerSpec from '@dxos/compute/LayerSpec';
 
 //
 // Capability Module

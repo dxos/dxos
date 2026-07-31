@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, type RDF, extractDocFacts, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 import { Expando } from '@dxos/schema';
 import { Message } from '@dxos/types';
 

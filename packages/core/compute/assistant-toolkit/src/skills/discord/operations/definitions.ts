@@ -4,7 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Credential, Operation, Trace } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { DXN } from '@dxos/keys';
 
 // TODO(dmaretskyi): Extract.

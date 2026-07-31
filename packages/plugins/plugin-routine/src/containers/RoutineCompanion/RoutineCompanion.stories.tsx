@@ -7,7 +7,9 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Instructions, Routine, Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Routine from '@dxos/compute/Routine';
+import * as Skill from '@dxos/compute/Skill';
 import { Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';

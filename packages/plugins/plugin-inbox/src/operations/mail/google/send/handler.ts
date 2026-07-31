@@ -5,7 +5,7 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
 import { GoogleMail } from '../../../../apis';

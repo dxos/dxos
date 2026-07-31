@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { CollectionModel } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import { File } from '@dxos/types';
 

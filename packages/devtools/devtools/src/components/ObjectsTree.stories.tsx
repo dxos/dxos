@@ -7,8 +7,8 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
-import { Trigger } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';

@@ -10,7 +10,7 @@ import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AssistantPlugin } from '@dxos/plugin-assistant/testing';

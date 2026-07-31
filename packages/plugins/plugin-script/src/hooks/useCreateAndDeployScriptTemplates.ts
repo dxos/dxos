@@ -5,7 +5,7 @@
 import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Script } from '@dxos/compute';
+import * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';

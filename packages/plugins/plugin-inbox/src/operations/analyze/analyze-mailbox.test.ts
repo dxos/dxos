@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import { Mailbox } from '../../types';

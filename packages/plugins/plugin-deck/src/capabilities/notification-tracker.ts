@@ -9,7 +9,9 @@ import * as Stream from 'effect/Stream';
 
 import { Capabilities, Capability, type PluginManager, makeOperationHandlerPull } from '@dxos/app-framework';
 import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { type Operation, OperationHandlerSet, Process } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';

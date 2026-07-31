@@ -7,7 +7,8 @@ import * as Redacted from 'effect/Redacted';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Credential, Operation } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';

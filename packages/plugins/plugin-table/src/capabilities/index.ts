@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { SpaceCapabilities, SpaceCapability, SpaceEvents } from '@dxos/plugin-space';
 
 import { TableOperation } from '#types';

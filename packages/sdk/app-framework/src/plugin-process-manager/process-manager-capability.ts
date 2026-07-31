@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { LayerSpec, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import {
   LayerStack,
   ProcessManager,
@@ -15,6 +14,11 @@ import {
   RemoteProcessManager,
   RemoteTraceMonitor,
 } from '@dxos/compute-runtime';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public

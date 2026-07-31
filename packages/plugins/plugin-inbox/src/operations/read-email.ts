@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 

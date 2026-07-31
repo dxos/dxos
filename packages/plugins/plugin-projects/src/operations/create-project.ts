@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { GraphPath } from '@dxos/app-toolkit';
-import { Operation, Project } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';

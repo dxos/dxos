@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { ComputeGraph } from '@dxos/conductor';
 import { DXN, Ref, Type } from '@dxos/echo';
 

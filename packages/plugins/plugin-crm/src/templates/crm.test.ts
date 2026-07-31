@@ -6,7 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Instructions, Routine, Trace, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';

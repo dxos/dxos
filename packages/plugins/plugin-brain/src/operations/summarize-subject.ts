@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { FactStore, type SemanticIndexError, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 

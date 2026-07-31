@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
 
 const { mergeField, snapshotField } = ConnectorSync;
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';

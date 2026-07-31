@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 
 import { PlanReminder, UpdateTasks } from './operations/definitions';

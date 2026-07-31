@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Option from 'effect/Option';
 
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 

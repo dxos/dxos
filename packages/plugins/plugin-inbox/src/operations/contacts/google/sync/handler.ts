@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';

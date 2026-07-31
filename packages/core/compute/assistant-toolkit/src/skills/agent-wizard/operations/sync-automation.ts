@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Operation, Routine, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FeedAnnotation } from '@dxos/schema';
 

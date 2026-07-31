@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { contactExtractor, extractContact } from '@dxos/extractor-lib';
 

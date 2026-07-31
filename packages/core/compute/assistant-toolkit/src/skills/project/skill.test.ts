@@ -5,7 +5,8 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Instructions, Project } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';

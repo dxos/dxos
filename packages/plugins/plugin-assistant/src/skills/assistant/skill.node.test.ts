@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';

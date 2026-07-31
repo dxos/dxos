@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { EID } from '@dxos/keys';
 
 import type * as AppCapabilities from './AppCapabilities';

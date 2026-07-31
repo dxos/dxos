@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { SettingsOperation } from '@dxos/app-toolkit';
-import { type Script } from '@dxos/compute';
+import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';

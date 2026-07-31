@@ -16,7 +16,8 @@ import {
 } from '@dxos/ai';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
-import { Operation, Trace } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Type } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';

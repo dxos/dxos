@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { PathResolution } from '@dxos/app-graph';
 import { AppCapabilities, GraphPath, LayoutOperation, NotFound, UrlPath } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';

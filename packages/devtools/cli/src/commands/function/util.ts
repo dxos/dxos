@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
 import { FormBuilder } from '@dxos/cli-util';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
 
 export type FunctionStatus = 'not imported' | 'up-to-date' | 'update available';

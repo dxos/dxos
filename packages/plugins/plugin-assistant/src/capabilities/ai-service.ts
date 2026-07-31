@@ -9,7 +9,8 @@ import * as Layer from 'effect/Layer';
 import { AiModelResolver, AiService, Provider } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Credential, LayerSpec } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 
 import type { AssistantPluginOptions } from '#types';
 

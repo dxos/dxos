@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Chess } from '@dxos/plugin-chess/types';

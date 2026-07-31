@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Game, GameVariantMismatchError, loadGame } from '@dxos/plugin-game/types';

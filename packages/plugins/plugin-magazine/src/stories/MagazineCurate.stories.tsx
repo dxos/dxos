@@ -17,7 +17,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { LayerSpec } from '@dxos/compute';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';

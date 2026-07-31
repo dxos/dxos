@@ -11,9 +11,9 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import { Operation } from '@dxos/compute';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
+import * as Operation from '@dxos/compute/Operation';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { withClientProvider } from '@dxos/react-client/testing';

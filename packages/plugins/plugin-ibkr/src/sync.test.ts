@@ -4,7 +4,8 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, EID, Feed, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 

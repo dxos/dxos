@@ -7,7 +7,7 @@ import * as Fiber from 'effect/Fiber';
 import * as HashSet from 'effect/HashSet';
 import * as Ref from 'effect/Ref';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
 /**

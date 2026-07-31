@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 

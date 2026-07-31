@@ -16,7 +16,7 @@ import {
   UrlResolution,
 } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Filter, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID, SpaceId } from '@dxos/keys';

@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
 import { QuestionStore } from '../stores';
 import { answerOpenQuestions } from './answer-questions';

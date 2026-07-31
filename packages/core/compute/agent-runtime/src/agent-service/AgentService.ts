@@ -10,7 +10,6 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AiContext } from '@dxos/assistant';
-import { McpServer, Process, Skill } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import {
   AgentService,
@@ -19,6 +18,9 @@ import {
   type Session,
   getSession,
 } from '@dxos/compute/AgentService';
+import * as McpServer from '@dxos/compute/McpServer';
+import * as Process from '@dxos/compute/Process';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EID } from '@dxos/keys';

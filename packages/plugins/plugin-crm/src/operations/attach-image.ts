@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';

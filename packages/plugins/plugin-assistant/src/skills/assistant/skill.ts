@@ -4,7 +4,7 @@
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { templates } from '@dxos/assistant';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 
 import { AssistantOperation } from '#types';
 

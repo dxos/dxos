@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
 import { CollaborationOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';

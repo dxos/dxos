@@ -3,7 +3,7 @@
 //
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { OperationHandlerSet } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 export const TestingOperationHandlerSet = OperationHandlerSet.keyed([
   [LayoutOperation.AddToast, () => import('./add-toast')],

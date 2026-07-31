@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Key, Type } from '@dxos/echo';
 // Person is referenced in Actor.Actor's inferred type; importing it allows TypeScript to name
 // it in the emitted .d.ts for AppendChannelMessage.

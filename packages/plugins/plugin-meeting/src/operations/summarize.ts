@@ -2,7 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { TranscriptOperation } from '@dxos/plugin-transcription/types';
 

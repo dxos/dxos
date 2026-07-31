@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Graph } from '@dxos/graph';
 

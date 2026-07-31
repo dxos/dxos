@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { AgentIdentity, Operation } from '@dxos/compute';
+import * as AgentIdentity from '@dxos/compute/AgentIdentity';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';

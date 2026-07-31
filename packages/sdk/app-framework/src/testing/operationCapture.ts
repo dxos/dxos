@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 
 import { Capabilities } from '../common';
 import { Capability } from '../core';

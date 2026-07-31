@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig, Common, printList, spaceIdWithDefault, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Context } from '@dxos/context';
 import { Database, Filter, Query } from '@dxos/echo';
 

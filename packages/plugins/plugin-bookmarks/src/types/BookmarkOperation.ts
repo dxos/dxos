@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { PageAction } from '@dxos/plugin-crx/types';
 import { Text } from '@dxos/schema';

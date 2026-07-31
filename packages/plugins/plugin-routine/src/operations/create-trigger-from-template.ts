@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, Script, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 

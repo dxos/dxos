@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, DXN, Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 

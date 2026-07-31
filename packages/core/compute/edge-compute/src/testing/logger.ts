@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { log } from '@dxos/log';
 
 export const noopTraceWriter: Trace.TraceWriter = Trace.noopWriter;

@@ -5,7 +5,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Input, useTranslation } from '@dxos/react-ui';

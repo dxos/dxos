@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { AccessToken, Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Event, Message } from '@dxos/types';

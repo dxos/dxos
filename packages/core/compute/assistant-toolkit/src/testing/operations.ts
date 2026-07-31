@@ -5,7 +5,11 @@
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Instructions, OperationHandlerSet, Routine, Skill, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Routine from '@dxos/compute/Routine';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Feed, Tag } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { Employer, Organization, Person } from '@dxos/types';

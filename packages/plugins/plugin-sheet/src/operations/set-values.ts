@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
 import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
 import { SheetOperation, addressToIndex, mapFormulaRefsToIndices } from '../types';

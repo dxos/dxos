@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';

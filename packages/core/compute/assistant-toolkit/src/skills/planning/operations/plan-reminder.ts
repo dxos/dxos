@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';

@@ -6,7 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { ServiceResolver, Trigger, type TriggerEvent } from '@dxos/compute';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trigger from '@dxos/compute/Trigger';
+import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Filter, type Key, Query } from '@dxos/echo';
 import { type Cursor } from '@dxos/link';
 

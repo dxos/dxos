@@ -5,7 +5,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities } from '@dxos/app-framework';
 import { SpaceState } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ObservabilityOperation } from '@dxos/plugin-observability';

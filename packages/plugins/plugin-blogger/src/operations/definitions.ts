@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Connection } from '@dxos/plugin-connector/types';

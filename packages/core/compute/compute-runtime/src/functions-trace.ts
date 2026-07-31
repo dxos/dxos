@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Trigger } from '@dxos/compute';
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import * as Trigger from '@dxos/compute/Trigger';
 // QueryAST is referenced indirectly through `Type.InstanceType<typeof ...EventSchema>`
 // in the emitted .d.ts; the namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports

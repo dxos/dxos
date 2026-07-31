@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Query, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestHelpers } from '@dxos/effect/testing';

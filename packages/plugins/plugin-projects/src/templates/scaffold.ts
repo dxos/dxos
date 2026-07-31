@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Instructions, Project } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
 import { Collection, Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 

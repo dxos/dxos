@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, AppSpace } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 

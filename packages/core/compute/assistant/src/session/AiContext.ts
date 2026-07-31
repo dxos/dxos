@@ -10,7 +10,7 @@ import * as Function from 'effect/Function';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
 import { Annotation, Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';

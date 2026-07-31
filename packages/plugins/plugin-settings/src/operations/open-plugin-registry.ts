@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphPath, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
 import { SETTINGS_ID, getPluginRegistrySectionPath } from '../types';
 

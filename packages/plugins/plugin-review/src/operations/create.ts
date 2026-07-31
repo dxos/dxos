@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Relation } from '@dxos/echo';
 import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { Attention } from '@dxos/react-ui-attention/types';

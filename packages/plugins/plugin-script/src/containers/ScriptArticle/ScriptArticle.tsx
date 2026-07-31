@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Script } from '@dxos/compute';
+import type * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';

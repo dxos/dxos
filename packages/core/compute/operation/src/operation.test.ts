@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';

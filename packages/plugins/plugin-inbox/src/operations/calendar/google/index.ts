@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Operation, OperationHandlerSet } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import Create from './create';
 import List from './list';

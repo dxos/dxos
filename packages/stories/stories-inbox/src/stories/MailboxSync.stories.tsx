@@ -8,7 +8,8 @@ import React from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
 import { persistentClientServices } from '@dxos/client/testing';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';

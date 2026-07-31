@@ -14,7 +14,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { todo } from '@dxos/debug';
 import { DXN, Filter, Ref, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

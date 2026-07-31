@@ -6,7 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { ProjectSkill } from '@dxos/assistant-toolkit';
-import { type Instructions, Operation, Routine, Skill } from '@dxos/compute';
+import type * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { RoutineCapabilities, RoutineOperation } from '@dxos/plugin-routine';

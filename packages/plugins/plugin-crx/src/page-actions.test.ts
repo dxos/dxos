@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Message, request } from '@dxos/crx-protocol';
 import { createMockPeer } from '@dxos/crx-protocol/testing';
 import { DXN } from '@dxos/keys';

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Type } from '@dxos/echo';
 import { type Label } from '@dxos/ui-types/translations';
 

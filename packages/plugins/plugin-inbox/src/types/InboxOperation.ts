@@ -8,7 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Credential, Operation, Trace } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { FactStore } from '@dxos/pipeline-rdf/fact-store';

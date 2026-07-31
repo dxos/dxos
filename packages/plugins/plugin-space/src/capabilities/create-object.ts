@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Type } from '@dxos/echo';
 import { createDefaultSchema } from '@dxos/schema';
 import { Organization, Person, Task } from '@dxos/types';

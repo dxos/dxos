@@ -7,7 +7,7 @@ import * as Prompt from '@effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';

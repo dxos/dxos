@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 // The operations `SheetPlugin.node` can serve, and only those. `scroll-to-anchor` drives a live
 // editor view, so it is browser-only — and `OperationHandlerSet.lazy` defers the import at runtime

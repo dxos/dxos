@@ -5,8 +5,8 @@
 import type * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 
-import { type Process } from '@dxos/compute';
 import { type ProcessManager } from '@dxos/compute-runtime';
+import type * as Process from '@dxos/compute/Process';
 import { type Database, type Feed } from '@dxos/echo';
 
 /**

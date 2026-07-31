@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Filter } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/edge-compute';

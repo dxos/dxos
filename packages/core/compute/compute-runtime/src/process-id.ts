@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 
 export type ProcessIdGenerator = () => Process.ID;
 

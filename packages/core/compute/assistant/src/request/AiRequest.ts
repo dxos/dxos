@@ -26,7 +26,10 @@ import {
   callTool,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { type Instructions, Operation, type Skill, Trace } from '@dxos/compute';
+import type * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Skill from '@dxos/compute/Skill';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';

@@ -9,7 +9,7 @@ import type { ComponentType } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { type Collection, type Database, type Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';

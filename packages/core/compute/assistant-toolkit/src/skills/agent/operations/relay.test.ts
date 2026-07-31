@@ -7,8 +7,11 @@ import * as Effect from 'effect/Effect';
 import { expect } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Instructions, Operation, OperationHandlerSet, Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Text } from '@dxos/schema';

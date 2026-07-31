@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Skill, Template } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 
 import { type ResearchSource, defaultResearchSources } from '#sources';
 import { CrmOperation } from '#types';

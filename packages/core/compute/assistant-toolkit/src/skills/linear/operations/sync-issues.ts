@@ -8,8 +8,9 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { Credential, Operation } from '@dxos/compute';
 import { withAuthorization } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Person, Pipeline, Task } from '@dxos/types';

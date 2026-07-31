@@ -8,7 +8,7 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { type Space, useQuery } from '@dxos/react-client/echo';

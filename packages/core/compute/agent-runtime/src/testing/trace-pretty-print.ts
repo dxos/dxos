@@ -7,8 +7,9 @@ import * as Layer from 'effect/Layer';
 
 import { ConsolePrinter } from '@dxos/ai';
 import { CompleteBlock } from '@dxos/assistant';
-import { Process, Trace } from '@dxos/compute';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Query } from '@dxos/echo';
 
 /**

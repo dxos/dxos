@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { getSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '../types';

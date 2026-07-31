@@ -13,7 +13,9 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
 
-import { type LayerSpec, ServiceNotAvailableError, ServiceResolver } from '@dxos/compute';
+import { ServiceNotAvailableError } from '@dxos/compute';
+import type * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

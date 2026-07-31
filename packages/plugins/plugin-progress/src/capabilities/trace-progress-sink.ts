@@ -6,8 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, type CancelTarget, createProgressTraceSink, resolveTriggerId } from '@dxos/app-toolkit';
-import { Process, ServiceResolver, Trace } from '@dxos/compute';
 import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { log } from '@dxos/log';
 
 /**

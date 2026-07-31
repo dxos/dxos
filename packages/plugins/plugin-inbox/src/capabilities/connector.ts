@@ -11,8 +11,9 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Credential, Trigger } from '@dxos/compute';
 import { withAuthorization } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Obj } from '@dxos/echo';
 import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';

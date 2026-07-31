@@ -12,7 +12,8 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { FormBuilder } from '@dxos/cli-util';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Annotation, Database, Entity, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';

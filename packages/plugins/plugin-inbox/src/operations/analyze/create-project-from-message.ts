@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Operation, Project } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { buildThreads, clusterThreads, deriveThreadId, resolveModel, summarizeTopics } from '@dxos/pipeline-email';

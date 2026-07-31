@@ -5,7 +5,7 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';

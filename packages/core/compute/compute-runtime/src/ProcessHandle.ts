@@ -21,8 +21,9 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import { Process, type Trace } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
+import type * as Trace from '@dxos/compute/Trace';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 

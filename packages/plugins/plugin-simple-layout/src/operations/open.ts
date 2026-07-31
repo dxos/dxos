@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, NotFound } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, EID } from '@dxos/echo';
 import { log } from '@dxos/log';

@@ -5,7 +5,7 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { Model } from '@dxos/ai';
-import { Template } from '@dxos/compute';
+import * as Template from '@dxos/compute/Template';
 // Text is referenced in the inferred type of 'templates' (via Template.make → Template.Template.source → Ref.Ref(Text.Text));
 // the import lets TypeScript name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports

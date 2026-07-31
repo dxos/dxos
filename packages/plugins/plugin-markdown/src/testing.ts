@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { HasSubject } from '@dxos/types';
 

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { File } from '@dxos/types';

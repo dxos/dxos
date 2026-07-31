@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, Templates } from '#capabilities';
 import { meta } from '#meta';

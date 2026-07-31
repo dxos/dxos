@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Type, View } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
 import { Table } from '@dxos/react-ui-table/types';

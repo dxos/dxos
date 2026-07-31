@@ -18,7 +18,9 @@ import {
 } from '@dxos/app-toolkit';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Instructions, Operation, Project } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import { Sequence } from '@dxos/conductor';
 import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

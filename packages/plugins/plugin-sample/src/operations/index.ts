@@ -7,7 +7,7 @@
 // module; the framework loads exactly the invoked operation's module on demand.
 // Each module must `export default` a handler created with `Operation.withHandler`.
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { SampleOperation } from '../types';
 

@@ -7,8 +7,9 @@ import * as Layer from 'effect/Layer';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientService } from '@dxos/client';
-import { Credential, LayerSpec } from '@dxos/compute';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Database } from '@dxos/echo';
 import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';

@@ -6,7 +6,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';

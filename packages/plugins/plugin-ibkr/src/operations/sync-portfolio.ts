@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Credential, Operation } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
 import { Feed, Obj } from '@dxos/echo';
 
 import { IBKR_SOURCE } from '../constants';

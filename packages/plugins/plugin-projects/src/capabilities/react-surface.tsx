@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 
 import { ProjectArticle } from '#containers';
 

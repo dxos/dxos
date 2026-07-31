@@ -5,7 +5,9 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Chat } from '@dxos/assistant-toolkit';
-import { Instructions, Project, Routine } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
+import * as Routine from '@dxos/compute/Routine';
 import { Collection, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';

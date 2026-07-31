@@ -8,8 +8,8 @@ import * as Stream from 'effect/Stream';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, type CancelTarget, createProgressTraceSink, resolveTriggerId } from '@dxos/app-toolkit';
-import { Trace } from '@dxos/compute';
 import { RemoteProcessManager } from '@dxos/compute-runtime';
+import * as Trace from '@dxos/compute/Trace';
 import { log } from '@dxos/log';
 
 /**

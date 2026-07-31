@@ -11,8 +11,8 @@ import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { Trace } from '@dxos/compute';
 import { operationServiceLayerNoop } from '@dxos/compute/testing';
+import * as Trace from '@dxos/compute/Trace';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { ContentBlock, type Message } from '@dxos/types';

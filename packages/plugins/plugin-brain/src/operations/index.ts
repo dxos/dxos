@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { InboxOperation } from '@dxos/plugin-inbox/types';
 
 import { BrainOperation } from '#types';

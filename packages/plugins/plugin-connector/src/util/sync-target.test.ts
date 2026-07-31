@@ -9,8 +9,10 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Capabilities, Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation, ServiceResolver, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { operationServiceLayerNoop } from '@dxos/compute/testing';
+import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';

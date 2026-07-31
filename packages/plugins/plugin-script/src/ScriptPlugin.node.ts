@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Script } from '@dxos/compute';
+import * as Script from '@dxos/compute/Script';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';

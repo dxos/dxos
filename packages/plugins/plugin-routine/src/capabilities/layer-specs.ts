@@ -10,7 +10,6 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { ActivationEvents, Capabilities, Capability, Plugin, makeOperationHandlerPull } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { LayerSpec, Operation, OperationHandlerSet, Trigger } from '@dxos/compute';
 import {
   FeedTraceSink,
   ProcessManager,
@@ -21,6 +20,10 @@ import {
   TriggerMonitor,
   TriggerStateStore,
 } from '@dxos/compute-runtime';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Registry } from '@dxos/echo';
 import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
 import { EffectEx } from '@dxos/effect';

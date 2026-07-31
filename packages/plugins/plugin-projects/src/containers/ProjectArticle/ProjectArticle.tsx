@@ -8,7 +8,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';

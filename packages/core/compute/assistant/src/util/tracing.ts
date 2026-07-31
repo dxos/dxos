@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 import { Actor, ContentBlock } from '@dxos/types';
 

@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { Operation, ServiceResolver } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { configPreset } from '@dxos/config';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

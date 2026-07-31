@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';

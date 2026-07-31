@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
 import { RESET_DIALOG } from '../constants';
 import { ResetStorage } from './definitions';

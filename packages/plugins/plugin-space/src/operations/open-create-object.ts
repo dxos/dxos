@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Obj } from '@dxos/echo';
 
 import { CREATE_OBJECT_DIALOG } from '../constants';

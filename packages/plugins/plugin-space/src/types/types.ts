@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { AppNodeMatcher } from '@dxos/app-toolkit';
 import { type PublicKey } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Obj } from '@dxos/echo';
 import { type ComplexMap } from '@dxos/util';
 

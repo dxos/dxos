@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';

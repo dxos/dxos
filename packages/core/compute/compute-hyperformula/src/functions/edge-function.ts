@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, JsonSchema, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';

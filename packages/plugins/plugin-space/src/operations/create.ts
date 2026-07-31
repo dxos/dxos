@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';

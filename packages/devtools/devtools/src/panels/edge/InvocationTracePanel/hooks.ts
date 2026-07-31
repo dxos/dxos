@@ -4,9 +4,10 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { Operation, Script } from '@dxos/compute';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import { type InvocationSpan } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';

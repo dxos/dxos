@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, print, spaceLayer, withTypes } from '@dxos/cli-util';
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 

@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, EID, Obj, Ref } from '@dxos/echo';
 
 import { IBKR_SYNC_CRON } from './constants';

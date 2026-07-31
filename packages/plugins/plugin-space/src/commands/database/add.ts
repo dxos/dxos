@@ -15,7 +15,7 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
-import type { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, type Err, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';

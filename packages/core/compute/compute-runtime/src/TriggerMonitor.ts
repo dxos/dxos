@@ -8,7 +8,8 @@ import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Trigger, TriggerEvent } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Filter, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 

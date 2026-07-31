@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 

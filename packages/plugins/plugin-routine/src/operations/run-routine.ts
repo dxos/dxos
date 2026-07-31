@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Operation, Trigger } from '@dxos/compute';
 import { createInvocationPayload } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 

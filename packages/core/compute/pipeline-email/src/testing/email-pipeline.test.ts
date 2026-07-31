@@ -18,7 +18,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { AiService, Provider } from '@dxos/ai';
 import { OllamaAiServiceLayer } from '@dxos/ai/testing';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';

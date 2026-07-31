@@ -3,7 +3,7 @@
 //
 
 import { CollaborationOperation } from '@dxos/app-toolkit';
-import { OperationHandlerSet } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { MarkdownOperation } from '../types';
 

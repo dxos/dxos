@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { ServiceResolver } from '@dxos/compute';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';

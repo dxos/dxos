@@ -3,7 +3,7 @@
 //
 
 import { DatabaseSkill, SkillManagerSkill } from '@dxos/assistant-toolkit';
-import { type Skill } from '@dxos/compute';
+import type * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 
 export const getDefaultSkills = (): Ref.Ref<Skill.Skill>[] => [

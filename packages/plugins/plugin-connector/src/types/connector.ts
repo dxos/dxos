@@ -8,7 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import type { Client } from '@dxos/client';
-import type { Credential, Operation, Trigger } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';

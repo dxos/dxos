@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { renderTimelineAscii } from '@dxos/react-ui-components';
 
 import { buildExecutionGraph, collectProcessActivityLines, deriveInFlightActivityLine } from './execution-graph';

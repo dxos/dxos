@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.ScrollIntoView> = LayoutOperation.ScrollIntoView.pipe(
   Operation.withHandler(() => Effect.void),

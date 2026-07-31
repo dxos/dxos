@@ -1,7 +1,7 @@
 // Copyright 2025 DXOS.org
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { OperationHandlerSet } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 export const SimpleLayoutOperationHandlerSet = OperationHandlerSet.keyed([
   [LayoutOperation.Close, () => import('./close')],

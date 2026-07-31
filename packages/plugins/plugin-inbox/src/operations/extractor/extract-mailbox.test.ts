@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';

@@ -10,7 +10,7 @@ import { describe } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';

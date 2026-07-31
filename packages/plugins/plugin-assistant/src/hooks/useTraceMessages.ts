@@ -7,8 +7,8 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { pipe } from 'effect/Function';
 import { useMemo } from 'react';
 
-import { Trace } from '@dxos/compute';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Trace from '@dxos/compute/Trace';
 import { Filter, Query } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 

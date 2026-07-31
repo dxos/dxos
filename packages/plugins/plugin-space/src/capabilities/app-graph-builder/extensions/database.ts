@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import { Capability, type CapabilityManager, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';

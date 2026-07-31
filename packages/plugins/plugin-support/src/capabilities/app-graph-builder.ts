@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, AppNode, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Obj } from '@dxos/echo';
 import { SPACE_HOME_NODE_TYPE } from '@dxos/plugin-space';
 import { Attention } from '@dxos/react-ui-attention';

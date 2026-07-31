@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Routine, Trigger } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { IconButton, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';

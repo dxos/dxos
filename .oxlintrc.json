@@ -37,6 +37,7 @@
   "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf", "promise", "vitest", "jsdoc", "node"],
   "rules": {
     "@dxos/eslint-plugin-rules/consistent-update-param": "warn",
+    "@dxos/eslint-plugin-rules/dxos-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",

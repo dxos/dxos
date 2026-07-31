@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import { useCallback, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
-import { Credential } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';

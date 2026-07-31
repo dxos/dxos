@@ -8,7 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiContext, Harness } from '@dxos/assistant';
-import { Instructions, type Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import type * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { EffectEx } from '@dxos/effect';

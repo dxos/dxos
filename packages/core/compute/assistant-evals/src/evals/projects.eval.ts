@@ -8,7 +8,7 @@ import { evalite } from 'evalite';
 
 import { AiContext } from '@dxos/assistant';
 import { Chat, ProjectSkill } from '@dxos/assistant-toolkit';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';

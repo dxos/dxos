@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';

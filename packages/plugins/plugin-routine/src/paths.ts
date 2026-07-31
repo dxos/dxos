@@ -3,7 +3,7 @@
 //
 
 import { GraphPath } from '@dxos/app-toolkit';
-import { Routine } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
 
 import { meta } from '#meta';
 

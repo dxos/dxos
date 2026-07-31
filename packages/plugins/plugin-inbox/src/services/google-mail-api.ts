@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as ParseResult from 'effect/ParseResult';
 
-import { Credential } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
 
 import { GoogleMail } from '../apis';
 import { GoogleApiError } from '../errors';

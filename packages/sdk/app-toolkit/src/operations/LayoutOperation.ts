@@ -8,7 +8,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { Selection } from '@dxos/react-ui-attention/types';
 

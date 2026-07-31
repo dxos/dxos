@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Harness } from '@dxos/assistant';
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 

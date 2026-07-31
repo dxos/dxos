@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { type DependencyList, use, useCallback, useMemo } from 'react';
 
-import { Operation, ServiceResolver } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
 

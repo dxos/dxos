@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useMemo, useState } from 'react';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';

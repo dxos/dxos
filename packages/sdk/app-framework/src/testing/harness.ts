@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 

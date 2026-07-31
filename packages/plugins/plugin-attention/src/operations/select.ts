@@ -7,7 +7,7 @@ import * as Match from 'effect/Match';
 
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Selection } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities } from '../types';

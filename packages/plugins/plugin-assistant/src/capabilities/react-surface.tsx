@@ -10,7 +10,7 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { Agent, Chat, Plan } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';

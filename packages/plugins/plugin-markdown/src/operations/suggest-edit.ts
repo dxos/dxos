@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AgentIdentity, Operation } from '@dxos/compute';
+import * as AgentIdentity from '@dxos/compute/AgentIdentity';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { Branch } from '@dxos/versioning';
 

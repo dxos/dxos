@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Game } from '@dxos/plugin-game/types';

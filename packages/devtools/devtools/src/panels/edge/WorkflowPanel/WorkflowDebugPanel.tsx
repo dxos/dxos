@@ -8,8 +8,10 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { Credential, Operation, Trace } from '@dxos/compute';
 import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database, Registry } from '@dxos/echo';

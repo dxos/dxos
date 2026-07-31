@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, GraphPath } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';

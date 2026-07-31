@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Chat } from '@dxos/assistant-toolkit';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Feed, Obj, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 

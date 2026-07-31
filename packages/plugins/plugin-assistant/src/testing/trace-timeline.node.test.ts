@@ -16,9 +16,13 @@ import {
   WebSearchSkill,
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
-import { Instructions, Operation, Skill, Trace, Trigger } from '@dxos/compute';
 import { FeedTraceSink, TriggerDispatcher } from '@dxos/compute-runtime';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';

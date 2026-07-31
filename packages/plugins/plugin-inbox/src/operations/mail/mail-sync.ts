@@ -9,7 +9,9 @@ import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
-import { Cancellation, Operation, Trace } from '@dxos/compute';
+import * as Cancellation from '@dxos/compute/Cancellation';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { Cursor } from '@dxos/link';

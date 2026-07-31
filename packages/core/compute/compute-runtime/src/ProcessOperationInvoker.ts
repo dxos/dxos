@@ -16,8 +16,10 @@ import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
-import { Process, Trace } from '@dxos/compute';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

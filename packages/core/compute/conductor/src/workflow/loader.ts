@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { JsonSchema } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type URI } from '@dxos/keys';

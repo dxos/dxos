@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';

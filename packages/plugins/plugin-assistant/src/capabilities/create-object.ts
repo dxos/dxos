@@ -7,7 +7,9 @@ import * as Layer from 'effect/Layer';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Agent, AgentSkill, Chat } from '@dxos/assistant-toolkit';
-import { Operation, ServiceResolver, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';

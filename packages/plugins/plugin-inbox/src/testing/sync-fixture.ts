@@ -8,8 +8,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Credential, Operation, Trace } from '@dxos/compute';
 import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Ref, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as InboxResolver from '@dxos/extractor-lib';

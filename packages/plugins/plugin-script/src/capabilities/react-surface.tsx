@@ -8,7 +8,7 @@ import React, { type ComponentProps } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Script } from '@dxos/compute';
+import * as Script from '@dxos/compute/Script';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
