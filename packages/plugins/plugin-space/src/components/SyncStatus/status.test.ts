@@ -6,15 +6,6 @@ import { describe, expect, test } from 'vitest';
 
 import { type StatusInput, getStatus } from './status';
 
-const createInput = (props: Partial<StatusInput> = {}): StatusInput => ({
-  offline: false,
-  saved: true,
-  stalled: false,
-  needsToUpload: false,
-  needsToDownload: false,
-  ...props,
-});
-
 describe('getStatus', () => {
   test('unsaved work takes precedence', () => {
     expect(getStatus(createInput({ saved: false, offline: true, stalled: true }))).toBe('saving-locally');
@@ -46,4 +37,13 @@ describe('getStatus', () => {
   test('nothing outstanding while online', () => {
     expect(getStatus(createInput())).toBe('remote-synced');
   });
+});
+
+const createInput = (props: Partial<StatusInput> = {}): StatusInput => ({
+  offline: false,
+  saved: true,
+  stalled: false,
+  needsToUpload: false,
+  needsToDownload: false,
+  ...props,
 });

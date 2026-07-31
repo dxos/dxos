@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { expect, within } from 'storybook/test';
 
 import { SpaceId } from '@dxos/keys';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -10,6 +11,7 @@ import { type PeerSyncState, type SpaceSyncStateMap } from '@dxos/react-client/e
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
+import { STALLED_TIMEOUT } from '#hooks';
 import { translations } from '#translations';
 
 import { SyncStatusIndicator } from './SyncStatus';
@@ -92,6 +94,16 @@ export const Stalled: Story = {
     state: createSyncState({ missingOnLocal: 20, unsyncedDocumentCount: 20 }),
     saved: true,
     edgeStatus: createEdgeStatus(),
+  },
+  // The stall is only reported once the timer elapses; wait for it so a capture never lands on the interim state.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const indicator = await canvas.findByRole(
+      'button',
+      { name: 'Replication stalled' },
+      { timeout: STALLED_TIMEOUT * 2 },
+    );
+    await expect(indicator).toBeVisible();
   },
 };
 
