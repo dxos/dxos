@@ -10,32 +10,40 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/person-deduplication-plugin-inb
 - [x] 1.4 `applyMerge` (meta-key transfer, overrides fold, remove losers).
 - [x] 1.5 `personIdentitySpec` + `organizationIdentitySpec` in `@dxos/extractor-lib`.
 - [x] 1.6 Unit suite for Person duplicates — 21 tests green.
-- [ ] 1.7 `IdentityIndex` (moved to phase 4, where `Resolver` consumes it).
+- [x] 1.7 `IdentityIndex` + `makeIdentityIndex`/`buildIdentityIndex`.
 
-## Phase 2 — operations
+## Phase 2 — operations ✅
 
-- [ ] 2.1 `FindDuplicates` / `ApplyMerge` definitions in `@dxos/extractor`.
-- [ ] 2.2 `SpaceCapabilities.IdentitySpec` + handlers in `plugin-space`.
-- [ ] 2.3 `plugin-crm` contributes the Person/Organization specs.
+- [x] 2.1 `FindDuplicates` / `MergeDuplicates` — definitions AND handlers in `plugin-space`, not
+      `@dxos/extractor`: resolving a typename to its spec needs `Capability.Service`, and importing
+      `@dxos/app-framework` into `@dxos/extractor` would break its framework-free property. The
+      engine itself is in `@dxos/extractor` as agreed. See DESIGN.md §3.4.
+- [x] 2.2 `SpaceCapabilities.IdentitySpec` + handlers in `plugin-space`.
+- [x] 2.3 `plugin-crm` contributes the Person/Organization specs.
 
-## Phase 3 — UI
+## Phase 3 — UI (built, NOT live-verified)
 
-- [ ] 3.1 `duplicates` layout value on `TypeArticle` (hidden with no spec).
-- [ ] 3.2 Duplicates toolbar (Merge / Skip / counter / prev-next).
-- [ ] 3.3 Merge-preview companion (Form over the uncommitted draft, Confirm/Cancel).
-- [ ] 3.4 Storybook + play test.
+- [x] 3.1 `duplicates` layout value on `TypeArticle` (hidden with no spec).
+- [x] 3.2 Duplicates toolbar (Merge / Skip / counter / prev-next / rescan).
+- [x] 3.3 Merge-preview companion (Form over the uncommitted draft, Confirm/Cancel).
+- [ ] 3.4 Storybook + play test — **still owed**; nothing here has been rendered yet.
 
 ### 3a — `TypeArticle` fixes requested alongside (2026-07-31)
 
-- [ ] 3a.1 Table tab: a Delete button appears in the toolbar when rows are checked.
-- [ ] 3a.2 Card tab: clicking a card selects/deselects it instead of navigating.
-- [ ] 3a.3 Masonry scrollbar thumb flush with the edge — drop the padding outside the masonry.
+- [x] 3a.1 Table tab: a Delete button appears in the toolbar when rows are checked (undoable via
+      `SpaceOperation.RemoveObjects`).
+- [x] 3a.2 Card tab: clicking a card selects/deselects it; Open moved to the card menu.
+- [x] 3a.3 Masonry scrollbar padding — done by the user directly.
 
 ## Phase 4 — fix the sources (F1–F4)
 
-- [ ] 4.1 `Resolver.Live` reimplemented on `IdentityIndex`; per-`Database` `WeakMap` cache.
-- [ ] 4.2 Delete `ContactLookup`; `buildContactFromActor` takes the index.
-- [ ] 4.3 Google `upsertPerson`: fall back to the identity index, union emails instead of clobbering.
+- [x] 4.1 `Resolver.Live` reimplemented on `IdentityIndex`; per-`Database` `WeakMap` cache +
+      `registerResolved`. Fixes **F3** and **F4** (one normalization; `Resolver.Mock` now shares it).
+- [x] 4.3 Google `upsertPerson`: two-stage resolution (foreign key → identity index), stamps the
+      resource name onto the person it finds, and merges via `personIdentitySpec.merge` instead of
+      clobbering `emails`/`phoneNumbers`/`addresses`/`urls`. Fixes **F2**.
+- [ ] 4.2 Delete `ContactLookup`; `buildContactFromActor` takes the index. **F1 is still open** —
+      two concurrently-syncing mailboxes still hold separate caches.
 - [ ] 4.4 Audit `plugin-github/sync`, `assistant-toolkit/linear/sync-issues`.
 - [ ] 4.5 **Selective extraction** — a type-specific `shouldExtract` on the spec/extractor, so the
       cheapest fix for duplicate volume is not creating the object at all. Person rules:

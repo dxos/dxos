@@ -1,6 +1,6 @@
 # Object deduplication — duplicates from external data sources
 
-- **Status**: design + phase 1/2 implementation
+- **Status**: phases 1-4 implemented (UI not yet live-verified); phase 5 not started
 - **Date**: 2026-07-31
 - **Requested by**: Rich
 - **Branch**: `claude/person-deduplication-plugin-inbox-dbe8b2`
@@ -120,22 +120,27 @@ applyMerge(db, spec, plan): Effect<void>             // the only write
   - arrays of compound values: union by the spec's normalization key, survivor's order first;
   - refs: survivor's when set, else the first non-empty;
   - `Obj.Meta.keys`: union (so the survivor answers every foreign-key lookup afterwards).
-- `applyMerge` copies losers' meta keys onto the survivor, rewrites inbound refs for the
-  space-db types the spec declares, then `db.remove`s the losers.
+- `applyMerge` copies losers' meta keys onto the survivor, then `db.remove`s the losers.
 
-**Known limitation**: `Message.sender.contact` refs live in immutable feed items and cannot be
-rewritten. Those refs dangle after a merge; the UI already falls back to `sender.email`/`name`, and
-the next sync re-resolves the email to the survivor. Documented, not fixed in v1.
+**Known limitation (as built)**: references to a loser are not rewritten at all.
+`Message.sender.contact` lives in immutable feed items and cannot be rewritten even in principle,
+so those refs dangle after a merge; the UI falls back to `sender.email`/`name`, and the next sync
+re-resolves the email to the survivor. Rewriting space-db refs is deferred until the
+`object-merging` engine offers a primitive for it, rather than hand-rolled here.
 
 ### 3.4 Operations
 
-Definitions in `@dxos/extractor` (pure, serializable, no capability access); handlers in
-`plugin-space`, which is where the spec capability and the UI live.
+The engine (`IdentitySpec`, `IdentityIndex`, `findDuplicates`, `planMerge`, `applyMerge`) lives in
+`@dxos/extractor` as requested. The **operation wrappers** could not: an operation that resolves a
+typename to its spec needs `Capability.Service`, and pulling `@dxos/app-framework` into
+`@dxos/extractor` would break the framework-free property its `ExtractorRegistry` docstring relies
+on. Both definitions and handlers therefore live in `plugin-space`, next to the capability and the
+UI, and call the generic engine.
 
-| Operation        | Input                                 | Output                             |
-| ---------------- | ------------------------------------- | ---------------------------------- |
-| `FindDuplicates` | `{ typename }`                        | `{ groups: { key, objectIds }[] }` |
-| `ApplyMerge`     | `{ typename, objectIds, overrides? }` | `{ survivorId }`                   |
+| Operation         | Input                                 | Output                             |
+| ----------------- | ------------------------------------- | ---------------------------------- |
+| `FindDuplicates`  | `{ typename }`                        | `{ groups: { keys, objectIds }[] }` |
+| `MergeDuplicates` | `{ typename, objectIds, overrides? }` | `{ survivorId, removedIds }`       |
 
 Specs reach `plugin-space` through `SpaceCapabilities.IdentitySpec`, contributed by `plugin-crm`
 for Person/Organization — mirroring `InboxCapabilities.ObjectExtractor`. The Duplicates tab is
@@ -150,10 +155,13 @@ gains a third layout value alongside `masonry`/`table`.
   counter (`3 / 17`), and prev/next. The layout toggle stays.
 - **Content**: masonry of the current group's cards (the existing `TypeTile`), so the user sees
   every candidate at once.
-- **Selection**: clicking a card selects it; the existing **Selected** companion renders it.
-- **Merge**: builds an _uncommitted_ draft (`planMerge`) and routes it to a **Merge preview**
-  companion showing a schema-driven `Form` over the draft with Confirm/Cancel. Confirm invokes
-  `ApplyMerge` and advances to the next group. Nothing is written before Confirm.
+- **Selection**: clicking a card toggles selection (it no longer navigates — the companion follows
+  the selection, so navigating on every click fought the review; Open moved to the card menu). The
+  existing **Selected** companion renders the selection.
+- **Merge**: builds an _uncommitted_ draft (`planMerge`) and stages it in the space plugin's
+  ephemeral state. The Selected companion swaps to a schema-driven `Form` over that draft with
+  Confirm/Cancel; Confirm invokes `MergeDuplicates` with the edited draft as `overrides`. Nothing
+  is written before Confirm.
 - **Skip**: advances without writing. Skips are session state in v1 (not persisted); a persisted
   "not a duplicate" assertion is phase 4.
 
