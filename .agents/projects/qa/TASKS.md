@@ -1,6 +1,6 @@
 # QA — Tasks
 
-_Resume: answer open question in §3 (fixture capture vs dark-mode implementation order); the Sync-routine picker (§4) needs a live app check. Uncommitted: none. Last: single-message toggle + latest-message auto-expand landed._
+_Resume: fixture capture is wired in the MailboxSync story (Phase 5) but NOT yet exercised against a real account — connect one, star some mail, save the HTML. Uncommitted: none. Last: stories-inbox message panel + attention fixes._
 
 User-reported defects and small UX corrections found while using Composer, tracked
 across whichever package owns the fix. Findings and rationale live in
@@ -25,9 +25,11 @@ across whichever package owns the fix. Findings and rationale live in
 Email bodies render in a shadow root and are recolored only for personal/non-table
 mail. Two gaps, both detailed in DESIGN.md §1.
 
-- [ ] **Capture real email fixtures to analyze against**
-  - Add a per-message `Save message` action (dev tier) in
-    `ConversationStack/useToolbar.tsx` — download the `text/html` block (or the
+- [x] **Capture real email fixtures to analyze against** — done in the MailboxSync
+      story rather than the shipping app menu; see Phase 5. Still needs a real account
+      connected to actually produce fixtures.
+  - ~~Add a per-message `Save message` action (dev tier) in
+    `ConversationStack/useToolbar.tsx`~~ — download the `text/html` block (or the
     full `.eml`, which `scripts/mbox.ts` can already parse).
   - Store under `src/testing/data/emails/`, loaded via `import.meta.glob` raw.
   - New `HtmlViewer.fixtures.stories.tsx` rendering every fixture as a light/dark
@@ -80,6 +82,40 @@ created deliberately, not a failed attempt.
 - [ ] **Decide whether a system-managed routine should be editable at all**
   - The action is bound by registry key on purpose (nothing persisted into the space);
     an empty _editable_ picker invites the user to break the binding.
+
+## Phase 5: MailboxSync story — fixture capture harness
+
+[MailboxSync.stories.tsx](../../../packages/stories/stories-inbox/src/stories/MailboxSync.stories.tsx)
+is the story that drives a real sync (persistent client against edge `main`), so it is
+where fixtures get captured. Three defects found while wiring that up.
+
+- [x] **Message panel rendered nothing** — `MessageModule` passed the whole thread
+      (an array) as the surface `subject`, but the article's filter is
+      `AppSurface.subject(AppSurface.Article, isNonDraftMessage)`, which matches a single
+      non-draft Message. Now passes the selected message; `MessageArticle` looks the
+      conversation up itself from `threadId` + `companionTo`.
+- [x] **No panel was ever attended** — the story's decorators were missing
+      `withAttention()`, which `ModuleContainer` documents as required for its
+      `AttendableContainer` cells to register. Without it nothing attention-gated works.
+- [x] **Save a single message as a fixture** — `ArchiveModule` gains a save button for the
+      selected message: its raw email HTML as `<date>-<sender>.html` when it has an html
+      body, else the serialized message as JSON.
+- [x] **Export only starred messages** — the feed download now filters to messages
+      carrying the `starred` system tag, so starring in the Mailbox panel is how a
+      fixture set is curated. Button shows the count and disables at zero.
+- [ ] **Exercise it against a real account** — connect, star, save. Nothing above is
+      verified beyond build + lint; the story needs a live mailbox to render.
+- [ ] **Decide whether a starred-only archive should still be re-importable** — `Upload`
+      calls `replaceFeed`, which swaps the whole feed for the file's contents, so
+      round-tripping a starred-only export now discards everything unstarred.
+
+## Open questions for the user
+
+- [ ] **`StoryRole.Mailbox` attendable id divergence** — `ModuleContainer` registers each
+      role cell's `AttendableContainer` under a _positional_ id, while `MailboxModule` and
+      `MessageModule` deliberately swap in the mailbox object path for their selection
+      context. Attention and selection are therefore keyed differently in this story;
+      `withAttention()` fixes "nothing is attended" but not the divergence.
 
 ## References
 
