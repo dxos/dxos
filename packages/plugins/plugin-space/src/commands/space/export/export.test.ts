@@ -13,12 +13,11 @@ import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 
-import { handler as archive } from './archive';
-import { handler as snapshot } from './snapshot';
+import { handler } from './export';
 
 const ExportTestLayer = Layer.mergeAll(TestLayer, NodeContext.layer);
 
-type ExportOutput = { spaceId: string; path: string; size: number };
+type ExportOutput = { spaceId: string; format: string; path: string; size: number };
 
 const createSpace = Effect.fn(function* () {
   const client = yield* ClientService;
@@ -28,18 +27,23 @@ const createSpace = Effect.fn(function* () {
   return space;
 });
 
-describe('space snapshot/archive', () => {
-  it('should write a JSON snapshot into an output directory', () =>
+const lastOutput = Effect.fn(function* () {
+  const logger = yield* TestConsole.TestConsole;
+  return TestConsole.parseJson<ExportOutput>(logger.logs[logger.logs.length - 1]);
+});
+
+describe('space export', () => {
+  it('should write a json export into an output directory', () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const space = yield* createSpace();
 
       const outputDir = yield* fs.makeTempDirectoryScoped();
-      yield* snapshot({ spaceId: Option.some(space.id), output: Option.some(outputDir) });
+      yield* handler({ spaceId: Option.some(space.id), output: Option.some(outputDir), format: 'json' });
 
-      const logger = yield* TestConsole.TestConsole;
-      const { spaceId, path, size } = TestConsole.parseJson<ExportOutput>(logger.logs[0]);
+      const { spaceId, format, path, size } = yield* lastOutput();
       expect(spaceId).toEqual(space.id);
+      expect(format).toEqual('json');
       expect(path.startsWith(outputDir)).toBe(true);
       expect(path.endsWith('.dx.json')).toBe(true);
       expect(size).toBeGreaterThan(0);
@@ -48,16 +52,17 @@ describe('space snapshot/archive', () => {
       expect(contents.originalSpaceId).toEqual(space.id);
     }).pipe(Effect.provide(ExportTestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 
-  it('should write a binary archive to an explicit file path', () =>
+  it('should write a binary export to an explicit file path', () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const space = yield* createSpace();
 
       const outputPath = `${yield* fs.makeTempDirectoryScoped()}/nested/space.tar`;
-      yield* archive({ spaceId: Option.some(space.id), output: Option.some(outputPath) });
+      yield* handler({ spaceId: Option.some(space.id), output: Option.some(outputPath), format: 'binary' });
 
-      const logger = yield* TestConsole.TestConsole;
-      expect(TestConsole.parseJson<ExportOutput>(logger.logs[0]).path).toEqual(outputPath);
+      const { format, path } = yield* lastOutput();
+      expect(format).toEqual('binary');
+      expect(path).toEqual(outputPath);
       expect((yield* fs.stat(outputPath)).type).toEqual('File');
     }).pipe(Effect.provide(ExportTestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

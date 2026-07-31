@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as FileSystem from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
@@ -10,34 +11,39 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { CommandConfig, FormBuilder, formatBytes, getSpace, print, spaceIdWithDefault } from '@dxos/cli-util';
+import {
+  CommandConfig,
+  Common,
+  FormBuilder,
+  formatBytes,
+  getSpace,
+  print,
+  spaceIdWithDefault,
+  withTimeout,
+} from '@dxos/cli-util';
 import { type Key } from '@dxos/echo';
-import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
-import { SpaceNotReadyError } from '../../errors';
+import { SpaceNotReadyError } from '../../../errors';
 
 const SPACE_READY_TIMEOUT = Duration.seconds(30);
 
-export const outputOption = Options.text('output').pipe(
-  Options.withAlias('o'),
-  Options.withDescription('Output file, or a directory to write the generated filename into.'),
-  Options.optional,
-);
+export const FORMATS = ['binary', 'json'] as const;
+
+export type Format = (typeof FORMATS)[number];
+
+const ARCHIVE_FORMATS: Record<Format, SpaceArchive.Format> = {
+  binary: SpaceArchive.Format.BINARY,
+  json: SpaceArchive.Format.JSON,
+};
 
 export type ExportArgs = {
   spaceId: Option.Option<Key.SpaceId>;
   output: Option.Option<string>;
+  format: Format;
 };
 
-/**
- * Export a space in the given archive format and write it to disk.
- */
-export const exportSpaceToFile = Effect.fn(function* ({
-  spaceId,
-  output,
-  format,
-  label,
-}: ExportArgs & { format: SpaceArchive.Format; label: string }) {
+export const handler = Effect.fn(function* ({ spaceId, output, format }: ExportArgs) {
   const { json } = yield* CommandConfig;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -53,24 +59,44 @@ export const exportSpaceToFile = Effect.fn(function* ({
     }),
   );
 
-  const archive = yield* Effect.tryPromise(() => space.internal.export({ format }));
+  const archive = yield* Effect.tryPromise(() => space.internal.export({ format: ARCHIVE_FORMATS[format] }));
   const outputPath = yield* resolveOutputPath(output, archive.filename);
   yield* fs.makeDirectory(path.dirname(outputPath), { recursive: true });
   yield* fs.writeFile(outputPath, archive.contents);
 
   if (json) {
     yield* Console.log(
-      JSON.stringify({ spaceId: resolvedSpaceId, path: outputPath, size: archive.contents.length }, null, 2),
+      JSON.stringify({ spaceId: resolvedSpaceId, format, path: outputPath, size: archive.contents.length }, null, 2),
     );
   } else {
-    const builder = FormBuilder.make({ title: label }).pipe(
+    const builder = FormBuilder.make({ title: 'Exported Space' }).pipe(
       FormBuilder.set('spaceId', resolvedSpaceId),
+      FormBuilder.set('format', format),
       FormBuilder.set('path', outputPath),
       FormBuilder.set('size', formatBytes(archive.contents.length)),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }
 });
+
+export const exportSpace = Command.make(
+  'export',
+  {
+    spaceId: Common.spaceId.pipe(Options.optional),
+    format: Options.choice('format', FORMATS).pipe(
+      Options.withDescription(
+        'Archive format: binary is a direct dump of the underlying storage and includes document history; json contains current object state only.',
+      ),
+      Options.withDefault('binary' as const),
+    ),
+    output: Options.text('output').pipe(
+      Options.withAlias('o'),
+      Options.withDescription('Output file, or a directory to write the generated filename into.'),
+      Options.optional,
+    ),
+  },
+  (args) => handler(args).pipe(withTimeout),
+).pipe(Command.withDescription('Export a space archive to disk.'));
 
 const resolveOutputPath = Effect.fn(function* (output: Option.Option<string>, filename: string) {
   const fs = yield* FileSystem.FileSystem;

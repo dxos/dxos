@@ -3,4 +3,4 @@
 '@dxos/plugin-space': minor
 ---
 
-Add `dx space snapshot` and `dx space archive` commands to write a space's JSON snapshot or binary archive to disk, matching the DevTools spaces panel row actions.
+Add a `dx space export` command to write a space archive to disk, in either the binary storage-dump format (includes document history) or a JSON snapshot of current object state.

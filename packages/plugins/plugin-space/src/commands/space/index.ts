@@ -4,9 +4,9 @@
 
 import * as Command from '@effect/cli/Command';
 
-import { archive } from './archive';
 import { close } from './close';
 import { create } from './create';
+import { exportSpace } from './export';
 import { info } from './info';
 import { join } from './join';
 import { list } from './list';
@@ -14,10 +14,9 @@ import { members } from './members';
 import { open } from './open';
 import { schema } from './schema';
 import { share } from './share';
-import { snapshot } from './snapshot';
 import { sync } from './sync';
 
 export const space = Command.make('space').pipe(
   Command.withDescription('Manage ECHO spaces.'),
-  Command.withSubcommands([archive, close, create, info, join, list, members, open, schema, share, snapshot, sync]),
+  Command.withSubcommands([close, create, exportSpace, info, join, list, members, open, schema, share, sync]),
 );
