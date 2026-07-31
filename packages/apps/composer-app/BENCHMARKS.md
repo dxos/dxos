@@ -169,3 +169,17 @@ Auto-recorded by `src/playwright/startup.spec.ts`. One row per scenario per harn
 | 2026-07-31T20:12:52Z | 922e3ce364 |  | cold | chromium | 11170 | 19651 | 1092 | 4844 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (5274) |
 | 2026-07-31T20:13:33Z | 922e3ce364 | ⚠ | warm-cold | chromium | 10169 | 14170 | 328 | 5546 | 29.6 | 422 | `org.dxos.plugin.client.module.Client` (3906) |
 | 2026-07-31T20:13:59Z | 922e3ce364 | ⚠ | cold | chromium | 9281 | 14256 | 324 | 4514 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3866) |
+| 2026-07-31T20:15:25Z | 22fbfd11b2 |  | cold | chromium | 8913 | 13424 | 276 | 4207 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3660) |
+| 2026-07-31T20:16:50Z | 22fbfd11b2 | ⚠ | cold | chromium | 9172 | 13433 | 280 | 4038 | 27.8 | 365 | `org.dxos.plugin.client.module.Client` (3607) |
+| 2026-07-31T20:18:23Z | 22fbfd11b2 | ⚠ | cold | chromium | 9339 | 14283 | 292 | 4209 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3635) |
+| 2026-07-31T20:19:48Z | 22fbfd11b2 | ⚠ | cold | chromium | 9356 | 13509 | 260 | 4237 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3492) |
+| 2026-07-31T20:21:12Z | 22fbfd11b2 | ⚠ | cold | chromium | 8534 | 13089 | 320 | 4234 | 27.8 | 367 | `org.dxos.plugin.client.module.Client` (3385) |
+| 2026-07-31T20:24:11Z | 22fbfd11b2 | ⚠ | cold | chromium | 9313 | 14155 | 296 | 3251 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3703) |
+| 2026-07-31T20:25:36Z | 22fbfd11b2 | ⚠ | cold | chromium | 8824 | 12907 | 272 | 3134 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3578) |
+| 2026-07-31T20:26:15Z | 22fbfd11b2 | ⚠ | warm-cold | chromium | 9638 | 14615 | 312 | 4005 | 29.6 | 422 | `org.dxos.plugin.client.module.Client` (3783) |
+| 2026-07-31T20:26:41Z | 22fbfd11b2 | ⚠ | cold | chromium | 9483 | 13877 | 312 | 3256 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3771) |
+| 2026-07-31T20:28:06Z | 22fbfd11b2 | ⚠ | cold | chromium | 8879 | 13683 | 292 | 3278 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3817) |
+| 2026-07-31T20:29:31Z | 22fbfd11b2 | ⚠ | cold | chromium | 8968 | 13489 | 264 | 3280 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3493) |
+| 2026-07-31T20:31:02Z | 22fbfd11b2 | ⚠ | cold | chromium | 9278 | 13604 | 312 | 3014 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3805) |
+| 2026-07-31T20:32:28Z | 22fbfd11b2 | ⚠ | cold | chromium | 9308 | 13709 | 308 | 3203 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3781) |
+| 2026-07-31T20:33:53Z | 22fbfd11b2 | ⚠ | cold | chromium | 8892 | 13540 | 312 | 3102 | 27.8 | 366 | `org.dxos.plugin.client.module.Client` (3534) |

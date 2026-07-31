@@ -156,6 +156,10 @@ test.describe.serial('Startup timing harness', () => {
         await objectForm.getByTestId('save-button').click();
       }
       await primerPage.locator('.cm-content').first().waitFor({ timeout: 30_000 });
+      // A returning user reloads the URL they were on; the root URL would open home without
+      // restoring the primed document plank (and the editor milestone would never fire).
+      const measuredUrl = new URL(primerPage.url());
+      measuredUrl.searchParams.set('profiler', '1');
       await primer.close();
 
       // Re-launch with the same `userDataDir`. IDB persists; module cache is
@@ -165,7 +169,7 @@ test.describe.serial('Startup timing harness', () => {
       const network = trackNetwork(page);
       await observeLongTasks(page);
       const start = Date.now();
-      await page.goto(`${INITIAL_URL}/?profiler=1`);
+      await page.goto(measuredUrl.toString());
       await waitForReady(page);
       const navigationToReady = Date.now() - start;
       // Golden anchor: the primed document's editor must mount before collection so

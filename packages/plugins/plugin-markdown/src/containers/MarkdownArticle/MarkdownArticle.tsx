@@ -395,12 +395,13 @@ const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: s
   const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
   const view = controller?.view;
   useEffect(() => {
+    // Boot-waterfall milestone (once per page): the first editor can accept input from here —
+    // the "time to first meaningful action" anchor for the returning-user entry path. Marked on
+    // the view alone: the EditorViews registry is an optional capability and must not gate it.
+    if (view && performance.getEntriesByName('milestone:first-editor-interactive').length === 0) {
+      performance.mark('milestone:first-editor-interactive');
+    }
     if (view && editorViews) {
-      // Boot-waterfall milestone (once per page): the first editor can accept input from here —
-      // the "time to first meaningful action" anchor for the returning-user entry path.
-      if (performance.getEntriesByName('milestone:first-editor-interactive').length === 0) {
-        performance.mark('milestone:first-editor-interactive');
-      }
       editorViews.register(attendableId ?? id, view, id);
       return () => editorViews.unregister(attendableId ?? id);
     }
