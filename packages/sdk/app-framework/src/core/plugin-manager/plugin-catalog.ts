@@ -9,11 +9,11 @@ import * as PubSub from 'effect/PubSub';
 
 import { log } from '@dxos/log';
 
+import * as Plugin from '../plugin';
+import type * as PluginRegistry from '../registry';
 import { type ActivationScheduler } from './activation-scheduler';
 import { type ManagerState } from './manager-state';
 import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
-import * as Plugin from './plugin';
-import type * as PluginRegistry from './registry';
 
 /** Host configuration passed through from `ManagerOptions`. */
 export type PluginCatalogOptions = {

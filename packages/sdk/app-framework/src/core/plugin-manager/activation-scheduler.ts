@@ -13,14 +13,14 @@ import * as Ref from 'effect/Ref';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import * as ActivationEvent from './activation-event';
+import * as ActivationEvent from '../activation-event';
+import type * as Capability from '../capability';
+import type * as CapabilityManager from '../capability-manager';
+import { DependencyCycleError, DuplicateProviderError, MissingProviderError } from '../errors';
+import type * as Plugin from '../plugin';
 import * as ActivationGraph from './activation-graph';
-import type * as Capability from './capability';
-import type * as CapabilityManager from './capability-manager';
-import { DependencyCycleError, DuplicateProviderError, MissingProviderError } from './errors';
 import { type ManagerState } from './manager-state';
 import { type ModuleLoader, together } from './module-loader';
-import type * as Plugin from './plugin';
 
 /**
  * The activation lifecycle engine: owns {@link start} / {@link activate} /

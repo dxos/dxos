@@ -11,7 +11,8 @@ import * as Ref from 'effect/Ref';
 
 import { log } from '@dxos/log';
 
-import * as ActivationEvent from './activation-event';
+import * as ActivationEvent from '../activation-event';
+import type * as Plugin from '../plugin';
 import {
   type ActivationMessage,
   type PluginFailure,
@@ -20,7 +21,6 @@ import {
   type PluginInitializationError,
   PluginTimeoutError,
 } from './manager-types';
-import type * as Plugin from './plugin';
 
 /**
  * The plugin manager's shared substrate, owned by no single unit: the observable state, the

@@ -15,12 +15,12 @@ import * as Scope from 'effect/Scope';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import * as Capability from './capability';
-import * as CapabilityManager from './capability-manager';
-import { CapabilityNotFoundError, ProvidesMismatchError } from './errors';
+import * as Capability from '../capability';
+import * as CapabilityManager from '../capability-manager';
+import { CapabilityNotFoundError, ProvidesMismatchError } from '../errors';
+import * as Plugin from '../plugin';
 import { type ManagerState } from './manager-state';
 import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
-import * as Plugin from './plugin';
 
 /**
  * Owns the per-module load pipeline and its bookkeeping: memoized loads (id -> Deferred),

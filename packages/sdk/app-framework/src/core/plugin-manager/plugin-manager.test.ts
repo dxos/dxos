@@ -20,11 +20,11 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
-import { ActivationEvents } from '../common';
-import * as ActivationEvent from './activation-event';
-import * as Capability from './capability';
-import { DependencyCycleError, DuplicateProviderError, MissingProviderError, ProvidesMismatchError } from './errors';
-import * as Plugin from './plugin';
+import { ActivationEvents } from '../../common';
+import * as ActivationEvent from '../activation-event';
+import * as Capability from '../capability';
+import { DependencyCycleError, DuplicateProviderError, MissingProviderError, ProvidesMismatchError } from '../errors';
+import * as Plugin from '../plugin';
 import * as PluginManager from './plugin-manager';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');

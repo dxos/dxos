@@ -50,9 +50,14 @@ import * as Ref from 'effect/Ref';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import type * as ActivationEvent from './activation-event';
+import type * as ActivationEvent from '../activation-event';
+import * as CapabilityManager from '../capability-manager';
+import * as Plugin from '../plugin';
+// Imported with a `PluginRegistry` alias because the unrelated `@effect-atom/atom-react`
+// `Registry` is already imported above; from outside this file the namespace is
+// re-exported as `Registry` via `./index.ts`.
+import * as PluginRegistry from '../registry';
 import { ActivationScheduler } from './activation-scheduler';
-import * as CapabilityManager from './capability-manager';
 import { ManagerState } from './manager-state';
 import {
   type ActivationMessage,
@@ -63,12 +68,7 @@ import {
   PluginTimeoutError,
 } from './manager-types';
 import { ModuleLoader } from './module-loader';
-import * as Plugin from './plugin';
 import { PluginCatalog } from './plugin-catalog';
-// Imported with a `PluginRegistry` alias because the unrelated `@effect-atom/atom-react`
-// `Registry` is already imported above; from outside this file the namespace is
-// re-exported as `Registry` via `./index.ts`.
-import * as PluginRegistry from './registry';
 
 // Shared with the manager's collaborating units; the canonical public surface stays here.
 export { PluginInitializationError, PluginTimeoutError } from './manager-types';

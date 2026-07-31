@@ -4,8 +4,8 @@
 
 import { Graph, GraphModel } from '@dxos/graph';
 
-import type * as Capability from './capability';
-import type * as Plugin from './plugin';
+import type * as Capability from '../capability';
+import type * as Plugin from '../plugin';
 
 //
 // Pure ordering logic for the activation scheduler, built on the shared `@dxos/graph` model.

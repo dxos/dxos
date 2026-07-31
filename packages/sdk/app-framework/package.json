@@ -44,8 +44,8 @@
       "import": "./dist/lib/core/plugin.mjs"
     },
     "./PluginManager": {
-      "source": "./src/core/plugin-manager.ts",
-      "types": "./dist/types/src/core/plugin-manager.d.ts",
+      "source": "./src/core/plugin-manager/index.ts",
+      "types": "./dist/types/src/core/plugin-manager/index.d.ts",
       "import": "./dist/lib/core/plugin-manager.mjs"
     },
     "./UrlLoader": {
