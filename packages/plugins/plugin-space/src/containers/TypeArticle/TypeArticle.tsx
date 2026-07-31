@@ -19,7 +19,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
 import { CardAnnotation } from '@dxos/schema';
-import { getStyles } from '@dxos/ui-theme';
+import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -63,19 +63,21 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     extract: (object) => Obj.getLabel(object) ?? '',
   });
 
-  const duplicates = useDuplicates({ space, type, objects, enabled: layout === 'duplicates' });
-
   // Selection is keyed by the type's own URI — the same id the 'selected-objects' companion resolves
   // from its `companionTo` (see react-surface.tsx), so cards, table rows and the companion agree.
   const selectedIds = useSelection(typeUri, 'multi');
   const { multi: setSelectedObjects, toggle: toggleSelected } = useSelectionActions(typeUri);
 
-  // Duplicates is offered only for types some plugin registered an identity rule for — there is
-  // nothing to scan otherwise.
+  // TODO(burdon): Factor out as an aspect?
+  const duplicates = useDuplicates({ space, type, objects, enabled: layout === 'duplicates' });
+
+  // Duplicates is offered only for types some plugin registered an identity rule for:
+  // there is nothing to scan otherwise.
   const layouts = useMemo(
     () => LAYOUTS.filter(({ value }) => value !== 'duplicates' || duplicates.spec),
     [duplicates.spec],
   );
+
   const duplicatesGroup = useDuplicatesGroup({
     ns: meta.profile.key,
     typeUri,
@@ -113,6 +115,18 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     }
   }, [objects, selectedIds, invokePromise, space.id, setSelectedObjects]);
 
+  // Stable identity: `DynamicTable` rebuilds its model whenever `features` changes, so an inline
+  // literal here would discard and re-seed the table's selection on every render.
+  const tableFeatures = useMemo(
+    () => ({
+      selection: { enabled: true, mode: 'multiple' as const },
+      dataEditable: true,
+      schemaEditable: false,
+      pinColumns: 1,
+    }),
+    [],
+  );
+
   // Table rows are editable, so opening a row is a deliberate row action rather than `onRowClick`
   // (which would fire on every cell click and fight with in-cell editing).
   const rowActions = useMemo(
@@ -140,18 +154,17 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
           layout === 'table' &&
             selectedIds.length > 0 &&
             ((builder) => {
-              builder
-                .action(
-                  'delete-selected',
-                  {
-                    label: ['delete-selected.label', { ns: meta.profile.key, count: selectedIds.length }],
-                    icon: 'ph--trash--regular',
-                  },
-                  handleDeleteSelected,
-                )
-                .separator('gap');
+              builder.action(
+                'delete-selected',
+                {
+                  label: ['delete-selected.label', { ns: meta.profile.key, count: selectedIds.length }],
+                  icon: 'ph--trash--regular',
+                },
+                handleDeleteSelected,
+              );
             }),
         )
+        .separator()
         .group(
           'layout',
           {
@@ -190,10 +203,8 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root role={role}>
-        <Panel.Toolbar classNames='flex'>
-          {layout !== 'duplicates' && (
-            <SearchList.Input placeholder={t('search-placeholder.label')} classNames='border grow' />
-          )}
+        <Panel.Toolbar classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
+          {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
           <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
             <Menu.Toolbar />
           </Menu.Root>
@@ -220,12 +231,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
             <DynamicTable
               type={type}
               rows={results}
-              features={{
-                selection: { enabled: true, mode: 'multiple' },
-                dataEditable: true,
-                schemaEditable: false,
-                pinColumns: 1,
-              }}
+              features={tableFeatures}
               rowActions={rowActions}
               // Seed from the shared selection so switching card → table keeps what was selected;
               // the table otherwise starts from its own empty model.

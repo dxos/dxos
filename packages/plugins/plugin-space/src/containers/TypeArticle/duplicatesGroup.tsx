@@ -98,38 +98,50 @@ export const useDuplicatesGroup = ({
           },
           handleAdvance,
         )
-        .separator('line')
-        .action(
-          'previous',
-          { label: ['previous-duplicate.label', { ns }], icon: 'ph--caret-left--regular', disabled: position <= 1 },
-          handlePrevious,
-        )
-        // The group counter is not an action; `custom` lets the graph carry it so the toolbar stays
-        // a single menu rather than a menu plus a hand-rolled toolbar for one label.
-        .action(
-          'position',
-          {
-            label: ['duplicates-position.label', { ns }],
-            variant: 'custom',
-            render: () => (
-              <span className='mli-1 text-description text-sm tabular-nums'>
-                {total === 0 ? '—' : `${position} / ${total}`}
-              </span>
-            ),
-          },
-          () => {},
-        )
-        .action(
-          'next',
-          { label: ['next-duplicate.label', { ns }], icon: 'ph--caret-right--regular', disabled: position >= total },
-          handleAdvance,
-        )
         .action(
           'rescan',
           { label: ['rescan-duplicates.label', { ns }], icon: 'ph--arrows-clockwise--regular' },
           handleRefresh,
         )
-        .separator('gap');
+        .subgraph((builder) =>
+          total === 0
+            ? []
+            : builder
+                .action(
+                  'previous',
+                  {
+                    label: ['previous-duplicate.label', { ns }],
+                    icon: 'ph--caret-left--regular',
+                    disabled: position <= 1,
+                  },
+                  handlePrevious,
+                )
+                // The group counter is not an action; `custom` lets the graph carry it so the toolbar stays
+                // a single menu rather than a menu plus a hand-rolled toolbar for one label.
+                .action(
+                  'position',
+                  {
+                    label: ['duplicates-position.label', { ns }],
+                    variant: 'custom',
+                    render: () => (
+                      <span className='text-description text-sm tabular-nums'>
+                        {position} / {total}
+                      </span>
+                    ),
+                  },
+                  () => {},
+                )
+                .action(
+                  'next',
+                  {
+                    label: ['next-duplicate.label', { ns }],
+                    icon: 'ph--caret-right--regular',
+                    disabled: position >= total,
+                  },
+                  handleAdvance,
+                ),
+        )
+        .separator();
     },
     [ns, current.length, position, total, handleMerge, handleAdvance, handlePrevious, handleRefresh],
   );

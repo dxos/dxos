@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { useManagerOptional, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
@@ -53,10 +53,11 @@ export const useTableModel = <T extends TableRow = TableRow>({
   const registry = useContext(RegistryContext);
   const viewState = useManagerOptional();
   const selected = useSelection(object && Obj.getURI(object), 'multi');
-  // Snapshot once per table object: this seeds the model, and re-running it on every selection
-  // change would rebuild the model underneath the user.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const initialSelection = useMemo(() => [...(selection ?? selected)], [object]);
+  // Read at construction time, not frozen into the effect's deps. The model is rebuilt whenever any
+  // of its inputs change identity, and each rebuild re-seeds from here — a frozen snapshot would
+  // reset the selection to whatever it was when the table mounted, discarding the user's clicks.
+  const initialSelection = useRef<readonly string[]>(selection ?? selected);
+  initialSelection.current = selection ?? selected;
 
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
@@ -75,7 +76,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
         change: createEchoChangeCallback<T>(object),
         features,
         rowActions,
-        initialSelection,
+        initialSelection: [...initialSelection.current],
         onRowAction,
         ...props,
       });
@@ -88,7 +89,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       void model?.close();
     };
     // TODO(burdon): Trigger if callbacks change?
-  }, [registry, viewState, object, projection, features, rowActions, initialSelection]);
+  }, [registry, viewState, object, projection, features, rowActions]);
 
   // Update data when rows change.
   useEffect(() => {
