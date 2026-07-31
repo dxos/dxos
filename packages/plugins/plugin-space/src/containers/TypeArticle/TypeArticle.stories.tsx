@@ -170,7 +170,8 @@ const meta = {
         // and the state atom the space plugin would normally contribute.
         Capability.contributes(Capabilities.OperationHandler, SpaceOperationHandlerSet),
         Capability.contributes(SpaceCapabilities.EphemeralState, ephemeralState()),
-        // The plugin contributes these itself in the app; the story has no plugin-space modules.
+        // plugin-inbox contributes these in the app (it owns the types this materialises); the story
+        // runs no plugins that would.
         Capability.contributes(SpaceCapabilities.IdentitySpec, personIdentitySpec),
         Capability.contributes(SpaceCapabilities.IdentitySpec, organizationIdentitySpec),
       ],

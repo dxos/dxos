@@ -10,7 +10,6 @@ export { makeCreateObjectEntryForDatabaseType } from '../util';
 
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const IdentityCreated = Capability.lazy('IdentityCreated', () => import('./identity-created'));
-export const IdentitySpecs = Capability.lazy('IdentitySpecs', () => import('./identity-specs'));
 export { NavigationHandler } from './navigation-handler';
 export type { NavigationHandlerOptions } from './navigation-handler';
 export const NavigationTargetResolver = Capability.lazy(
