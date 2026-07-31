@@ -55,12 +55,66 @@ New findings beyond the planned questions (details in [MAP.md](./MAP.md)):
 - 44% of the measured population (200/456 modules) is labs-tier — production boots ~235 + deps;
   trend lines must separate the two populations
 
-## Phase 2 — derive the implementation phases
+## Phase 2 — implementation waves (ordering ratified 2026-07-31)
 
-- [ ] Authored FROM the completed map — priority ordering drafted in MAP.md §"Phase 2
-      priorities": (1) critical-chain membership fixes (ClientReady async, ProcessManager audit,
-      drop its OperationHandler require), (2) byte hygiene (typescript/onnx/defuddle/fast-check/
-      SPARQL/emoji), (3) the MakerOptions declaration substrate (`roles`/`handles`/`urlKeys`) +
-      two miss hooks + TypePresent watcher, then family flips in byte order, (4) tier-aware
-      trend line. The warm-reload-race prerequisite still applies to any scheduling change
-      (round-barrier restructuring).
+Target state per family ratified in conversation (translations/schema/pluginAsset/settings stay
+eager; per-family verdicts and measured sizing in MAP.md and the target table). Waves in order:
+
+### Wave 1 — activation-event deferral of the four families (~6.1 MB / 431 chunks off eager boot)
+
+Move `operationHandler`, `reactSurface`, `createObject`, `skillDefinition` off startup
+(131 chunk-bearing modules of 244 total; combined removal measured at 6.1 MB of the 21.5 MB
+boot JS). Substrate per SUBSTRATE.md:
+
+- [ ] `MakerOptions`/`ModuleSpec` declaration field (`roles`, `handles`) next to `activatesOn`
+- [ ] operationHandler → on-demand per operation: invoker `NoHandlerError` → pull-then-retry
+      hook; un-pin the three `requires` barriers (`ProcessManagerPlugin.ts:16` drop,
+      `plugin-routine` RegistrySync + `plugin-deck` NotificationTracker → event-mode on
+      SpacesReady); fix the `layer-specs.ts:55` one-shot snapshot
+- [ ] reactSurface → activation event per declared role; surface-miss → activate → suspend on
+      the existing `placeholder`; `Surface.useIsAvailable` consults declared roles; follow-up:
+      `React.lazy` component split (surface chunks statically import containers today)
+- [ ] createObject → event on create-flow open; fix the untracked `getAll` in
+      `plugin-space/.../extensions/database.ts:346` first
+- [ ] skillDefinition → assistant-activation event; headless-routine caveat: toolkit
+      materialization must pull (or fire the event) so trigger-fired routines keep skills
+- [ ] Validate each flip with the startup harness (cold + warm-cold) and the
+      first-interaction-latency probe on the deferred path
+
+### Wave 2 — lightweight operation definitions ([DEFINITIONS-AUDIT.md](./DEFINITIONS-AUDIT.md))
+
+No definition file is lightweight today (~576-file floor; confirmed-shipping leaks ≈ 2–2.5 MB
+wire in the eager core). Fix rules 1–5 in the audit doc:
+
+- [ ] Tag/implementation split for services referenced by definitions (pipeline-rdf `FactStore`
+      exemplar — the 1.5 MB SPARQL chunk; `@dxos/ai` resolvers unreachable from its type surface)
+- [ ] Definitions never import a plugin's main barrel — cross-plugin refs via `/types`
+      (`Mailbox.ts` → plugin-connector barrel is the exemplar)
+- [ ] Type directories value-free (`ui-editor/src/types/types.ts` value-imports
+      `@codemirror/view` — 510 KB of CodeMirror at boot)
+- [ ] `Operation` importable without the `@dxos/compute` barrel (subpath, or decouple
+      `Header.ts` from `@effect/platform/HttpClient`) — decision owed: subpath vs decouple
+- [ ] Drop the static `export { XOperationHandlerSet } from './operations'` from all 97
+      `plugin.ts` stubs (sole external consumer is the node CLI — give it its own entry)
+- [ ] Promote `audit-opdefs.py` to a CI budget check (fails on new heavy externals / closure
+      growth) — prerequisite hardening for the `handles` declaration field
+
+### Wave 3 — eager-core UI laziness audit
+
+Components loaded before `main()` that should be lazy. Known from the chunk graph:
+
+- [ ] `ResetDialog` lazy (`main.tsx:32` static import drags `react-ui-form` → emoji-mart 479 KB,
+      motion, mdast/mermaid, ajv/zod — ~2 MB for a fatal-error dialog)
+- [ ] Sweep the rest of `main`'s 9 MB / 874-chunk static closure for same-shape offenders
+      (audit method: chunk-stats static closure of the entry, biggest facades first)
+- [ ] fast-check in production: `@effect/ai`'s `LanguageModel` → `Arbitrary` → fast-check
+      (298 KB) — investigate whether the Arbitrary path is test-only upstream, can be
+      externalized/stubbed in the build, or needs an upstream issue
+
+### Later / standing
+
+- [ ] Critical-chain membership fixes (MAP.md P0): `observability.ClientReady` async body,
+      `ProcessManager` activate audit — can land independently of the waves
+- [ ] appGraphBuilder post-shell event — deliberately deferred until wave 1's win is measured
+- [ ] Tier-aware per-commit trend line (Phase 1 leftover)
+- [ ] Warm-reload race root-cause — still gates any scheduling change (round barriers)
