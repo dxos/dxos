@@ -11,9 +11,10 @@ import { Event } from '@dxos/async';
 import { assertArgument } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlTransaction } from '@dxos/sql-sqlite';
+import { SqlMigrator, SqlTransaction } from '@dxos/sql-sqlite';
 
 import { PositionConflictError } from './errors';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
@@ -61,58 +62,17 @@ export class FeedStore {
   readonly onNewBlocks = new Event<void>();
 
   /**
-   * Creates required feed store tables and indexes if they do not exist.
+   * Applies any migrations this database has not recorded yet.
+   *
+   * Databases created before migration tracking existed already hold the tables from migration 1,
+   * so they are stamped rather than re-run; `feeds` is the marker for that.
    */
   migrate = Effect.fn('FeedStore.migrate')(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-
-      // Feeds Table
-      yield* sql`CREATE TABLE IF NOT EXISTS feeds (
-        feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
-        spaceId TEXT NOT NULL,
-        feedId TEXT NOT NULL,
-        feedNamespace TEXT
-      )`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)`;
-
-      // Blocks Table
-      yield* sql`CREATE TABLE IF NOT EXISTS blocks (
-        insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
-        feedPrivateId INTEGER NOT NULL,
-        position INTEGER,
-        sequence INTEGER NOT NULL,
-        actorId TEXT NOT NULL,
-        prevSequence INTEGER,
-        prevActorId TEXT,
-        timestamp INTEGER NOT NULL,
-        data BLOB NOT NULL,
-        FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
-      )`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId ON blocks(feedPrivateId, sequence, actorId)`;
-
-      // Subscriptions Table
-      yield* sql`CREATE TABLE IF NOT EXISTS subscriptions (
-          subscriptionId TEXT PRIMARY KEY,
-          expiresAt INTEGER NOT NULL,
-          feedPrivateIds TEXT NOT NULL -- JSON array
-      )`;
-
-      // Cursor Tokens Table
-      yield* sql`CREATE TABLE IF NOT EXISTS cursor_tokens (
-          spaceId TEXT PRIMARY KEY,
-          token TEXT NOT NULL
-      )`;
-
-      // Sync State Table.
-      yield* sql`CREATE TABLE IF NOT EXISTS sync_state (
-          spaceId TEXT NOT NULL,
-          feedNamespace TEXT NOT NULL,
-          lastPulledPosition INTEGER NOT NULL DEFAULT -1,
-          PRIMARY KEY (spaceId, feedNamespace)
-      )`;
-    }).pipe(Effect.withSpan('FeedStore.migrate')),
+    SqlMigrator.run({
+      table: MIGRATIONS_TABLE,
+      migrations: MIGRATIONS,
+      baseline: { throughId: 1, when: SqlMigrator.tableExists('feeds') },
+    }).pipe(Effect.asVoid, Effect.withSpan('FeedStore.migrate')),
   );
 
   /**

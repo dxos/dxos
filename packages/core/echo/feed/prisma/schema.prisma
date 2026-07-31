@@ -1,0 +1,69 @@
+// Schema for the feed store's tables. Generates `src/migrations/schema.sql` via
+// `moon run feed:prisma`; no prisma client is generated and none ships to the runtime.
+//
+// Column types, table names, and index names must stay byte-compatible with databases
+// created by earlier releases, so models carry explicit `@@map` / `map:` names and
+// timestamps are `Int` (epoch milliseconds), never `DateTime`.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Feed {
+  feedPrivateId Int     @id @default(autoincrement())
+  spaceId       String
+  feedId        String
+  feedNamespace String?
+
+  blocks Block[]
+
+  @@unique([spaceId, feedId], map: "idx_feeds_spaceId_feedId")
+  @@map("feeds")
+}
+
+model Block {
+  insertionId   Int     @id @default(autoincrement())
+  feedPrivateId Int
+  position      Int?
+  sequence      Int
+  actorId       String
+  prevSequence  Int?
+  prevActorId   String?
+  timestamp     Int
+  data          Bytes
+
+  // NoAction rather than prisma's default (RESTRICT / CASCADE) to match the unqualified
+  // `FOREIGN KEY` this table was originally created with.
+  feed Feed @relation(fields: [feedPrivateId], references: [feedPrivateId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([feedPrivateId, position], map: "idx_blocks_feedPrivateId_position")
+  @@unique([feedPrivateId, sequence, actorId], map: "idx_blocks_feedPrivateId_sequence_actorId")
+  @@map("blocks")
+}
+
+model Subscription {
+  subscriptionId String @id
+  expiresAt      Int
+
+  /// JSON array.
+  feedPrivateIds String
+
+  @@map("subscriptions")
+}
+
+model CursorToken {
+  spaceId String @id
+  token   String
+
+  @@map("cursor_tokens")
+}
+
+model SyncState {
+  spaceId            String
+  feedNamespace      String
+  lastPulledPosition Int    @default(-1)
+
+  @@id([spaceId, feedNamespace])
+  @@map("sync_state")
+}

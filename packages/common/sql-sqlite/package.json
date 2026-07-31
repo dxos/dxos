@@ -53,6 +53,16 @@
       "types": "./dist/types/src/SqlTransaction.d.ts",
       "browser": "./dist/lib/browser/SqlTransaction.mjs",
       "node": "./dist/lib/node-esm/SqlTransaction.mjs"
+    },
+    "./SqlMigrations": {
+      "types": "./dist/types/src/SqlMigrations.d.ts",
+      "browser": "./dist/lib/browser/SqlMigrations.mjs",
+      "node": "./dist/lib/node-esm/SqlMigrations.mjs"
+    },
+    "./SqlMigrator": {
+      "types": "./dist/types/src/SqlMigrator.d.ts",
+      "browser": "./dist/lib/browser/SqlMigrator.mjs",
+      "node": "./dist/lib/node-esm/SqlMigrator.mjs"
     }
   },
   "files": [

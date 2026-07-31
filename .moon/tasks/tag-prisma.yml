@@ -1,0 +1,27 @@
+# For packages whose SQLite schema is authored as a prisma schema.
+# The `prisma` task generates idempotent DDL into `src/migrations/`; stores import that SQL
+# with `?raw` and apply it via `applyMigrations`. Prisma is build-time only — no
+# `@prisma/client` and no query engine ship to the runtime.
+
+$schema: https://moonrepo.dev/schemas/tasks.json
+
+# moon v2 no longer scopes task files by filename; scope by tag explicitly.
+inheritedBy:
+  tags: ['prisma']
+
+tasks:
+  prisma:
+    options:
+      internal: true
+    command: node $workspaceRoot/scripts/prisma-generate-sql.mjs
+    inputs:
+      - /scripts/prisma-generate-sql.mjs
+      - 'prisma/**/*.prisma'
+    outputs:
+      - src/migrations/
+
+  # `deps` merges by append, so this adds to the build deps declared in tag-ts-vite-build.yml
+  # rather than replacing them. There is no `prebuild` meta-task in this repo.
+  build:
+    deps:
+      - prisma
