@@ -2053,6 +2053,69 @@ class ManagerImpl implements PluginManager {
    * resolve to their implementation (waiting — bounded by the activation timeout — for
    * concurrent providers), multi capabilities to their live contributions view.
    */
+  /**
+   * Awaits providers of this module's multi requires whose load is already in flight in a
+   * concurrent round, and ingests their contributions before this module's activate runs.
+   * Soft-edge ordering only covers providers inside one round — a provider mid-load in a
+   * concurrent round (the startup dependency graph while an event-triggered pull runs) is
+   * dropped from the pulled round's candidates entirely, so without this a one-shot snapshot
+   * read (e.g. the process manager's `Capabilities.LayerSpec` collection) races the provider's
+   * contribution. Bounded by the activation timeout so a multi-capability cycle (legal — multi
+   * requires never hard-gate) degrades to today's behaviour instead of deadlocking.
+   */
+  private _settleInflightMultiProviders(module: Plugin.PluginModule): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      const multiIdentifiers = new Set(
+        module.activation.requires
+          .filter((capability) => capability.arity === 'multi')
+          .map((capability) => capability.identifier),
+      );
+      if (multiIdentifiers.size === 0) {
+        return;
+      }
+      const inflight = this._get(this._modulesAtom).filter(
+        (provider) =>
+          provider.id !== module.id &&
+          !this._capabilities.has(provider.id) &&
+          this._moduleMemoMap.has(provider.id) &&
+          provider.activation.provides.some((provided) => multiIdentifiers.has(provided.identifier)),
+      );
+      if (inflight.length === 0) {
+        return;
+      }
+      log('waiting for in-flight multi providers', { module: module.id, providers: inflight.map((m) => m.id) });
+      yield* Effect.forEach(
+        inflight,
+        (provider) =>
+          Effect.gen(this, function* () {
+            const deferred = this._moduleMemoMap.get(provider.id);
+            if (deferred === undefined) {
+              return;
+            }
+            const capabilities = yield* Deferred.await(deferred);
+            // Idempotent (memoized per module): the provider's own round contributes the same
+            // entries as a no-op when it gets there.
+            yield* this._contributeCapabilities(provider, capabilities);
+          }).pipe(
+            // A provider that failed to activate resolves to nothing here; its failure is
+            // recorded and surfaced by its own load fiber.
+            Effect.ignore,
+          ),
+        { concurrency: 'unbounded', discard: true },
+      ).pipe(
+        Effect.timeout(this._activationTimeout),
+        Effect.catchAll(() =>
+          Effect.sync(() =>
+            log.warn('proceeding without in-flight multi providers', {
+              module: module.id,
+              providers: inflight.map((m) => m.id),
+            }),
+          ),
+        ),
+      );
+    });
+  }
+
   private _resolveRequires(module: Plugin.PluginModule): Effect.Effect<Context.Context<never>, Error> {
     return Effect.gen(this, function* () {
       const spec = module.activation;
@@ -2127,6 +2190,7 @@ class ManagerImpl implements PluginManager {
           performance.mark(`module:${module.id}:start`);
           yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activating', module: module.id });
           const pluginId = this._getPluginIdForModule(module.id);
+          yield* this._settleInflightMultiProviders(module);
           const requiresContext = yield* this._resolveRequires(module);
           const [duration, capabilities] = yield* module.activate().pipe(
             Effect.provide(requiresContext),

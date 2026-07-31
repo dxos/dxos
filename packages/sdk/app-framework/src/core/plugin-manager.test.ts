@@ -2344,6 +2344,69 @@ describe('PluginManager', () => {
       }),
     );
 
+    it.effect('an event-pulled snapshot consumer waits for a multi provider in flight in the startup round', () =>
+      Effect.gen(function* () {
+        // Regression: an event fired while the startup dependency round is still activating pulls
+        // its providers into a *separate* scoped round. A multi provider mid-load in the startup
+        // round is dropped from that round's candidates (memoized load), taking its soft edge with
+        // it — so a snapshot consumer (e.g. the process manager reading `Capabilities.LayerSpec`)
+        // could take its one-shot `.get()` before the provider contributed.
+        const EventX = ActivationEvent.make('org.dxos.test.snapshotRace');
+        const providerStarted = yield* Deferred.make<void>();
+        const providerGate = yield* Deferred.make<void>();
+        let snapshot: readonly { widget: string }[] = [];
+
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            // Startup root, held open by the gate to keep the startup round in flight.
+            Plugin.addModule({
+              id: 'provider',
+              provides: [Widget],
+              activate: () =>
+                Effect.gen(function* () {
+                  yield* Deferred.succeed(providerStarted, undefined);
+                  yield* Deferred.await(providerGate);
+                  return [Capability.contribute(Widget, { widget: 'one' })];
+                }),
+            }),
+            // Snapshot consumer: singleton provider pulled on demand by the event below.
+            Plugin.addModule({
+              id: 'snapshotter',
+              requires: [Widget],
+              provides: [String],
+              activate: Effect.fnUntraced(function* () {
+                const contributions = yield* Widget;
+                snapshot = contributions.get();
+                return Capability.contribute(String, { string: 'snapshot' });
+              }),
+            }),
+            Plugin.addModule({
+              id: 'listener',
+              activatesOn: EventX,
+              requires: [String],
+              activate: () => Effect.succeed([]),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        const startFiber = yield* Effect.fork(manager.start());
+        yield* Deferred.await(providerStarted);
+
+        // Fire the event mid-startup: the pull round runs concurrently with the held-open
+        // startup round.
+        const eventFiber = yield* Effect.fork(manager.activate(EventX));
+        // Let the event fiber run to its snapshot (broken) or its provider wait (fixed) before
+        // the provider is released — otherwise the race can accidentally resolve correctly.
+        yield* Effect.yieldNow().pipe(Effect.repeatN(50));
+        yield* Deferred.succeed(providerGate, undefined);
+        yield* Fiber.join(eventFiber);
+        yield* Fiber.join(startFiber);
+
+        assert.deepStrictEqual(snapshot, [{ widget: 'one' }]);
+      }),
+    );
+
     it.effect('a multi consumer activates with an empty collection when no providers exist', () =>
       Effect.gen(function* () {
         let count = -1;
