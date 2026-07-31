@@ -3,4 +3,5 @@
 //
 
 export * from './Html';
-export * from './HtmlViewer';
+export * from './transform-colors';
+export * from './useEmailDialect';

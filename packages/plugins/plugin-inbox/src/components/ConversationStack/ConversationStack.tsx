@@ -14,14 +14,14 @@ import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
 import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
-import { HtmlViewer } from '@dxos/react-ui-components';
+import { Html, useEmailDialect } from '@dxos/react-ui-components';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
+import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 import { Mailbox, SystemTags } from '#types';
 
@@ -561,18 +561,16 @@ const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
     return { html: htmlText, markdown: markdownBlock ?? (htmlText ? normalizeText(htmlText) : plainText) };
   }, [message.blocks]);
 
+  // Both hooks run unconditionally — the markdown fallback below is a conditional *return*, not a
+  // conditional call. The dialect reads the raw html because the sender's color-scheme declaration
+  // does not survive sanitization.
+  const resolveSrc = useCidResolver(message.attachments, db);
+  const dialect = useEmailDialect({ html, isPersonal, resolveSrc });
+
   // The HTML view needs an html block; without one (e.g. a markdown-only body) fall through to the
   // markdown renderer.
   if (viewMode === 'html' && html) {
-    return (
-      <HtmlViewer
-        html={html}
-        loadRemoteImages={loadRemoteImages}
-        isPersonal={isPersonal}
-        attachments={message.attachments}
-        db={db}
-      />
-    );
+    return <Html html={html} loadRemoteImages={loadRemoteImages} dialect={dialect} />;
   }
 
   return <MarkdownViewer content={markdown} markdown={viewMode !== 'plain'} loadRemoteImages={loadRemoteImages} />;

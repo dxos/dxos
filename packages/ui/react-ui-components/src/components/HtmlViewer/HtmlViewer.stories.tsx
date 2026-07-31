@@ -3,25 +3,24 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { expect, waitFor } from 'storybook/test';
 
-import { Blob, Ref } from '@dxos/echo';
-import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type Message } from '@dxos/types';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { trim } from '@dxos/util';
 
 import m1 from './fixtures/m1.html?raw';
 import m2 from './fixtures/m2.html?raw';
-import { HtmlViewer } from './HtmlViewer';
+import { Html, type HtmlSrcResolver } from './Html';
+import { useEmailDialect } from './useEmailDialect';
 
 //
 // Samples
 //
 
 // A simple/personal email (no layout tables) — recolored to the app theme so it reads in light/dark.
-const PERSONAL_EMAIL = `
+const PERSONAL_EMAIL = trim`
   <div style="color:#202124;font-family:Georgia,serif">
     <p>Hi team,</p>
     <p>Following up on the
@@ -36,7 +35,7 @@ const PERSONAL_EMAIL = `
 
 // A marketing email built from layout tables with intentional brand colors — left as authored so its
 // design (colored header, button) is preserved rather than recolored.
-const MARKETING_EMAIL = `
+const MARKETING_EMAIL = trim`
   <table width="100%" style="background:#ffffff"><tr><td align="center">
     <table width="600" style="background:#f4f4f4;border-radius:8px;overflow:hidden">
       <tr><td style="background:#1a73e8;color:#ffffff;padding:24px;font-size:24px;font-family:Arial">
@@ -53,7 +52,7 @@ const MARKETING_EMAIL = `
   </td></tr></table>
 `;
 
-const REMOTE_IMAGE_EMAIL = `
+const REMOTE_IMAGE_EMAIL = trim`
   <div style="font-family:Arial;color:#202124">
     <p>Here is this week's banner:</p>
     <img src="https://picsum.photos/seed/dxos-mail/480/160" alt="banner" />
@@ -62,7 +61,7 @@ const REMOTE_IMAGE_EMAIL = `
 `;
 
 // A reply whose quoted history (Gmail's `.gmail_quote`) is collapsed behind the "•••" toggle.
-const REPLY_EMAIL = `
+const REPLY_EMAIL = trim`
   <div style="color:#202124;font-family:Arial">
     <p>Sounds good — I'll have the draft ready by Thursday.</p>
     <div class="gmail_quote">
@@ -75,14 +74,16 @@ const REPLY_EMAIL = `
   </div>
 `;
 
-const PLAINTEXT_EMAIL = `Hello,
+const PLAINTEXT_EMAIL = trim`
+Hello,
 
 This is a plain-text email, shown verbatim.
   - indented line one
   - indented line two
 
 Regards,
-Sam`;
+Kai
+`;
 
 /**
  * Named bodies the story renders. The hand-written ones isolate a single behaviour; `m1`/`m2` are real
@@ -90,16 +91,49 @@ Sam`;
  * rendering — sender stylesheets, nested layout tables, explicit `color-scheme` declarations.
  */
 const SAMPLES = {
-  personal: { html: PERSONAL_EMAIL, note: 'Simple body, no tables — recolored to the app theme.' },
-  reply: { html: REPLY_EMAIL, note: 'Quoted history collapsed behind the "•••" toggle.' },
-  marketing: { html: MARKETING_EMAIL, note: 'Layout tables — left as authored unless flagged personal.' },
-  plaintext: { html: PLAINTEXT_EMAIL, note: 'Not markup; shown verbatim in a <pre>.' },
-  remoteImage: { html: REMOTE_IMAGE_EMAIL, note: 'Remote image, blocked unless images are loaded.' },
-  m1: { html: m1, note: 'Captured: table layout, one sender stylesheet, no color-scheme declaration.' },
-  m2: { html: m2, note: 'Captured: declares color-scheme light — the sender has no dark rendering.' },
+  personal: {
+    html: PERSONAL_EMAIL,
+    note: 'Simple body, no tables — recolored to the app theme.',
+  },
+  reply: {
+    html: REPLY_EMAIL,
+    note: 'Quoted history collapsed behind the "•••" toggle.',
+  },
+  marketing: {
+    html: MARKETING_EMAIL,
+    note: 'Layout tables — left as authored unless flagged personal.',
+  },
+  plaintext: {
+    html: PLAINTEXT_EMAIL,
+    note: 'Not markup; shown verbatim in a <pre>.',
+  },
+  remoteImage: {
+    html: REMOTE_IMAGE_EMAIL,
+    note: 'Remote image, blocked unless images are loaded.',
+  },
+  m1: {
+    html: m1,
+    note: 'Captured: table layout, one sender stylesheet, no color-scheme declaration.',
+  },
+  m2: {
+    html: m2,
+    note: 'Captured: declares color-scheme light — the sender has no dark rendering.',
+  },
 };
 
 type SampleId = keyof typeof SAMPLES;
+
+type EmailBodyProps = {
+  html: string;
+  isPersonal?: boolean;
+  loadRemoteImages?: boolean;
+  resolveSrc?: HtmlSrcResolver;
+};
+
+/** What a caller writes: the sandbox plus the email dialect (see `useEmailDialect`). */
+const EmailBody = ({ html, isPersonal, loadRemoteImages, resolveSrc }: EmailBodyProps) => (
+  <Html html={html} loadRemoteImages={loadRemoteImages} dialect={useEmailDialect({ html, isPersonal, resolveSrc })} />
+);
 
 //
 // Story
@@ -128,7 +162,7 @@ const ThemePane = ({
       <ThemeProvider tx={tx} themeMode={mode}>
         <div className='bg-baseSurface text-baseText p-2 overflow-auto'>
           <div className='pb-1 text-xs uppercase tracking-wide text-description'>{mode}</div>
-          <HtmlViewer html={html} isPersonal={isPersonal} loadRemoteImages={loadRemoteImages} />
+          <EmailBody html={html} isPersonal={isPersonal} loadRemoteImages={loadRemoteImages} />
         </div>
       </ThemeProvider>
     </div>
@@ -157,7 +191,7 @@ const DefaultStory = ({ sample, isPersonal, loadRemoteImages, compare }: StoryPr
           <ThemePane mode='dark' html={html} isPersonal={isPersonal} loadRemoteImages={loadRemoteImages} />
         </div>
       ) : (
-        <HtmlViewer html={html} isPersonal={isPersonal} loadRemoteImages={loadRemoteImages} />
+        <EmailBody html={html} isPersonal={isPersonal} loadRemoteImages={loadRemoteImages} />
       )}
     </div>
   );
@@ -179,36 +213,82 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Personal: Story = { args: { sample: 'personal', isPersonal: true } };
+export const Personal: Story = {
+  args: {
+    sample: 'personal',
+    isPersonal: true,
+  },
+};
 
-export const Reply: Story = { args: { sample: 'reply', isPersonal: true } };
+export const Reply: Story = {
+  args: {
+    sample: 'reply',
+    isPersonal: true,
+  },
+};
 
-export const Marketing: Story = { args: { sample: 'marketing' } };
+export const Marketing: Story = {
+  args: {
+    sample: 'marketing',
+  },
+};
 
 /** A table-based body flagged personal — themed anyway, unlike `Marketing`. */
-export const PersonalTable: Story = { args: { sample: 'marketing', isPersonal: true } };
+export const PersonalTable: Story = {
+  args: {
+    sample: 'marketing',
+    isPersonal: true,
+  },
+};
 
-export const Plaintext: Story = { args: { sample: 'plaintext' } };
+export const Plaintext: Story = {
+  args: {
+    sample: 'plaintext',
+  },
+};
 
-export const RemoteImagesBlocked: Story = { args: { sample: 'remoteImage', loadRemoteImages: false } };
+export const RemoteImagesBlocked: Story = {
+  args: {
+    sample: 'remoteImage',
+    loadRemoteImages: false,
+  },
+};
 
-export const RemoteImagesLoaded: Story = { args: { sample: 'remoteImage', loadRemoteImages: true } };
+export const RemoteImagesLoaded: Story = {
+  args: {
+    sample: 'remoteImage',
+    loadRemoteImages: true,
+  },
+};
 
 /** Real mail, light vs dark. As delivered: a table layout is left as authored, so the app surface bleeds through. */
-export const Captured: Story = { args: { sample: 'm1', compare: true } };
+export const Captured: Story = {
+  args: {
+    sample: 'm1',
+    compare: true,
+  },
+};
 
 /** The same bodies with the recolor transform forced on, to judge it against real sender markup. */
-export const CapturedThemed: Story = { args: { sample: 'm1', isPersonal: true, compare: true } };
+export const CapturedThemed: Story = {
+  args: {
+    sample: 'm1',
+    isPersonal: true,
+    compare: true,
+  },
+};
 
 //
-// Inline cid: image
+// Unresolved src
 //
 
-// A signature image referenced inline via `cid:` (RFC 2392), as Gmail/JMAP attach it — resolved
-// against the message's `attachments` (see `EmailStage.processAttachments`/`AttachmentMetadata.contentId`).
+// A signature image referenced inline via `cid:` (RFC 2392), as Gmail/JMAP attach it. The sandbox does
+// not know what `cid:` means — it hands any non-http src to the dialect's resolver and swaps the result
+// in once it settles. The ECHO-backed resolver that maps a cid onto a message attachment lives with the
+// data layer (`plugin-inbox`'s `useCidResolver`) and is tested there.
 const INLINE_IMAGE_CONTENT_ID = 'inline-signature-1';
 
-const INLINE_IMAGE_EMAIL = `
+const INLINE_IMAGE_EMAIL = trim`
   <div style="font-family:Arial;color:#202124">
     <p>See the attached signature below.</p>
     <img id="inline-cid-image" src="cid:${INLINE_IMAGE_CONTENT_ID}" alt="signature" />
@@ -219,27 +299,12 @@ const INLINE_IMAGE_EMAIL = `
 const INLINE_PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
-const InlineCidImageStory = () => {
-  const { space } = useClientStory();
-  const [attachments, setAttachments] = useState<readonly Message.Attachment[] | undefined>(undefined);
+// Async on purpose: a real resolver is a database read, so the story exercises the swap-in-place path
+// rather than a synchronous substitution.
+const resolveInlineImage: HtmlSrcResolver = async (src) =>
+  src === `cid:${INLINE_IMAGE_CONTENT_ID}` ? `data:image/png;base64,${INLINE_PNG_BASE64}` : undefined;
 
-  useEffect(() => {
-    if (!space) {
-      return;
-    }
-    const bytes = Uint8Array.from(atob(INLINE_PNG_BASE64), (char) => char.charCodeAt(0));
-    const blob = space.db.add(Blob.make({ type: 'image/png', size: bytes.length, data: Blob.inlineData(bytes) }));
-    setAttachments([{ name: 'signature.png', ref: Ref.make(blob), contentId: INLINE_IMAGE_CONTENT_ID }]);
-  }, [space]);
-
-  if (!space || !attachments) {
-    return <Loading />;
-  }
-
-  return <HtmlViewer html={INLINE_IMAGE_EMAIL} isPersonal attachments={attachments} db={space.db} />;
-};
-
-/** Finds the element hosting the shadow root `HtmlViewer` attaches its content to. */
+/** Finds the element hosting the shadow root the content is attached to. */
 const findShadowHost = (root: Element): Element | undefined => {
   if (root.shadowRoot) {
     return root;
@@ -253,21 +318,14 @@ const findShadowHost = (root: Element): Element | undefined => {
   return undefined;
 };
 
-/**
- * The one story that can't be driven by args: the attachment has to be minted into a live space before
- * the body can resolve its `cid:` reference, so it supplies its own subject and client provider.
- */
-export const InlineCidImage: Story = {
-  render: () => <InlineCidImageStory />,
-  decorators: [withClientProvider({ types: [Blob.Blob], createIdentity: true, createSpace: true })],
+/** The one story not driven by the sample args: it supplies a resolver rather than a different body. */
+export const UnresolvedSrc: Story = {
+  render: () => <EmailBody html={INLINE_IMAGE_EMAIL} isPersonal resolveSrc={resolveInlineImage} />,
   play: async ({ canvasElement }) => {
-    await waitFor(
-      async () => {
-        const host = findShadowHost(canvasElement);
-        const image = host?.shadowRoot?.querySelector<HTMLImageElement>('#inline-cid-image');
-        await expect(image?.getAttribute('src')).toMatch(/^data:/);
-      },
-      { timeout: 12_000 },
-    );
+    await waitFor(async () => {
+      const host = findShadowHost(canvasElement);
+      const image = host?.shadowRoot?.querySelector<HTMLImageElement>('#inline-cid-image');
+      await expect(image?.getAttribute('src')).toMatch(/^data:/);
+    });
   },
 };

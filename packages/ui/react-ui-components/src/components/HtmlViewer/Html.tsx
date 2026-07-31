@@ -22,10 +22,15 @@ export type HtmlTransform = (root: HTMLElement) => void;
  */
 export type HtmlSrcResolver = (src: string) => Promise<string | undefined>;
 
-export type HtmlProps = ThemedClassName<{
-  html: string;
-  /** When false (default), remote image `src`s are stripped so tracking pixels don't load. */
-  loadRemoteImages?: boolean;
+/**
+ * Everything a kind of content needs beyond the sandbox itself. `Html` is fixed; a dialect is how
+ * email, RSS, a web clip, or agent-produced markup differ — so this is a value, not a subclass and not
+ * a `variant` enum (which would put every dialect's knowledge back inside the shared component).
+ *
+ * A dialect usually holds React state (expand refs, memoized resolvers), so it is built by a hook —
+ * see {@link useEmailDialect} — rather than declared as a constant.
+ */
+export type HtmlDialect = {
   /** Extra CSS injected into the shadow root, after the base rules. */
   css?: string;
   /** Content transforms, applied in order once the content is attached. */
@@ -34,6 +39,13 @@ export type HtmlProps = ThemedClassName<{
   resolveSrc?: HtmlSrcResolver;
   /** Tags removed during sanitization, on top of DOMPurify's defaults. */
   forbidTags?: readonly string[];
+};
+
+export type HtmlProps = ThemedClassName<{
+  html: string;
+  /** When false (default), remote image `src`s are stripped so tracking pixels don't load. */
+  loadRemoteImages?: boolean;
+  dialect?: HtmlDialect;
 }>;
 
 /** Tags that execute or phone home; a shadow root isolates style, not script. */
@@ -70,15 +82,8 @@ const isMarkup = (text: string): boolean =>
  * (collapsing quoted replies, recoloring to the theme, …) and `resolveSrc` resolves non-http `src`
  * references. This component owns only the sandbox.
  */
-export const Html = ({
-  html,
-  loadRemoteImages = false,
-  css,
-  transforms,
-  resolveSrc,
-  forbidTags,
-  classNames,
-}: HtmlProps) => {
+export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: HtmlProps) => {
+  const { css, transforms, resolveSrc, forbidTags } = dialect ?? {};
   // Rebuilt on theme change so transforms that read theme tokens (via computed style) re-run.
   const { themeMode } = useThemeContext();
   const hostRef = useRef<HTMLDivElement>(null);
