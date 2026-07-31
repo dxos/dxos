@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useEffect, useState } from 'react';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SPRITE_URL = '/icons.svg';
@@ -84,6 +84,9 @@ type RegistryState = {
   defs: SVGSVGElement;
   loaded: Set<string>;
   inflight: Map<string, Promise<void>>;
+  // Permanent misses (unsupported prefix, 404, malformed source) — never re-fetched, so a
+  // component that re-renders with a bad icon name doesn't produce repeated network churn.
+  failed: Set<string>;
   staticReady: Promise<void>;
 };
 
@@ -140,21 +143,27 @@ const resolveDynamic = async (state: RegistryState, name: string): Promise<void>
   if (!parsed || parsed.iconSet !== 'ph') {
     // For now, only auto-resolve Phosphor icons via the public /phosphor/ tree.
     // Custom prefixes (dx--, plugin namespaces) must be in the static sprite.
+    state.failed.add(name);
     return;
   }
   let svgText: string;
   try {
     const response = await fetch(buildPhosphorUrl(parsed.iconName, parsed.variant));
     if (!response.ok) {
+      if (response.status === 404) {
+        state.failed.add(name);
+      }
       return;
     }
     svgText = await response.text();
   } catch {
+    // Network errors are transient — leave the name eligible for a retry.
     return;
   }
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   const symbol = ingestSvgChildrenAsSymbol(doc.documentElement, name);
   if (!symbol) {
+    state.failed.add(name);
     return;
   }
   state.defs.appendChild(symbol);
@@ -173,6 +182,7 @@ const createRegistry = (): RegistryHandle => {
     defs,
     loaded: new Set<string>(),
     inflight: new Map<string, Promise<void>>(),
+    failed: new Set<string>(),
     staticReady: undefined as unknown as Promise<void>,
   };
   state.staticReady = loadStaticSprite(state).then(notify);
@@ -180,7 +190,7 @@ const createRegistry = (): RegistryHandle => {
   const registry: IconRegistry = {
     hasIcon: (name) => state.loaded.has(name),
     requestIcon: (name) => {
-      if (state.loaded.has(name) || state.inflight.has(name)) {
+      if (state.loaded.has(name) || state.inflight.has(name) || state.failed.has(name)) {
         return;
       }
       const promise = resolveDynamic(state, name)
@@ -214,17 +224,19 @@ export const IconRegistryProvider = ({ children }: PropsWithChildren) => {
     if (typeof document === 'undefined') {
       return;
     }
+    // Nested/multi-root mounts: remember the registry that was active before this provider so
+    // non-React consumers (e.g. <dx-icon>) fall back to it — not to nothing — on unmount.
+    const previousRegistry = getHost()[REGISTRY_GLOBAL];
     const handle = createRegistry();
     setActiveRegistry(handle.registry);
     setRegistry(handle.registry);
     return () => {
       if (getIconRegistry() === handle.registry) {
-        setActiveRegistry(undefined);
+        setActiveRegistry(previousRegistry);
       }
       handle.dispose();
     };
   }, []);
 
-  const value = useMemo(() => registry, [registry]);
-  return <IconRegistryContext.Provider value={value}>{children}</IconRegistryContext.Provider>;
+  return <IconRegistryContext.Provider value={registry}>{children}</IconRegistryContext.Provider>;
 };
