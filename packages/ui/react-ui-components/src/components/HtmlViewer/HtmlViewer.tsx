@@ -9,9 +9,9 @@ import React, { useMemo, useRef } from 'react';
 import { Blob, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Html, type HtmlSrcResolver, type HtmlTransform } from '@dxos/react-ui-html';
 import { type Message } from '@dxos/types';
 
+import { Html, type HtmlSrcResolver, type HtmlTransform } from './Html';
 import { type ThemeColorParams, cssColorToOklch, processEmailColors } from './transform-colors';
 
 export type HtmlViewerProps = ThemedClassName<{

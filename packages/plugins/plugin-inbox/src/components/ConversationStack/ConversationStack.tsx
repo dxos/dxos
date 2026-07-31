@@ -14,6 +14,7 @@ import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
 import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
+import { HtmlViewer } from '@dxos/react-ui-components';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { TagIndex } from '@dxos/schema';
@@ -26,7 +27,6 @@ import { Mailbox, SystemTags } from '#types';
 
 import { createDraftMessage, getMessageProps } from '../../util';
 import { EditMessage } from '../EditMessage';
-import { HtmlViewer } from '../HtmlViewer';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
 import { ExtractorMenuItem } from './useExtractorActions';

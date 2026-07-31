@@ -156,7 +156,6 @@
       "@dxos/react-ui-geo",
       "@dxos/react-ui-graph",
       "@dxos/react-ui-grid",
-      "@dxos/react-ui-html",
       "@dxos/react-ui-introspect",
       "@dxos/react-ui-list",
       "@dxos/react-ui-markdown",
