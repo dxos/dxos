@@ -4,7 +4,7 @@
 
 import { join } from 'path';
 
-import { createConfig, packages } from '../../.storybook/main';
+import { createConfig, packages } from '../../.storybook/main.ts';
 
 export default createConfig({
   stories: [
@@ -13,7 +13,6 @@ export default createConfig({
     join(packages, '/sdk/react-client/src/**/*.stories.tsx'),
     join(packages, '/sdk/shell/src/stories/*.stories.tsx'),
     join(packages, '/ui/react-ui-mosaic/src/**/*.stories.tsx'),
-    join(packages, '/ui/react-ui-stack/src/**/*.stories.tsx'),
     join(packages, '/ui/react-ui-table/src/**/*.stories.tsx'),
   ],
 });

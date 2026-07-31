@@ -3,28 +3,30 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
+import { type ReactVirtualizerOptions, type Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
 import React, {
   type FC,
-  forwardRef,
   Fragment,
   type ReactElement,
   type Ref,
+  forwardRef,
   useCallback,
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { type Axis, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { type GetId } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
-import { useVisibleItems } from '../../hooks';
+import { type VirtualizerPaginationController, useVirtualizerPagination, useVisibleItems } from '../../hooks';
 import { useMosaicContainerContext } from './Container';
 import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder';
 import { styles } from './styles';
 import { type MosaicTileProps } from './Tile';
-import { type GetId } from './types';
 
 //
 // Mosaic Drag-and-drop
@@ -87,9 +89,28 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
       currentId,
       selectedIds,
       registerScrollTo,
+      setActiveLocation,
     } = useMosaicContainerContext(MOSAIC_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
+
+    // Reserve the dragged item's slot the instant it leaves `visibleItems`. The source is removed a frame
+    // before any placeholder becomes active (the pointer still sits over the source, so no `onDragEnter`
+    // has fired), which collapses the stack by the item's height and flickers the following tiles upward.
+    // Activating the source-slot placeholder (location `index + 0.5`) in a layout effect fills the gap in
+    // the same commit, before paint.
+    const draggingSource = dragging?.source.data;
+    const sourceIndex = useMemo(() => {
+      if (!items || !draggingSource || draggingSource.containerId !== id) {
+        return -1;
+      }
+      return items.findIndex((item) => getId(item) === draggingSource.id);
+    }, [items, draggingSource, id, getId]);
+    useLayoutEffect(() => {
+      if (sourceIndex >= 0) {
+        setActiveLocation(sourceIndex + 0.5);
+      }
+    }, [sourceIndex, setActiveLocation]);
 
     const rootRef = useRef<HTMLDivElement>(null);
     const scrollToId = useCallback(
@@ -158,7 +179,12 @@ type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
   Pick<
     ReactVirtualizerOptions<HTMLElement, HTMLDivElement>,
     'estimateSize' | 'gap' | 'getScrollElement' | 'overscan' | 'onChange'
-  >;
+  > & {
+    /** Enables paginated loading; see `useVirtualizerPagination`. Requires `draggable={false}`. */
+    pagination?: VirtualizerPaginationController;
+    /** Rows from either loaded edge at which the adjacent page is requested. @default 12. */
+    paginationThreshold?: number;
+  };
 
 const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
   (
@@ -172,6 +198,8 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       getScrollElement,
       overscan = 8,
       gap,
+      pagination,
+      paginationThreshold,
       onChange,
       draggable = true,
       debug,
@@ -180,6 +208,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     forwardedRef,
   ) => {
     invariant(Tile);
+    invariant(!pagination || !draggable, 'pagination requires draggable={false}');
     const { id, dragging, currentId, selectedIds, registerScrollTo } =
       useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
@@ -191,14 +220,27 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       ? (index: number) => (index % 2 === 0 ? 0 : estimateSize(Math.floor(index / 2)))
       : estimateSize;
 
+    const { onChange: handlePaginationChange, leadingSpace } = useVirtualizerPagination({
+      items: visibleItems,
+      getId,
+      pagination,
+      threshold: paginationThreshold,
+    });
+    const handleChange = useCallback(
+      (nextVirtualizer: Virtualizer<any, any>, sync: boolean) => {
+        handlePaginationChange(nextVirtualizer);
+        onChange?.(nextVirtualizer, sync);
+      },
+      [handlePaginationChange, onChange],
+    );
+
     const virtualizer = useVirtualizer({
       // NOTE: When draggable we double the number of items to allow for placeholders.
       count: draggable ? visibleItems.length * 2 + 1 : visibleItems.length,
       estimateSize: wrappedEstimateSize,
       gap,
-      // Inset the stack from both ends by `gap` (matching the inter-item spacing). The virtualizer
-      // folds this into item offsets, getTotalSize(), and scrollToIndex, so no manual compensation.
-      paddingStart: gap,
+      // Inset by `gap` (inter-item spacing) plus any pagination spacer; see `useVirtualizerPagination`.
+      paddingStart: (gap ?? 0) + leadingSpace,
       paddingEnd: gap,
       // Key measurements by stable item ID so the size cache survives scrolling;
       // without this, measurements are indexed by position and are lost when items reorder.
@@ -207,7 +249,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
         : (index) => getId(visibleItems![index]),
       getScrollElement,
       overscan,
-      onChange,
+      onChange: handleChange,
     });
 
     // Register scroll-to-item via virtualizer index lookup.
@@ -353,4 +395,4 @@ InternalPlaceholder.displayName = 'InternalPlaceholder';
 
 export { MosaicStack, MosaicVirtualStack };
 
-export type { MosaicStackTileComponent, MosaicStackProps, MosaicVirtualStackProps };
+export type { MosaicStackProps, MosaicStackTileComponent, MosaicVirtualStackProps };

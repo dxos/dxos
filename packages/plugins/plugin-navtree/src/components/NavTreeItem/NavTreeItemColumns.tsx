@@ -4,7 +4,8 @@
 
 import React, { Fragment, memo, useMemo } from 'react';
 
-import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Treegrid } from '@dxos/react-ui-list';
 
 import { getListActions, useActions } from '#hooks';
 import { meta } from '#meta';

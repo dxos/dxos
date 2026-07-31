@@ -3,17 +3,18 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Blueprint } from '@dxos/compute';
+import { Project, Skill } from '@dxos/compute';
 import { Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useQuery, useRegistry } from '@dxos/react-client/echo';
+import { useRegistry } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useContextBinder } from '#hooks';
@@ -26,22 +27,22 @@ export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unkn
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role = 'article', subject: chat, companionTo, attendableId }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
-    const space = getSpace(companionTo);
-    useBlueprints({ subject: chat, companionTo });
+    const db = Obj.getDatabase(companionTo);
+    useSkills({ subject: chat, companionTo });
 
     // Persist (and flush) a transient chat before the first request so the agent can resolve
     // the now-durable conversation feed; subsequent submits are a no-op once persisted.
     const handleSubmit = useCallback(async () => {
-      if (!space || !chat || Obj.getDatabase(chat)) {
+      if (!db || !chat || Obj.getDatabase(chat)) {
         return;
       }
 
       await invokePromise(SpaceOperation.AddObject, {
         object: chat,
-        target: space.db,
+        target: db,
       });
       await invokePromise(SpaceOperation.AddRelation, {
-        db: space.db,
+        db,
         schema: Chat.CompanionTo,
         source: chat,
         target: companionTo,
@@ -50,8 +51,8 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         companionTo,
         chat,
       });
-      await space.db.flush();
-    }, [space, chat, companionTo, invokePromise]);
+      await db.flush();
+    }, [db, chat, companionTo, invokePromise]);
 
     return (
       <ChatArticle
@@ -67,60 +68,95 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
 );
 
 /**
- * Bind blueprints to the context.
+ * Bind skills to the context.
  */
 // TODO(burdon): Why is this only in the companion?
-const useBlueprints = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'subject' | 'companionTo'>) => {
+const useSkills = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'subject' | 'companionTo'>) => {
   const registry = useRegistry();
   const space = getSpace(companionTo);
-  const feedTarget = chat?.feed.target;
+  const [feedSnapshot] = useObject(chat?.feed);
+  const feedTarget = Obj.getReactiveOrUndefined(feedSnapshot);
   const binder = useContextBinder(space, feedTarget);
 
-  const blueprintKeys = useMemo(() => {
+  const skillKeys = useMemo(() => {
     const schema = companionTo ? Obj.getType(companionTo) : undefined;
     if (!schema) {
       return [] as string[];
     }
 
-    return Option.getOrElse(() => [] as string[])(AppAnnotation.BlueprintsAnnotation.get(Type.getSchema(schema)));
+    return Option.getOrElse(() => [] as string[])(AppAnnotation.SkillsAnnotation.get(Type.getSchema(schema)));
   }, [companionTo]);
 
-  const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
-  const pluginBlueprints = useMemo(
+  const existingSkills = useQuery(space?.db, Filter.type(Skill.Skill));
+  const pluginSkills = useMemo(
     () =>
-      existingBlueprints.filter((blueprint) => {
-        const key = Obj.getMeta(blueprint).key;
-        return key !== undefined && blueprintKeys.includes(key);
+      existingSkills.filter((skill) => {
+        const key = Obj.getMeta(skill).key;
+        return key !== undefined && skillKeys.includes(key);
       }),
-    [existingBlueprints, blueprintKeys],
+    [existingSkills, skillKeys],
   );
+
+  // Subscribe so a project's instructions ref resolving after the project object itself (e.g. loading
+  // over the wire) re-triggers the effects below, mirroring the `feedSnapshot` subscription above.
+  const [instructionsSnapshot] = useObject(
+    Obj.instanceOf(Project.Project, companionTo) ? companionTo.instructions : undefined,
+  );
+
+  // Steer the chat with the project's instructions BY REFERENCE (chat.instructions → system prompt at
+  // request time). Also the lazy backfill: pre-existing project chats without the field pick it up here.
+  useEffect(() => {
+    if (!chat || chat.instructions || !Obj.instanceOf(Project.Project, companionTo)) {
+      return;
+    }
+    const instructionsRef = companionTo.instructions;
+    if (instructionsRef) {
+      Obj.update(chat, (chat) => {
+        chat.instructions = instructionsRef;
+      });
+    }
+  }, [chat, companionTo, instructionsSnapshot]);
 
   useAsyncEffect(async () => {
     if (!binder?.isOpen) {
       return;
     }
 
-    // Bind annotated blueprints: use key URI for registry blueprints (no DB clone needed).
-    if (blueprintKeys.length > 0) {
-      const registryKeys = blueprintKeys.filter((key) => {
+    // Bind annotated skills: use key URI for registry skills (no DB clone needed).
+    if (skillKeys.length > 0) {
+      const registryKeys = skillKeys.filter((key) => {
         const candidate = registry.list().find((e) => Entity.getMeta(e)?.key === key);
-        return candidate != null && Obj.instanceOf(Blueprint.Blueprint, candidate);
+        return candidate != null && Obj.instanceOf(Skill.Skill, candidate);
       });
 
-      // DB-forked blueprints (in space but not in registry).
-      const dbForks = pluginBlueprints.filter((bp) => !registryKeys.includes(Obj.getMeta(bp).key ?? ''));
+      // DB-forked skills (in space but not in registry).
+      const dbForks = pluginSkills.filter((bp) => !registryKeys.includes(Obj.getMeta(bp).key ?? ''));
       if (registryKeys.length > 0) {
-        await binder.bind({ blueprints: registryKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key))) });
+        await binder.bind({ skills: registryKeys.map((key) => Ref.fromURI(Skill.registryURI(key))) });
       }
       if (dbForks.length > 0) {
-        await binder.bind({ blueprints: dbForks.map((blueprint) => Ref.make(blueprint)) });
+        await binder.bind({ skills: dbForks.map((skill) => Ref.make(skill)) });
       }
     }
 
-    if (Obj.instanceOf(Blueprint.Blueprint, companionTo)) {
-      await binder.bind({ blueprints: [Ref.make(companionTo)] });
+    if (Obj.instanceOf(Skill.Skill, companionTo)) {
+      await binder.bind({ skills: [Ref.make(companionTo)] });
     } else {
       await binder.bind({ objects: [Ref.make(companionTo)] });
     }
-  }, [binder, blueprintKeys, pluginBlueprints, companionTo]);
+
+    // Bind the project's skills and context objects into the session (instructions text travels
+    // via chat.instructions, set above).
+    if (Obj.instanceOf(Project.Project, companionTo)) {
+      const bindings = Project.contextBindings(companionTo);
+      if (bindings.skills.length > 0) {
+        await binder.bind({ skills: bindings.skills });
+      }
+      if (bindings.objects.length > 0) {
+        await binder.bind({ objects: bindings.objects });
+      }
+    }
+  }, [binder, skillKeys, pluginSkills, companionTo, instructionsSnapshot]);
 };
+
+ChatCompanion.displayName = 'ChatCompanion';

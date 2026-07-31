@@ -60,36 +60,28 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  * Views are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
  */
-const ViewSchema = Schema.Struct({
-  /**
-   * Query used to retrieve data.
-   * Can be a user-provided query grammar string or a query AST.
-   */
-  query: Schema.Struct({
-    raw: Schema.optional(Schema.String),
-    ast: QueryAST.Query,
-  }),
+export class View extends Type.makeObject<View>(DXN.make('org.dxos.type.view', '0.1.0'))(
+  Schema.Struct({
+    /**
+     * Query used to retrieve data.
+     * Can be a user-provided query grammar string or a query AST.
+     */
+    query: Schema.Struct({
+      raw: Schema.optional(Schema.String),
+      ast: QueryAST.Query,
+    }),
 
-  /**
-   * Projection of the data returned from the query.
-   */
-  projection: Projection,
-}).pipe(
-  internal.HiddenAnnotation.set(true),
-  Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' }),
-  Type.makeObject(DXN.make('org.dxos.type.view', '0.1.0')),
-);
+    /**
+     * Projection of the data returned from the query.
+     */
+    projection: Projection,
+  }).pipe(
+    internal.HiddenAnnotation.set(true),
+    Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' }),
+  ),
+) {}
 
-// NOTE: Declared as a named interface and the `View` const is annotated `Type.Obj<View>` so
-//   downstream consumers see a named `View` type instead of the inlined `QueryAST.Query` union.
-//   Without the named interface, embedding `Type.getSchema(View.View)` in a downstream
-//   `Schema.Struct` triggers TS2742 portability errors (e.g. plugin-kanban, plugin-table).
-// TODO(wittjosiah): Find a better solution that doesn't require manually keeping the interface in sync.
-export interface View extends Type.InstanceType<typeof ViewSchema> {}
-
-export const View: Type.Obj<View> = ViewSchema as any;
-
-export const make = (props: Partial<Obj.MakeProps<typeof View>>): View => {
+export const make = (props: Partial<Obj.MakeProps<typeof View>>): Type.InstanceType<typeof View> => {
   return Obj.make(View, {
     query: { ast: Query.select(Filter.nothing()).ast },
     projection: { fields: [] },

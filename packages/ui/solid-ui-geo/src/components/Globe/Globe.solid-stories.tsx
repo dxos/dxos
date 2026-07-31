@@ -121,7 +121,7 @@ const createTrip = (
   );
 };
 
-type DefaultStoryProps = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation'> &
+type StoryArgs = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation'> &
   Pick<GlobeCanvasProps, 'projection' | 'styles'> & {
     drag?: boolean;
     spin?: boolean;
@@ -139,7 +139,7 @@ const DefaultStory = ({
   spin = false,
   tour = false,
   xAxis = false,
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   const [controller, setController] = createSignal<GlobeController | null>(null);
 
   const [dots] = createResource(async () => {

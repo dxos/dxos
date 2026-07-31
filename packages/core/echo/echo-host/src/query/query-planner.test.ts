@@ -1,19 +1,15 @@
 //
-// Copyright 2025 example.com
-//
-
-//
 // Copyright 2025 DXOS.org
 //
 
 import { describe, expect, test } from 'vitest';
 
-import { Filter, Order, Query, Ref } from '@dxos/echo';
+import { Aggregate, Filter, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { QueryPlanner } from './query-planner';
+import { QueryPlanner, filterContainsInQuery } from './query-planner';
 
 describe('QueryPlanner', () => {
   const planner = new QueryPlanner();
@@ -58,6 +54,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -164,6 +161,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -253,6 +251,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -324,6 +323,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -433,6 +433,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -490,6 +491,7 @@ describe('QueryPlanner', () => {
                     "_tag": "OrderStep",
                     "order": [
                       {
+                        "direction": "asc",
                         "kind": "natural",
                       },
                     ],
@@ -531,6 +533,7 @@ describe('QueryPlanner', () => {
                     "_tag": "OrderStep",
                     "order": [
                       {
+                        "direction": "asc",
                         "kind": "natural",
                       },
                     ],
@@ -543,6 +546,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -630,6 +634,7 @@ describe('QueryPlanner', () => {
                   "_tag": "OrderStep",
                   "order": [
                     {
+                      "direction": "asc",
                       "kind": "natural",
                     },
                   ],
@@ -671,6 +676,7 @@ describe('QueryPlanner', () => {
                   "_tag": "OrderStep",
                   "order": [
                     {
+                      "direction": "asc",
                       "kind": "natural",
                     },
                   ],
@@ -682,6 +688,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -753,6 +760,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -801,6 +809,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -840,6 +849,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -901,6 +911,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -910,12 +921,57 @@ describe('QueryPlanner', () => {
     `);
   });
 
-  // TODO(dmaretskyi): Implement this.
-  test.skip('select everything but the type', () => {
+  test('select everything but the type', () => {
     const query = Query.select(Filter.not(Filter.type(TestSchema.Person)));
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
-    expect(plan).toMatchInlineSnapshot();
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": true,
+              "typename": [
+                "dxn:com.example.type.person:0.1.0",
+              ],
+            },
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "filter": {
+                "id": undefined,
+                "props": {},
+                "type": "object",
+                "typename": "dxn:com.example.type.person:0.1.0",
+              },
+              "type": "not",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
   });
 
   test('select excluding multiple types', () => {
@@ -951,27 +1007,31 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterStep",
             "filter": {
-              "filters": [
-                {
-                  "id": undefined,
-                  "props": {},
-                  "type": "object",
-                  "typename": "dxn:com.example.type.organization:0.1.0",
-                },
-                {
-                  "id": undefined,
-                  "props": {},
-                  "type": "object",
-                  "typename": "dxn:com.example.type.person:0.1.0",
-                },
-              ],
-              "type": "or",
+              "filter": {
+                "filters": [
+                  {
+                    "id": undefined,
+                    "props": {},
+                    "type": "object",
+                    "typename": "dxn:com.example.type.organization:0.1.0",
+                  },
+                  {
+                    "id": undefined,
+                    "props": {},
+                    "type": "object",
+                    "typename": "dxn:com.example.type.person:0.1.0",
+                  },
+                ],
+                "type": "or",
+              },
+              "type": "not",
             },
           },
           {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1021,6 +1081,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1070,6 +1131,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1122,6 +1184,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1173,6 +1236,7 @@ describe('QueryPlanner', () => {
             "limit": 10,
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1234,6 +1298,20 @@ describe('QueryPlanner', () => {
     `);
   });
 
+  test('ordered, skipped, and limited results: skip is added to the propagated cap; the limit step is removed', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).skip(5).limit(10);
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+
+    // The OrderStep caps to skip(5) + limit(10) = 15 so that 10 survive the skip (propagating a bare
+    // 10 would truncate before the skip and yield only 5). The SkipStep remains to trim the top-15
+    // back to the [5, 15) window; the LimitStep is redundant once the cap is propagated and is removed.
+    const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+    expect(orderStep?._tag === 'OrderStep' && orderStep.limit).toBe(15);
+    expect(plan.steps.some((step) => step._tag === 'SkipStep' && step.skip === 5)).toBe(true);
+    expect(plan.steps.some((step) => step._tag === 'LimitStep')).toBe(false);
+  });
+
   test('union of limited queries', () => {
     const query = Query.all(
       Query.select(Filter.type(TestSchema.Person)).limit(5),
@@ -1284,6 +1362,7 @@ describe('QueryPlanner', () => {
                     "limit": 5,
                     "order": [
                       {
+                        "direction": "asc",
                         "kind": "natural",
                       },
                     ],
@@ -1327,6 +1406,7 @@ describe('QueryPlanner', () => {
                     "limit": 5,
                     "order": [
                       {
+                        "direction": "asc",
                         "kind": "natural",
                       },
                     ],
@@ -1339,6 +1419,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1350,6 +1431,208 @@ describe('QueryPlanner', () => {
   test('throws when query has no from clause', () => {
     const query = Query.select(Filter.type(TestSchema.Person));
     expect(() => planner.createPlan(query.ast)).toThrow('Query must be scoped with a from() clause');
+  });
+
+  describe('aggregate', () => {
+    test('group by single property inserts a natural OrderStep before AggregateStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).aggregate({ title: Aggregate.group('title') });
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep', 'AggregateStep']);
+
+      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+      expect(orderStep).toMatchObject({ order: [{ kind: 'natural', direction: 'asc' }] });
+
+      const aggregateStep = plan.steps.find((step) => step._tag === 'AggregateStep');
+      expect(aggregateStep).toMatchObject({ aggregates: [{ name: 'title', kind: 'group', property: 'title' }] });
+    });
+
+    test('an explicit orderBy before aggregate is preserved (no natural order inserted)', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .orderBy(Order.property('title', 'desc'))
+        .aggregate({ title: Aggregate.group('title') });
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep', 'AggregateStep']);
+
+      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+      expect(orderStep).toMatchObject({ order: [{ kind: 'property', property: 'title', direction: 'desc' }] });
+    });
+
+    test('multi-key aggregate carries all group entries on AggregateStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).aggregate({
+        title: Aggregate.group('title'),
+        id: Aggregate.group('id'),
+      });
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const aggregateStep = plan.steps.find((step) => step._tag === 'AggregateStep');
+      expect(aggregateStep).toMatchObject({
+        aggregates: [
+          { name: 'title', kind: 'group', property: 'title' },
+          { name: 'id', kind: 'group', property: 'id' },
+        ],
+      });
+    });
+
+    test('limit before aggregate stays before AggregateStep with no pushdown across it', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .orderBy(Order.property('title', 'asc'))
+        .limit(10)
+        .aggregate({ title: Aggregate.group('title') });
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      // No optimizeLimits pushdown: LimitStep remains a distinct step (not folded into SelectStep/OrderStep).
+      expect(tags).toEqual([
+        'SelectStep',
+        'FilterDeletedStep',
+        'FilterStep',
+        'OrderStep',
+        'LimitStep',
+        'AggregateStep',
+      ]);
+
+      const limitStep = plan.steps.find((step) => step._tag === 'LimitStep');
+      expect(limitStep).toMatchObject({ limit: 10 });
+    });
+
+    test('limit after aggregate pages over groups (stays after AggregateStep, no pushdown)', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .aggregate({ title: Aggregate.group('title') })
+        .limit(5);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual([
+        'SelectStep',
+        'FilterDeletedStep',
+        'FilterStep',
+        'OrderStep',
+        'AggregateStep',
+        'LimitStep',
+      ]);
+
+      // The group-level limit must NOT be pushed into the SelectStep/OrderStep.
+      const selectStep = plan.steps.find((step) => step._tag === 'SelectStep');
+      expect((selectStep as any).limit).toBeUndefined();
+      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+      expect((orderStep as any).limit).toBeUndefined();
+      const limitStep = plan.steps.find((step) => step._tag === 'LimitStep');
+      expect(limitStep).toMatchObject({ limit: 5 });
+    });
+
+    test('skip + limit after aggregate pages over groups', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .aggregate({ title: Aggregate.group('title') })
+        .skip(2)
+        .limit(5);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual([
+        'SelectStep',
+        'FilterDeletedStep',
+        'FilterStep',
+        'OrderStep',
+        'AggregateStep',
+        'SkipStep',
+        'LimitStep',
+      ]);
+    });
+
+    test('AggregateStep carries all declared aggregates', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).aggregate({
+        title: Aggregate.group('title'),
+        latest: Aggregate.max('title'),
+      });
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const aggregateStep = plan.steps.find((step) => step._tag === 'AggregateStep');
+      expect(aggregateStep).toMatchObject({
+        aggregates: [
+          { name: 'title', kind: 'group', property: 'title' },
+          { name: 'latest', kind: 'max', property: 'title' },
+        ],
+      });
+    });
+
+    test('a post-aggregate orderBy is a group-level OrderStep after AggregateStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .orderBy(Order.property('title', 'desc'))
+        .aggregate({ title: Aggregate.group('title'), latest: Aggregate.max('title') })
+        .orderBy(Order.property('latest', 'desc'))
+        .limit(5);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      // Within-group OrderStep, then AggregateStep, then the group-level OrderStep (which absorbs the
+      // group-level limit via optimizeLimits — it pages over whole groups, so no separate LimitStep).
+      expect(tags).toEqual([
+        'SelectStep',
+        'FilterDeletedStep',
+        'FilterStep',
+        'OrderStep',
+        'AggregateStep',
+        'OrderStep',
+      ]);
+
+      const groupOrderStep = plan.steps[plan.steps.length - 1];
+      expect(groupOrderStep).toMatchObject({
+        _tag: 'OrderStep',
+        order: [{ kind: 'property', property: 'latest', direction: 'desc' }],
+        limit: 5,
+      });
+    });
+
+    test('throws when aggregate is nested inside another aggregate', () => {
+      const inner = Query.select(Filter.type(TestSchema.Task)).aggregate({ title: Aggregate.group('title') });
+      // Raw AST composition: an inner query with its own aggregate, wrapped by an outer aggregate.
+      const query = Query.fromAst({
+        type: 'aggregate',
+        query: inner.ast,
+        aggregates: [{ name: 'id', kind: 'group', property: 'id' }],
+      });
+
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Only one aggregate clause is supported');
+    });
+
+    test('throws when an aggregated subquery is used as a from() source', () => {
+      // The planner flattens `.from(subquery)`; an aggregated subquery would merge a second aggregate
+      // into the plan, so it must be rejected even though the outer query has no aggregate of its own.
+      const aggregatedSubquery = Query.select(Filter.type(TestSchema.Person)).aggregate({
+        email: Aggregate.group('email'),
+      });
+      const query = Query.select(Filter.type(TestSchema.Task)).from(aggregatedSubquery);
+
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(
+        'aggregate must be the outermost query clause',
+      );
+    });
+
+    test('throws when both the outer query and a from() subquery are aggregated', () => {
+      const aggregatedSubquery = Query.select(Filter.type(TestSchema.Person)).aggregate({
+        email: Aggregate.group('email'),
+      });
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .from(aggregatedSubquery)
+        .aggregate({ title: Aggregate.group('title') });
+
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Only one aggregate clause is supported');
+    });
+
+    test('aggregate under from()/options() is still valid (outermost data clause)', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .aggregate({ title: Aggregate.group('title') })
+        .options({
+          debugLabel: 'grouped',
+        });
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      expect(plan.steps.some((step) => step._tag === 'AggregateStep')).toBe(true);
+    });
   });
 
   test('from all accessible spaces', () => {
@@ -1387,6 +1670,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1433,6 +1717,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1522,6 +1807,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1595,6 +1881,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1651,6 +1938,118 @@ describe('QueryPlanner', () => {
     const hasLimitStep = plan.steps.some((step) => step._tag === 'LimitStep');
     const orderWithLimit = plan.steps.some((step) => step._tag === 'OrderStep' && (step as any).limit === 10);
     expect(hasLimitStep || orderWithLimit).toBe(true);
+  });
+
+  describe('Filter.in subquery (semi-join)', () => {
+    const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
+
+    test('nested in-query rides inside the residual object FilterStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }));
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      // _ensureOrderStep always appends a trailing natural OrderStep when none is present.
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep']);
+
+      const filterStep = plan.steps.find((step) => step._tag === 'FilterStep');
+      expect(filterStep).toMatchObject({
+        filter: {
+          type: 'object',
+          props: {
+            title: {
+              type: 'in-query',
+              property: 'title',
+              subquery: subquery.ast,
+            },
+          },
+        },
+      });
+    });
+
+    test('root Filter.in(projection) throws query too complex', () => {
+      const query = Query.select(Filter.in(subquery.project('title')));
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Query too complex');
+    });
+
+    test('Filter.and(type, root in-query) throws query too complex', () => {
+      const query = Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.in(subquery.project('title'))));
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Query too complex');
+    });
+
+    test('filterContainsInQuery detects a nested in-query in object props', () => {
+      const filter = Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }).ast;
+      expect(filterContainsInQuery(filter)).toBe(true);
+      expect(filterContainsInQuery(Filter.type(TestSchema.Task).ast)).toBe(false);
+    });
+
+    test('filterContainsInQuery detects in-query nested inside and/or/not', () => {
+      const inQueryFilter = Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }).ast;
+      expect(filterContainsInQuery({ type: 'not', filter: inQueryFilter })).toBe(true);
+      expect(filterContainsInQuery({ type: 'and', filters: [Filter.type(TestSchema.Person).ast, inQueryFilter] })).toBe(
+        true,
+      );
+      expect(filterContainsInQuery({ type: 'or', filters: [Filter.type(TestSchema.Person).ast, inQueryFilter] })).toBe(
+        true,
+      );
+    });
+
+    test('limit-guard: limit is not folded into SelectStep when a nested in-query is present', () => {
+      // Mirrors the 'childOf with limit' regression test above: the guard only prevents pushing
+      // the limit into the SelectStep (which would slice candidates before the semi-join runs and
+      // starve the result set) — it does not forbid a *later*, unblocked OrderStep from absorbing
+      // the limit, since that OrderStep already sees the fully-filtered set.
+      const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }))
+        .orderBy(Order.natural('asc'))
+        .limit(10);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const selectStep = plan.steps.find((step) => step._tag === 'SelectStep');
+      expect((selectStep as any).limit).toBeUndefined();
+      const hasLimitStep = plan.steps.some((step) => step._tag === 'LimitStep');
+      const orderWithLimit = plan.steps.some((step) => step._tag === 'OrderStep' && (step as any).limit === 10);
+      expect(hasLimitStep || orderWithLimit).toBe(true);
+    });
+
+    test('negative control: without in-query, the limit folds into the OrderStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural('asc')).limit(10);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      expect(plan.steps.some((step) => step._tag === 'LimitStep')).toBe(false);
+      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+      expect((orderStep as any).limit).toBe(10);
+    });
+
+    test('composes below aggregate + limit: the semi-join FilterStep runs before grouping', () => {
+      const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }))
+        .orderBy(Order.property('title', 'asc'))
+        .aggregate({ title: Aggregate.group('title'), count: Aggregate.count() })
+        .orderBy(Order.property('count', 'desc'))
+        .limit(10);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      // Mirrors 'a post-aggregate orderBy is a group-level OrderStep after AggregateStep' above:
+      // the trailing group-level OrderStep absorbs the limit (it already pages over whole groups),
+      // so there is no separate LimitStep. The semi-join FilterStep still runs before OrderStep/AggregateStep.
+      expect(tags).toEqual([
+        'SelectStep',
+        'FilterDeletedStep',
+        'FilterStep',
+        'OrderStep',
+        'AggregateStep',
+        'OrderStep',
+      ]);
+
+      const filterStepIndex = tags.indexOf('FilterStep');
+      const aggregateStepIndex = tags.indexOf('AggregateStep');
+      expect(filterStepIndex).toBeLessThan(aggregateStepIndex);
+
+      const groupOrderStep = plan.steps[plan.steps.length - 1];
+      expect(groupOrderStep).toMatchObject({ _tag: 'OrderStep', limit: 10 });
+
+      const filterStep = plan.steps[filterStepIndex];
+      expect(filterStep).toMatchObject({ filter: { type: 'object', props: { title: { type: 'in-query' } } } });
+    });
   });
 });
 

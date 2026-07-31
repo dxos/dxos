@@ -7,15 +7,14 @@ import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
-import { PublicKey } from '@dxos/react-client';
-import { type SpaceMember, useMembers, useSpace } from '@dxos/react-client/echo';
-import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { type Space } from '@dxos/halo';
+import { useIdentity, useMembers } from '@dxos/halo-react';
+import { PublicKey } from '@dxos/keys';
+import { useSpace } from '@dxos/react-client/echo';
 import {
   Avatar,
   type AvatarContentProps,
   type DxAvatar,
-  List,
-  ListItem,
   Popover,
   type Size,
   type ThemedClassName,
@@ -24,7 +23,8 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
-import { ComplexMap, keyToFallback } from '@dxos/util';
+import { Listbox } from '@dxos/react-ui-list';
+import { ComplexMap, hexToFallback } from '@dxos/util';
 
 import { meta } from '#meta';
 import { type ObjectViewerProps, SpaceCapabilities } from '#types';
@@ -37,7 +37,7 @@ const ACTIVITY_DURATION = 30_000;
 const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
-const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
+const getName = (member: Space.Member) => member.displayName ?? generateName(member.identityKey ?? '0');
 
 export type SpacePresenceProps = {
   object: Obj.Unknown;
@@ -59,9 +59,9 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
     return () => clearInterval(interval);
   }, []);
 
-  const memberOnline = useCallback((member: SpaceMember) => member.presence === 1, []);
+  const memberOnline = useCallback((member: Space.Member) => member.online, []);
   const memberIsNotSelf = useCallback(
-    (member: SpaceMember) => !identity?.identityKey.equals(member.identity.identityKey),
+    (member: Space.Member) => identity?.identityKey !== member.identityKey,
     [identity?.identityKey],
   );
 
@@ -75,24 +75,27 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
 
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))
-    .filter((member) => currentObjectViewers.has(member.identity.identityKey))
-    .map((member) => {
-      const objectView = currentObjectViewers.get(member.identity.identityKey);
-      const lastSeen = objectView?.lastSeen ?? -Infinity;
-      const currentlyAttended = objectView?.currentlyAttended ?? false;
-
-      return {
-        ...member,
-        currentlyAttended,
-        lastSeen,
-      };
+    .flatMap((member) => {
+      // Presence viewers are keyed by `PublicKey`; the HALO member carries a hex identity key.
+      const memberKey = member.identityKey ? PublicKey.fromHex(member.identityKey) : undefined;
+      const objectView = memberKey ? currentObjectViewers.get(memberKey) : undefined;
+      if (!objectView) {
+        return [];
+      }
+      return [
+        {
+          ...member,
+          currentlyAttended: objectView.currentlyAttended ?? false,
+          lastSeen: objectView.lastSeen ?? -Infinity,
+        },
+      ];
     })
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
   return <FullPresence members={membersForObject} />;
 };
 
-export type Member = SpaceMember & {
+export type Member = Space.Member & {
   /**
    * Last time a member was seen on this object.
    */
@@ -119,13 +122,13 @@ export const FullPresence = (props: MemberPresenceProps) => {
     <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
       {members.slice(0, 3).map((member, i) => (
         <Tooltip.Trigger
-          key={member.identity.identityKey.toHex()}
+          key={member.identityKey}
           side='bottom'
-          content={getName(member.identity)}
+          content={getName(member)}
           className='grid focus:outline-hidden'
         >
           <PresenceAvatar
-            identity={member.identity}
+            member={member}
             match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
             index={members.length - i}
             onClick={() => onMemberClick?.(member)}
@@ -151,24 +154,22 @@ export const FullPresence = (props: MemberPresenceProps) => {
             <Popover.Content side='bottom'>
               <Popover.Arrow />
               <Popover.Viewport classNames='max-h-56'>
-                <List>
-                  {members.map((member) => (
-                    <ListItem.Root
-                      key={member.identity.identityKey.toHex()}
-                      classNames='flex gap-2 items-center cursor-pointer mb-2'
-                      onClick={() => onMemberClick?.(member)}
-                      data-testid='identity-list-item'
-                    >
-                      {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                      <PresenceAvatar
-                        identity={member.identity}
-                        size={size}
-                        showName
-                        match={member.currentlyAttended}
-                      />
-                    </ListItem.Root>
-                  ))}
-                </List>
+                <Listbox.Root>
+                  <Listbox.Content aria-label='members'>
+                    {members.map((member) => (
+                      <Listbox.Item
+                        key={member.identityKey}
+                        id={member.identityKey ?? ''}
+                        classNames='flex gap-2 items-center cursor-pointer mb-2'
+                        onClick={() => onMemberClick?.(member)}
+                        data-testid='identity-list-item'
+                      >
+                        {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
+                        <PresenceAvatar member={member} size={size} showName match={member.currentlyAttended} />
+                      </Listbox.Item>
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Root>
               </Popover.Viewport>
             </Popover.Content>
           </Popover.Portal>
@@ -179,7 +180,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
 };
 
 type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
-  identity: Identity;
+  member: Space.Member;
   showName?: boolean;
   match?: boolean;
   index?: number;
@@ -187,23 +188,23 @@ type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
 };
 
 const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
-  ({ identity, showName, match, index, onClick, size }, forwardedRef) => {
+  ({ member, showName, match, index, onClick, size }, forwardedRef) => {
     const status = match ? 'current' : 'active';
-    const fallbackValue = keyToFallback(identity.identityKey);
+    const fallbackValue = hexToFallback(member.identityKey ?? '0');
     return (
       <Avatar.Root>
         <Avatar.Content
           status={status}
-          hue={identity.profile?.data?.hue || fallbackValue.hue}
+          hue={member.data?.hue || fallbackValue.hue}
           data-testid='spacePlugin.presence.member'
           data-status={status}
           size={size}
           {...(index ? { style: { zIndex: index } } : {})}
           onClick={onClick}
-          fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
+          fallback={member.data?.emoji || fallbackValue.emoji}
           ref={forwardedRef}
         />
-        <Avatar.Label classNames={showName ? 'text-sm truncate px-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>
+        <Avatar.Label classNames={showName ? 'text-sm truncate px-2' : 'sr-only'}>{getName(member)}</Avatar.Label>
       </Avatar.Root>
     );
   },
@@ -259,3 +260,5 @@ export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPr
     </Tooltip.Trigger>
   );
 };
+
+SpacePresence.displayName = 'SpacePresence';

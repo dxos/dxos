@@ -6,43 +6,44 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContext } from '@dxos/assistant';
-import { Chat, DatabaseBlueprint, AgentWizardBlueprint } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation } from '@dxos/compute';
+import { AgentWizardSkill, AlarmSkill, Chat, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { Operation, Skill } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { AssistantBlueprint } from '#blueprints';
+import { AssistantSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
+    Effect.fnUntraced(function* ({ db, name, instructions, addToSpace = true }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
       const feed = space.db.add(Feed.make());
-      const chat = Chat.make({ name, feed: Ref.make(feed) });
+      const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
       Obj.setParent(feed, chat);
       if (addToSpace) {
         space.db.add(chat);
       }
 
-      // Dynamic import to avoid circular dependency with the barrel that also exports BlueprintManagerHandlers.
-      const { BlueprintManagerBlueprint } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
+      // Dynamic import to avoid circular dependency with the barrel that also exports SkillManagerHandlers.
+      const { SkillManagerSkill } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
 
       const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
       const binder = new AiContext.Binder({ feed, runtime, registry });
 
-      // Bind default blueprints via registry refs — no DB clone needed since the ECHO ref
+      // Bind default skills via registry refs — no DB clone needed since the ECHO ref
       // resolver already spans the hypergraph registry.
       yield* Effect.promise(() =>
         binder.use((b: AiContext.Binder) =>
           b.bind({
-            blueprints: [AssistantBlueprint, DatabaseBlueprint, AgentWizardBlueprint, BlueprintManagerBlueprint].map(
-              ({ key }) => Ref.fromURI(Blueprint.registryURI(key)),
+            skills: [AssistantSkill, DatabaseSkill, AgentWizardSkill, SkillManagerSkill, AlarmSkill].map(({ key }) =>
+              Ref.fromURI(Skill.registryURI(key)),
             ),
+            objects: [Ref.make(chat)],
           }),
         ),
       );

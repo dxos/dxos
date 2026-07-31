@@ -106,7 +106,7 @@ op transcribeVideo
     Resolves video.url → GET worker → Text.make({ content }) →
     Database write → Obj.update(video, { transcript: Ref.make(text) }).
     Also adopts the worker's `result.title` as Video.name when the name is empty.
-    Exposed on the ./operations subpath for blueprint/tool reuse.
+    Exposed on the ./operations subpath for skill/tool reuse.
 ```
 
 ```mdl

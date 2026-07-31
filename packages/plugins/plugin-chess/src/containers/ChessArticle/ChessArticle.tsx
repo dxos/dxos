@@ -107,3 +107,5 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
     </Chessboard.Root>
   );
 };
+
+ChessArticle.displayName = 'ChessArticle';

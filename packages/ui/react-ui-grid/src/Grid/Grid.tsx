@@ -168,33 +168,33 @@ export const Grid = {
   Content: GridContent,
 };
 
-export { GridRoot, GridContent, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd, useGridContext };
+export { GridContent, GridRoot, createGridScope, gridSeparatorBlockEnd, gridSeparatorInlineEnd, useGridContext };
 
-export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
+export type { DxGridElement, GridContentProps, GridEditBox, GridEditing, GridRootProps, GridScopedProps };
 
 export {
-  colToA1Notation,
-  rowToA1Notation,
-  closestCell,
-  commentedClassName,
-  toPlaneCellIndex,
-  parseCellIndex,
-  cellQuery,
   DxEditRequest,
+  cellQuery,
+  closestCell,
+  colToA1Notation,
+  commentedClassName,
+  parseCellIndex,
+  rowToA1Notation,
+  toPlaneCellIndex,
 } from '@dxos/lit-grid';
 
 export type {
-  DxGridRange,
-  DxGridAxisMeta,
   DxAxisResize,
-  DxGridCells,
-  DxGridPlaneRange,
-  DxGridPlaneCells,
+  DxGridAxis,
+  DxGridAxisMeta,
   DxGridCellIndex,
-  DxGridPlaneCellIndex,
+  DxGridCells,
   DxGridCellValue,
   DxGridPlane,
-  DxGridPosition,
+  DxGridPlaneCellIndex,
+  DxGridPlaneCells,
   DxGridPlanePosition,
-  DxGridAxis,
+  DxGridPlaneRange,
+  DxGridPosition,
+  DxGridRange,
 } from '@dxos/lit-grid';

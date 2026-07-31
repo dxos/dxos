@@ -4,15 +4,15 @@
 
 import {
   Children,
-  createElement,
-  forwardRef,
-  type ForwardRefExoticComponent,
+  type CSSProperties,
   type ForwardedRef,
+  type ForwardRefExoticComponent,
   type HTMLAttributes,
-  isValidElement,
   type ReactNode,
   type RefAttributes,
-  type CSSProperties,
+  createElement,
+  forwardRef,
+  isValidElement,
 } from 'react';
 
 import { log } from '@dxos/log';

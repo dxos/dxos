@@ -1,0 +1,39 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type RDF } from '@dxos/pipeline-rdf';
+
+type FixtureMessage = {
+  'id': string;
+  'created'?: string;
+  'sender'?: { name?: string };
+  'blocks'?: Array<{ _tag: string; text?: string }>;
+  '@meta'?: { keys?: Array<{ source?: string; id?: string }> };
+};
+
+/**
+ * Parse a discord channel fixture (the JSON emitted by `moon run plugin-discord:generate-fixtures`)
+ * into pipeline-rdf extraction documents: one per message, text joined from its text blocks,
+ * attributed to the sender and sourced by the message's discord key.
+ */
+export const parseDiscordFixture = (json: unknown): RDF.ExtractDocument[] => {
+  const messages = (json as { messages?: FixtureMessage[] })?.messages ?? [];
+  return messages
+    .map((message): RDF.ExtractDocument => {
+      const key = message['@meta']?.keys?.[0]?.id ?? message.id;
+      const text = (message.blocks ?? [])
+        .filter((block) => block._tag === 'text' && block.text)
+        .map((block) => block.text)
+        .join('\n')
+        .trim();
+
+      return {
+        source: `discord:${key}`,
+        date: message.created,
+        author: message.sender?.name,
+        text,
+      };
+    })
+    .filter((doc) => doc.text.length > 0);
+};

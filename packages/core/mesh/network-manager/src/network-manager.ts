@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+
 import { Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -59,6 +61,14 @@ export type SwarmNetworkManagerOptions = {
   enableDevtoolsLogging?: boolean; // Log to devtools.
   peerInfo?: PeerInfo;
 };
+
+/**
+ * Effect service tag for {@link SwarmNetworkManager}.
+ */
+export class SwarmNetworkManagerService extends EffectContext.Tag('@dxos/network-manager/SwarmNetworkManager')<
+  SwarmNetworkManagerService,
+  SwarmNetworkManager
+>() {}
 
 /**
  * Manages p2p connection to the swarm.
@@ -126,6 +136,10 @@ export class SwarmNetworkManager {
 
   setPeerInfo(peerInfo: PeerInfo): void {
     this._peerInfo = peerInfo;
+  }
+
+  getPeerInfo(): PeerInfo | undefined {
+    return this._peerInfo;
   }
 
   async open(): Promise<void> {
@@ -235,16 +249,15 @@ export class SwarmNetworkManager {
     switch (state) {
       case ConnectionState.OFFLINE: {
         this._connectionState = state;
-        // go offline
+        // Only signaling toggles across an offline/online cycle. The messenger stays open so its
+        // subscriptions survive — the swarm does not re-`listen` on reconnect — and its subscriptions
+        // are torn down only on a real `close`.
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline()));
-        await this._messenger.close();
         await this._signalManager.close();
         break;
       }
       case ConnectionState.ONLINE: {
         this._connectionState = state;
-        // go online
-        this._messenger.open();
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline()));
         await this._signalManager.open();
         break;

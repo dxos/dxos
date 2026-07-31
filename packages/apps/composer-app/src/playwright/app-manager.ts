@@ -21,6 +21,16 @@ const modifier = isMac ? 'Meta' : 'Control';
 
 export const INITIAL_URL = 'http://localhost:4173';
 
+// `GraphPath.pinnedWorkspaceId('dxos:plugin-registry')`, restated so this page-object does not import
+// the registry plugin (its module graph reaches packages that fail to load under playwright's loader).
+const REGISTRY_WORKSPACE = '!dxos:plugin-registry';
+
+// `UrlPath.WORKSPACE_KEY` — the pair-chain anchor segment, restated for the same reason.
+const WORKSPACE_KEY = 'w';
+
+/** Builds the pair-chain base for a workspace: `/<anchor>/<workspace>`. */
+const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/${WORKSPACE_KEY}/${workspace}`;
+
 // Only the personal space is seeded on every new identity. The exemplar space is skipped on
 // localhost (see OnboardingPlugin `generateExemplarSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
@@ -193,15 +203,17 @@ export class AppManager {
   async waitForSpaceReady(timeout = 10_000): Promise<void> {
     await this.page.waitForSelector('[data-testid="create-space-form"]', { state: 'detached', timeout });
     await this.page.waitForFunction(
-      () => {
-        const workspaceId = window.location.pathname.split('/').filter(Boolean)[0];
-        if (!workspaceId) {
+      // Pair-chain URLs are `/<anchor>/<workspace>/…`, so the workspace follows the anchor segment.
+      (anchorKey) => {
+        const [anchor, workspaceId] = window.location.pathname.split('/').filter(Boolean);
+        if (anchor !== anchorKey || !workspaceId) {
           return false;
         }
 
         const selectedSpace = document.querySelector('[data-testid="spacePlugin.space"][aria-selected="true"]');
         return selectedSpace?.getAttribute('data-object-id') === `root/${workspaceId}`;
       },
+      WORKSPACE_KEY,
       { timeout },
     );
     // TODO(wittjosiah): This improves reliability significantly. Find a better thing to wait for.
@@ -302,7 +314,13 @@ export class AppManager {
 
   async renameObject(newName: string, nth = 0): Promise<void> {
     await this.getObjectLinks().nth(nth).hover();
-    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
+    // Match any tree depth: the navtree's section-group nesting varies an object's level, and the
+    // actions button testid encodes that level (`actionsLevel${level}`).
+    await this.getObjectLinks()
+      .nth(nth)
+      .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+      .first()
+      .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.renameObject').last().focus();
@@ -313,7 +331,11 @@ export class AppManager {
   }
 
   async deleteObject(nth = 0): Promise<void> {
-    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
+    await this.getObjectLinks()
+      .nth(nth)
+      .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+      .first()
+      .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
@@ -365,12 +387,13 @@ export class AppManager {
     // the click is silently swallowed and the test then times out waiting
     // for the registry tree to render. URL-driven navigation has no such
     // dependency on operation-handler registration.
-    await this.page.goto(`${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry`);
+    await this.page.goto(workspaceUrl(REGISTRY_WORKSPACE));
     await this.page.getByTestId('pluginRegistry.recommended').waitFor({ state: 'visible' });
   }
 
   async openRegistryCategory(category: string): Promise<void> {
-    await this.page.goto(`${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry/plugin-registry%3E${category}`);
+    // A category node's id is the bare category name, addressed as the `category` key.
+    await this.page.goto(`${workspaceUrl(REGISTRY_WORKSPACE)}/category/${category}`);
     await this.page.getByTestId(`pluginRegistry.${category}`).waitFor({ state: 'visible' });
   }
 

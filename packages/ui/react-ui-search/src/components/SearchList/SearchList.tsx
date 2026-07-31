@@ -328,11 +328,11 @@ export const SearchList = {
 };
 
 export type {
-  SearchListRootProps,
   SearchListContentProps,
-  SearchListViewportProps,
-  SearchListInputProps,
-  SearchListItemProps,
   SearchListEmptyProps,
   SearchListGroupProps,
+  SearchListInputProps,
+  SearchListItemProps,
+  SearchListRootProps,
+  SearchListViewportProps,
 };

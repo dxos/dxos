@@ -12,10 +12,12 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { SHADOW_KEY_SOURCE, findShadowObject, reanchorShadowObject } from './shadow';
 
 // Minimal writable type to exercise the shadow helpers without depending on a specific app schema.
-const Note = Schema.Struct({
-  id: Obj.ID,
-  value: Schema.optional(Schema.String),
-}).pipe(Type.makeObject(DXN.make('example.org.test.note', '0.1.0')));
+const Note = Type.makeObject(DXN.make('example.org.test.note', '0.1.0'))(
+  Schema.Struct({
+    id: Obj.ID,
+    value: Schema.optional(Schema.String),
+  }),
+);
 
 describe('shadow', () => {
   let builder: EchoTestBuilder;

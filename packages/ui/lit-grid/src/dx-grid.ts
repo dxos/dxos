@@ -20,9 +20,9 @@ import {
   type DxGridAxisMeta,
   type DxGridAxisMetaProps,
   type DxGridAxisSizes,
-  type DxGridCellValue,
   type DxGridCells,
   DxGridCellsSelect,
+  type DxGridCellValue,
   type DxGridFixedPlane,
   type DxGridFocusIndicatorVariant,
   type DxGridFrozenAxes,
@@ -1686,14 +1686,14 @@ export class DxGrid extends LitElement {
 }
 
 export {
-  rowToA1Notation,
-  colToA1Notation,
+  accessoryHandlesPointerdownAttrs,
+  cellQuery,
   closestAction,
   closestCell,
+  colToA1Notation,
   parseCellIndex,
+  rowToA1Notation,
   toPlaneCellIndex,
-  cellQuery,
-  accessoryHandlesPointerdownAttrs,
 } from './util';
 
 export const commentedClassName = 'dx-grid__cell--commented';

@@ -164,3 +164,5 @@ const Hint = ({ toolMode }: { toolMode: ToolMode }) => {
     </div>
   );
 };
+
+VoxelArticle.displayName = 'VoxelArticle';

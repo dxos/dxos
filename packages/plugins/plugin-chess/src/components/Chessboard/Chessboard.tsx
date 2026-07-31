@@ -11,10 +11,8 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useRef,
 } from 'react';
 
-import { addEventListener } from '@dxos/async';
 import { useObject } from '@dxos/echo-react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
@@ -25,7 +23,6 @@ import {
   Chessboard as NaturalChessboard,
   type ChessboardProps as NaturalChessboardProps,
   getRawPgn,
-  useGameboardContext,
 } from '@dxos/react-ui-gameboard';
 
 import { type Chess } from '#types';
@@ -88,9 +85,48 @@ const Root = forwardRef<ChessboardController, RootProps>(({ state, children }, f
     [model],
   );
 
+  // Keyboard navigation — fires regardless of which descendant (Board or Info) has focus.
+  // Gated to elements marked data-chessboard-arrow-navigation to avoid intercepting toolbar controls.
+  const handleKeyDown = useCallback(
+    (ev: React.KeyboardEvent) => {
+      const target = ev.target instanceof HTMLElement ? ev.target : undefined;
+      if (!target?.closest('[data-chessboard-arrow-navigation]')) {
+        return;
+      }
+
+      const moveIndex = registry.get(model.moveIndex);
+      switch (ev.key) {
+        case 'ArrowUp':
+          ev.preventDefault();
+          model.setMoveIndex(0);
+          break;
+        case 'ArrowDown':
+          ev.preventDefault();
+          model.setMoveIndex(model.game.history().length);
+          break;
+        case 'ArrowLeft':
+          if (moveIndex > 0) {
+            ev.preventDefault();
+            model.setMoveIndex(moveIndex - 1);
+          }
+          break;
+        case 'ArrowRight':
+          if (moveIndex < model.game.history().length) {
+            ev.preventDefault();
+            model.setMoveIndex(moveIndex + 1);
+          }
+          break;
+      }
+    },
+    [registry, model],
+  );
+
   return (
     <Gameboard.Root model={model} onDrop={handleDrop}>
-      {children}
+      {/* display:contents is layout-transparent; catches keydown bubbled from any focused descendant. */}
+      <div className='contents' onKeyDown={handleKeyDown}>
+        {children}
+      </div>
     </Gameboard.Root>
   );
 });
@@ -119,45 +155,11 @@ const BOARD_NAME = 'Chessboard.Board';
 
 type BoardProps = NaturalChessboardProps;
 
-const Board = (props: BoardProps) => {
-  const registry = useContext(RegistryContext);
-  const { model } = useGameboardContext<ChessModel>(BOARD_NAME);
-
-  // Keyboard navigation.
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!ref.current) {
-      return;
-    }
-
-    // Participate in keyboard navigation (set tabIndex={0})
-    ref.current.setAttribute('data-arrow-keys', 'all');
-
-    return addEventListener(ref.current, 'keydown', (ev) => {
-      const moveIndex = registry.get(model.moveIndex);
-      switch (ev.key) {
-        case 'ArrowUp':
-          model.setMoveIndex(0);
-          break;
-        case 'ArrowDown':
-          model.setMoveIndex(model.game.history().length);
-          break;
-        case 'ArrowLeft':
-          if (moveIndex > 0) {
-            model.setMoveIndex(moveIndex - 1);
-          }
-          break;
-        case 'ArrowRight':
-          if (moveIndex < model.game.history().length) {
-            model.setMoveIndex(moveIndex + 1);
-          }
-          break;
-      }
-    });
-  }, [registry, model]);
-
-  return <NaturalChessboard {...props} ref={ref} />;
-};
+const Board = (props: BoardProps) => (
+  <div className='contents' data-chessboard-arrow-navigation>
+    <NaturalChessboard {...props} />
+  </div>
+);
 
 Board.displayName = BOARD_NAME;
 
@@ -173,8 +175,8 @@ export const Chessboard = {
 };
 
 export type {
-  RootProps as ChessboardRootProps,
-  ContentProps as ChessboardContentProps,
   BoardProps as ChessboardBoardProps,
+  ContentProps as ChessboardContentProps,
   InfoProps as ChessboardInfoProps,
+  RootProps as ChessboardRootProps,
 };

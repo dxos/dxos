@@ -44,7 +44,7 @@ describe('parseProto / config.proto', () => {
           },
           log: { filter: 'info' },
           edgeFeatures: { subductionReplicator: true, signaling: true },
-          servicesMode: Runtime.Client.ServicesMode.SHARED_WORKER,
+          servicesMode: Runtime.Client.ServicesMode.DEDICATED_WORKER,
         },
         services: {
           edge: { url: 'wss://edge.dxos.org' },
@@ -117,7 +117,7 @@ describe('parseProto / config.proto', () => {
 
     const value = {
       id: 'mod',
-      record: { '@type': 'dxos.example.Frame', payload: { x: 1, y: 'two' } },
+      record: { '@type': 'dxos.example.Frame', 'payload': { x: 1, y: 'two' } },
     };
     expect(Schema.decodeUnknownSync(Module)(value)).toEqual(value);
   });

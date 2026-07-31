@@ -4,7 +4,7 @@
 
 import type { ManifoldToplevel } from 'manifold-3d';
 import { readFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, test } from 'vitest';
 

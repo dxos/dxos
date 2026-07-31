@@ -33,7 +33,7 @@ describe('mergeJsonSchemas', () => {
 
 describe('buildUnionFormSchema', () => {
   test('produces an Effect schema exposing each JSON Schema property as a field', ({ expect }) => {
-    // The exact shape the provider blueprint authors (string + number fields with titles).
+    // The exact shape the provider skill authors (string + number fields with titles).
     const searchSchema = {
       type: 'object',
       properties: {

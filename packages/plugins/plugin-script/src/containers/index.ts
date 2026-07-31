@@ -8,4 +8,5 @@ export const DeploymentDialog: ComponentType<any> = lazy(() => import('./Deploym
 export const NotebookArticle: ComponentType<any> = lazy(() => import('./NotebookArticle'));
 export const ScriptArticle: ComponentType<any> = lazy(() => import('./ScriptArticle'));
 export const ScriptProperties: ComponentType<any> = lazy(() => import('./ScriptProperties'));
+export const ScriptSettings: ComponentType<any> = lazy(() => import('./ScriptSettings'));
 export const TestContainer: ComponentType<any> = lazy(() => import('./TestContainer'));

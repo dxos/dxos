@@ -59,7 +59,7 @@ const resolveSubscribePids = (agentPid: Process.ID, processes: readonly Process.
 const attachActiveHandle = (
   processManager: ProcessManager.Manager,
   pid: Process.ID,
-): Effect.Effect<ProcessManager.Handle<any, any> | undefined> =>
+): Effect.Effect<ProcessManager.Handle<any, any, never> | undefined> =>
   Effect.gen(function* () {
     const maxAttempts = 15;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {

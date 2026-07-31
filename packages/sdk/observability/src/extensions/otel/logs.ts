@@ -41,7 +41,7 @@ export class OtelLogs {
     });
     this._loggerProvider = new LoggerProvider({
       resource: this.options.resource,
-      processors: [new BatchLogRecordProcessor(logExporter)],
+      processors: [new BatchLogRecordProcessor({ exporter: logExporter })],
     });
   }
 
@@ -101,16 +101,19 @@ const convertLevel = (level: LogLevel): SeverityNumber => {
   }
 };
 
+const errorToString = (error: Error): string => error.stack ?? `${error.name}: ${error.message}`;
+
 const safeStringify = (value: unknown): string => {
   try {
-    return JSON.stringify(value);
+    // Replace errors as they are encountered; `JSON.stringify` alone renders them as `{}`.
+    return JSON.stringify(value, (_key, nested) => (nested instanceof Error ? errorToString(nested) : nested));
   } catch {
     return '[Circular]';
   }
 };
 
 // TODO(wittjosiah): Reconcile logging utils w/ EDGE.
-const stringifyValues = (object: object | undefined, keyPrefix?: string, depth: number = 1) => {
+export const stringifyValues = (object: object | undefined, keyPrefix?: string, depth: number = 1) => {
   if (!object) {
     return {};
   }
@@ -121,7 +124,11 @@ const stringifyValues = (object: object | undefined, keyPrefix?: string, depth: 
     }
     const newKey = keyPrefix ? `${keyPrefix}${key}` : key;
     if (typeof value === 'object') {
-      if (!value || Array.isArray(value) || depth > FLATTEN_DEPTH) {
+      if (value instanceof Error) {
+        // `message`/`stack` are non-enumerable, so the flatten path below would silently
+        // reduce a logged error to nothing.
+        result[newKey] = errorToString(value);
+      } else if (!value || Array.isArray(value) || depth > FLATTEN_DEPTH) {
         result[newKey] = safeStringify(value);
       } else {
         const flattened = stringifyValues(value, `${newKey}_`, depth + 1);

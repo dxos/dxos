@@ -1,18 +1,9 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
 tasks:
-  compile:
-    # Two entry points:
-    #   - src/index.ts produces dist/lib/node/index.mjs (the `.` package export — full server)
-    #   - src/tools/index.ts produces dist/lib/node/tools/index.mjs (the `./tools` subpath export)
-    # Letting consumers import only the tool definitions without the stdio/HTTP server.
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/tools/index.ts'
-      - '--platform=node'
   # Run the MCP server from source (no build step required thanks to
   # `tsx --conditions=source`). Long-running; designed to be piped to
   # an MCP client via stdio.

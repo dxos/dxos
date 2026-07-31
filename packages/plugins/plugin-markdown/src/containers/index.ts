@@ -9,3 +9,4 @@ export type { MarkdownArticleProps } from './MarkdownArticle';
 export const MarkdownCard: ComponentType<any> = lazy(() => import('./MarkdownCard'));
 export const EditableMarkdownCard: ComponentType<any> = lazy(() => import('./EditableMarkdownCard'));
 export const MarkdownArticle: ComponentType<any> = lazy(() => import('./MarkdownArticle'));
+export const MarkdownSettings: ComponentType<any> = lazy(() => import('./MarkdownSettings'));

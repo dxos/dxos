@@ -129,6 +129,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
               key={option.id}
               value={option.id}
               label={option.label}
+              description={option.description}
               checked={selectedIds?.includes(option.id)}
               onSelect={() => onSelect?.(option.id)}
               classNames='flex items-center gap-2'

@@ -14,7 +14,18 @@ import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
 import { type Side, type Size } from '../types';
 
-const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
+// Root font size in px, read lazily and guarded for non-DOM environments (e.g. node tests) so that
+// merely importing this module doesn't touch the DOM at load time.
+let remCache: number | undefined;
+const getRem = (): number => {
+  if (remCache === undefined) {
+    remCache =
+      typeof document !== 'undefined' && typeof getComputedStyle !== 'undefined'
+        ? parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+        : 16;
+  }
+  return remCache;
+};
 
 const measureSubject = (element: HTMLButtonElement, fallbackSize: number): { width: number; height: number } => {
   const stackItemElement = element.closest('[data-dx-resize-subject]');
@@ -34,7 +45,8 @@ const getNextSize = (
     Math.max(
       minSize,
       startSize +
-        ((location.current.input[client] - location.initial.input[client]) / REM) * (side.endsWith('start') ? -1 : 1),
+        ((location.current.input[client] - location.initial.input[client]) / getRem()) *
+          (side.endsWith('start') ? -1 : 1),
     ),
   );
 };
@@ -85,10 +97,11 @@ export const ResizeHandle = ({
     if (!buttonRef.current) {
       return;
     }
+    const buttonElement = buttonRef.current;
 
     // TODO(thure): This should handle StackItem state vs local state better.
     return draggable({
-      element: buttonRef.current,
+      element: buttonElement,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         // We will be moving the line to indicate a drag; we can disable the native drag preview.
         disableNativeDragPreview({ nativeSetDragImage });
@@ -99,9 +112,9 @@ export const ResizeHandle = ({
       onDragStart: () => {
         dragStartSize.current =
           dragStartSize.current === 'min-content'
-            ? measureSubject(buttonRef.current!, fallbackSize)[orientation === 'horizontal' ? 'width' : 'height'] / REM
+            ? measureSubject(buttonElement, fallbackSize)[orientation === 'horizontal' ? 'width' : 'height'] / getRem()
             : dragStartSize.current;
-        buttonRef.current?.closest(`[${RESIZE_SUBJECT}]`)?.setAttribute(RESIZE_SUBJECT_DRAGGING, 'true');
+        buttonElement.closest(`[${RESIZE_SUBJECT}]`)?.setAttribute(RESIZE_SUBJECT_DRAGGING, 'true');
       },
       // NOTE: Throttling here doesn't prevent the warning:
       //  Measure loop restarted more than 5 times
@@ -119,7 +132,7 @@ export const ResizeHandle = ({
         setSize(nextSize);
         onSizeChange?.(nextSize, true);
         dragStartSize.current = nextSize;
-        buttonRef.current?.closest(`[${RESIZE_SUBJECT}]`)?.removeAttribute(RESIZE_SUBJECT_DRAGGING);
+        buttonElement.closest(`[${RESIZE_SUBJECT}]`)?.removeAttribute(RESIZE_SUBJECT_DRAGGING);
       },
     });
   }, [
@@ -135,9 +148,12 @@ export const ResizeHandle = ({
       className={mx(
         'group absolute flex focus-visible:outline-hidden',
         surfaceZIndex({ elevation, level: 'tooltip' }),
+        // Both the grab button (w-4/h-4) and its hover line are centered on the underlying edge: the
+        // button is offset by half its size (-2) so it straddles the edge, and the line is centered
+        // within the button (start-1/2 / top-1/2) so it sits on the edge too.
         orientation === 'horizontal'
-          ? 'cursor-col-resize w-4 inset-y-0 data-[side=inline-end]:end-0 data-[side=inline-end]:before:end-0 data-[side=inline-start]:start-0 data-[side=inline-start]:before:start-0 border-b-0! before:inset-y-0 before:w-1'
-          : 'cursor-row-resize h-4 inset-x-0 data-[side=block-end]:bottom-0 data-[side=block-end]:before:bottom-0 data-[side=block-start]:top-0 data-[side=block-start]:before:top-0 border-x-0! before:inset-x-0 before:h-1',
+          ? 'cursor-col-resize w-4 inset-y-0 data-[side=inline-end]:-end-2 data-[side=inline-start]:-start-2 border-b-0! before:inset-y-0 before:w-1 before:start-1/2 before:-translate-x-1/2'
+          : 'cursor-row-resize h-4 inset-x-0 data-[side=block-end]:-bottom-2 data-[side=block-start]:-top-2 border-x-0! before:inset-x-0 before:h-1 before:top-1/2 before:-translate-y-1/2',
         orientation === 'horizontal'
           ? iconPosition === 'end'
             ? 'align-end'

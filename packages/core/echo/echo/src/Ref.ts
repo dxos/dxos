@@ -15,6 +15,7 @@ import type * as internal from './internal';
 import * as refInternal from './internal/Ref';
 import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
+import type * as Relation from './Relation';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Type$ from './Type';
 
@@ -45,13 +46,20 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  *
  * @example
  * ```ts
- * const Task = Schema.Struct({
- *   assignee: Ref.Ref(Person),  // Creates a Ref schema
- * }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
+ * class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
+ *   Schema.Struct({
+ *     assignee: Ref.Ref(Person),  // Creates a Ref schema
+ *   }),
+ * ) {}
  * ```
  */
 export const Ref: {
-  <S extends Type$.AnyObj | Type$.AnyRelation>(type: S): RefSchema<Type$.InstanceType<S> & Obj.Unknown>;
+  <S extends Type$.AnyObj>(type: S): RefSchema<Type$.InstanceType<S> & Obj.Unknown>;
+
+  // Relations are entities too and can be referenced. The instance type already
+  // carries the relation kind brand, so intersect with `Relation.Unknown` (not
+  // `Obj.Unknown`, whose object kind brand conflicts and collapses to `never`).
+  <S extends Type$.AnyRelation>(type: S): RefSchema<Type$.InstanceType<S> & Relation.Unknown>;
 
   // `Type.Type` entities (the meta-schema kind) can be referenced too — e.g. a
   // trigger that points to a stored function/workflow definition.

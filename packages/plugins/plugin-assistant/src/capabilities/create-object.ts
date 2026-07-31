@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability, Capabilities } from '@dxos/app-framework';
-import { Agent, AgentBlueprint, Chat } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Agent, AgentSkill, Chat } from '@dxos/assistant-toolkit';
+import { Operation, ServiceResolver, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
@@ -35,23 +35,11 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Blueprint.Blueprint),
-        inputSchema: AssistantOperation.BlueprintForm,
+        id: Type.getTypename(Skill.Skill),
+        inputSchema: AssistantOperation.SkillForm,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = Blueprint.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Routine.Routine),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Routine.make(props);
+            const object = Skill.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
@@ -75,7 +63,7 @@ export default Capability.makeModule(
         id: Type.getTypename(Agent.Agent),
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make());
+            const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentSkill.make());
 
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,

@@ -14,26 +14,26 @@ import { Provider } from './Provider';
 export const STARRED_TAG = { source: 'org.dxos.plugin.commerce', id: 'starred' };
 
 /** A user's saved product search configuration. */
-export const Search = Schema.Struct({
-  name: Schema.String.pipe(Schema.annotations({ title: 'Name' }), Schema.optional),
-  providers: Schema.Array(Ref.Ref(Provider)),
-  /** Values for the union of provider fields, keyed by field name. */
-  params: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(FormInputAnnotation.set(false)),
-  /** Backing ECHO feed (queue) of immutable Result entries appended by each run. */
-  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-  /** Per-Result tags keyed by tag uri → Result ids (the `starred` flag — see {@link STARRED_TAG}). */
-  tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
-  /**
-   * Timestamp of the last run; persisted metadata, hidden from forms.
-   * Run progress itself is ephemeral UI state (see SearchForm), not a persisted property.
-   */
-  lastRunAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-}).pipe(
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--shopping-cart--regular', hue: 'cyan' }),
-  Type.makeObject(DXN.make('org.dxos.type.commerce.Search', '0.1.0')),
-);
-export type Search = Type.InstanceType<typeof Search>;
+export class Search extends Type.makeObject<Search>(DXN.make('org.dxos.type.commerce.Search', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.annotations({ title: 'Name' }), Schema.optional),
+    providers: Schema.Array(Ref.Ref(Provider)),
+    /** Values for the union of provider fields, keyed by field name. */
+    params: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(FormInputAnnotation.set(false)),
+    /** Backing ECHO feed (queue) of immutable Result entries appended by each run. */
+    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    /** Per-Result tags keyed by tag uri → Result ids (the `starred` flag — see {@link STARRED_TAG}). */
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+    /**
+     * Timestamp of the last run; persisted metadata, hidden from forms.
+     * Run progress itself is ephemeral UI state (see SearchForm), not a persisted property.
+     */
+    lastRunAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--shopping-cart--regular', hue: 'cyan' }),
+  ),
+) {}
 
 /** Checks if a value is a Search object. */
 export const instanceOf = (value: unknown): value is Search => Obj.instanceOf(Search, value);

@@ -56,6 +56,7 @@ export class QueryPlanner {
 
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
+    this._validateAggregatePlacement(query);
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
@@ -90,6 +91,10 @@ export class QueryPlanner {
         return this._generateOrderClause(query, context);
       case 'limit':
         return this._generateLimitClause(query, context);
+      case 'skip':
+        return this._generateSkipClause(query, context);
+      case 'aggregate':
+        return this._generateAggregateClause(query, context);
       case 'from':
         return this._generateFromClause(query, context);
       default:
@@ -145,6 +150,27 @@ export class QueryPlanner {
               _tag: 'ClearWorkingSetStep',
             },
             ...this._generateDeletedHandlingSteps(context),
+          ]);
+        }
+        if (context.selectionInverted && isTrivialTypenameFilter(filter)) {
+          invariant(filter.typename !== null);
+          // Negated plain type filter (e.g. `Filter.not(Filter.type(Foo))`) — mirrors the trivial-OR
+          // handling below: select via an inverted TypeSelector when indexed, or a WildcardSelector
+          // when working from the in-memory set, then re-check the negation in the FilterStep.
+          const selector: QueryPlan.Selector = this._options.noIndexes
+            ? { _tag: 'WildcardSelector' }
+            : { _tag: 'TypeSelector', typename: [filter.typename], inverted: true };
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              scope: context.scope,
+              selector,
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: { type: 'not', filter: { ...filter } },
+            },
           ]);
         }
         if (context.selectionInverted) {
@@ -283,6 +309,8 @@ export class QueryPlanner {
         throw queryTooComplexError(context.originalQuery);
       case 'in':
         throw queryTooComplexError(context.originalQuery);
+      case 'in-query':
+        throw queryTooComplexError(context.originalQuery);
       case 'range':
         throw queryTooComplexError(context.originalQuery);
 
@@ -418,11 +446,16 @@ export class QueryPlanner {
             return filter.typename;
           });
 
-          // When noIndexes is set, use WildcardSelector so all loaded cores are scanned;
-          // the type predicate is enforced by the FilterStep that already follows.
+          // When noIndexes is set, use WildcardSelector so all loaded cores are scanned; a WildcardSelector
+          // carries no inversion, so the FilterStep below must apply the negation instead of the selector.
           const orSelector: QueryPlan.Selector = this._options.noIndexes
             ? { _tag: 'WildcardSelector' }
             : { _tag: 'TypeSelector', typename: typenames, inverted: context.selectionInverted };
+          // The FilterStep re-checks the selector's predicate (it also disambiguates same-named schema
+          // versions the index doesn't distinguish), so it must encode the same inversion as the selector.
+          const orFilter: QueryAST.Filter = context.selectionInverted
+            ? { type: 'not', filter: { ...filter } }
+            : { ...filter };
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
@@ -432,7 +465,7 @@ export class QueryPlanner {
             ...this._generateDeletedHandlingSteps(context),
             {
               _tag: 'FilterStep',
-              filter: { ...filter },
+              filter: orFilter,
             },
           ]);
         } else {
@@ -658,6 +691,59 @@ export class QueryPlanner {
   }
 
   /**
+   * `aggregate` must be the outermost data clause: only `from()`/`options()` and the group-level
+   * pagination clauses `limit()`/`skip()` may wrap it. At most one `aggregate` may appear anywhere
+   * in the tree — including inside a `.from(subquery)` source, which the planner flattens (so an
+   * aggregated subquery would otherwise produce an unsupported double-`aggregate`). The DSL's types
+   * can't enforce this (`Query<AggregateResult & ...>` still exposes `orderBy`/`select`/etc.), so
+   * it's validated here at plan time.
+   *
+   * `limit`/`skip` above an `aggregate` page over whole groups (see the group-aware `LimitStep`/
+   * `SkipStep` execution); a `limit`/`skip` below it windows the flat object stream before aggregating.
+   */
+  private _validateAggregatePlacement(query: QueryAST.Query): void {
+    // Count every aggregate anywhere in the tree. `QueryAST.visit` recurses through `from` sources,
+    // so this also sees aggregated subqueries that flattening would merge in.
+    let aggregateCount = 0;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'aggregate') {
+        aggregateCount += 1;
+      }
+    });
+    if (aggregateCount === 0) {
+      return;
+    }
+    if (aggregateCount > 1) {
+      throw new QueryError({
+        message: 'Only one aggregate clause is supported per query',
+        context: { query },
+      });
+    }
+
+    // Exactly one aggregate: it must sit at the outermost data position (only from/options/order/
+    // limit/skip may wrap it). A wrapping `order` reorders whole groups; an `order` inside the
+    // aggregate's own query orders members within each group. Unwrap the permitted wrappers and
+    // require the aggregate to be what remains.
+    let root = query;
+    while (
+      root.type === 'options' ||
+      root.type === 'from' ||
+      root.type === 'order' ||
+      root.type === 'limit' ||
+      root.type === 'skip'
+    ) {
+      root = root.query;
+    }
+    if (root.type !== 'aggregate') {
+      throw new QueryError({
+        message:
+          'aggregate must be the outermost query clause — only from(), options(), orderBy(), limit() and skip() may follow it',
+        context: { query },
+      });
+    }
+  }
+
+  /**
    * Removes filter steps that have no predicates.
    */
   private _optimizeEmptyFilters(plan: QueryPlan.Plan): QueryPlan.Plan {
@@ -711,6 +797,26 @@ export class QueryPlanner {
     ]);
   }
 
+  private _generateSkipClause(query: QueryAST.QuerySkipClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'SkipStep',
+        skip: query.skip,
+      },
+    ]);
+  }
+
+  private _generateAggregateClause(query: QueryAST.QueryAggregateClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'AggregateStep',
+        aggregates: query.aggregates,
+      },
+    ]);
+  }
+
   // After complete plan is built, inspect it from the end:
   //   - Walk backwards until hitting an object set changer.
   //   - If an order step is found, skip.
@@ -747,10 +853,12 @@ export class QueryPlanner {
       }
     }
 
-    // Find the position to insert the order step (before any limit steps).
+    // Find the position to insert the order step (before any trailing limit/skip/aggregate steps —
+    // aggregation must see the intended order already applied, both within and between groups).
     let insertIndex = processedPlan.steps.length;
     for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
-      if (processedPlan.steps[i]._tag === 'LimitStep') {
+      const tag = processedPlan.steps[i]._tag;
+      if (tag === 'LimitStep' || tag === 'SkipStep' || tag === 'AggregateStep') {
         insertIndex = i;
       } else {
         break;
@@ -760,7 +868,7 @@ export class QueryPlanner {
     const newSteps = [...processedPlan.steps];
     newSteps.splice(insertIndex, 0, {
       _tag: 'OrderStep',
-      order: [Order.natural.ast],
+      order: [Order.natural().ast],
     });
 
     return QueryPlan.Plan.make(newSteps);
@@ -811,7 +919,9 @@ export class QueryPlanner {
 
     // Check if we can propagate the limit to a SelectStep and/or OrderStep.
     // We can only do this if there are no unions, traversals, or set differences between them.
-    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep']);
+    // AggregateStep is also a blocker: a limit above it counts whole groups, so it must not be
+    // pushed down into the flat SelectStep/OrderStep scan (that would slice objects, not groups).
+    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep', 'AggregateStep']);
 
     let selectStepIndex = -1;
     let orderStepIndex = -1;
@@ -835,26 +945,55 @@ export class QueryPlanner {
         selectStepIndex = -1;
         orderStepIndex = -1;
       }
+      // Same reasoning for a nested subquery-membership predicate (`Filter.in(query.project(...))`):
+      // it prunes results in-memory after the SelectStep based on a set resolved at execution time,
+      // so pushing the limit earlier would slice candidates before the semi-join runs and starve
+      // the result set.
+      if (step._tag === 'FilterStep' && filterContainsInQuery(step.filter)) {
+        selectStepIndex = -1;
+        orderStepIndex = -1;
+      }
     }
 
     if (selectStepIndex === -1 && orderStepIndex === -1) {
       return QueryPlan.Plan.make(processedSteps);
     }
 
-    // A content-based reorder (by property value or system timestamp) needs the FULL candidate set
-    // before slicing — the index scan order does not match the requested order. Pushing the limit
-    // into the SelectStep would slice an arbitrary subset before sorting. Natural (by id) and rank
-    // (FTS scan already returns by rank) orders are consistent with the scan, so keep optimizing
-    // those.
+    // Pushing the limit into the SelectStep is only sound when the scan enumerates candidates in the
+    // requested order, so that the first N of the scan are the first N of the result. The scan runs
+    // in ascending natural order (by id / queue position). A content-based reorder (property or
+    // system timestamp) or a descending natural order does not match that scan order, so slicing at
+    // select time would keep the wrong N; those need the FULL candidate set and only the OrderStep
+    // may apply the limit. Ascending natural and rank (the FTS scan already returns by rank) stay
+    // consistent with the scan, so keep optimizing those.
     if (orderStepIndex !== -1) {
       const orderStep = processedSteps[orderStepIndex];
-      const reordersByContent =
+      const scanOrderMismatch =
         orderStep._tag === 'OrderStep' &&
-        orderStep.order.some((order) => order.kind === 'property' || order.kind === 'timestamp');
-      if (reordersByContent) {
+        orderStep.order.some(
+          (order) =>
+            order.kind === 'property' ||
+            order.kind === 'timestamp' ||
+            (order.kind === 'natural' && order.direction === 'desc'),
+        );
+      if (scanOrderMismatch) {
         selectStepIndex = -1;
       }
     }
+
+    // A SkipStep between a propagation target and the LimitStep drops items after the limit
+    // would be applied. Since the LimitStep is removed, the limit pushed into the earlier step
+    // must also cover the skipped prefix — otherwise `skip(k).limit(n)` yields only `n - k` items.
+    const skipBetween = (fromIndex: number): number => {
+      let total = 0;
+      for (let i = fromIndex + 1; i < limitStepIndex; i++) {
+        const step = processedSteps[i];
+        if (step._tag === 'SkipStep') {
+          total += step.skip;
+        }
+      }
+      return total;
+    };
 
     // Create a mutable copy of steps to modify.
     const newSteps = [...processedSteps];
@@ -864,7 +1003,7 @@ export class QueryPlanner {
       const selectStep = newSteps[selectStepIndex] as QueryPlan.SelectStep;
       newSteps[selectStepIndex] = {
         ...selectStep,
-        limit: limitValue,
+        limit: limitValue + skipBetween(selectStepIndex),
       };
     }
 
@@ -873,7 +1012,7 @@ export class QueryPlanner {
       const orderStep = newSteps[orderStepIndex] as QueryPlan.OrderStep;
       newSteps[orderStepIndex] = {
         ...orderStep,
-        limit: limitValue,
+        limit: limitValue + skipBetween(orderStepIndex),
       };
     }
 
@@ -943,6 +1082,32 @@ const _filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
     case 'and':
     case 'or':
       return filter.filters.some(_filterContainsChildOf);
+    default:
+      return false;
+  }
+};
+
+/**
+ * Returns true if the filter is a subquery-membership predicate (`Filter.in(query.project(...))`,
+ * AST type `in-query`) or composes one via `and` / `or` / `not` / a nested `object` prop. Unlike
+ * `child-of`, which is only ever a root filter, `in-query` is always nested inside an `object`
+ * filter's `props` — the residual FilterStep produced by `_generateSelectionFromFilter`'s `object`
+ * case (above) is always `type: 'object'`, so this must recurse into `props` to find it.
+ *
+ * Exported (unlike the sibling `_filterContains*` helpers) so `query-executor.ts`'s `extractScopes`
+ * can reuse it — a bare `filter.type === 'in-query'` check there would miss the common case.
+ */
+export const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'in-query':
+      return true;
+    case 'object':
+      return Object.values(filter.props).some(filterContainsInQuery);
+    case 'not':
+      return filterContainsInQuery(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(filterContainsInQuery);
     default:
       return false;
   }

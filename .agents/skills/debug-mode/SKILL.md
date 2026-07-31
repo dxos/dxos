@@ -17,7 +17,8 @@ This repo already ships the full pipeline; do not reinvent it.
 - Entries are serialized as **NDJSON** and streamed over the Vite HMR WebSocket to the dev server, which appends them to **`packages/apps/composer-app/app.log`**. The file is truncated when the dev server starts.
 - Third-party plugin code hosted inside Composer imports `@dxos/log` from the host, so its logs land in the same `app.log`.
 - Query the log with `node scripts/query-logs.mjs packages/apps/composer-app/app.log -q <filter> -g <regex>`. See the `logging` skill for the full filter syntax (levels, `path:level`, `!exclude`, `-q` OR / `-g` AND).
-- Node-side code (tests, CLI, server): `@dxos/log` works identically; set `LOG_FILTER=debug` for stdout capture in vitest runs.
+- Node-side code (tests, CLI, server): `@dxos/log` works identically; set `LOG_FILTER=debug` for stdout capture in vitest runs. Node vitest also writes an NDJSON file sink at **`<package>/test.log`** (path is printed at run start).
+- **Browser tests** (vitest browser mode, `*.browser.test.ts`, storybook) have no filesystem, so `@dxos/log` entries are POSTed to the `DxosLogPlugin` dev-server sink and appended to **`<package>/test-browser.log`** (NDJSON, same shape as `app.log`/`test.log`). Both the page realm and worker realms are covered. Filter defaults to `debug`; override with `DX_TEST_LOG_FILTER` (or `LOG_FILTER`). Query it the same way: `node scripts/query-logs.mjs <package>/test-browser.log -q debug -g '\[DEBUG H'`. This is the primary window into worker-side behavior for worker-framework browser tests.
 - Composer runs client services in a **dedicated worker per tab** (a coordinator handles cross-tab exclusivity; there is no long-lived SharedWorker hosting services — `DX_SHARED_WORKER` is an opt-in exception). A plain page reload therefore picks up newly instrumented worker-side code; do NOT ask the user to close all tabs first. Worker-side logs land in the same `app.log` (the log plugin handles `?worker_file` / `?sharedworker_file` entries).
 
 You instrument by adding `log('[DEBUG H1] …', { ctx })` calls inside `#region DEBUG` markers, ask the user to reproduce, then grep for `[DEBUG H` in `app.log`. The `f`/`n` fields in each NDJSON record give you file:line; the `c` field carries structured context; `o` carries scope.
@@ -95,6 +96,8 @@ ALL instrumentation MUST be wrapped in region blocks for clean removal:
 ```
 
 (Equivalently `truncate -s 0 packages/apps/composer-app/app.log`.)
+
+When debugging a **test** rather than the running app, the sink is the package's own file — truncate `<package>/test.log` (node) or `<package>/test-browser.log` (browser) instead, and re-run the test yourself between iterations rather than waiting on a human reproduction.
 
 ### Be minimal
 

@@ -6,8 +6,8 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 import React from 'react';
 
 import { type Ref } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
-import { useObject } from '@dxos/react-client/echo';
+import { Doc } from '@dxos/echo-doc';
+import { useObject } from '@dxos/echo-react';
 import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
@@ -52,7 +52,7 @@ export const Summary = composable<HTMLDivElement, SummaryProps>(
       return {
         initialValue: target.content ?? '',
         extensions: [
-          createDataExtensions({ id, text: createDocAccessor(target, ['content']) }),
+          createDataExtensions({ id, text: Doc.createAccessor(target, ['content']) }),
           createBasicExtensions({ lineWrapping: true }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           createMarkdownExtensions(),

@@ -349,11 +349,11 @@ describe('Annotation', () => {
         schema: Schema.String,
       });
 
-      const TaggedPerson = Schema.Struct({
-        name: Schema.String,
-      })
-        .pipe(ColorAnnotation.set('teal'))
-        .pipe(Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0')));
+      const TaggedPerson = Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0'))(
+        Schema.Struct({
+          name: Schema.String,
+        }).pipe(ColorAnnotation.set('teal')),
+      );
 
       const schema = Type.getSchema(TaggedPerson);
       const result = ColorAnnotation.get(schema);
@@ -368,11 +368,11 @@ describe('Annotation', () => {
       id: 'org.dxos.annotation.color',
       schema: Schema.String,
     });
-    const Person = Schema.Struct({
-      name: Schema.String,
-    })
-      .pipe(ColorAnnotation.set('schema-teal'))
-      .pipe(Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0')));
+    const Person = Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+      }).pipe(ColorAnnotation.set('schema-teal')),
+    );
 
     test('set and get on Obj.make instance', ({ expect }) => {
       const person = Obj.make(Person, { name: 'Alice' });
@@ -445,8 +445,8 @@ describe('Annotation', () => {
       id: 'org.dxos.test.order',
       schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
     });
-    const Container = Schema.Struct({ name: Schema.String }).pipe(
-      Type.makeObject(DXN.make('com.example.type.container', '0.1.0')),
+    const Container = Type.makeObject(DXN.make('com.example.type.container', '0.1.0'))(
+      Schema.Struct({ name: Schema.String }),
     );
 
     const setOrder = (obj: Obj.Unknown, order: Record<string, string[]>) =>
@@ -526,11 +526,11 @@ describe('Annotation', () => {
       id: 'org.dxos.test.mutable-ref-order',
       schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
     });
-    const Item = Schema.Struct({ name: Schema.String }).pipe(
-      Type.makeObject(DXN.make('com.example.type.mutableItem', '0.1.0')),
+    const Item = Type.makeObject(DXN.make('com.example.type.mutableItem', '0.1.0'))(
+      Schema.Struct({ name: Schema.String }),
     );
-    const Container = Schema.Struct({ name: Schema.String }).pipe(
-      Type.makeObject(DXN.make('com.example.type.mutableContainer', '0.1.0')),
+    const Container = Type.makeObject(DXN.make('com.example.type.mutableContainer', '0.1.0'))(
+      Schema.Struct({ name: Schema.String }),
     );
 
     test('push to an annotation array in place without Annotation.set', ({ expect }) => {

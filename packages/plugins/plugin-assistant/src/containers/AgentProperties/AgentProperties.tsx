@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -18,26 +18,30 @@ export type AgentPropertiesProps = AppSurface.ObjectPropertiesProps<Agent.Agent>
 export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const spaceId = Obj.getDatabase(agent)?.spaceId;
 
-  // TODO(burdon): Factor this out?
-  const syncTriggers = useSpaceCallback(
+  // Subscriptions live on the compiled automation, so a toggle recompiles them (per-category
+  // reconcile — the schedule routine is untouched). `useSpaceCallback` takes no arguments, so the
+  // next set is staged on a ref.
+  const pendingSubscriptions = useRef<Ref.Ref<Obj.Unknown>[]>([]);
+  const syncAutomation = useSpaceCallback(
     spaceId,
     [] as const,
-    () => Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) }),
+    () =>
+      Operation.invoke(AgentWizardOperations.SyncAutomation, {
+        agent: Ref.make(agent),
+        subscriptions: pendingSubscriptions.current,
+      }),
     [agent],
   );
 
-  // Sync triggers whenever the agent mutates (e.g., subscriptions change).
-  useEffect(() => {
-    if (!spaceId) {
-      return;
-    }
+  const handleSubscriptionsChanged = useCallback(
+    (subscriptions: Ref.Ref<Obj.Unknown>[]) => {
+      pendingSubscriptions.current = subscriptions;
+      syncAutomation().catch((err) => log.catch(err));
+    },
+    [syncAutomation],
+  );
 
-    return Obj.subscribe(agent, () => {
-      queueMicrotask(() => {
-        syncTriggers().catch((err) => log.catch(err));
-      });
-    });
-  }, [spaceId, agent, syncTriggers]);
-
-  return <AgentPropertiesComponent agent={agent} />;
+  return <AgentPropertiesComponent agent={agent} onSubscriptionsChanged={handleSubscriptionsChanged} />;
 };
+
+AgentProperties.displayName = 'AgentProperties';

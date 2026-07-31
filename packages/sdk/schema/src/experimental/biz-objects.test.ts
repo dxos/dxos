@@ -11,14 +11,14 @@ import { DXN, Obj, Ref, Type } from '@dxos/echo';
 
 // Product Ideas
 // Build self-building knowledge base.
-// - Modules/Blueprints: sets of propostitional statements about somethings (a company, person, project, "our challenge", "our toolchain", "problem X", etc.)
+// - Modules/Skills: sets of propostitional statements about somethings (a company, person, project, "our challenge", "our toolchain", "problem X", etc.)
 //   - Discuss with colleagues and AI and click to accept/reject premises which are then added to the module.
 //   - Modules are used in reasoning.
 //   - Out of the box: team is assigned a "game" to come up with shared models for everyone else in the team.
 // - New modules can be created on the fly inside the AI and we can collaboratively chat with the model.
 // - Models can referernce each other canonically.
 // - Models include open questions/issues to solve.
-// - Could be product ideas, technical issues; they have a goal; can be associated with tools (blueprints) that can join (temporarily) and do work.
+// - Could be product ideas, technical issues; they have a goal; can be associated with tools (skills) that can join (temporarily) and do work.
 // - Local LLM (offline).
 
 // ## COMPUTE MODEL
@@ -31,9 +31,9 @@ import { DXN, Obj, Ref, Type } from '@dxos/echo';
 // - Follow-up with refactoring.
 
 // UX
-// - Edit Blueprint (schema, prompts, scripts, tool selection).
-// - Drag Blueprint into Chat's context window.
-// - Output Chat responses into Blueprint (in a structured way).
+// - Edit Skill (schema, prompts, scripts, tool selection).
+// - Drag Skill into Chat's context window.
+// - Output Chat responses into Skill (in a structured way).
 // - Schema editor, Outline editor, Document editor, Sheet model.
 
 /**
@@ -52,9 +52,7 @@ namespace Proposition {
     children?: Fields[];
   }
 
-  export const Object = Fields.pipe(Type.makeObject(DXN.make('org.dxos.type.proposition', '0.1.0')));
-
-  export type Object = Type.InstanceType<typeof Object>;
+  export class Object extends Type.makeObject<Object>(DXN.make('org.dxos.type.proposition', '0.1.0'))(Fields) {}
 
   // TODO(burdon): Obfuscates Obj.make?
   export const make = (props: Pick<Object, 'text'>) => Obj.make(Object, Fields.make(props));
@@ -83,9 +81,7 @@ export namespace OKR {
     description: 'A goal-setting framework defining Objectives and Key Results.',
   });
 
-  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.okr', '0.1.0')));
-
-  export type Object = Type.InstanceType<typeof Object>;
+  class Object extends Type.makeObject<Object>(DXN.make('org.dxos.type.okr', '0.1.0'))(Properties) {}
 
   export const make = () => Obj.make(Object, { objectives: [], keyResults: [] });
 }
@@ -115,7 +111,7 @@ export namespace SWOT {
       'SWOT is a strategic planning technique used to evaluate the Strengths, Weaknesses, Opportunities, and Threats involved in a project or business venture.',
   });
 
-  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.swot', '0.1.0')));
+  const Object = Type.makeObject(DXN.make('org.dxos.type.swot', '0.1.0'))(Properties);
 
   export type Any = Type.InstanceType<typeof Object>;
 
@@ -127,9 +123,7 @@ export namespace Plan {
     name: Schema.String,
   });
 
-  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')));
-
-  export type Object = Type.InstanceType<typeof Object>;
+  class Object extends Type.makeObject<Object>(DXN.make('org.dxos.type.plan', '0.1.0'))(Properties) {}
 
   export const make = ({ name }: Object) => Obj.make(Object, { name });
 }

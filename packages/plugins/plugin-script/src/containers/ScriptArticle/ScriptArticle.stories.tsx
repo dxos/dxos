@@ -8,15 +8,16 @@ import React, { useEffect, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Blueprint } from '@dxos/compute';
+import { Skill } from '@dxos/compute';
 import { Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -25,12 +26,12 @@ import { translations } from '#translations';
 
 import { ScriptArticle } from './ScriptArticle';
 
-type DefaultStoryProps = {};
+type StoryArgs = {};
 
 /**
  * Loads the script source ref so `script.source.target` is available for the editor.
  */
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const [space] = useSpaces();
   const [script] = useQuery(space?.db, Filter.type(Script.Script));
   const [sourceReady, setSourceReady] = useState(false);
@@ -80,7 +81,7 @@ const meta = {
               services: SERVICES_CONFIG.REMOTE,
             },
           }),
-          types: [Script.Script, Operation.PersistentOperation, Blueprint.Blueprint, Text.Text],
+          types: [Script.Script, Operation.PersistentOperation, Skill.Skill, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -98,7 +99,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<DefaultStoryProps>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 

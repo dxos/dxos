@@ -26,7 +26,7 @@ describe('MapPlugin', () => {
     );
 
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
+    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
 
     // Operation handlers are not loaded on startup — SetupProcessManager fires lazily when an operation is invoked.
     await harness.fire(ActivationEvents.SetupProcessManager);

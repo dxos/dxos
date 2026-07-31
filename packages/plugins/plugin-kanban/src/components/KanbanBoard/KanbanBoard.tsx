@@ -139,7 +139,6 @@ export const KanbanBoardContent = composable<HTMLDivElement, KanbanBoardContentP
     <Board.Content
       {...composableProps(props)}
       ref={forwardedRef}
-      id={kanbanId}
       eventHandler={columnEventHandler}
       Tile={KanbanColumn}
     />

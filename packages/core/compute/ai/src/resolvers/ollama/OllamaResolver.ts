@@ -2,19 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import type * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { DXN } from '@dxos/keys';
+
 import * as AiModelResolver from '../../AiModelResolver';
-import { type ModelName } from '../../defs';
-import { type AiModelNotAvailableError } from '../../errors';
+import { AiModelNotAvailableError } from '../../errors';
+import * as Model from '../../Model';
+import * as Provider from '../../Provider';
 import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
 
 /**
- * Ollama resolver using native Ollama API.
+ * Ollama resolver using the native Ollama API.
  *
  * curl http://localhost:11434/api/tags | jq
  */
@@ -22,10 +24,20 @@ export const DEFAULT_OLLAMA_ENDPOINT = 'http://localhost:11434';
 
 export const make = ({
   endpoint = DEFAULT_OLLAMA_ENDPOINT,
-  transformClient,
+  // Ollama's CORS preflight rejects the `traceparent` header Effect's HttpClient injects for
+  // distributed tracing (a local model server participates in no trace), so disable propagation by
+  // default — otherwise browser calls to Ollama fail the preflight. Callers may override.
+  transformClient = (client) => HttpClient.withTracerPropagation(client, false),
+  provider = Provider.ollama.id,
+  models = Model.forProvider(provider),
 }: {
   readonly endpoint?: string;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
+  /** The provider this resolver serves; `built-in` (the sidecar) passes its own id. */
+  readonly provider?: DXN.DXN;
+  /** Models this resolver serves; defaults to the provider's curated catalog. Local providers pass a
+   * list extended with installed tags so runtime-pulled models resolve too. */
+  readonly models?: readonly Model.Model[];
 } = {}) => {
   // Create the client layer configured for Ollama's API format.
   const clientLayer = ChatCompletionsAdapter.clientLayer({
@@ -34,21 +46,19 @@ export const make = ({
     transformClient,
   }).pipe(Layer.provide(FetchHttpClient.layer));
 
-  // Create model layers with client dependency provided.
+  // Create model layers with the client dependency provided.
   const createModelLayer = (model: string) => ChatCompletionsAdapter.layer(model).pipe(Layer.provide(clientLayer));
 
-  return AiModelResolver.AiModelResolver.fromModelMap(
+  // Map each model id (DXN) to the raw Ollama tag passed to the back-end.
+  const backendById = new Map(models.map((model) => [model.id, model.backend]));
+
+  return AiModelResolver.AiModelResolver.resolver(
     {
       name: 'Ollama',
     },
-    Effect.succeed({
-      'ai.google.model.gemma-3-27b': createModelLayer('gemma3:27b'),
-      'ai.ollama.model.deepseek-r1:latest': createModelLayer('deepseek-r1:latest'),
-      'ai.ollama.model.llama3.2:1b': createModelLayer('llama3.2:1b'),
-      'ai.ollama.model.llama3:70b': createModelLayer('llama3:70b'),
-      'ai.ollama.model.qwen2.5:14b': createModelLayer('qwen2.5:14b'),
-      'ai.ollama.model.gpt-oss:20b': createModelLayer('gpt-oss:20b'),
-      'ai.ollama.model.gemma4:latest': createModelLayer('gemma4:latest'),
-    } satisfies Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>),
+    Effect.succeed((model: DXN.DXN, options) => {
+      const backend = options?.provider === provider ? backendById.get(model) : undefined;
+      return backend ? createModelLayer(backend) : Layer.fail(new AiModelNotAvailableError(model));
+    }),
   );
 };

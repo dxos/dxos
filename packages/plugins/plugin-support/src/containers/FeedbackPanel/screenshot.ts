@@ -17,15 +17,15 @@
 // The `html-to-image` import is dynamic on purpose — pays the ~30 KB only when
 // the user actually clicks "Create GitHub Issue", not on every panel mount.
 
+import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 
 /**
  * Default Composer image-service base URL — the Cloudflare Worker that `composer-crx`
- * uses in production (see `packages/apps/composer-crx/src/config.ts`). The `images.dxos.org`
- * alias that `@dxos/plugin-crm` defaults to is not yet DNS-mapped, so we point at the
- * worker URL directly. Override per-environment via `DX_IMAGE_SERVICE_URL`.
+ * uses in production. Override per-environment via `runtime.services.edgeServices.image`
+ * or the `DX_IMAGE_SERVICE_URL` env var.
  */
-export const DEFAULT_IMAGE_SERVICE_URL = 'https://image-service-main.dxos.workers.dev';
+const DEFAULT_IMAGE_SERVICE_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Image];
 
 /** Hard ceiling on the captured PNG — matches the CRM caller's cap. */
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;

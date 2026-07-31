@@ -24,7 +24,7 @@ export default Config2.make({
       An optional message enricher pipeline lets plugins annotate messages before they are
       committed — for example, to attach speaker identity from a calls service.
 
-      The plugin ships two blueprint-compatible operations: Open (loads and formats a transcript
+      The plugin ships two skill-compatible operations: Open (loads and formats a transcript
       for reading by an AI assistant) and Summarize (sends the transcript text to an LLM and
       returns a structured Markdown summary with key points, verbatim quotes, and actionable
       tasks extracted from the conversation).
@@ -36,7 +36,7 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-transcription',
     icon: { key: 'ph--microphone--regular', hue: 'sky' },
     spec: 'PLUGIN.mdl',
-    tags: ['labs'],
+    tags: ['alpha'],
     screenshots: [],
   },
 });

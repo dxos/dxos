@@ -17,3 +17,5 @@ export const DownloadLogsAction = () => {
   const [onDownloadLogs] = useCapabilities(ObservabilityCapabilities.LogDownloader);
   return <FeedbackForm.DownloadLogs onDownloadLogs={onDownloadLogs} />;
 };
+
+DownloadLogsAction.displayName = 'DownloadLogsAction';

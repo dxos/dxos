@@ -52,10 +52,16 @@
       "path": "../../core/compute/extractor"
     },
     {
+      "path": "../../core/compute/extractor-lib"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -79,10 +85,16 @@
       "path": "../../ui/react-ui-calendar"
     },
     {
+      "path": "../../ui/react-ui-dnd"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-geo"
+    },
+    {
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-menu"
@@ -113,6 +125,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-space"

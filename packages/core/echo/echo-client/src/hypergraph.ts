@@ -2,16 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
+import { type BlobBackend } from '@dxos/echo-protocol';
 import {
-  batchEvents,
   type AnyProperties,
-  getStrongDependencies,
   type RefResolverRequest,
   type RefSource,
+  TypeSchema,
+  batchEvents,
+  getStrongDependencies,
+  isInstanceOf,
   setRefResolver,
 } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
@@ -19,8 +22,9 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
+import { BlobManager } from './blob';
 import { type ItemsUpdatedEvent } from './core-db';
-import { type LoadBackend, type LoadResult, LoadOpTable } from './core-db/load-op';
+import { type LoadBackend, LoadOpTable, type LoadResult } from './core-db/load-op';
 import { RequestImpl } from './core-db/ref-resolver-request';
 import { type DatabaseImpl } from './proxy-db';
 import {
@@ -65,6 +69,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   // kind / space; closure satisfaction lives in the per-call `RequestImpl`s.
   readonly #loadOpTable = new LoadOpTable((uri) => this.#routeBackend(uri));
   readonly #spaceBackends = new Map<SpaceId, LoadBackend>();
+  readonly #blobManager = new BlobManager();
 
   constructor() {
     this._registry = makeRegistry();
@@ -154,6 +159,21 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return ref;
   }
 
+  /**
+   * @internal Reached by `DatabaseImpl` to dispatch blob reads/writes.
+   */
+  get blobManager(): BlobManager {
+    return this.#blobManager;
+  }
+
+  registerBlobBackend(name: string, backend: BlobBackend, options?: { default?: boolean }): CleanupFn {
+    return this.#blobManager.registerBackend(name, backend, options);
+  }
+
+  get defaultBlobStorage(): string {
+    return this.#blobManager.defaultStorage;
+  }
+
   getDatabase(spaceId: SpaceId): DatabaseImpl | undefined {
     return this._databases.get(spaceId);
   }
@@ -163,8 +183,18 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * @param middleware Called with the loaded object. The caller may change the object.
    * @returns Result of `onLoad`.
    */
-  createRefResolver({ context = {}, middleware = (obj) => obj }: Hypergraph.RefResolverOptions): Ref.Resolver {
+  createRefResolver({ context = {} }: Hypergraph.RefResolverOptions): Ref.Resolver {
     // TODO(dmaretskyi): Rewrite resolution algorithm with tracks for absolute and relative DXNs.
+
+    // A resolved reference that points at a persisted (db-backed) schema object surfaces as the
+    // registered `Type.Type` entity rather than the raw stored object, so consumers see a stable
+    // type entity. Other entities pass through unchanged.
+    const materializeStoredSchema = (obj: AnyProperties): AnyProperties => {
+      if (context.space != null && isInstanceOf(TypeSchema, obj) && Type.getDatabase(obj) != null) {
+        return this.getDatabase(context.space)?._getOrRegisterPersistentSchema(obj) ?? obj;
+      }
+      return obj;
+    };
 
     return {
       resolve: (uri: URI.URI, { source }: { source: RefSource }): RefResolverRequest => {
@@ -176,14 +206,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
         if (EID.isEID(uri)) {
           const res = this._resolveSync(uri, context, onLoad);
-          return res ? middleware(res) : undefined;
+          return res ? materializeStoredSchema(res) : undefined;
         }
 
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
-        // typename DXN, or a keyed entity (operation, blueprint, etc.) by its key DXN.
+        // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN.
         if (DXN.isDXN(uri)) {
           const entity = this._registry.getByURI(uri.toString());
-          return entity ? middleware(entity) : undefined;
+          return entity ? materializeStoredSchema(entity) : undefined;
         }
 
         return undefined; // Unsupported URI kind.
@@ -191,11 +221,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
       resolveLegacy: async (uri) => {
         const obj = await this._resolveAsync(uri, context);
-        if (obj) {
-          return middleware(obj);
-        } else {
-          return undefined;
-        }
+        return obj ? materializeStoredSchema(obj) : undefined;
       },
 
       resolveSchema: async (uri) => {
@@ -510,14 +536,12 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
     // TODO(dmaretskyi): Consider throwing if space not found.
 
-    if (!OBJECT_DIAGNOSTICS.has(objectId)) {
-      OBJECT_DIAGNOSTICS.set(objectId, {
-        spaceId,
-        objectId,
-        loadReason: 'reference access',
-        loadedStack: new StackTrace(),
-      });
-    }
+    recordObjectDiagnostic(objectId, () => ({
+      spaceId,
+      objectId,
+      loadReason: 'reference access',
+      loadedStack: new StackTrace().getStack(),
+    }));
 
     log('trap', { spaceId, objectId });
     if (onResolve) {
@@ -586,7 +610,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         return undefined;
       } else if (DXN.isDXN(uri)) {
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
-        // typename DXN, or a keyed entity (operation, blueprint, etc.) by its key DXN.
+        // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN.
         const entity = this._registry.getByURI(uri.toString());
         status = entity ? 'resolved' : 'missing';
         return entity ?? undefined;
@@ -637,7 +661,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
     const feeds = await db.query(Filter.type(Feed.Feed)).run();
     for (const feed of feeds) {
-      const feedDXN = Feed.getQueueUri(feed);
+      const feedDXN = Feed.getFeedUri(feed);
       if (!feedDXN) {
         continue;
       }
@@ -787,11 +811,38 @@ type ObjectDiagnostic = {
   objectId: string;
   spaceId: string;
   loadReason: string;
-  loadedStack?: StackTrace;
+  /**
+   * Formatted at capture. Storing the `StackTrace` itself would keep this map — which is never
+   * pruned — holding an unformatted stack, and an unformatted stack retains the receiver of every
+   * frame it captured, i.e. the hypergraph and the whole client graph behind it (DX-1140).
+   */
+  loadedStack?: string;
   query?: string;
 };
 
+/**
+ * First load of each object, for the `referenced-objects` diagnostic. Bounded because entries are
+ * keyed by object id and never removed: a long-lived host that keeps resolving new objects (a worker
+ * syncing a mailbox, say) would otherwise accumulate one entry per object forever. Oldest entries are
+ * dropped first, so the diagnostic keeps the most recent loads.
+ */
 export const OBJECT_DIAGNOSTICS = new Map<string, ObjectDiagnostic>();
+
+const MAX_OBJECT_DIAGNOSTICS = 1_000;
+
+export const recordObjectDiagnostic = (objectId: string, diagnostic: () => ObjectDiagnostic): void => {
+  if (OBJECT_DIAGNOSTICS.has(objectId)) {
+    return;
+  }
+  if (OBJECT_DIAGNOSTICS.size >= MAX_OBJECT_DIAGNOSTICS) {
+    // Map iteration is insertion-ordered, so the first key is the oldest.
+    const oldest = OBJECT_DIAGNOSTICS.keys().next();
+    if (!oldest.done) {
+      OBJECT_DIAGNOSTICS.delete(oldest.value);
+    }
+  }
+  OBJECT_DIAGNOSTICS.set(objectId, diagnostic());
+};
 
 trace.diagnostic({
   id: 'referenced-objects',
@@ -802,7 +853,7 @@ trace.diagnostic({
         objectId: object.objectId,
         spaceId: object.spaceId,
         loadReason: object.loadReason,
-        creationStack: object.loadedStack?.getStack(),
+        creationStack: object.loadedStack,
         query: object.query,
       };
     });

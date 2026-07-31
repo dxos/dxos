@@ -70,6 +70,7 @@ message GetDiagnosticsResponse {
 message Platform {
   enum PLATFORM_TYPE {
     BROWSER = 0;
+    /// @deprecated The shared-worker services path was removed. Value reserved for wire compatibility.
     SHARED_WORKER = 1;
     NODE = 2;
     DEDICATED_WORKER = 3;

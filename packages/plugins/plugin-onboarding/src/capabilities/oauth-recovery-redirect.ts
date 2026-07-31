@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -84,6 +85,16 @@ const deleteSnapshot = (accessTokenId: string | undefined): void => {
 };
 
 /**
+ * `Effect.tryPromise` wraps a rejected promise in `UnknownException`, whose own `.message` is a
+ * generic boilerplate string ("An unknown error occurred in Effect.tryPromise") — the real cause
+ * lives in its `.error` property, so unwrap it before logging or it is silently lost.
+ */
+const describeError = (error: unknown): string => {
+  const cause = Cause.isUnknownException(error) ? error.error : error;
+  return cause instanceof Error ? cause.message : String(cause);
+};
+
+/**
  * Startup module that finalizes redirect-flow OAuth-recovery callbacks.
  *
  * atproto/bsky nullifies `window.opener`, so the register / recovery flows cannot relay their
@@ -113,11 +124,18 @@ export default Capability.makeModule(
           const invoker = yield* Capability.waitFor(Capabilities.OperationInvoker);
           yield* finalizeRedirect(client, invoker, params).pipe(
             Effect.catchAll((error) =>
-              Effect.sync(() =>
-                log.error('oauth recovery finalize failed', {
-                  error: error instanceof Error ? error.message : String(error),
-                }),
-              ),
+              Effect.gen(function* () {
+                log.error('oauth recovery finalize failed', { error: describeError(error) });
+                yield* invoker
+                  .invoke(LayoutOperation.AddToast, {
+                    id: 'oauth-recovery-error-unknown',
+                    title: 'OAuth recovery failed',
+                    description: 'Something went wrong completing sign-in. Please try again.',
+                    icon: 'ph--warning-circle--regular',
+                    duration: 10_000,
+                  })
+                  .pipe(Effect.ignore);
+              }),
             ),
             Effect.ensuring(Effect.sync(() => deleteSnapshot(params.accessTokenId))),
           );

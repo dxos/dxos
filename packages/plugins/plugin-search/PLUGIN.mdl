@@ -4,8 +4,9 @@ name: SearchPlugin
 version: 0.1.0
 ---
 
-A full-text search and web-search plugin for `DXOS` Composer that lets users locate objects
-across all spaces and pull in structured data from the web.
+A full-text search plugin for `DXOS` Composer that lets users locate objects within the
+active space, ranked and highlighted against the space's FTS5 index. The same index also
+filters messages in the mailbox.
 
 ## Extensions
 
@@ -42,15 +43,6 @@ type SearchResult
     objectId: string          # ECHO object DXN
     typeName: string          # schema typename of the matched object
     fields: MatchField[]      # list of fields where the query matched
-```
-
-```mdl
-type WebSearchResult
-  fields:
-    url: string
-    title: string
-    snippet: string
-    publishedDate?: string
 ```
 
 ## Components
@@ -166,15 +158,15 @@ feat F-3: Deck Companion Search Panel
 ```
 
 ```mdl
-feat F-4: Web Search (Exa)
+feat F-4: Mailbox Message Search
 
   req F-4.1:
-    when: the Exa API key is configured
-    then: external web-search is available and returns WebSearchResult objects
+    when: user types a query in the mailbox search box
+    then: messages are filtered against the same FTS5 index used by SearchDialog / SearchArticle
 
   req F-4.2:
-    when: web search returns results
-    then: results are ranked by relevance and returned with url, title, and snippet
+    when: a message matches the query
+    then: the matched text is highlighted in the message list
 ```
 
 ## Acceptance

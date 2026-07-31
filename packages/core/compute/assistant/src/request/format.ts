@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { type FunctionNotFoundError, type Operation, Template } from '@dxos/compute';
-import { type Database, Obj, type Registry } from '@dxos/echo';
+import { Database, Obj, type Registry } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-client';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type EntityId } from '@dxos/keys';
@@ -25,48 +25,83 @@ import { ArtifactDiffResolver } from './artifact-diff';
 // TODO(burdon): Move to AiPreprocessor.
 export const formatSystemPrompt = ({
   system,
-  blueprints = [],
+  skills = [],
   objects = [],
-}: Pick<AiRequest.RunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
+  instructions = [],
+}: Pick<AiRequest.RunProps, 'system' | 'skills' | 'objects' | 'instructions'>): Effect.Effect<
   string,
   FunctionNotFoundError | EntityNotFoundError,
   Database.Service | Registry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
-    const blueprintDefs = yield* Function.pipe(
-      blueprints,
-      Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
+    const skillDefs = yield* Function.pipe(
+      skills,
+      Effect.forEach((skill) => Effect.succeed(skill.instructions)),
       Effect.flatMap(
         Effect.forEach((template) =>
           Effect.gen(function* () {
             return trim`
-            <blueprint>
+            <skill>
               ${yield* Template.processTemplate(template)}
-            </blueprint>
+            </skill>
           `;
           }),
         ),
       ),
-      Effect.map((blueprints) =>
-        blueprints.length > 0 ? ['## Blueprints Definitions', ...blueprints].join('\n\n') : undefined,
+      Effect.map((skills) => (skills.length > 0 ? ['## Skills Definitions', ...skills].join('\n\n') : undefined)),
+    );
+
+    // Instructions steer the session, so their text (and sentinel commands) belongs in the system
+    // prompt itself — a context-object stub would force the model to tool-load them and follow nothing.
+    const instructionDefs = yield* Function.pipe(
+      instructions,
+      Effect.forEach((instructions) =>
+        Effect.gen(function* () {
+          // A broken text ref degrades to commands-only rather than failing the whole prompt.
+          const text = yield* Database.load(instructions.text).pipe(
+            Effect.map((doc) => doc.content.trim()),
+            Effect.catchTag('EntityNotFoundError', () => Effect.succeed('')),
+          );
+          const commands = (instructions.commands ?? []).map(
+            ({ sentinel, description, prompt }) =>
+              `- \`${sentinel}\`${description ? ` (${description})` : ''}: ${prompt}`,
+          );
+          const parts = [text];
+          if (commands.length > 0) {
+            parts.push(
+              ['When the user message contains one of these sentinel commands, follow its prompt:', ...commands].join(
+                '\n',
+              ),
+            );
+          }
+          return `<instructions>\n${parts.filter(Boolean).join('\n\n')}\n</instructions>`;
+        }),
       ),
+      Effect.map((defs) => (defs.length > 0 ? ['## Instructions', ...defs].join('\n\n') : undefined)),
     );
 
     const objectDefs = yield* Function.pipe(
       objects,
-      Effect.forEach((object) =>
-        Effect.succeed(trim`
-          <object>
-            <dxn>${Obj.getURI(object)}</dxn>
-            <typename>${Obj.getTypename(object)}</typename>
-          </object>
-        `),
-      ),
+      Effect.forEach((object) => {
+        // Carry the label so the model only tool-loads an object when it needs the contents,
+        // not just to learn what the reference is.
+        const label = Obj.getLabel(object);
+        return Effect.succeed(
+          trim`
+            <object>
+              <dxn>${Obj.getURI(object)}</dxn>
+              <typename>${Obj.getTypename(object)}</typename>${label ? `\n  <label>${label}</label>` : ''}
+            </object>
+          `,
+        );
+      }),
       Effect.map((objects) => (objects.length > 0 ? ['## Context Objects', ...objects].join('\n\n') : undefined)),
     );
 
     return yield* Function.pipe(
-      Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
+      Effect.succeed(
+        [system, instructionDefs, skillDefs, objectDefs].filter((def): def is string => def !== undefined),
+      ),
       Effect.map((parts) => parts.join('\n\n')),
     );
   }).pipe(Effect.withSpan('formatSystemPrompt'));

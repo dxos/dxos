@@ -6,41 +6,63 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
+import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
-import { Routine } from '@dxos/compute';
+import { Instructions } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { type Delegation, type DelegationStrategy } from '@dxos/functions-runtime';
+import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { DelegationBlueprint } from '../blueprints';
-import { AgentPrompt } from '../functions';
-import { Agent } from '../types';
+import { RunInstructions } from '../operations';
+import { DelegationSkill } from '../skills';
+import { Agent, Chat } from '../types';
 
 /**
- * Resolves the agent whose chat is backed by the given conversation feed, if any. Plain (agentless)
- * chats yield `undefined`, so the strategy is a no-op for them.
+ * Resolves the chat backed by the given conversation feed, if any.
  */
-const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefined, never, Database.Service> =>
+const findChatForFeed = (feed: Feed.Feed): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
   Effect.gen(function* () {
-    const agents = yield* Database.query(Filter.type(Agent.Agent)).run;
-    for (const agent of agents) {
-      if (!agent.chat) {
-        continue;
-      }
+    const chats = yield* Database.query(Filter.type(Chat.Chat)).run;
+    for (const chat of chats) {
       const matches = yield* Effect.gen(function* () {
-        const chat = yield* Database.load(agent.chat!);
         const chatFeed = yield* Database.load(chat.feed);
         return chatFeed.id === feed.id;
       }).pipe(Effect.orElseSucceed(() => false));
       if (matches) {
-        return agent;
+        return chat;
       }
     }
     return undefined;
+  });
+
+/**
+ * Resolves the agent whose chat is backed by the given conversation feed, if any.
+ * Plain (agentless) chats yield `undefined`.
+ */
+const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const chat = yield* findChatForFeed(feed);
+    return chat ? yield* Agent.loadForChat(chat) : undefined;
+  });
+
+/**
+ * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
+ * fully-qualified ref in the current space. Not resolved here — it resolves lazily when read.
+ */
+const resolveArtifactRef = (id: string): Effect.Effect<Ref.Ref<Obj.Unknown>, Error, Database.Service> =>
+  Effect.gen(function* () {
+    const parsed = EID.tryParse(id);
+    const candidate = (parsed ? EID.getEntityId(parsed) : undefined) ?? id;
+    if (!EntityId.isValid(candidate)) {
+      // Malformed LLM-reported id: fail so the caller's `orElseSucceed` drops it.
+      return yield* Effect.fail(new Error(`Invalid artifact id: ${id}`));
+    }
+    const { db } = yield* Database.Service;
+    return db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId: candidate }));
   });
 
 /**
@@ -49,7 +71,7 @@ const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefine
 const formatResult = (value: unknown): string => (typeof value === 'string' ? value : JSON.stringify(value));
 
 /**
- * Extracts artifact ids a sub-agent reported in its result (see the synthesized routine
+ * Extracts artifact ids a sub-agent reported in its result (see the synthesized instructions
  * instructions). Tolerates the result being a string, or an object with `artifactIds`/`artifactId`.
  */
 const extractArtifactIds = (value: unknown): string[] => {
@@ -69,17 +91,17 @@ const extractArtifactIds = (value: unknown): string[] => {
 /**
  * Supervisor behaviour for the conversational agent: after each turn, every in-progress plan task
  * not already delegated is run by a sub-agent (a synthesized minimal `Routine` executed via
- * `AgentPrompt`); on completion the task status is updated and a templated message is posted back to
+ * `RunInstructions`); on completion the task status is updated and a templated message is posted back to
  * the conversation.
  */
 export const makeDelegationStrategy = (): DelegationStrategy => ({
   reconcile: (feed, activeIds) =>
     Effect.gen(function* () {
-      const agent = yield* findAgentForFeed(feed);
-      if (!agent) {
+      const chat = yield* findChatForFeed(feed);
+      if (!chat) {
         return [];
       }
-      const plan = yield* Database.load(agent.plan).pipe(Effect.orElseSucceed(() => undefined));
+      const plan = chat.plan ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
       if (!plan) {
         return [];
       }
@@ -93,24 +115,24 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         return [];
       }
 
-      // Sub-agents inherit the supervisor's bound blueprints (so they have the same tools/
-      // capabilities), minus the delegation blueprint itself — otherwise a sub-agent could
+      // Sub-agents inherit the supervisor's bound skills (so they have the same tools/
+      // capabilities), minus the delegation skill itself — otherwise a sub-agent could
       // recursively delegate. Resolved from the conversation's AiContext bindings.
-      const inheritedBlueprints = yield* Effect.gen(function* () {
+      const inheritedSkills = yield* Effect.gen(function* () {
         const runtime = yield* Effect.runtime<Database.Service>();
         const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-        return binder.getBlueprints().filter((blueprint) => Obj.getMeta(blueprint).key !== DelegationBlueprint.key);
+        return binder.getSkills().filter((skill) => Obj.getMeta(skill).key !== DelegationSkill.key);
       }).pipe(Effect.scoped);
-      const blueprints = inheritedBlueprints.map((blueprint) => Ref.make(blueprint));
+      const skills = inheritedSkills.map((skill) => Ref.make(skill));
 
       const delegations: Delegation[] = [];
       for (const task of pending) {
-        // Synthesize a minimal routine whose goal is the task; the sub-agent runs it via AgentPrompt
-        // with the inherited blueprints bound.
-        const routine = yield* Database.add(
-          Routine.make({
+        // Synthesize a minimal instructions whose goal is the task; the sub-agent runs it via RunInstructions
+        // with the inherited skills bound.
+        const instructions = yield* Database.add(
+          Instructions.make({
             name: task.title,
-            instructions: trim`
+            text: trim`
               Complete the following task and report the result concisely.
 
               If you create any documents or artifacts, call completeJob with a JSON object of the
@@ -119,7 +141,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
 
               Task: ${task.title}
             `,
-            blueprints,
+            skills,
           }),
         );
 
@@ -127,7 +149,10 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           id: task.id,
           spawn: Effect.gen(function* () {
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-            const fiber = yield* invoker.invokeFiber(AgentPrompt, { prompt: Ref.make(routine), input: {} });
+            const fiber = yield* invoker.invokeFiber(RunInstructions, {
+              instructions: Ref.make(instructions),
+              input: {},
+            });
             const pid = fiber.pid;
             Obj.update(plan, (plan) => {
               const taskRecord = plan.tasks.find((taskRecord) => taskRecord.id === task.id);
@@ -144,8 +169,11 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
 
   onComplete: (feed, id, exit) =>
     Effect.gen(function* () {
-      const agent = yield* findAgentForFeed(feed);
-      const plan = agent ? yield* Database.load(agent.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
+      const chat = yield* findChatForFeed(feed);
+      // Reuse the chat just resolved rather than re-scanning every chat for the same feed.
+      const agent = chat ? yield* Agent.loadForChat(chat) : undefined;
+      const plan =
+        chat?.plan != null ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
 
       let title = id;
       if (plan) {
@@ -158,15 +186,13 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         });
       }
 
-      // Fold any artifacts the sub-agent produced into the supervisor agent's context, so follow-up
-      // turns can reference them. The sub-agent runs in its own session but in the same space, so
-      // the artifacts resolve by id. Keep the stored refs to embed as inline reference blocks below.
+      // Surface any artifacts the sub-agent produced as inline reference blocks in the notification
+      // message, so follow-up turns can reference them (durable filing belongs to the project's
+      // collection — the agent stores no artifacts).
       const artifactRefs: Ref.Ref<Obj.Unknown>[] = [];
       if (agent && Exit.isSuccess(exit)) {
         for (const artifactId of extractArtifactIds(exit.value)) {
-          const ref = yield* Agent.addArtifact(agent, { name: title, id: artifactId }).pipe(
-            Effect.orElseSucceed(() => undefined),
-          );
+          const ref = yield* resolveArtifactRef(artifactId).pipe(Effect.orElseSucceed(() => undefined));
           if (ref) {
             artifactRefs.push(ref);
           }

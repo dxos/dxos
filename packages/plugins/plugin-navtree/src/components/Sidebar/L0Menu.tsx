@@ -26,11 +26,10 @@ import React, {
 
 import { type Node } from '@dxos/app-graph';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
   Icon,
   IconButton,
-  ListItem,
   ScrollArea,
   type ThemedClassName,
   Tooltip,
@@ -38,8 +37,8 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
+import { DropIndicator } from '@dxos/react-ui-list';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -59,6 +58,14 @@ type L0ItemData = {
   id: L0ItemProps['item']['id'];
   type: 'l0Item';
 };
+
+// Local rearrange-handler callback shape; drag-and-drop is wired directly via pragmatic-dnd in `L0Item`,
+// so only the callback signature is needed here.
+type StackItemRearrangeHandler<Data extends { id: string } = { id: string }> = (
+  source: Data,
+  target: Data,
+  closestEdge: Edge | null,
+) => void;
 
 type L0ItemRootProps = {
   item: Node.Node;
@@ -92,7 +99,13 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
         case 'tab':
           return onTabChange?.(item);
         case 'link':
-          return onSelect?.({ item, path, current: !getItem(path).current, option: event.altKey });
+          return onSelect?.({
+            item,
+            path,
+            current: !getItem(path).current,
+            option: event.altKey,
+            shift: event.shiftKey,
+          });
       }
     },
     [item, parent, type, getItem, onSelect, onTabChange, isLg, runAction],
@@ -232,7 +245,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
+      {closestEdge && <DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
 });

@@ -10,7 +10,6 @@ import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, View } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { MapOperation } from '#types';
@@ -20,7 +19,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
       id: MapOperation.Toggle.meta.key,
-      match: (node) => Option.map(NodeMatcher.whenEchoType(View.View)(node), (view) => ({ view, node })),
+      match: (node, get) => Option.map(NodeMatcher.whenEchoType(View.View)(node, get), (view) => ({ view, node })),
       actions: ({ view, node }, get) => {
         const presentationRef = (node.properties as any).presentation;
         const target = presentationRef ? get(Obj.atom(presentationRef)) : undefined;
@@ -60,7 +59,7 @@ export default Capability.makeModule(
           }
           return [
             AppNode.makeCompanion({
-              id: linkedSegment('map'),
+              variant: 'map',
               label: ['map.companion.label', { ns: meta.profile.key }],
               icon: 'ph--map-trifold--regular',
               data: 'map',

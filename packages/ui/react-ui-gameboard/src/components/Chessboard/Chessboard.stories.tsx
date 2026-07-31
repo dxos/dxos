@@ -14,11 +14,11 @@ import { Gameboard, type GameboardRootProps, type Move, type Player } from '../G
 import { ChessModel } from './chess';
 import { Chessboard, type ChessboardProps } from './Chessboard';
 
-type DefaultStoryProps = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
+type StoryArgs = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
   pgn?: string;
 };
 
-const DefaultStory = ({ orientation: _orientation, pgn, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ orientation: _orientation, pgn, ...props }: StoryArgs) => {
   const registry = useContext(RegistryContext);
   const model = useMemo(() => new ChessModel(registry, pgn), [registry, pgn]);
   const [orientation, setOrientation] = useState<Player | undefined>(_orientation);

@@ -22,9 +22,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/av"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -64,10 +61,25 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
+      "path": "../../core/compute/pipeline-transcription"
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -77,6 +89,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -94,6 +109,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-audio"
     },
     {
@@ -109,10 +127,16 @@
       "path": "../../ui/react-ui-graph"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/react-ui-transcription"
     },
     {
       "path": "../../ui/ui-editor"
@@ -121,13 +145,19 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../../ui/ui-types"
-    },
-    {
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

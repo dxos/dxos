@@ -9,13 +9,13 @@ export {
   AlreadyJoinedError,
   ApiError,
   CancelledError,
-  DataCorruptionError,
   DatabaseError,
+  DataCorruptionError,
   EntityNotFoundError,
+  IdentityNotInitializedError,
   InvalidConfigError,
   InvalidInvitationError,
   InvalidInvitationExtensionRoleError,
-  IdentityNotInitializedError,
   InvalidStorageVersionError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
@@ -27,8 +27,8 @@ export {
 export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 export {
   type AppContextRequest,
-  type LayoutRequest,
   type InvitationUrlRequest,
+  type LayoutRequest,
   ShellDisplay,
   ShellLayout,
 } from '@dxos/protocols/proto/dxos/iframe';

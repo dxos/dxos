@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { DXN, Ref, Type } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { random } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -87,7 +87,7 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
 
   [TestSchemaType.contact]: async (provider) => {
     const organizations = await provider?.(TestSchemaType.organization);
-    const location = random.datatype.boolean() ? random.geo.airport() : {};
+    const airport = random.datatype.boolean() ? random.geo.airport() : undefined;
 
     return {
       name: random.person.fullName(),
@@ -96,7 +96,8 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
         organizations?.length && random.datatype.boolean({ probability: 0.8 })
           ? Ref.make(random.helpers.arrayElement(organizations))
           : undefined,
-      ...location,
+      lat: airport?.location?.[1],
+      lng: airport?.location?.[0],
     };
   },
 
@@ -113,7 +114,7 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
 
 const testObjectMutators: TestMutationsMap<TestSchemaType> = {
   [TestSchemaType.document]: async (object, params) => {
-    const accessor = createDocAccessor(object, ['content']);
+    const accessor = Doc.createAccessor(object, ['content']);
     for (let i = 0; i < params.count; i++) {
       const length = object.content?.content?.length ?? 0;
       accessor.handle.change((doc) => {

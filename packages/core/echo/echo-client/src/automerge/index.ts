@@ -2,5 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './repo-proxy';
+export * as Doc from './Doc';
 export * from './doc-handle-proxy';
+export * from './repo-proxy';

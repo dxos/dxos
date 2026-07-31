@@ -83,6 +83,6 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
   },
 );
 
-export { Label, Validation, Description, DescriptionAndValidation, ErrorMessage };
+export { Description, DescriptionAndValidation, ErrorMessage, Label, Validation };
 
-export type { LabelProps, ValidationProps, DescriptionProps, DescriptionAndValidationProps, ErrorMessageProps };
+export type { DescriptionAndValidationProps, DescriptionProps, ErrorMessageProps, LabelProps, ValidationProps };

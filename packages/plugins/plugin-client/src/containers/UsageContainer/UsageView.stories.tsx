@@ -50,6 +50,7 @@ const meta = {
   title: 'plugins/plugin-client/containers/UsageView',
   component: UsageView,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  tags: ['test'],
   parameters: {
     layout: 'fullscreen',
     translations,

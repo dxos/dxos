@@ -6,10 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 import { PropertyMeta } from '@dxos/echo/internal';
+import { CardAnnotation } from '@dxos/schema';
 
 import * as Geo from './Geo';
 import * as Organization from './Organization';
@@ -108,7 +109,7 @@ const PersonSchema = Schema.Struct({
   ).pipe(Schema.optional),
 });
 
-export const Person = PersonSchema.pipe(
+const _PersonSchema = PersonSchema.pipe(
   Schema.extend(
     Schema.Struct({
       // TODO(wittjosiah): Reconcile with addresses.
@@ -118,17 +119,19 @@ export const Person = PersonSchema.pipe(
   Schema.annotations({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
   Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'neutral' }),
-  Type.makeObject(DXN.make('org.dxos.type.person', '0.1.0')),
+  CardAnnotation.set(true),
 );
 
-export type Person = Type.InstanceType<typeof Person>;
+export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.person', '0.1.0'))(_PersonSchema) {}
+
 export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.make(Person, props);
+
+const _LegacyPersonSchema = PersonSchema.pipe(
+  Schema.annotations({ title: 'Person' }),
+  LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
+);
 
 /**
  * @deprecated
  */
-export const LegacyPerson = PersonSchema.pipe(
-  Schema.annotations({ title: 'Person' }),
-  LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
-  Type.makeObject(DXN.make('org.dxos.type.person', '0.1.0')),
-);
+export const LegacyPerson = Type.makeObject(DXN.make('org.dxos.type.person', '0.1.0'))(_LegacyPersonSchema);

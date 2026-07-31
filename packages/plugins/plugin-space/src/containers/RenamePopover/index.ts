@@ -3,4 +3,4 @@
 //
 
 export { RenamePopover as default } from './RenamePopover';
-export type { RenamePopoverProps, RenameSubject } from './RenamePopover';
+export type { RenameCallback, RenamePopoverProps, RenameSubject } from './RenamePopover';

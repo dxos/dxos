@@ -8,11 +8,12 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Query, Type, View } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory, createRelationFactory } from '@dxos/schema/testing';
@@ -25,9 +26,9 @@ const generator = random as any as ValueGenerator;
 
 random.seed(7);
 
-type DefaultStoryProps = { variant: ExplorerArticleVariant };
+type StoryArgs = { variant: ExplorerArticleVariant };
 
-const DefaultStory = ({ variant }: DefaultStoryProps) => {
+const DefaultStory = ({ variant }: StoryArgs) => {
   const [space] = useSpaces();
   const [graph] = useQuery(space?.db, Filter.type(Graph.Graph));
   if (!space || !graph) {
@@ -37,7 +38,7 @@ const DefaultStory = ({ variant }: DefaultStoryProps) => {
   return <ExplorerArticle role='article' subject={graph as any} attendableId={graph.id} variant={variant} />;
 };
 
-const meta: Meta<DefaultStoryProps> = {
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-explorer/containers/ExplorerArticle',
   render: DefaultStory,
   decorators: [

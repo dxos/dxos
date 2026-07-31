@@ -36,7 +36,7 @@ describe('Obj.subscribe', () => {
   test('returns a no-op unsubscribe for non-proxy inputs', () => {
     const queueShaped: any = {
       id: '01KQ5NKXJWSKMRPVTVG2GHV8V3',
-      blueprints: { added: [], removed: [] },
+      skills: { added: [], removed: [] },
       objects: { added: [], removed: [] },
     };
     const unsubscribe = Obj.subscribe(queueShaped, () => {});

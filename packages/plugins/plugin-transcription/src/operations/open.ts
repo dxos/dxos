@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof TranscriptOperation.Open> = Transcri
     Effect.fn(function* ({ transcript }) {
       const transcriptObj = yield* Database.load(transcript);
       const feed = yield* Database.load(transcriptObj.feed);
-      const messages = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+      const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
       const content = messages
         .flatMap((message: Message.Message, index: number) => renderByline([])(message, index))
         .join('\n\n');

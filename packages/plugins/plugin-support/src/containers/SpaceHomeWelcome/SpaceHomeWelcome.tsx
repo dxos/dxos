@@ -5,10 +5,11 @@
 import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
 import { AppSpace } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
-import { type Space, useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
+import { type Space } from '@dxos/react-client/echo';
 import { Carousel, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -32,15 +33,14 @@ type SpaceScopedProps = {
 export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
   const isPersonal = !!space && AppSpace.isPersonalSpace(space);
   const [dismissed] = useWelcomeDismissed(space);
-
   if (!isPersonal) {
     return null;
   }
 
   return (
-    <div className={dismissed ? 'hidden' : undefined}>
+    <HomeSection.Root classNames={dismissed ? 'hidden' : undefined}>
       <WelcomePanel />
-    </div>
+    </HomeSection.Root>
   );
 };
 
@@ -59,6 +59,7 @@ export const useWelcomeDismissed = (space?: Space): [boolean, (value: boolean) =
     (value: boolean) => updateProperties((current) => Annotation.set(current, WelcomeDismissedAnnotation, value)),
     [updateProperties],
   );
+
   return [dismissed, setDismissed];
 };
 
@@ -95,18 +96,20 @@ const WelcomePanel = memo(() => {
   }, [manager]);
 
   return (
-    <div className='flex flex-col items-center gap-4 pbe-2 border-be border-separator'>
+    <div className='flex flex-col items-center gap-4 py-8'>
       <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
-      <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
+      <p className='pb-4 text-center text-balance text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (
-        <Carousel.Root count={slides.length}>
-          <Carousel.Content classNames='max-w-[50rem]'>
+        <Carousel.Root count={slides.length} transition='slide' continuous autoAdvance={10_000}>
+          <Carousel.Content>
             <Carousel.Previous />
-            <Carousel.Viewport>
-              {slides.map((slide, index) => (
-                <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
-              ))}
-            </Carousel.Viewport>
+            <div className='flex justify-center w-full'>
+              <Carousel.Viewport classNames='max-w-[40rem]'>
+                {slides.map((slide, index) => (
+                  <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
+                ))}
+              </Carousel.Viewport>
+            </div>
             <Carousel.Next />
             <Carousel.Indicators />
             <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>
@@ -118,3 +121,5 @@ const WelcomePanel = memo(() => {
 });
 
 WelcomePanel.displayName = 'WelcomePanel';
+
+SpaceHomeWelcome.displayName = 'SpaceHomeWelcome';

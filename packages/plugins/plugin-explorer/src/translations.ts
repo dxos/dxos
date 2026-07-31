@@ -26,6 +26,9 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Explorer',
         'object-title.label': 'Title',
+        'neighborhood-companion.label': 'Graph',
+        'depth.label_one': '{{count}} hop',
+        'depth.label_other': '{{count}} hops',
       },
     },
   },

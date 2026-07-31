@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codec-protobuf",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -13,20 +13,14 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      }
+      "import": "./dist/lib/index.mjs"
     },
     "./stream": {
+      "source": "./src/stream.ts",
       "types": "./dist/types/src/stream.d.ts",
-      "browser": "./dist/lib/browser/stream.mjs",
-      "node": {
-        "require": "./dist/lib/node/stream.cjs",
-        "default": "./dist/lib/node-esm/stream.mjs"
-      }
+      "import": "./dist/lib/stream.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

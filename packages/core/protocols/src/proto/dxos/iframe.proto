@@ -11,18 +11,6 @@ import "dxos/keys.proto";
 // TODO(burdon): Rename dxos.xxx.iframe?
 package dxos.iframe;
 
-message StartRequest {
-  string origin = 1;
-  /// Key for the iframe resource lock used to determine when the service is closing.
-  optional string lock_key = 2;
-}
-
-/// Iframe-to-worker RPCs.
-service WorkerService {
-  rpc Start(StartRequest) returns (google.protobuf.Empty);
-  rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
-}
-
 enum ShellDisplay {
   NONE = 0;
   FULLSCREEN = 1;

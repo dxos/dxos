@@ -3,7 +3,7 @@
 //
 
 import type { Client } from '@dxos/client';
-import { SpaceState, type Space } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { Filter, Obj, Query } from '@dxos/echo';
 
 /**

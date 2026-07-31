@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Paths } from '@dxos/app-toolkit';
+import { GraphPath } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 
-const { getSectionPath: getChatsPath, getObjectPath: getChatPath } = Paths.createTypeSectionPaths(Chat.Chat);
+const { getSectionPath: getChatsPath, getObjectPath: getChatPath } = GraphPath.createTypeSectionPaths(Chat.Chat, {
+  groupId: GraphPath.GroupSegments.ai,
+});
 
-export { getChatsPath, getChatPath };
+export { getChatPath, getChatsPath };

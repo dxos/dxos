@@ -1,0 +1,84 @@
+---
+id: org.dxos.plugin.heygen
+name: HeyGenPlugin
+version: 0.1.0
+---
+
+A **headless** Composer plugin that makes [HeyGen](https://heygen.com) available
+as a **video** generation provider for `plugin-studio`. No React/UI surfaces.
+
+## Extensions
+
+| Term   | URI                     |
+| ------ | ----------------------- |
+| `feat` | `org.dxos.mdl.feat@1.0` |
+| `test` | `org.dxos.mdl.test@1.0` |
+
+## Connector
+
+```mdl
+feat HeyGenConnector
+  desc: >
+    Contributes a ConnectorEntry via Capability.contributes(Connector, [entry])
+    on SetupConnectors (mirrors plugin-ideogram / plugin-ibkr).
+  id: org.dxos.plugin.heygen.connector
+  source: heygen.com
+  label: HeyGen
+  credentialForm:
+    schema: HeyGenTokenForm { token: string }   # the API key
+    onSubmit: >
+      Trim the token; store Obj.make(AccessToken, { source: "heygen.com", token })
+      + Obj.make(Connection, { connectorId, accessToken }); return { kind: "complete", … }.
+```
+
+## Provider
+
+```mdl
+feat HeyGenGenerationService
+  desc: >
+    Contributes a GenerationService (kind 'video') via
+    Capability.contributes(StudioCapabilities.GenerationService, [service]) on Startup.
+    Asynchronous: enqueue → awaitResult (poll). Contract from @dxos/plugin-studio/types.
+  id: heygen
+  kind: video
+  contentType: video/mp4
+  source: heygen.com
+  requestSchema: { avatarId?, voiceId? }        # HeyGen requires both at generate time
+  enqueue:
+    endpoint: POST https://api.heygen.com/v3/videos   # via edge CORS proxy; header X-Api-Key
+    body: { type: 'avatar', avatar_id, voice_id, script: <prompt>, aspect_ratio, resolution, … }
+    returns: { jobId: data.video_id }
+  awaitResult:
+    endpoint: GET https://api.heygen.com/v3/videos/{jobId}   # poll until status 'completed'
+    returns: { variants: [{ contentType: 'video/mp4', url, generation: { provider: 'heygen' } }] }
+  errors:
+    - missing apiKey → MissingApiKey (studio resolves it from the Connector credential first)
+    - missing avatar/voice → ProviderFailure
+    - non-2xx / status 'failed' / timeout → ProviderFailure
+```
+
+## Avatar/voice picker
+
+```mdl
+feat HeyGenGenerateForm
+  desc: >
+    Overrides studio's default schema-driven GenerateForm for kind:'video' with a
+    provider-specific picker: `avatarId`/`voiceId` render as SelectFields populated
+    from listAvatars()/listVoices(). Contributed as a ReactSurface on the studio
+    `GenerateForm` role token (@dxos/plugin-studio/surfaces) with Position.first +
+    filter data.kind==='video'. The API key is read from the Connector AccessToken
+    (useQuery, source 'heygen.com'). Ported from the former plugin-generator
+    GenerationProperties.
+```
+
+## Dependencies
+
+- `@dxos/plugin-studio` (workspace:\*) — `/types` (GenerationService contract) + `/surfaces` (GenerateForm role token).
+- `@dxos/plugin-connector`, `@dxos/types` (AccessToken), `@dxos/edge-client`
+  (CORS proxy), `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/echo`,
+  `@dxos/invariant`, `@dxos/log`, `@dxos/react-client`, `@dxos/react-ui-form`,
+  `react` (peer), `effect`.
+
+## Out of scope (v1)
+
+- Audio generation (HeyGen is video-only).

@@ -59,10 +59,12 @@ describe('Obj.setValue', () => {
       value: Schema.optional(Schema.Number),
     });
 
-    const Container = Schema.Struct({
-      name: Schema.String,
-      items: Schema.optional(Schema.Array(Item)),
-    }).pipe(Type.makeObject(DXN.make('com.test.type.container', '0.1.0')));
+    const Container = Type.makeObject(DXN.make('com.test.type.container', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        items: Schema.optional(Schema.Array(Item)),
+      }),
+    );
 
     const container = Obj.make(Container, { name: 'box' });
 
@@ -146,9 +148,11 @@ describe('Obj.setValue', () => {
   });
 
   test('handles two-dimensional arrays', ({ expect }) => {
-    const Matrix = Schema.Struct({
-      values: Schema.optional(Schema.Array(Schema.Array(Schema.Number))),
-    }).pipe(Type.makeObject(DXN.make('com.test.type.matrix', '0.1.0')));
+    const Matrix = Type.makeObject(DXN.make('com.test.type.matrix', '0.1.0'))(
+      Schema.Struct({
+        values: Schema.optional(Schema.Array(Schema.Array(Schema.Number))),
+      }),
+    );
 
     const matrix = Obj.make(Matrix, {});
 
@@ -194,10 +198,12 @@ describe('Obj.setValue', () => {
       value: Schema.optional(Schema.Number),
     });
 
-    const Container = Schema.Struct({
-      name: Schema.String,
-      items: Schema.optional(Schema.Array(Item)),
-    }).pipe(Type.makeObject(DXN.make('com.test.type.container', '0.1.0')));
+    const Container = Type.makeObject(DXN.make('com.test.type.container', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        items: Schema.optional(Schema.Array(Item)),
+      }),
+    );
 
     const container = Obj.make(Container, { name: 'box' });
 
@@ -216,10 +222,12 @@ describe('Obj.setValue', () => {
       completed: Schema.optional(Schema.Boolean),
     });
 
-    const TodoList = Schema.Struct({
-      name: Schema.String,
-      tasks: Schema.optional(Schema.Array(Task)),
-    }).pipe(Type.makeObject(DXN.make('com.test.type.todoList', '0.1.0')));
+    const TodoList = Type.makeObject(DXN.make('com.test.type.todoList', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        tasks: Schema.optional(Schema.Array(Task)),
+      }),
+    );
 
     const todoList = Obj.make(TodoList, { name: 'My Tasks' });
 
@@ -240,10 +248,12 @@ describe('Obj.setValue', () => {
       label: Schema.optional(Schema.String), // Optional - should not be initialized
     });
 
-    const Container = Schema.Struct({
-      name: Schema.String,
-      items: Schema.optional(Schema.Array(Item)),
-    }).pipe(Type.makeObject(DXN.make('com.test.type.container', '0.1.0')));
+    const Container = Type.makeObject(DXN.make('com.test.type.container', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        items: Schema.optional(Schema.Array(Item)),
+      }),
+    );
 
     const container = Obj.make(Container, { name: 'box' });
 

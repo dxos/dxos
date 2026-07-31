@@ -62,7 +62,11 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
     });
 
     ws.on('close', () => {
-      connection = undefined;
+      // During a reconnect the new connection may be admitted before the old
+      // socket's close event fires; only clear if this socket is still current.
+      if (connection?.ws === ws) {
+        connection = undefined;
+      }
       closeTrigger.wake();
     });
   });
@@ -106,7 +110,7 @@ const createResponseSender = (connection: () => WebSocketMuxer) => {
     void connection().send(
       buf.create(MessageSchema, {
         source: {
-          identityKey: recipient.identityKey,
+          identityDid: recipient.identityDid,
           peerKey: recipient.peerKey,
         },
         serviceId: request.serviceId!,

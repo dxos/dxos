@@ -31,9 +31,9 @@ my-plugin/
     operations/
       index.ts
       definitions.ts
-    blueprints/
+    skills/
       index.ts
-      my-blueprint.ts
+      my-skill.ts
 ```
 
 ## Skeleton order
@@ -49,7 +49,7 @@ Build the smallest thing that runs, then add features:
 7. `src/containers/FooArticle/` — minimal `Panel.Root` shell.
 8. `src/plugin.tsx` — `Plugin.define(meta).pipe(addSchemaModule, addSurfaceModule, addTranslationsModule, Plugin.make)`.
 
-Build, then load the dev URL into Composer (Settings → Plugins → Load by URL). Iterate. Add operations, blueprints, settings as features land.
+Build, then load the dev URL into Composer (Settings → Plugins → Load by URL). Iterate. Add operations, skills, settings as features land.
 
 ## Inside the dxos monorepo
 

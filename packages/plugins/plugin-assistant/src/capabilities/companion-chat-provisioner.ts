@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -12,8 +12,15 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { DeckCapabilities, PLANK_COMPANION_TYPE, type StoredDeckState } from '@dxos/plugin-deck';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import {
+  COMPANION_VIEW_STATE_CONTEXT,
+  DeckCapabilities,
+  PLANK_COMPANION_TYPE,
+  type StoredDeckState,
+  companionAspect,
+} from '@dxos/plugin-deck';
+import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
@@ -31,6 +38,11 @@ export default Capability.makeModule(
     const deckStateAtom = yield* Capability.get(DeckCapabilities.State);
     const cacheAtom = yield* Capability.get(AssistantCapabilities.CompanionChatCache);
     const stateAtom = yield* Capability.get(AssistantCapabilities.State);
+    // The selected companion variant moved off deck state into a global view-state aspect; read and
+    // observe it directly so a tab switch (which no longer touches deck state) still re-provisions.
+    // Project just the variant so a companion resize (same aspect) does not re-fire provisioning.
+    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const variantAtom = Atom.make((get) => get(viewState.atom(companionAspect, COMPANION_VIEW_STATE_CONTEXT)).variant);
 
     const plankSubs = new Map<string, () => void>();
 
@@ -91,7 +103,8 @@ export default Capability.makeModule(
         return;
       }
 
-      const plankIds = new Set(deck.solo ? [deck.solo] : deck.active);
+      const companionVariant = registry.get(variantAtom);
+      const plankIds = new Set(deck.active);
 
       // Remove subscriptions for planks that are no longer active.
       for (const trackedId of plankSubs.keys()) {
@@ -101,18 +114,20 @@ export default Capability.makeModule(
       }
 
       for (const plankId of plankIds) {
-        const resolved = provisionForPlank(plankId, deck.companionVariant);
+        const resolved = provisionForPlank(plankId, companionVariant);
 
         if (resolved) {
           // Already provisioned — no need to watch connections.
           unsubPlank(plankId);
         } else if (!plankSubs.has(plankId)) {
           // Not yet resolved — subscribe to child connections so we re-try
-          // when graph builder extensions add companion nodes (after expand).
+          // when graph builder extensions add companion nodes (after expand). This subscription
+          // outlives the current `provision()` run, so re-read the latest variant at callback time
+          // rather than closing over the one captured here.
           plankSubs.set(
             plankId,
             registry.subscribe(graph.connections(plankId, 'child'), () => {
-              if (provisionForPlank(plankId, deck.companionVariant)) {
+              if (provisionForPlank(plankId, registry.get(variantAtom))) {
                 unsubPlank(plankId);
               }
             }),
@@ -125,11 +140,13 @@ export default Capability.makeModule(
 
     const unsub1 = registry.subscribe(deckStateAtom, provision);
     const unsub2 = registry.subscribe(stateAtom, provision);
+    const unsub3 = registry.subscribe(variantAtom, provision);
 
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
         unsub1();
         unsub2();
+        unsub3();
         unsubAllPlanks();
       }),
     );
@@ -154,11 +171,11 @@ const resolveEffectiveVariant = (
   }
 
   if (preferredVariant) {
-    const preferred = companions.find((companion) => getLinkedVariant(companion.id) === preferredVariant);
+    const preferred = companions.find((companion) => Attention.getLinkedVariant(companion.id) === preferredVariant);
     if (preferred) {
-      return getLinkedVariant(preferred.id);
+      return Attention.getLinkedVariant(preferred.id);
     }
   }
 
-  return getLinkedVariant(companions[0].id);
+  return Attention.getLinkedVariant(companions[0].id);
 };

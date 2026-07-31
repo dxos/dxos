@@ -5,7 +5,7 @@
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const IntegrationProvider = Capability.lazy('SlackIntegrationProvider', () => import('./integration-provider'));
+export const Connector = Capability.lazy('SlackConnector', () => import('./connector'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

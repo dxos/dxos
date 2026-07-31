@@ -16,3 +16,12 @@ export const Blockstore = Capability.make<BlockstoreInterface>(`${meta.profile.k
 
 export type Instances = Record<SpaceId, { directory: PrivateDirectory; forest: PrivateForest }>;
 export const Instances = Capability.make<Instances>(`${meta.profile.key}.capability.instances`);
+
+/**
+ * Name this extension registers its `BlobBackend` under on the ECHO Hypergraph. Core packages
+ * (`@dxos/echo`, `@dxos/echo-client`, `@dxos/client`) never reference this constant.
+ */
+export const WNFS_BACKEND = 'wnfs';
+
+/** URI scheme this extension's `BlobBackend` resolves at read time. */
+export const WNFS_SCHEME = 'wnfs';

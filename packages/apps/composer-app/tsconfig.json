@@ -223,10 +223,13 @@
       "path": "../../plugins/plugin-assistant"
     },
     {
+      "path": "../../plugins/plugin-atproto"
+    },
+    {
       "path": "../../plugins/plugin-attention"
     },
     {
-      "path": "../../plugins/plugin-automation"
+      "path": "../../plugins/plugin-blogger"
     },
     {
       "path": "../../plugins/plugin-bluesky"
@@ -238,10 +241,16 @@
       "path": "../../plugins/plugin-bookmarks"
     },
     {
+      "path": "../../plugins/plugin-brain"
+    },
+    {
       "path": "../../plugins/plugin-calls"
     },
     {
       "path": "../../plugins/plugin-chess"
+    },
+    {
+      "path": "../../plugins/plugin-chess-com"
     },
     {
       "path": "../../plugins/plugin-client"
@@ -250,13 +259,13 @@
       "path": "../../plugins/plugin-code"
     },
     {
-      "path": "../../plugins/plugin-comments"
-    },
-    {
       "path": "../../plugins/plugin-commerce"
     },
     {
       "path": "../../plugins/plugin-conductor"
+    },
+    {
+      "path": "../../plugins/plugin-connector"
     },
     {
       "path": "../../plugins/plugin-crm"
@@ -271,6 +280,9 @@
       "path": "../../plugins/plugin-deck"
     },
     {
+      "path": "../../plugins/plugin-devtools"
+    },
+    {
       "path": "../../plugins/plugin-discord"
     },
     {
@@ -280,22 +292,19 @@
       "path": "../../plugins/plugin-duffel"
     },
     {
-      "path": "../../plugins/plugin-explorer"
+      "path": "../../plugins/plugin-excalidraw"
     },
     {
-      "path": "../../plugins/plugin-feed"
+      "path": "../../plugins/plugin-explorer"
     },
     {
       "path": "../../plugins/plugin-file"
     },
     {
-      "path": "../../plugins/plugin-gallery"
+      "path": "../../plugins/plugin-freeq"
     },
     {
       "path": "../../plugins/plugin-game"
-    },
-    {
-      "path": "../../plugins/plugin-generator"
     },
     {
       "path": "../../plugins/plugin-github"
@@ -304,10 +313,19 @@
       "path": "../../plugins/plugin-graph"
     },
     {
-      "path": "../../plugins/plugin-inbox"
+      "path": "../../plugins/plugin-heygen"
     },
     {
-      "path": "../../plugins/plugin-integration"
+      "path": "../../plugins/plugin-ibkr"
+    },
+    {
+      "path": "../../plugins/plugin-ideogram"
+    },
+    {
+      "path": "../../plugins/plugin-illustrator"
+    },
+    {
+      "path": "../../plugins/plugin-inbox"
     },
     {
       "path": "../../plugins/plugin-iroh-beacon"
@@ -316,7 +334,13 @@
       "path": "../../plugins/plugin-kanban"
     },
     {
+      "path": "../../plugins/plugin-library"
+    },
+    {
       "path": "../../plugins/plugin-linear"
+    },
+    {
+      "path": "../../plugins/plugin-magazine"
     },
     {
       "path": "../../plugins/plugin-map"
@@ -326,9 +350,6 @@
     },
     {
       "path": "../../plugins/plugin-markdown"
-    },
-    {
-      "path": "../../plugins/plugin-masonry"
     },
     {
       "path": "../../plugins/plugin-meeting"
@@ -358,6 +379,9 @@
       "path": "../../plugins/plugin-outliner"
     },
     {
+      "path": "../../plugins/plugin-payments"
+    },
+    {
       "path": "../../plugins/plugin-pipeline"
     },
     {
@@ -367,13 +391,28 @@
       "path": "../../plugins/plugin-preview"
     },
     {
+      "path": "../../plugins/plugin-progress"
+    },
+    {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
       "path": "../../plugins/plugin-pwa"
     },
     {
       "path": "../../plugins/plugin-registry"
     },
     {
+      "path": "../../plugins/plugin-review"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
+    },
+    {
       "path": "../../plugins/plugin-sample"
+    },
+    {
+      "path": "../../plugins/plugin-sandbox"
     },
     {
       "path": "../../plugins/plugin-script"
@@ -397,9 +436,6 @@
       "path": "../../plugins/plugin-simple-layout"
     },
     {
-      "path": "../../plugins/plugin-sketch"
-    },
-    {
       "path": "../../plugins/plugin-slack"
     },
     {
@@ -418,6 +454,9 @@
       "path": "../../plugins/plugin-status-bar"
     },
     {
+      "path": "../../plugins/plugin-studio"
+    },
+    {
       "path": "../../plugins/plugin-support"
     },
     {
@@ -433,6 +472,9 @@
       "path": "../../plugins/plugin-tictactoe"
     },
     {
+      "path": "../../plugins/plugin-tldraw"
+    },
+    {
       "path": "../../plugins/plugin-transcription"
     },
     {
@@ -440,6 +482,9 @@
     },
     {
       "path": "../../plugins/plugin-trip"
+    },
+    {
+      "path": "../../plugins/plugin-typefully"
     },
     {
       "path": "../../plugins/plugin-video"
@@ -499,6 +544,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../sdk/worker-framework"
+    },
+    {
       "path": "../../ui/brand"
     },
     {
@@ -506,6 +554,9 @@
     },
     {
       "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-error-boundary"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"
@@ -575,9 +626,6 @@
     },
     {
       "path": "../../ui/react-ui-pickers"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

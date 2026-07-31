@@ -18,8 +18,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
-import { Organization, Person } from '@dxos/types';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
+import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -40,7 +40,7 @@ const useTestModel = <S extends Type.AnyObj>(schema: S, count: number) => {
   const { space } = useClientStory();
   const [object, setObject] = useState<Table.Table>();
 
-  const features = useMemo<TableFeatures>(
+  const features = useMemo<Partial<TableFeatures>>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
     [],
   );

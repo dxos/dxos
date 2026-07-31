@@ -48,3 +48,5 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
     </div>
   );
 };
+
+SaveFilterPopover.displayName = 'SaveFilterPopover';

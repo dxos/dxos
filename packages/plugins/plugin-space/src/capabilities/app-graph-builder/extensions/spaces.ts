@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, GraphPath } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
@@ -48,17 +48,18 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     GraphBuilder.createExtension({
       id: 'spaceHome',
       position: Position.first,
+      url: { key: 'home', kind: 'singleton', path: [] },
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           {
-            id: Paths.SPACE_HOME_SEGMENT,
+            id: GraphPath.SPACE_HOME_SEGMENT,
             type: SPACE_HOME_NODE_TYPE,
             data: SPACE_HOME_NODE_TYPE,
             properties: {
               label: SPACE_HOME_NODE_LABEL,
               icon: 'ph--house--regular',
-              iconHue: 'cyan',
+              iconHue: 'emerald',
               position: Position.first,
               draggable: false,
               droppable: false,
@@ -177,7 +178,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       id: 'spaces',
       match: NodeMatcher.whenRoot,
       connector: (_node, get) => {
-        const client = capabilities.get(ClientCapabilities.Client);
+        // This reactive connector can recompute once during the teardown window (e.g. when stories
+        // swap plugin managers) after the Client capability has been removed; tolerate its absence
+        // via the safe `getAll` lookup rather than the throwing `get`.
+        const [client] = capabilities.getAll(ClientCapabilities.Client);
+        if (!client) {
+          return Effect.succeed([]);
+        }
         const stateAtom = capabilities.get(SpaceCapabilities.State);
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
         const spacesAtom = CreateAtom.fromObservable(client.spaces);
@@ -217,7 +224,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 .sort((sortA, sortB) => orderMap.get(sortA.id)! - orderMap.get(sortB.id)!),
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
-              .filter((space, idx) => spaceStates[idx] !== SpaceState.SPACE_INACTIVE)
+              .filter((space, idx) => spaceStates[idx] === SpaceState.SPACE_READY)
               .filter(
                 (space) =>
                   space.tags.length === 0 || AppSpace.isPersonalSpace(space) || AppSpace.isExemplarSpace(space),
@@ -237,8 +244,25 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
       },
-      // TODO(graph-path-ids): Resolver temporarily disabled; redesign needed for path-based IDs.
-      // resolver: (id, get) => { ... },
+    }),
+
+    // Communications section group — no single plugin owns this category; it lives here so the
+    // group is always present when the space plugin is active. A more specific plugin (e.g. a
+    // future plugin-communications) should own this once one exists.
+    // TODO(wittjosiah): Move to a dedicated communications plugin when one exists.
+    GraphBuilder.createExtension({
+      id: GraphPath.GroupSegments.communications,
+      match: AppNodeMatcher.whenSpace,
+      connector: (space) =>
+        Effect.succeed([
+          AppNode.makeGroup({
+            id: GraphPath.GroupSegments.communications,
+            type: GraphPath.GroupTypes.communications,
+            label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
+            space,
+            position: 100,
+          }),
+        ]),
     }),
 
     GraphBuilder.createExtension({

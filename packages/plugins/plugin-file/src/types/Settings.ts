@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-export const DEFAULT_BACKEND_ID = 'inline';
+export const DEFAULT_BACKEND_STORAGE = 'inline';
 
 export const Settings = Schema.mutable(
   Schema.Struct({

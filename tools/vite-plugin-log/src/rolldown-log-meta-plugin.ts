@@ -5,7 +5,7 @@
 import type { RolldownPlugin } from 'rolldown';
 
 import type { LogMetaTransformOptions } from './definitions.ts';
-import { ROLLDOWN_LOG_META_PLUGIN_NAME, rolldownLogMetaTransform, type RolldownLogMetaHookContext } from './plugin.ts';
+import { ROLLDOWN_LOG_META_PLUGIN_NAME, type RolldownLogMetaHookContext, rolldownLogMetaTransform } from './plugin.ts';
 
 /**
  * Rolldown / Vite (Rolldown) transform plugin: injects per-call-site metadata using

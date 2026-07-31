@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { getMailboxAllMailPath } from '../paths';
+import { getMailboxPath } from '../paths';
 import { InboxOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
 
       return {
         id: Obj.getURI(object),
-        subject: [getMailboxAllMailPath(db.spaceId, object.id)],
+        subject: [getMailboxPath(db.spaceId, object.id)],
         object,
       };
     }),

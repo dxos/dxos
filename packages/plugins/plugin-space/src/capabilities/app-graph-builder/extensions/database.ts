@@ -2,23 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
-import { type URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
-import { createFilename, isNonNullable, Position } from '@dxos/util';
+import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -27,11 +26,9 @@ import { SpaceCapabilities } from '#types';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
-  BLOCK_REORDER_ABOVE,
   DATABASE_SECTION_TYPE,
+  SCHEMA_NODE_TYPE,
   SNAPSHOT_BY_SCHEMA_LABEL,
-  STATIC_SCHEMA_TYPE,
-  TYPE_COLLECTION_TYPE,
   buildViewIndex,
   downloadBlob,
 } from './shared';
@@ -45,24 +42,35 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
 
   return yield* Effect.all([
-    // Types section virtual node under each space.
+    // System section group — created alongside database/settings so the group always
+    // appears when the space plugin is active and hides when there are no children.
+    GraphBuilder.createExtension({
+      id: GraphPath.GroupSegments.system,
+      match: AppNodeMatcher.whenSpace,
+      connector: (space) =>
+        Effect.succeed([
+          AppNode.makeGroup({
+            id: GraphPath.GroupSegments.system,
+            type: GraphPath.GroupTypes.system,
+            label: ['nav-tree-group-system.label', { ns: meta.profile.key }],
+            space,
+            position: 900,
+          }),
+        ]),
+    }),
+
+    // Types section virtual node under the system group.
     GraphBuilder.createExtension({
       id: 'databaseSection',
-      match: AppNodeMatcher.whenSpace,
-      connector: (space, get) => {
-        const spaceState = get(CreateAtom.fromObservable(space.state));
-        if (spaceState !== SpaceState.SPACE_READY) {
-          return Effect.succeed([]);
-        }
-
+      match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
+      connector: (space) => {
         return Effect.succeed([
           AppNode.makeSection({
-            id: Paths.Segments.database,
+            id: GraphPath.Segments.database,
             type: DATABASE_SECTION_TYPE,
             label: ['database-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
             space,
-            position: Position.last,
             testId: 'spacePlugin.databaseSection',
           }),
         ]);
@@ -72,11 +80,16 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
       id: 'database',
+      url: { key: 'type', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === DATABASE_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
+        // Read settings reactively — same pattern as the translator read below.
+        const settingsAtom = get(capabilities.atom(SpaceCapabilities.Settings)).at(0);
+        const showHidden = settingsAtom ? get(settingsAtom).showHidden : false;
+
         // Persisted types live in the space db; static/runtime types live in the shared registry.
         // Fan across both so the space's own types appear without leaking other spaces' types.
         const allSchemas = get(
@@ -91,7 +104,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             return false;
           }
           const schema = Type.getSchema(type);
-          if (HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+          if (!showHidden && HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
             return false;
           }
           if (Type.getTypename(type) === Type.getTypename(Collection.Collection)) {
@@ -138,37 +151,24 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // {All} virtual node + view objects under each schema node.
     GraphBuilder.createExtension({
       id: 'schemaChildren',
+      url: { key: 'view', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return space && Type.isType(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
+        // Scoped to the Database section's own type nodes (both static and database schemas — see
+        // SCHEMA_NODE_TYPE): other plugins' type nodes (e.g. plugin-crm's virtual type nodes) share the
+        // `Type.isType(node.data)` shape but should stay leaf nodes for now.
+        return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)
+          ? Option.some({ space, schema: node.data })
+          : Option.none();
       },
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
-
-        const slug = Paths.getTypeSlug(schema);
         const typeUri = Type.getURI(schema);
 
-        // {All} virtual node.
-        const allNode = Node.make({
-          id: 'all',
-          type: TYPE_COLLECTION_TYPE,
-          data: { space, typeUri },
-          properties: {
-            label: ['type-collection-all.label', { ns: meta.profile.key }],
-            icon: 'ph--list--regular',
-            iconHue: 'neutral',
-            role: 'branch',
-            testId: `spacePlugin.typeCollectionAll.${slug}`,
-            selectable: false,
-            draggable: false,
-            droppable: false,
-            childrenDroppable: false,
-            blockInstruction: BLOCK_REORDER_ABOVE,
-          },
-        });
-
-        // View objects for this schema.
+        // View objects are the type node's only visible children; every object of the type (viewed
+        // or not) is also reachable via the `databaseObjects` extension below, keyed generically as
+        // `obj`. The list of all objects is rendered when the type node is selected (see TypeArticle).
         const viewIndex = buildViewIndex(get, space, schemas);
         const viewNodes = viewIndex
           .getViewsForTypeUri(typeUri)
@@ -183,45 +183,52 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           )
           .filter(isNonNullable);
 
-        return Effect.succeed([allNode, ...viewNodes]);
+        return Effect.succeed(viewNodes);
       },
     }),
 
-    // Objects of the schema type under the {All} node.
+    // Every object of a type — not just its views — as a hidden child of its type node, so
+    // `…/database/<slug>/<objectId>` resolves via the generic `db` key even when the type has no
+    // dedicated section of its own. Disjoint from `schemaChildren`'s view nodes (`viewIndex.isView`
+    // excludes them) so the two connectors never emit a node with the same id under the same parent.
+    // The `db` key names the database subgraph — the generic key that guarantees every ECHO object a
+    // URL (see the design's "Unmapped nodes"); `object` addresses the same object via the collection
+    // subgraph.
     GraphBuilder.createExtension({
-      id: 'typeCollectionObjects',
+      id: 'databaseObjects',
+      url: { key: 'db', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
-        if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typeUri) {
-          return Option.none();
-        }
-        return Option.some({ space: node.data.space as Space, typeUri: node.data.typeUri as URI.URI });
+        const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+        return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)
+          ? Option.some({ space, schema: node.data })
+          : Option.none();
       },
-      connector: ({ space, typeUri }, get) => {
+      connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
+        const typeUri = Type.getURI(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
-        const objects = get(space.db.query(Filter.type(typeUri)).atom).filter(
-          (object: Obj.Unknown) => !viewIndex.isView(object) && !Obj.getParent(object),
+
+        // Feed-only objects (e.g. games appended via Feed.append) are not in the Automerge graph;
+        // includeFeeds resolves them too.
+        const objects = get(
+          space.db.query(Query.select(Filter.type(typeUri)).from(space.db, { includeFeeds: true })).atom,
         );
 
         return Effect.succeed(
           objects
-            .map((object: Obj.Unknown) => {
-              get(Obj.atom(object));
-              return AppNode.makeObject({
+            .filter((object) => !viewIndex.isView(object))
+            .map((object) =>
+              AppNode.makeObject({
                 get,
                 db: space.db,
                 object,
+                disposition: 'hidden',
                 draggable: false,
                 droppable: false,
-              });
-            })
-            .filter(isNonNullable)
-            .toSorted((nodeA, nodeB) => {
-              const labelA = typeof nodeA.properties.label === 'string' ? nodeA.properties.label : '';
-              const labelB = typeof nodeB.properties.label === 'string' ? nodeB.properties.label : '';
-              return labelA.localeCompare(labelB);
-            }),
+              }),
+            )
+            .filter(isNonNullable),
         );
       },
     }),
@@ -274,7 +281,7 @@ const createSchemaNode = ({
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
   // a stored schema's entity id, or a static schema's typename.
-  const slug = Paths.getTypeSlug(schema);
+  const slug = GraphPath.getTypeSlug(schema);
   const iconAnnotation =
     Type.getDatabase(schema) == null
       ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))
@@ -304,15 +311,17 @@ const createSchemaNode = ({
   const iconHue = Type.getDatabase(schema) != null ? 'neutral' : iconAnnotation?.hue;
   return Node.make({
     id: nodeId,
-    type: STATIC_SCHEMA_TYPE,
+    type: SCHEMA_NODE_TYPE,
     data: schema,
     properties: {
       label,
       icon,
       iconHue,
-      role: 'branch',
+      // Selecting the type node opens a list of every object of this type (see TypeArticle);
+      // objects resolve on demand as hidden children. View objects are its only visible children, so
+      // without a view the node is a leaf (no `role: 'branch'`).
       testId: `spacePlugin.schemaNode.${typename}`,
-      selectable: false,
+      selectable: true,
       draggable: false,
       droppable: false,
       childrenDroppable: false,
@@ -388,7 +397,9 @@ const createSchemaActions = ({
         Operation.invoke(SpaceOperation.OpenCreateObject, {
           target: space.db,
           views: true,
-          initialFormValues: { typename: Type.getTypename(type) },
+          // The type-picker field value is the type URI (see TypeOptions), so seed the default with
+          // the URI — not the bare typename — for the option to be pre-selected.
+          initialFormValues: { typename: Type.getURI(type) },
         }),
       properties: {
         label: ADD_VIEW_TO_SCHEMA_LABEL,

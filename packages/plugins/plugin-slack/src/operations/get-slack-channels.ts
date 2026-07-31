@@ -50,14 +50,14 @@ const conversationKind = (conversation: SlackApi.SlackConversation): string => {
 };
 
 /**
- * Discovery only — list Slack conversations reachable from the integration's
+ * Discovery only — list Slack conversations reachable from the connection's
  * token and return one descriptor per item. Read-only: NO local Channel objects
- * are created here. Materialization happens lazily in `SyncSlackChannel` on
- * first sync of a target.
+ * are created here. Materialization happens via `materializeTarget` when a
+ * binding is created.
  */
 const handler: Operation.WithHandler<typeof SlackOperation.GetSlackChannels> = SlackOperation.GetSlackChannels.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ integration }) {
+    Effect.fn(function* ({ connection }) {
       return yield* Effect.gen(function* () {
         const conversations = yield* SlackApi.fetchConversations();
         const targets = conversations.map((conversation) => ({
@@ -72,7 +72,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.GetSlackChannels> = S
           },
         }));
         return { targets };
-      }).pipe(Effect.provide(SlackApi.SlackCredentials.fromIntegration(integration)));
+      }).pipe(Effect.provide(SlackApi.SlackCredentials.fromConnection(connection)));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

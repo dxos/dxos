@@ -9,11 +9,11 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { SettingsOperation } from '@dxos/app-toolkit';
 import { type Script } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -95,7 +95,7 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
 
   return (
     <div className='flex flex-col'>
-      <Form.Section label={t('script-publish-settings.label')} description={t('script-publish-settings.description')} />
+      <Form.Section title={t('script-publish-settings.label')} description={t('script-publish-settings.description')} />
 
       {!githubToken && (
         <div className='flex flex-col py-form-gap'>
@@ -119,3 +119,5 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
     </div>
   );
 };
+
+FunctionPublishing.displayName = 'FunctionPublishing';

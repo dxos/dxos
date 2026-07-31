@@ -7,6 +7,9 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
+// Imported so TypeScript can name these types in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Message, type Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { TranscriptOperation } from '../types';

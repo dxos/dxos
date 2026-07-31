@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentType, lazy } from 'react';
-
 export * from './AwaitingObject';
 export * from './CreateObjectPanel';
 export * from './ForeignKeys';
 export * from './SyncStatus';
 
-export const SpaceSettings: ComponentType<any> = lazy(() => import('./SpaceSettings'));
+// TODO(wittjosiah): Remove.
+export { RENAME_POPOVER } from '../constants';
+export type { RenameCallback, RenameSubject } from '../containers/RenamePopover';

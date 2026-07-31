@@ -42,7 +42,13 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/halo/credentials"
@@ -96,16 +102,22 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-assistant"
+    },
+    {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-connector"
     },
     {
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-inbox"
+      "path": "../plugin-illustrator"
     },
     {
-      "path": "../plugin-integration"
+      "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-kanban"
@@ -117,13 +129,7 @@
       "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-masonry"
-    },
-    {
       "path": "../plugin-sheet"
-    },
-    {
-      "path": "../plugin-sketch"
     },
     {
       "path": "../plugin-space"
@@ -133,6 +139,9 @@
     },
     {
       "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-tldraw"
     }
   ]
 }

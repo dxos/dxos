@@ -1,0 +1,3 @@
+# Local research fixtures, fact stores, and results — private mailbox data. Never commit.
+# Everything under fixtures/ is ignored EXCEPT the tracked static/ test data.
+/fixtures/local/*

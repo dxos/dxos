@@ -4,16 +4,17 @@
 
 import { type Accessor, For, createEffect, useContext } from 'solid-js';
 
-import { type AiService, type ModelName } from '@dxos/ai';
+import { type AiService } from '@dxos/ai';
+import { DXN } from '@dxos/keys';
 
 import { AppContext } from '../../../components';
 import { theme } from '../../../theme';
 import { useSpinner } from '../hooks';
 
 export type StatusBarProps = {
-  model: ModelName;
+  model: DXN.DXN;
   metadata?: AiService.ServiceMetadata;
-  blueprints?: string[];
+  skills?: string[];
   processing?: Accessor<boolean>;
 };
 
@@ -36,8 +37,8 @@ export const StatusBar = (props: StatusBarProps) => {
       </text>
       <box flexGrow={1} />
       <box marginRight={1} flexDirection='row'>
-        <For each={props.blueprints}>
-          {(blueprint) => <text style={{ fg: theme.text.secondary, marginRight: 1 }}>{toCircled(blueprint[0])}</text>}
+        <For each={props.skills}>
+          {(skill) => <text style={{ fg: theme.text.secondary, marginRight: 1 }}>{toCircled(skill[0])}</text>}
         </For>
       </box>
       <text style={{ fg: theme.text.subdued, marginRight: 1 }}>{props.model}</text>

@@ -15,6 +15,7 @@ export type TestItem = {
   id: string;
   name: string;
   icon?: string;
+  disposition?: string;
   items: TestItem[];
 };
 
@@ -25,20 +26,24 @@ export const TestItemSchema = Schema.Struct({
   items: Schema.mutable(Schema.Array(Schema.suspend((): Schema.Schema<TestItem> => TestItemSchema))),
 });
 
-export const createTree = (n = 4, d = 4): TestItem => ({
-  id: random.string.uuid(),
-  name: random.commerce.productName(),
-  icon:
-    d === 3
-      ? undefined
-      : random.helpers.arrayElement([
-          'ph--planet--regular',
-          'ph--sailboat--regular',
-          'ph--house--regular',
-          'ph--gear--regular',
-        ]),
-  items: d > 0 ? random.helpers.multiple(() => createTree(n, d - 1), { count: n }) : [],
-});
+export const createTree = (n = 4, d = 4, { groups = false }: { groups?: boolean } = {}): TestItem => {
+  const children = d > 0 ? random.helpers.multiple(() => createTree(n, d - 1), { count: n }) : [];
+  return {
+    id: random.string.uuid(),
+    name: random.commerce.productName(),
+    icon:
+      d === 3
+        ? undefined
+        : random.helpers.arrayElement([
+            'ph--planet--regular',
+            'ph--sailboat--regular',
+            'ph--house--regular',
+            'ph--gear--regular',
+          ]),
+    // When groups is true, mark every direct child as a group section header (no icon).
+    items: groups ? children.map((child) => ({ ...child, disposition: 'group', icon: undefined })) : children,
+  };
+};
 
 const removeItem = (tree: TestItem, source: TreeData) => {
   const parent = getTestItem(tree, source.path.slice(1, -1));

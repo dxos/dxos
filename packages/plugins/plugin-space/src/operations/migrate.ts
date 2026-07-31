@@ -7,7 +7,7 @@ import { Capabilities } from '@dxos/app-framework';
 import { SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { SpaceCapabilities } from '../types';

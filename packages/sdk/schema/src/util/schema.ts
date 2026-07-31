@@ -22,8 +22,8 @@ export type SchemaPropertyDefinition = {
   config?: { options?: SelectOptionType[] };
 };
 
-export const createDefaultSchema = () =>
-  Schema.Struct({
+export const createDefaultSchema = () => {
+  const struct = Schema.Struct({
     title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
     status: Schema.optional(
       Schema.Literal('todo', 'in-progress', 'done')
@@ -44,8 +44,10 @@ export const createDefaultSchema = () =>
     description: Schema.optional(Schema.String).annotations({
       title: 'Description',
     }),
-    // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
-  }).pipe(Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')));
+  });
+  // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
+  return Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0'))(struct);
+};
 
 export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Promise<Type.AnyEntity | undefined> => {
   if (!DXN.isDXN(dxn)) {
@@ -85,7 +87,7 @@ export const getSchemaFromPropertyDefinitions = (
   // `EchoObjectSchema(...)` yields a static `Type.Obj` entity; unwrap to its
   // source schema (which carries the typename annotation) before handing it to
   // `createEchoSchema`, which expects a raw Effect Schema.
-  const typeSchema = Schema.Struct(fields).pipe(Type.makeObject(DXN.make(typename, '0.1.0')));
+  const typeSchema = Type.makeObject(DXN.make(typename, '0.1.0'))(Schema.Struct(fields));
   const schema = createEchoSchema(Type.getSchema(typeSchema));
 
   // Wrap schema modifications in Type.update so they run inside the schema's change context.

@@ -50,6 +50,8 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.${filter.operator}(${JSON.stringify(filter.value)})`;
     case 'in':
       return `Filter.in([${filter.values.map((v) => JSON.stringify(v)).join(', ')}])`;
+    case 'in-query':
+      return `Filter.in(${prettyQuery(filter.subquery)}.project(${JSON.stringify(filter.property)}))`;
     case 'contains':
       return `Filter.contains(${JSON.stringify(filter.value)})`;
     case 'tag':
@@ -113,7 +115,7 @@ export const prettyQuery = (query: QueryAST.Query): string => {
     case 'order': {
       const orders = query.order.map((o) => {
         if (o.kind === 'natural') {
-          return 'Order.natural()';
+          return `Order.natural(${JSON.stringify(o.direction)})`;
         } else if (o.kind === 'rank') {
           return `Order.rank(${JSON.stringify(o.direction)})`;
         } else if (o.kind === 'timestamp') {
@@ -158,5 +160,21 @@ export const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'limit':
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
+    case 'skip':
+      return `${prettyQuery(query.query)}.skip(${query.skip})`;
+    case 'aggregate': {
+      const aggregates = query.aggregates.map((aggregate) => {
+        const arg =
+          aggregate.kind === 'items'
+            ? aggregate.limit !== undefined
+              ? `{ limit: ${aggregate.limit} }`
+              : ''
+            : aggregate.kind === 'count'
+              ? ''
+              : JSON.stringify(aggregate.property);
+        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
+      });
+      return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;
+    }
   }
 };

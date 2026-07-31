@@ -3,7 +3,7 @@
 //
 
 import { init as initCjsLexer, parse as parseCjs } from 'cjs-module-lexer';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { createRequire as nodeCreateRequire } from 'node:module';
 import path from 'node:path';
 import { type Plugin } from 'vite';
@@ -122,7 +122,6 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
   // `@playwright/test` (and transitive playwright-core) into the browser bundle.
   '@dxos/lit-grid': new Set(['testing']),
   '@dxos/react-ui-mosaic': new Set(['playwright']),
-  '@dxos/react-ui-stack': new Set(['playwright']),
   '@dxos/react-ui-table': new Set(['playwright']),
   '@dxos/ui-theme': new Set(['plugin']),
   // `solid-js/web/storage` is a server-only helper that pulls
@@ -131,7 +130,7 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
   'solid-js': new Set(['web/storage']),
   // `effect` publishes `./.index` for bundler internals — maps to `effect/.index`, which Vite
   // often cannot resolve for the import map and is not part of the plugin-facing surface.
-  effect: new Set(['.index']),
+  'effect': new Set(['.index']),
 };
 
 /**

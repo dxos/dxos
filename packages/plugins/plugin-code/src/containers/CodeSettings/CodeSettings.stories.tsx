@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { AccessToken } from '@dxos/link';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { AccessToken } from '@dxos/types';
 
 import { translations } from '#translations';
 import { type Settings } from '#types';
@@ -25,7 +25,7 @@ const meta = {
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [AccessToken.AccessToken] }),
     withTheme(),
-    withLayout({ layout: 'column', classNames: 'w-[40rem]' }),
+    withLayout({ layout: 'fullscreen' }),
   ],
   parameters: {
     layout: 'fullscreen',

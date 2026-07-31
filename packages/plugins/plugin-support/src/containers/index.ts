@@ -13,3 +13,4 @@ export const ShortcutsList: ComponentType<any> = lazy(() => import('./ShortcutsL
 export const SpaceHomeWelcome: ComponentType<any> = lazy(() => import('./SpaceHomeWelcome'));
 export const SupportArticle: ComponentType<any> = lazy(() => import('./SupportArticle'));
 export const SupportCompanion: ComponentType<any> = lazy(() => import('./SupportCompanion'));
+export const SupportSettings: ComponentType<any> = lazy(() => import('./SupportSettings'));

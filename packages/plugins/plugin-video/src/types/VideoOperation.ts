@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
-import { DXN, Database, Ref } from '@dxos/echo';
+import { Database, DXN, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';

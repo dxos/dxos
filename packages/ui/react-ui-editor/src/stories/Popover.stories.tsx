@@ -18,6 +18,7 @@ import {
   type EditorMenuGroup,
   type EditorMenuItem,
   EditorMenuProvider,
+  type EditorMenuProviderProps,
   type UseEditorMenuProps,
   createMenuGroup,
   filterMenuGroups,
@@ -43,21 +44,27 @@ const placeholder = (trigger: string[]) => {
   return Domino.of('div').append(pressEl, ...triggerEls, forCommandsEl).root;
 };
 
-type DefaultStoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
+type StoryArgs = Omit<UseEditorMenuProps, 'viewRef'> &
+  Pick<EditorMenuProviderProps, 'searchPlaceholder'> & { text: string };
 
-const DefaultStory = ({ text, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ text, searchPlaceholder, ...props }: StoryArgs) => {
   const [controller, setController] = useState<EditorController | null>(null);
   const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
   const getView = useCallback(() => controller?.view ?? null, [controller]);
 
   return (
-    <EditorMenuProvider getView={getView} groups={groupsRef.current} {...menuProps}>
+    <EditorMenuProvider
+      getView={getView}
+      groups={groupsRef.current}
+      searchPlaceholder={searchPlaceholder}
+      {...menuProps}
+    >
       <EditorStory ref={setController} text={text} extensions={extension} />
     </EditorMenuProvider>
   );
 };
 
-const LinkStory = (args: DefaultStoryProps) => {
+const LinkStory = (args: StoryArgs) => {
   const { space } = useClientStory();
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
@@ -76,6 +83,7 @@ const LinkStory = (args: DefaultStoryProps) => {
       const result = await space?.db.query(Query.type(TestSchema.Person)).run();
       const items = result
         .filter((object) => object.name.toLowerCase().includes(name))
+        .sort((a, b) => a.name.localeCompare(b.name))
         .map(
           (object): EditorMenuItem => ({
             id: object.id,
@@ -92,7 +100,18 @@ const LinkStory = (args: DefaultStoryProps) => {
           }),
         );
 
-      return [{ id: 'test', items }];
+      // Mirrors the plugin's picker, where this opens the app's create-object dialog.
+      const createItem: EditorMenuItem = {
+        id: 'create-object',
+        label: 'Add object',
+        icon: 'ph--plus--regular',
+        onSelect: ({ view, head }) => insertAtCursor(view, head, `[${name || 'New object'}](dxn:echo:@:new) `),
+      };
+
+      return [
+        { id: 'create', items: [createItem] },
+        { id: 'test', items },
+      ];
     },
     [space],
   );
@@ -143,7 +162,7 @@ export const Link: Story = {
       },
       onCreateSpace: async ({ space }) => {
         const createObjects = createObjectFactory(space.db, generator);
-        await createObjects([{ type: TestSchema.Person, count: 10 }]);
+        await createObjects([{ type: TestSchema.Person, count: 50 }]);
         await space.db.flush({ indexes: true });
       },
     }),
@@ -151,6 +170,9 @@ export const Link: Story = {
   args: {
     text: join('# Links', '', ''),
     trigger: ['/', '@'],
+    // The "@" picker is a combobox: the query is typed into the popover, not the document.
+    searchTriggers: ['@'],
+    searchPlaceholder: 'Search or create…',
     placeholder: {
       content: () => placeholder(['/', '@']),
     },

@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import type { EchoViewRefPath } from '@dxos/schema';
@@ -23,8 +23,8 @@ import { meta } from '#meta';
 
 export const DATABASE_SECTION_TYPE = `${meta.profile.key}.database`;
 export const COLLECTIONS_SECTION_TYPE = `${meta.profile.key}.collections`;
-export const TYPE_COLLECTION_TYPE = `${meta.profile.key}.type-collection`;
-export const STATIC_SCHEMA_TYPE = `${meta.profile.key}.static-schema`;
+/** Tags every type node under the Database section — both static (compile-time) and database (dynamic) schemas. */
+export const SCHEMA_NODE_TYPE = `${meta.profile.key}.static-schema`;
 
 //
 // Constants
@@ -37,7 +37,6 @@ export const META_NS: { ns: string } = { ns: meta.profile.key };
 // Stable Callbacks
 //
 
-export const BLOCK_REORDER_ABOVE = (_source: TreeData, instruction: any) => instruction.type === 'reorder-above';
 export const CAN_DROP_SPACE = (source: TreeData) => Obj.isObject(source.item.data) || isSpace(source.item.data);
 
 //

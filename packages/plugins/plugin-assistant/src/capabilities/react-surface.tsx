@@ -7,37 +7,34 @@ import React, { type ComponentProps, useEffect } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Chat, Agent, Plan } from '@dxos/assistant-toolkit';
+import { AppSurface, useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
+import { Agent, Chat, Plan } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
-import { Prompts } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
-import { AssistantSettings } from '#components';
 import {
-  BlueprintArticle,
-  ChatCompanion,
-  ChatArticle,
-  ChatDialog,
   AgentArticle,
   AgentProperties,
+  AssistantSettings,
+  ChatArticle,
+  ChatCompanion,
+  ChatDialog,
+  IntegrationPrompt,
   PlanArticle,
-  RoutineArticle,
-  RoutineList,
   SpaceHomePrompt,
   SpaceHomeSuggestions,
   TracePanel,
   TriggerStatus,
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
-import { type Assistant } from '#types';
+import { type Assistant, ChatSurface } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -59,7 +56,10 @@ export default Capability.makeModule(() =>
         id: 'spaceHomeSuggestions',
         filter: Surface.makeFilter(SpaceHomeContent),
         position: Position.last,
-        component: ({ data }) => <SpaceHomeSuggestions space={data.space} />,
+        component: ({ data }) => {
+          const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeSuggestions');
+          return visible ? <SpaceHomeSuggestions space={data.space} onClose={hide} /> : null;
+        },
       }),
       Surface.create({
         id: 'chat',
@@ -107,15 +107,15 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'invocations'),
           AppSurface.oneOf(
             AppSurface.companion(AppSurface.Article, Sequence.Sequence),
-            AppSurface.companion(AppSurface.Article, Routine.Routine),
+            AppSurface.companion(AppSurface.Article, Instructions.Instructions),
           ),
         ),
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
-          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+          const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
-          const target = Obj.instanceOf(Routine.Routine, data.companionTo) ? undefined : data.companionTo;
+          const target = Obj.instanceOf(Instructions.Instructions, data.companionTo) ? undefined : data.companionTo;
 
           return (
             <Panel.Root role={role} className='dx-document'>
@@ -125,20 +125,6 @@ export default Capability.makeModule(() =>
             </Panel.Root>
           );
         },
-      }),
-      Surface.create({
-        id: 'blueprint',
-        filter: AppSurface.object(AppSurface.Article, Blueprint.Blueprint),
-        component: ({ data, role }) => (
-          <BlueprintArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
-      }),
-      Surface.create({
-        id: 'prompt',
-        filter: AppSurface.object(AppSurface.Article, Routine.Routine),
-        component: ({ data, role }) => (
-          <RoutineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
       }),
       Surface.create({
         id: 'plan',
@@ -169,6 +155,15 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
+        id: 'integrationPrompt',
+        filter: Surface.makeFilter(ChatSurface, (data) => data.role === 'integration-prompt'),
+        component: ({ data }) => {
+          // `data.data` is model-supplied JSON (untyped); narrow `service` before use.
+          const service = typeof data.data?.service === 'string' ? data.data.service : undefined;
+          return <IntegrationPrompt service={service} />;
+        },
+      }),
+      Surface.create({
         id: 'triggerStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: () => {
@@ -179,11 +174,6 @@ export default Capability.makeModule(() =>
 
           return <TriggerStatus role='status-indicator' space={space} />;
         },
-      }),
-      Surface.create({
-        id: 'prompts',
-        filter: AppSurface.subject(Prompts, Obj.isObject),
-        component: ({ data }) => <RoutineList subject={data.subject} />,
       }),
     ]),
   ),

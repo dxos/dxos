@@ -6,20 +6,20 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { MapInline } from '@dxos/plugin-map';
 import { MapCapabilities } from '@dxos/plugin-map/types';
-import { getSpace, useObject, useObjects } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
-import { SegmentStack, type SegmentCardAction } from '#components';
+import { type SegmentCardAction, SegmentStack } from '#components';
 import { meta } from '#meta';
 import { Routing, RoutingOperation, Segment, Trip } from '#types';
 
@@ -97,8 +97,8 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
           void showItem({
             contextId: id,
             selectionId: action.segmentId,
-            companion: linkedSegment('segment'),
-            path: Paths.getObjectPathFromObject(subject),
+            companion: Attention.linkedSegment('segment'),
+            path: GraphPath.getObjectPathFromObject(subject),
           });
           break;
         case 'delete':
@@ -131,8 +131,8 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       void showItem({
         contextId: id,
         selectionId: segmentId,
-        companion: linkedSegment('segment'),
-        path: Paths.getObjectPathFromObject(subject),
+        companion: Attention.linkedSegment('segment'),
+        path: GraphPath.getObjectPathFromObject(subject),
       });
     },
     [id, showItem, subject],
@@ -143,13 +143,13 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
 
   const handleAddSegment = useCallback(
     (kind: Segment.Kind) => {
-      const space = getSpace(subject);
-      if (!space) {
+      const db = Obj.getDatabase(subject);
+      if (!db) {
         return;
       }
       // The chronologically-last leg, used to chain the new segment's origin from where it ended.
       const previous = segments.at(-1);
-      const segment = space.db.add(Segment.makeDefault(kind));
+      const segment = db.add(Segment.makeDefault(kind));
       Trip.addSegment(subject, segment);
       // Pre-fill the start (and end, for a range) from the current calendar selection.
       if (calendarSelection?.from) {
@@ -265,7 +265,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         )}
       >
         {/* Row 1: calendar + segment stack. */}
-        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-bs-0 overflow-hidden'>
+        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-h-0 overflow-hidden'>
           <NaturalCalendar.Root>
             <Panel.Root className='hidden @3xl:block border-r border-subdued-separator'>
               <Panel.Toolbar asChild>
@@ -306,3 +306,5 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
     </div>
   );
 };
+
+TripArticle.displayName = 'TripArticle';

@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ClientServicesProvider, ClientServicesProviderResource } from '@dxos/client-protocol';
-import { type Config, ConfigResource } from '@dxos/config';
+import { type ClientServicesProvider } from '@dxos/client-protocol';
+import { type Config } from '@dxos/config';
 import { GetDiagnosticsRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { type JsonKeyOptions, isNonNullable, jsonKeyReplacer } from '@dxos/util';
+import { type JsonKeyOptions, jsonKeyReplacer } from '@dxos/util';
 
 import { createCollectDiagnosticsBroadcastSender } from './diagnostics-broadcast';
 
@@ -25,8 +24,8 @@ export class DiagnosticsCollector {
   private static broadcastSender = createCollectDiagnosticsBroadcastSender();
 
   public static async collect(
-    config: Config | Config[] = findConfigs(),
-    services: ClientServicesProvider | null = findSystemServiceProvider(),
+    config: Config | Config[] = [],
+    services: ClientServicesProvider | null = null,
     options: JsonKeyOptions = {},
   ): Promise<any> {
     const serviceDiagnostics = await services?.services?.SystemService?.getDiagnostics(
@@ -42,7 +41,6 @@ export class DiagnosticsCollector {
 
     const clientDiagnostics = {
       config,
-      trace: TRACE_PROCESSOR.getDiagnostics(),
     };
 
     const diagnostics =
@@ -56,14 +54,3 @@ export class DiagnosticsCollector {
     return JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer(options)));
   }
 }
-
-const findSystemServiceProvider = (): ClientServicesProvider | null => {
-  const serviceProviders = TRACE_PROCESSOR.findResourcesByAnnotation(ClientServicesProviderResource);
-  const providerResource = serviceProviders.find((r) => r.instance.deref()?.services?.SystemService != null);
-  return providerResource?.instance?.deref() ?? null;
-};
-
-const findConfigs = (): Config[] => {
-  const configs = TRACE_PROCESSOR.findResourcesByAnnotation(ConfigResource);
-  return configs.map((r) => r.instance.deref()).filter(isNonNullable);
-};

@@ -7,3 +7,4 @@ export * from './Globe';
 export * from './Graph';
 export * from './Lattice';
 export * from './Tree';
+export * from './Visualization';

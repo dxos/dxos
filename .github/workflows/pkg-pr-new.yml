@@ -17,11 +17,13 @@ jobs:
   publish:
     runs-on: depot-ubuntu-24.04-4
     container:
-      image: ghcr.io/dxos/gh-actions:20.19.5
+      image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 30
+    # The CLI's five platform binaries add ~330 MB of multipart upload (5 MB parts) on top of the
+    # workspace packages, which does not fit the previous 30.
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -41,6 +43,17 @@ jobs:
         run: moon run shell:bundle
         env:
           NODE_ENV: production
+
+      # The CLI publishes prebuilt binaries generated into dist/, so without this the publish script
+      # has nothing to attach. Deliberately no `NODE_ENV: production` — that would diverge the preview
+      # binary from the one `cli:publish` produces.
+      - name: Bundle CLI
+        run: moon run cli:bundle
+
+      # Gate the preview on the same check as `cli:publish`. Without it this workflow published a binary
+      # compiled by the CI image's bun rather than the pinned one, which rejected its own arguments.
+      - name: Smoke test CLI
+        run: moon run cli:smoke
 
       - name: Publish to pkg.pr.new
         run: .github/workflows/scripts/pkg-pr-new-publish.sh

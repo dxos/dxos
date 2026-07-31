@@ -17,3 +17,5 @@ export const StatusBarActions = (_props: StatusBarActionsProps) => {
     </div>
   );
 };
+
+StatusBarActions.displayName = 'StatusBarActions';

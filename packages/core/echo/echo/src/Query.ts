@@ -8,12 +8,13 @@ import type * as EffectArray from 'effect/Array';
 import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
-import { type URI } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
 
+import type * as Aggregate from './Aggregate';
 import type * as Collection from './Collection';
 import * as Database from './Database';
 import type * as Dataset from './Dataset';
-import * as Feed from './Feed';
+import type * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
@@ -45,10 +46,23 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
       ? Ref.Target<RefArrayElement<P>>
       : never;
 
+/**
+ * Phantom brand on the flat row produced by {@link Query.aggregate}. Present only at the type level
+ * (never at runtime), it lets hooks like `useQuery`/`usePagination` distinguish an aggregate-row
+ * query from an entity query and avoid wrapping the row in `Entity.Entity`. The brand is a required
+ * property so `T extends AggregateResult` discriminates — an optional one would be satisfied by any
+ * type. Consumers never read it.
+ */
+export interface AggregateResult {
+  readonly '~@dxos/echo/Query.AggregateResult': true;
+}
+
+export const QueryTypeId = '~@dxos/echo/Query' as const;
+export type QueryTypeId = typeof QueryTypeId;
+
 // TODO(burdon): Narrow T to Entity.Unknown?
 export interface Query<T> {
-  // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Query': { value: T };
+  readonly [QueryTypeId]: { value: T };
 
   ast: QueryAST.Query;
 
@@ -57,15 +71,24 @@ export interface Query<T> {
    * @param filter - Filter to select the objects.
    * @returns Query for the selected objects.
    */
-  'select'(filter: Filter.Filter<T>): Query<T>;
-  'select'(props: Filter.Props<T>): Query<T>;
+  select(filter: Filter.Filter<T>): Query<T>;
+  select(props: Filter.Props<T>): Query<T>;
+
+  /**
+   * Project the query's results to a single scalar property, for use as a membership set in
+   * `Filter.in(query.project('col'))` — an uncorrelated `col IN (SELECT property FROM ...)`
+   * semi-join. The subquery is resolved once at execution time. A projection is a terminal
+   * value, not a `Query`, so it cannot be chained further.
+   * @param property - Property path to project.
+   */
+  project<K extends RefPropKey<T>>(property: K): Projection<T[K]>;
 
   /**
    * Traverse an outgoing reference.
    * @param key - Property path inside T that is a reference or optional reference.
    * @returns Query for the target of the reference.
    */
-  'reference'<K extends RefPropKey<T>>(key: K): Query<ReferenceTraversalTarget<T[K]>>;
+  reference<K extends RefPropKey<T>>(key: K): Query<ReferenceTraversalTarget<T[K]>>;
 
   /**
    * Find objects referencing this object.
@@ -75,12 +98,12 @@ export interface Query<T> {
    */
   // TODO(dmaretskyi): any way to enforce `Ref.Target<Schema.Schema.Type<S>[key]> == T`?
   // TODO(dmaretskyi): Ability to go through arrays of references.
-  'referencedBy'<S extends Type$.AnyEntity>(
+  referencedBy<S extends Type$.AnyEntity>(
     target: S | URI.URI,
     key: RefPropKey<Type$.InstanceType<S>>,
   ): Query<Type$.InstanceType<S>>;
-  'referencedBy'<S extends Type$.AnyEntity>(target: S | URI.URI): Query<Type$.InstanceType<S>>;
-  'referencedBy'(): Query<any>;
+  referencedBy<S extends Type$.AnyEntity>(target: S | URI.URI): Query<Type$.InstanceType<S>>;
+  referencedBy(): Query<any>;
 
   /**
    * Find relations where this object is the source.
@@ -88,7 +111,7 @@ export interface Query<T> {
    * @param relation - Schema of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  'sourceOf'<R extends Type$.AnyRelation>(
+  sourceOf<R extends Type$.AnyRelation>(
     relation?: R | URI.URI,
     predicates?: Filter.Props<Type$.InstanceType<R>>,
   ): Query<Type$.InstanceType<R>>;
@@ -99,7 +122,7 @@ export interface Query<T> {
    * @param relation - Type entity of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  'targetOf'<R extends Type$.AnyRelation>(
+  targetOf<R extends Type$.AnyRelation>(
     relation?: R | URI.URI,
     predicates?: Filter.Props<Type$.InstanceType<R>>,
   ): Query<Type$.InstanceType<R>>;
@@ -108,40 +131,86 @@ export interface Query<T> {
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
    */
-  'source'(): Query<Relation.SourceOf<T>>;
+  source(): Query<Relation.SourceOf<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
    */
-  'target'(): Query<Relation.TargetOf<T>>;
+  target(): Query<Relation.TargetOf<T>>;
 
   /**
    * Get the parent object of the current selection.
    * @returns Query for the parent objects.
    */
-  'parent'(): Query<any>;
+  parent(): Query<any>;
 
   /**
    * Get all child objects of the current selection.
    * @returns Query for the child objects.
    */
-  'children'(): Query<any>;
+  children(): Query<any>;
 
   /**
    * Order the query results.
    * Orders are specified in priority order. The first order will be applied first, etc.
+   *
+   * `Order.property` orders by the current result shape's fields, so it works both before and after
+   * an {@link aggregate}: before, by member (row) properties; after, by the flat record's fields
+   * (any group or aggregate field — e.g. `Order.property('lastMessageAt')` reorders the groups by
+   * that aggregate).
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
    */
-  'orderBy'(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
+  orderBy(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
+
+  /**
+   * Aggregate the query results into flat records. {@link Aggregate.group} entries partition the
+   * results into contiguous groups (one record each), keyed by the record field the group is named
+   * after; with no `group` entries the entire input aggregates into a single record. Each declared
+   * aggregate becomes a top-level field and can be ordered by with a following {@link orderBy} using
+   * {@link Order.property}.
+   *
+   * Groups are ordered by the first occurrence of their key in the incoming stream, so a preceding
+   * `orderBy` controls group order in the absence of a following one. {@link Aggregate.items}'s own
+   * `order` option is a separate, explicit per-group member ordering — pass it there rather than
+   * relying on a preceding `orderBy`, whose only well-defined job once `aggregate` follows is
+   * establishing initial group order. For example, message threads ordered by their most recent
+   * message, each retaining up to 20 members newest-first:
+   *
+   * ```ts
+   * Query.type(Message)
+   *   .aggregate({
+   *     threadId: Aggregate.group('threadId'),
+   *     lastMessageAt: Aggregate.max('created'),
+   *     items: Aggregate.items({ limit: 20, order: [Order.property('created', 'desc')] }),
+   *   })
+   *   .orderBy(Order.property('lastMessageAt', 'desc'));
+   * ```
+   *
+   * Must be the last data-selecting clause in the chain — only `from`/`options`/`orderBy`/`limit`/
+   * `skip` may follow.
+   * @param aggregates - Record of aggregate declarations keyed by result field name.
+   * @returns Query whose flat result records carry the named aggregates as fields.
+   */
+  aggregate<const A extends Record<string, Aggregate.Aggregate<T, any>>>(
+    aggregates: A,
+  ): Query<Aggregate.AggregationResult<A>>;
 
   /**
    * Limit the number of results.
    * @param limit - Maximum number of results to return.
    * @returns Query for the limited results.
    */
-  'limit'(limit: number): Query<T>;
+  limit(limit: number): Query<T>;
+
+  /**
+   * Skip a number of results (offset). Combined with `orderBy` and `limit`, expresses a windowed
+   * (paginated) read.
+   * @param skip - Number of leading results to skip.
+   * @returns Query for the remaining results.
+   */
+  skip(skip: number): Query<T>;
 
   /**
    * Query from selected databases only.
@@ -154,7 +223,7 @@ export interface Query<T> {
    *
    * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
    */
-  'from'(database: Database.Database | Database.Database[], options?: { includeFeeds?: boolean }): Query<T>;
+  from(database: Database.Database | Database.Database[], options?: { includeFeeds?: boolean }): Query<T>;
 
   /**
    * Query from selected feeds only.
@@ -166,7 +235,7 @@ export interface Query<T> {
    * ```
    *
    */
-  'from'(feeds: Feed.Feed | Feed.Feed[]): Query<T>;
+  from(feeds: Feed.Feed | Feed.Feed[]): Query<T>;
 
   /**
    * Query from all accessible spaces.
@@ -179,7 +248,7 @@ export interface Query<T> {
    *
    * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
    */
-  'from'(allSpaces: 'all-accessible-spaces', options?: { includeFeeds?: boolean }): Query<T>;
+  from(allSpaces: 'all-accessible-spaces', options?: { includeFeeds?: boolean }): Query<T>;
 
   /**
    * Query from a dataset.
@@ -191,7 +260,7 @@ export interface Query<T> {
    * Query.type(Person).from(feed);
    * ```
    */
-  'from'(dataset: Dataset.Dataset): Query<T>;
+  from(dataset: Dataset.Dataset): Query<T>;
 
   /**
    * Query from the results of another query.
@@ -202,7 +271,7 @@ export interface Query<T> {
    * Query.select(Filter.props({ foo: 'foo' })).from(Query.select(Filter.type(Contact)).reference('org'));
    * ```
    */
-  'from'(query: Any): Query<T>;
+  from(query: Any): Query<T>;
 
   /**
    * Query from one or more raw scopes.
@@ -213,34 +282,46 @@ export interface Query<T> {
    * Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
    * ```
    */
-  'from'(...scopes: QueryAST.Scope[]): Query<T>;
+  from(...scopes: QueryAST.Scope[]): Query<T>;
 
   /**
    * Query from a raw scope or array of scopes.
    */
-  'from'(scope: QueryAST.Scope | QueryAST.Scope[]): Query<T>;
+  from(scope: QueryAST.Scope | QueryAST.Scope[]): Query<T>;
 
   /**
    * Add options to a query.
    */
-  'options'(options: QueryAST.QueryOptions): Query<T>;
+  options(options: QueryAST.QueryOptions): Query<T>;
 
   /**
    * Attach a diagnostic label for logs and tooling (execution semantics unchanged).
    */
-  'debugLabel'(label: string): Query<T>;
+  debugLabel(label: string): Query<T>;
 }
 
 export type Any = Query<any>;
 
 export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
+/**
+ * A query projected to a single scalar property (see {@link Query.project}).
+ */
+export type Projection<V = unknown> = internal.Projection<V>;
+
+/**
+ * Brand key for {@link Projection}. Re-exported (like {@link QueryTypeId}) so the sandboxed
+ * `query-lite` mirror can declare its own local constant with the same string literal and
+ * construct structurally-compatible projections without importing this module's runtime.
+ */
+export type ProjectionTypeId = internal.ProjectionTypeId;
+
 class QueryClass implements Any {
-  private static 'variance': Any['~Query'] = {} as Any['~Query'];
+  private static 'variance': Any[QueryTypeId] = {} as Any[QueryTypeId];
 
   constructor(public readonly ast: QueryAST.Query) {}
 
-  '~Query' = QueryClass.variance;
+  [QueryTypeId] = QueryClass.variance;
 
   select(filter: Filter.Any | Filter.Props<any>): Any {
     if (Filter.is(filter)) {
@@ -256,6 +337,10 @@ class QueryClass implements Any {
         filter: Filter.props(filter).ast,
       });
     }
+  }
+
+  project(property: string): Projection<any> {
+    return internal.makeProjection(this.ast, property);
   }
 
   reference(key: string): Any {
@@ -326,11 +411,19 @@ class QueryClass implements Any {
     });
   }
 
-  orderBy(...order: Order.Order<any>[]): Any {
+  orderBy(...order: Order.Any[]): Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
       order: order.map((o) => o.ast),
+    });
+  }
+
+  aggregate(aggregates: Record<string, Aggregate.Any>): Any {
+    return new QueryClass({
+      type: 'aggregate',
+      query: this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
     });
   }
 
@@ -339,6 +432,14 @@ class QueryClass implements Any {
       type: 'limit',
       query: this.ast,
       limit,
+    });
+  }
+
+  skip(skip: number): Any {
+    return new QueryClass({
+      type: 'skip',
+      query: this.ast,
+      skip,
     });
   }
 
@@ -451,11 +552,13 @@ class QueryClass implements Any {
       if (typename === 'org.dxos.type.collection') {
         throw new Error('Query.from(collection) is not yet supported.');
       }
-      // Validate that the items are Feed.Feed instances.
+      // Validate that the items are feed objects. Checked by typename rather than schema instanceof
+      // to keep this module free of a runtime dependency on the Feed module (avoids an import cycle).
       for (const item of items) {
-        if (!Obj.instanceOf(Feed.Feed, item)) {
+        const itemTypename = Obj.getTypename(item as Obj.Unknown);
+        if (itemTypename !== 'org.dxos.type.feed') {
           throw new TypeError(
-            `Query.from() expects Feed objects (org.dxos.type.feed), but received an object with typename '${typename ?? 'unknown'}'.`,
+            `Query.from() expects Feed objects (org.dxos.type.feed), but received an object with typename '${itemTypename ?? 'unknown'}'.`,
           );
         }
       }
@@ -463,10 +566,11 @@ class QueryClass implements Any {
 
     const feedItems = items as Feed.Feed[];
     const feedScopes = feedItems.map((feed) => {
-      const uri = Feed.getQueueUri(feed);
+      // Inlined Feed.getFeedUri to avoid a runtime import cycle with the Feed module.
+      const uri = EID.tryParse(Obj.getURI(feed));
       if (!uri) {
         throw new TypeError(
-          `Query.from() expects persisted Feed objects with a queue URI; got feed without a space (id=${Obj.getURI(feed)}).`,
+          `Query.from() expects persisted Feed objects with a feed URI; got feed without a space (id=${Obj.getURI(feed)}).`,
         );
       }
       return { _tag: 'feed' as const, feedUri: String(uri) };
@@ -503,7 +607,7 @@ class QueryClass implements Any {
 }
 
 export const is = (value: unknown): value is Any => {
-  return typeof value === 'object' && value !== null && '~Query' in value;
+  return typeof value === 'object' && value !== null && QueryTypeId in value;
 };
 
 /** Construct a query from an ast. */
@@ -549,6 +653,16 @@ export const type: {
     filter: Filter.type(type, predicates).ast,
   });
 };
+
+/**
+ * Project a query's results to a single scalar property, for use as a membership set in
+ * `Filter.in(Query.project(query, 'col'))`.
+ * @param query - Query to project.
+ * @param property - Property path to project.
+ * @returns Projection for use in `Filter.in`.
+ */
+export const project = <T, K extends RefPropKey<T>>(query: Query<T>, property: K): Projection<T[K]> =>
+  internal.makeProjection<T[K]>(query.ast, property);
 
 /**
  * Combine results of multiple queries.

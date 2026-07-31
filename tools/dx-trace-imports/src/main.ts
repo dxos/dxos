@@ -2,29 +2,36 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as esbuild from 'esbuild';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 
+import { buildImportGraph } from './build-graph.ts';
 import {
+  EXTERNAL_PREFIX,
   type Matcher,
-  type MatcherInput,
+  type WorkspacePackageResolver,
   createMatcher,
   createWorkspacePackageResolver,
+  externalSpecifierOf,
+  isExternalKey,
+  matchesKey,
   normalizeFsPath,
   packageNameFromPath,
 } from './matcher.ts';
+import { resolvePackageExport } from './package-resolution.ts';
 
 export interface TraceImportsOptions {
-  /** Absolute or relative entry file passed to esbuild. */
-  readonly from: string;
+  /** Absolute or relative entry file to start the crawl from. */
+  readonly from?: string;
+  /** Package export subpath (e.g. `./plugin`) resolved via `package.json` exports. */
+  readonly exportSubpath?: string;
   /** Target spec — package, path, or glob. See `--to` in the CLI. */
   readonly to: string;
   /** Limit the number of distinct chains we render (default: 10). */
   readonly maxChains?: number;
-  /** Custom esbuild conditions; defaults to `['workerd', 'worker', 'node']`. */
+  /** Custom export conditions; defaults to `['workerd', 'worker', 'node']`. */
   readonly conditions?: readonly string[];
   /** Collapse chains to package-to-package edges. */
   readonly packagesOnly?: boolean;
@@ -39,74 +46,17 @@ export interface TraceImportsResult {
   readonly totalEmitted: number;
   /** Distinct chains (label-encoded) collected up to `maxChains`. */
   readonly labelChains: readonly string[][];
-  /** Path of the metafile written to a temp directory (for debugging). */
+  /** Path of the graph snapshot written to a temp directory (for debugging). */
   readonly metafilePath: string;
   /** Whether the DFS halted because we hit `maxChains`. */
   readonly stoppedEarly: boolean;
   /** Tree-rendered output (already populated with chain labels). */
   readonly rendered: string;
+  /** Resolved entry file used for the trace. */
+  readonly entryPath: string;
 }
 
 const DEFAULT_CONDITIONS = ['workerd', 'worker', 'node'] as const;
-
-/**
- * Extensions of asset-style imports that esbuild can't resolve out of the box.
- * We mark them as external so the metafile still records the edge for tracing.
- */
-const ASSET_EXTENSIONS_FILTER =
-  /\.(wasm|node|css|pcss|scss|sass|less|svg|png|jpe?g|gif|webp|avif|ico|woff2?|ttf|eot|otf|mp3|mp4|webm|wav|ogg|glsl|frag|vert|md|html?|txt|tpl)(\?[^?]*)?$/i;
-
-/**
- * Vite-style resource queries (e.g. `./foo.ts?raw`, `./worker.ts?worker`) that
- * change how the asset is loaded but aren't understood by esbuild's resolver.
- * We mark them as external so the trace can still see the edge.
- */
-const VITE_RESOURCE_QUERY_FILTER = /\?(raw|url|inline|worker|sharedworker)\b/i;
-
-const traceExternalsPlugin: esbuild.Plugin = {
-  name: 'trace-imports-externals',
-  setup(build) {
-    build.onResolve({ filter: /^cloudflare:/ }, (args) => ({ path: args.path, external: true }));
-    build.onResolve({ filter: ASSET_EXTENSIONS_FILTER }, (args) => ({ path: args.path, external: true }));
-    build.onResolve({ filter: VITE_RESOURCE_QUERY_FILTER }, (args) => ({ path: args.path, external: true }));
-  },
-};
-
-/** Map absolute normalized path -> metafile input key (first wins). */
-const buildAbsToInputKey = (inputs: Record<string, esbuild.Metafile['inputs'][string]>, absWorkingDir: string) => {
-  const absToKey = new Map<string, string>();
-  for (const key of Object.keys(inputs)) {
-    const abs = normalizeFsPath(path.resolve(absWorkingDir, key));
-    if (!absToKey.has(abs)) {
-      absToKey.set(abs, key);
-    }
-  }
-  return absToKey;
-};
-
-const resolveImportKey = (importPath: string, absWorkingDir: string, absToInputKey: Map<string, string>) => {
-  const abs = normalizeFsPath(path.resolve(absWorkingDir, importPath));
-  return absToInputKey.get(abs) ?? null;
-};
-
-const findEntryKey = (
-  metafileInputs: Record<string, esbuild.Metafile['inputs'][string]>,
-  absWorkingDir: string,
-  entryAbsolute: string,
-) => {
-  const want = normalizeFsPath(entryAbsolute);
-  const absToKey = buildAbsToInputKey(metafileInputs, absWorkingDir);
-  if (absToKey.has(want)) {
-    return absToKey.get(want) ?? null;
-  }
-  for (const key of Object.keys(metafileInputs)) {
-    const abs = normalizeFsPath(path.resolve(absWorkingDir, key));
-    if (abs === want) {
-      return key;
-    }
-  }
-  return null;
-};
 
 const wrapBold = (color: boolean, value: string) => (color ? `\x1b[1m${value}\x1b[22m` : value);
 
@@ -115,10 +65,10 @@ const wrapBold = (color: boolean, value: string) => (color ? `\x1b[1m${value}\x1
  * `node_modules/.pnpm/<spec>/node_modules/<pkg>/dist/...` -> `<pkg>/dist/...`.
  */
 const prettifyStep = (step: string, absWorkingDir: string, color: boolean): string => {
-  if (step.startsWith('[external] ')) {
-    const specifier = step.slice('[external] '.length);
+  if (isExternalKey(step)) {
+    const specifier = externalSpecifierOf(step);
     const pkg = packageNameFromPath(`node_modules/${specifier}`);
-    return pkg ? `[external] ${wrapBold(color, pkg)}${specifier.slice(pkg.length)}` : step;
+    return pkg ? `${EXTERNAL_PREFIX}${wrapBold(color, pkg)}${specifier.slice(pkg.length)}` : step;
   }
   let relative = path.relative(absWorkingDir, path.resolve(absWorkingDir, step)) || '.';
   relative = relative.replace(/\\/g, '/');
@@ -139,12 +89,12 @@ const prettifyStep = (step: string, absWorkingDir: string, color: boolean): stri
 const packageLabel = (
   step: string,
   absWorkingDir: string,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
+  resolveWorkspacePackage: WorkspacePackageResolver,
 ): string => {
-  if (step.startsWith('[external] ')) {
-    const specifier = step.slice('[external] '.length);
+  if (isExternalKey(step)) {
+    const specifier = externalSpecifierOf(step);
     const pkg = packageNameFromPath(`node_modules/${specifier}`);
-    return `[external] ${pkg ?? specifier}`;
+    return `${EXTERNAL_PREFIX}${pkg ?? specifier}`;
   }
   const absolute = path.resolve(absWorkingDir, step);
   const relative = path.relative(absWorkingDir, absolute).replace(/\\/g, '/') || '.';
@@ -162,7 +112,7 @@ const packageLabel = (
 const chainToPackages = (
   chain: readonly string[],
   absWorkingDir: string,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
+  resolveWorkspacePackage: WorkspacePackageResolver,
 ): string[] => {
   const labels: string[] = [];
   for (const step of chain) {
@@ -214,79 +164,33 @@ const renderTree = (chainsOfLabels: readonly (readonly string[])[]): string => {
   return lines.join('\n');
 };
 
-/** Build a `MatcherInput` for an internal (file-resolved) input key. */
-const internalMatcherInput = (
-  inputKey: string,
-  absWorkingDir: string,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
-): MatcherInput => {
-  const resolvedAbsolute = normalizeFsPath(path.resolve(absWorkingDir, inputKey));
-  const fromNodeModules = packageNameFromPath(inputKey);
-  const packageName = fromNodeModules ?? resolveWorkspacePackage(resolvedAbsolute);
-  return {
-    resolvedAbsolute,
-    packageName: packageName ?? null,
-    externalSpecifier: null,
-  };
-};
-
-/** Build a `MatcherInput` for an external import edge. */
-const externalMatcherInput = (specifier: string): MatcherInput => ({
-  resolvedAbsolute: null,
-  packageName: null,
-  externalSpecifier: specifier,
-});
-
-/** Input keys whose file is itself a terminal under the matcher. */
-const terminalInputKeys = (
-  inputs: Record<string, esbuild.Metafile['inputs'][string]>,
-  absWorkingDir: string,
+/** Graph keys whose node is itself a terminal under the matcher. */
+const terminalKeys = (
+  graph: Map<string, string[]>,
   matcher: Matcher,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
-): string[] => {
-  const keys: string[] = [];
-  for (const key of Object.keys(inputs)) {
-    if (matcher.matches(internalMatcherInput(key, absWorkingDir, resolveWorkspacePackage))) {
-      keys.push(key);
-    }
-  }
-  return keys;
-};
+  resolveWorkspacePackage: WorkspacePackageResolver,
+): string[] => [...graph.keys()].filter((key) => matchesKey(key, matcher, resolveWorkspacePackage));
 
-/** Compute the set of input keys that lie on some path from `entryKey` to a terminal input. */
+/** Compute the set of graph keys that lie on some path from `entryKey` to a terminal node. */
 const buildKeysReachingTerminal = (
-  metafile: esbuild.Metafile,
-  absWorkingDir: string,
+  graph: Map<string, string[]>,
   entryKey: string,
   matcher: Matcher,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
+  resolveWorkspacePackage: WorkspacePackageResolver,
 ): Set<string> => {
-  const inputs = metafile.inputs;
-  const absToInputKey = buildAbsToInputKey(inputs, absWorkingDir);
-  /** Reverse adjacency: predecessor -> successors that import it. */
   const reverse = new Map<string, Set<string>>();
-  for (const [currentKey, record] of Object.entries(inputs)) {
-    if (!record.imports) {
-      continue;
-    }
-    for (const imp of record.imports) {
-      if (imp.external) {
-        continue;
-      }
-      const nextKey = resolveImportKey(imp.path, absWorkingDir, absToInputKey);
-      if (!nextKey) {
-        continue;
-      }
-      let preds = reverse.get(nextKey);
+  for (const [currentKey, deps] of graph.entries()) {
+    for (const dep of deps) {
+      let preds = reverse.get(dep);
       if (!preds) {
         preds = new Set();
-        reverse.set(nextKey, preds);
+        reverse.set(dep, preds);
       }
       preds.add(currentKey);
     }
   }
 
-  const terminals = terminalInputKeys(inputs, absWorkingDir, matcher, resolveWorkspacePackage);
+  const terminals = terminalKeys(graph, matcher, resolveWorkspacePackage);
   const reachableBackward = new Set<string>(terminals);
   const queue = [...terminals];
   for (let head = 0; head < queue.length; head++) {
@@ -310,21 +214,17 @@ const buildKeysReachingTerminal = (
 };
 
 /**
- * Walk the metafile and emit each terminal chain to `onChain`. The DFS halts
- * as soon as `onChain` returns `false`. The caller controls dedupe and
- * accounting.
+ * Walk the graph and emit each terminal chain to `onChain`. The DFS halts
+ * as soon as `onChain` returns `false`.
  */
 const collectChains = (
-  metafile: esbuild.Metafile,
-  absWorkingDir: string,
+  graph: Map<string, string[]>,
   entryKey: string,
   matcher: Matcher,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
+  resolveWorkspacePackage: WorkspacePackageResolver,
   onChain: (chain: string[]) => boolean,
 ): void => {
-  const inputs = metafile.inputs;
-  const absToInputKey = buildAbsToInputKey(inputs, absWorkingDir);
-  const onPathToTarget = buildKeysReachingTerminal(metafile, absWorkingDir, entryKey, matcher, resolveWorkspacePackage);
+  const onPathToTarget = buildKeysReachingTerminal(graph, entryKey, matcher, resolveWorkspacePackage);
 
   let stop = false;
   const emit = (chain: string[]): void => {
@@ -342,40 +242,29 @@ const collectChains = (
     }
 
     const extendedChain = [...chain, currentKey];
-    if (
-      !currentKey.startsWith('[external] ') &&
-      matcher.matches(internalMatcherInput(currentKey, absWorkingDir, resolveWorkspacePackage))
-    ) {
+    if (matchesKey(currentKey, matcher, resolveWorkspacePackage)) {
       emit(extendedChain);
       return;
     }
-
-    const record = inputs[currentKey];
-    if (!record || !record.imports) {
+    // External nodes are always leaves; nothing further to walk.
+    if (isExternalKey(currentKey)) {
       return;
     }
 
-    for (const imp of record.imports) {
+    const deps = graph.get(currentKey) ?? [];
+    for (const dep of deps) {
       if (stop) {
         return;
       }
-      if (imp.external) {
-        const specifier = (imp as { original?: string }).original ?? imp.path;
-        if (matcher.matches(externalMatcherInput(specifier))) {
-          emit([...extendedChain, `[external] ${specifier}`]);
-        }
+      if (!onPathToTarget.has(dep)) {
         continue;
       }
-      const nextKey = resolveImportKey(imp.path, absWorkingDir, absToInputKey);
-      if (!nextKey || !onPathToTarget.has(nextKey)) {
+      if (stackSet.has(dep)) {
         continue;
       }
-      if (stackSet.has(nextKey)) {
-        continue;
-      }
-      stackSet.add(nextKey);
-      dfs(nextKey, extendedChain, stackSet);
-      stackSet.delete(nextKey);
+      stackSet.add(dep);
+      dfs(dep, extendedChain, stackSet);
+      stackSet.delete(dep);
     }
   };
 
@@ -383,55 +272,39 @@ const collectChains = (
   dfs(entryKey, [], stackSet);
 };
 
+const resolveEntryPath = (
+  options: TraceImportsOptions,
+  absWorkingDir: string,
+  conditions: readonly string[],
+): string => {
+  if (options.exportSubpath) {
+    return resolvePackageExport(absWorkingDir, options.exportSubpath, conditions);
+  }
+  if (options.from) {
+    return normalizeFsPath(path.resolve(absWorkingDir, options.from));
+  }
+  throw new Error('Either `from` or `exportSubpath` must be provided.');
+};
+
 /**
- * Run an esbuild bundle, dump the metafile to a temp file, and return the
- * structured trace result.
- *
- * The function is side-effect heavy by design — it shells out to esbuild and
- * writes a metafile to `os.tmpdir()`. Callers wanting a pure analysis can
- * skip this and use {@link analyzeMetafile} directly.
+ * Build a static import graph with the SWC parser and return structured trace results.
  */
-export const traceImports = async (options: TraceImportsOptions): Promise<TraceImportsResult> => {
+export const traceImports = (options: TraceImportsOptions): TraceImportsResult => {
   const absWorkingDir = options.absWorkingDir ?? process.cwd();
   const conditions = options.conditions ?? DEFAULT_CONDITIONS;
   const maxChains = options.maxChains ?? 10;
   const color = options.color ?? process.stdout.isTTY === true;
   const packagesOnly = options.packagesOnly ?? false;
 
-  const entryAbsolute = normalizeFsPath(path.resolve(absWorkingDir, options.from));
+  const entryAbsolute = resolveEntryPath(options, absWorkingDir, conditions);
   const matcher = createMatcher(options.to, absWorkingDir);
   const resolveWorkspacePackage = createWorkspacePackageResolver(absWorkingDir);
 
-  const metafilePath = path.join(os.tmpdir(), `trace-imports-metafile-${process.pid}-${Date.now()}.json`);
-  const outfile = process.platform === 'win32' ? 'NUL' : '/dev/null';
+  const entryKey = normalizeFsPath(entryAbsolute);
+  const graph = buildImportGraph(entryKey, conditions, matcher, resolveWorkspacePackage);
 
-  const result = await esbuild.build({
-    entryPoints: [entryAbsolute],
-    bundle: true,
-    write: true,
-    outfile,
-    metafile: true,
-    absWorkingDir,
-    format: 'esm',
-    platform: 'node',
-    conditions: [...conditions],
-    logLevel: 'warning',
-    // Suppress warnings that are noise for graph-only analysis: bare imports
-    // dropped because the target marks `sideEffects: false`, and "package.json"
-    // hints we don't act on. The metafile still records every edge.
-    logOverride: {
-      'ignored-bare-import': 'silent',
-      'package.json': 'silent',
-    },
-    plugins: [traceExternalsPlugin],
-  });
-
-  fs.writeFileSync(metafilePath, JSON.stringify(result.metafile, null, 2), 'utf8');
-
-  const entryKey = findEntryKey(result.metafile.inputs, absWorkingDir, entryAbsolute);
-  if (!entryKey) {
-    throw new Error(`Could not find entry "${options.from}" in metafile inputs (resolve cwd: ${absWorkingDir}).`);
-  }
+  const metafilePath = path.join(os.tmpdir(), `trace-imports-graph-${process.pid}-${Date.now()}.json`);
+  fs.writeFileSync(metafilePath, JSON.stringify(Object.fromEntries(graph.entries()), null, 2), 'utf8');
 
   const seenOutputs = new Set<string>();
   const labelChains: string[][] = [];
@@ -444,7 +317,7 @@ export const traceImports = async (options: TraceImportsOptions): Promise<TraceI
     return chain.map((step) => prettifyStep(step, absWorkingDir, color));
   };
 
-  collectChains(result.metafile, absWorkingDir, entryKey, matcher, resolveWorkspacePackage, (chain) => {
+  collectChains(graph, entryKey, matcher, resolveWorkspacePackage, (chain) => {
     totalEmitted += 1;
     const labels = chainToLabels(chain);
     const key = labels.join('\0');
@@ -466,5 +339,6 @@ export const traceImports = async (options: TraceImportsOptions): Promise<TraceI
     metafilePath,
     stoppedEarly,
     rendered,
+    entryPath: entryAbsolute,
   };
 };

@@ -19,12 +19,14 @@ import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { Database, Obj, type Ref } from '@dxos/echo';
-import { type Integration } from '@dxos/plugin-integration';
+import { type AccessToken } from '@dxos/link';
+import { type Connection } from '@dxos/plugin-connector';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
-import { IntegrationDatabaseMissingError, MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';
+import { MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';
 
 //
 // Schemas
@@ -326,46 +328,68 @@ type CredentialsValue = {
 /**
  * Layer-based credentials service. Mirrors the `TrelloCredentials` /
  * `GoogleCredentials` patterns: every authenticated API call pulls creds from
- * this service rather than threading them through as explicit parameters, so
- * call sites compose a single
- * `Effect.provide(BlueskyApi.Credentials.fromIntegration(ref, client))`
- * at the operation boundary.
+ * this service rather than threading them through as explicit parameters.
  *
- * Construction resolves the integration's PDS once (via the public XRPC
- * `resolveHandle` and a DID-document lookup) so subsequent calls reuse it.
+ * Token sourcing: an operation invoked with a `Connection` composes
+ * `fromConnection(ref, client)`; one invoked with an external-sync cursor
+ * composes `fromAccessToken(cursor.spec.source, client)` directly (the cursor
+ * no longer relates to `Connection`).
+ *
+ * Construction resolves the PDS once (via the public XRPC `resolveHandle`
+ * and a DID-document lookup) so subsequent calls reuse it.
  */
 export class Credentials extends Context.Tag('@dxos/plugin-bluesky/Credentials')<Credentials, CredentialsValue>() {
-  /** Loads the integration's access token, resolves its PDS, and packages credentials. */
-  static fromIntegration = (integrationRef: Ref.Ref<Integration.Integration>, client: Client) =>
+  /** Loads the connection's access token, resolves its PDS, and packages credentials. */
+  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>, client: Client) =>
     Layer.effect(
       Credentials,
       Effect.gen(function* () {
-        const integration = yield* Database.load(integrationRef);
-        const accessToken = yield* Database.load(integration.accessToken);
-        const handle = accessToken.account;
-        if (!handle) {
-          return yield* Effect.fail(new MissingBlueskyHandleError());
-        }
-        const db = Obj.getDatabase(integration);
+        const connection = yield* Database.load(connectionRef);
+        const accessToken = yield* Database.load(connection.accessToken);
+        const db = Obj.getDatabase(connection);
         if (!db) {
-          return yield* Effect.fail(new IntegrationDatabaseMissingError());
+          return yield* Effect.fail(new SyncDatabaseMissingError());
         }
-        const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
-        if (!edgeBaseUrl) {
-          return yield* Effect.fail(new Error('EDGE services not configured.'));
+        return yield* packageCredentials(accessToken, db, client);
+      }),
+    );
+
+  /** Loads the access token directly, resolves its PDS, and packages credentials. */
+  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>, client: Client) =>
+    Layer.effect(
+      Credentials,
+      Effect.gen(function* () {
+        const accessToken = yield* Database.load(accessTokenRef);
+        const db = Obj.getDatabase(accessToken);
+        if (!db) {
+          return yield* Effect.fail(new SyncDatabaseMissingError());
         }
-        const pdsBaseUrl = yield* resolvePds(handle);
-        return {
-          spaceId: db.spaceId,
-          accessTokenId: accessToken.id,
-          accessTokenValue: accessToken.token,
-          edgeBaseUrl,
-          pdsBaseUrl,
-          handle,
-        };
+        return yield* packageCredentials(accessToken, db, client);
       }),
     );
 }
+
+/** Shared credential-packaging step used by both {@link Credentials.fromConnection} and {@link Credentials.fromAccessToken}. */
+const packageCredentials = (accessToken: AccessToken.AccessToken, db: Database.Database, client: Client) =>
+  Effect.gen(function* () {
+    const handle = accessToken.account;
+    if (!handle) {
+      return yield* Effect.fail(new MissingBlueskyHandleError());
+    }
+    const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
+    if (!edgeBaseUrl) {
+      return yield* Effect.fail(new Error('EDGE services not configured.'));
+    }
+    const pdsBaseUrl = yield* resolvePds(handle);
+    return {
+      spaceId: db.spaceId,
+      accessTokenId: accessToken.id,
+      accessTokenValue: accessToken.token,
+      edgeBaseUrl,
+      pdsBaseUrl,
+      handle,
+    };
+  });
 
 //
 // Public API surface

@@ -123,7 +123,7 @@ export const propertyTestSuite = () => {
         await peer.networkManager.joinSwarm(Context.default(), {
           peerInfo: {
             peerKey: this.peerId.toHex(),
-            identityKey: this.peerId.toHex(),
+            identityDid: `did:halo:${this.peerId.toHex()}`,
           },
           topic: model.topic,
           protocolProvider: todo(),

@@ -5,17 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { type MarkdownExtensionProvider, MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import { MarkdownCapabilities, type MarkdownExtensionProvider } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
-
-import { FileCapabilities } from '#types';
 
 import { image } from '../extensions';
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
     const provider: MarkdownExtensionProvider = ({ document, viewMode }) => {
       if (viewMode === 'source') {
         return undefined;
@@ -26,8 +22,7 @@ export default Capability.makeModule(
         if (!space) {
           return undefined;
         }
-        const resolvers = capabilities.getAll(FileCapabilities.UrlResolver);
-        return [image({ space, resolvers })];
+        return [image({ space })];
       }
 
       return undefined;

@@ -53,7 +53,13 @@
       "path": "../../echo/echo-client"
     },
     {
+      "path": "../../echo/echo-doc"
+    },
+    {
       "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../protocols"
     },
     {
       "path": "../ai"
@@ -62,7 +68,7 @@
       "path": "../compute"
     },
     {
-      "path": "../functions"
+      "path": "../compute-runtime"
     },
     {
       "path": "../mcp-client"

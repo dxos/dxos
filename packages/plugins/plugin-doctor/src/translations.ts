@@ -34,9 +34,9 @@ export const translations = [
         'diagnostic.operations-services.label': 'Operation services',
         'diagnostic.operations-services.description':
           'Flags saved operations that request services not registered in the runtime whitelist.',
-        'diagnostic.blueprint-tools.label': 'Blueprint tools',
-        'diagnostic.blueprint-tools.description':
-          'Flags saved blueprints that reference tools not registered by any plugin toolkit.',
+        'diagnostic.skill-tools.label': 'Skill tools',
+        'diagnostic.skill-tools.description':
+          'Flags saved skills that reference tools not registered by any plugin toolkit.',
       },
     },
   },

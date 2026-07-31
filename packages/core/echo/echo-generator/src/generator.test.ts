@@ -93,9 +93,11 @@ describe('TestObjectGenerator', () => {
   });
 
   test('create object with in memory schema', async () => {
-    const Task = Schema.Struct({
-      name: Schema.optional(Schema.String),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
+    const Task = Type.makeObject(DXN.make('com.example.type.task', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+      }),
+    );
 
     enum Types {
       task = 'com.example.type.task',

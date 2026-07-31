@@ -25,3 +25,5 @@ export const SidekickArticle = ({ role, subject: _sidekick, attendableId: _atten
     </Column.Root>
   );
 };
+
+SidekickArticle.displayName = 'SidekickArticle';

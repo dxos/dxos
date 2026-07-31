@@ -3,7 +3,7 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { RangeSetBuilder, type Extension } from '@codemirror/state';
+import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { BLOCK_TYPES } from './constants';
@@ -18,6 +18,7 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   component: 'var(--color-pink-400)',
   service: 'var(--color-yellow-400)',
   db: 'var(--color-red-400)',
+  module: 'var(--color-indigo-400)',
 };
 
 const theme = EditorView.baseTheme({
@@ -253,6 +254,8 @@ export const mdlFenceHighlight: Extension = [
         }
       }
     },
-    { decorations: (instance) => instance.decorations },
+    {
+      decorations: (instance) => instance.decorations,
+    },
   ),
 ];

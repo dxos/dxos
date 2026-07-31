@@ -36,4 +36,4 @@ export const SVG: SVG = {
   FPS,
 };
 
-export type { SVGRootProps, SVGGridProps, SVGMarkersProps, SVGZoomProps, SVGGraphProps, SVGMeshProps, SVGFPSProps };
+export type { SVGFPSProps, SVGGraphProps, SVGGridProps, SVGMarkersProps, SVGMeshProps, SVGRootProps, SVGZoomProps };

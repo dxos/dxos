@@ -4,19 +4,18 @@
 
 // @import-as-namespace
 
+import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
-import { type Space } from '@dxos/client/echo';
-import { Annotation, Filter, Key, Obj, Ref, Query, Type } from '@dxos/echo';
+import { type Space, isSpace } from '@dxos/client/echo';
+import { Annotation, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { type TreeData } from '@dxos/react-ui-list';
-import { inferObjectOrder, Position } from '@dxos/util';
+import { Position, inferObjectOrder } from '@dxos/util';
 
-import { Paths } from '../app';
-import { AppCapabilities } from '../app-framework';
 import { AppNodeMatcher } from '../app-graph';
 import { AppNode } from '../app-graph';
 import { AppAnnotation } from '../echo';
@@ -51,18 +50,17 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
  * typename and annotations — no manual wiring needed. The section is suppressed
  * when the space has no matching objects.
  *
- * Requires five coordinated pieces: Paths.createTypeSectionPaths, the section
- * extension (this function), a {@link SpaceCapabilities.CreateObjectEntry} with
- * `targetNodeId: options.targetNodeId ?? getSectionPath(spaceId)` (the ?? fallback ensures
- * both the section "+" button and the space-level create dialog navigate to the section path),
- * a section action that passes `targetNodeId`, and a {@link createTypeSectionPathResolver}
- * registered via {@link AppCapabilities.NavigationPathResolver} for deep-link support.
+ * Requires two coordinated pieces: `GraphPath.createTypeSectionPaths` and this extension, with a
+ * {@link SpaceCapabilities.CreateObjectEntry} set to
+ * `targetNodeId: options.targetNodeId ?? getSectionPath(spaceId)`. URL resolution (both directions)
+ * is automatic — no path resolver to register — since the extension's `urlKey` declaration is all
+ * `@dxos/app-graph`'s `path-resolution.ts` needs.
  *
- * // TODO(wittjosiah): Simplify this idiom — five coordinated pieces across multiple files is a high bar.
+ * Pass `createObject` to add a "+" action on the section header automatically.
  */
 export const createTypeSectionExtension = (
   type: Type.AnyEntity,
-  options?: {
+  options: {
     /** Position hint for the section in the sidebar. */
     position?: Position.Position;
     /**
@@ -70,6 +68,41 @@ export const createTypeSectionExtension = (
      * Use to narrow or exclude objects (e.g. `Query.without` to hide companion-linked chats).
      */
     query?: Query.Any;
+    /**
+     * Override the default {@link AppNodeMatcher.whenSpace} match function.
+     * Use when the section should live under a group node rather than directly under a space.
+     * The match must still return `Option<Space>` so the connector can query the space db.
+     */
+    match?: (node: Node.Node) => Option.Option<Space>;
+    /**
+     * Group segment the section nests under (e.g. `GraphPath.GroupSegments.ai`), when `match` places it
+     * beneath a navtree group rather than directly under the space. Included in the forward-resolution
+     * `urlPath` so section objects at `root/<space>/<groupSegment>/<typename>/<id>` resolve
+     * deterministically. Omit for a space-direct section (`root/<space>/<typename>/<id>`).
+     */
+    groupSegment?: string;
+    /**
+     * If provided, a "+" action is added to the section header that runs this effect when clicked.
+     * The action label is resolved from `add-object.label` in the type's i18n namespace.
+     */
+    createObject?: (space: Space) => Effect.Effect<any, any, any>;
+    /**
+     * Registered URL prefix key for this section's connector (e.g. `doc`, `mail`). Keys are global, so
+     * it is declared here rather than derived — see `@dxos/app-graph`'s `path-resolution.ts` for how
+     * registered keys resolve and serialize URLs.
+     */
+    urlKey: string;
+    /**
+     * Registered URL key making the section node itself addressable (e.g. `library` → `/w/<space>/library`),
+     * for a section that is worth linking to in its own right. Omit and the section stays a bare container:
+     * only its objects are addressable, which is the default because `urlKey` alone cannot describe the
+     * node sitting *at* its own path.
+     *
+     * Opting in splits the section into two extensions — one owning the section node, one owning its
+     * objects — since a node is stamped from its producing extension's binding, and the two need different
+     * ones. The objects are then materialized on expand rather than inline.
+     */
+    sectionUrlKey?: string;
   },
 ): Effect.Effect<GraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -87,29 +120,56 @@ export const createTypeSectionExtension = (
   const canDropSameType = (source: TreeData) =>
     Node.isGraphNode(source.item) && Obj.isObject(source.item.data) && Obj.getTypename(source.item.data) === typename;
 
-  return GraphBuilder.createExtension({
+  /** Node-id segments from the space down to the section node — the section's own path. */
+  const sectionSegments = options.groupSegment ? [options.groupSegment, typename] : [typename];
+
+  /** The section's objects in their persisted order; empty means the section is suppressed. */
+  const queryOrderedObjects = (space: Space, get: Atom.Context): Obj.Unknown[] => {
+    const objects = get(space.db.query(options.query ?? defaultQuery).atom) as Obj.Unknown[];
+    if (objects.length === 0) {
+      return [];
+    }
+
+    // Re-emits when space.properties changes; the stored order is a list of object refs (uri read without
+    // loading the target).
+    const storedRefs =
+      get(Annotation.atomProperty(space.properties, AppAnnotation.SectionOrderAnnotation, typename)) ?? [];
+    const order = storedRefs
+      .map((ref) => (EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) : undefined))
+      .filter((id): id is string => id !== undefined);
+    // Objects not in the stored order follow in query order.
+    return inferObjectOrder(
+      Object.fromEntries(objects.map((object): [string, Obj.Unknown] => [object.id, object])),
+      order,
+    );
+  };
+
+  const buildObjectNodes = (space: Space, get: Atom.Context, orderedObjects: Obj.Unknown[]) => {
+    const onRearrange = makeSectionRearrangeCallback(space, typename);
+    return orderedObjects
+      .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange, canDrop: canDropSameType }))
+      .filter((node): node is NonNullable<typeof node> => node !== null);
+  };
+
+  /** Matches this type's section node (the parent the objects and the create action hang off). */
+  const whenSection = (node: Node.Node): Option.Option<Space> => {
+    const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+    // `testId` is the exclusive sentinel: object nodes share `type === typename` but carry
+    // `testId: 'spacePlugin.object'`, so this guard distinguishes section from object nodes.
+    return node.type === typename && node.properties.testId === testId && space ? Option.some(space) : Option.none();
+  };
+
+  // The section node itself. Addressable in its own right only when sectionUrlKey is declared —
+  // that makes it a singleton so selecting it opens a plank. Without it the node is a bare
+  // container and only its objects get a URL.
+  const sectionExtension = GraphBuilder.createExtension({
     id: typename,
-    match: AppNodeMatcher.whenSpace,
+    url: options.sectionUrlKey ? { key: options.sectionUrlKey, kind: 'singleton', path: sectionSegments } : undefined,
+    match: options.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
-      const objects = get(space.db.query(options?.query ?? defaultQuery).atom) as Obj.Unknown[];
-      if (objects.length === 0) {
+      if (queryOrderedObjects(space, get).length === 0) {
         return Effect.succeed([]);
       }
-
-      // Re-emits when space.properties changes; the stored order is a list of object refs (uri read without
-      // loading the target).
-      const storedRefs =
-        get(Annotation.atomProperty(space.properties, AppAnnotation.SectionOrderAnnotation, typename)) ?? [];
-      const order = storedRefs
-        .map((ref) => (EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) : undefined))
-        .filter((id): id is string => id !== undefined);
-      // Objects not in the stored order follow in query order.
-      const orderedObjects = inferObjectOrder(
-        Object.fromEntries(objects.map((object): [string, Obj.Unknown] => [object.id, object])),
-        order,
-      );
-
-      const onRearrange = makeSectionRearrangeCallback(space, typename);
 
       // Mirror AppNode.makeObject: look up the registered Type.Type entity to read icon/hue.
       // Raw schema classes don't carry annotations reliably; the registry copy does.
@@ -132,7 +192,9 @@ export const createTypeSectionExtension = (
         Node.make({
           id: typename,
           type: typename,
-          data: `${typename}-root`,
+          // An addressable section carries the registered type entity so plugin-space's generic
+          // type-collection surface can render it. A bare container carries an opaque marker.
+          data: options.sectionUrlKey ? (typeEntity ?? `${typename}-root`) : `${typename}-root`,
           properties: {
             label,
             icon,
@@ -142,54 +204,49 @@ export const createTypeSectionExtension = (
             droppable: false,
             space,
             testId,
-            ...(options?.position ? { position: options.position } : {}),
+            ...(options.position ? { position: options.position } : {}),
           },
-          nodes: orderedObjects
-            .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange, canDrop: canDropSameType }))
-            .filter((node): node is NonNullable<typeof node> => node !== null),
         }),
       ]);
     },
   });
-};
 
-/**
- * Creates a `AppCapabilities.NavigationPathResolver` that recognises paths of the form
- * `root/<spaceId>/<typename>/<objectId>` and maps them to ECHO EIDs.
- *
- * Without a resolver, `validateNavigationTarget` returns NOT_FOUND for any path
- * not yet materialised in the graph — causing navigation to the custom type section
- * (including deep-links and page reloads) to silently 404.
- *
- * Register with `AppPlugin.addNavigationResolverModule`. One resolver per type is enough;
- * the capability system fans them out until one returns `Option.some`.
- *
- * Also set `targetNodeId: getSectionPath(options.db.spaceId)` in the plugin's `CreateObjectEntry`
- * so the create dialog navigates to the type section rather than the generic database section:
- * ```ts
- * targetNodeId: options.targetNodeId ?? getSectionPath(options.db.spaceId),
- * ```
- */
-export const createTypeSectionPathResolver = (type: Type.AnyEntity): AppCapabilities.NavigationPathResolver => {
-  const typename = Type.getTypename(type);
-  invariant(typename, 'Schema must have a typename to create a type section path resolver.');
-  return (qualifiedPath) => {
-    const spaceId = Paths.getSpaceIdFromPath(qualifiedPath);
-    if (!spaceId) {
-      return Effect.succeed(Option.none());
-    }
+  // The section's objects — always a separate extension so each object gets its own item binding
+  // (keyed by urlKey) independent of how the section node itself is addressed.
+  const objectsExtension = GraphBuilder.createExtension({
+    id: `${typename}.sectionObjects`,
+    url: { key: options.urlKey, kind: 'item', path: sectionSegments },
+    match: whenSection,
+    connector: (space, get) => Effect.succeed(buildObjectNodes(space, get, queryOrderedObjects(space, get))),
+  });
 
-    const sectionPath = `${Paths.getSpacePath(spaceId)}/${typename}`;
-    if (!qualifiedPath.startsWith(`${sectionPath}/`)) {
-      return Effect.succeed(Option.none());
-    }
+  const extensions = Effect.map(Effect.all([sectionExtension, objectsExtension]), ([section, objects]) => [
+    ...section,
+    ...objects,
+  ]);
 
-    // The immediate segment after the section path is the object ID.
-    const objectId = qualifiedPath.slice(sectionPath.length + 1).split('/')[0];
-    if (!objectId || !Key.EntityId.isValid(objectId)) {
-      return Effect.succeed(Option.none());
-    }
+  if (!options.createObject) {
+    return extensions;
+  }
 
-    return Effect.succeed(Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId })));
-  };
+  const { createObject } = options;
+
+  const actionsExtension = GraphBuilder.createExtension({
+    id: `${typename}.sectionCreate`,
+    match: whenSection,
+    actions: (space) =>
+      Effect.succeed([
+        Node.makeAction({
+          id: 'create',
+          data: () => createObject(space),
+          properties: {
+            label: ['add-object.label', { ns: typename }],
+            icon: 'ph--plus--regular',
+            disposition: 'list-item-primary',
+          },
+        }),
+      ]),
+  });
+
+  return Effect.map(Effect.all([extensions, actionsExtension]), ([base, actions]) => [...base, ...actions]);
 };

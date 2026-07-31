@@ -19,7 +19,7 @@ import {
 } from '@dxos/echo-protocol';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import { EffectEx, type RuntimeProvider } from '@dxos/effect';
-import { EscapedPropPath, type IndexEngine, type EntityMeta, type ReverseRef } from '@dxos/index-core';
+import { type EntityMeta, EscapedPropPath, type IndexEngine, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -31,8 +31,9 @@ import type { SpaceStateManager } from '../db-host';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint';
 import { filterMatchDoc, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
-import type { QueryPlan } from './plan';
-import { QueryPlanner } from './query-planner';
+import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by';
+import { QueryPlan } from './plan';
+import { QueryPlanner, filterContainsInQuery } from './query-planner';
 
 type QueryExecutorOptions = {
   indexEngine: IndexEngine;
@@ -84,6 +85,18 @@ type QueryItem = {
    */
   createdAt: number | null;
   updatedAt: number | null;
+
+  /**
+   * Group key, set by `AggregateStep`. Undefined for queries without an `aggregate` clause; `{}` for
+   * an aggregate clause with no `group` entries (a single group over the whole input).
+   */
+  groupKey?: GroupKeyValue;
+
+  /**
+   * Named group aggregates, stamped by `AggregateStep` when the query declares non-`items` aggregates;
+   * shared by every member of a group and read by a following group-level `OrderStep`.
+   */
+  aggregates?: GroupAggregates;
 };
 
 const QueryItem = Object.freeze({
@@ -109,6 +122,20 @@ const QueryItem = Object.freeze({
     } else {
       throw new Error('Invalid query item');
     }
+  },
+
+  /**
+   * Computes the composite group key for this item from the aggregate's `group`-kind entries, keyed
+   * by result field name. No `group` entries yields `{}` — a single group over the whole input.
+   */
+  getGroupKey: (item: QueryItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue => {
+    const key: GroupKeyValue = {};
+    for (const aggregate of aggregates) {
+      if (aggregate.kind === 'group') {
+        key[aggregate.name] = GroupBy.coerceKeyComponent(QueryItem.getProperty(item, [aggregate.property]));
+      }
+    }
+    return key;
   },
 
   getParent: (item: QueryItem): EID.EID | undefined => {
@@ -401,6 +428,14 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
         if (step.filter.type === 'child-of') {
           scopes.isSimple = false;
         }
+        // A nested in-query (subquery-membership) predicate's result depends on the subquery's
+        // own scope/typenames — which may differ entirely from this query's — so a hint scoped
+        // to this query's dimensions could miss a change that alters the subquery's result set.
+        // `filterContainsInQuery` (not a bare `step.filter.type` check) is required: the residual
+        // filter here is always `type: 'object'` with the in-query nested in `props`.
+        if (filterContainsInQuery(step.filter)) {
+          scopes.isSimple = false;
+        }
         break;
       }
       case 'TraverseStep':
@@ -453,6 +488,20 @@ const overlapsOrUnconstrained = <T>(hintSet: ReadonlySet<T> | undefined, scopeSe
   hintSet === undefined || scopeSet === null || setsOverlap(hintSet, scopeSet);
 
 /**
+ * Serializes a possibly-absent group key for `changed` diffing. `undefined` (non-grouped
+ * queries) serializes to a distinct sentinel so it never collides with a real (empty) group key.
+ */
+const _serializeOptionalGroupKey = (key: GroupKeyValue | undefined): string =>
+  key === undefined ? '\0' : GroupBy.serializeGroupKey(key);
+
+/** True once the working set has been partitioned by an AggregateStep (every item carries a group key). */
+const isGrouped = (workingSet: QueryItem[]): boolean => workingSet.length > 0 && workingSet[0].groupKey !== undefined;
+
+// Non-null assertion is sound: only called from group-aware limit/skip, which run exclusively on a
+// working set already partitioned by AggregateStep (guarded by `isGrouped`), where every item has a key.
+const serializeItemGroupKey = (item: QueryItem): string => GroupBy.serializeGroupKey(item.groupKey!);
+
+/**
  * Executes query plans against the IndexEngine and AutomergeHost.
  *
  * The QueryExecutor is responsible for:
@@ -480,6 +529,18 @@ export class QueryExecutor extends Resource {
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
+
+  /**
+   * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
+   * `JSON.stringify(subquery) + '\0' + property`. Two FilterSteps embedding the same subquery
+   * (e.g. both branches of a `Query.all` union) share one resolution instead of re-running it;
+   * the `Promise` (rather than the resolved value) is cached so concurrent lookups — `UnionStep`
+   * branches execute via `Promise.all` — await the same in-flight resolution instead of racing.
+   * Cleared at the top of every `execQuery()` since subquery results can change between runs.
+   */
+  #inQuerySetCache = new Map<string, Promise<{ values: ReadonlySet<unknown>; trace: ExecutionTrace }>>();
+  /** Subquery-resolution traces already attached to a FilterStep's trace this `execQuery` run. */
+  #inQueryTracesAttached = new Set<string>();
 
   constructor(options: QueryExecutorOptions) {
     super();
@@ -516,8 +577,19 @@ export class QueryExecutor extends Resource {
   }
 
   getResults(): QueryResult[] {
-    return this._lastResultSet.map(
-      (item): QueryResult => ({
+    // Computed over the final (post-filter) result set so counts always match shipped records.
+    const groupCounts = new Map<string, number>();
+    for (const item of this._lastResultSet) {
+      if (item.groupKey === undefined) {
+        continue;
+      }
+      const serialized = GroupBy.serializeGroupKey(item.groupKey);
+      groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
+    }
+
+    return this._lastResultSet.map((item): QueryResult => {
+      const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
+      return {
         id: item.objectId,
         documentId: item.documentId ?? undefined,
         queueId: item.queueId ?? undefined,
@@ -527,8 +599,11 @@ export class QueryExecutor extends Resource {
         rank: item.rank,
 
         documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
-      }),
-    );
+
+        groupKey: serializedGroupKey,
+        groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
+      };
+    });
   }
 
   /**
@@ -558,6 +633,11 @@ export class QueryExecutor extends Resource {
       query: Query.pretty(Query.fromAst(this._query)),
     });
 
+    // Subquery results can change between reactive runs, so resolved `in-query` sets must not
+    // survive across `execQuery` calls.
+    this.#inQuerySetCache = new Map();
+    this.#inQueryTracesAttached = new Set();
+
     const prevResultSet = this._lastResultSet;
     const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
     // Omit objects whose strong deps cannot be resolved from local state so they
@@ -576,7 +656,10 @@ export class QueryExecutor extends Resource {
           workingSet[index].spaceId !== item.spaceId ||
           workingSet[index].documentId !== item.documentId ||
           workingSet[index].queueId !== item.queueId ||
-          workingSet[index].queueNamespace !== item.queueNamespace,
+          workingSet[index].queueNamespace !== item.queueNamespace ||
+          // A property edit can move an item between groups without changing its flat position
+          // (e.g. the last item of group A becomes the first item of group B at the same index).
+          _serializeOptionalGroupKey(workingSet[index].groupKey) !== _serializeOptionalGroupKey(item.groupKey),
       );
 
     // Disabled because concurrent queries don't print hierarchies correctly.
@@ -643,6 +726,12 @@ export class QueryExecutor extends Resource {
         break;
       case 'LimitStep':
         ({ workingSet: newWorkingSet, trace } = await this._execLimitStep(step, workingSet));
+        break;
+      case 'SkipStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execSkipStep(step, workingSet));
+        break;
+      case 'AggregateStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execAggregateStep(step, workingSet));
         break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
@@ -929,15 +1018,23 @@ export class QueryExecutor extends Resource {
       });
     }
 
+    // A nested `in-query` (subquery-membership) predicate is not a matcher-level concept — resolve
+    // each one to a concrete literal `in` before falling through to the normal in-memory matchers,
+    // which only know how to test a value against a static set.
+    const subqueryTraces: ExecutionTrace[] = [];
+    const filter = filterContainsInQuery(step.filter)
+      ? await this._resolveInQueryFilter(step.filter, subqueryTraces)
+      : step.filter;
+
     const result = workingSet.filter((item) => {
       if (item.doc) {
-        return filterMatchDoc(step.filter, {
+        return filterMatchDoc(filter, {
           id: item.objectId,
           spaceId: item.spaceId,
           doc: item.doc,
         });
       } else if (item.data) {
-        return filterMatchObjectJSON(step.filter, item.data);
+        return filterMatchObjectJSON(filter, item.data);
       } else {
         return false;
       }
@@ -950,8 +1047,98 @@ export class QueryExecutor extends Resource {
         name: 'Filter',
         details: JSON.stringify(step.filter),
         objectCount: result.length,
+        children: subqueryTraces,
       },
     };
+  }
+
+  /**
+   * Recursively rewrites every `in-query` node in `filter` to a literal `in` node, resolving each
+   * subquery's projected value set at most once per `execQuery` run (see `#inQuerySetCache`).
+   * `subqueryTraces` collects the resolution's `ExecutionTrace` the first time each subquery is
+   * resolved this run, so its cost is visible under the FilterStep that triggered it.
+   */
+  private async _resolveInQueryFilter(
+    filter: QueryAST.Filter,
+    subqueryTraces: ExecutionTrace[],
+  ): Promise<QueryAST.Filter> {
+    switch (filter.type) {
+      case 'in-query': {
+        const { values, trace } = await this._resolveInQuerySet(filter);
+        const cacheKey = _inQueryCacheKey(filter);
+        if (!this.#inQueryTracesAttached.has(cacheKey)) {
+          this.#inQueryTracesAttached.add(cacheKey);
+          subqueryTraces.push(trace);
+        }
+        return { type: 'in', values: [...values] };
+      }
+      case 'object': {
+        if (Object.keys(filter.props).length === 0) {
+          return filter;
+        }
+        const props: Record<string, QueryAST.Filter> = {};
+        for (const [key, propFilter] of Object.entries(filter.props)) {
+          props[key] = await this._resolveInQueryFilter(propFilter, subqueryTraces);
+        }
+        return { ...filter, props };
+      }
+      case 'not':
+        return { ...filter, filter: await this._resolveInQueryFilter(filter.filter, subqueryTraces) };
+      case 'and':
+        return {
+          ...filter,
+          filters: await Promise.all(filter.filters.map((f) => this._resolveInQueryFilter(f, subqueryTraces))),
+        };
+      case 'or':
+        return {
+          ...filter,
+          filters: await Promise.all(filter.filters.map((f) => this._resolveInQueryFilter(f, subqueryTraces))),
+        };
+      default:
+        return filter;
+    }
+  }
+
+  /**
+   * Resolves a single `in-query` node's projected value set, sharing one resolution across every
+   * occurrence of the same subquery+property within this `execQuery` run (e.g. both branches of a
+   * `Query.all` union embedding the same subquery). The `Promise` is cached (not just the value) so
+   * concurrent callers — `UnionStep` branches run under `Promise.all` — await the same in-flight
+   * resolution instead of each starting their own.
+   */
+  private _resolveInQuerySet(
+    node: QueryAST.FilterInQuery,
+  ): Promise<{ values: ReadonlySet<unknown>; trace: ExecutionTrace }> {
+    const cacheKey = _inQueryCacheKey(node);
+    let cached = this.#inQuerySetCache.get(cacheKey);
+    if (!cached) {
+      cached = this._computeInQuerySet(node);
+      this.#inQuerySetCache.set(cacheKey, cached);
+    }
+    return cached;
+  }
+
+  private async _computeInQuerySet(
+    node: QueryAST.FilterInQuery,
+  ): Promise<{ values: ReadonlySet<unknown>; trace: ExecutionTrace }> {
+    // TODO(dmaretskyi): Push membership into the SQL index once custom property indexes are
+    // supported, instead of a full in-memory scan of the subquery's candidates.
+    const subPlan = new QueryPlanner().createPlan(node.subquery);
+    const { workingSet: subResults, trace } = await this._execPlan(subPlan, []);
+    trace.name = 'Subquery';
+    trace.details = Query.pretty(Query.fromAst(node.subquery));
+
+    const values = new Set<unknown>();
+    for (const item of subResults) {
+      const rawValue = QueryItem.getProperty(item, [node.property]);
+      // Omit missing/null projected values so a subquery object lacking the property never
+      // broadens the membership set (it must not make parents that also lack the property match).
+      if (rawValue === undefined || rawValue === null) {
+        continue;
+      }
+      values.add(isEncodedReference(rawValue) ? EncodedReference.toURI(rawValue) : rawValue);
+    }
+    return { values, trace };
   }
 
   private async _execTimestampFilterStep(
@@ -1332,11 +1519,18 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execOrderStep(step: QueryPlan.OrderStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    let sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
+    // After an AggregateStep the working set is partitioned into contiguous groups; a post-group order
+    // reorders whole groups (by their aggregates), and a pushed-down limit pages over whole groups.
+    // Otherwise it sorts and slices the flat object stream.
+    let sortedWorkingSet = isGrouped(workingSet)
+      ? GroupBy.orderGroups(workingSet, serializeItemGroupKey, (a, b) => this._compareMultiOrder(a, b, step.order))
+      : [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
 
     // Apply limit if specified on the order step.
     if (step.limit !== undefined && sortedWorkingSet.length > step.limit) {
-      sortedWorkingSet = sortedWorkingSet.slice(0, step.limit);
+      sortedWorkingSet = isGrouped(sortedWorkingSet)
+        ? GroupBy.takeGroups(sortedWorkingSet, step.limit, serializeItemGroupKey)
+        : sortedWorkingSet.slice(0, step.limit);
     }
 
     return {
@@ -1351,7 +1545,11 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execLimitStep(step: QueryPlan.LimitStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const limitedWorkingSet = workingSet.slice(0, step.limit);
+    // After an AggregateStep the working set is partitioned into contiguous groups; limit then pages
+    // over whole groups. Otherwise it slices the flat object stream.
+    const limitedWorkingSet = isGrouped(workingSet)
+      ? GroupBy.takeGroups(workingSet, step.limit, serializeItemGroupKey)
+      : workingSet.slice(0, step.limit);
 
     return {
       workingSet: limitedWorkingSet,
@@ -1360,6 +1558,47 @@ export class QueryExecutor extends Resource {
         name: 'Limit',
         details: JSON.stringify({ limit: step.limit }),
         objectCount: limitedWorkingSet.length,
+      },
+    };
+  }
+
+  private async _execSkipStep(step: QueryPlan.SkipStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const skippedWorkingSet = isGrouped(workingSet)
+      ? GroupBy.dropGroups(workingSet, step.skip, serializeItemGroupKey)
+      : workingSet.slice(step.skip);
+
+    return {
+      workingSet: skippedWorkingSet,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Skip',
+        details: JSON.stringify({ skip: step.skip }),
+        objectCount: skippedWorkingSet.length,
+      },
+    };
+  }
+
+  private async _execAggregateStep(
+    step: QueryPlan.AggregateStep,
+    workingSet: QueryItem[],
+  ): Promise<StepExecutionResult> {
+    const withKeys = workingSet.map((item) => ({ ...item, groupKey: QueryItem.getGroupKey(item, step.aggregates) }));
+    const partitioned = GroupBy.partitionByGroupKey(withKeys, (item) => GroupBy.serializeGroupKey(item.groupKey!));
+    const groupedWorkingSet = GroupBy.withGroupAggregates(
+      partitioned,
+      (item) => GroupBy.serializeGroupKey(item.groupKey!),
+      step.aggregates,
+      (item, property) => QueryItem.getProperty(item, [property]),
+      (a, b, order) => this._compareByOrder(a, b, order),
+    );
+
+    return {
+      workingSet: groupedWorkingSet,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Aggregate',
+        details: JSON.stringify({ aggregates: step.aggregates }),
+        objectCount: groupedWorkingSet.length,
       },
     };
   }
@@ -1383,8 +1622,10 @@ export class QueryExecutor extends Resource {
 
   private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
     switch (order.kind) {
-      case 'natural':
-        return a.objectId.localeCompare(b.objectId);
+      case 'natural': {
+        const comparison = a.objectId.localeCompare(b.objectId);
+        return order.direction === 'desc' ? -comparison : comparison;
+      }
       case 'property': {
         const comparison = this._compareByProperty(a, b, order.property);
         return order.direction === 'desc' ? -comparison : comparison;
@@ -1409,8 +1650,13 @@ export class QueryExecutor extends Resource {
   }
 
   private _compareByProperty(a: QueryItem, b: QueryItem, property: string): number {
-    const aValue = QueryItem.getProperty(a, [property]);
-    const bValue = QueryItem.getProperty(b, [property]);
+    // On a grouped working set, a property order names a group field: prefer a stamped scalar
+    // aggregate (max/min/count) when present, else fall through to the member/row property (which
+    // also covers ordering by a group-key component, shared by every member).
+    const aValue =
+      a.aggregates && property in a.aggregates ? a.aggregates[property] : QueryItem.getProperty(a, [property]);
+    const bValue =
+      b.aggregates && property in b.aggregates ? b.aggregates[property] : QueryItem.getProperty(b, [property]);
 
     // Both null or undefined
     if (aValue == null && bValue == null) {
@@ -1936,3 +2182,9 @@ function filterContainsTimestamp(filter: QueryAST.Filter): boolean {
   }
   return false;
 }
+
+/**
+ * Cache key identifying an `in-query` node's subquery + projected property, used to share one
+ * resolution across every occurrence of the same subquery within an `execQuery` run.
+ */
+const _inQueryCacheKey = (node: QueryAST.FilterInQuery): string => `${JSON.stringify(node.subquery)}\0${node.property}`;

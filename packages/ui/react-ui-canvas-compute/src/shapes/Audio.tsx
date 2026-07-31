@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
+import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
@@ -26,10 +27,10 @@ export const createAudio = (props: CreateAudioProps) =>
   createShape<AudioShape>({ type: 'audio', size: { width: 64, height: 64 }, ...props });
 
 export const AudioComponent = ({ shape }: ShapeComponentProps<AudioShape>) => {
-  const { node } = useComputeNodeState(shape);
+  const { runtime } = useComputeNodeState(shape);
   const [active, setActive] = useState(false);
   useEffect(() => {
-    node.value = active;
+    runtime.setOutput(DEFAULT_OUTPUT, active);
   }, [active]);
 
   // https://docs.pmnd.rs/react-three-fiber/api/canvas#render-props

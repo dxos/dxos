@@ -192,4 +192,4 @@ export const Event = {
   Body: EventBody,
 };
 
-export type { EventRootProps, EventToolbarProps, EventViewportProps, EventHeaderProps, EventBodyProps };
+export type { EventBodyProps, EventHeaderProps, EventRootProps, EventToolbarProps, EventViewportProps };

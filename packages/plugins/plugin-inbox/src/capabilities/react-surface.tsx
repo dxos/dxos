@@ -7,16 +7,15 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { getParentId, useNode } from '@dxos/plugin-graph';
-import { Event, Message, Organization, Person } from '@dxos/types';
+import { getParentId } from '@dxos/plugin-graph';
+import { useNode } from '@dxos/plugin-graph/hooks';
+import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
   CalendarProperties,
-  DraftsArticle,
   EditMessageArticle,
   EventArticle,
   EventCard,
@@ -27,35 +26,28 @@ import {
   RelatedToContact,
   RelatedToOrganization,
   SaveFilterPopover,
+  SubscriptionsArticle,
 } from '#containers';
-import { Calendar, DraftMessage, Mailbox } from '#types';
+import { Calendar, Mailbox } from '#types';
 
-import { MAILBOX_DRAFTS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
-import { getDraftsId } from '../paths';
+import { POPOVER_SAVE_FILTER } from '../constants';
+import { getSubscriptionsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
 
+/** A single non-draft message or a non-empty conversation (thread) of them. */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'drafts',
+        id: 'subscriptions',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          const mailbox = data.properties?.mailbox;
           const lastSegment = data.attendableId.split('/').pop();
-          return (
-            lastSegment === getDraftsId() && Mailbox.instanceOf(mailbox) && data.subject === MAILBOX_DRAFTS_NODE_DATA
-          );
+          return lastSegment === getSubscriptionsId() && Mailbox.instanceOf(data.subject);
         }),
         component: ({ data, role }) => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-
-          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
-          return <DraftsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
+          return <SubscriptionsArticle role={role} subject={data.subject} attendableId={data.attendableId} />;
         },
       }),
       Surface.create({
@@ -63,7 +55,12 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Mailbox.Mailbox),
         component: ({ data }) => {
           return (
-            <MailboxArticle subject={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
+            <MailboxArticle
+              subject={data.subject}
+              filter={data.properties?.filter}
+              systemTag={data.properties?.systemTag}
+              attendableId={data.attendableId}
+            />
           );
         },
       }),
@@ -83,19 +80,13 @@ export default Capability.makeModule(() =>
         ),
         component: ({ data, role }) => {
           const { graph } = useAppGraph();
-          const parentId = getParentId(data.attendableId);
-          const parent = useNode(graph, parentId);
-          const mailbox = parent?.properties.mailbox;
-          // companionTo is only present on Article data; Section renders without a companion.
-          const companionTo = (data as { companionTo?: Mailbox.Mailbox }).companionTo;
+          const parent = useNode(graph, getParentId(data.attendableId));
+          // A message lives under its mailbox view; every mailbox view carries the mailbox as its node
+          // `data`, so use that (not `properties.mailbox`, which only some views set) to scope the
+          // conversation lookup in MessageArticle.
+          const mailbox = Mailbox.instanceOf(parent?.data) ? parent.data : undefined;
           return (
-            <MessageArticle
-              role={role}
-              subject={data.subject}
-              attendableId={data.attendableId}
-              companionTo={companionTo}
-              mailbox={companionTo ? undefined : mailbox}
-            />
+            <MessageArticle role={role} subject={data.subject} attendableId={data.attendableId} mailbox={mailbox} />
           );
         },
       }),

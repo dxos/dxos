@@ -50,9 +50,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute-runtime"
-    },
-    {
       "path": "../../core/compute/ai"
     },
     {
@@ -65,10 +62,10 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/functions"
+      "path": "../../core/compute/compute-runtime"
     },
     {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/edge-compute"
     },
     {
       "path": "../../core/compute/operation"
@@ -89,25 +86,19 @@
       "path": "../../plugins/plugin-assistant"
     },
     {
-      "path": "../../plugins/plugin-automation"
-    },
-    {
       "path": "../../plugins/plugin-chess"
     },
     {
       "path": "../../plugins/plugin-client"
     },
     {
-      "path": "../../plugins/plugin-comments"
+      "path": "../../plugins/plugin-connector"
     },
     {
       "path": "../../plugins/plugin-game"
     },
     {
       "path": "../../plugins/plugin-inbox"
-    },
-    {
-      "path": "../../plugins/plugin-integration"
     },
     {
       "path": "../../plugins/plugin-kanban"
@@ -123,6 +114,12 @@
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-review"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
     },
     {
       "path": "../../plugins/plugin-sample"

@@ -11,12 +11,12 @@ import { InboxCapabilities } from '@dxos/plugin-inbox';
 
 import {
   AppGraphBuilder,
-  BlueprintDefinition,
   CreateObject,
   MarkerProvider,
   OperationHandler,
   ReactSurface,
   Settings,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { TripMessageExtractor } from '#operations';
@@ -31,7 +31,7 @@ export const TripPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Trip.Trip, Segment.Segment, Booking.Booking] }),

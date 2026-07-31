@@ -69,3 +69,5 @@ const Code = ({ code }: { code: string }) => {
     </div>
   );
 };
+
+RecoveryCodeDialog.displayName = 'RecoveryCodeDialog';

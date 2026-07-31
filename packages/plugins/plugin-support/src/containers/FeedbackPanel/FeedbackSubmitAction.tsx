@@ -48,3 +48,5 @@ export const FeedbackSubmitAction = ({ disabled }: FeedbackSubmitActionProps) =>
 
   return <FeedbackForm.SubmitPosthog onSubmit={handleSave} disabled={disabled} />;
 };
+
+FeedbackSubmitAction.displayName = 'FeedbackSubmitAction';

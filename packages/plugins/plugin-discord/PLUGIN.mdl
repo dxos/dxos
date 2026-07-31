@@ -39,7 +39,7 @@ type RemoteTarget
 type DiscordTargetOptions
   desc: Per-target sync options stored under IntegrationTarget.options and edited from the Integration UI.
   fields:
-    daysOfHistory?: number           # initial backfill window in days (default 30; ignored after first sync)
+    maxDays?: number           # initial backfill window in days (default 30; ignored after first sync)
 ```
 
 ```mdl
@@ -101,7 +101,7 @@ op SyncDiscordChannel
     Pull-only incremental sync for the currently-selected Discord targets on an
     Integration. For each selected channel: resolves (or materializes) the local
     ECHO Channel keyed by the Discord channel snowflake id, pages through messages
-    newer than target.cursor (or from "now minus daysOfHistory" on first sync),
+    newer than target.cursor (or from "now minus maxDays" on first sync),
     maps each Discord message to a @dxos/types Message, appends the batch to the
     channel's ECHO Feed, then advances target.cursor to the newest id seen.
     Targets are processed in parallel (concurrency 3). Failures on one target
@@ -157,7 +157,7 @@ feat F-3: Incremental Message Sync
     then: for each selected target channel, messages newer than target.cursor are fetched and appended
   req F-3.2:
     when: a target has no cursor (first sync)
-    then: lookback window is determined by DiscordTargetOptions.daysOfHistory (default 30, max ~3 years)
+    then: lookback window is determined by DiscordTargetOptions.maxDays (default 30, max ~3 years)
   req F-3.3:
     when: sync succeeds for a target
     then: target.cursor advances to the newest message snowflake id seen; subsequent runs are incremental
@@ -286,8 +286,8 @@ test T-9: Channel re-sync is idempotent
 ```
 
 ```mdl
-test T-10: daysOfHistory controls initial lookback
-  given: new target with DiscordTargetOptions.daysOfHistory = 14
+test T-10: maxDays controls initial lookback
+  given: new target with DiscordTargetOptions.maxDays = 14
   when: op:SyncDiscordChannel is invoked for the first time
   then:
     - after parameter is a snowflake derived from (now - 14 days)

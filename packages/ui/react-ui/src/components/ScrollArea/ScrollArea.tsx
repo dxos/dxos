@@ -24,6 +24,8 @@ type ScrollAreaContextType = {
   orientation: AllowedAxis;
   /** Hide scrollbars when not scrolling. */
   autoHide: boolean;
+  /** Show scrollbars. */
+  scrollbars?: boolean;
   /** Apply padding to opposite side of scrollbar. */
   centered?: boolean;
   /** Apply padding. */
@@ -54,6 +56,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
       asChild,
       orientation = 'vertical',
       autoHide = true,
+      scrollbars = true,
       centered = false,
       padding = false,
       thin = false,
@@ -66,8 +69,8 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const options = useMemo(
-      () => ({ orientation, autoHide, centered, padding, thin, snap }),
-      [orientation, autoHide, centered, padding, thin, snap],
+      () => ({ orientation, autoHide, scrollbars, centered, padding, thin, snap }),
+      [orientation, autoHide, scrollbars, centered, padding, thin, snap],
     );
 
     return (
@@ -103,8 +106,8 @@ const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...pr
       {...restWithoutStyle}
       style={
         {
-          '--scroll-width': `${density.size}px`,
-          '--scroll-padding': `${density.padding}px`,
+          '--scroll-width': options.scrollbars ? `${density.size}px` : '0px',
+          '--scroll-padding': options.scrollbars ? `${density.padding}px` : '0px',
           ...style,
         } as CSSProperties
       }

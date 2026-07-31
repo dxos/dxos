@@ -4,7 +4,11 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import * as Filter from './Filter';
+import * as Obj from './Obj';
+import { TestSchema } from './testing/test-schema';
 
 describe('Filter timestamp builders', () => {
   test('updated({ after }) produces correct AST', () => {
@@ -86,5 +90,39 @@ describe('Filter timestamp builders', () => {
   test('timestamp filters pass the is() check', () => {
     const f = Filter.updated({ after: Date.now() });
     expect(Filter.is(f)).toBe(true);
+  });
+});
+
+describe('toPredicate', () => {
+  test('matches by type', () => {
+    const expando = Obj.make(TestSchema.Expando, { title: 'test' });
+    const match = Filter.toPredicate(Filter.type(TestSchema.Expando));
+    expect(match(expando)).toBe(true);
+  });
+
+  test('rejects wrong type', () => {
+    const person = Obj.make(TestSchema.Person, { name: 'Alice' });
+    const match = Filter.toPredicate(Filter.type(TestSchema.Expando));
+    expect(match(person)).toBe(false);
+  });
+
+  test('matches property constraints', () => {
+    const expando = Obj.make(TestSchema.Expando, { title: 'test', value: 100 });
+    const match = Filter.toPredicate(Filter.type(TestSchema.Expando, { title: 'test' }));
+    expect(match(expando)).toBe(true);
+    expect(Filter.toPredicate(Filter.type(TestSchema.Expando, { value: 200 }))(expando)).toBe(false);
+  });
+
+  test('matches or filters', () => {
+    const chat = DXN.make('org.dxos.type.assistant.chat', '0.1.0');
+    const agent = DXN.make('org.dxos.type.agent', '0.1.0');
+    const expando = Obj.make(TestSchema.Expando, {});
+    const match = Filter.toPredicate(Filter.or(Filter.type(chat), Filter.type(agent), Filter.type(TestSchema.Expando)));
+    expect(match(expando)).toBe(true);
+  });
+
+  test('dual form', () => {
+    const expando = Obj.make(TestSchema.Expando, {});
+    expect(Filter.toPredicate(expando, Filter.type(TestSchema.Expando))).toBe(true);
   });
 });

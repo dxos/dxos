@@ -3,21 +3,30 @@
 //
 
 import type { Identity } from '@dxos/client/halo';
+import { type PasskeyFailure } from '@dxos/plugin-client';
 import { type MaybePromise } from '@dxos/util';
+
+/**
+ * Which failure the screen is currently reporting. Only one login method is on screen at a time, so
+ * one field is enough; the reason selects both the message and the control it renders under.
+ */
+export type WelcomeError = 'email' | 'oauth' | `passkey-${PasskeyFailure}`;
+
+export const passkeyError = (failure: PasskeyFailure): WelcomeError => `passkey-${failure}`;
 
 export enum WelcomeState {
   INIT = 0,
   // TODO(wittjosiah): Remove this state once signups are auto-admitted.
   EMAIL_SENT = 1,
   LOGIN_SENT = 2,
-  SPACE_INVITATION = 3,
   WAITLIST_SUBMITTED = 4,
 }
 
 export type WelcomeScreenProps = {
   state: WelcomeState;
   identity?: Identity | null;
-  error?: boolean;
+  /** Failure from the last login/sign-up attempt; cleared when a new attempt starts. */
+  error?: WelcomeError | null;
 
   // Login tab.
   /** Existing-account email login. Server returns a recovery token inline (dev)
@@ -45,10 +54,6 @@ export type WelcomeScreenProps = {
   onCreateAccountWithOAuth?: (args: { code: string; provider: string; loginHint?: string }) => MaybePromise<void>;
   /** Submit waitlist sign-up (no invitation code). */
   onJoinWaitlist?: (email: string) => MaybePromise<void>;
-
-  // Other.
-  onSpaceInvitation?: () => MaybePromise<void>;
-  onGoToLogin?: () => MaybePromise<void>;
 };
 
 export const validEmail = (email: string) => !!email.match(/.+@.+\..+/);

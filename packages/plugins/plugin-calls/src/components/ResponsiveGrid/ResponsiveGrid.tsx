@@ -7,7 +7,6 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { type Size } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
@@ -74,7 +73,7 @@ export const ResponsiveGrid = <T extends object = any>({
     height: containerHeight = 0,
     ref: containerRef,
   } = useResizeDetector<HTMLDivElement>({ refreshRate: 100 });
-  const [dividerHeight, setDividerHeight] = useState<Size>(0);
+  const [dividerHeight, setDividerHeight] = useState<number>(0);
   useEffect(() => {
     if (containerWidth && containerHeight) {
       const { height } = fitAspectRatio(containerWidth, containerHeight, ASPECT_RATIO);

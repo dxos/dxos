@@ -3,6 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
+import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
@@ -10,20 +11,24 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { EntityId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 
 import * as TagIndex from './TagIndex';
 
 /** A minimal item standing in for an immutable feed object. */
-const Item = Schema.Struct({
-  text: Schema.String,
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.Item', '0.1.0')));
+const Item = Type.makeObject(DXN.make('org.dxos.test.tagindex.Item', '0.1.0'))(
+  Schema.Struct({
+    text: Schema.String,
+  }),
+);
 
 /** A host pairing an immutable feed of items with a referenced tag index over them. */
-const Host = Schema.Struct({
-  feed: Ref.Ref(Feed.Feed),
-  tags: Ref.Ref(TagIndex.TagIndex),
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.Host', '0.1.0')));
+const Host = Type.makeObject(DXN.make('org.dxos.test.tagindex.Host', '0.1.0'))(
+  Schema.Struct({
+    feed: Ref.Ref(Feed.Feed),
+    tags: Ref.Ref(TagIndex.TagIndex),
+  }),
+);
 
 describe('TagIndex', () => {
   test('sets, unsets, and inverts feed-object tags', () => {
@@ -57,6 +62,73 @@ describe('TagIndex', () => {
     tags.unsetTag(urgent, b.id);
     expect([...tags.objects(urgent)]).toEqual([]);
     expect(tags.tagIds()).toEqual([later]);
+  });
+
+  test('matches tag membership across absolute and relative key forms (import round-trips)', ({ expect }) => {
+    const tagIndex = TagIndex.make();
+    const tags = TagIndex.bind(tagIndex);
+
+    const entityId = EntityId.random();
+    const item = EntityId.random();
+    const absolute = EID.make({ spaceId: SpaceId.random(), entityId }); // How live data stores a tag id.
+    const relative = EID.make({ entityId }); // How a portable snapshot stores it (no space id).
+
+    // A tag stored under its absolute uri is found by the relative query and vice versa: membership
+    // ignores the space id, so a space import (which mints a new space id) keeps tags resolvable.
+    tags.setTag(absolute, item);
+    expect([...tags.objects(relative)]).toEqual([item]);
+    expect([...tags.objects(absolute)]).toEqual([item]);
+    // Same entity id under a different space also matches (the post-import resolution case).
+    expect([...tags.objects(EID.make({ spaceId: SpaceId.random(), entityId }))]).toEqual([item]);
+
+    // Non-EID tag ids are still compared verbatim.
+    tags.setTag('dxn:tag:urgent', item);
+    expect([...tags.objects('dxn:tag:urgent')]).toEqual([item]);
+    expect([...tags.objects('dxn:tag:other')]).toEqual([]);
+  });
+
+  test('atom family returns tag uris for one object', () => {
+    const tagIndex = TagIndex.make();
+    const tags = TagIndex.bind(tagIndex);
+
+    const first = EntityId.random();
+    const second = EntityId.random();
+    const urgent = 'dxn:tag:urgent';
+    const later = 'dxn:tag:later';
+
+    tags.setTag(urgent, first);
+    tags.setTag(later, first);
+    tags.setTag(urgent, second);
+
+    const tagsForObject = TagIndex.atom(tagIndex);
+    const registry = Registry.make();
+    expect(registry.get(tagsForObject(first)).sort()).toEqual([later, urgent]);
+    expect(registry.get(tagsForObject(second))).toEqual([urgent]);
+
+    tags.unsetTag(later, first);
+    expect(registry.get(tagsForObject(first))).toEqual([urgent]);
+  });
+
+  test('taggedIdsAtom returns object ids for one tag', ({ expect }) => {
+    const tagIndex = TagIndex.make();
+    const tags = TagIndex.bind(tagIndex);
+
+    const first = EntityId.random();
+    const second = EntityId.random();
+    const urgent = 'dxn:tag:urgent';
+    const later = 'dxn:tag:later';
+
+    tags.setTag(urgent, first);
+    tags.setTag(urgent, second);
+    tags.setTag(later, first);
+
+    const registry = Registry.make();
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, urgent))).toEqual([first, second]);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, later))).toEqual([first]);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, 'dxn:tag:missing'))).toEqual([]);
+
+    tags.unsetTag(urgent, first);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, urgent))).toEqual([second]);
   });
 });
 
@@ -159,7 +231,7 @@ describe('TagIndex (feed integration)', () => {
       expect(tags.tags(hello.id)).toEqual([urgent]);
 
       // Filter the feed by tag.
-      const items = yield* Feed.runQuery(feed, Filter.type(Item));
+      const items = yield* Feed.query(feed, Filter.type(Item)).run;
       const tagged = new Set(tags.objects(urgent));
       expect(items.filter((item) => tagged.has(item.id)).map((item) => item.text)).toEqual(['hello']);
 

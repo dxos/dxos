@@ -4,45 +4,53 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
-import { type Database } from '@dxos/echo';
-import { type Merge } from '@dxos/effect';
-import { useVoiceInput } from '@dxos/plugin-transcription';
+import { Project } from '@dxos/compute';
+import { type Database, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
-import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
+import {
+  ChatEditor,
+  type ChatEditorController,
+  type ChatEditorProps,
+  ChatStatusIndicator,
+  commands,
+} from '@dxos/react-ui-chat';
+import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
+import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
 import { type ChatPresetProps } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
-import { type ChatEvent } from '../Chat/events';
+import { type ChatEvent } from '../Chat';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
 import { ChatMcpErrors } from './ChatMcpErrors';
 import { ChatOptions } from './ChatOptions';
 import { ChatReferences } from './ChatReferences';
-import { ChatStatusIndicator } from './ChatStatusIndicator';
+import { useChatVoiceInput } from './useChatVoiceInput';
 
-export type ChatPromptProps = ThemedClassName<
-  Merge<
-    {
-      outline?: boolean;
-      settings?: boolean;
-      expandable?: boolean;
-      db?: Database.Database;
-      chat?: Chat.Chat;
-      processor: AiChatProcessor;
-      event: Event<ChatEvent>;
-      online?: boolean;
-      placeholder?: ChatEditorProps['placeholder'];
-      onOnlineChange?: (online: boolean) => void;
-    },
-    ChatPresetProps
-  >
+export type ChatPromptProps = Merge<
+  ThemedClassName<{
+    outline?: boolean;
+    settings?: boolean;
+    expandable?: boolean;
+    db?: Database.Database;
+    chat?: Chat.Chat;
+    processor: AiChatProcessor;
+    event: Event<ChatEvent>;
+    /** Read-only indicator of whether the configured provider is the remote (online) service. */
+    online?: boolean;
+    placeholder?: ChatEditorProps['placeholder'];
+    /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
+    companionTo?: Obj.Unknown;
+  }>,
+  ChatPresetProps
 >;
 
 export const ChatPrompt = ({
@@ -54,11 +62,11 @@ export const ChatPrompt = ({
   event,
   online,
   placeholder,
-  onOnlineChange,
   onPresetChange,
   settings = true,
   presets,
   preset,
+  companionTo,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
 
@@ -68,36 +76,37 @@ export const ChatPrompt = ({
   const activeRef = useDynamicRef(active);
 
   const editorRef = useRef<ChatEditorController>(null);
-  const [recordingState, setRecordingState] = useState(false);
   useEffect(() => {
     return event.on((ev) => {
-      switch (ev.type) {
-        case 'update-prompt':
-          if (!editorRef.current?.getText()?.length) {
-            editorRef.current?.setText(ev.text);
-            editorRef.current?.focus();
-          }
-          break;
-        case 'record-start':
-          setRecordingState(true);
-          break;
-        case 'record-stop':
-          setRecordingState(false);
-          break;
+      if (ev.type === 'update-prompt' && !editorRef.current?.getText()?.length) {
+        editorRef.current?.setText(ev.text);
+        editorRef.current?.focus();
       }
     });
   }, [event]);
 
-  // TODO(burdon): Configure capability in TranscriptionPlugin.
-  const { recording } = useVoiceInput({
-    active: recordingState,
-    onUpdate: (text) => {
-      editorRef.current?.setText(text);
-      editorRef.current?.focus();
-    },
-  });
+  const fallbackDocId = useId();
+  const docId = chat?.id ?? fallbackDocId;
+  useChatVoiceInput(docId, editorRef);
 
-  const extensions = useChatKeymapExtensions({ event });
+  const keymapExtensions = useChatKeymapExtensions({ event });
+
+  // Sentinel-command completion is sourced from the bound project's instructions, if any.
+  const [companion] = useObject(companionTo);
+  const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
+  const commandsRef = useDynamicRef(instructions?.commands ?? []);
+  const commandsExtension = useMemo(
+    () =>
+      commands({
+        getCommands: () => commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+      }),
+    [commandsRef],
+  );
+
+  const extensions = useMemo(
+    () => [keymapExtensions, pendingText(), commandsExtension],
+    [keymapExtensions, commandsExtension],
+  );
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
@@ -133,6 +142,7 @@ export const ChatPrompt = ({
         <ChatEditor
           ref={editorRef}
           autoFocus
+          markdown
           lineWrapping
           classNames='col-span-2 pt-0.5'
           placeholder={placeholder ?? t('prompt.placeholder')}
@@ -160,14 +170,15 @@ export const ChatPrompt = ({
           <ChatActions
             classNames='col-span-2'
             microphone={true}
-            recording={recording}
+            docId={docId}
             processing={streaming}
             onEvent={handleEvent}
           >
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
-                <Input.Switch classNames='mx-1' checked={online} onCheckedChange={onOnlineChange} />
+                {/* Read-only: the provider is configured in Assistant settings, not toggled here. */}
+                <Input.Switch classNames='mx-1' checked={online} disabled />
               </Input.Root>
             )}
           </ChatActions>

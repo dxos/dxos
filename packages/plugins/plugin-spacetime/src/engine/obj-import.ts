@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { ManifoldToplevel, Manifold } from 'manifold-3d';
+import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 
 import { log } from '@dxos/log';
 

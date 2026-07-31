@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 import type * as Runtime from 'effect/Runtime';
 
 import { DeferredTask, asyncTimeout } from '@dxos/async';
+import { Operation } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -20,7 +20,7 @@ const PROCESSING_TIMEOUT = 20_000; // ms
 const MAX_RANGE_ID_COUNT = 10;
 
 export type SegmentsNormalizerProps = {
-  functionExecutor: FunctionExecutor;
+  operationRuntime: Runtime.Runtime<Operation.Service>;
   feed: Feed.Feed;
   feedRuntime: Runtime.Runtime<Database.Service>;
   startingCursor: QueueCursor;
@@ -33,7 +33,7 @@ export type QueueCursor = {
 };
 
 export class MessageNormalizer extends Resource {
-  private readonly _functionExecutor: FunctionExecutor;
+  private readonly _operationRuntime: Runtime.Runtime<Operation.Service>;
 
   private _feed: Feed.Feed;
   private _feedRuntime: Runtime.Runtime<Database.Service>;
@@ -42,9 +42,9 @@ export class MessageNormalizer extends Resource {
   private _normalizationTask?: DeferredTask;
   private _lastProcessedMessageIds?: string[];
 
-  constructor({ functionExecutor, feed, feedRuntime, startingCursor }: SegmentsNormalizerProps) {
+  constructor({ operationRuntime, feed, feedRuntime, startingCursor }: SegmentsNormalizerProps) {
     super();
-    this._functionExecutor = functionExecutor;
+    this._operationRuntime = operationRuntime;
     this._feed = feed;
     this._feedRuntime = feedRuntime;
     this._cursor = startingCursor;
@@ -93,9 +93,12 @@ export class MessageNormalizer extends Resource {
     this._lastProcessedMessageIds = messages.map((message) => message.id);
 
     try {
-      // TODO(mykola): Executor should support timeout.
+      // TODO(mykola): Invocation should support timeout.
       const response: NormalizationOutput = await asyncTimeout(
-        this._functionExecutor.invoke(sentenceNormalization, { messages }),
+        Operation.invoke(sentenceNormalization, { messages }).pipe(
+          Effect.provide(this._operationRuntime),
+          EffectEx.runAndForwardErrors,
+        ),
         PROCESSING_TIMEOUT,
       );
 

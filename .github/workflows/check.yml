@@ -36,8 +36,10 @@ env:
   TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
+# The event is part of the key because on a schedule `github.ref` is `refs/heads/main`: without it the
+# nightly shares a group with pushes to main and the next push cancels it mid-e2e.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 # https://moonrepo.dev/docs/guides/ci
@@ -78,8 +80,19 @@ jobs:
       - name: Check for import cycles
         run: pnpm run check-cycles
 
+      - name: Check public packages don't depend on private packages
+        run: pnpm run check-public-dependencies
+
       - name: Check publish config
         run: pnpm run check-publish-config
+
+      - name: Check public packages are published
+        run: pnpm run check-packages-published
+
+      - name: Check version files in sync
+        # version.ts (DXOS_VERSION) + tauri.conf.json are derived from their package versions by
+        # sync-versions.mjs during release; fail the PR if a committed copy drifts out of sync.
+        run: node scripts/sync-versions.mjs --check
 
       - name: Check package.json paths
         run: pnpm run pkg-lint
@@ -106,18 +119,6 @@ jobs:
       - name: Check for peer dependency issues
         run: pnpm install --resolution-only --no-frozen-lockfile
 
-      - name: Upload moon run report
-        uses: actions/upload-artifact@v7
-        if: >-
-          (success() || failure()) &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        with:
-          name: moon-check-report
-          path: .moon/cache/runReport.json
-          retention-days: 1
-          if-no-files-found: ignore
-
   test:
     strategy:
       matrix:
@@ -133,7 +134,7 @@ jobs:
       NODE_VERSION: ${{ matrix.node-version }}
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
       # while still excluding the heavier opt-in tag families.
-      VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e && !compiler'
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
       VITEST_ENV: 'node'
       VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
       VITEST_XML_REPORT: 'true'
@@ -202,18 +203,6 @@ jobs:
           path: test-results
           retention-days: 7
 
-      - name: Upload moon run report
-        uses: actions/upload-artifact@v7
-        if: >-
-          (success() || failure()) &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        with:
-          name: moon-test-report-${{ matrix.node-version }}
-          path: .moon/cache/runReport.json
-          retention-days: 1
-          if-no-files-found: ignore
-
       - uses: codecov/codecov-action@v5
         if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
         with:
@@ -242,7 +231,7 @@ jobs:
       NODE_VERSION: ${{ matrix.node-version }}
       # Opt in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
       # while still excluding the heavier opt-in tag families.
-      VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e && !compiler'
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
       VITEST_ENV: 'node'
       VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
       VITEST_XML_REPORT: 'true'
@@ -311,18 +300,6 @@ jobs:
           path: test-results
           retention-days: 7
 
-      - name: Upload moon run report
-        uses: actions/upload-artifact@v7
-        if: >-
-          (success() || failure()) &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        with:
-          name: moon-storybook-report-${{ matrix.node-version }}
-          path: .moon/cache/runReport.json
-          retention-days: 1
-          if-no-files-found: ignore
-
       - uses: codecov/codecov-action@v5
         if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
         with:
@@ -332,19 +309,100 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
+  # Workerd tests run in the Cloudflare Workers runtime (`@cloudflare/vitest-pool-workers`)
+  # on their own runner, in parallel with `test`/`storybook`. No chromium/Playwright needed —
+  # the workerd binary ships with the `workerd` npm package installed during setup.
+  workerd:
+    strategy:
+      matrix:
+        node-version: ['24.11.1']
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
+      credentials:
+        username: dxos-bot
+        password: ${{ github.token }}
+    timeout-minutes: 30
+    env:
+      NODE_VERSION: ${{ matrix.node-version }}
+      # Opt in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
+      # while still excluding the heavier opt-in tag families.
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
+      VITEST_ENV: 'node'
+      # v8 coverage imports `node:inspector/promises`, which the workerd runtime does not
+      # provide — coverage is unsupported for the workers pool, so keep it off for this job.
+      VITEST_COVERAGE: 'false'
+      VITEST_XML_REPORT: 'true'
+      MOON_CONCURRENCY: 4
+      # Exposed so step conditions can branch on token presence without referencing
+      # secrets directly (secrets are not allowed in if: expressions).
+      TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Clean stale test results
+        run: rm -rf test-results
+
+      - name: Test Workerd Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN != '' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon run :test-workerd --affected remote -- --no-file-parallelism
+
+      # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
+      - name: Test Workerd Affected (no analytics)
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
+        run: moon run :test-workerd --affected remote -- --no-file-parallelism
+
+      - name: Test Workerd All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon exec --on-failure continue :test-workerd -- --no-file-parallelism
+
+      # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
+      - name: Test Workerd All (no analytics)
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
+        run: moon exec --on-failure continue :test-workerd -- --no-file-parallelism
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-report-workerd-${{ matrix.node-version }}
+          path: test-results
+          retention-days: 7
+
   e2e:
-    # e2e runs on pushes/schedules to release branches AND on release-please PRs.
-    # For push events github.ref is refs/heads/<branch>; for pull_request events
-    # github.ref is refs/pull/N/merge so we also check github.head_ref (the source
-    # branch name, set only on pull_request events) to catch release-please PRs.
+    # e2e runs on pushes/schedules to main AND on the Changesets "Version Packages" PR (so we never
+    # publish untested). For push events github.ref is refs/heads/<branch>; for pull_request events
+    # github.ref is refs/pull/N/merge so we also check github.head_ref (the source branch name, set only
+    # on pull_request events) to catch the changesets/action PR branch (changeset-release/<base>).
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
-      startsWith(github.ref, 'refs/heads/rc-') ||
-      startsWith(github.ref, 'refs/heads/hotfix-') ||
-      startsWith(github.ref, 'refs/heads/release-please-') ||
-      startsWith(github.head_ref, 'rc-') ||
-      startsWith(github.head_ref, 'hotfix-') ||
-      startsWith(github.head_ref, 'release-please-') ||
+      startsWith(github.ref, 'refs/heads/changeset-release/') ||
+      startsWith(github.head_ref, 'changeset-release/') ||
       inputs.e2e
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -352,7 +410,9 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 60
+    # Headroom over the 45m test cap plus ~10m of bundling: the step timeout fails the job cleanly with
+    # traces attached, whereas hitting this cap cancels it and proves nothing.
+    timeout-minutes: 75
     env:
       DX_ENVIRONMENT: ci
       DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
@@ -370,6 +430,7 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          persist-credentials: false
 
       - name: Extract branch
         id: extract_branch
@@ -381,12 +442,14 @@ jobs:
       - name: Install Playwright
         run: pnpm run install-playwright
 
+      # A manual `e2e` dispatch takes the "All" path on any branch: affected-scoping resolves to nothing
+      # when the diff touches no project (e.g. a CI-only change), which would bundle and test nothing.
       - name: Bundle Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
         run: moon run :bundle --affected remote
 
       - name: Bundle All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         run: moon run :bundle
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
@@ -399,7 +462,8 @@ jobs:
         run: rm -rf test-results
 
       - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
+        timeout-minutes: 45
         uses: trunk-io/analytics-uploader@v1
         env:
           PLAYWRIGHT_BROWSER: all
@@ -411,10 +475,14 @@ jobs:
           run: moon run :e2e --affected remote --concurrency=1
 
       - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
+        timeout-minutes: 45
         uses: trunk-io/analytics-uploader@v1
         env:
           PLAYWRIGHT_BROWSER: all
+          # A manual dispatch must execute the suite: re-running the same commit otherwise replays a remote
+          # cache hit in seconds, which reports green without running a test and emits no JUnit XML.
+          MOON_CACHE: ${{ inputs.e2e && 'off' || 'read-write' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -430,67 +498,90 @@ jobs:
           path: test-results/playwright
           retention-days: 7
 
-      - name: Send test report
-        if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
-        uses: ./.github/actions/test-report
-        with:
-          name: ${{ github.job }}
-          result: ${{ job.status }}
-
-  check-report:
-    needs: [check, test, storybook]
-    # Only post on same-repo PRs — fork PRs get read-only tokens regardless of
-    # declared permissions, and non-PR runs have no PR to comment on.
+  # Builds, packs and smoke-tests the CLI on its own runner, in parallel with `e2e`. It used to ride along
+  # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
+  # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
+  cli:
     if: >-
-      always() &&
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
+      startsWith(github.ref, 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/heads/changeset-release/') ||
+      startsWith(github.head_ref, 'changeset-release/') ||
+      inputs.e2e
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
     steps:
-      - name: Download check moon report
-        id: download-check-report
-        continue-on-error: true
-        uses: actions/download-artifact@v5
+      - name: Checkout
+        uses: actions/checkout@v5
         with:
-          name: moon-check-report
-          path: .moon/cache
+          fetch-depth: 0
+          lfs: true
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
 
-      - uses: 'moonrepo/run-report-action@v1'
-        if: steps.download-check-report.outcome == 'success'
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
+      # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.
+      - name: Smoke test packed CLI
+        run: moon run cli:smoke
+
+      - name: Pack the CLI for the foreign-machine job
+        run: |
+          mkdir -p cli-verify
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli-linux-x64
+          cp packages/devtools/cli/scripts/verify-installed.mjs cli-verify/
+
+      # The verifier travels with the tarballs because the job that runs them has no checkout.
+      - name: Upload packed CLI
+        uses: actions/upload-artifact@v4
         with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
+          name: cli-verify
+          path: cli-verify/
+          retention-days: 1
 
-      - name: Download test moon report
-        id: download-test-report
-        continue-on-error: true
-        uses: actions/download-artifact@v5
+  # Runs the packed CLI where the tree that built it does not exist. Deliberately no checkout, no container
+  # and a different runner: a `--compile`d binary is meant to carry everything, and when a dependency
+  # resolves a path at bundle time instead — `@automerge/automerge`'s WASM, `classic-level`'s native addon —
+  # it works in the job that built it and nowhere else, which is how @dxos/cli@0.10.0 shipped unrunnable.
+  # `cli:smoke` cannot cover this in CI because the build container forbids mount namespaces.
+  cli-foreign:
+    needs: cli
+    if: ${{ !cancelled() && needs.cli.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download packed CLI
+        uses: actions/download-artifact@v4
         with:
-          name: moon-test-report-24.11.1
-          path: .moon/cache
+          name: cli-verify
+          path: cli-verify
 
-      - uses: 'moonrepo/run-report-action@v1'
-        if: steps.download-test-report.outcome == 'success'
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
+      # `--omit=optional` so the launcher's optionalDependencies are not fetched from npm — those versions
+      # are published, so without it the released (and possibly broken) platform package could satisfy the
+      # dependency instead of the tarball built here.
+      # The `./` is load-bearing: npm reads a bare `dir/file.tgz` as the GitHub shorthand `owner/repo` and
+      # tries to clone it.
+      - name: Install from the tarballs
+        run: |
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund --omit=optional ./cli-verify/*.tgz
 
-      - name: Download storybook moon report
-        id: download-storybook-report
-        continue-on-error: true
-        uses: actions/download-artifact@v5
-        with:
-          name: moon-storybook-report-24.11.1
-          path: .moon/cache
+      # The same verifier `cli:smoke` runs, so the two cannot check different things.
+      - name: Verify the install
+        run: node cli-verify/verify-installed.mjs .
 
-      - uses: 'moonrepo/run-report-action@v1'
-        if: steps.download-storybook-report.outcome == 'success'
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
-
+  # Reports every nightly job from one place. e2e is in `needs` so a cancelled e2e is still reported (its
+  # former in-job step used `success() || failure()`, which skips on cancellation) and so the other three
+  # reports can no longer go out green while e2e is still running.
   report:
-    needs: [test, storybook]
+    needs: [test, storybook, workerd, e2e]
     if: always() && github.event_name == 'schedule'
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -498,15 +589,96 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 10
     steps:
+      # This job only runs a repository-local action, so it never needs git auth; leaving the token in
+      # `.git/config` would expose it to anything in the checked-out tree.
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      # Each report is `always()` so an undelivered one cannot suppress the rest — without it a failing
+      # first report skips the e2e report, silencing the very signal this job exists to send. A failed
+      # step still fails the job.
       - name: Send test report
+        if: always()
         uses: ./.github/actions/test-report
         with:
           name: test-24.11.1
           result: ${{ needs.test.result }}
       - name: Send storybook report
+        if: always()
         uses: ./.github/actions/test-report
         with:
           name: storybook-24.11.1
           result: ${{ needs.storybook.result }}
+      - name: Send workerd report
+        if: always()
+        uses: ./.github/actions/test-report
+        with:
+          name: workerd-24.11.1
+          result: ${{ needs.workerd.result }}
+      - name: Send e2e report
+        if: always()
+        uses: ./.github/actions/test-report
+        with:
+          name: e2e
+          result: ${{ needs.e2e.result }}
+
+  # Advisory changeset reminder (NOT a gate): when a PR changes publishable source but has no
+  # `.changeset/*.md`, post/update a single sticky comment; remove it once a changeset is added.
+  # A change that needs no release just omits the changeset — no empty changeset required.
+  # Same-repo PRs only — fork PRs get a read-only token and cannot be commented on.
+  changeset-reminder:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect missing changeset
+        id: detect
+        env:
+          CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-changeset.mjs
+
+      - name: Post or remove reminder comment
+        uses: actions/github-script@v7
+        env:
+          MISSING: ${{ steps.detect.outputs.missing }}
+          PACKAGES: ${{ steps.detect.outputs.packages }}
+        with:
+          script: |
+            const marker = '<!-- changeset-reminder -->';
+            const missing = process.env.MISSING === 'true';
+            const packages = process.env.PACKAGES || '';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (missing) {
+              const body = [
+                marker,
+                '### 🦋 No changeset found',
+                '',
+                'This PR changes publishable source but has no `.changeset/*.md`.',
+                packages ? `Affected: ${packages}` : '',
+                '',
+                '- If the change is consumer-relevant (worth a changelog entry), run `pnpm changeset` and commit the file.',
+                "- If it isn't changelog-relevant (chore / refactor / internal), you can ignore this — the code still ships with the next release.",
+              ].filter(Boolean).join('\n');
+              if (existing) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+            }

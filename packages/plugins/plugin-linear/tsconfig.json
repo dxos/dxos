@@ -37,6 +37,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -58,7 +61,7 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-integration"
+      "path": "../plugin-connector"
     },
     {
       "path": "../plugin-testing"

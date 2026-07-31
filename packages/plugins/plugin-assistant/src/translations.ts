@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Agent, McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Agent, Chat, McpServer } from '@dxos/assistant-toolkit';
+import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
@@ -12,33 +12,32 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 
 import { meta } from '#meta';
 
-// TODO(burdon): Standardize translation names.
 export const translations: Resource[] = [
   ...componentsTranslations,
   ...formTranslations,
   {
     'en-US': {
-      [Type.getTypename(Blueprint.Blueprint)]: {
-        'typename.label': 'Blueprint',
-        'typename.label_zero': 'Blueprints',
-        'typename.label_one': 'Blueprint',
-        'typename.label_other': 'Blueprints',
-        'object-name.placeholder': 'New blueprint',
-        'add-object.label': 'Add blueprint',
-        'rename-object.label': 'Rename blueprint',
-        'delete-object.label': 'Delete blueprint',
-        'object-deleted.label': 'Blueprint deleted',
+      [Type.getTypename(Skill.Skill)]: {
+        'typename.label': 'Skill',
+        'typename.label_zero': 'Skills',
+        'typename.label_one': 'Skill',
+        'typename.label_other': 'Skills',
+        'object-name.placeholder': 'New skill',
+        'add-object.label': 'Add skill',
+        'rename-object.label': 'Rename skill',
+        'delete-object.label': 'Delete skill',
+        'object-deleted.label': 'Skill deleted',
       },
-      [Type.getTypename(Routine.Routine)]: {
-        'typename.label': 'Routine',
-        'typename.label_zero': 'Routines',
-        'typename.label_one': 'Routine',
-        'typename.label_other': 'Routines',
-        'object-name.placeholder': 'New routine',
-        'add-object.label': 'Add routine',
-        'rename-object.label': 'Rename routine',
-        'delete-object.label': 'Delete routine',
-        'object-deleted.label': 'Routine deleted',
+      [Type.getTypename(Instructions.Instructions)]: {
+        'typename.label': 'Instructions',
+        'typename.label_zero': 'Instructions',
+        'typename.label_one': 'Instructions',
+        'typename.label_other': 'Instructions',
+        'object-name.placeholder': 'New instructions',
+        'add-object.label': 'Add instructions',
+        'rename-object.label': 'Rename instructions',
+        'delete-object.label': 'Delete instructions',
+        'object-deleted.label': 'Instructions deleted',
       },
       [Type.getTypename(Sequence.Sequence)]: {
         'typename.label': 'Sequence',
@@ -52,15 +51,15 @@ export const translations: Resource[] = [
         'object-deleted.label': 'Sequence deleted',
       },
       [Type.getTypename(Chat.Chat)]: {
-        'typename.label': 'AI Conversation',
-        'typename.label_zero': 'AI Conversations',
-        'typename.label_one': 'AI Conversation',
-        'typename.label_other': 'AI Conversations',
-        'object-name.placeholder': 'New AI conversation',
-        'add-object.label': 'Add AI conversation',
-        'rename-object.label': 'Rename AI conversation',
-        'delete-object.label': 'Delete AI conversation',
-        'object-deleted.label': 'AI conversation deleted',
+        'typename.label': 'Session',
+        'typename.label_zero': 'Sessions',
+        'typename.label_one': 'Session',
+        'typename.label_other': 'Sessions',
+        'object-name.placeholder': 'New session',
+        'add-object.label': 'Add Session',
+        'rename-object.label': 'Rename session',
+        'delete-object.label': 'Delete session',
+        'object-deleted.label': 'Session deleted',
       },
       [Type.getTypename(McpServer.McpServer)]: {
         'typename.label': 'MCP Server',
@@ -85,13 +84,10 @@ export const translations: Resource[] = [
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
         'plugin.name': 'Assistant',
-        'settings.title': 'Assistant settings',
         'object.placeholder': 'New prompt',
         'create-object.label': 'Create prompt',
         'create-trigger.label': 'Create trigger',
         'create-stack-section.label': 'Create prompt',
-        'command.placeholder': 'Enter slash command...',
-        'template.placeholder': 'Enter template...',
         'value.placeholder': 'Enter value...',
         'prompt-rules.label': 'Prompt Rules',
         'typename.placeholder': 'Enter typename of objects which this template is for',
@@ -100,7 +96,7 @@ export const translations: Resource[] = [
         'service-registry.label': 'Service Registry',
         'type-filter.placeholder': 'Type',
         'any-type-filter.label': 'Any',
-        'no-blueprint.message': 'No active blueprints',
+        'no-skill.message': 'No active skills',
         'tool-call.label': 'Calling',
         'tool-result.label': 'Success',
         'tool-error.label': 'Tool call failed',
@@ -126,16 +122,33 @@ export const translations: Resource[] = [
         'toolkit.label': 'Toolkit',
         'stats.label': 'Stats',
         'summary.label': 'Summary',
+        'rewind.label': 'Rewind to here',
         'thinking.label': 'Thinking',
+
+        'connect.label': 'Connect',
+        'integration-prompt.title': 'Connect {{service}}',
+        'integration-prompt.description': 'This action needs access to {{service}}. Connect it to continue.',
+        'integration-prompt.unavailable': 'No connector is available for {{service}}.',
 
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',
         'context-objects.button': 'Add to context',
         'context-settings.button': 'Chat settings',
         'microphone.button': 'Click to speak',
+        'recording.placeholder': 'Recording…',
+        'stop-recording.label': 'Stop recording',
+        'hold-to-record.label': 'Hold to record',
+        'start-recording.label': 'Start recording',
+        'recording-options.label': 'Recording options',
+        'record-mode.label': 'Record mode',
+        'record-mode.toggle.label': 'Toggle',
+        'record-mode.hold.label': 'Hold (push-to-talk)',
+        'audio-device.label': 'Microphone',
+        'audio-device.default.label': 'System default',
+        'settings.entity-extraction.label': 'Entity extraction',
         'cancel-processing.button': 'Stop processing',
 
-        'options.blueprints.title': 'Skills',
+        'options.skills.title': 'Skills',
         'options.mcp.title': 'MCP',
         'options.chat-model.title': 'Models',
         'remove-object.label': 'Remove object',
@@ -158,10 +171,31 @@ export const translations: Resource[] = [
         'ai-service-error.label': 'AI service error',
         'view-usage.label': 'View usage',
 
+        // LLM provider labels.
+        'settings.provider.edge.label': 'Edge',
+        'settings.provider.built-in.label': 'Built-in',
+        'settings.provider.ollama.label': 'Ollama',
+        'settings.provider.lmstudio.label': 'LM Studio',
+
+        // Ollama local model management (desktop only).
+        'settings.ollama.title': 'Local models',
+        'settings.ollama.installed.label': 'Downloaded models',
+        'settings.ollama.empty.message': 'No models downloaded. Pull one below to get started.',
+        'settings.ollama.pull.label': 'Pull model',
+        'settings.ollama.pull.placeholder': 'Search or enter a model name (e.g. llama3.2:1b)',
+        'settings.ollama.pull-custom.label': 'Pull “{{name}}”',
+        'settings.ollama.pulling.label': 'Pulling…',
+        'settings.ollama.pulling.message': 'Downloading… {{percent}}%',
+        'settings.ollama.cancel.label': 'Cancel download',
+        'settings.ollama.loaded.label': 'Loaded',
+        'settings.ollama.loaded.vram': 'Loaded · {{size}}',
+        'settings.ollama.load.label': 'Load into memory',
+        'settings.ollama.unload.label': 'Unload from memory',
+        'settings.ollama.remove.label': 'Delete model',
+        'settings.ollama.failed.message': 'Could not reach the local model service: {{error}}',
+
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
-        'run-prompt.label': 'Run prompt',
-        'routine-running.label': 'Running…',
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',
@@ -169,7 +203,6 @@ export const translations: Resource[] = [
         // Trigger status
         'trigger-status-disabled.label': 'Triggers disabled',
         'trigger-status-idle.label': 'Triggers idle',
-        'trigger-status-edge.label': 'Triggers will run on EDGE',
         'trigger-status-running.label': 'Trigger running',
         'trigger-status-error.label': 'Trigger error',
         'trigger-runtime.label': 'Auto trigger execution',
@@ -190,10 +223,13 @@ export const translations: Resource[] = [
 
         // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
         'space-home.suggestions.heading': 'Get started',
-        'space-home.suggestion-draft-doc.label': 'Draft a new document',
-        'space-home.suggestion-data-type.label': 'Create a new data type',
-        'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
+        'space-home.suggestion-magazine.label': 'Create feeds for tracking the latest AI news and build a magazine',
+        'space-home.suggestion-spreadsheet.label':
+          "Look up and create a spreadsheet of MLB's top starters by month for {{year}}",
+        'space-home.suggestion-kanban.label': 'Create a kanban view for tracking tasks',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
+
+        'nav-tree-group-ai.label': 'Assistant',
       },
     },
   },

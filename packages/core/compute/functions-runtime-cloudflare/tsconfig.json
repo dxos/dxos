@@ -2,7 +2,7 @@
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "types": [
-      "@cloudflare/workers-types/2023-07-01",
+      "@cloudflare/workers-types",
       "@dxos/typings"
     ]
   },
@@ -19,6 +19,9 @@
     },
     {
       "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/effect"
     },
     {
       "path": "../../../common/errors"

@@ -3,10 +3,9 @@
 //
 
 import { type Database, Filter, type Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
-import { type Message } from '@dxos/types';
+import { useQuery } from '@dxos/echo-react';
 
-import { ExtractedFrom } from '../types';
+import { ExtractedFrom, Mailbox } from '../types';
 
 /**
  * Returns the set of objects extracted from a given Message — i.e. the `Source` of every
@@ -16,6 +15,6 @@ import { ExtractedFrom } from '../types';
  * The list updates reactively as new extractions land (via `ExtractMessage` dispatcher) or
  * existing extractions are deleted.
  */
-export const useExtractedObjects = (db: Database.Database | undefined, message: Message.Message): Obj.Any[] => {
+export const useExtractedObjects = (db: Database.Database | undefined, message: Mailbox.MessageLike): Obj.Any[] => {
   return useQuery(db, Query.select(Filter.id(message.id)).targetOf(ExtractedFrom.ExtractedFrom).source()) as Obj.Any[];
 };

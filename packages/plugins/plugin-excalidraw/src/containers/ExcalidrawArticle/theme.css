@@ -1,0 +1,12 @@
+/*
+ * Copyright 2026 DXOS.org
+ */
+
+/*
+ * Excalidraw renders its Library trigger into the top-right tunnel and exposes no `UIOptions`
+ * toggle for it, so hide it here: Composer owns asset management, and the library's own
+ * storage/sharing flow has no counterpart in ECHO.
+ */
+.excalidraw .default-sidebar-trigger {
+  display: none;
+}

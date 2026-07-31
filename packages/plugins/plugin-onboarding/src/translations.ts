@@ -20,6 +20,7 @@ export const translations = [
         'request-access-email.description':
           "A confirmation link has been sent to your inbox. If it doesn't arrive in the next three minutes please check your spam folder.",
         'email-error.message': 'Failed to send verification email.',
+        'oauth-error.message': 'Could not connect to that account. Please try again.',
 
         'email-input.label': 'Email',
         'email-input.placeholder': 'Your email',
@@ -32,6 +33,12 @@ export const translations = [
         'signup-tab.label': 'Sign Up',
         'welcome-back.title': 'Welcome back!',
         'sign-in-with-passkey-button.label': 'Log in with passkey',
+        'passkey-pending.label': 'Waiting for passkey…',
+        'passkey-dismissed-error.message':
+          'No passkey was used. The prompt was dismissed, or this device has no passkey for Composer.',
+        'passkey-rejected-error.message':
+          "That passkey isn't linked to an account. Try another passkey, or log in with email or another device.",
+        'passkey-failed-error.message': 'Passkey login failed. Please try again or use another way to log in.',
         'more-ways-to-sign-in.label': 'More ways to log in',
         'login-passkey.label': 'Passkey',
         'login-passkey.description': 'The simplest way to access your data on new devices.',
@@ -71,15 +78,6 @@ export const translations = [
         'join-device-button.description': 'Authenticate using an existing device.',
         'recover-identity-button.label': 'Continue with a recovery code',
         'recover-identity-button.description': 'Recover your identity using a paper key.',
-
-        'space-invitation.title': 'You have been invited to a space',
-        'space-invitation.description':
-          "You're not currently logged in on this device, click the button below to create a new account and accept the invitation, or log in on this device before accepting the invitation.",
-        'join-space-button.label': 'Create account & accept invitation',
-        'go-to-login.title': 'Already have an account?',
-        'go-to-login.description':
-          'If you already have an account, log in before accepting the invitation with that account.',
-        'go-to-login-button.label': 'Go to login',
 
         'passkey-setup-toast.title': 'Setup a passkey',
         'passkey-setup-toast.description':

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Mesh, PointerEventTypes, Vector3, type PointerInfo } from '@babylonjs/core';
+import { type Mesh, PointerEventTypes, type PointerInfo, Vector3 } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
 import { Obj } from '@dxos/echo';

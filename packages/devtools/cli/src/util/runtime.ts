@@ -13,11 +13,11 @@ import { AiModelResolver, type AiService } from '@dxos/ai';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
-import { type ClientService } from '@dxos/client';
-import { type Credential, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
+import { ClientService } from '@dxos/client';
+import { type Credential, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
+import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import { type Database, type Key, Registry } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
-import { credentialsLayerFromDatabase } from '@dxos/functions';
 
 export type AiChatServices =
   | AiService.AiService
@@ -93,6 +93,10 @@ export const chatLayer = ({
     Layer.provideMerge(OperationHandlerSet.provide(functions)),
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(credentialsLayerFromDatabase()),
+    // Resolves server-custodied tokens through EDGE; the client is only touched when one is hit.
+    Layer.provideMerge(
+      Layer.unwrapEffect(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
+    ),
     Layer.provideMerge(spaceLayer(spaceId, true)),
     Layer.provideMerge(Trace.writerLayerNoop),
   );

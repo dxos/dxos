@@ -9,21 +9,23 @@ import { createRoot } from 'react-dom/client';
 
 import { log } from '@dxos/log';
 
-import { Container, Options } from './components';
+import { Options, Root } from './components';
 
-const Root = () => {
+const OptionsApp = () => {
   return (
-    <Container classNames='absolute inset-0 flex justify-center overflow-hidden bg-modal-surface'>
-      <div className='dx-document bg-base-surface'>
-        <Options />
+    <Root name='options'>
+      <div className='absolute inset-0 flex justify-center overflow-hidden bg-modal-surface'>
+        <div className='dx-document bg-base-surface'>
+          <Options />
+        </div>
       </div>
-    </Container>
+    </Root>
   );
 };
 
 const main = async () => {
   log.info('options');
-  createRoot(document.getElementById('root')!).render(<Root />);
+  createRoot(document.getElementById('root')!).render(<OptionsApp />);
 };
 
 void main();

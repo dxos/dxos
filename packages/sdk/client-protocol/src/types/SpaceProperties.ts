@@ -6,12 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Ref, Type } from '@dxos/echo';
 
-/**
- * Where do triggers get executed.
- */
-export const ComputeEnvironment = Schema.Literal('disabled', 'local', 'edge');
-export type ComputeEnvironment = Schema.Schema.Type<typeof ComputeEnvironment>;
-
 export const SpacePropertiesSchema = Schema.Struct({
   //
   // System properties.
@@ -27,12 +21,11 @@ export const SpacePropertiesSchema = Schema.Struct({
   invocationTraceFeed: Schema.optional(Ref.Ref(Feed.Feed)),
 
   /**
-   * Preference for trigger execution.
-   * *disabled* - triggers do not run locally or on EDGE.
-   * *local* - triggers are executed locally on the client, edge is not running triggers.
-   * *edge* - triggers are executed on the edge, triggers are not run locally.
+   * Space-wide kill-switch for trigger execution.
+   * When true, the local trigger dispatcher is stopped for the space (no triggers run locally).
+   * Per-trigger local/edge routing is controlled by the trigger's `remote` flag.
    */
-  computeEnvironment: Schema.optional(ComputeEnvironment),
+  triggersDisabled: Schema.optional(Schema.Boolean),
 
   //
   // User properties.
@@ -49,9 +42,6 @@ export type SpacePropertiesSchema = Schema.Schema.Type<typeof SpacePropertiesSch
 
 // TODO(burdon): Pipe Schem.optional, or partial to entire struct to make everything optional?
 // TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?
-export const SpaceProperties = SpacePropertiesSchema.pipe(
-  Annotation.HiddenAnnotation.set(true),
-  Type.makeObject(DXN.make('org.dxos.type.spaceProperties', '0.1.0')),
-);
-
-export type SpaceProperties = Type.InstanceType<typeof SpaceProperties>;
+export class SpaceProperties extends Type.makeObject<SpaceProperties>(
+  DXN.make('org.dxos.type.spaceProperties', '0.1.0'),
+)(SpacePropertiesSchema.pipe(Annotation.HiddenAnnotation.set(true))) {}

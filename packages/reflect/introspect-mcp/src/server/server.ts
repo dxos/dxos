@@ -7,7 +7,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { Introspector } from '@dxos/introspect';
 import { inputSchemaToZod } from '@dxos/introspect-tools';
 
-import { createToolDefinitions, registerLogger, type ToolLogger, type ToolResult } from '../tools';
+import { type ToolLogger, type ToolResult, createToolDefinitions, registerLogger } from '../tools';
 
 export type ServerOptions = {
   introspector: Introspector;

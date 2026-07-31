@@ -11,15 +11,16 @@ import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';
 import {
-  type ATTR_PARENT,
-  type ATTR_TYPE,
   ATTR_DELETED,
+  type ATTR_PARENT,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
+  type ATTR_TYPE,
   EntityKind,
   KindId,
+  ObjectBranchId,
   ObjectDatabaseId,
   ObjectDeletedId,
   ObjectVersionId,
@@ -40,6 +41,7 @@ export {
   ATTR_DELETED,
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
+  ObjectBranchId,
   ObjectDatabaseId,
   ObjectDeletedId,
   ObjectVersionId,
@@ -60,6 +62,7 @@ export interface InternalObjectProps {
   readonly [MetaId]?: EntityMeta;
   [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
+  readonly [ObjectBranchId]?: string;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
   readonly [RelationSourceDXNId]?: EID.EID;

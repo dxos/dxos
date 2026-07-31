@@ -12,7 +12,7 @@ import {
 } from '@dxos/ui-types';
 
 export type TagStyleProps = {
-  palette?: ChromaticPalette | NeutralPalette | MessageValence;
+  hue?: ChromaticPalette | NeutralPalette | MessageValence;
 };
 
 const root: ComponentFunction<TagStyleProps> = (_, ...etc) => mx('dx-tag', ...etc);

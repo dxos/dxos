@@ -158,7 +158,7 @@ describe('EdgeClient', () => {
 
   const textMessage = (message: string, source?: EdgeIdentity) =>
     protocol.createMessage(TextMessageSchema, {
-      source: source && { peerKey: source.peerKey, identityKey: source.identityKey },
+      source: source && { peerKey: source.peerKey, identityDid: source.identityDid },
       payload: { message },
     });
 

@@ -21,7 +21,7 @@ Memoized-llm tests default to the **`direct`** preset (`@dxos/ai/testing` → `T
 Populate it from 1Password:
 
 ```bash
-pnpm -ws 1p-credentials   # exports DX_ANTHROPIC_API_KEY (see .env.1password)
+pnpm -ws 1p-credentials   # exports DX_ANTHROPIC_API_KEY from the 1Password CI vault
 ```
 
 or export it directly: `export DX_ANTHROPIC_API_KEY=sk-ant-...`.
@@ -75,7 +75,7 @@ ALLOW_LLM_GENERATION=1 moon run <package-name>:test -- <path/to/file.test.ts>
 Example:
 
 ```bash
-ALLOW_LLM_GENERATION=1 moon run assistant-toolkit:test -- src/blueprints/project/blueprint.test.ts
+ALLOW_LLM_GENERATION=1 moon run assistant-toolkit:test -- src/skills/project/skill.test.ts
 ```
 
 ## Notes

@@ -8,11 +8,9 @@ import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#types';
 import { type Calendar } from '#types';
 
-import { Initialize, InitializeAction } from '../../components';
-import { GOOGLE_CALENDAR_PROVIDER_ID } from '../../constants';
+import { Initialize } from '../../components';
 
 export type InitializeCalendarProps = {
   calendar: Calendar.Calendar;
@@ -25,7 +23,7 @@ export const InitializeCalendar = composable<HTMLDivElement, InitializeCalendarP
       <Initialize
         {...props}
         target={calendar}
-        noIntegrationMessage={t('no-integrations.label')}
+        noConnectionsMessage={t('no-connections.label')}
         emptyMessage={t('empty-calendar.message')}
         ref={forwardedRef}
       />
@@ -34,20 +32,3 @@ export const InitializeCalendar = composable<HTMLDivElement, InitializeCalendarP
 );
 
 InitializeCalendar.displayName = 'InitializeCalendar';
-
-export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  return (
-    <InitializeAction
-      target={calendar}
-      targetKey='calendar'
-      providerId={GOOGLE_CALENDAR_PROVIDER_ID}
-      operation={InboxOperation.GoogleCalendarSync}
-      syncLabel={t('sync-calendar.label')}
-      notify={{
-        success: ['sync-calendar-success.title', { ns: meta.profile.key }],
-        error: ['sync-calendar-error.title', { ns: meta.profile.key }],
-      }}
-    />
-  );
-};

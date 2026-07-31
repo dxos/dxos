@@ -9,37 +9,53 @@ export * from './client';
 export {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
+  type BindOptions,
+  type BranchStore,
+  type DecodedAutomergePrimaryValue,
   type GetObjectCoreByIdOptions,
   type InitRootProxyFn,
   type ItemsUpdatedEvent,
   type LoadObjectOptions,
-  type SpaceDocumentHeads,
   META_NAMESPACE,
-  type BindOptions,
   type ObjectCoreOptions,
+  type SpaceDocumentHeads,
   objectIsUpdated,
-  DocAccessor,
-  type DecodedAutomergePrimaryValue,
-  type IDocHandle,
-  type KeyPath,
-  isValidKeyPath,
 } from './core-db';
-export { type CloneOptions, clone } from './echo-handler';
-export { createDocAccessor } from './echo-handler';
-export { createObject, EchoReactiveHandler, initEchoReactiveObjectRootProxy } from './echo-handler';
-export { isEchoObject } from './echo-handler';
-export { getEditHistory, checkoutVersion } from './echo-handler';
-export { type ProxyTarget } from './echo-handler';
 export {
+  type CloneOptions,
+  EchoReactiveHandler,
   MutationOutsideChangeContextError,
-  createPropertySetError,
-  createPropertyDeleteError,
+  ObjectVersion,
+  type ProxyTarget,
+  type Selection,
+  type SubscriptionHandle,
+  type UpdateInfo,
+  type VersionDiff,
+  checkoutVersion,
+  clone,
   createArrayMethodError,
+  createBranch,
+  createObject,
+  createPropertyDeleteError,
+  createPropertySetError,
+  createSubscription,
+  deleteBranch,
+  findObjectWithForeignKey,
+  getBranches,
+  getCurrentBranch,
+  getDXNWithSpaceKey,
+  getEditHistory,
+  getEditHistoryWithDiffs,
+  getObjectCore,
+  getObjectOnBranch,
+  getVersion,
+  initEchoReactiveObjectRootProxy,
+  isEchoObject,
+  matchKeys,
+  mergeBranch,
+  switchBranch,
+  syncBranch,
 } from './echo-handler';
-export { type Selection, type SubscriptionHandle, type UpdateInfo, createSubscription } from './echo-handler';
-export { getDXNWithSpaceKey, findObjectWithForeignKey, matchKeys } from './echo-handler';
-export { ObjectVersion, getVersion } from './echo-handler';
-export * from './guarded-scope';
 export * from './hypergraph';
 export * from './proxy-db';
 export * from './query';

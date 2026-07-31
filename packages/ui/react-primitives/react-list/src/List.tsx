@@ -14,7 +14,9 @@
 // Layering:
 //   - `@dxos/react-list`      — this package; ARIA + structure only.
 //   - `@dxos/react-ui-list`   — adds `dx-*` styling, keyboard nav, and
-//                               opinionated `RowList`/`CardList` containers.
+//                               opinionated containers (Listbox, OrderedList,
+//                               Tree, Accordion, Combobox, Picker) plus the
+//                               reusable navigation/selection/disclosure aspects.
 //   - `@dxos/react-ui-mosaic` — virtualized / draggable / card-board
 //                               layouts; composes the above where useful.
 //
@@ -23,7 +25,7 @@
 // control over styling and keyboard handling (e.g. a custom Combobox).
 //
 // See:
-//   - `packages/ui/ui-theme/src/css/components/selected.md` for the
+//   - `packages/ui/ui-theme/src/css/components/state.md` for the
 //     `aria-selected` ↔ `dx-selected` pairing rules.
 //   - `packages/ui/react-ui-list/AUDIT.md` for why this layering exists.
 //   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
@@ -107,6 +109,6 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
 
 List.displayName = LIST_NAME;
 
-export { List, createListScope, useListContext, LIST_NAME };
+export { List, LIST_NAME, createListScope, useListContext };
 
-export type { ListProps, ListVariant, ListScopedProps };
+export type { ListProps, ListScopedProps, ListVariant };

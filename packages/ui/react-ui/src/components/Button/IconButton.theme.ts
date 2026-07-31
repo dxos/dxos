@@ -13,7 +13,7 @@ export type IconButtonStyleProps = ButtonStyleProps & {
 };
 
 const root: ComponentFunction<IconButtonStyleProps> = ({ iconOnly, square }, ...etc) => {
-  return mx('px-1.5', !iconOnly && 'gap-1.5', square && 'aspect-square', ...etc);
+  return mx('px-2', !iconOnly && 'gap-1.5', square && 'aspect-square', ...etc);
 };
 
 export const iconButtonTheme: Theme<IconButtonStyleProps> = {

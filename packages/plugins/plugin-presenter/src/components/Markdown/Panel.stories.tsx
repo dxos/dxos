@@ -14,7 +14,7 @@ import { Slide, type SlideProps } from './Slide';
 
 const DefaultStory = ({ content = '' }: SlideProps) => {
   return (
-    <Panel classNames='bg-neutral-200'>
+    <Panel classNames='bg-scrim-surface'>
       <Slide content={content} />
     </Panel>
   );

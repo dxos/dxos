@@ -3,9 +3,9 @@
 //
 
 import { type Operation, Script } from '@dxos/compute';
+import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
+import { getInvocationUrl } from '@dxos/compute-runtime';
 import { Obj } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { getInvocationUrl } from '@dxos/functions-runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -77,10 +77,10 @@ export const getAccessCredential = (identityKey: PublicKey): Credential => {
       id: identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.ServiceAccess',
-        serverName: 'hub.dxos.network',
-        serverKey: identityKey,
+        'serverName': 'hub.dxos.network',
+        'serverKey': identityKey,
         identityKey,
-        capabilities: ['composer:beta'],
+        'capabilities': ['composer:beta'],
       },
     },
   };

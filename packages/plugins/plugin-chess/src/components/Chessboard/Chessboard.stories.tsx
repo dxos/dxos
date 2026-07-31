@@ -20,11 +20,11 @@ const SAMPLE_PGN =
 const PROMOTION_PGN =
   '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 14. d5 Qg5 15. dxe6 Kf8 16. e7+ Kg8 *';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   pgn?: string;
 };
 
-const DefaultStory = ({ pgn }: DefaultStoryProps) => {
+const DefaultStory = ({ pgn }: StoryArgs) => {
   const state = useMemo(() => Chess.make(pgn ? { pgn } : undefined), [pgn]);
   const [orientation, setOrientation] = useState<Player>('white');
   const [showInfo, setShowInfo] = useState(true);

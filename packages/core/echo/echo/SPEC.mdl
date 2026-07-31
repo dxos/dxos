@@ -1,0 +1,561 @@
+---
+id: org.dxos.echo
+name: Echo
+version: 0.10.0
+---
+
+`@dxos/echo` is the public API surface for ECHO — the typed, local-first object
+graph backed by Automerge. It defines schema (types and relations), the object
+data model, references, query/filter, and the Effect `Database` service. Client
+wiring (`EchoClient`, `EchoHost`, sync, hypergraph implementation) lives in
+`@dxos/echo-db`; React hooks (`useQuery`, `useObject`, `useSchema`) live in
+`@dxos/echo-react`.
+
+This spec captures the package's namespace modules and their public API, plus the
+features and acceptance criteria that constrain them.
+
+Every module is an ESM namespace module following the DXOS namespace-module
+styleguide: a PascalCase file in `src/`, re-exported from `index.ts` as
+`export * as <Name> from './<Name>'`, and consumed by callers as a namespace
+(`Obj.make`, `Filter.eq` — never a bare `makeObj`). Members are unprefixed; the
+caller always reads `<Name>.<member>`. Each module has a matching subpath
+entrypoint (`@dxos/echo/Filter`) for narrow imports. `DXN`, `EID`, `URI` (from
+`@dxos/keys`) and `QueryAST` (from `@dxos/echo-protocol`) are re-exported at the
+root.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term     | URI                       |
+| -------- | ------------------------- |
+| `module` | `org.dxos.mdl.module@1.0` |
+| `feat`   | `org.dxos.mdl.feat@1.0`   |
+| `test`   | `org.dxos.mdl.test@1.0`   |
+
+## Modules
+
+### Core modeling
+
+```mdl
+module Type
+  desc: |
+    Schema definition and introspection. A single class-based declaration unifies
+    the runtime schema entity and the TypeScript instance type. The DXN comes
+    first, the schema is applied to the returned function.
+  api:
+    makeObject: <Self>(dxn, opts?) => (schema) => ObjClass   # declare an object type.
+    makeRelation: <Self>(dxn) => ({ source, target, id? }) => (schema) => RelationClass  # declare a relation type.
+    makeObjectFromJsonSchema: (jsonSchema) => AnyObj         # build an object type from JSON Schema.
+    makeRelationFromJsonSchema: (jsonSchema) => AnyRelation  # build a relation type from JSON Schema.
+    AnyObj / AnyRelation / AnyType / AnyEntity: type         # wildcard schema bounds.
+    InstanceType: <typeof X> => T                            # instance type of a schema (or use the class name).
+    getURI: (schema) => DXN                                  # type DXN, e.g. dxn:type:example.com/type/Person:0.1.0.
+    getTypename: (schema) => string                          # typename portion of the type DXN.
+    getVersion: (schema) => string                           # semantic version of the type.
+    getMeta: (schema) => Meta                                # type metadata (icon, color, ...).
+    isObject / isRelation / isType / isMutable: (x) => boolean  # predicates.
+```
+
+```mdl
+module Obj
+  desc: |
+    The runtime data API for objects. Functions work on objects both inside and
+    outside a database, so most getters can return undefined.
+  api:
+    make: (Type, props) => Obj                    # create an instance; props typed via MakeProps.
+    Unknown / Any: schema | type                  # untyped object schema / instance type.
+    MakeProps: <typeof T> => props                # props accepted by make for a type.
+    isObject: (x) => boolean                      # is this an ECHO object.
+    instanceOf: (Type, obj) => boolean            # is obj an instance of Type.
+    isDeleted: (obj) => boolean                   # tombstone marker.
+    getSchema: (obj) => Schema | undefined        # resolved schema, if available.
+    getDXN: (obj) => DXN                           # DXN of the object itself (dxn:echo:...).
+    getTypename / getTypeURI: (obj) => ...        # type identity of the instance.
+    getMeta: (obj) => Meta                        # object metadata section (keys, ...).
+    getSnapshot / snapshotOf: (obj) => Snapshot   # immutable point-in-time copy.
+    clone: (obj, opts?) => Obj                    # structural copy.
+    getValue / setValue / update: (obj, path, ..) # path-based read / write / mutation.
+    subscribe: (obj, cb) => Unsubscribe           # react to changes on a live object.
+    toJSON: (obj) => Json                          # serialize.
+    fromJSON: (json, { graph, db }) => Obj        # deserialize into a graph / db.
+    Meta / ID: symbol | accessor                  # reserved-field symbols and accessors.
+```
+
+```mdl
+module Relation
+  desc: |
+    Relation instances. Relations extend objects with typed source / target
+    endpoints addressed by reserved symbol keys.
+  api:
+    make: (Type, props) => Relation               # create a relation (endpoints via Source / Target).
+    Source / Target: unique symbol                # reserved endpoint keys.
+    getSource / getTarget: (rel) => Obj           # resolved endpoint objects.
+    getSourceURI / getTargetURI: (rel) => DXN     # endpoint DXNs.
+    isRelation: (x) => boolean                    # predicate.
+    instanceOf: (Type, rel) => boolean            # is rel an instance of Type.
+    Unknown: schema                               # untyped relation.
+    getMeta / getValue / setValue / update / subscribe: ...  # shared object surface.
+```
+
+```mdl
+module Ref
+  desc: References between entities, stored as `{ "/": "dxn:..." }` and resolved lazily.
+  api:
+    Ref: (Schema) => RefSchema        # schema for a typed reference field.
+    Array: (Schema) => Schema         # schema for an array of refs.
+    make: (obj) => Ref                # ref to an existing object.
+    fromURI: (dxn) => Ref             # ref from a DXN.
+    isRef: (x) => boolean             # predicate.
+    hasEntityId / isRefType: ...      # predicates.
+    Target: <R> => T                  # target instance type of a ref.
+    Resolver: interface               # resolves a ref to its target.
+```
+
+```mdl
+module Entity
+  desc: The shared substrate for objects and relations.
+  api:
+    Kind: { Object, Relation }        # entity-kind discriminator.
+    Unknown / Any: schema | type      # untyped entity.
+    isEntity: (x) => boolean          # predicate.
+    instanceOf: (Type, entity) => boolean  # kind-agnostic instance check.
+    isSnapshot: (x) => boolean        # predicate.
+```
+
+### Query
+
+```mdl
+module Query
+  desc: Graph-shaped selections compiled to a QueryAST.
+  api:
+    select: (filter) => Query         # objects matching a filter.
+    type: (Type, props?) => Query     # objects of a type (optionally filtered).
+    from: (source) => Query           # start a query from a source set.
+    all: () => Query                  # everything.
+    without: (query) => Query         # set difference.
+    fromAst: (ast) => Query           # build from a raw QueryAST.
+    pretty: (query) => string         # human-readable form.
+    Any: type                         # wildcard query type.
+    Type: <Q> => T                    # element type extracted from a query.
+```
+
+```mdl
+module Filter
+  desc: Predicate builders composed into queries.
+  api:
+    type: (Type) => Filter            # match by type.
+    props: (shape) => Filter          # match by property shape.
+    id: (id | id[]) => Filter         # match by object id.
+    tag / key / foreignKeys: ...      # match by tag / meta key / foreign keys.
+    text: (query, opts?) => Filter    # full-text search.
+    eq / neq / gt / gte / lt / lte: (value) => Filter  # comparators.
+    contains / between / childOf: ... # membership / range / hierarchy.
+    created / updated: (range) => Filter  # time predicates.
+    not: (filter) => Filter           # negation.
+    everything / nothing: Filter      # identity / empty.
+    Any: type                         # wildcard filter type.
+```
+
+```mdl
+module QueryResult
+  desc: The handle returned by db.query(...).
+  api:
+    run: () => Promise<Results>       # one-shot execution.
+    subscribe: (cb) => Unsubscribe    # reactive subscription to result changes.
+```
+
+```mdl
+module Order
+  desc: Result ordering.
+  api:
+    natural: Order                    # insertion / natural order.
+    property: (path) => Order         # order by a property path.
+    rank: Order                       # order by rank.
+    created / updated: Order          # order by timestamps.
+    Any: type                         # wildcard order type.
+```
+
+```mdl
+module Aggregate
+  desc: Grouping and reduction over query results.
+  api:
+    group: (spec) => Aggregate        # group rows by a key.
+    count: () => Aggregate            # count rows.
+    min / max: (path) => Aggregate    # extrema over a property.
+    items: () => Aggregate            # collect matched items.
+    Spec / AggregationResult: type    # spec and result shapes.
+```
+
+### Database access (Effect)
+
+```mdl
+module Database
+  desc: |
+    The imperative `Database` interface plus the Effect surface. The interface
+    exposes add / remove / query / getObjectById / makeRef / flush / graph /
+    schemaRegistry. The Effect functions require Database.Service in context.
+  api:
+    Database: interface               # imperative DB handle.
+    Service: Context.Tag              # yield* Database.Service => { db }.
+    layer: (db) => Layer              # provide the service from an imperative db.
+    notAvailable: Layer               # stub layer that fails on use.
+    makeService: (db) => Service      # construct the service value.
+    query: (filterOrQuery) => Effect  # query within the service (.run to execute).
+    runQuery: (filterOrQuery) => Effect  # query and collect results.
+    schemaQuery / runSchemaQuery: ... # schema-registry queries.
+    add / remove / flush: (...) => Effect  # mutations and persistence.
+    resolve: (dxn | ref) => Effect    # resolve via the graph.
+    load: (ref) => Effect             # load a ref target; does not require Service.
+    spaceId: () => Effect             # space id of the current db.
+    isDatabase: (x) => boolean        # predicate.
+```
+
+```mdl
+module Registry
+  desc: Schema registry — registers and resolves ECHO types.
+  api:
+    Registry: interface               # registry handle.
+    Service: Context.Tag              # Effect service for the registry.
+    runQuery: (query) => Effect       # query registered schema.
+    isRegistry: (x) => boolean        # predicate.
+```
+
+```mdl
+module Hypergraph
+  desc: The cross-space object graph that resolves refs across spaces.
+  api:
+    Hypergraph: interface             # extends Database.Queryable; resolves refs.
+    RefResolutionContext: interface   # context for resolving a ref.
+    RefResolverOptions: interface     # options controlling resolution.
+```
+
+```mdl
+module Scope
+  desc: Ambient resolution scopes.
+  api:
+    space: Scope                      # resolve within a space.
+    registry: Scope                   # resolve within the schema registry.
+    feed: Scope                       # resolve within a feed.
+```
+
+```mdl
+module Migration
+  desc: Object-level schema migrations.
+  api:
+    define: (spec) => ObjectMigration  # declare a migration between type versions.
+    ObjectMigration: type              # a migration definition.
+    ObjectMigrationContext: type       # runtime context passed to a migration.
+    TransformResult: <To> => type      # result of a transform step.
+```
+
+### Values, formats & serialization
+
+```mdl
+module Text
+  desc: Collaborative text edits over a key path.
+  api:
+    update: (obj, path, text) => void  # replace text at a path.
+    splice: (obj, path, edit) => void  # apply a splice edit.
+    apply: (obj, path, edit) => void   # apply an Edit.
+    KeyPath / Edit: type               # path and edit shapes.
+```
+
+```mdl
+module Blob
+  desc: Binary attachments with inline or external storage.
+  api:
+    Blob: objectType                   # the Blob object type (org.dxos.type.blob).
+    make: (props) => Blob              # create a blob.
+    inlineData / externalData: (...) => BlobData  # inline vs external payloads.
+    fromBytes: (bytes, opts?) => Blob  # build from raw bytes.
+    read: (blob) => Promise<bytes>     # read payload.
+    exists: (blob) => Promise<boolean> # availability check.
+    url: (blob) => string              # resolvable URL.
+    MAX_INLINE_SIZE: number            # inline payload ceiling.
+    Storage / Scheme: enum             # storage backend and scheme.
+```
+
+```mdl
+module Format
+  desc: Format schemas for typed scalar values.
+  api:
+    string / number / date / object / select: schema  # formatted value schemas.
+```
+
+```mdl
+module Annotation
+  desc: Attach metadata (icons, colors, formats) to schema.
+  api:
+    make: (props) => Annotation        # define an annotation.
+    get / set / update: (...) => ...   # read / write an annotation on schema.
+    getFromAst: (ast) => value         # read from a schema AST.
+    atom / atomProperty: ...           # atom-level annotation helpers.
+    Dictionary: schema                 # dictionary annotation value.
+    getDictionary / setDictionary / buildDictionary: ...  # dictionary helpers.
+```
+
+```mdl
+module Json
+  desc: JSON serialization helpers.
+  api:
+    createRefReplacer: (opts) => JsonReplacer  # ref-aware JSON.stringify replacer.
+```
+
+```mdl
+module JsonSchema
+  desc: Bridge between Effect Schema and JSON Schema.
+  api:
+    toEffectSchema: (jsonSchema) => Schema  # JSON Schema -> Effect Schema.
+    toJsonSchema: (schema) => JsonSchema    # Effect Schema -> JSON Schema.
+    JsonSchema: schema                      # the JSON Schema type.
+```
+
+```mdl
+module Key
+  desc: Identifier types re-exported for convenience.
+  api:
+    EntityId / SpaceId / EID / URI: type   # identifier types.
+    ForeignKey: type                        # external system key.
+```
+
+### Built-in types
+
+```mdl
+module Collection
+  desc: A named, ordered list of refs.
+  api:
+    Collection: objectType             # org.dxos.type.collection.
+    make: (props) => Collection        # create a collection.
+    isCollection: (x) => boolean       # predicate.
+```
+
+```mdl
+module Feed
+  desc: An append-only feed object with cursors, sync, and retention.
+  api:
+    Feed: objectType                   # org.dxos.type.feed.
+    make: (props) => Feed              # create a feed.
+    append / remove: (feed, item) => Effect  # mutate the feed.
+    query: (feed, ...) => ...          # read entries.
+    sync / getSyncState: (...) => ...  # replication control and state.
+    cursor / next / nextOption: ...    # cursor navigation.
+    setRetention: (feed, opts) => void # retention policy.
+    getFeedUri: (feed) => URI          # feed URI.
+```
+
+```mdl
+module Tag
+  desc: A label object plus list helpers.
+  api:
+    Tag: objectType                    # the Tag type.
+    make: (props) => Tag               # create a tag.
+    findOrCreate: (list, label) => Tag # idempotent lookup / create.
+    findTagByLabel: (list, label) => Tag | undefined  # lookup.
+    sortTags / createTagList: ...      # ordering and list construction.
+    Map: type                          # tag map shape.
+```
+
+```mdl
+module View
+  desc: A projection over data with field-schema helpers.
+  api:
+    View: objectType                   # org.dxos.type.view.
+    make: (props) => View              # create a view.
+    Projection: type                   # projection descriptor.
+    FieldSchema / FieldType: schema | type  # field descriptors.
+    createFieldId: (...) => string     # stable field id.
+    KeyValueProps: schema              # key/value field props.
+```
+
+```mdl
+module Dataset
+  desc: A dataset value type.
+  api:
+    Dataset: type                      # dataset shape.
+    isDataset: (x) => boolean          # predicate.
+```
+
+## Features
+
+```mdl
+feat F-1: Namespace-module API surface
+
+  req F-1.1:
+    when: a caller imports @dxos/echo
+    then: every public module is available as an unprefixed namespace
+          (Obj.make, Filter.eq), and each is also importable via its subpath
+          (@dxos/echo/Filter)
+
+  req F-1.2:
+    when: a caller needs identifiers or the query AST
+    then: DXN / EID / URI (from @dxos/keys) and QueryAST (from @dxos/echo-protocol)
+          are re-exported at the package root
+```
+
+```mdl
+feat F-2: Type declaration
+
+  req F-2.1:
+    when: a named, reusable type is declared
+    then: `class X extends Type.makeObject<X>(dxn)(schema) {}` yields both the
+          runtime schema entity (via static members) and the TypeScript instance
+          type X, with no separate `type`/`interface` alias
+
+  req F-2.2:
+    when: a relation type is declared
+    then: `Type.makeRelation<X>(dxn)({ source, target })(schema)` binds typed
+          source and target endpoints
+
+  req F-2.3:
+    when: a schema is introspected
+    then: Type.getURI / getTypename / getVersion / getMeta return its identity and
+          metadata
+```
+
+```mdl
+feat F-3: Object data model
+
+  req F-3.1:
+    when: Obj.make(Type, props) is called
+    then: an object is created carrying id, type DXN, and (when resolvable) schema
+
+  req F-3.2:
+    when: a field on a live object is mutated in place
+    then: Obj.subscribe listeners fire and query subscriptions re-evaluate
+
+  req F-3.3:
+    when: an accessor is called on an object outside a database
+    then: it returns undefined rather than throwing where identity cannot be resolved
+
+  req F-3.4:
+    when: an object is serialized and deserialized
+    then: Obj.toJSON / fromJSON round-trip its id, type, meta, and refs
+```
+
+```mdl
+feat F-4: References
+
+  req F-4.1:
+    when: a ref field is declared with Ref.Ref(Schema)
+    then: it stores a DXN and resolves lazily to a target of the schema type
+
+  req F-4.2:
+    when: a ref target is loaded in Effect code
+    then: Database.load resolves it, and a missing target surfaces as
+          EntityNotFoundError (catchable by tag)
+```
+
+```mdl
+feat F-5: Query and filter
+
+  req F-5.1:
+    when: db.query(filterOrQuery) is called
+    then: a QueryResult is returned exposing .run() (one-shot) and .subscribe()
+          (reactive)
+
+  req F-5.2:
+    when: a filter is composed from Filter builders
+    then: type, props, id, tag, text, comparators, time, and boolean combinators
+          compile to a single QueryAST
+
+  req F-5.3:
+    when: results are ordered or aggregated
+    then: Order and Aggregate modifiers apply over the matched set
+```
+
+```mdl
+feat F-6: Effect Database service
+
+  req F-6.1:
+    when: Effect code declares Database.Service
+    then: Database.query / add / remove / flush / resolve compose as Effects that
+          require the service
+
+  req F-6.2:
+    when: an imperative db is bridged into Effect code
+    then: Database.layer(db) provides the service, and Database.notAvailable stubs
+          it for contexts without a db
+```
+
+## Acceptance
+
+```mdl
+test T-1: Class type is both schema and TS type
+  given: `class Person extends Type.makeObject<Person>(dxn)(Schema.Struct({ name: Schema.String })) {}`
+  then:
+    - Type.getTypename(Person) equals the typename encoded in dxn
+    - Obj.make(Person, { name: 'Bill' }) is assignable to Person
+    - Obj.instanceOf(Person, obj) is true for that object
+```
+
+```mdl
+test T-2: Object round-trips through JSON
+  given: an object created with Obj.make and added to a db
+  when: it is passed through Obj.toJSON then Obj.fromJSON({ graph, db })
+  then:
+    - id, type DXN, and meta are preserved
+    - ref fields resolve to the same targets
+```
+
+```mdl
+test T-3: Query subscription reacts to mutation
+  given: a subscribed QueryResult for Filter.type(Person)
+  when: a new Person is added and an existing one is mutated
+  then:
+    - the subscription fires with the updated result set
+    - a one-shot .run() returns the same set
+```
+
+```mdl
+test T-4: Effect query requires the service
+  given: an Effect program using Database.query(Filter.everything)
+  when: run without providing Database.Service
+  then: the program is a type error / fails to run until Database.layer(db) is provided
+```
+
+```mdl
+test T-5: Missing ref target is catchable
+  given: a ref whose target does not exist
+  when: Database.load(ref) runs
+  then: it fails with EntityNotFoundError, catchable via Effect.catchTag('EntityNotFoundError', ...)
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext module
+  uri: org.dxos.mdl.module@1.0
+  desc: |
+    An ESM namespace module following the DXOS namespace-module styleguide:
+    a PascalCase file in src/, re-exported from index.ts as
+    `export * as <Name> from './<Name>'`. Callers import it as a namespace, so
+    members are unprefixed (`Obj.make`, not `makeObj`). The file path is inferred
+    from the block name (`Obj` -> `src/Obj.ts`).
+  fields:
+    desc?: Prose
+    api: ApiMap         # public members reached as `<Name>.<member>`  (name: TypeExpr # comment)
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```

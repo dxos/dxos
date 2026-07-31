@@ -21,12 +21,12 @@ export default Config2.make({
 
       Maps are collaborative ECHO objects: all peers sharing a space see viewport changes and dataset updates
       in real time without any manual refresh.
-      A Blueprint is also included so AI assistants can create and update maps on behalf of the user.
+      A Skill is also included so AI assistants can create and update maps on behalf of the user.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-map',
     icon: { key: 'ph--compass--regular', hue: 'sky' },
     spec: 'PLUGIN.mdl',
-    tags: ['labs'],
+    tags: ['alpha'],
     screenshots: [{ dark: 'https://dxos.network/plugin-details-map-dark.png' }],
   },
 });

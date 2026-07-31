@@ -67,7 +67,7 @@ type SidekickProperties
 component SidekickArticle
   desc: |
     Primary dashboard for the sidekick agent. Displayed as an Article surface
-    for Agent objects whose blueprint matches org.dxos.blueprint.sidekick.
+    for Agent objects whose skill matches org.dxos.skill.sidekick.
     The Chat companion panel provides the main interaction channel with voice input.
   props:
     subject: Agent
@@ -183,12 +183,12 @@ component Permissions
 ## Services
 
 ```mdl
-service SidekickBlueprint
+service SidekickSkill
   desc: |
-    Composes existing blueprints to provide the agent's full capability set.
-    No custom service implementation — this is a Blueprint.make() composition.
+    Composes existing skills to provide the agent's full capability set.
+    No custom service implementation — this is a Skill.make() composition.
   ops:
-    # All operations come from composed blueprints:
+    # All operations come from composed skills:
     # database: Query, Load, ObjectCreate, ObjectUpdate, ObjectDelete,
     #           TagAdd, TagRemove, RelationCreate, RelationDelete,
     #           ContextAdd, ContextRemove
@@ -204,7 +204,7 @@ service SidekickBlueprint
 feat F-1: Agent Creation and Configuration
   desc: Create and configure a Sidekick agent instance in a space.
 
-  req F-1.1: Plugin creates an Agent.Agent with blueprint org.dxos.blueprint.sidekick.
+  req F-1.1: Plugin creates an Agent.Agent with skill org.dxos.skill.sidekick.
   req F-1.2: Agent spec populated with instruction template including user name.
   req F-1.3: Agent chat created and linked for companion interaction.
   req F-1.4: Agent queue created for event processing.
@@ -264,7 +264,7 @@ feat F-4: Daily Journal
 feat F-5: Dashboard
   desc: Article surface providing overview of sidekick state.
 
-  req F-5.1: Dashboard displayed for Agent objects with sidekick blueprint.
+  req F-5.1: Dashboard displayed for Agent objects with sidekick skill.
   req F-5.2: Day Ahead section shows summary from today's JournalEntry.
   req F-5.3: Action Items section aggregates open tasks from recent entries.
   req F-5.4: People section shows Person cards with tags and update counts.
@@ -306,7 +306,7 @@ feat F-8: Comment Thread Responses (Phase 2)
 test T-1: Agent initialization
   given: user activates sidekick in a space
   then:
-    - Agent.Agent created with sidekick blueprint
+    - Agent.Agent created with sidekick skill
     - spec document contains instruction template with user name
     - Chat created and linked
     - Journal created and added as artifact
@@ -375,8 +375,8 @@ test T-7: Voice input tolerance
 
 ### Phase 1 — Core Functionality
 
-- Plugin skeleton (meta, translations, blueprint registration).
-- Sidekick Blueprint composing database, agent, markdown, inbox blueprints.
+- Plugin skeleton (meta, translations, skill registration).
+- Sidekick Skill composing database, agent, markdown, inbox skills.
 - Agent creation with instruction template, chat, journal, artifacts.
 - Person profile creation and linking.
 - User profile document.
@@ -388,7 +388,7 @@ test T-7: Voice input tolerance
 
 - Email monitoring and draft generation (F-7).
 - Permission system for auto-respond vs draft-only per contact (F-5.6).
-- Background research on persons via research blueprint.
+- Background research on persons via research skill.
 - Thread comment responses (F-8).
 - Proactive suggestions based on email/calendar context.
 

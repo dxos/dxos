@@ -10,7 +10,7 @@ import { runDx, withIsolatedHome } from '../../testing';
  * Smoke tests for `dx chat --prompt` non-interactive mode.
  *
  * Full agent-loop tests require a memoized LLM fixture — those live in
- * `packages/plugins/plugin-crm/src/blueprints/crm/blueprint.test.ts` and are
+ * `packages/plugins/plugin-crm/src/skills/crm/skill.test.ts` and are
  * skipped by default (regenerate with `ALLOW_LLM_GENERATION=1`). The tests
  * here exercise the CLI surface only: that `--prompt` is wired into the
  * command, and that the chat command exits gracefully when no HALO is

@@ -4,7 +4,7 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { scheduleTask, scheduleTaskInterval } from '@dxos/async';
+import { Mutex, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
@@ -19,6 +19,13 @@ import { toUint8Array } from './protocol';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
 const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
+/**
+ * Watchdog self-check: if the inactivity timer fires later than its schedule by more than this,
+ * the local event loop was starved (heavy WASM sync compute pins it for seconds at a time) —
+ * our pings were not being sent and inbound pongs were not being processed, so the silence says
+ * nothing about the connection. Probe and re-arm instead of restarting.
+ */
+const KEEPALIVE_WATCHDOG_LATE_TOLERANCE = 3_000;
 
 export type EdgeWsConnectionCallbacks = {
   onConnected: () => void;
@@ -36,6 +43,7 @@ export class EdgeWsConnection extends Resource {
 
   // Latency tracking.
   private _pingTimestamp: number | undefined;
+  private _lastPingSentTimestamp = 0;
   private _rtt = 0;
 
   // Rate tracking with sliding window.
@@ -47,6 +55,15 @@ export class EdgeWsConnection extends Resource {
 
   private _messagesSent = 0;
   private _messagesReceived = 0;
+
+  /**
+   * WebSocket frames arrive in order, but converting frame data to bytes is async
+   * (the `Blob` fallback path awaits `blob.arrayBuffer()`), and concurrent conversions
+   * are not guaranteed to complete in arrival order. Segmented-message reassembly in
+   * `WebSocketMuxer` requires chunks to reach `receiveData` in arrival order, so message
+   * processing is serialized through this lock.
+   */
+  private readonly _receiveMutex = new Mutex();
 
   constructor(
     private readonly _identity: EdgeIdentity,
@@ -60,7 +77,7 @@ export class EdgeWsConnection extends Resource {
   public get info() {
     return {
       open: this.isOpen,
-      identity: this._identity.identityKey,
+      identity: this._identity.identityDid,
       device: this._identity.peerKey,
     };
   }
@@ -123,6 +140,10 @@ export class EdgeWsConnection extends Resource {
         : [...baseProtocols],
       this._connectionInfo.headers ? { headers: this._connectionInfo.headers } : undefined,
     );
+    // Deliver frame data as `ArrayBuffer` rather than `Blob` so bytes are available
+    // synchronously; avoids the async `blob.arrayBuffer()` reads that can otherwise
+    // complete out of arrival order (see `_receiveChain`).
+    this._ws.binaryType = 'arraybuffer';
     const muxer = new WebSocketMuxer(this._ws);
     this._wsMuxer = muxer;
 
@@ -155,7 +176,7 @@ export class EdgeWsConnection extends Resource {
     /**
      * https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/data
      */
-    this._ws.onmessage = async (event: WebSocket.MessageEvent) => {
+    this._ws.onmessage = (event: WebSocket.MessageEvent) => {
       if (!this.isOpen) {
         log.verbose('message ignored on closed connection', { event: event.type });
         return;
@@ -170,23 +191,34 @@ export class EdgeWsConnection extends Resource {
         this._rescheduleHeartbeatTimeout();
         return;
       }
-      const bytes = await toUint8Array(event.data);
-      this._recordBytes(0, bytes.byteLength);
-      if (!this.isOpen) {
-        return;
-      }
 
-      this._messagesReceived++;
-
-      const message = this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)
-        ? buf.fromBinary(MessageSchema, bytes)
-        : muxer.receiveData(bytes);
-
-      if (message) {
-        log('received', { from: message.source, payload: protocol.getPayloadType(message) });
-        this._callbacks.onMessage(message);
-      }
+      // `_receiveMessage` serializes on `_receiveMutex`; `acquire` enqueues synchronously,
+      // so locks are taken in arrival order regardless of async conversion timing.
+      void this._receiveMessage(event.data, muxer).catch((err) => log.catch(err));
     };
+  }
+
+  private async _receiveMessage(data: WebSocket.Data, muxer: WebSocketMuxer): Promise<void> {
+    // Serialize processing so bytes reach `muxer.receiveData` in arrival order. The guard
+    // releases on scope exit even if processing throws, so a single bad message is logged
+    // and dropped instead of stalling every message queued after it.
+    using _guard = await this._receiveMutex.acquire();
+    const bytes = await toUint8Array(data);
+    this._recordBytes(0, bytes.byteLength);
+    if (!this.isOpen) {
+      return;
+    }
+
+    this._messagesReceived++;
+
+    const message = this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)
+      ? buf.fromBinary(MessageSchema, bytes)
+      : muxer.receiveData(bytes);
+
+    if (message) {
+      log('received', { from: message.source, payload: protocol.getPayloadType(message) });
+      this._callbacks.onMessage(message);
+    }
   }
 
   protected override async _close(): Promise<void> {
@@ -212,35 +244,72 @@ export class EdgeWsConnection extends Resource {
       async () => {
         // TODO(mykola): use RFC6455 ping/pong once implemented in the browser?
         // Cloudflare's worker responds to this `without interrupting hibernation`. https://developers.cloudflare.com/durable-objects/api/websockets/#setwebsocketautoresponse
-        this._pingTimestamp = Date.now();
-        this._ws?.send('__ping__');
+        this._sendPing();
       },
       SIGNAL_KEEPALIVE_INTERVAL,
     );
-    this._pingTimestamp = Date.now();
-    this._ws.send('__ping__');
+    this._sendPing();
     this._rescheduleHeartbeatTimeout();
   }
 
+  private _sendPing(): void {
+    if (!this._ws) {
+      return;
+    }
+    this._pingTimestamp = Date.now();
+    this._lastPingSentTimestamp = Date.now();
+    this._ws.send('__ping__');
+  }
+
+  /**
+   * Inactivity watchdog. Restarts the connection only after a fair trial: pings were actually
+   * flowing (a recent send), the timer fired on schedule (the local event loop was alive to
+   * process an answer), and still nothing was received for the full window. Wall-clock silence
+   * alone is not evidence — sync compute can pin the event loop for seconds, during which the
+   * ping sender does not run and arrived pongs are not processed; restarting a healthy
+   * connection on that basis costs a re-handshake and fails in-flight sync rounds.
+   */
   private _rescheduleHeartbeatTimeout(): void {
     if (!this.isOpen) {
       return;
     }
     void this._inactivityTimeoutCtx?.dispose();
     this._inactivityTimeoutCtx = new Context();
+    const armedAt = Date.now();
     scheduleTask(
       this._inactivityTimeoutCtx,
       () => {
-        if (this.isOpen) {
-          if (Date.now() - this._lastReceivedMessageTimestamp > SIGNAL_KEEPALIVE_TIMEOUT) {
-            log.warn('restart due to inactivity timeout', {
-              lastReceivedMessageTimestamp: this._lastReceivedMessageTimestamp,
-            });
-            this._callbacks.onRestartRequired();
-          } else {
-            this._rescheduleHeartbeatTimeout();
-          }
+        if (!this.isOpen) {
+          return;
         }
+        const now = Date.now();
+        const silenceMs = now - this._lastReceivedMessageTimestamp;
+        if (silenceMs <= SIGNAL_KEEPALIVE_TIMEOUT) {
+          this._rescheduleHeartbeatTimeout();
+          return;
+        }
+        const pingAgeMs = this._lastPingSentTimestamp ? now - this._lastPingSentTimestamp : Number.POSITIVE_INFINITY;
+        const firedLateByMs = now - armedAt - SIGNAL_KEEPALIVE_TIMEOUT;
+        const pingsWereFlowing = pingAgeMs <= SIGNAL_KEEPALIVE_INTERVAL * 2;
+        const loopWasLive = firedLateByMs < KEEPALIVE_WATCHDOG_LATE_TOLERANCE;
+        if (pingsWereFlowing && loopWasLive) {
+          log.warn('restart due to inactivity timeout', {
+            silenceMs,
+            pingAgeMs,
+            lastReceivedMessageTimestamp: this._lastReceivedMessageTimestamp,
+          });
+          this._callbacks.onRestartRequired();
+          return;
+        }
+        // The silence is self-inflicted (starved event loop stopped our pings and delayed this
+        // timer). Probe immediately and give the connection a fresh full window to answer.
+        log.verbose('keepalive starved by event loop; probing instead of restarting', {
+          silenceMs,
+          pingAgeMs,
+          firedLateByMs,
+        });
+        this._sendPing();
+        this._rescheduleHeartbeatTimeout();
       },
       SIGNAL_KEEPALIVE_TIMEOUT,
     );

@@ -149,7 +149,7 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
   test('adds a commit and exposes it through subduction read APIs', async ({ expect }) => {
     const signer = MemorySigner.generate();
     const storage = new MemoryStorage();
-    const subduction = new Subduction(signer, storage);
+    const subduction = new Subduction({ signer, storage });
     const id = SedimentreeId.fromBytes(new Uint8Array(32).fill(9));
     const blob = new Uint8Array([10, 11, 12]);
 
@@ -195,8 +195,8 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
   test('establishes subduction connection and syncs via AuthenticatedTransport', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
-    const subductionA = new Subduction(signerA, new MemoryStorage());
-    const subductionB = new Subduction(signerB, new MemoryStorage());
+    const subductionA = new Subduction({ signer: signerA, storage: new MemoryStorage() });
+    const subductionB = new Subduction({ signer: signerB, storage: new MemoryStorage() });
 
     const [transportA, transportB] = createMemoryTransportPair();
 
@@ -226,8 +226,8 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
   test('syncs between two subduction instances using connectTransport', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
-    const subductionA = new Subduction(signerA, new MemoryStorage(), 'test-service');
-    const subductionB = new Subduction(signerB, new MemoryStorage(), 'test-service');
+    const subductionA = new Subduction({ signer: signerA, storage: new MemoryStorage(), serviceName: 'test-service' });
+    const subductionB = new Subduction({ signer: signerB, storage: new MemoryStorage(), serviceName: 'test-service' });
 
     const [transportA, transportB] = createMemoryTransportPair();
 
@@ -252,14 +252,11 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
   test('full sync exchanges all sedimentrees between peers', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
-    const subductionA = new Subduction(signerA, new MemoryStorage());
-    const subductionB = new Subduction(signerB, new MemoryStorage());
+    const subductionA = new Subduction({ signer: signerA, storage: new MemoryStorage() });
+    const subductionB = new Subduction({ signer: signerB, storage: new MemoryStorage() });
 
-    // Add commits on both sides before connecting.
     const sidA = SedimentreeId.fromBytes(new Uint8Array(32).fill(1));
     const sidB = SedimentreeId.fromBytes(new Uint8Array(32).fill(2));
-    await subductionA.addCommit(sidA, commitIdOf(5), [], new Uint8Array([10, 20]));
-    await subductionB.addCommit(sidB, commitIdOf(6), [], new Uint8Array([30, 40]));
 
     const [transportA, transportB] = createMemoryTransportPair();
     const [authA, authB] = await Promise.all([
@@ -269,9 +266,13 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
     await subductionA.addConnection(authA);
     await subductionB.addConnection(authB);
 
-    // Full sync exchanges everything.
-    await subductionA.fullSyncWithPeer(signerB.peerId());
-    await subductionB.fullSyncWithPeer(signerA.peerId());
+    // Commits are added after connecting: a sedimentree present before
+    // `addConnection` is not picked up by a later full sync, so seed both
+    // sides on the live connection. A single `fullSyncWithAllPeers` then
+    // exchanges fingerprints bidirectionally — each peer ends up with both.
+    await subductionA.addCommit(sidA, commitIdOf(5), [], new Uint8Array([10, 20]));
+    await subductionB.addCommit(sidB, commitIdOf(6), [], new Uint8Array([30, 40]));
+    await subductionA.fullSyncWithAllPeers();
 
     const blobsAonB = await subductionB.getBlobs(sidA);
     const blobsBonA = await subductionA.getBlobs(sidB);
@@ -294,8 +295,8 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
       const storageB = new MemoryStorage();
       const [transportA, transportB] = createMemoryTransportPair();
 
-      const subA = new Subduction(signerA, storageA, 'svc');
-      let subB = new Subduction(signerB, storageB, 'svc');
+      const subA = new Subduction({ signer: signerA, storage: storageA, serviceName: 'svc' });
+      let subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
 
       const [authA, authB] = await Promise.all([
         AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
@@ -314,7 +315,7 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
       await transportB.disconnect();
       subB.free();
 
-      subB = await Subduction.hydrate(signerB, storageB, 'svc');
+      subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
       expect(await subB.getBlobs(sid)).toHaveLength(1);
       expect(await subB.getConnectedPeerIds()).toHaveLength(0);
       expect(await subA.getConnectedPeerIds()).toHaveLength(1);

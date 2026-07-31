@@ -3,8 +3,7 @@
 //
 
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
-
-import { type ModelName } from './defs';
+import { DXN } from '@dxos/keys';
 
 export class PromptPreprocessingError extends BaseError.extend(
   'AiInputPreprocessorError',
@@ -12,7 +11,7 @@ export class PromptPreprocessingError extends BaseError.extend(
 ) {}
 
 export class AiModelNotAvailableError extends BaseError.extend('AiModelNotAvailableError') {
-  constructor(model: ModelName, options?: Omit<BaseErrorOptions, 'context'>) {
+  constructor(model: DXN.DXN, options?: Omit<BaseErrorOptions, 'context'>) {
     super({ message: `AI Model not available: ${model}`, context: { model }, ...options });
   }
 }
@@ -24,3 +23,10 @@ export class AiToolNotFoundError extends BaseError.extend('AiToolNotFoundError')
 }
 
 export class AiServiceOverloadedError extends BaseError.extend('AiServiceOverloadedError', 'AI Service overloaded') {}
+
+/** Failure of an Ollama administrative request (transport, non-OK status, or a pull error frame). */
+export class OllamaError extends BaseError.extend('OllamaError', 'Ollama admin request failed') {
+  constructor(message: string, options?: Omit<BaseErrorOptions, 'context'>) {
+    super({ message, ...options });
+  }
+}

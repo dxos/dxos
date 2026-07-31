@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -14,7 +14,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Calendar, getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
-import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { Selection, ViewState } from '@dxos/react-ui-attention';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -26,10 +26,10 @@ import { getPlanningWindowDays } from '../operations/extractor/config';
  * Resolves the inclusive event window [from, to] for a calendar node: the user's committed
  * `'range'` selection if present, otherwise today through today + the configured planning window.
  */
-const resolvePlanningWindow = (viewState: ViewStateManager, nodeId: string): { from: Date; to: Date } => {
+const resolvePlanningWindow = (viewState: ViewState.Manager, nodeId: string): { from: Date; to: Date } => {
   // Read without asserting the mode (the dedicated range context may be empty or, defensively, hold
   // another mode), falling back to the default window otherwise.
-  const selection = viewState.get(selectionAspect, getCalendarRangeSelectionId(nodeId));
+  const selection = viewState.get(Selection.aspect, getCalendarRangeSelectionId(nodeId));
   const range =
     selection.mode === 'range' && selection.from && selection.to
       ? { from: selection.from, to: selection.to }
@@ -45,7 +45,7 @@ export default Capability.makeModule(
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const selection = get(viewState.atom(selectionAspect, nodeId));
+        const selection = get(viewState.atom(Selection.aspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
     );
@@ -68,7 +68,7 @@ export default Capability.makeModule(
         }
         return Effect.succeed([
           AppNode.makeCompanion({
-            id: linkedSegment('segment'),
+            variant: 'segment',
             label: ['segment.companion.label', { ns: meta.profile.key }],
             icon: 'ph--ticket--regular',
             data: segment ?? 'segment',
@@ -97,7 +97,7 @@ export default Capability.makeModule(
 
     // Context-menu action written into the calendar's menu: create a trip + itinerary from the events
     // in the calendar's currently-selected date range (or the next N days from today when nothing is
-    // selected). The Trip is created and opened immediately while the planning blueprint runs.
+    // selected). The Trip is created and opened immediately while the planning skill runs.
     const planTripExtension = yield* GraphBuilder.createExtension({
       id: 'calendarPlanTrip',
       match: (node) =>

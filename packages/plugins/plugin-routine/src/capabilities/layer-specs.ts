@@ -1,0 +1,256 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Registry as AtomRegistry } from '@effect-atom/atom';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import { OpaqueToolkit } from '@dxos/ai';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { ClientService } from '@dxos/client';
+import { LayerSpec, Operation, OperationHandlerSet, Trigger } from '@dxos/compute';
+import {
+  FeedTraceSink,
+  ProcessManager,
+  RemoteOperationInvoker,
+  RemoteProcessManager,
+  RemoteTriggerManager,
+  TriggerDispatcher,
+  TriggerMonitor,
+  TriggerStateStore,
+} from '@dxos/compute-runtime';
+import { Database, Registry } from '@dxos/echo';
+import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
+import { invariant } from '@dxos/invariant';
+
+//
+// Capability Module
+//
+// Contributes application- and space-affinity `Capabilities.LayerSpec` entries
+// that together replace the former monolithic `RoutineCapabilities.ComputeRuntime`.
+//
+// Specs are declared at module level; runtime state (the `Client`, contributed
+// capability lists, etc.) is resolved via Effect-level requirements rather
+// than captured from an outer scope.
+//
+
+/**
+ * Gathers contributed {@link Capabilities.OperationHandler} sets from the
+ * {@link Capability.Service} and exposes them through the
+ * {@link OperationHandlerSet.OperationHandlerProvider} tag so space-affinity
+ * specs (e.g. {@link OperationsToRegistrySpec}) can consume them through the
+ * normal LayerStack resolution path.
+ */
+const OperationHandlerProviderSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Capability.Service],
+    provides: [OperationHandlerSet.OperationHandlerProvider],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const operationHandlerSets = yield* Capability.getAll(Capabilities.OperationHandler);
+        const mergedOperationHandlers =
+          operationHandlerSets.length === 0
+            ? OperationHandlerSet.empty
+            : OperationHandlerSet.merge(...operationHandlerSets);
+        return OperationHandlerSet.provide(mergedOperationHandlers);
+      }),
+    ),
+);
+
+const RegistrySpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [Registry.Service],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return Layer.succeed(Registry.Service, client.graph.registry);
+      }),
+    ),
+);
+
+const OpaqueToolkitSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Capability.Service],
+    provides: [OpaqueToolkit.OpaqueToolkitProvider],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const capabilities = yield* Capability.Service;
+        return Layer.succeed(OpaqueToolkit.OpaqueToolkitProvider, {
+          getToolkit: () => {
+            const toolkits = capabilities.getAll(AppCapabilities.Toolkit);
+            return OpaqueToolkit.merge(...toolkits);
+          },
+        });
+      }),
+    ),
+);
+
+const OperationsToRegistrySpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [Registry.Service, OperationHandlerSet.OperationHandlerProvider],
+    provides: [Registry.Service],
+  },
+  () =>
+    Layer.effect(
+      Registry.Service,
+      Effect.gen(function* () {
+        const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+        const registry = yield* Registry.Service;
+        const handlers = yield* handlerSet.handlers;
+        registry.add(handlers.map(Operation.serialize));
+        return registry;
+      }),
+    ),
+);
+
+/**
+ * In-memory trigger state. Loses state across restarts but works in both
+ * browser and CLI/Node contexts. Hosts that need durable storage should
+ * contribute a replacement LayerSpec that provides {@link TriggerStateStore}
+ * backed by a persistent `KeyValueStore` (e.g. `BrowserKeyValueStore` or
+ * `BunKeyValueStore`).
+ */
+const TriggerStateStoreSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [],
+    provides: [TriggerStateStore],
+  },
+  () => TriggerStateStore.layerMemory,
+);
+
+//
+// Space-affinity specs.
+//
+
+const FeedTraceSinkSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [Database.Service],
+    provides: [FeedTraceSink.FeedTraceSink],
+  },
+  () => FeedTraceSink.layerLive,
+);
+
+/**
+ * Space-scoped remote operation invoker (EDGE). When edge agents are enabled
+ * (`runtime.client.edgeFeatures.agents`) operations are invoked without a space
+ * binding (the edge routes them); otherwise they are scoped to the space. The
+ * config is read inside the factory — at slice-materialisation time, once
+ * `ClientService` is available — so the owning module does not need the client
+ * at activation time and can activate on `SetupProcessManager`.
+ */
+const RemoteOperationInvokerSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [ClientService],
+    provides: [RemoteOperationInvoker.Service],
+  },
+  (context) =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        invariant(context.space, 'space context required for RemoteOperationInvoker');
+        const client = yield* ClientService;
+        const edgeAgents = client.config.get('runtime.client.edgeFeatures.agents');
+        return EdgeOperationInvoker.fromClient(client, edgeAgents ? undefined : context.space);
+      }),
+    ),
+);
+
+/**
+ * Space-scoped remote (EDGE) trigger manager, consumed by the aggregate
+ * {@link TriggerMonitor}. Uses the EDGE implementation whenever an edge service
+ * is configured (a trigger is routed here by its own `remote` flag, so the
+ * manager should exist wherever edge is reachable), otherwise a no-op.
+ */
+const RemoteTriggerManagerSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [ClientService, AtomRegistry.AtomRegistry],
+    provides: [RemoteTriggerManager.Service],
+  },
+  (context) =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        invariant(context.space, 'space context required for RemoteTriggerManager');
+        const client = yield* ClientService;
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        return edgeUrl ? EdgeTriggerManager.fromClient(client, context.space) : RemoteTriggerManager.layerNoop;
+      }),
+    ),
+);
+
+/**
+ * Application-scoped remote (EDGE) process manager, providing the progress meter's cancel control.
+ * Uses the EDGE implementation whenever an edge service is configured — cancel is addressed by trigger
+ * id + space, so it is not space-scoped — otherwise a read-only no-op. Resolved by the progress trace
+ * sink to route an edge-run trigger's cancel; the aggregate {@link TriggerMonitor} view is unaffected.
+ */
+const RemoteProcessManagerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService, AtomRegistry.AtomRegistry],
+    provides: [RemoteProcessManager.Service],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        return edgeUrl ? EdgeProcessManager.fromClient(client) : RemoteProcessManager.layerNoop;
+      }),
+    ),
+);
+
+const TriggerDispatcherSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [Database.Service, TriggerStateStore, ProcessManager.ProcessManagerService, AtomRegistry.AtomRegistry],
+    provides: [TriggerDispatcher],
+  },
+  () => TriggerDispatcher.layer({ timeControl: 'natural' }),
+);
+
+/**
+ * Aggregate {@link Trigger.TriggerMonitorService} over the local
+ * {@link TriggerDispatcher} and the remote {@link RemoteTriggerManager.Service}.
+ * Provides a unified view of trigger state across local and edge environments.
+ */
+const TriggerMonitorSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [TriggerDispatcher, Database.Service, AtomRegistry.AtomRegistry, RemoteTriggerManager.Service],
+    provides: [Trigger.TriggerMonitorService],
+  },
+  () => TriggerMonitor.layer,
+);
+
+export default Capability.makeModule(() =>
+  Effect.succeed([
+    Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
+    Capability.contributes(Capabilities.LayerSpec, RegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
+    Capability.contributes(Capabilities.LayerSpec, OperationsToRegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
+    Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
+    Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),
+    Capability.contributes(Capabilities.LayerSpec, RemoteTriggerManagerSpec),
+    Capability.contributes(Capabilities.LayerSpec, TriggerMonitorSpec),
+    Capability.contributes(Capabilities.LayerSpec, RemoteOperationInvokerSpec),
+    Capability.contributes(Capabilities.LayerSpec, RemoteProcessManagerSpec),
+    Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
+  ]),
+);

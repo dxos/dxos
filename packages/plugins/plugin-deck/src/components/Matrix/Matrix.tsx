@@ -4,13 +4,13 @@
 
 import { useFocusFinders } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
-import React, { forwardRef, type PropsWithChildren, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
-import { type MosaicStackTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { type ComposableProps } from '@dxos/ui-types';
 
 //
@@ -202,4 +202,4 @@ export const Matrix = {
   Viewport: MatrixViewport,
 };
 
-export type { MatrixController, MatrixRootProps, MatrixContentProps, MatrixViewportProps };
+export type { MatrixContentProps, MatrixController, MatrixRootProps, MatrixViewportProps };

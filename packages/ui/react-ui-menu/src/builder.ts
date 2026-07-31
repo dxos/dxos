@@ -41,6 +41,9 @@ export interface ActionGroupBuilder {
   /** Add an action node as a child of the current group. */
   action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this;
 
+  /** Add a switch action rendered as a labeled Input.Switch. */
+  switch(id: string, props: Omit<MenuActionProperties, 'variant'> & { checked: boolean }, invoke: () => void): this;
+
   /** Add a nested action group. */
   group(id: string, props: MenuItemGroupProperties, cb: ActionGroupBuilderFn): this;
 
@@ -61,7 +64,7 @@ export interface MenuBuilder extends ActionGroupBuilder {
   /**
    * Add a root-level toolbar overflow dropdown (⋮) with built-in trigger styling.
    */
-  menu(id: string, cb: ActionGroupBuilderFn): this;
+  menu(id: string, cb: ActionGroupBuilderFn, testId?: string): this;
 
   /**
    * Return the assembled action graph.
@@ -94,6 +97,10 @@ class MenuBuilderImpl implements MenuBuilder {
     return this;
   }
 
+  switch(id: string, props: Omit<MenuActionProperties, 'variant'> & { checked: boolean }, invoke: () => void): this {
+    return this.action(id, { ...props, variant: 'switch' }, invoke);
+  }
+
   group(id: string, props: MenuItemGroupProperties, cb: ActionGroupBuilderFn): this {
     this._data.nodes.push(createMenuItemGroup(id, props));
     this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
@@ -101,8 +108,8 @@ class MenuBuilderImpl implements MenuBuilder {
     return this;
   }
 
-  menu(id: string, cb: ActionGroupBuilderFn): this {
-    return this.group(id, overflowMenuProperties, cb);
+  menu(id: string, cb: ActionGroupBuilderFn, testId?: string): this {
+    return this.group(id, testId === undefined ? overflowMenuProperties : { ...overflowMenuProperties, testId }, cb);
   }
 
   subgraph(subgraphOrCb: ActionGraphProps | ActionGroupBuilderFn | false | null | undefined): this {

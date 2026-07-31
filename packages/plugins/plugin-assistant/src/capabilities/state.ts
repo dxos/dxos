@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
@@ -27,9 +27,16 @@ export default Capability.makeModule(() =>
 
     const companionChatCacheAtom = Atom.make<Record<string, Obj.Unknown | undefined>>({}).pipe(Atom.keepAlive);
 
+    const homeSuggestionsCacheAtom = createKvsStore({
+      key: `${meta.profile.key}.home-suggestions`,
+      schema: AssistantCapabilities.HomeSuggestionsCacheSchema,
+      defaultValue: () => ({}),
+    });
+
     return [
       Capability.contributes(AssistantCapabilities.State, stateAtom),
       Capability.contributes(AssistantCapabilities.CompanionChatCache, companionChatCacheAtom),
+      Capability.contributes(AssistantCapabilities.HomeSuggestionsCache, homeSuggestionsCacheAtom),
     ];
   }),
 );

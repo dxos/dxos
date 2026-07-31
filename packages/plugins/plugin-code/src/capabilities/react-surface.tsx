@@ -13,12 +13,16 @@ import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
 import { CodeProject, Settings, Spec } from '#types';
 
-import { SpecView } from '../containers/SpecArticle/SpecArticle';
 import { isPluginSpecSubject } from '../plugin-spec';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'pluginSpec',
+        filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
+        component: ({ data: { subject }, role }) => <SpecArticle role={role} content={subject.content} />,
+      }),
       Surface.create({
         id: 'specArticle',
         filter: AppSurface.oneOf(
@@ -44,13 +48,13 @@ export default Capability.makeModule(() =>
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <CodeSettings settings={settings} onSettingsChange={updateSettings} />;
+          return (
+            <CodeSettings
+              settings={settings}
+              onSettingsChange={(next: Settings.Settings) => updateSettings(() => next)}
+            />
+          );
         },
-      }),
-      Surface.create({
-        id: 'pluginSpec',
-        filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
-        component: ({ data: { subject }, role }) => <SpecView role={role} content={subject.content} readOnly />,
       }),
     ]),
   ),

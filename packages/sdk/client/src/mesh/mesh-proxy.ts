@@ -2,10 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as Runtime from 'effect/Runtime';
+
 import { Event, MulticastObservable, SubscriptionList } from '@dxos/async';
 import { type ClientServicesProvider } from '@dxos/client-protocol';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { runServiceCall, subscribeStream } from '@dxos/protocols';
 import { ConnectionState, type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { RPC_TIMEOUT } from '../common';
@@ -23,7 +25,10 @@ export class MeshProxy {
   /** Subscriptions for RPC streams that need to be re-established on reconnect. */
   private readonly _streamSubscriptions = new SubscriptionList();
 
-  constructor(private readonly _serviceProvider: ClientServicesProvider) {}
+  constructor(
+    private readonly _serviceProvider: ClientServicesProvider,
+    private readonly _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime,
+  ) {}
 
   toJSON(): { networkStatus: NetworkStatus } {
     return {
@@ -36,8 +41,10 @@ export class MeshProxy {
   }
 
   async updateConfig(swarm: ConnectionState): Promise<void> {
-    invariant(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    return this._serviceProvider.services.NetworkService.updateConfig({ swarm }, { timeout: RPC_TIMEOUT });
+    await runServiceCall(this._runtime, this._serviceProvider.rpc.NetworkService.updateConfig({ swarm }), {
+      timeout: RPC_TIMEOUT,
+      label: 'NetworkService.updateConfig',
+    });
   }
 
   /**
@@ -62,14 +69,11 @@ export class MeshProxy {
   private _setupStreams(): void {
     this._streamSubscriptions.clear();
 
-    invariant(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    const networkStatusStream = this._serviceProvider.services.NetworkService.queryStatus(undefined, {
-      timeout: RPC_TIMEOUT,
-    });
-    networkStatusStream.subscribe((networkStatus: NetworkStatus) => {
-      this._networkStatusUpdated.emit(networkStatus);
-    });
-    this._streamSubscriptions.add(() => networkStatusStream.close());
+    this._streamSubscriptions.add(
+      subscribeStream(this._runtime, this._serviceProvider.rpc.NetworkService.queryStatus(undefined), {
+        onData: (networkStatus) => this._networkStatusUpdated.emit(networkStatus),
+      }),
+    );
   }
 
   /**

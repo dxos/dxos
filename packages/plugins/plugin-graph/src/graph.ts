@@ -7,7 +7,7 @@ import * as Record from 'effect/Record';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, UrlPath } from '@dxos/app-toolkit';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -19,7 +19,12 @@ export default Capability.makeModule(
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const extensionsByModuleAtom = yield* Capability.atomByModule(AppCapabilities.AppGraphBuilder);
 
-    const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
+    // The grammar's fixed tiers, configured here rather than declared by an extension: no connector
+    // produces their nodes (see `GraphBuilder.UrlGrammar`).
+    const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry, {
+      anchorKey: UrlPath.WORKSPACE_KEY,
+      linkedKey: UrlPath.COMPANION_KEY,
+    });
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());
     // }, 5_000);
@@ -30,7 +35,10 @@ export default Capability.makeModule(
         const next: GraphBuilder.BuilderExtension[] = [];
         for (const [moduleId, extensions] of Object.entries(extensionsByModule)) {
           for (const ext of GraphBuilder.flattenExtensions(extensions)) {
-            next.push({ ...ext, id: `${moduleId}.${ext.id}` });
+            next.push({
+              ...ext,
+              id: `${moduleId}.${ext.id}`,
+            });
           }
         }
         const current = Record.values(registry.get(builder.extensions));
@@ -46,14 +54,11 @@ export default Capability.makeModule(
 
     setupDevtools(builder.graph);
 
-    return Capability.contributes(
-      AppCapabilities.AppGraph,
-      { graph: builder.graph, explore: GraphBuilder.explore },
-      () =>
-        Effect.sync(() => {
-          // clearInterval(interval);
-          unsubscribe();
-        }),
+    return Capability.contributes(AppCapabilities.AppGraph, builder, () =>
+      Effect.sync(() => {
+        // clearInterval(interval);
+        unsubscribe();
+      }),
     );
   }),
 );

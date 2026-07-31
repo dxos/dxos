@@ -3,12 +3,12 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { DXN, EID, URI, type SpaceId } from '@dxos/keys';
+import { DXN, EID, type SpaceId, URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type { AnyEntity } from '../common/types';
 import { MetaId } from '../common/types/model-symbols';
-import { type InternalObjectProps, ObjectDatabaseId } from './model';
+import { type InternalObjectProps, ObjectBranchId, ObjectDatabaseId } from './model';
 import { getObjectEchoUri } from './util';
 
 /**
@@ -74,4 +74,14 @@ export const getUri = (entity: AnyEntity, options?: GetURIOptions): URI.URI => {
 export const getDatabase = (entity: AnyEntity): any | undefined => {
   assumeType<InternalObjectProps>(entity);
   return entity[ObjectDatabaseId];
+};
+
+/**
+ * Get the branch this entity instance is bound to (`'main'` for the canonical object, or the branch
+ * of a `db.branch()` independent instance). Reads the branch off the instance, so two instances of the
+ * same object id on different branches report their own branch.
+ */
+export const getBranch = (entity: AnyEntity): string => {
+  assumeType<InternalObjectProps>(entity);
+  return entity[ObjectBranchId] ?? 'main';
 };

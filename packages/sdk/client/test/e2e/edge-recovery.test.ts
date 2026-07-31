@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
-import { Obj, Filter, Database } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 import type { SpaceSyncState } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -29,7 +29,7 @@ const createEdgeConfig = () =>
       },
       client: {
         edgeFeatures: {
-          echoReplicator: true,
+          subductionReplicator: true,
           feedReplicator: true,
           signaling: true,
           agents: true,
@@ -181,13 +181,13 @@ const waitForSync = async (db: Database.Database, timeout = 60_000) => {
 
       interval = setInterval(async () => {
         try {
-          handleSyncState(await db.getSyncState());
+          handleSyncState(await db.getAutomergeSyncState());
         } catch (error) {
           console.error(error);
         }
       }, 500);
 
-      db.getSyncState()
+      db.getAutomergeSyncState()
         .then(handleSyncState)
         .catch((error) => console.error(error));
     });

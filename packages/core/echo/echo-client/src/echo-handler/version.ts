@@ -4,7 +4,7 @@
 
 import { next as A } from '@automerge/automerge';
 
-import { createDocAccessor } from './doc-accessor';
+import { getObjectCore } from './echo-object-utils';
 
 export type ObjectVersion = {
   heads: string[];
@@ -21,7 +21,7 @@ export const ObjectVersion = Object.freeze({
  * @throws If the object is not in the database.
  */
 export const getVersion = (obj: any): ObjectVersion => {
-  const docAccessor = createDocAccessor(obj, []);
+  const docAccessor = getObjectCore(obj).getDocAccessor([]);
   const doc = docAccessor.handle.doc();
   if (!doc) {
     return { heads: [] };

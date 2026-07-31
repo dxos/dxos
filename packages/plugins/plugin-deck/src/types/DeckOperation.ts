@@ -16,9 +16,8 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 
 const PartAdjustmentSchema = Schema.Union(
   Schema.Literal('close').annotations({ description: 'Close the plank.' }),
-  Schema.Literal('companion').annotations({ description: 'Open the companion plank.' }),
-  Schema.Literal('solo').annotations({ description: 'Solo the plank.' }),
-  Schema.Literal('solo--fullscreen').annotations({ description: 'Fullscreen the plank.' }),
+  Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
+  Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
   Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
   Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
 );
@@ -51,6 +50,22 @@ export const UpdatePlankSize = Operation.make({
   input: Schema.Struct({
     id: Schema.String.annotations({ description: 'The id of the plank to resize.' }),
     size: Schema.Number.annotations({ description: 'The new size of the plank.' }),
+  }),
+  output: Schema.Void,
+});
+
+export const UpdateTilingSize = Operation.make({
+  meta: {
+    key: makeKey('updateTilingSize'),
+    name: 'Update Tiling Size',
+    description: 'Update the split point of the tiling deck.',
+    icon: 'ph--columns--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    size: Schema.Number.annotations({
+      description: 'Width of the tiling deck start pane in rem.',
+    }),
   }),
   output: Schema.Void,
 });

@@ -17,12 +17,12 @@ import {
   Button,
   Clipboard,
   IconButton,
-  ListItem,
   type ThemedClassName,
   Tooltip,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -60,7 +60,6 @@ const AvatarStackEffect = ({
   return (
     <>
       <span
-        role='none'
         className={mx(
           'absolute right-auto opacity-20',
           reverseEffects ? 'left-3' : 'left-1',
@@ -68,13 +67,11 @@ const AvatarStackEffect = ({
         )}
       >
         <span
-          role='none'
           className={tx('avatar.ring', { ...avatarProps, status, animation })}
           style={{ animationDelay: '400ms' }}
         />
       </span>
       <span
-        role='none'
         className={mx(
           'absolute right-auto opacity-50',
           reverseEffects ? 'left-2' : 'left-2',
@@ -82,7 +79,6 @@ const AvatarStackEffect = ({
         )}
       >
         <span
-          role='none'
           className={tx('avatar.ring', { ...avatarProps, status, animation })}
           style={{ animationDelay: '200ms' }}
         />
@@ -147,14 +143,14 @@ export const InvitationListItemImpl = ({
   const avatarStatus = avatarError ? 'error' : avatarGreen ? 'active' : 'inactive';
 
   return (
-    <ListItem.Root
-      id={invitationCode}
+    <Listbox.Item
+      id={invitationId}
       {...props}
       classNames={['flex gap-2 ps-3 pe-1 items-center relative', props.classNames]}
     >
-      <ListItem.Heading classNames='sr-only'>
+      <Listbox.ItemLabel classNames='sr-only'>
         {t(multiUse ? 'invite-many-list-item.label' : 'invite-one-list-item.label')}
-      </ListItem.Heading>
+      </Listbox.ItemLabel>
       {multiUse && (
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
@@ -229,6 +225,6 @@ export const InvitationListItemImpl = ({
           data-testid='remove-invitation'
         />
       )}
-    </ListItem.Root>
+    </Listbox.Item>
   );
 };

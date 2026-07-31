@@ -33,10 +33,13 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
@@ -51,10 +54,16 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-testing"

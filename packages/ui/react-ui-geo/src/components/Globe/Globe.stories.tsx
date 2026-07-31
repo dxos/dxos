@@ -125,7 +125,7 @@ const createTrip = (
   );
 };
 
-type DefaultStoryProps = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation'> &
+type StoryArgs = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation'> &
   Pick<GlobeCanvasProps, 'projection' | 'styles'> & {
     drag?: boolean;
     spin?: boolean;
@@ -149,7 +149,7 @@ const DefaultStory = ({
   lockTilt = false,
   mode,
   level = '110m',
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   const [controller, setController] = useState<GlobeController | null>(null);
   const [dots] = useAsyncState(async () => {
     const points = (await import('../../../data/countries-dots-3.ts')).default;

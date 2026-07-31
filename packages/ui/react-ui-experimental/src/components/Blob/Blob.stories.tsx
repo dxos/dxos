@@ -23,15 +23,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    color: '#005599',
-    speed: 0.3,
+    color: '#880000',
+    speed: 0.5,
     enableMouseInteraction: true,
-    hoverSmoothness: 0.05,
-    animationSize: 30,
+    hoverSmoothness: 0.9,
+    animationSize: 40,
     ballCount: 15,
-    clumpFactor: 1,
+    clumpFactor: 0.9,
     cursorBallSize: 3,
-    cursorBallColor: '#000077',
+    cursorBallColor: '#ff8800',
     enableTransparency: true,
   },
 };

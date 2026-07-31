@@ -4,23 +4,16 @@
 
 import * as Predicate from 'effect/Predicate';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { BaseError } from '@dxos/errors';
 
 const INVALID_TRELLO_ACCESS_TOKEN_MESSAGE =
   'Trello access token must be a "<apiKey>:<userToken>" colon-separated string.' as const;
 
-const INTEGRATION_DATABASE_MISSING_MESSAGE = 'No database for integration ref.' as const;
-
 /** Stored `AccessToken.token` is not `"<apiKey>:<userToken>"`. */
 export class InvalidTrelloAccessTokenError extends BaseError.extend(
   'InvalidTrelloAccessTokenError',
   INVALID_TRELLO_ACCESS_TOKEN_MESSAGE,
-) {}
-
-/** Integration ref had no resolvable ECHO database (invoker did not provide `Database.layer`). */
-export class IntegrationDatabaseMissingError extends BaseError.extend(
-  'IntegrationDatabaseMissingError',
-  INTEGRATION_DATABASE_MISSING_MESSAGE,
 ) {}
 
 /**
@@ -30,8 +23,8 @@ export const formatTrelloSyncFailure = (error: unknown): string => {
   if (InvalidTrelloAccessTokenError.is(error)) {
     return INVALID_TRELLO_ACCESS_TOKEN_MESSAGE;
   }
-  if (IntegrationDatabaseMissingError.is(error)) {
-    return INTEGRATION_DATABASE_MISSING_MESSAGE;
+  if (SyncDatabaseMissingError.is(error)) {
+    return error.message;
   }
   if (error instanceof BaseError) {
     const keys = Object.keys(error.context);

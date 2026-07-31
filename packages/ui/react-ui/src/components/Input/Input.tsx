@@ -8,6 +8,8 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
+  PropsWithChildren,
+  type ReactNode,
   forwardRef,
   useCallback,
   useEffect,
@@ -37,7 +39,6 @@ import {
   type ValidationProps as ValidationPrimitiveProps,
   useInputContext,
 } from '@dxos/react-input';
-import { mx } from '@dxos/ui-theme';
 import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
@@ -262,7 +263,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
           ...props,
           ...(props.autoFocus && !hasIosKeyboard && { autoFocus: true }),
         }}
-        className={tx('input.inputWithSegments', { disabled: props.disabled }, classNames) || ''}
+        className={tx('input.pin', { disabled: props.disabled }, classNames) || ''}
         segmentClassName={tx('input.segment', { disabled: props.disabled, density, elevation }) || ''}
         ref={forwardedRef}
       />
@@ -281,11 +282,28 @@ type AutoFillProps = {
   noAutoFill?: boolean;
 };
 
-type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps> & AutoFillProps;
+type AdornmentProps = {
+  /** Content rendered inside the input container before the field (icon or text). */
+  start?: ReactNode;
+  /** Content rendered inside the input container after the field (icon, text, or button). */
+  end?: ReactNode;
+};
+
+type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps> & AutoFillProps & AdornmentProps;
 
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
   (
-    { __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, noAutoFill, ...props },
+    {
+      __inputScope,
+      classNames,
+      density: densityProp,
+      elevation: elevationProp,
+      variant,
+      noAutoFill,
+      start,
+      end,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { hasIosKeyboard } = useThemeContext();
@@ -293,8 +311,9 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
     const density = useDensityContext(densityProp);
     const elevation = useElevationContext(elevationProp);
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    const adorned = start != null || end != null;
 
-    return (
+    const field = (
       <TextInputPrimitive
         {...props}
         // TODO(wittjosiah): Factor out autofill properies.
@@ -302,17 +321,33 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
         className={tx(
           'input.input',
           {
-            variant,
+            // When adorned the surrounding container owns the surface/border/focus, so the field is
+            // rendered "bare" (subdued) regardless of the requested variant.
+            variant: adorned ? 'subdued' : variant,
             disabled: props.disabled,
             density,
             elevation,
             validationValence,
           },
-          classNames,
+          adorned ? undefined : classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
         ref={forwardedRef}
       />
+    );
+
+    if (!adorned) {
+      return field;
+    }
+
+    return (
+      <div
+        className={tx('input.container', { variant, disabled: props.disabled, density, validationValence }, classNames)}
+      >
+        {start != null && <span className={tx('input.adornment', { side: 'start' })}>{start}</span>}
+        {field}
+        {end != null && <span className={tx('input.adornment', { side: 'end' })}>{end}</span>}
+      </div>
     );
   },
 );
@@ -400,7 +435,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          className: tx('input.checkbox', { size }, 'shrink-0', classNames),
+          'className': tx('input.checkbox', { size }, 'shrink-0', classNames),
         }}
         ref={forwardedRef}
       >
@@ -435,6 +470,7 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
     },
     forwardedRef,
   ) => {
+    const { tx } = useThemeContext();
     const [checked, onCheckedChange] = useControllableState({
       prop: propsChecked,
       defaultProp: propsDefaultChecked ?? false,
@@ -446,7 +482,7 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
     return (
       <input
         type='checkbox'
-        className={mx('dx-checkbox--switch dx-focus-ring', classNames)}
+        className={tx('input.switch', { disabled: props.disabled }, classNames)}
         checked={checked}
         onChange={(event) => {
           onCheckedChange(event.target.checked);
@@ -465,6 +501,21 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
 );
 
 Switch.displayName = 'Input.Switch';
+
+//
+// Wrapper for Switch/Checkbox to center them within the input row height.
+//
+
+const Block = forwardRef<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <div {...props} className={tx('input.block')} ref={forwardedRef}>
+      {children}
+    </div>
+  );
+});
+
+Block.displayName = 'Input.Block';
 
 //
 // Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
@@ -499,6 +550,7 @@ export const Input = {
   DateTime,
   Checkbox,
   Switch,
+  Block,
   Label,
   Description,
   Validation,
@@ -508,19 +560,19 @@ export const Input = {
 export { useInputTrigger };
 
 export type {
-  InputVariant,
-  InputRootProps,
-  InputSharedProps,
-  PinInputProps,
-  TextInputProps,
-  TextAreaProps,
-  TimeProps,
+  CheckboxProps,
   DateInputProps,
   DateTimeInputProps,
-  CheckboxProps,
-  SwitchProps,
-  LabelProps,
-  DescriptionProps,
-  ValidationProps,
   DescriptionAndValidationProps,
+  DescriptionProps,
+  InputRootProps,
+  InputSharedProps,
+  InputVariant,
+  LabelProps,
+  PinInputProps,
+  SwitchProps,
+  TextAreaProps,
+  TextInputProps,
+  TimeProps,
+  ValidationProps,
 };

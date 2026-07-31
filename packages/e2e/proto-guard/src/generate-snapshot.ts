@@ -65,9 +65,11 @@ const seedData = async (client: Client) => {
     const space = await client.spaces.create({ name: 'second-space' });
 
     // Create dynamic schema.
-    const TestType = Schema.Struct({
-      testField: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const TestType = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        testField: Schema.String,
+      }),
+    );
     const dynamicSchema = await space.db.addType(TestType);
 
     const object2 = space.db.add(Obj.make(dynamicSchema, { testField: 'Test' }));

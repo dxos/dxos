@@ -28,14 +28,36 @@ runs:
     - uses: moonrepo/setup-toolchain@v0
       with:
         # IMPORTANT: Keep in-sync with .prototools
-        moon-version: '2.2.6'
-        proto-version: '0.57.3'
+        moon-version: '2.4.5'
+        proto-version: '0.58.2'
 
+    # Installs the toolchains `.moon/toolchains.yml` declares, which the first moon task would do anyway.
+    # Deliberately not `auto-install` on setup-toolchain: that installs everything pinned, and rust is a
+    # 1.2 GB rustup toolchain that nothing in CI uses.
+    - name: Install moon toolchains
+      run: moon setup
+      shell: bash
+
+    # `.github/Dockerfile` installs node and pnpm to bootstrap CI while moon installs them from
+    # `.prototools`, so the two can drift and only a cold toolchain cache would reveal it — print what PATH
+    # resolves next to the pin and flag a divergence. Logged rather than failed: the image's copies are used
+    # only until moon's cache exists. bun is absent from the image on purpose, and `moon setup` populates
+    # moon's toolchain without creating a proto shim, so a bare `bun` exits 127 and only the pin can be read.
     - name: Log out debug info
       run: |
-        node --version
-        pnpm --version
-        bun --version
+        for tool in node pnpm; do
+          resolved=$( ("$tool" --version 2>/dev/null || true) | tail -1)
+          pinned=$( (proto run "$tool" -- --version 2>/dev/null || true) | tail -1)
+          if [ -z "$resolved" ] || [ -z "$pinned" ]; then
+            status=UNKNOWN
+          elif [ "$resolved" = "$pinned" ]; then
+            status=ok
+          else
+            status=MISMATCH
+          fi
+          printf '%-5s PATH=%-12s pinned=%-12s %s\n' "$tool" "${resolved:-<absent>}" "${pinned:-<none>}" "$status"
+        done
+        printf '%-5s pinned=%s\n' bun "$( (proto run bun -- --version 2>/dev/null || true) | tail -1)"
       shell: bash
 
     - name: PNPM Store Path

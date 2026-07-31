@@ -3,4 +3,6 @@
 //
 
 export { SandboxClient } from './SandboxClient';
-export type { SandboxRecord, ExecResult, FileEntry } from './SandboxClient';
+export type { ExecResult, FileEntry, SandboxRecord } from './SandboxClient';
+export { createSandboxClient, getSandboxServiceUrl } from './sandbox-url';
+export { mergeExecEnv, resolveSandboxCredentialEnv } from './sandbox-env';

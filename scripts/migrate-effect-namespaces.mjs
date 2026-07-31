@@ -12,7 +12,6 @@ const EFFECT_EX_SYMBOLS = new Set([
   'unwrapExit',
   'runAndForwardErrors',
   'runInRuntime',
-  'promiseWithCauseCapture',
   'acquireReleaseResource',
   'contextFromScope',
   'asyncTaskTaggingLayer',

@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
+import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -63,9 +64,9 @@ export interface Unknown extends BaseObj {}
  * if (Obj.isObject(unknownValue)) { ... }
  *
  * // Reference to any object type
- * const Collection = Schema.Struct({
- *   objects: Schema.Array(Ref.Ref(Obj.Unknown)),
- * }).pipe(Type.makeObject(DXN.make('com.example.type.collection', '0.1.0')));
+ * class Collection extends Type.makeObject<Collection>(DXN.make('com.example.type.collection', '0.1.0'))(
+ *   Schema.Struct({ objects: Schema.Array(Ref.Ref(Obj.Unknown)) }),
+ * ) {}
  * ```
  */
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
@@ -299,6 +300,22 @@ export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Eff
 export const getReactiveOrThrow = <T extends Unknown>(snapshot: Snapshot<T>): T =>
   Effect.runSync(getReactive(snapshot));
 
+/**
+ * Synchronous version of `Obj.getReactive` that returns `undefined` instead of throwing.
+ * Accepts `undefined` input so callers can pass the result of `useObject` directly.
+ *
+ * @param snapshot - A snapshot of the object (from `Obj.getSnapshot` or `useObject`), or `undefined`.
+ * @returns The reactive object, or `undefined` if the snapshot is `undefined` or unresolvable.
+ */
+export const getReactiveOrUndefined = <T extends Unknown>(snapshot: Snapshot<T> | undefined): T | undefined => {
+  if (snapshot === undefined) {
+    return undefined;
+  }
+  return Effect.runSyncExit(getReactive(snapshot)).pipe(
+    Exit.match({ onSuccess: (value) => value, onFailure: () => undefined }),
+  );
+};
+
 export type CloneOptions = {
   /**
    * Retain the original object's ID.
@@ -308,9 +325,12 @@ export type CloneOptions = {
 
   /**
    * Recursively clone referenced objects.
-   * @default false
+   * - `'parent'`: clone only refs whose target is transitively parented under the clone root (children
+   *   that cascade-delete with it); shared refs (registry operations, context objects, …) are copied as-is.
+   * - `'all'`: clone every referenced object recursively.
+   * Omit for a shallow clone (refs copied as-is).
    */
-  deep?: boolean;
+  deep?: 'parent' | 'all';
 };
 
 /**
@@ -360,8 +380,9 @@ export type Mutable<T> = internal.Mutable<T>;
  *
  * Note: Only accepts objects. Use `Relation.update` for relations.
  */
-export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): void => {
+export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): T => {
   internal.change(obj, callback);
+  return obj;
 };
 
 /**
@@ -555,6 +576,24 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => i
  */
 export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.Database | undefined =>
   internal.getDatabase(entity);
+
+/**
+ * Get the branch this object instance is bound to: `'main'` for the canonical object, or the branch of
+ * a `db.branch()` independent instance. The branch is a property of the instance — two instances of the
+ * same object id on different branches each report their own branch.
+ */
+export const getBranch = (obj: Unknown): string => internal.getBranch(obj);
+
+/**
+ * Get an immutable snapshot of the object at the given historical heads — a detached instance, not a
+ * pin on the live object. Only the surface that asks for it sees the historical value; the live
+ * object and every other surface are unaffected. The functional alternative to a read-time-travel pin.
+ */
+export const getVersion = <T extends Unknown>(obj: T, heads: readonly string[]): Snapshot<T> => {
+  const db = getDatabase(obj);
+  invariant(db, 'object is not bound to a database');
+  return db.getVersion(obj, heads);
+};
 
 //
 // Meta
@@ -877,6 +916,7 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
  * @param options.uri - Override object URI. Changes the result of `Obj.getURI`.
  * @param options.database - Database to associate with the object.
+ * @param options.parent - Parent entity to associate with the object (used when the JSON has no `@parent`). Changes the result of `Obj.getParent`.
  */
 export const fromJSON: (
   json: unknown,
@@ -923,6 +963,17 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
+/**
+ * Create a reactive snapshot atom for an ECHO object or ref.
+ * Use inside atom computations (e.g. `Atom.make((get) => get(Obj.atom(ref)))`) to subscribe
+ * to a ref's target — the atom re-fires when the target loads or changes.
+ *
+ * @idiom org.dxos.echo.objAtomReactive
+ *   applies: Subscribing to a ref's target inside an atom computation or a non-React reactive context
+ *   instead-of: `ref.target` — synchronous and not reactive; returns `undefined` when the target isn't loaded yet and never notifies when it becomes available
+ *   uses: {@link atom}
+ *   related: org.dxos.echo-react.useObjectReactive
+ */
 export const atom = objInternal.makeAtom;
 export const atomReactive = objInternal.makeWithReactive;
 export const atomProperty = objInternal.makeProperty;

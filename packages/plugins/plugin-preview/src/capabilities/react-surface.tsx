@@ -9,7 +9,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { Card } from '@dxos/react-ui';
 import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 import { Position } from '@dxos/util';
@@ -24,21 +23,8 @@ export default Capability.makeModule(() =>
       // TODO(burdon): Create helpers and factor out.
       //
 
-      Surface.create<{ subject: Person.Person }>({
-        id: 'schemaPopoverContact',
-        position: Position.first,
-        filter: AppSurface.object(AppSurface.CardContent, Person.Person),
-        component: ({ data, role }) => {
-          return (
-            <>
-              <PersonCard role={role} subject={data.subject} />
-              <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
-            </>
-          );
-        },
-      }),
       Surface.create({
-        id: 'schemaPopoverOrganization',
+        id: 'organizationContent',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Organization.Organization),
         component: ({ data, role }) => {
@@ -50,6 +36,20 @@ export default Capability.makeModule(() =>
           );
         },
       }),
+      Surface.create<{ subject: Person.Person }>({
+        id: 'contactContent',
+        position: Position.first,
+        filter: AppSurface.object(AppSurface.CardContent, Person.Person),
+        component: ({ data, role }) => {
+          return (
+            <>
+              <PersonCard role={role} subject={data.subject} />
+              <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
+            </>
+          );
+        },
+      }),
+
       Surface.create({
         id: 'schemaPopoverProject',
         position: Position.first,
@@ -129,22 +129,22 @@ export default Capability.makeModule(() =>
         },
       }),
 
-      Surface.create({
-        id: 'section',
-        position: Position.last,
-        filter: AppSurface.subject(AppSurface.Section, Obj.isObject),
-        component: ({ data }) => {
-          return (
-            <div className='flex w-full justify-center'>
-              <div className='py-2 dx-card-min-width dx-card-max-width'>
-                <Card.Root>
-                  <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-                </Card.Root>
-              </div>
-            </div>
-          );
-        },
-      }),
+      // Surface.create({
+      //   id: 'fallbackSection',
+      //   position: Position.last,
+      //   filter: AppSurface.subject(AppSurface.Section, Obj.isObject),
+      //   component: ({ data }) => {
+      //     return (
+      //       <div className='flex w-full justify-center'>
+      //         <div className='py-2 dx-card-min-width dx-card-max-width'>
+      //           <Card.Root>
+      //             <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+      //           </Card.Root>
+      //         </div>
+      //       </div>
+      //     );
+      //   },
+      // }),
     ]),
   ),
 );

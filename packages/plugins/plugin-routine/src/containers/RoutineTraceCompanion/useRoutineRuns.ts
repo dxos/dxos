@@ -1,0 +1,48 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { useMemo } from 'react';
+
+import { type Routine, Trace } from '@dxos/compute';
+import { FeedTraceSink } from '@dxos/compute-runtime';
+import { type Database, Filter, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
+import { EID } from '@dxos/keys';
+
+import { type RoutineRun, groupIntoRuns } from './runs';
+
+/**
+ * Returns the execution runs for a routine.
+ *
+ * Reads from the per-space trace feed and filters to messages whose
+ * `meta.trigger` ref matches one of the routine's triggers.
+ */
+export const useRoutineRuns = (db: Database.Database | undefined, routine: Routine.Routine): RoutineRun[] => {
+  const [traceFeed] = useQuery(db, FeedTraceSink.query);
+
+  const messages = useQuery(
+    db,
+    traceFeed ? Query.select(Filter.type(Trace.Message)).from(traceFeed) : Query.select(Filter.nothing()),
+  );
+
+  const triggerEntityIds = useMemo<ReadonlySet<string>>(() => {
+    const ids = new Set<string>();
+    for (const triggerRef of routine.triggers) {
+      if (!triggerRef) {
+        continue;
+      }
+      const uri = triggerRef.uri;
+      if (!uri) {
+        continue;
+      }
+      const eid = EID.getEntityId(EID.parse(uri));
+      if (eid) {
+        ids.add(eid);
+      }
+    }
+    return ids;
+  }, [routine.triggers.map((triggerRef) => triggerRef?.uri ?? '').join('|')]);
+
+  return useMemo(() => groupIntoRuns(messages, triggerEntityIds), [messages, triggerEntityIds]);
+};

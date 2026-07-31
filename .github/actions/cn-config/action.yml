@@ -5,6 +5,15 @@ inputs:
   version:
     description: 'Version'
     required: true
+  environment:
+    description: Target environment (labs | staging | production) — selects the updater channel.
+    required: true
+  ios-bundle-version:
+    description: >-
+      Optional override for bundle.iOS.bundleVersion (Apple's CFBundleVersion, which must be plain digits
+      separated by dots — a prerelease-tagged `version` fails Apple's validation). Skipped if empty.
+    required: false
+    default: ''
   working-directory:
     description: 'Working directory'
     default: '.'
@@ -13,9 +22,9 @@ runs:
   using: 'composite'
   steps:
     - uses: ./.github/actions/cn-channel
-      # TODO(wittjosiah): Switch to production.
-      if: github.ref_name != 'labs'
       id: release-channel
+      with:
+        environment: ${{ inputs.environment }}
 
     - name: Find tauri.conf.json
       id: find-tauri-config
@@ -29,8 +38,6 @@ runs:
       shell: bash
 
     - name: Update endpoints in tauri.conf.json
-      # TODO(wittjosiah): Switch to production.
-      if: github.ref_name != 'labs'
       run: |
         jq \
           --arg channel "${{ steps.release-channel.outputs.channel }}" \
@@ -46,6 +53,16 @@ runs:
         jq \
           --arg version "${{ inputs.version }}" \
           '.version = $version' \
+          "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}" > temp.json && \
+        mv temp.json "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}"
+      shell: bash
+
+    - name: Update iOS bundle version in tauri.conf.json
+      if: inputs.ios-bundle-version != ''
+      run: |
+        jq \
+          --arg version "${{ inputs.ios-bundle-version }}" \
+          '.bundle.iOS.bundleVersion = $version' \
           "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}" > temp.json && \
         mv temp.json "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}"
       shell: bash

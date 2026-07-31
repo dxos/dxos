@@ -74,4 +74,4 @@ export const Summarize = Operation.make({
     meeting: Type.getSchema(Meeting.Meeting),
   }),
   output: Schema.Void,
-});
+}).pipe(Operation.visible);

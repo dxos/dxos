@@ -8,10 +8,10 @@ import { useEffect, useState } from 'react';
 
 // TODO(thure): This should be derived from the same source of truth as the Tailwind theme config.
 const breakpointMediaQueries: Record<string, string> = {
-  sm: '(min-width: 640px)',
-  md: '(min-width: 768px)',
-  lg: '(min-width: 1024px)',
-  xl: '(min-width: 1280px)',
+  'sm': '(min-width: 640px)',
+  'md': '(min-width: 768px)',
+  'lg': '(min-width: 1024px)',
+  'xl': '(min-width: 1280px)',
   '2xl': '(min-width: 1536px)',
 };
 

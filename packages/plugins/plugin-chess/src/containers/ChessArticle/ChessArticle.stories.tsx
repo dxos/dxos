@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { make as makeGame } from '@dxos/plugin-game';
+import { Game } from '@dxos/plugin-game';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -15,14 +15,14 @@ import { Chess } from '#types';
 
 import { ChessArticle } from './ChessArticle';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   pgn?: string;
 };
 
-const DefaultStory = ({ pgn }: DefaultStoryProps) => {
+const DefaultStory = ({ pgn }: StoryArgs) => {
   const { game, state } = useMemo(() => {
     const state = Chess.make(pgn ? { pgn } : undefined);
-    const game = makeGame({ name: 'Story game', variant: state as Obj.Unknown });
+    const game = Game.make({ name: 'Story game', variant: state as Obj.Unknown });
     return { game, state };
   }, [pgn]);
   return <ChessArticle role='article' attendableId='story' game={game} variant={state} />;

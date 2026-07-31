@@ -11,6 +11,7 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
@@ -20,7 +21,6 @@ import { translations } from '#translations';
 import { useEventHandlerAdapter } from '../../hooks';
 import { TestColumn, TestItem } from '../../testing';
 import { Focus } from '../Focus';
-import { Mosaic, type MosaicEventHandler } from '../Mosaic';
 import { Board, type BoardModel } from './Board';
 import { DefaultBoardColumn } from './Column';
 
@@ -49,7 +49,7 @@ const createTestData = (db: Database.Database, columns: number, items?: (column:
   });
 };
 
-type DefaultStoryProps = {
+type StoryArgs = {
   columns?: number;
   items?: (column: number) => number;
   debug?: boolean;
@@ -57,7 +57,7 @@ type DefaultStoryProps = {
 
 type TestBoardModelResult = {
   model: BoardModel<TestColumn, TestItem>;
-  eventHandler: MosaicEventHandler<TestColumn>;
+  eventHandler: DndContainerHandler<TestColumn>;
 };
 
 const useTestBoardModel = (): TestBoardModelResult => {
@@ -164,7 +164,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
   return { model, eventHandler };
 };
 
-const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: DefaultStoryProps) => {
+const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: StoryArgs) => {
   const { model, eventHandler } = useTestBoardModel();
   const columns = useAtomValue(model.columns);
   if (columnsProp > 0 && columns.length === 0) {
@@ -172,10 +172,10 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: DefaultStoryP
   }
 
   return (
-    <Mosaic.Root asChild debug={debug}>
+    <Dnd.Root>
       <div className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board.Root model={model}>
-          <Board.Content id='board' debug={debug} eventHandler={eventHandler} Tile={DefaultBoardColumn} />
+          <Board.Content debug={debug} eventHandler={eventHandler} Tile={DefaultBoardColumn} />
         </Board.Root>
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
@@ -183,7 +183,7 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: DefaultStoryP
           </Focus.Group>
         )}
       </div>
-    </Mosaic.Root>
+    </Dnd.Root>
   );
 };
 
@@ -199,7 +199,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: ({ space }, context) => {
-        const args = context.args as DefaultStoryProps;
+        const args = context.args as StoryArgs;
         createTestData(space.db, args.columns ?? 0, args.items);
       },
     }),

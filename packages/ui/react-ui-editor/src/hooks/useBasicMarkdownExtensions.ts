@@ -18,6 +18,8 @@ export type UseBasicMarkdownExtensionsOptions = {
   placeholder?: string;
   /** Enables markdown visual decorations. Pass `false` to disable. Defaults to `true`. */
   decorate?: boolean;
+  /** Renders the editor read-only (selectable but not editable). Defaults to `false`. */
+  readonly?: boolean;
   /**
    * Extra extensions appended to the returned array.
    * Callers must memoize this array — it is used as a dependency of {@link useMemo}.
@@ -39,17 +41,18 @@ export type UseBasicMarkdownExtensionsOptions = {
 export const useBasicMarkdownExtensions = ({
   placeholder,
   decorate = true,
+  readonly = false,
   extensions,
 }: UseBasicMarkdownExtensionsOptions = {}): Extension[] => {
   const { themeMode } = useThemeContext();
   return useMemo(
     () => [
-      createBasicExtensions({ placeholder }),
+      createBasicExtensions({ placeholder, readOnly: readonly }),
       createThemeExtensions({ syntaxHighlighting: true, themeMode }),
       createMarkdownExtensions(),
       ...(decorate ? [decorateMarkdown()] : []),
       ...(extensions ?? []),
     ],
-    [placeholder, themeMode, decorate, extensions],
+    [placeholder, themeMode, decorate, readonly, extensions],
   );
 };

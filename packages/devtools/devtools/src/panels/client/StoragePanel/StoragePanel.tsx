@@ -17,10 +17,10 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { DropdownMenu, Icon, ScrollArea, Toolbar, Tree, TreeItem } from '@dxos/react-ui';
+import { DropdownMenu, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { BitField } from '@dxos/util';
 
-import { Bitbar, JsonView, PanelContainer } from '../../../components';
+import { Bitbar, JsonView } from '../../../components';
 
 // TODO(burdon): Rewrite this panel as a table.
 
@@ -205,9 +205,8 @@ export const StoragePanel = () => {
   const selectedValue = selected?.value as SelectionValue | undefined;
 
   return (
-    <PanelContainer
-      classNames='grid grid-cols-2 divide-x divide-separator'
-      toolbar={
+    <Panel.Root>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
             Refresh
@@ -234,39 +233,40 @@ export const StoragePanel = () => {
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
         </Toolbar.Root>
-      }
-    >
-      <DataTree items={items} onSelect={setSelected} />
+      </Panel.Toolbar>
+      <Panel.Content classNames='grid grid-cols-2 divide-x divide-separator'>
+        <DataTree items={items} onSelect={setSelected} />
 
-      {selectedValue && (
-        <ScrollArea.Root thin>
-          <ScrollArea.Viewport classNames='divide-y divide-separator'>
-            {selectedValue.kind === 'blob' && (
-              <>
-                <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
-                <Bitbar
-                  value={selectedValue.blob.bitfield ?? new Uint8Array()}
-                  length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
-                  className='m-2'
-                />
-                <JsonView data={selectedValue.blob} />
-              </>
-            )}
+        {selectedValue && (
+          <ScrollArea.Root thin>
+            <ScrollArea.Viewport classNames='divide-y divide-separator'>
+              {selectedValue.kind === 'blob' && (
+                <>
+                  <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
+                  <Bitbar
+                    value={selectedValue.blob.bitfield ?? new Uint8Array()}
+                    length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
+                    className='m-2'
+                  />
+                  <JsonView data={selectedValue.blob} />
+                </>
+              )}
 
-            {selectedValue.kind === 'feed' && (
-              <>
-                <Bitbar
-                  value={selectedValue.feed.downloaded ?? new Uint8Array()}
-                  length={Math.ceil(selectedValue.feed.length ?? 0)}
-                  className='m-2'
-                />
-                <JsonView data={selectedValue.feed} />
-              </>
-            )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      )}
-    </PanelContainer>
+              {selectedValue.kind === 'feed' && (
+                <>
+                  <Bitbar
+                    value={selectedValue.feed.downloaded ?? new Uint8Array()}
+                    length={Math.ceil(selectedValue.feed.length ?? 0)}
+                    className='m-2'
+                  />
+                  <JsonView data={selectedValue.feed} />
+                </>
+              )}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        )}
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
@@ -297,9 +297,9 @@ const TreeItemText = ({ primary, secondary }: TreeItemTextProps) => (
 
 const DataTree: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ items = [], onSelect }) => {
   return (
-    <Tree.Root classNames='p-2'>
+    <div role='tree' className='p-2'>
       <DataItems items={items} onSelect={onSelect} />
-    </Tree.Root>
+    </div>
   );
 };
 
@@ -309,15 +309,17 @@ const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ item
       {items.map((item) => {
         const { id, iconName, Element, items } = item;
         return (
-          <TreeItem.Root key={id} collapsible={!!items?.length} open>
+          <div key={id} role='treeitem'>
             <div className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
               <Icon icon={iconName} />
               {Element}
             </div>
-            <TreeItem.Body className='ps-4'>
-              <Tree.Branch>{items && <DataItems items={items} onSelect={onSelect} />}</Tree.Branch>
-            </TreeItem.Body>
-          </TreeItem.Root>
+            {items && items.length > 0 && (
+              <div role='group' className='ps-4'>
+                <DataItems items={items} onSelect={onSelect} />
+              </div>
+            )}
+          </div>
         );
       })}
     </>

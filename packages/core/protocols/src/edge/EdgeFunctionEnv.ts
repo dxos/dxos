@@ -63,6 +63,8 @@ export interface Env {
   QUEUE_SERVICE: QueueService;
   DATA_SERVICE: DataService;
   FUNCTIONS_AI_SERVICE: FunctionsAiService;
+  /** Absent when the function is not invoked in the context of a space. */
+  ACCESS_TOKEN_SERVICE?: AccessTokenService;
 }
 
 /**
@@ -93,17 +95,36 @@ export interface DataService {
 export interface QueueService {
   queryQueue: (
     ctx: TraceContext,
-    request: FeedProtocol.QueryQueueRequest,
+    request: FeedProtocol.QueryFeedRequest,
   ) => Promise<RpcResult<FeedProtocol.QueryResult>>;
   insertIntoQueue: (
     ctx: TraceContext,
-    request: FeedProtocol.InsertIntoQueueRequest,
+    request: FeedProtocol.InsertIntoFeedRequest,
   ) => Promise<RpcResult<RpcDisposable>>;
   deleteFromQueue: (
     ctx: TraceContext,
-    request: FeedProtocol.DeleteFromQueueRequest,
+    request: FeedProtocol.DeleteFromFeedRequest,
   ) => Promise<RpcResult<RpcDisposable>>;
 }
+
+/**
+ * Resolves server-custodied access tokens (those stored as `MANAGED_ACCESS_TOKEN`) for functions.
+ *
+ * The binding is created bound to the invocation's space, so a function can only reach credentials
+ * for the space it runs in — the space is not a parameter the caller can choose.
+ */
+export interface AccessTokenService {
+  getAccessToken(ctx: TraceContext, request: GetAccessTokenRequest): Promise<RpcResult<GetAccessTokenResult>>;
+}
+
+export type GetAccessTokenRequest = {
+  /** Id of the `AccessToken` object the grant was registered against. */
+  accessTokenId: string;
+};
+
+export type GetAccessTokenResult =
+  | { success: true; accessToken: string; expiresAtMillis: number }
+  | { success: false; reason: string };
 
 /**
  * FunctionsAiService API for other CF services like functions.
@@ -120,7 +141,7 @@ export type FunctionInvokeOptions = {
   /**
    * URI of the conversation feed (queue).
    * Forwarded into the function context so nested operations can resolve
-   * `AiContext.Service` and related conversation-scoped services.
+   * the conversation-scoped `HarnessService` and related services.
    */
   conversation?: URI.URI;
   cpuTimeLimit?: number;

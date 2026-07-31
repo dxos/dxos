@@ -4,10 +4,11 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Connector } from '@dxos/plugin-connector';
 import { Button, ButtonGroup, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -21,20 +22,17 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
+  const connectors = useCapabilities(Connector);
 
-  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
-    db,
-    subject,
-    functionKey: 'org.dxos.function.inbox.google-calendar-sync',
-  });
+  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({ db, subject, connectors });
 
   const handleViewTrigger = useCallback(() => {
     if (!db) {
       return;
     }
     void invokePromise(LayoutOperation.Open, {
-      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.automation.automations')],
-      workspace: Paths.getSpacePath(db.spaceId),
+      subject: [GraphPath.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
+      workspace: GraphPath.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 
@@ -66,3 +64,5 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
     </Form.Section>
   );
 };
+
+CalendarProperties.displayName = 'CalendarProperties';

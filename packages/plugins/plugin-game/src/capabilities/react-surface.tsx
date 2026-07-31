@@ -19,8 +19,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'game',
         filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, Game),
-          AppSurface.object(AppSurface.Section, Game),
+          AppSurface.object(AppSurface.Article, Game.Game),
+          AppSurface.object(AppSurface.Section, Game.Game),
         ),
         component: ({ data, role }) => (
           <GameArticle role={role} subject={data.subject} attendableId={data.attendableId} />
@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'gameCard',
-        filter: AppSurface.object(AppSurface.CardContent, Game),
+        filter: AppSurface.object(AppSurface.CardContent, Game.Game),
         component: ({ data, role }) => <GameCard role={role} subject={data.subject} />,
       }),
     ]),

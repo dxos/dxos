@@ -3,4 +3,3 @@
 //
 
 export * from './delegation-strategy';
-export * from './plan-completion-guard';

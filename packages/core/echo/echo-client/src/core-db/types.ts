@@ -2,24 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Move this file to ../automerge.
-// TDOO(burdon): Standardize import * as A.
-import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
+import type { Heads } from '@automerge/automerge';
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import type * as Brand from 'effect/Brand';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import type { EntityMeta } from '@dxos/echo-protocol';
 import type { SpaceId, URI } from '@dxos/keys';
-import { getDeep } from '@dxos/util';
 
-// ---------------------------------------------------------------------------
+import * as Doc from '../automerge/Doc';
+
+//
 // TargetKey — proxy-target cache key (shared with echo-handler to avoid
 // circular dep: object-core ← echo-proxy-target ← core-db).
-// ---------------------------------------------------------------------------
+//
 
 type TargetKeyType = {
-  path: KeyPath;
+  path: Doc.KeyPath;
   namespace: string;
   type: 'record' | 'array';
 } & Brand.Brand<'TargetKey'>;
@@ -27,8 +26,8 @@ type TargetKeyType = {
 export type TargetKey = TargetKeyType;
 
 export const TargetKey = {
-  new: (path: KeyPath, namespace: string, type: 'record' | 'array'): TargetKey => {
-    const copiedPath: KeyPath = [...path];
+  new: (path: Doc.KeyPath, namespace: string, type: 'record' | 'array'): TargetKey => {
+    const copiedPath: Doc.KeyPath = [...path];
     return { path: copiedPath, namespace, type } as TargetKey;
   },
   hash: (key: TargetKey): string => JSON.stringify(key),
@@ -49,39 +48,10 @@ export type DecodedAutomergePrimaryValue =
   | EncodedReference;
 
 //
-// Automerge types.
-// TODO(burdon): Factor out to new low-level type package: @dxos/types?
-//
-
-export type KeyPath = readonly (string | number)[];
-
-export interface IDocHandle<T = any> {
-  doc(): Doc<T> | undefined; // TODO(burdon): Remove undefined.
-  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
-  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): Heads | undefined;
-  addListener(event: 'change', listener: () => void): void;
-  removeListener(event: 'change', listener: () => void): void;
-}
-
-// TODO(burdon): Rename ValueAccessor?
-export interface DocAccessor<T = any> {
-  get handle(): IDocHandle<T>;
-  get path(): KeyPath;
-}
-
-// TODO(burdon): Extract function.
-export const DocAccessor = {
-  getValue: <T>(accessor: DocAccessor): T => getDeep(accessor.handle.doc(), accessor.path) as T,
-};
-
-export const isValidKeyPath = (value: unknown): value is KeyPath =>
-  Array.isArray(value) && value.every((v) => typeof v === 'string' || typeof v === 'number');
-
-// ---------------------------------------------------------------------------
 // Shared entity-manager / database types — placed here so they can be
 // referenced from both core-db (object-core) and proxy-db (database) without
 // introducing circular imports.
-// ---------------------------------------------------------------------------
+//
 
 /** Notification payload emitted when objects in a space are created or updated. */
 export interface ItemsUpdatedEvent {

@@ -104,7 +104,7 @@ const Header = ({ classNames, children, icon }: HeaderProps) => {
           classNames={['transition transition-transform ease-in-out', open ? 'rotate-90' : 'transform-none']}
         />
       </IconBlock>
-      <div className='flex gap-1 items-center overflow-hidden truncate'>{children}</div>
+      <div className='w-full flex gap-1 items-center overflow-hidden truncate'>{children}</div>
       {icon && <IconBlock>{icon}</IconBlock>}
     </div>
   );
@@ -169,9 +169,9 @@ export const TogglePanel = {
 };
 
 export type {
-  RootProps as TogglePanelRootProps,
+  BodyProps as TogglePanelBodyProps,
   ContentProps as TogglePanelContentProps,
   HeaderProps as TogglePanelHeaderProps,
-  BodyProps as TogglePanelBodyProps,
+  RootProps as TogglePanelRootProps,
   ViewportProps as TogglePanelViewportProps,
 };

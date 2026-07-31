@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './data';
-export * from './schema';
-export * from './testing';
+export { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
 
-export * from './ModuleContainer';
+export * from './data';
+export * from './decorators';
+export * from './objects';
+export * from './schema';
+export * from './snapshot';

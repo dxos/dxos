@@ -7,48 +7,50 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { isComposerUrl } from './bridge/urls';
-import { DEVELOPER_MODE_PROP, getProp } from './config';
-import { runExtractor } from './extractors';
 import {
-  PAGE_ACTIONS_LIST_ACK_EVENT,
-  PAGE_ACTIONS_LIST_EVENT,
-  PAGE_ACTIONS_LIST_MESSAGE_TYPE,
-  PAGE_ACTIONS_PAGE_READY_EVENT,
-  PAGE_ACTIONS_READY_MESSAGE_TYPE,
   PAGE_ACTION_DELIVER_MESSAGE_TYPE,
   PAGE_ACTION_EXTRACT_MESSAGE_TYPE,
   PAGE_ACTION_INVOKE_ACK_EVENT,
   PAGE_ACTION_INVOKE_EVENT,
   PAGE_ACTION_INVOKE_MESSAGE_TYPE,
   PAGE_ACTION_PREDICATE_MESSAGE_TYPE,
+  PAGE_ACTIONS_LIST_ACK_EVENT,
+  PAGE_ACTIONS_LIST_EVENT,
+  PAGE_ACTIONS_LIST_MESSAGE_TYPE,
+  PAGE_ACTIONS_PAGE_READY_EVENT,
+  PAGE_ACTIONS_READY_MESSAGE_TYPE,
   decodeInvokeAck,
   decodeListAck,
-} from './page-actions';
-import { pickSnapshot } from './picker';
-import { showDebugPreview } from './picker/debug-preview';
+} from './core/actions';
+import { isComposerUrl } from './core/bridge/urls';
+import { runExtractor } from './core/extractors';
+import { pickSnapshot } from './core/picker';
+import { showDebugPreview } from './core/picker/debug-preview';
 import {
-  type PingAck,
-  type RenderAck,
   PING_ACK_EVENT,
   PING_EVENT,
   PING_MESSAGE_TYPE,
+  type PingAck,
   RENDER_ACK_EVENT,
   RENDER_EVENT,
   RENDER_MESSAGE_TYPE,
   RENDER_READY_DATASET_KEY,
+  type RenderAck,
   decodePingAck,
   decodePingRequest,
   decodeRenderAck,
   decodeRenderRequest,
-} from './proxy';
+} from './core/proxy';
+// Import specific `core/` submodules rather than the top-level barrel: this is the content
+// script injected into every page, so it deliberately avoids pulling in background-only weight
+// (e.g. `bridge/sender`'s tab APIs, the `image` edge-client action) via a barrel.
+import { DeveloperMode } from './core/state';
 
 /**
  * Content script — loaded on every page at document_start. Hosts the DOM
  * picker and the page-actions / search-proxy relays.
  *
- * The popup cannot reliably await a round-trip reply because it closes when
- * the user mouses onto the page to pick. The popup fires a one-way
+ * The side panel does not await a round-trip reply: it fires a one-way
  * `start-picker` message; we push the picked snapshot to the background via
  * a deliver message. The background handles discovery + delivery.
  */
@@ -281,7 +283,7 @@ const main = async () => {
 
     // When `developer-mode` is on, show the serialized JSON before delivery so
     // the user can inspect (and copy) the payload independently of Composer.
-    const debug = Boolean(await getProp(DEVELOPER_MODE_PROP));
+    const debug = await DeveloperMode.get();
     if (debug) {
       const confirmed = await showDebugPreview(picked.actionId, picked);
       if (!confirmed) {

@@ -10,19 +10,23 @@ import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ViewAnnotation } from '@dxos/schema';
 
 import { buildViewIndex, checkPendingMigration } from './shared';
 
-const TestContact = Schema.Struct({
-  name: Schema.String,
-}).pipe(Type.makeObject(DXN.make('com.example.type.contact', '0.1.0')));
+const TestContact = Type.makeObject(DXN.make('com.example.type.contact', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String,
+  }),
+);
 
-const TestViewWrapper = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  view: Ref.Ref(View.View),
-}).pipe(ViewAnnotation.set(['view']), Type.makeObject(DXN.make('com.example.type.viewWrapper', '0.1.0')));
+const TestViewWrapper = Type.makeObject(DXN.make('com.example.type.viewWrapper', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    view: Ref.Ref(View.View),
+  }).pipe(ViewAnnotation.set(['view'])),
+);
 
 describe('buildViewIndex', () => {
   let testBuilder: EchoTestBuilder;

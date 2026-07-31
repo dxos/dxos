@@ -3,79 +3,103 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { createObject } from '@dxos/echo-client';
 import { Panel } from '@dxos/react-ui';
 import { AttendableContainer } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor } from '@dxos/react-ui-editor';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 import { Markdown } from '#types';
 
-import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from './MarkdownEditor';
+import {
+  MarkdownEditor,
+  type MarkdownEditorEditorRootProps,
+  MarkdownEditorProvider,
+  type MarkdownEditorProviderProps,
+} from './MarkdownEditor';
 
-type DefaultStoryProps = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
+const CONTENT = [
+  '# Markdown editor',
+  '',
+  '> Edit any column and watch the others update.',
+  '',
+  'Renders **markdown** formatting inline, or as raw *source*.',
+  '',
+  '## Section One',
+  '',
+  'Bound to a raw `Text` object (no client or database); every column shares the same object.',
+  '',
+  '- First item',
+  '- Second item',
+  '- Third item',
+  '',
+  '## Section Two',
+  '',
+  'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+  '',
+  'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+  '',
+  'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.',
+  '',
+].join('\n');
 
-const DefaultStory = (props: DefaultStoryProps) => {
-  const [space] = useSpaces();
-  const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
-  const id = doc && Obj.getURI(doc);
-  if (!id) {
-    return <Loading data={{ id }} />;
-  }
+// Per-column editor config; the column's view mode is taken from `defaultViewMode`.
+type StoryArgs = {
+  columns: Markdown.Settings[];
+};
+
+const EditorArticle = (props: MarkdownEditorEditorRootProps) => (
+  <Editor.Root {...props}>
+    <Panel.Root role='article'>
+      <Panel.Toolbar>
+        <MarkdownEditor.Toolbar classNames='dx-document' />
+      </Panel.Toolbar>
+      <Panel.Content>
+        <MarkdownEditor.Content />
+        <Editor.Blocks />
+      </Panel.Content>
+    </Panel.Root>
+  </Editor.Root>
+);
+
+const EditorColumn = ({ id, object, settings }: Pick<MarkdownEditorProviderProps, 'id' | 'object' | 'settings'>) => (
+  <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
+    <MarkdownEditorProvider
+      id={id}
+      attendableId={id}
+      object={object}
+      viewMode={settings?.defaultViewMode}
+      settings={settings}
+    >
+      {(editorRootProps) => <EditorArticle {...editorRootProps} />}
+    </MarkdownEditorProvider>
+  </AttendableContainer>
+);
+
+// Renders one column per config; all columns bind to the same raw ECHO object, so edits sync live via automerge.
+const DefaultStory = ({ columns }: StoryArgs) => {
+  // An automerge-backed ECHO object created without a client or database.
+  const object = useMemo(() => createObject(Text.make({ content: CONTENT })), []);
 
   return (
-    <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
-      <MarkdownEditorProvider id={id} object={doc} {...props}>
-        {(editorRootProps) => (
-          <Editor.Root {...editorRootProps}>
-            <Panel.Root>
-              <Panel.Toolbar asChild>
-                <MarkdownEditor.Toolbar />
-              </Panel.Toolbar>
-              <Panel.Content asChild>
-                <MarkdownEditor.Content />
-              </Panel.Content>
-            </Panel.Root>
-          </Editor.Root>
-        )}
-      </MarkdownEditorProvider>
-    </AttendableContainer>
+    <div className='dx-container grid' style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
+      {columns.map((settings, index) => (
+        <EditorColumn key={index} id={`${object.id}/${index}`} object={object} settings={settings} />
+      ))}
+    </div>
   );
 };
 
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/components/MarkdownEditor',
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'column' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        // TODO(burdon): Try to write story without ClientPlugin.
-        ClientPlugin({
-          types: [Markdown.Document, Text.Text],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(
-                Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }),
-              );
-            }),
-        }),
-      ],
-    }),
-  ],
+  decorators: [withTheme()],
   parameters: {
     translations: [...translations, ...editorTranslations],
   },
@@ -85,4 +109,28 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [withLayout({ layout: 'column' }), withAttention()],
+  args: {
+    columns: [
+      {
+        defaultViewMode: 'preview',
+      },
+    ],
+  },
+};
+
+export const TwoColumn: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' }), withAttention()],
+  args: {
+    columns: [
+      {
+        defaultViewMode: 'preview',
+        numberedHeadings: true,
+      },
+      {
+        defaultViewMode: 'source',
+      },
+    ],
+  },
+};

@@ -75,6 +75,29 @@ export const Static: Story = {
   },
 };
 
+export const Custom_DXOS: Story = {
+  args: {
+    icon: 'dx--dxos--regular',
+    classNames: getSize(16),
+  },
+};
+
+/**
+ * Custom DXOS brand icons (the `dx--` set), sourced from `@dxos/brand` SVGs.
+ */
+export const Brand: Story = {
+  args: {
+    icon: 'dx--dxos--regular',
+  },
+  render: () => (
+    <div className='flex gap-8'>
+      {(['dxos', 'echo', 'halo', 'mesh', 'dxns', 'kube'] as const).map((name) => (
+        <Icon key={name} icon={`dx--${name}--regular`} classNames={getSize(12)} />
+      ))}
+    </div>
+  ),
+};
+
 export const Dynamic: Story = {
   args: {
     icon: 'ph--github-logo--regular',

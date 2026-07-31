@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { osTranslations } from '@dxos/ui-theme';
@@ -15,7 +16,7 @@ import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
 import { GITHUB_NEW_ISSUE_URL } from '../../constants';
-import { DEFAULT_IMAGE_SERVICE_URL, captureScreenshot, uploadScreenshot } from './screenshot';
+import { captureScreenshot, uploadScreenshot } from './screenshot';
 
 const CUSTOM_LABEL = 'Composer';
 
@@ -85,7 +86,8 @@ export const GitHubAction = () => {
   const config = useConfig();
   // Shared with @dxos/plugin-crm (same Edge service, same multipart contract).
   const imageServiceUrl =
-    (config.values.runtime?.app?.env?.DX_IMAGE_SERVICE_URL as string | undefined) ?? DEFAULT_IMAGE_SERVICE_URL;
+    (config.values.runtime?.app?.env?.DX_IMAGE_SERVICE_URL as string | undefined) ??
+    getEdgeServiceEndpoint(config, EdgeServiceName.Image);
 
   const handleGitHub = useCallback<FeedbackSubmitHandler>(
     async (values) => {
@@ -141,7 +143,7 @@ export const GitHubAction = () => {
         }
       }
 
-      // Phase 1: prefilled URL only. Authenticated submission via plugin-integration
+      // Phase 1: prefilled URL only. Authenticated submission via plugin-connector
       // is a follow-up — when present, POST to /repos/dxos/dxos/issues using the
       // stored AccessToken and open the resulting `html_url` instead.
       const url = buildGitHubIssueUrl(values, screenshotUrl);
@@ -181,3 +183,5 @@ export const GitHubAction = () => {
 
   return <FeedbackForm.SubmitGitHub onSubmit={handleGitHub} />;
 };
+
+GitHubAction.displayName = 'GitHubAction';

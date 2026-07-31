@@ -6,21 +6,22 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
-import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
+import { AnchorWidget, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
 import { type Assistant } from '../../types';
-import { type BlockRenderer, type MessageThreadContext } from './sync';
-import { applyToolBlockToWidgetState } from './tool-widget-state';
+import { type BlockRenderer, type MessageThreadContext, applyToolBlockToWidgetState } from './sync';
 import {
+  BranchWidget,
   FallbackWidget,
   ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
-  SuggestionWidget,
   StatsWidget,
-  SummaryWidget,
-  ToolWidget,
   StatusWidget,
+  SuggestionWidget,
+  SummaryWidget,
+  SurfaceWidget,
+  ToolWidget,
 } from './widgets';
 
 /**
@@ -39,7 +40,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   // Block-only (no widget — see note above).
   //
 
-  prompt: {
+  'prompt': {
     block: true,
   },
 
@@ -47,7 +48,13 @@ export const componentRegistry: XmlWidgetRegistry = {
   // DOM Widgets
   //
 
-  synthetic: {
+  'link-preview': {
+    block: false,
+    urlSchemes: ['dxn:', 'echo:'],
+    factory: ({ label, dxn }) =>
+      typeof label === 'string' && typeof dxn === 'string' ? new AnchorWidget(label, dxn) : null,
+  },
+  'synthetic': {
     block: true,
     factory: ({ children, range }) => {
       const text = getXmlTextChild(children);
@@ -57,7 +64,7 @@ export const componentRegistry: XmlWidgetRegistry = {
       return text ? new ReasoningWidget(text, range.from) : null;
     },
   },
-  reasoning: {
+  'reasoning': {
     block: true,
     streaming: true,
     factory: ({ children, range }) => {
@@ -65,14 +72,14 @@ export const componentRegistry: XmlWidgetRegistry = {
       return text ? new ReasoningWidget(text, range.from) : null;
     },
   },
-  reference: {
+  'reference': {
     block: false,
     factory: ({ children, ref }) => {
       const text = getXmlTextChild(children);
       return text && ref ? new ReferenceWidget(text, ref) : null;
     },
   },
-  select: {
+  'select': {
     block: true,
     factory: ({ children }) => {
       const options = children
@@ -81,21 +88,22 @@ export const componentRegistry: XmlWidgetRegistry = {
       return options?.length ? new SelectWidget(options) : null;
     },
   },
-  suggestion: {
-    block: true,
+  // Inline so a run of suggestions flows onto one wrapped line instead of one block per line.
+  'suggestion': {
+    block: false,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new SuggestionWidget(text) : null;
     },
   },
-  stats: {
+  'stats': {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new StatsWidget(text) : null;
     },
   },
-  status: {
+  'status': {
     block: true,
     streaming: true,
     factory: ({ children }) => {
@@ -108,11 +116,19 @@ export const componentRegistry: XmlWidgetRegistry = {
   // React Widgets (portaled outside of the editor)
   //
 
-  summary: {
+  'branch': {
+    block: true,
+    Component: BranchWidget,
+  },
+  'summary': {
     block: true,
     Component: SummaryWidget,
   },
-  toolCall: {
+  'surface': {
+    block: true,
+    Component: SurfaceWidget,
+  },
+  'toolCall': {
     block: true,
     Component: (props) => (
       <div className='py-2'>
@@ -120,11 +136,11 @@ export const componentRegistry: XmlWidgetRegistry = {
       </div>
     ),
   },
-  toolResult: {
+  'toolResult': {
     block: true,
     Component: FallbackWidget,
   },
-  toolkit: {
+  'toolkit': {
     block: true,
     Component: FallbackWidget,
   },
@@ -133,11 +149,11 @@ export const componentRegistry: XmlWidgetRegistry = {
   // Fallback
   //
 
-  json: {
+  'json': {
     block: true,
     Component: FallbackWidget,
   },
-};
+} as const;
 
 /**
  * Convert block to markdown.
@@ -157,8 +173,16 @@ export function createBlockRenderer(viewType: Assistant.ChatView | undefined): B
     if (!isBlockVisible(viewType, message, block)) {
       return;
     }
+
     let str = blockToMarkdownImpl(context, message, block);
     if (str && !block.pending) {
+      // Suggestions are inline widgets meant to flow: keeping them on one line lets a run of them wrap
+      // as chips instead of stacking one per line. A trailing space separates adjacent tags so the
+      // inline parser sees them as distinct.
+      if (block._tag === 'suggestion') {
+        return (str += ' ');
+      }
+
       // Use a blank line as the block separator so each rendered block parses as its own
       // markdown block. A single newline lets CommonMark absorb a following `<prompt>` (an
       // HTML type-7 tag, which can't interrupt an open paragraph) into the previous
@@ -197,7 +221,11 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
         if (block.disposition === 'synthetic') {
           return renderXMLBlock('synthetic', { content: block.text, pending: block.pending });
         } else {
-          return `\n<prompt>${block.text}</prompt>`;
+          // Built by explicit concatenation, not an indented template: `trim` dedents by the minimum
+          // indent across all lines, and a multi-line prompt contributes lines at zero indent — so the
+          // source file's indentation survived into the document, where 4+ spaces is an indented code
+          // block and neither the prompt nor the toolbar parsed as an element any more.
+          return `\n<prompt>${block.text}</prompt>\n${renderBranchToolbar(message)}\n`;
         }
       } else {
         const text = block.text.trim();
@@ -261,6 +289,18 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       return renderXMLBlock('status', { content: block.statusText, pending: block.pending });
     }
 
+    case 'surface': {
+      if (block.pending) {
+        return;
+      }
+      // Carry the payload as JSON text content so it round-trips through the mixed XML parser
+      // without colliding with attribute quoting; `SurfaceWidget` re-parses it.
+      return renderXMLBlock('surface', {
+        content: JSON.stringify(block.data ?? {}),
+        attributes: `role="${escapeXmlAttribute(block.role)}"`,
+      });
+    }
+
     default: {
       // TODO(burdon): Needs stable ID.
       return `<json id="${message.id}">\n${JSON.stringify(block)}\n</json>`;
@@ -269,10 +309,20 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
 };
 
 /**
+ * Mini toolbar below a user prompt: branch (soft fork) plus when the prompt was sent.
+ * `messageId` rather than `id` because a tag's `id` attribute would shadow the widget's own id.
+ */
+const renderBranchToolbar = (message: Message.Message) =>
+  `<branch messageId="${escapeXmlAttribute(message.id)}" created="${escapeXmlAttribute(message.created)}" />`;
+
+/**
  * Escape text embedded in generated XML so the mixed XML parser does not treat `&`, `<`, `>` as markup.
  */
 const escapeXmlTextContent = (raw: string): string =>
   raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/** Escape a value embedded in a double-quoted XML attribute (e.g. a model-supplied surface role). */
+const escapeXmlAttribute = (raw: string): string => escapeXmlTextContent(raw).replace(/"/g, '&quot;');
 
 const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
   // Replace paragraph breaks so that the markdown parser does not split the content into multiple paragraphs.

@@ -3,26 +3,28 @@
 //
 
 import { type ViewUpdate } from '@codemirror/view';
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-import { Paths } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
-import { invariant } from '@dxos/invariant';
-import { getSpace, useObject } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { Doc } from '@dxos/echo-doc';
+import { useObject } from '@dxos/echo-react';
+import { type Identity } from '@dxos/halo';
+import { getSpace } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
-import { selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { Selection, ViewState } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
+  AnchorWidget,
   Cursor,
   type EditorStateStore,
   EditorView,
   type Extension,
   InputModeExtensions,
-  type PreviewOptions,
+  type XmlWidgetProps,
+  type XmlWidgetState,
   createDataExtensions,
   decorateMarkdown,
   documentId,
@@ -30,16 +32,21 @@ import {
   formattingKeymap,
   linkTooltip,
   listener,
-  preview,
   replacer,
   selectionState,
   snippets,
+  xmlTags,
 } from '@dxos/ui-editor';
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
+import {
+  PreviewComponent,
+  type PreviewComponentProps,
+  parseEmbedLabel,
+} from '../components/PreviewComponent/PreviewComponent';
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -51,12 +58,21 @@ export type ExtensionsOptions = {
   compact?: boolean;
   viewMode?: EditorViewMode;
   editable?: boolean;
-  viewState?: ViewStateManager;
+  viewState?: ViewState.Manager;
   editorStateStore?: EditorStateStore;
-  previewOptions?: PreviewOptions;
+  setWidgets?: (widgets: XmlWidgetState[]) => void;
   platform?: 'mobile' | 'desktop';
-  /** Callback when an internal link is clicked. */
-  onSelectObject?: (objectId: string) => void;
+  /**
+   * Local identity for collaboration awareness. Optional so the editor can bind to a raw ECHO object
+   * with no client (awareness only activates when both a space and an identity are present).
+   */
+  identity?: Identity.Info | null;
+  /**
+   * Callback when an internal link is clicked, with the link's URL pathname — resolving one to a node
+   * walks the app graph, which only a container may reach. `modifiers.shift` reflects the originating
+   * click/keydown event, so callers can invert the deck's navigation disposition.
+   */
+  onSelectLink?: (pathname: string, modifiers?: { shift: boolean }) => void;
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
@@ -68,18 +84,18 @@ export const useExtensions = ({
   viewMode,
   viewState,
   editorStateStore,
-  previewOptions,
-  onSelectObject,
+  setWidgets,
+  identity,
+  onSelectLink,
 }: ExtensionsOptions): Extension[] => {
   const { platform } = useThemeContext();
-  const identity = useIdentity();
   const space = getSpace(object);
 
   // Get the content reference from Document objects.
   const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
   // Use useObject to trigger re-render when the reference loads (returns snapshot for reactivity).
   useObject(contentRef);
-  // Get the actual live object target via .target (needed for createDocAccessor).
+  // Get the actual live object target via .target (needed for Doc.createAccessor).
   const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
@@ -92,28 +108,30 @@ export const useExtensions = ({
       createBaseExtensions({
         id,
         object,
+        space,
         settings,
         compact,
         viewMode,
         viewState,
-        previewOptions,
+        setWidgets,
         platform,
-        onSelectObject,
+        onSelectLink,
       }),
     [
       id,
       object,
+      space,
       compact,
       viewMode,
       viewState,
-      previewOptions,
+      setWidgets,
       settings,
       settings?.debug,
       settings?.editorInputMode,
       settings?.folding,
       settings?.numberedHeadings,
       platform,
-      onSelectObject,
+      onSelectLink,
     ],
   );
 
@@ -125,7 +143,7 @@ export const useExtensions = ({
         target &&
           createDataExtensions({
             id,
-            text: createDocAccessor(target, ['content']),
+            text: Doc.createAccessor(target, ['content']),
             messenger: space,
             identity,
           }),
@@ -151,14 +169,15 @@ export const useExtensions = ({
 const createBaseExtensions = ({
   id,
   object,
-  onSelectObject,
+  space,
+  onSelectLink,
   settings,
   compact,
   viewMode,
   viewState,
-  previewOptions,
+  setWidgets,
   platform,
-}: ExtensionsOptions): Extension[] => {
+}: ExtensionsOptions & { space?: Space }): Extension[] => {
   const extensions: Extension[] = [
     viewState && selectionChange(viewState),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
@@ -176,10 +195,31 @@ const createBaseExtensions = ({
           selectionChangeDelay: 100,
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
-          renderLinkButton: onSelectObject && createRenderLink(onSelectObject),
+          renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
+          // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
+          skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:'),
         }),
-        linkTooltip(renderLinkTooltip),
-        preview(previewOptions),
+        linkTooltip({ render: renderLinkTooltip }),
+        xmlTags({
+          registry: {
+            'dxn-preview': {
+              block: true,
+              urlSchemes: ['dxn:', 'echo:'],
+              // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
+              // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
+              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) =>
+                label ? parseEmbedLabel(label).height : undefined,
+              Component: (props: Omit<PreviewComponentProps, 'space'>) => <PreviewComponent {...props} space={space} />,
+            },
+            'link-preview': {
+              block: false,
+              urlSchemes: ['dxn:', 'echo:'],
+              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
+                label && dxn ? new AnchorWidget(label, dxn) : null,
+            },
+          },
+          setWidgets,
+        }),
         replacer(),
       ],
     );
@@ -195,7 +235,7 @@ const createBaseExtensions = ({
   return extensions;
 };
 
-const selectionChange = (viewState: ViewStateManager) => {
+const selectionChange = (viewState: ViewState.Manager) => {
   const debouncedHandler = debounceAndThrottle((update: ViewUpdate) => {
     const id = update.state.facet(documentId);
     const cursorConverter = update.state.facet(Cursor.converter);
@@ -213,7 +253,7 @@ const selectionChange = (viewState: ViewStateManager) => {
         to: cursorConverter.toCursor(range.to),
       }));
 
-    viewState.set(selectionAspect, id, { mode: 'multi-range', ranges });
+    viewState.set(Selection.aspect, id, { mode: 'multi-range', ranges });
   }, 100);
 
   return EditorView.updateListener.of((update: ViewUpdate) => {
@@ -224,33 +264,32 @@ const selectionChange = (viewState: ViewStateManager) => {
 };
 
 const createRenderLink =
-  (onSelectObject: (id: string) => void): RenderCallback<{ url: string }> =>
+  (onSelectLink: (pathname: string, modifiers?: { shift: boolean }) => void): RenderCallback<{ url: string }> =>
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
-    const qualifiedId = isInternal ? Paths.fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
     const icon = Domino.of('span')
       .classNames('dx-link ms-1 inline-block align-[-0.125em]')
       .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
     if (isInternal) {
-      invariant(qualifiedId, 'Invalid link format.');
+      const pathname = new URL(url, window.location.origin).pathname;
+
       icon
         .attributes({ role: 'button', tabindex: '0' })
         .on('click', (event) => {
           event.preventDefault();
           event.stopPropagation();
-          onSelectObject(qualifiedId);
+          onSelectLink(pathname, { shift: event.shiftKey });
         })
         .on('keydown', (event) => {
-          const keyboardEvent = event as KeyboardEvent;
-          if (keyboardEvent.key !== 'Enter' && keyboardEvent.key !== ' ') {
+          if (event.key !== 'Enter' && event.key !== ' ') {
             return;
           }
 
-          keyboardEvent.preventDefault();
-          keyboardEvent.stopPropagation();
-          onSelectObject(qualifiedId);
+          event.preventDefault();
+          event.stopPropagation();
+          onSelectLink(pathname, { shift: event.shiftKey });
         });
     }
 

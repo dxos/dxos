@@ -4,7 +4,7 @@
 
 import { CalendarDate, CalendarDateTime, Time, parseDate, parseDateTime, parseTime } from '@internationalized/date';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { forwardRef, useCallback, useState } from 'react';
+import React, { type ComponentProps, ReactNode, forwardRef, useCallback, useState } from 'react';
 import {
   DateField,
   type DateFieldProps,
@@ -53,7 +53,9 @@ const toCalendarDate = (date: Date) => new CalendarDate(date.getFullYear(), date
 // Theming.
 //
 
-const fieldClass = 'inline-flex items-center gap-px font-mono tabular-nums focus-within:bg-attention-surface';
+// TODO(burdon): Move to theme.
+const fieldClassNames =
+  'inline-flex flex-nowrap items-center gap-px whitespace-nowrap tabular-nums focus-within:bg-attention-surface';
 
 // React Aria sets `caret-color: transparent` inline on each segment because spinbuttons replace
 // the whole value rather than inserting at a caret position. We override with `!important` so a
@@ -63,15 +65,17 @@ const fieldClass = 'inline-flex items-center gap-px font-mono tabular-nums focus
 // width regardless of value (so e.g. month `1` and `12` occupy the same space). `text-align: end`
 // right-aligns the digits within that fixed width.
 // TODO(burdon): Move to Input.theme.ts
-const segmentClass =
-  'rounded-xs outline-none text-end [caret-color:currentColor]! ' +
+const segmentClassNames =
+  'shrink-0 rounded-xs outline-none text-end [caret-color:currentColor]! ' +
   'data-[type=year]:min-w-[4ch] ' +
-  'data-[type=month]:min-w-[2ch] data-[type=day]:min-w-[2ch] ' +
-  'data-[type=hour]:min-w-[2ch] data-[type=minute]:min-w-[2ch] ' +
+  'data-[type=month]:min-w-[1ch] data-[type=day]:min-w-[1ch] ' +
+  'data-[type=hour]:min-w-[1ch] data-[type=minute]:min-w-[1ch] ' +
   'data-[placeholder]:text-subdued data-[type=literal]:text-subdued ' +
   'data-[focused]:bg-accent-bg data-[focused]:text-accent-fg ' +
   'data-[invalid]:text-rose-500 ' +
   'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
+
+const timeSegmentClassNames = `${segmentClassNames} data-[type=dayPeriod]:text-xs data-[type=dayPeriod]:text-description`;
 
 // Match bidi format characters (LRI/RLI/PDI/LRE/RLE/PDF/LRO/RLO) that React Aria inserts to
 // isolate locale-formatted portions. These are invisible glyphs but the browser still gives
@@ -80,18 +84,22 @@ const segmentClass =
 // collapse them to zero width.
 const BIDI_FORMAT_RE = /^[‪-‮⁦-⁩]+$/;
 
+// The segment object react-aria passes to the `DateInput` render function and expects back on
+// `DateSegment` — derived from the component so no extra dependency on `react-stately` is needed.
+type DateSegmentData = ComponentProps<typeof DateSegment>['segment'];
+
 /**
  * Render a single DateSegment. Locale-specific literals between date and time portions
  * (e.g. en-US's `", "`) become a plain space; bidi format markers are kept but rendered
  * zero-width so the visible content lines up at the field's left edge.
  */
-const renderSegment = (segment: { type: string; text: string }) => {
+const renderSegment = (segment: DateSegmentData, classNames = segmentClassNames) => {
   if (segment.type === 'literal') {
     if (BIDI_FORMAT_RE.test(segment.text)) {
       // Render as a fixed-width spacer (between date and time portions of a datetime field),
       // but hide when at the field's edges — opening LRI is the first child of a time-only
       // field and would push everything right; closing PDI is the last child everywhere.
-      return <span aria-hidden className='select-none w-[2ch] first:hidden last:hidden' />;
+      return <span aria-hidden className='select-none w-[1ch] first:hidden last:hidden' />;
     }
     if (segment.text.includes(',')) {
       return (
@@ -101,7 +109,8 @@ const renderSegment = (segment: { type: string; text: string }) => {
       );
     }
   }
-  return <DateSegment segment={segment as any} className={segmentClass} />;
+
+  return <DateSegment segment={segment} className={classNames} />;
 };
 
 //
@@ -110,12 +119,12 @@ const renderSegment = (segment: { type: string; text: string }) => {
 
 type SegmentedInputBaseProps = InputSharedProps &
   ThemedClassName<{
-    id?: string;
-    value?: string;
-    defaultValue?: string;
-    onValueChange?: (value: string) => void;
-    disabled?: boolean;
-    autoFocus?: boolean;
+    'id'?: string;
+    'value'?: string;
+    'defaultValue'?: string;
+    'onValueChange'?: (value: string) => void;
+    'disabled'?: boolean;
+    'autoFocus'?: boolean;
     'aria-label'?: string;
   }>;
 
@@ -150,19 +159,19 @@ const useFieldChrome = ({
  * `Input.Root`) calls the registered handler on press; the popover anchors to this field.
  */
 const PickerWrapper = ({
+  children,
   pickerValue,
-  onPickerChange,
   withTime,
   disabled = false,
-  children,
   calendar,
+  onPickerChange,
 }: {
+  children: ReactNode;
   pickerValue: Date | undefined;
-  onPickerChange: (next: Date | undefined) => void;
   withTime: boolean;
   disabled?: boolean;
-  children: React.ReactNode;
-  calendar: React.ReactNode;
+  calendar: ReactNode;
+  onPickerChange: (next: Date | undefined) => void;
 }) => {
   const [open, setOpen] = useState(false);
   const openPicker = useCallback(() => {
@@ -225,13 +234,13 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
     const parsed = tryParse(parseDate, stringValue);
 
     const fieldProps: DateFieldProps<CalendarDate> = {
-      value: parsed,
-      onChange: (next) => setStringValue(next ? formatCalendarDate(next) : ''),
-      isDisabled: disabled,
+      'value': parsed,
+      'onChange': (next) => setStringValue(next ? formatCalendarDate(next) : ''),
+      'isDisabled': disabled,
       autoFocus,
       'aria-label': ariaLabel ?? 'date',
-      granularity: 'day',
-      shouldForceLeadingZeros: true,
+      'granularity': 'day',
+      'shouldForceLeadingZeros': true,
     };
 
     const field = (
@@ -247,7 +256,7 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
           className={tx(
             'input.input',
             { variant, disabled, density, elevation, validationValence },
-            fieldClass,
+            fieldClassNames,
             classNames,
           )}
         >
@@ -311,14 +320,14 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
     const parsed = tryParse(parseTime, stringValue);
 
     const fieldProps: TimeFieldProps<Time> = {
-      value: parsed,
-      onChange: (next) => setStringValue(next ? formatTime(next) : ''),
-      isDisabled: disabled,
+      'value': parsed,
+      'onChange': (next) => setStringValue(next ? formatTime(next) : ''),
+      'isDisabled': disabled,
       autoFocus,
       'aria-label': ariaLabel ?? 'time',
-      granularity: 'minute',
+      'granularity': 'minute',
       hourCycle,
-      shouldForceLeadingZeros: true,
+      'shouldForceLeadingZeros': true,
     };
 
     return (
@@ -334,11 +343,11 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
           className={tx(
             'input.input',
             { variant, disabled, density, elevation, validationValence },
-            fieldClass,
+            fieldClassNames,
             classNames,
           )}
         >
-          {renderSegment}
+          {(segment) => renderSegment(segment, timeSegmentClassNames)}
         </DateInput>
       </TimeField>
     );
@@ -386,14 +395,14 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
     const parsed = tryParse(parseDateTime, stringValue);
 
     const fieldProps: DateFieldProps<CalendarDateTime> = {
-      value: parsed,
-      onChange: (next) => setStringValue(next ? formatCalendarDateTime(next) : ''),
-      isDisabled: disabled,
+      'value': parsed,
+      'onChange': (next) => setStringValue(next ? formatCalendarDateTime(next) : ''),
+      'isDisabled': disabled,
       autoFocus,
       'aria-label': ariaLabel ?? 'date-time',
-      granularity: 'minute',
+      'granularity': 'minute',
       hourCycle,
-      shouldForceLeadingZeros: true,
+      'shouldForceLeadingZeros': true,
     };
 
     const field = (
@@ -409,7 +418,7 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
           className={tx(
             'input.input',
             { variant, disabled, density, elevation, validationValence },
-            fieldClass,
+            fieldClassNames,
             classNames,
           )}
         >
@@ -449,6 +458,6 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
 );
 SegmentedDateTime.displayName = 'Input.SegmentedDateTime';
 
-export { SegmentedDate, SegmentedTime, SegmentedDateTime };
+export { SegmentedDate, SegmentedDateTime, SegmentedTime };
 
-export type { SegmentedDateProps, SegmentedTimeProps, SegmentedDateTimeProps };
+export type { SegmentedDateProps, SegmentedDateTimeProps, SegmentedTimeProps };

@@ -3,4 +3,4 @@
 //
 
 export { FormLayout, type FormLayoutProps } from './FormLayout';
-export { LayoutParseError, parseLayout, type LayoutNode } from './parser';
+export { type LayoutNode, LayoutParseError, parseLayout } from './parser';

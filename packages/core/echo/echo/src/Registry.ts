@@ -25,7 +25,7 @@ export type TypeId = typeof TypeId;
  * A registry may delegate to an optional upstream registry: results from the local
  * registry take precedence and upstream results fill in anything not found locally.
  *
- * Intended use cases include caches of schemas, operations, blueprints, routines, plugins,
+ * Intended use cases include caches of schemas, operations, skills, routines, plugins,
  * etc., sourced from 3rd-party plugins, local code, or local space objects.
  *
  * Types (schema-definition entities produced by `Type.makeObject` / `Type.makeRelation`) are

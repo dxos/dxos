@@ -3,9 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
@@ -131,22 +130,16 @@ describe('schema-validator', () => {
       });
     });
 
-    test('walking into an Unknown-typed value does not warn', ({ expect }) => {
+    test('walking into an Unknown-typed value does not throw', ({ expect }) => {
       // Mirrors the annotation Dictionary (Record<string, Unknown>): nested keys/indices under an
-      // Unknown slot are all valid, so the validator must not log "unknown property" while walking them.
+      // Unknown slot are all valid, so the validator must not reject while walking them.
       const schema = Schema.Struct({ dict: Schema.Record({ key: Schema.String, value: Schema.Unknown }) });
-      const warn = vi.spyOn(log, 'warn');
-      try {
-        for (const path of [
-          ['dict', 'someType'],
-          ['dict', 'someType', 'nested'],
-          ['dict', 'someType', '0'],
-        ]) {
-          SchemaValidator.getPropertySchema(schema, path);
-        }
-        expect(warn).not.toHaveBeenCalled();
-      } finally {
-        warn.mockRestore();
+      for (const path of [
+        ['dict', 'someType'],
+        ['dict', 'someType', 'nested'],
+        ['dict', 'someType', '0'],
+      ]) {
+        SchemaValidator.getPropertySchema(schema, path);
       }
     });
     test('index signatures', () => {
@@ -197,6 +190,46 @@ describe('schema-validator', () => {
           });
         }
       }
+    });
+  });
+
+  describe('assertExactProperties', () => {
+    test('rejects extra properties on a closed struct', () => {
+      const Person = Schema.Struct({ name: Schema.String });
+      expect(() => SchemaValidator.assertExactProperties(Person, { name: 'Alice', extra: true })).to.throw(
+        /Unknown property: extra/,
+      );
+    });
+
+    test('allows extra properties when the schema has an index signature', () => {
+      const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any });
+      expect(() => SchemaValidator.assertExactProperties(Expando, { custom: 'value' })).not.to.throw();
+    });
+
+    test('rejects extra nested properties', () => {
+      const schema = Schema.Struct({
+        nested: Schema.Struct({ field: Schema.Number }),
+      });
+      expect(() => SchemaValidator.assertExactProperties(schema, { nested: { field: 1, extra: true } })).to.throw(
+        /Unknown property: nested.extra/,
+      );
+    });
+
+    test('resolves nested discriminated union using target property values', () => {
+      const spec = Schema.Union(
+        Schema.Struct({ kind: Schema.Literal('feed'), feed: Schema.optional(Schema.String) }),
+        Schema.Struct({ kind: Schema.Literal('timer'), cron: Schema.String }),
+      );
+      const schema = Schema.Struct({ spec });
+      const target = { spec: { kind: 'feed' as const, feed: 'echo:/feed', extra: true } };
+      expect(() => SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path))).to.throw(
+        /Unknown property: spec.extra/,
+      );
+      expect(() =>
+        SchemaValidator.assertExactProperties(schema, { spec: { kind: 'feed' as const } }, (path) =>
+          getDeep({ spec: { kind: 'feed' as const } }, path),
+        ),
+      ).not.to.throw();
     });
   });
 });

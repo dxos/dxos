@@ -9,7 +9,7 @@ import { OperationHandlerSet } from '@dxos/compute';
 
 import { ScriptOperationHandlerSet } from '#operations';
 
-import { ScriptHandlers } from '../blueprints/functions';
+import { ScriptHandlers } from '../skills/functions';
 
 export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
   Effect.fnUntraced(function* () {

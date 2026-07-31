@@ -3,6 +3,11 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import { type FC, type ReactNode } from 'react';
+
+// Imported so TypeScript can name this type in the emitted .d.ts (ThreadContext → Message).
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Message } from '@dxos/types';
 
 import { type ThreadContextValue } from './types';
 
@@ -18,4 +23,7 @@ export type ThreadContext = ThreadContextValue & {
   focusComposer: () => void;
 };
 
-export const [ThreadContextProvider, useThreadContext] = createContext<ThreadContext>('Thread');
+export const [ThreadContextProvider, useThreadContext]: readonly [
+  FC<ThreadContext & { children: ReactNode }>,
+  (consumerName: string) => ThreadContext,
+] = createContext<ThreadContext>('Thread');

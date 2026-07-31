@@ -17,8 +17,6 @@ import { focusTheme } from '../components/Focus/Focus.theme';
 import { iconTheme } from '../components/Icon/Icon.theme';
 import { inputTheme } from '../components/Input/Input.theme';
 import { linkTheme } from '../components/Link/Link.theme';
-import { listTheme } from '../components/List/List.theme';
-import { treegridTheme } from '../components/List/Treegrid.theme';
 import { mainTheme } from '../components/Main/Main.theme';
 import { menuTheme } from '../components/Menu/Menu.theme';
 import { messageTheme } from '../components/Message/Message.theme';
@@ -28,6 +26,7 @@ import { scrollAreaTheme } from '../components/ScrollArea/ScrollArea.theme';
 import { selectTheme } from '../components/Select/Select.theme';
 import { separatorTheme } from '../components/Separator/Separator.theme';
 import { skeletonTheme } from '../components/Skeleton/Skeleton.theme';
+import { sliderTheme } from '../components/Slider/Slider.theme';
 import { splitterTheme } from '../components/Splitter/Splitter.theme';
 import { statusTheme } from '../components/Status/Status.theme';
 import { tagTheme } from '../components/Tag/Tag.theme';
@@ -62,7 +61,6 @@ export const defaultTheme: Theme<Record<string, any>> = {
   iconButton: iconButtonTheme,
   input: inputTheme,
   link: linkTheme,
-  list: listTheme,
   main: mainTheme,
   message: messageTheme,
   menu: menuTheme,
@@ -71,13 +69,13 @@ export const defaultTheme: Theme<Record<string, any>> = {
   select: selectTheme,
   separator: separatorTheme,
   skeleton: skeletonTheme,
+  slider: sliderTheme,
   splitter: splitterTheme,
   status: statusTheme,
   tag: tagTheme,
   toast: toastTheme,
   toolbar: toolbarTheme,
   tooltip: tooltipTheme,
-  treegrid: treegridTheme,
 };
 
 export const defaultTx = bindTheme(defaultTheme);

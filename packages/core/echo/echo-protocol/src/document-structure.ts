@@ -3,13 +3,14 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { EntityId, URI } from '@dxos/keys';
+import { type EntityId, PublicKey, SpaceId, type URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';
 import type { ForeignKey } from './foreign-key';
 import { type EncodedReference, isEncodedReference } from './reference';
 import { type SpaceDocVersion } from './space-doc-version';
+import { createIdFromSpaceKey } from './space-id';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -29,7 +30,19 @@ export interface DatabaseDirectory {
   version?: SpaceDocVersion;
 
   access?: {
-    spaceKey: string;
+    /**
+     * ID of the space that owns the document.
+     */
+    spaceId?: SpaceId;
+
+    /**
+     * @deprecated Use {@link spaceId}. Still written alongside `spaceId` so older clients
+     * (and code paths that need the space public key, which cannot be recovered from the id)
+     * keep working.
+     *
+     * Space key of the owning space in hex format without the 0x prefix.
+     */
+    spaceKey?: string;
   };
   /**
    * Objects inlined in the current document.
@@ -45,14 +58,72 @@ export interface DatabaseDirectory {
   };
 
   /**
+   * Per-object branch registry. Keyed by the subtree-root object id, then by branch name; each
+   * branch records the automerge doc url holding each subtree member at that branch.
+   *
+   * This is the single synced source of truth for branches: it is both the branch list/membership
+   * AND the set of branch documents the space must replicate (the host collects these urls in
+   * {@link getAllBranchDocUrls}). The client document loader does NOT treat these urls as object
+   * links, so branch docs never materialize as phantom objects. The implicit `'main'` branch is
+   * never listed here (it is the object's main doc via {@link links}).
+   *
+   * Which branch a device is currently viewing is NOT stored here — that is device-local,
+   * non-synced state.
+   */
+  branches?: SpaceBranchRegistry;
+
+  /**
    * @deprecated
    * For backward compatibility.
    */
   experimental_spaceKey?: string;
 }
 
+/**
+ * @see DatabaseDirectory.branches
+ */
+export type SpaceBranchRegistry = {
+  [rootObjectId: string]: {
+    [branchName: string]: BranchRecord;
+  };
+};
+
+export type BranchRecord = {
+  /** Subtree member object id -> automerge doc url holding that member on this branch. */
+  members: { [objectId: string]: string | RawString };
+  /**
+   * The root object's main-doc heads at fork time. Provenance only — currently written but never
+   * read; the merge relies on shared automerge ancestry, not this field.
+   */
+  baseHeads?: string[];
+  /** Unix ms timestamp at branch creation. */
+  createdAt?: number;
+};
+
 export const DatabaseDirectory = Object.freeze({
   /**
+   * @returns ID of the space that owns the document.
+   * Coalesces `access.spaceId` with the deprecated space key fields (`access.spaceKey`,
+   * `experimental_spaceKey`), deriving the id from the key for documents that predate `spaceId`.
+   */
+  getSpaceId: async (doc: DatabaseDirectory): Promise<SpaceId | null> => {
+    if (doc.access?.spaceId != null) {
+      invariant(SpaceId.isValid(doc.access.spaceId), 'Invalid space ID');
+      return doc.access.spaceId;
+    }
+
+    const spaceKeyHex = DatabaseDirectory.getSpaceKey(doc);
+    if (spaceKeyHex == null) {
+      return null;
+    }
+
+    return createIdFromSpaceKey(PublicKey.fromHex(spaceKeyHex));
+  },
+
+  /**
+   * @deprecated Use {@link DatabaseDirectory.getSpaceId}. Only paths that require the space
+   * public key (which cannot be derived from the space id) should read the key.
+   *
    * @returns Space key in hex of the space that owns the document. In hex format. Without 0x prefix.
    */
   getSpaceKey: (doc: DatabaseDirectory): string | null => {
@@ -75,17 +146,46 @@ export const DatabaseDirectory = Object.freeze({
     return doc.links?.[id]?.toString();
   },
 
+  /**
+   * @returns The branch registry for a subtree-root object, or undefined if it has no branches.
+   */
+  getBranches: (doc: DatabaseDirectory, rootObjectId: EntityId): Record<string, BranchRecord> | undefined => {
+    return doc.branches?.[rootObjectId];
+  },
+
+  /**
+   * @returns All branch document urls referenced anywhere in the registry. Used by the host to
+   * decide which documents to replicate (branch docs are NOT object links).
+   */
+  getAllBranchDocUrls: (doc: DatabaseDirectory): string[] => {
+    const urls: string[] = [];
+    for (const byName of Object.values(doc.branches ?? {})) {
+      for (const record of Object.values(byName)) {
+        for (const url of Object.values(record.members ?? {})) {
+          urls.push(url.toString());
+        }
+      }
+    }
+    return urls;
+  },
+
   make: ({
+    spaceId,
     spaceKey,
     objects,
     links,
   }: {
-    spaceKey: string;
+    spaceId?: SpaceId;
+    /**
+     * @deprecated Provide {@link spaceId}. The key is still stamped for older clients.
+     */
+    spaceKey?: string;
     objects?: Record<string, EntityStructure>;
     links?: Record<string, RawString>;
   }): DatabaseDirectory => ({
     access: {
-      spaceKey,
+      ...(spaceId != null ? { spaceId } : {}),
+      ...(spaceKey != null ? { spaceKey } : {}),
     },
     objects: objects ?? {},
     links: links ?? {},

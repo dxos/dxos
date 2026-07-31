@@ -21,3 +21,5 @@ runtime:
       url: https://edge-main.dxos.workers.dev
     ai:
       server: https://ai-service.dxos.workers.dev
+    sandbox:
+      url: https://sandbox-service.dxos.workers.dev

@@ -10,6 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Pulse, type PulseProps, type PulseSignal } from './Pulse';
 
+type StoryArgs = PulseProps & { interval?: number };
+
 const DefaultStory = (props: PulseProps) => {
   const [active, setActive] = useState(props.active ?? true);
 
@@ -39,9 +41,7 @@ const meta = {
 
 export default meta;
 
-type StoryProps = PulseProps & { interval?: number };
-
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<StoryArgs>;
 
 // Radial wave emanating from the center.
 const radialWave: PulseSignal = (i, j, time) => {
@@ -144,7 +144,7 @@ export const Pointer: Story = {
 };
 
 // Randomly pings dots that then decay back to zero.
-const RandomPing = (props: StoryProps) => {
+const RandomPing = (props: StoryArgs) => {
   const { dim = 4, interval = 100 } = props;
   const valuesRef = useRef<Float32Array>(new Float32Array(dim * dim));
   const lastTimeRef = useRef(0);

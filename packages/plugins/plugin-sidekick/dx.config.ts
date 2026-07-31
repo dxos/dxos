@@ -14,7 +14,7 @@ export default Config2.make({
       Sidekick is a personal companion agent for DXOS Composer that acts as a
       persistent, document-aware assistant living inside your workspace. On first
       activation it creates a dedicated Agent instance backed by the Sidekick
-      blueprint, sets up a Chat channel for ongoing conversation (with optional
+      skill, sets up a Chat channel for ongoing conversation (with optional
       voice input via plugin-transcription), provisions a daily Journal, and
       generates a frank written profile of the user — goals, character, and
       current priorities — that it refines over time through dialogue.

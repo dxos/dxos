@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
 import { Database, Err, type Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration';
+import { Connection } from '@dxos/plugin-connector';
 
 import { DISCORD_API_BASE } from '../constants';
 import { makeEdgeProxyHttpClientLayer } from './proxy-http-client';
@@ -33,20 +33,20 @@ export const makeDiscordLayerFromToken = (token: string): Layer.Layer<DiscordRES
   );
 
 /**
- * Build a `DiscordREST` layer from a persisted `Integration` ref.
+ * Build a `DiscordREST` layer from a persisted {@link Connection} ref.
  *
- * Loads the integration's `AccessToken` on layer construction; the operation
+ * Loads the connection's `AccessToken` on layer construction; the operation
  * handler runs against the resulting `DiscordREST` without ever seeing the
  * raw token. Requires `Database.Service`, which the operation runner already
- * provides via the integration's database.
+ * provides via the connection's database.
  */
 export const makeDiscordLayer = (
-  integrationRef: Ref.Ref<Integration.Integration>,
+  connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
-      const integration = yield* Database.load(integrationRef);
-      const accessToken = yield* Database.load(integration.accessToken);
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
       return makeDiscordLayerFromToken(accessToken.token);
     }),
   );
@@ -65,16 +65,16 @@ export const makeDiscordUserLayerFromToken = (token: string): Layer.Layer<Discor
   );
 
 /**
- * Build a `DiscordREST` layer from a persisted `Integration` ref, for use by
- * Discord user OAuth operation handlers.
+ * Build a `DiscordREST` layer from a persisted {@link Connection} ref, for use
+ * by Discord user OAuth operation handlers.
  */
 export const makeDiscordUserLayer = (
-  integrationRef: Ref.Ref<Integration.Integration>,
+  connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
-      const integration = yield* Database.load(integrationRef);
-      const accessToken = yield* Database.load(integration.accessToken);
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
       return makeDiscordUserLayerFromToken(accessToken.token);
     }),
   );

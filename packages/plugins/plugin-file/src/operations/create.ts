@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Blob, Database } from '@dxos/echo';
 
-import { FileCapabilities, FileOperation, File, MAX_FILE_SIZE, Settings, isAcceptedMimeType } from '../types';
+import { File, FileCapabilities, FileOperation, Settings, isAcceptedMimeType } from '../types';
 
 export class UnsupportedFileTypeError extends Error {
   constructor(public readonly type: string) {
@@ -19,7 +20,7 @@ export class UnsupportedFileTypeError extends Error {
 export class FileTooLargeError extends Error {
   constructor(
     public readonly size: number,
-    public readonly limit: number = MAX_FILE_SIZE,
+    public readonly limit: number = Blob.MAX_INLINE_SIZE,
   ) {
     super(`File is too large: ${size} bytes (limit: ${limit} bytes)`);
     this.name = 'FileTooLargeError';
@@ -33,12 +34,26 @@ export class NoBackendError extends Error {
   }
 }
 
+export class FileReadError extends Error {
+  constructor(cause: unknown) {
+    super('Failed to read file contents.');
+    this.name = 'FileReadError';
+    this.cause = cause;
+  }
+}
+
 /**
- * Resolve the configured {@link FileCapabilities.Backend} from the plugin
- * settings atom. Falls back to the inline backend (or the first registered
- * one) if the configured id is missing or settings aren't available.
+ * Resolves the storage name to force for an upload:
+ * - the storage name the user explicitly configured in Settings.backend, if it matches a
+ *   registered {@link FileCapabilities.Backend} descriptor
+ * - otherwise `undefined`, leaving `File.fromBytes`'s `storage` option unset so it falls through
+ *   to the Blob registry's own configured default (edge when configured, inline otherwise)
+ *   instead of hardcoding `inline`
+ *
+ * Still requires at least one descriptor to be registered, as a sanity check that the plugin's
+ * settings UI has something to show.
  */
-export const resolveActiveBackend = Effect.gen(function* () {
+export const resolveActiveStorage = Effect.gen(function* () {
   const backends = yield* Capability.getAll(FileCapabilities.Backend);
   if (backends.length === 0) {
     return yield* Effect.fail(new NoBackendError());
@@ -49,14 +64,15 @@ export const resolveActiveBackend = Effect.gen(function* () {
 
   if (settingsAtomOpt._tag === 'Some' && registryOpt._tag === 'Some') {
     const settings = registryOpt.value.get(settingsAtomOpt.value) as Settings.Settings;
-    const id = settings.backend ?? Settings.DEFAULT_BACKEND_ID;
-    const match = backends.find((b) => b.id === id);
-    if (match) {
-      return match;
+    if (settings.backend) {
+      const match = backends.find((b) => b.storage === settings.backend);
+      if (match) {
+        return match.storage;
+      }
     }
   }
 
-  return backends.find((b) => b.id === Settings.DEFAULT_BACKEND_ID) ?? backends[0];
+  return undefined;
 });
 
 const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperation.Create.pipe(
@@ -66,20 +82,24 @@ const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperatio
       if (!isAcceptedMimeType(file.type)) {
         return yield* Effect.fail(new UnsupportedFileTypeError(file.type));
       }
-      if (file.size > MAX_FILE_SIZE) {
-        return yield* Effect.fail(new FileTooLargeError(file.size));
-      }
-      const backend = yield* resolveActiveBackend;
-      const info = yield* Effect.promise(() => backend.upload(file, db));
-      return {
-        object: File.make({
-          name: info.name,
-          type: info.type,
-          size: info.size,
-          data: info.data,
-          timestamp: new Date().toISOString(),
+      const storage = yield* resolveActiveStorage;
+      const bytes = new Uint8Array(
+        yield* Effect.tryPromise({
+          try: () => file.arrayBuffer(),
+          catch: (error) => new FileReadError(error),
         }),
-      };
+      );
+      // The size cap only applies to `inline` storage — `Blob.fromBytes` enforces it internally;
+      // other backends scale beyond it.
+      const object = yield* File.fromBytes(bytes, {
+        name: file.name,
+        type: file.type,
+        storage,
+      }).pipe(
+        Effect.provide(Database.layer(db)),
+        Effect.catchTag('BlobTooLargeError', () => Effect.fail(new FileTooLargeError(bytes.byteLength))),
+      );
+      return { object };
     }),
   ),
 );

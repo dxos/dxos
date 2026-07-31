@@ -6,12 +6,14 @@ import {
   rand,
   randChanceBoolean,
   randCompanyName,
+  randDepartment,
   randEmail,
   randFirstName,
   randFloat,
   randFullName,
   randHexaDecimal,
   randImg,
+  randJobTitle,
   randNumber,
   randParagraph,
   randProductName,
@@ -112,12 +114,14 @@ export const random = {
   person: {
     firstName: () => randFirstName(),
     fullName: () => randFullName(),
+    jobTitle: () => randJobTitle(),
   },
   company: {
     name: () => randCompanyName(),
   },
   commerce: {
     productName: () => randProductName(),
+    department: () => randDepartment(),
   },
   geo: {
     airport: () => rand(airports),

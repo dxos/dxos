@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 
 import * as McpToolkit from './McpToolkit';
 
-const AiServiceLayer = AiService.model('ai.claude.model.claude-opus-4-6', { thinking: false }).pipe(
+const AiServiceLayer = AiService.model('com.anthropic.model.claude-opus-4-8.default', { thinking: false }).pipe(
   Layer.provide(
     TestAiService({
       disableMemoization: true,
@@ -81,7 +81,7 @@ describe('Browser Automation', () => {
     ),
     {
       timeout: 120_000,
-      tags: ['llm'],
+      tags: ['manual'],
     },
   );
 
@@ -142,7 +142,7 @@ describe('Browser Automation', () => {
     ),
     {
       timeout: 120_000,
-      tags: ['llm'],
+      tags: ['manual'],
     },
   );
 });

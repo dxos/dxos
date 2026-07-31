@@ -1,0 +1,92 @@
+{
+  "cik": 320193,
+  "entityName": "Apple Inc.",
+  "facts": {
+    "us-gaap": {
+      "Revenues": {
+        "units": {
+          "USD": [
+            {
+              "end": "2024-09-28",
+              "val": 391035000000,
+              "form": "10-K",
+              "filed": "2024-11-01",
+              "fy": 2024,
+              "fp": "FY"
+            }
+          ]
+        }
+      },
+      "NetIncomeLoss": {
+        "units": {
+          "USD": [
+            {
+              "end": "2024-09-28",
+              "val": 93736000000,
+              "form": "10-K",
+              "filed": "2024-11-01",
+              "fy": 2024,
+              "fp": "FY"
+            }
+          ]
+        }
+      },
+      "Assets": {
+        "units": {
+          "USD": [
+            {
+              "end": "2024-09-28",
+              "val": 364980000000,
+              "form": "10-K",
+              "filed": "2024-11-01",
+              "fy": 2024,
+              "fp": "FY"
+            }
+          ]
+        }
+      },
+      "Liabilities": {
+        "units": {
+          "USD": [
+            {
+              "end": "2024-09-28",
+              "val": 308030000000,
+              "form": "10-K",
+              "filed": "2024-11-01",
+              "fy": 2024,
+              "fp": "FY"
+            }
+          ]
+        }
+      },
+      "StockholdersEquity": {
+        "units": {
+          "USD": [
+            {
+              "end": "2024-09-28",
+              "val": 56950000000,
+              "form": "10-K",
+              "filed": "2024-11-01",
+              "fy": 2024,
+              "fp": "FY"
+            }
+          ]
+        }
+      },
+      "EarningsPerShareDiluted": {
+        "units": {
+          "USD/shares": [
+            {
+              "end": "2024-09-28",
+              "val": 6.08,
+              "form": "10-K",
+              "filed": "2024-11-01",
+              "fy": 2024,
+              "fp": "FY"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

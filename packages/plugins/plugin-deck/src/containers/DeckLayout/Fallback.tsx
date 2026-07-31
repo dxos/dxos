@@ -22,3 +22,5 @@ const Fallback = () => {
     </div>
   );
 };
+
+Fallback.displayName = 'Fallback';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { HighlightStyle, LRLanguage, LanguageSupport, syntaxHighlighting, syntaxTree } from '@codemirror/language';
+import { HighlightStyle, LanguageSupport, LRLanguage, syntaxHighlighting, syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
@@ -12,7 +12,7 @@ import JSON5 from 'json5';
 import { Tag } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/ui';
-import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/ui-editor';
+import { type CompletionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/ui-editor';
 import { getHashHue, getStyles, mx } from '@dxos/ui-theme';
 
 export type QueryOptions = {
@@ -28,7 +28,7 @@ export const query = ({ tags }: QueryOptions = {}): Extension => {
     syntaxHighlighting(queryHighlightStyle),
     decorations({ tags }),
     typeahead({
-      onComplete: ({ line }: CompoetionContext) => {
+      onComplete: ({ line }: CompletionContext) => {
         const words = line.split(/\s+/).filter(Boolean);
         if (words.length > 0) {
           // TODO(burdon): Get suggestion from parser.
@@ -344,18 +344,18 @@ const styles = EditorView.theme({
 const queryHighlighting = styleTags({
   // Keywords
   'Not And Or': t.keyword,
-  TypeKeyword: t.attributeName,
+  'TypeKeyword': t.attributeName,
 
   // Literals
-  String: t.string,
-  Number: t.number,
-  Boolean: t.bool,
-  Null: t.null,
+  'String': t.string,
+  'Number': t.number,
+  'Boolean': t.bool,
+  'Null': t.null,
 
   // Identifiers
-  Identifier: t.variableName,
-  PropertyPath: t.propertyName,
-  Tagname: t.variableName,
+  'Identifier': t.variableName,
+  'PropertyPath': t.propertyName,
+  'Tagname': t.variableName,
 
   // Punctuation
   '{ }': t.brace,

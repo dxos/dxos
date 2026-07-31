@@ -10,7 +10,7 @@ workspace:
       - lint
 
 tasks:
-  compile:
+  build:
     command: node build.mjs
     options:
       mergeArgs: replace
@@ -19,7 +19,7 @@ tasks:
       mergeDeps: replace
     args: []
     deps:
-      - ^:compile
+      - ^:build
     inputs:
       - 'src/**/*'
       - 'build.mjs'

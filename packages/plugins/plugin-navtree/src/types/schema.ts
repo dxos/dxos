@@ -50,7 +50,7 @@ export type NodeProperties = SharedProperties & {
 };
 
 export type ActionProperties = SharedProperties & {
-  disposition?: string;
+  disposition?: string | string[];
   hidden?: boolean;
   caller?: string;
   menuType?: 'dropdown';
@@ -62,7 +62,7 @@ export type ActionProperties = SharedProperties & {
  */
 export type KeyBinding = {
   // NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
-  // TODO(thure): Dedupe (similar in react-ui-stack/next)
+  // TODO(thure): Dedupe with the other platform key-binding definitions.
   windows?: string;
   macos?: string;
   ios?: string;

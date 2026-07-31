@@ -3,7 +3,6 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { type Space } from '@dxos/echo-host';
 import {
   type SubscribeToSpacesRequest,
   type SubscribeToSpacesResponse,
@@ -11,6 +10,7 @@ import {
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { type ServiceContext } from '../services';
+import { type Space } from '../space';
 
 export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: SubscribeToSpacesRequest) => {
   return new Stream<SubscribeToSpacesResponse>(({ next }) => {

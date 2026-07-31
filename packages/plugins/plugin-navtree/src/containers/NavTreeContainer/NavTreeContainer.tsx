@@ -4,12 +4,14 @@
 
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
-import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
@@ -101,15 +103,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         if (activeItems.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            if (layout.mode === 'multi') {
-              void invokePromise(LayoutOperation.Set, { subject: [item.id] });
-            } else {
-              void invokePromise(LayoutOperation.Open, { subject: [item.id] });
-            }
+            void invokePromise(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokePromise, graph, layout.mode],
+      [invokePromise, graph],
     );
 
     const blockInstruction = useCallback(
@@ -128,7 +126,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     }, []);
 
     const handleSelect = useCallback(
-      ({ item: node, path, option }: { item: Node.Node; path: string[]; option: boolean }) => {
+      ({ item: node, path, option, shift }: { item: Node.Node; path: string[]; option: boolean; shift: boolean }) => {
         if (!node.data) {
           return;
         }
@@ -143,20 +141,21 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = getItem(path).current;
         if (!current) {
-          if (layout.mode === 'multi') {
-            void invokePromise(LayoutOperation.Set, { subject: [node.id] });
-          } else {
-            void invokePromise(LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
-          }
+          // Plain click navigates (the deck becomes this item); shift forces a new plank (see the Open
+          // handler, which upgrades any disposition to add when shift is held).
+          void invokePromise(LayoutOperation.Open, {
+            subject: [node.id],
+            key: node.properties.key,
+            disposition: 'solo',
+            modifiers: { shift },
+          });
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {
           void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id });
         }
 
-        const defaultAction = Graph.getActions(graph, node.id).find(
-          (action) => action.properties?.disposition === 'default',
-        );
+        const defaultAction = Graph.getActions(graph, node.id).find((action) => Node.hasDisposition(action, 'default'));
         if (Node.isAction(defaultAction)) {
           void runAction(defaultAction);
         }
@@ -165,7 +164,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, getItem, runAction, isLg, layout.mode],
+      [graph, invokePromise, getItem, runAction, isLg],
     );
 
     const handleBack = useCallback(() => void invokePromise(LayoutOperation.RevertWorkspace), [invokePromise]);
@@ -230,6 +229,19 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       });
     }, [graph]);
 
+    // Group nodes are always expanded and have no toggle, so they never trigger Graph.expand through
+    // user interaction. Watch the workspace's children reactively and mark any group nodes as open
+    // so the state machinery treats them consistently with regular open nodes (including on next load).
+    const workspaceChildren = useAtomValue(graph.connections(tab, 'child'));
+    useEffect(() => {
+      for (const child of workspaceChildren) {
+        if (Node.hasDisposition(child, 'group')) {
+          setItem([Node.RootId, tab, child.id], 'open', true);
+          Graph.expand(graph, child.id, 'child');
+        }
+      }
+    }, [workspaceChildren, tab, setItem, graph]);
+
     const onItemHover = useCallback(({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'child'), [graph]);
 
     const navTreeContextValue = useMemo(
@@ -269,3 +281,5 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 );
 
 export const NavTreeContainer = memo(NavTreeContainer$);
+
+NavTreeContainer.displayName = 'NavTreeContainer';

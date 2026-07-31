@@ -6,16 +6,14 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Position } from '@dxos/util';
 
-import { PresenterSettings } from '#components';
-import { CollectionPresenterArticle, DocumentPresenterContainer, MarkdownSlide } from '#containers';
+import { CollectionArticle, DocumentArticle, SlideArticle } from '#containers';
 import { meta } from '#meta';
-import { type Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -33,7 +31,7 @@ export default Capability.makeModule(() =>
             data.subject.type === meta.profile.key &&
             Obj.instanceOf(Markdown.Document, data.subject.object),
         ),
-        component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
+        component: ({ role, data }) => <DocumentArticle role={role} subject={data.subject.object} />,
       }),
       Surface.create({
         id: 'collection',
@@ -48,20 +46,12 @@ export default Capability.makeModule(() =>
             data.subject.type === meta.profile.key &&
             Obj.instanceOf(Collection.Collection, data.subject.object),
         ),
-        component: ({ role, data }) => <CollectionPresenterArticle role={role} subject={data.subject.object} />,
+        component: ({ role, data }) => <CollectionArticle role={role} subject={data.subject.object} />,
       }),
       Surface.create({
         id: 'slide',
         filter: AppSurface.object(AppSurface.Slide, Markdown.Document),
-        component: ({ data }) => <MarkdownSlide document={data.subject} />,
-      }),
-      Surface.create({
-        id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <PresenterSettings settings={settings} onSettingsChange={updateSettings} />;
-        },
+        component: ({ data }) => <SlideArticle {...data} />,
       }),
     ]),
   ),

@@ -3,4 +3,4 @@
 //
 
 export { Matrix } from './Matrix';
-export type { MatrixController, MatrixRootProps, MatrixContentProps, MatrixViewportProps } from './Matrix';
+export type { MatrixContentProps, MatrixController, MatrixRootProps, MatrixViewportProps } from './Matrix';

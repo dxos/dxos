@@ -11,22 +11,16 @@ import { DXN } from '@dxos/keys';
 
 import * as TypeOptions from './TypeOptions';
 
-const UserType = Schema.Struct({ name: Schema.String }).pipe(
-  Type.makeObject(DXN.make('com.example.type.user', '0.1.0')),
+const UserType = Type.makeObject(DXN.make('com.example.type.user', '0.1.0'))(Schema.Struct({ name: Schema.String }));
+
+const HiddenType = Type.makeObject(DXN.make('com.example.type.hidden', '0.1.0'))(
+  Schema.Struct({ name: Schema.String }).pipe(HiddenAnnotation.set(true)),
 );
 
-const HiddenType = Schema.Struct({ name: Schema.String }).pipe(
-  HiddenAnnotation.set(true),
-  Type.makeObject(DXN.make('com.example.type.hidden', '0.1.0')),
-);
-
-const Relation = Schema.Struct({ role: Schema.String }).pipe(
-  Type.makeRelation({
-    dxn: DXN.make('com.example.type.relation', '0.1.0'),
-    source: UserType,
-    target: UserType,
-  }),
-);
+const Relation = Type.makeRelation(DXN.make('com.example.type.relation', '0.1.0'))({
+  source: UserType,
+  target: UserType,
+})(Schema.Struct({ role: Schema.String }));
 
 const types = [UserType, HiddenType, Relation];
 
@@ -50,5 +44,13 @@ describe('filterTypeOptions', () => {
   test('returns sorted, de-duplicated typenames', ({ expect }) => {
     const result = TypeOptions.filterTypeOptions([UserType, UserType], { location: ['runtime'], kind: ['user'] });
     expect(result.map((o) => o.typename)).toEqual([Type.getTypename(UserType)]);
+  });
+
+  test('runtime types carry no data label so the consumer falls back to the typename translation', ({ expect }) => {
+    // Static types are JS class constructors with no user-set `name` field. The label must be
+    // `undefined` (not the constructor's intrinsic `.name`, which production minifiers mangle) so
+    // `useTypeOptions` resolves the proper label via `t('typename.label', { ns: typename })`.
+    const [option] = TypeOptions.filterTypeOptions([UserType], { location: ['runtime'], kind: ['user'] });
+    expect(option.label).toBeUndefined();
   });
 });

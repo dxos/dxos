@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { Obj, Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import type { SpaceSyncState } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -30,7 +30,7 @@ describe('sync', { timeout: 120_000, retry: 0, tags: ['sync-e2e'] }, async () =>
         },
         client: {
           edgeFeatures: {
-            echoReplicator: true,
+            subductionReplicator: true,
             feedReplicator: true,
           },
           storage: {
@@ -116,7 +116,7 @@ const waitForSync = async (db: Database.Database) => {
 
       interval = setInterval(async () => {
         try {
-          spaceSyncState = await db.getSyncState();
+          spaceSyncState = await db.getAutomergeSyncState();
           handleSyncState(spaceSyncState);
         } catch (error) {
           console.error(error);
@@ -124,7 +124,7 @@ const waitForSync = async (db: Database.Database) => {
       }, 500);
 
       try {
-        spaceSyncState = await db.getSyncState();
+        spaceSyncState = await db.getAutomergeSyncState();
         handleSyncState(spaceSyncState);
       } catch (error) {
         console.error(error);

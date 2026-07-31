@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { Card, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -14,7 +14,6 @@ import { Menu } from '@dxos/react-ui-menu';
 import { useRelatedObjects } from '#hooks';
 import { meta } from '#meta';
 
-// TODO(burdon): Companion type.
 export type RelatedArticleProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
   'role' | 'companionTo'
@@ -31,7 +30,7 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
           <Toolbar.Root />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Masonry.Content classNames='p-2' centered>
+          <Masonry.Content centered>
             <Masonry.Viewport items={items} />
           </Masonry.Content>
         </Panel.Content>
@@ -46,12 +45,14 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
 
+  // The card menu renders in a portal; resolve the origin plank from the card element instead.
+  const [cardRef, pivotId] = useCardPivot();
   // TODO(burdon): BUG: Includes item itself.
-  const menuItems = useObjectMenuItems(subject);
+  const menuItems = useObjectMenuItems(subject, pivotId);
 
   return (
     <Menu.Root>
-      <Card.Root classNames={classNames}>
+      <Card.Root ref={cardRef} classNames={classNames}>
         <Card.Header>
           <Card.Block>
             <Icon icon={icon} />
@@ -76,3 +77,5 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
     </Menu.Root>
   );
 };
+
+RelatedArticle.displayName = 'RelatedArticle';

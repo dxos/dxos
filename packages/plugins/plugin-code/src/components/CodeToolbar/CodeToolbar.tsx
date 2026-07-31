@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import React, { useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -70,7 +70,7 @@ const createToolbarActions = ({
     nodes: [
       createMenuAction('build', onBuild, {
         label: [buildBusy ? 'action.build.busy.label' : 'action.build.label', { ns: meta.profile.key }],
-        icon: 'ph--hammer--regular',
+        icon: 'ph--lightning--regular',
         disabled: anyBusy,
         testId: 'code-toolbar.build',
       }),

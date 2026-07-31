@@ -3,9 +3,9 @@
 //
 
 export * from './atom-kvs';
-export * from './types';
 export * as DynamicRuntime from './dynamic-runtime';
 export * as EffectEx from './EffectEx';
+export { type Configuration as OtelConfiguration, layerOtel } from './otel';
 export * as Performance from './Performance';
 export * as RuntimeProvider from './RuntimeProvider';
 export * as SchemaEx from './SchemaEx';

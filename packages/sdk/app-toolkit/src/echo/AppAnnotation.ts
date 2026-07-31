@@ -13,9 +13,9 @@ export const RootCollectionAnnotation = Annotation.make({
   schema: Ref.Ref(Collection.Collection),
 });
 
-/** Blueprint keys associated with a schema type. Used by AI companion to auto-load blueprints. */
-export const BlueprintsAnnotation = Annotation.make<string[]>({
-  id: 'org.dxos.annotation.blueprints',
+/** Skill keys associated with a schema type. Used by AI companion to auto-load skills. */
+export const SkillsAnnotation = Annotation.make<string[]>({
+  id: 'org.dxos.annotation.skills',
   schema: Schema.mutable(Schema.Array(Schema.String)),
 });
 
@@ -29,4 +29,14 @@ export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean
 export const SectionOrderAnnotation = Annotation.make({
   id: 'org.dxos.space.sectionOrder',
   schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
+});
+
+/**
+ * Per-space visibility of Home content sections, keyed by contributor name. Stored on
+ * `space.properties` so it replicates across the user's devices. An absent/`undefined` entry
+ * means the section is visible (default on); `false` hides it.
+ */
+export const HomeVisibilityAnnotation = Annotation.make({
+  id: 'org.dxos.space.homeVisibility',
+  schema: Schema.Record({ key: Schema.String, value: Schema.Boolean }),
 });

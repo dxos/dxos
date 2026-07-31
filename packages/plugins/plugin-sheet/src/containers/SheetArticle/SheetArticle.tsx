@@ -55,3 +55,5 @@ const SheetArticleInner = ({
     </Sheet.Root>
   );
 };
+
+SheetArticle.displayName = 'SheetArticle';

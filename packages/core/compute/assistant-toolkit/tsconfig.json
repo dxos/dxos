@@ -57,16 +57,22 @@
       "path": "../../../ui/ui-theme"
     },
     {
-      "path": "../../compute-runtime"
+      "path": "../../echo/echo"
     },
     {
-      "path": "../../echo/echo"
+      "path": "../../echo/echo-client"
     },
     {
       "path": "../../echo/echo-protocol"
     },
     {
       "path": "../../mesh/edge-client"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../agent-runtime"
     },
     {
       "path": "../ai"
@@ -78,10 +84,7 @@
       "path": "../compute"
     },
     {
-      "path": "../functions"
-    },
-    {
-      "path": "../functions-runtime"
+      "path": "../compute-runtime"
     }
   ]
 }

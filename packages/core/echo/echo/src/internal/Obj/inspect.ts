@@ -7,7 +7,7 @@ import type { InspectOptionsStylized, inspect as inspectFn } from 'node:util';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 
 import { getTypeURI } from '../Annotation';
-import { ATTR_TYPE, type AnyEntity } from '../common/types';
+import { type AnyEntity, ATTR_TYPE } from '../common/types';
 import { ATTR_META } from '../common/types/meta';
 import { MetaId } from '../common/types/model-symbols';
 

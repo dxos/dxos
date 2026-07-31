@@ -5,16 +5,15 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
-import { Entity, Filter, Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { Entity, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
-import { Text } from '@dxos/schema';
 
-import { useGlobalSearch, useGlobalSearchResults } from '#hooks';
+import { buildSearchQuery, toSearchResults, useGlobalSearch } from '#hooks';
 import { meta } from '#meta';
 import { type SearchResult } from '#types';
 
@@ -30,13 +29,8 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
   const pivotId = pivotIdProp ?? layout.active[layout.active.length - 1];
   const [query, setQuery] = useState<string>();
 
-  // TODO(burdon): Re-enable full-text search when indexer is available in all environments.
-  const objects = useQuery(
-    space?.db,
-    query === undefined ? Query.select(Filter.nothing()) : Query.select(Filter.not(Filter.type(Text.Text))),
-  );
-
-  const results = useGlobalSearchResults(objects);
+  const objects = useQuery(space?.db, buildSearchQuery(query));
+  const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 
   const handleSearch = useCallback(
@@ -53,12 +47,12 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
         return;
       }
 
-      const qualifiedPath = Paths.getObjectPathFromObject(result.object);
+      const qualifiedPath = GraphPath.getObjectPathFromObject(result.object);
       await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       await invokePromise(LayoutOperation.Open, {
         subject: [qualifiedPath],
         pivotId,
-        positioning: 'end',
+        disposition: 'add',
       });
     },
     [pivotId, invokePromise],
@@ -72,22 +66,26 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
           <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
-        <SearchList.Viewport classNames='max-h-[24rem]'>
-          {allResults.map((result) => (
-            <SearchList.Item
-              key={result.id}
-              classNames='flex gap-2 items-center'
-              value={result.id}
-              label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
-              icon={result.icon}
-              onSelect={() => void handleSelect(result)}
-            />
-          ))}
-          {query && allResults.length === 0 && <SearchList.Empty />}
-        </SearchList.Viewport>
-      </SearchList.Root>
+      <Dialog.Body>
+        <SearchList.Root onSearch={handleSearch}>
+          <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
+          <SearchList.Viewport classNames='max-h-[24rem]'>
+            {query && allResults.length === 0 && <SearchList.Empty />}
+            {allResults.map((result) => (
+              <SearchList.Item
+                key={result.id}
+                classNames='flex gap-2 items-center'
+                icon={result.icon}
+                value={result.id}
+                label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
+                onSelect={() => void handleSelect(result)}
+              />
+            ))}
+          </SearchList.Viewport>
+        </SearchList.Root>
+      </Dialog.Body>
     </Dialog.Content>
   );
 };
+
+SearchDialog.displayName = 'SearchDialog';

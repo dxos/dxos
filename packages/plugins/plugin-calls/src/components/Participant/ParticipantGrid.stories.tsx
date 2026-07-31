@@ -18,9 +18,9 @@ const everyone = [
   makeUser('dave', 'Dave', { tracks: { audioEnabled: false, videoEnabled: true } }),
 ];
 
-type StoryProps = { debug?: boolean; solo?: boolean };
+type StoryArgs = { debug?: boolean; solo?: boolean };
 
-const DefaultStory = ({ debug, solo }: StoryProps) => {
+const DefaultStory = ({ debug, solo }: StoryArgs) => {
   const users = useMemo(() => (solo ? [self] : everyone), [solo]);
   const state = useMemo(() => makeCallState(self, users), [users]);
   useSeedCallManager(state);

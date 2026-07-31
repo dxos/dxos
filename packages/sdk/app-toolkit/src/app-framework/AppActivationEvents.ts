@@ -14,13 +14,11 @@ import * as AppCapabilities from './AppCapabilities';
 export const SetupSettings = ActivationEvent$.make('org.dxos.app-framework.event.setupSettings');
 
 /**
- * Fired before {@link SetupAppGraph}. Activates modules that contribute the
- * integration-provider capability so service plugins register OAuth/sync
- * handlers before the app graph queries them.
+ * Fired before {@link SetupAppGraph}. Activates connector capability modules
+ * so service plugins register their OAuth/sync handlers before the app graph
+ * queries them.
  */
-export const SetupIntegrationProviders = ActivationEvent$.make(
-  'org.dxos.app-framework.event.setupIntegrationProviders',
-);
+export const SetupConnectors = ActivationEvent$.make('org.dxos.app-framework.event.setupConnectors');
 
 /**
  * Fired before the graph is created.
@@ -54,6 +52,13 @@ export const SetupArtifactDefinition = ActivationEvent$.make('org.dxos.app-frame
  * Fired when the graph is ready.
  */
 export const AppGraphReady = ActivationEvent$.make('org.dxos.app-framework.event.graphReady');
+
+/**
+ * Fired once the {@link AppCapabilities.ProgressRegistry} has been contributed,
+ * so consumers can gate activation on the registry being available without
+ * depending on the plugin that provides it.
+ */
+export const ProgressRegistryReady = ActivationEvent$.make('org.dxos.app-framework.event.progressRegistryReady');
 
 /**
  * Fired when plugin state is ready.

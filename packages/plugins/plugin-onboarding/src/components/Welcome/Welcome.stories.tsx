@@ -23,13 +23,7 @@ const DefaultStory = ({ state: initialState = WelcomeState.INIT, ...props }: Par
   return (
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Overlay classNames={OVERLAY_CLASSES} style={OVERLAY_STYLE}>
-        <Welcome
-          identity={identity}
-          state={state}
-          onEmailLogin={() => setState(WelcomeState.LOGIN_SENT)}
-          onGoToLogin={() => setState(WelcomeState.INIT)}
-          {...props}
-        />
+        <Welcome identity={identity} state={state} onEmailLogin={() => setState(WelcomeState.LOGIN_SENT)} {...props} />
       </AlertDialog.Overlay>
     </AlertDialog.Root>
   );
@@ -58,6 +52,17 @@ export const Default: Story = {
   },
 };
 
+/** Passkey login failed because the credential isn't a recovery credential for any account. */
+export const PasskeyRejected: Story = {
+  decorators: [withClientProvider()],
+  args: {
+    error: 'passkey-rejected',
+    onPasskey: () => console.log('passkey'),
+    onJoinIdentity: () => console.log('join identity'),
+    onRecoverIdentity: () => console.log('recover identity'),
+  },
+};
+
 /** Email is the primary login method (no passkey handler). Used by welcome-focus.spec.ts. */
 export const EmailPrimary: Story = {
   decorators: [withClientProvider()],
@@ -71,15 +76,4 @@ export const EmailPrimary: Story = {
 export const WithIdentity: Story = {
   decorators: [withClientProvider({ createIdentity: true })],
   args: {},
-};
-
-export const SpaceInvitation: Story = {
-  decorators: [withClientProvider()],
-  args: {
-    state: WelcomeState.SPACE_INVITATION,
-    onPasskey: () => console.log('passkey'),
-    onJoinIdentity: () => console.log('join identity'),
-    onRecoverIdentity: () => console.log('recover identity'),
-    onSpaceInvitation: () => console.log('space invitation'),
-  },
 };

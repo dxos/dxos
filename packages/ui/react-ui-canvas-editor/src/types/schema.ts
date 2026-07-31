@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Graph } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
@@ -46,21 +46,18 @@ export const Layout = Schema.Struct({
 export type Layout = Schema.Schema.Type<typeof Layout>;
 
 // TODO(wittjosiah): Rename WorkflowType?
-export const CanvasBoard = Schema.Struct({
-  name: Schema.optional(Schema.String),
+export class CanvasBoard extends Type.makeObject<CanvasBoard>(DXN.make('org.dxos.type.canvasBoard', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
 
-  computeGraph: Schema.optional(Ref.Ref(ComputeGraph)),
+    computeGraph: Schema.optional(Ref.Ref(ComputeGraph)),
 
-  /**
-   * Graph of shapes positioned on the canvas.
-   */
-  layout: Graph.Graph,
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--infinity--regular', hue: 'sky' }),
-  Type.makeObject(DXN.make('org.dxos.type.canvasBoard', '0.1.0')),
-);
-
-export type CanvasBoard = Type.InstanceType<typeof CanvasBoard>;
+    /**
+     * Graph of shapes positioned on the canvas.
+     */
+    layout: Graph.Graph,
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--infinity--regular', hue: 'sky' })),
+) {}
 
 /**
  * Creates a CanvasBoard with default empty layout and compute graph when not provided.

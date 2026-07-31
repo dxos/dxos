@@ -16,10 +16,10 @@ import { type AiChatProcessor } from '../processor';
 export const useDebug = ({ processor }: { processor: AiChatProcessor }) => {
   return useCallback(async () => {
     const objects = processor.context.getObjects();
-    const blueprints = processor.context.getBlueprints();
+    const skills = processor.context.getSkills();
     const system = await processor.getSystemPrompt();
     const tools = (await processor.getTools()) ?? {};
-    console.group('Chat', { objects, blueprints });
+    console.group('Chat', { objects, skills });
     try {
       console.log(trim`
         System Prompt:

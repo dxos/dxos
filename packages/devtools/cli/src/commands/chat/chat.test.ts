@@ -21,7 +21,7 @@ describe('chat command', () => {
     expect(stdout).toContain('Open chat interface.');
     expect(stdout).toMatch(/--provider/);
     expect(stdout).toMatch(/--model/);
-    expect(stdout).toMatch(/--blueprint/);
+    expect(stdout).toMatch(/--skill/);
     expect(stdout).toMatch(/--debug/);
   });
 });

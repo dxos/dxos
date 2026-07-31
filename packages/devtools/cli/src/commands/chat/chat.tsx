@@ -10,7 +10,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import { createSignal } from 'solid-js';
 
-import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
+import { AiService, Model } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppSpace } from '@dxos/app-toolkit';
@@ -18,6 +18,7 @@ import { type AiSession } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 
@@ -52,11 +53,11 @@ export const chat = Command.make(
     model: Options.text('model').pipe(
       Options.withDescription('Model to use.'),
       Options.withAlias('m'),
-      Options.withSchema(ModelName),
+      Options.withSchema(DXN.Schema),
       Options.optional,
     ),
-    blueprints: Options.text('blueprint').pipe(
-      Options.withDescription('Blueprints to include in the chat context.'),
+    skills: Options.text('skill').pipe(
+      Options.withDescription('Skills to include in the chat context.'),
       Options.withAlias('b'),
       Options.repeated,
     ),
@@ -83,10 +84,10 @@ export const chat = Command.make(
 
       const model = Option.getOrElse(options.model, () =>
         Match.value(options.provider).pipe(
-          Match.when('lmstudio', () => DEFAULT_LMSTUDIO_MODEL),
-          Match.when('ollama', () => DEFAULT_OLLAMA_MODEL),
-          Match.when('edge', () => DEFAULT_EDGE_MODEL),
-          Match.orElse(() => DEFAULT_EDGE_MODEL),
+          Match.when('lmstudio', () => Model.DEFAULT_LMSTUDIO),
+          Match.when('ollama', () => Model.DEFAULT_OLLAMA),
+          Match.when('edge', () => Model.DEFAULT_EDGE),
+          Match.orElse(() => Model.DEFAULT_EDGE),
         ),
       );
 
@@ -123,7 +124,7 @@ export const chat = Command.make(
         // }
       };
 
-      // TODO(burdon): Update message history, blueprints, etc.
+      // TODO(burdon): Update message history, skills, etc.
       const handleChatSelect = async (chat: Assistant.Chat) => {
         const current = conversation();
         await current?.close();
@@ -134,12 +135,12 @@ export const chat = Command.make(
         return next;
       };
 
-      const handleChatCreate = async (blueprints: string[]) => {
+      const handleChatCreate = async (skills: string[]) => {
         const current = conversation();
         await current?.close();
 
-        log.info('creating conversation', { blueprints });
-        const next = await processor.createSession(space, blueprints);
+        log.info('creating conversation', { skills });
+        const next = await processor.createSession(space, skills);
         setConversation(next);
         return next;
       };
@@ -153,7 +154,7 @@ export const chat = Command.make(
           await runNonInteractive({
             space,
             processor,
-            blueprints: [...options.blueprints],
+            skills: [...options.skills],
             prompt: nonInteractivePrompt,
             model,
             json,
@@ -163,9 +164,9 @@ export const chat = Command.make(
       }
 
       yield* Effect.promise(async () => {
-        log.info('initializing', { blueprints: options.blueprints.length });
-        if (options.blueprints.length) {
-          await handleChatCreate(options.blueprints);
+        log.info('initializing', { skills: options.skills.length });
+        if (options.skills.length) {
+          await handleChatCreate(options.skills);
         } else {
           await handleChatLoad();
         }
@@ -189,7 +190,7 @@ export const chat = Command.make(
                 model={model}
                 verbose={verbose}
                 onChatSelect={(chat) => handleChatSelect(chat)}
-                onChatCreate={({ blueprints }) => handleChatCreate(blueprints)}
+                onChatCreate={({ skills }) => handleChatCreate(skills)}
               />
             )}
           </App>

@@ -55,10 +55,9 @@ export type CreateObjectProps<T> = (T extends { id: string }
  *
  * @example
  * ```ts
- * const Contact = Schema.Struct({
- *   name: Schema.String,
- *   email: Schema.String,
- * }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')))
+ * class Contact extends Type.makeObject<Contact>(DXN.make('com.example.type.person', '0.1.0'))(
+ *   Schema.Struct({ name: Schema.String, email: Schema.String }),
+ * ) {}
  *
  * const contact = createObject(Contact, {
  *   name: "John",

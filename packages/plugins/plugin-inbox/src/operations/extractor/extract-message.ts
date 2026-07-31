@@ -8,8 +8,8 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';
+import * as InboxResolver from '@dxos/extractor-lib';
 
-import { InboxResolver } from '../../services';
 import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '../../types';
 
 /**
@@ -26,7 +26,8 @@ import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '../..
  */
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = InboxOperation.ExtractMessage.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, source, extractorId }) {
+    Effect.fnUntraced(function* ({ source, extractorId }) {
+      const { db } = yield* Database.Service;
       const extractors = yield* Capability.getAll(InboxCapabilities.ObjectExtractor);
 
       // A LIVE, reactive ECHO proxy (`isProxy`) is needed to use the source as a relation/tag
@@ -99,7 +100,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       // by (number, depart-date) and Trip by Booking confirmation code (PNR) — observe the objects
       // this run persisted. Without it, repeated extraction spawns duplicate Trips instead of
       // appending segments to the existing one.
-      yield* Effect.promise(() => db.flush({ indexes: true }));
+      yield* Database.flush({ indexes: true });
 
       return {
         extractorId: outcome.extractorId,

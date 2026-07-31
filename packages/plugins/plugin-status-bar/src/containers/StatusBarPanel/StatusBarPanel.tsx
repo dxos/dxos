@@ -20,3 +20,5 @@ export const StatusBarPanel = (_props: StatusBarPanelProps) => {
     </>
   );
 };
+
+StatusBarPanel.displayName = 'StatusBarPanel';

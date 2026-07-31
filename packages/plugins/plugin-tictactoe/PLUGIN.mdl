@@ -294,7 +294,7 @@ feat F-5: Configurable Board
 ```
 
 ```mdl
-feat F-6: Blueprint Integration
+feat F-6: Skill Integration
 
   req F-6.1: Assistant can create games, make moves, and analyze board state.
   req F-6.2: Assistant can play as an opponent using AI operations.
@@ -391,7 +391,7 @@ test T-9: Hard AI plays optimally
 ```
 
 ```mdl
-test T-10: Blueprint create and move
+test T-10: Skill create and move
   given: assistant uses create operation
   when: assistant calls makeMove with position "0,0"
   then:

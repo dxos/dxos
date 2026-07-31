@@ -74,6 +74,13 @@ export const adminDownload = (path: string) =>
     return response;
   });
 
+/**
+ * Reads the identity DID from a response item, tolerating the legacy hex `identityKey` field.
+ * Discriminates via `'identityDid' in item` so no casts are needed for New | Legacy unions.
+ */
+export const readIdentityDid = (item: { identityDid: string } | { identityKey: string }): string =>
+  'identityDid' in item ? item.identityDid : item.identityKey;
+
 /** Formats an error from the admin API for display. */
 export const formatAdminError = (error: unknown): string => {
   if (error instanceof AdminApiError) {

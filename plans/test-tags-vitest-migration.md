@@ -143,7 +143,7 @@ it.effect(
     Effect.provide(TestLayer),
     TestHelpers.provideTestContext,
   ),
-  { timeout: 120_000, tags: ['llm'] },
+  { timeout: 120_000, tags: ['manual'] },
 );
 ```
 
@@ -172,7 +172,7 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => { ... });
 test.runIf(TestHelpers.tagEnabled('llm'))('chat mode ...', async ({ expect }) => { ... });
 
 // After
-test('chat mode ...', { tags: ['llm'] }, async ({ expect }) => { ... });
+test('chat mode ...', { tags: ['manual'] }, async ({ expect }) => { ... });
 ```
 
 ### 3. Update the assistant-e2e harness

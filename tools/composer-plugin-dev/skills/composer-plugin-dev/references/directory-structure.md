@@ -8,14 +8,14 @@ src/
   meta.ts                 # Plugin.Meta
   translations.ts         # i18n by typename + meta.id
   index.ts                # exports plugin + meta only
-  blueprints/
+  skills/
     index.ts
-    my-blueprint.ts
+    my-skill.ts
   capabilities/
     index.ts              # Capability.lazy() exports only
     react-surface.tsx
     operation-handler.ts
-    blueprint-definition.ts
+    skill-definition.ts
   components/             # NO @dxos/app-framework / @dxos/app-toolkit
     index.ts
     Thing/

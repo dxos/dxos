@@ -3,13 +3,13 @@
 
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
-  compile:
+  build:
     command: pnpm exec dx-compile
     args:
       - --outputPath=dist/lib
     deps:
-      - dx-compile:compile
-      - ^:compile
+      - dx-compile:build
+      - ^:build
     inputs:
       - '@group(production)'
     outputs:

@@ -5,12 +5,12 @@ version: 0.1.0
 ---
 
 A plugin for AI-assisted Composer plugin development. Hosts authored DEUS specs
-(`.mdl` files), couples them to a `CodeProject`, and provides a Coder blueprint
+(`.mdl` files), couples them to a `CodeProject`, and provides a Coder skill
 that lets the assistant verify a spec, write source files into the project,
 and (eventually) dispatch a build agent. The build/sandbox itself is a
 separate EDGE service (out of scope until phase 2).
 
-Phase 1 shipped: rename, schema, blueprint scaffold, settings, credential
+Phase 1 shipped: rename, schema, skill scaffold, settings, credential
 wiring, and stub `verifySpec` / `runBuildAgent` operations.
 
 Phase 1.5 (this PR) adds an in-memory CRUD surface for source files. The agent
@@ -201,7 +201,7 @@ op verifySpec
   requires: [Database]
   note: |
     Operation key: `org.dxos.function.code.verify-spec`.
-    Exposed as a blueprint tool on CoderBlueprint.
+    Exposed as a skill tool on CoderSkill.
 ```
 
 ```mdl
@@ -346,17 +346,17 @@ op runBuild
   note:   Operation key `org.dxos.function.code.run-build`.
 ```
 
-## Blueprints
+## Skills
 
 ```mdl
-type CoderBlueprint
+type CoderSkill
   desc: |
-    Blueprint key `org.dxos.blueprint.coder`. Drives plugin authoring:
+    Skill key `org.dxos.skill.coder`. Drives plugin authoring:
     iterate on the Spec with the user, look up DXOS / Composer APIs through
     introspect-mcp, scaffold the project, then write/read/delete source
     files until the user is satisfied.
   fields:
-    key: org.dxos.blueprint.coder
+    key: org.dxos.skill.coder
     tools:
       - op:verifySpec
       - op:runBuildAgent
@@ -439,10 +439,10 @@ feat F-4: Settings + credentials
 ```
 
 ```mdl
-feat F-5: Coder blueprint
+feat F-5: Coder skill
 
-  req F-5.1: A blueprint with key `org.dxos.blueprint.coder` is contributed
-             via `addBlueprintDefinitionModule`.
+  req F-5.1: A skill with key `org.dxos.skill.coder` is contributed
+             via `addSkillDefinitionModule`.
   req F-5.2: Tools include op:verifySpec and op:runBuildAgent.
   req F-5.3: System instructions describe the Coder role:
               author/refine spec with user, run verifySpec, then runBuildAgent.
@@ -454,7 +454,7 @@ feat F-6: Stub operations
   req F-6.1: op:verifySpec defined and handler returns `{ ok: true, messages: [] }`.
   req F-6.2: op:runBuildAgent defined and handler returns `{ status: "queued" }`.
   req F-6.3: Both handlers are contributed via `addOperationHandlerModule`.
-  req F-6.4: Both operations resolve from blueprint tool calls without error.
+  req F-6.4: Both operations resolve from skill tool calls without error.
 ```
 
 ```mdl
@@ -484,7 +484,7 @@ feat F-8: File CRUD operations
   req F-8.5: op:deleteFile removes the matching file from `project.files`.
   req F-8.6: op:scaffoldProject seeds package.json, src/plugin.ts, README.md and
              returns the resulting file list.
-  req F-8.7: All file ops are wired into the CoderBlueprint tool set.
+  req F-8.7: All file ops are wired into the CoderSkill tool set.
 ```
 
 ```mdl
@@ -511,7 +511,7 @@ feat F-9: CodeArticle file tree + editor
 ```mdl
 feat F-10: Coder integrates introspect-mcp
 
-  req F-10.1: CoderBlueprint declares a remote MCP server entry pointing at the
+  req F-10.1: CoderSkill declares a remote MCP server entry pointing at the
               introspect-mcp HTTP endpoint.
   req F-10.2: System prompt directs the agent to call introspect-mcp
               (find_symbol / get_symbol / list_packages …) before writing
@@ -530,7 +530,7 @@ feat F-11: Sanity + reset operations
   req F-11.2: op:resetProject removes every SourceFile from `project.files`
               and calls Database.remove + flush so the underlying ECHO
               objects are not leaked.
-  req F-11.3: Both operations are wired into the CoderBlueprint tool set.
+  req F-11.3: Both operations are wired into the CoderSkill tool set.
   req F-11.4:
     when: the user asks the agent to "build hello world"
     then: the agent invokes op:helloWorld and `src/hello.ts` shows up in the
@@ -569,7 +569,7 @@ feat F-12a: Local build & run — single-file entry
     then: op:runBuild returns `{ ok: false, stdout, stderr: [...err], diagnostics: [] }`
           and does not throw
   req F-12a.7: Both ops are registered in the OperationHandlerSet and added
-               to CoderBlueprint's tool set. The Coder system prompt mentions
+               to CoderSkill's tool set. The Coder system prompt mentions
                `build-project` and `run-build` and the recommended sequence
                (write source → build → run).
   req F-12a.8: The CodeArticle toolbar exposes Build and Run buttons. Run is
@@ -671,17 +671,17 @@ test T-6: Clear API key removes AccessToken
 ```
 
 ```mdl
-test T-7: Blueprint registers tools
+test T-7: Skill registers tools
   given: composer-app with plugin-code loaded
-  when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.coder`
+  when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.coder`
   then:
-    - the blueprint is present
+    - the skill is present
     - its tool set includes verifySpec and runBuildAgent
 ```
 
 ```mdl
 test T-8: Stub operations resolve
-  given: an assistant chat with the Coder blueprint loaded
+  given: an assistant chat with the Coder skill loaded
   when: the assistant invokes verifySpec on a Spec
   then: the call returns `{ ok: true, messages: [] }`
   when: the assistant invokes runBuildAgent on a CodeProject
@@ -716,13 +716,13 @@ test T-11: CodeArticle reflects ECHO mutations
 ```
 
 ```mdl
-test T-12: Coder blueprint exposes file tools
+test T-12: Coder skill exposes file tools
   given: composer-app with plugin-code loaded
-  when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.coder`
+  when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.coder`
   then:
-    - the blueprint's tool set includes listFiles, readFile, writeFile,
+    - the skill's tool set includes listFiles, readFile, writeFile,
       deleteFile, scaffoldProject, helloWorld, and resetProject
-    - the blueprint declares an introspect-mcp remote MCP server
+    - the skill declares an introspect-mcp remote MCP server
 ```
 
 ```mdl
@@ -777,10 +777,10 @@ test T-16: Run the Hello World scaffold
 ```
 
 ```mdl
-test T-17: Coder blueprint exposes build/run tools
+test T-17: Coder skill exposes build/run tools
   given: composer-app with plugin-code loaded
-  when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.coder`
-  then: the blueprint's tool set includes buildProject and runBuild
+  when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.coder`
+  then: the skill's tool set includes buildProject and runBuild
 ```
 
 ```mdl

@@ -7,7 +7,7 @@ import { createArrayMethodError } from './errors';
 import { batchEvents } from './event-batch';
 import { getEchoRoot } from './ownership';
 import { getProxyTarget, isProxy } from './proxy-utils';
-import { ChangeId, EventId } from './symbols';
+import { EventId } from './symbols';
 
 /**
  * Check if array mutation is allowed (inside a change context).
@@ -20,8 +20,8 @@ const checkArrayMutationAllowed = (arr: any, method: string): void => {
   // Find the root ECHO object.
   const echoRoot = getEchoRoot(target);
 
-  // Check if initialized (has ChangeId marker or EventId).
-  const isInitialized = (echoRoot as any)[ChangeId] === true || EventId in echoRoot;
+  // A root object owns an `EventId` once initialized; before that, mutations are allowed.
+  const isInitialized = EventId in echoRoot;
   if (!isInitialized) {
     // Array is still being initialized, allow mutations.
     return;

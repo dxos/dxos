@@ -21,7 +21,13 @@ export const runShell = async (config: Config = new Config()) => {
   await runtime.open();
 
   try {
-    const services = new ClientServicesProxy(createIFramePort({ channel: DEFAULT_CLIENT_CHANNEL }));
+    // Provide the parent origin upfront so the effect-rpc client can send its first frame without
+    // waiting for an inbound message. The shell is served same-origin with its host, and unlike the
+    // former protobuf peer the effect-rpc server is passive (never sends until it receives), so the
+    // port would otherwise deadlock with no origin to post to.
+    const services = new ClientServicesProxy(
+      createIFramePort({ channel: DEFAULT_CLIENT_CHANNEL, origin: window.location.origin }),
+    );
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
@@ -58,9 +64,13 @@ const Fallback = ({ onClose }: { onClose?: () => void }) => {
       <Dialog.Overlay>
         <Dialog.Content>
           <Dialog.Title>{t('shell-fallback.title')}</Dialog.Title>
-          <Dialog.Close asChild onClick={() => onClose?.()}>
-            <Button variant='primary'>{t('close.label')}</Button>
-          </Dialog.Close>
+          <Dialog.ActionBar>
+            <Dialog.Close asChild onClick={() => onClose?.()}>
+              <Button variant='primary' classNames='w-full'>
+                {t('close.label')}
+              </Button>
+            </Dialog.Close>
+          </Dialog.ActionBar>
         </Dialog.Content>
       </Dialog.Overlay>
     </Dialog.Root>

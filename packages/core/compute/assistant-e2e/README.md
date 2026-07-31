@@ -1,93 +1,62 @@
 # @dxos/assistant-e2e
 
-Agent end-to-end tests that verify assistant behavior by running prompts against the full agent stack, using real composer plugins.
+> **Deprecated.** Superseded by `@dxos/assistant-evals` (`evalite`-scored evals, graded by
+> deterministic DB/tool-invocation assertions or an LLM judge instead of self-reported completion).
+> This package is slated for removal once its remaining scenarios (`inbox-enable`, `local-ai`,
+> `sandbox` — see below) are ported to an eval or dropped. Do not add new tests here.
 
-## Writing Tests
+Gated agent e2e tests: `agentTest` wraps a prompt as a memoized-replay vitest test, off by default
+so PR CI stays fast (`runMemoizedTests()`, opt in with `DX_RUN_LLM_TESTS=1` or
+`ALLOW_LLM_GENERATION=1` to regenerate memoized conversations).
 
-Each test file in `src/testing/` follows a strict uniform structure. A test consists of **only a prompt** — no setup code, assertions, or manual DB manipulation.
-
-### Template
+Each test file follows a strict uniform structure. A test consists of **only a prompt** — no setup
+code, assertions, or manual DB manipulation:
 
 ```typescript
-import { Prompt } from '@dxos/blueprints';
+import { describe, it } from '@effect/vitest';
+
+import { runMemoizedTests } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
-import { describe, it } from '@effect/vitest';
-import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harness';
+
+import { agentTest, agentTestTimeout, getDefaultSkills } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
-describe('DescriptiveName', () => {
+describe.skipIf(!runMemoizedTests())('DescriptiveName', () => {
   it.effect(
     'short test name',
-    agentTest(
-      Prompt.make({
-        instructions: trim`
-          Your prompt here.
+    agentTest({
+      instructions: trim`
+        Your prompt here.
 
-          Completion criteria:
-          - Expected outcome 1.
-          - Expected outcome 2.
-        `,
-        blueprints: getDefaultBlueprints(),
-      }),
-    ),
-    { timeout: DEFAULT_TEST_TIMEOUT },
+        Completion criteria:
+        - Expected outcome 1.
+        - Expected outcome 2.
+      `,
+      skills: getDefaultSkills(),
+    }),
+    { timeout: agentTestTimeout() },
   );
 });
 ```
 
-### Rules
+Rules:
 
-- `Obj.ID.dangerouslyDisableRandomness()` **must** appear at module scope before `describe`.
+- Memoized replay tests that don't need run-specific IDs **must** call
+  `Obj.ID.dangerouslyDisableRandomness()` at module scope before `describe`. Tests against live
+  external infra keyed by entity ID (e.g. `sandbox.test.ts`'s sandbox-service, which rejects a
+  repeated ID under a new space) must leave randomness enabled instead.
 - No extra code apart from the prompt — the test is the prompt and nothing else.
-- Always use `{ timeout: DEFAULT_TEST_TIMEOUT }`.
-- Use `trim` template literal for instructions.
-
-### Prompt Guidelines
-
-- Be specific but not overly verbose.
-- Add **completion criteria** so success is unambiguous.
+- Always pass `{ timeout: agentTestTimeout() }` as the third argument.
 - The agent starts with an **empty database** — instruct it to create any required data.
-
-### Blueprints
-
-- `getDefaultBlueprints()` — standard tests (includes `BlueprintManagerBlueprint`, `DatabaseBlueprint`).
-- Omit `blueprints` for tests that need none (e.g., smoke tests).
-- For custom sets, pass an array of `Ref.make(SomeBlueprint.make())`.
-
-### Expecting Failure
-
-```typescript
-agentTest(
-  { expect: 'failure' },
-  Prompt.make({ instructions: trim`Do nothing and fail.` }),
-),
-```
-
-## Running Tests
+- `getDefaultSkills()` covers standard tests (`SkillManagerSkill`, `DatabaseSkill`); omit `skills`
+  for tests that need none, or pass a custom `Ref.make(SomeSkill.make())` array.
 
 ```bash
-# Replay from memoized conversations (CI mode)
+# Replay from memoized conversations
 moon run assistant-e2e:test
 
-# Generate new conversations (requires credentials)
-ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test
-
-# Single test file
-ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test -- src/testing/database.test.ts
+# Live, regenerating conversations (requires credentials)
+ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test -- src/testing/sandbox.test.ts
 ```
-
-Memoized conversations are stored in `*.conversations.json` next to each test file. Always commit these after regeneration.
-
-## DXOS Resources
-
-- [Website](https://dxos.org)
-- [Developer Documentation](https://docs.dxos.org)
-- Talk to us on [Discord](https://dxos.org/discord)
-
-## Contributions
-
-Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs).
-
-License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2022 © DXOS

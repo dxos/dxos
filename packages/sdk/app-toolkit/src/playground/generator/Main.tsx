@@ -9,7 +9,8 @@ import React, { useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
-import { IconButton, List, ListItem } from '@dxos/react-ui';
+import { IconButton } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { PlaygroundRoles } from '../roles';
 
@@ -25,19 +26,17 @@ const Item = ({
   const handleRemove = useCallback(() => onRemove(id), [onRemove]);
 
   return (
-    <ListItem.Root key={id} id={id}>
-      <ListItem.Heading classNames='grow pt-2'>{id}</ListItem.Heading>
-      <ListItem.Endcap>
-        <IconButton
-          iconOnly
-          variant='ghost'
-          icon='ph--x--regular'
-          label='Remove'
-          disabled={disabled}
-          onClick={handleRemove}
-        />
-      </ListItem.Endcap>
-    </ListItem.Root>
+    <Listbox.Item id={id}>
+      <Listbox.ItemLabel>{id}</Listbox.ItemLabel>
+      <IconButton
+        iconOnly
+        variant='ghost'
+        icon='ph--x--regular'
+        label='Remove'
+        disabled={disabled}
+        onClick={handleRemove}
+      />
+    </Listbox.Item>
   );
 };
 
@@ -54,16 +53,18 @@ export const Main = () => {
   );
 
   return (
-    <List itemSizes='one'>
-      {plugins.map((plugin) => (
-        <Item
-          key={plugin.meta.profile.key}
-          id={plugin.meta.profile.key}
-          disabled={core.includes(plugin.meta.profile.key)}
-          onRemove={handleRemove}
-        />
-      ))}
-    </List>
+    <Listbox.Root>
+      <Listbox.Content aria-label='Plugins'>
+        {plugins.map((plugin) => (
+          <Item
+            key={plugin.meta.profile.key}
+            id={plugin.meta.profile.key}
+            disabled={core.includes(plugin.meta.profile.key)}
+            onRemove={handleRemove}
+          />
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
   );
 };
 

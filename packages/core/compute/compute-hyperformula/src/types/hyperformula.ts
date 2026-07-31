@@ -16,4 +16,4 @@ import { DetailedCellError, ExportedCellChange } from '@dxos/vendor-hyperformula
 
 export { DetailedCellError, ExportedCellChange };
 
-export type { SimpleCellRange, SimpleCellAddress, SimpleDate, SimpleDateTime };
+export type { SimpleCellAddress, SimpleCellRange, SimpleDate, SimpleDateTime };

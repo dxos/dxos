@@ -12,20 +12,13 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
 import { SampleStatusIndicator } from '#components';
-import {
-  SampleArticle,
-  SampleCompanionPanel,
-  SampleDeckCompanion,
-  SampleProperties,
-  SampleSettings,
-} from '#containers';
-import { meta } from '#meta';
-import { SampleCapabilities, SampleItem, type Settings } from '#types';
+import { SampleArticle, SampleCompanionPanel, SampleDeckCompanion, SampleProperties } from '#containers';
+import { SampleCapabilities, SampleItem } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -54,20 +47,6 @@ export default Capability.makeModule(() =>
         position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, SampleItem.SampleItem),
         component: ({ data }) => <SampleProperties subject={data.subject} />,
-      }),
-
-      // --- Plugin settings surface ---
-      // Renders the plugin's settings page in the global settings panel.
-      // `useSettingsState` is called here (in the surface component) to destructure
-      // the atom into typed `settings` and `updateSettings`. The settings component
-      // receives these as props via `SettingsArticleProps<T>` and never touches the atom.
-      Surface.create({
-        id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <SampleSettings settings={settings} onSettingsChange={updateSettings} />;
-        },
       }),
 
       // --- Status indicator surface ---

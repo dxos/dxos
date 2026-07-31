@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,8 +19,8 @@
         "default": "./src/loaders/index.ts"
       },
       "types": "./dist/types/src/loaders/index.d.ts",
-      "browser": "./dist/lib/browser/loaders/browser.mjs",
-      "default": "./dist/lib/node-esm/loaders/index.mjs"
+      "browser": "./dist/lib/loaders/browser.mjs",
+      "default": "./dist/lib/loaders.mjs"
     },
     "#savers": {
       "source": {
@@ -28,8 +28,8 @@
         "default": "./src/savers/index.ts"
       },
       "types": "./dist/types/src/savers/index.d.ts",
-      "browser": "./dist/lib/browser/savers/browser.mjs",
-      "default": "./dist/lib/node-esm/savers/index.mjs"
+      "browser": "./dist/lib/savers/browser.mjs",
+      "default": "./dist/lib/savers.mjs"
     },
     "#plugin": {
       "source": {
@@ -37,37 +37,30 @@
         "default": "./src/plugin/index.ts"
       },
       "types": "./dist/types/src/plugin/index.d.ts",
-      "browser": "./dist/lib/browser/plugin/browser.mjs",
-      "default": "./dist/lib/node-esm/plugin/index.mjs"
+      "browser": "./dist/lib/plugin/browser.mjs",
+      "default": "./dist/lib/plugin.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      }
+      "import": "./dist/lib/index.mjs"
     },
     "./esbuild-plugin": {
       "source": "./src/plugin/esbuild-plugin.ts",
-      "types": "./dist/types/src/esbuild-plugin/index.d.ts",
-      "import": "./dist/plugin/node-esm/esbuild-plugin.mjs",
-      "require": "./dist/plugin/node/esbuild-plugin.cjs"
+      "types": "./dist/types/src/plugin/esbuild-plugin.d.ts",
+      "import": "./dist/lib/plugin/esbuild-plugin.mjs"
     },
     "./rollup-plugin": {
       "source": "./src/plugin/rollup-plugin.ts",
-      "types": "./dist/types/src/rollup-plugin/index.d.ts",
-      "import": "./dist/plugin/node-esm/rollup-plugin.mjs",
-      "require": "./dist/plugin/node/rollup-plugin.cjs"
+      "types": "./dist/types/src/plugin/rollup-plugin.d.ts",
+      "import": "./dist/lib/plugin/rollup-plugin.mjs"
     },
     "./vite-plugin": {
       "source": "./src/plugin/vite-plugin.ts",
-      "types": "./dist/types/src/vite-plugin/index.d.ts",
-      "import": "./dist/plugin/node-esm/vite-plugin.mjs",
-      "require": "./dist/plugin/node/vite-plugin.cjs"
+      "types": "./dist/types/src/plugin/vite-plugin.d.ts",
+      "import": "./dist/lib/plugin/vite-plugin.mjs"
     }
   },
   "main": "dist/lib/node/index.cjs",

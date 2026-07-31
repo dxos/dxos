@@ -16,7 +16,7 @@ exist, and a tool for reading what *does* exist.
         .mdl spec  ──read──▶  agent  ──writes──▶  TypeScript
                                 ▲                       │
                                 │                       │
-                          reconcile                   index
+                            reconcile                 index
                                 │                       │
                                 └─────  introspect  ◀───┘
 ```

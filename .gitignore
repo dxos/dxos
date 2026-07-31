@@ -4,7 +4,8 @@
 # Claude Code harness session lock — per-machine runtime state, not source.
 .claude/scheduled_tasks.lock
 
-.dev.vars
+# Response-verbosity toggle state — per-user runtime, not repo policy.
+.claude/.response-mode
 
 # Logs
 logs/
@@ -18,6 +19,8 @@ debug-storybook.log
 app.log
 # vite-plugin-log Vitest NDJSON sink (per-package `test.log`).
 test.log
+# vite-plugin-log Vitest browser NDJSON sink (per-package `test-browser.log`).
+test-browser.log
 
 # Vitest
 vitest-results.json
@@ -75,7 +78,10 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
+.dev.vars
 .env
+# 1Password injection templates: no secrets, but they map vault/item names (phishing/harvest recon).
+.env.tpl
 !*/gravity/**/.env
 
 # next.js build output
@@ -97,6 +103,7 @@ tmp
 temp
 .vite-inspect
 *.tsbuildinfo
+bench-results.json
 
 # Web Extensions
 web-ext-artifacts
@@ -176,6 +183,7 @@ tools/intellij-plugin/build/
 
 # cloudflare
 .wrangler/
+wrangler.deploy.json
 
 # blade-runner
 dump.rdb
@@ -185,6 +193,9 @@ typedoc
 
 # aider assistant temp files
 .aider*
+
+# codex agent local state
+.codex/
 
 # playwright MCP temp files
 .playwright-mcp/

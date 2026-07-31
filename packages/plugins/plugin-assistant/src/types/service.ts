@@ -73,20 +73,20 @@ const ServiceInterface = Schema.Union(
 
 export type ServiceInterface = Schema.Schema.Type<typeof ServiceInterface>;
 
-export const ServiceType = Schema.Struct({
-  serviceId: Schema.String,
-  name: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-  category: Schema.optional(Schema.String),
-  enabled: Schema.optional(Schema.Boolean),
+export class ServiceType extends Type.makeObject<ServiceType>(DXN.make('org.dxos.type.service', '0.1.0'))(
+  Schema.Struct({
+    serviceId: Schema.String,
+    name: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String),
+    category: Schema.optional(Schema.String),
+    enabled: Schema.optional(Schema.Boolean),
 
-  /**
-   * Entries exposed: functions, workflows, and APIs.
-   */
-  interfaces: Schema.optional(Schema.Array(ServiceInterface)),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.service', '0.1.0')));
-
-export type ServiceType = Type.InstanceType<typeof ServiceType>;
+    /**
+     * Entries exposed: functions, workflows, and APIs.
+     */
+    interfaces: Schema.optional(Schema.Array(ServiceInterface)),
+  }),
+) {}
 
 //
 // Service Registry

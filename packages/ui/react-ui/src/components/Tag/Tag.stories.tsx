@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { hues } from '@dxos/ui-theme';
+import { hues } from '@dxos/ui-types';
 import { type ChromaticPalette, type MessageValence } from '@dxos/ui-types';
 
 import { withLayout, withTheme } from '../../testing';
@@ -19,7 +19,7 @@ const meta = {
   render: () => (
     <div>
       {palettes.map((palette) => (
-        <Tag key={palette} palette={palette}>
+        <Tag key={palette} hue={palette}>
           {palette}
         </Tag>
       ))}

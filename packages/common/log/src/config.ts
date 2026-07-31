@@ -20,12 +20,12 @@ export enum LogLevel {
 
 export const levels: Record<string, LogLevel> = {
   '*': LogLevel.TRACE,
-  trace: LogLevel.TRACE,
-  debug: LogLevel.DEBUG,
-  verbose: LogLevel.VERBOSE,
-  info: LogLevel.INFO,
-  warn: LogLevel.WARN,
-  error: LogLevel.ERROR,
+  'trace': LogLevel.TRACE,
+  'debug': LogLevel.DEBUG,
+  'verbose': LogLevel.VERBOSE,
+  'info': LogLevel.INFO,
+  'warn': LogLevel.WARN,
+  'error': LogLevel.ERROR,
 };
 
 export const shortLevelName = {

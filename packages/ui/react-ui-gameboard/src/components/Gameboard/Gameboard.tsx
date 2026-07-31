@@ -131,8 +131,8 @@ export const Gameboard = {
 export { useGameboardContext };
 
 export type {
-  GameboardRootProps,
   GameboardContentProps,
   PieceProps as GameboardPieceProps,
+  GameboardRootProps,
   SquareProps as GameboardSquareProps,
 };

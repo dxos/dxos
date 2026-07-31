@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 /**
  * Common options for syncing data from external providers (e.g. Gmail,
  * Google Calendar). Stored on `IntegrationTarget.options` and interpreted
- * by the contributing `IntegrationProvider`'s sync operation; applied in
+ * by the contributing `Connector`'s sync operation; applied in
  * addition to provider-specific defaults (e.g. Gmail label, Calendar id).
  */
 export const SyncOptions = Schema.Struct({

@@ -4,22 +4,23 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
-import type * as Option from 'effect/Option';
 import * as Schema$ from 'effect/Schema';
 
 import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
-import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Blueprint, Credential, Operation } from '@dxos/compute';
+import type { BuilderExtensions, GraphBuilder } from '@dxos/app-graph';
+import type { Credential, Operation, Skill } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
 import { type Translator as Translator$ } from '@dxos/i18n';
-import { EID } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
+import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
+import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations';
@@ -103,10 +104,43 @@ export const translatorLayer: Layer$.Layer<TranslatorService, never, Capability$
   TranslatorService,
 );
 
-export type AppGraph = Readonly<{
-  graph: Graph.ExpandableGraph;
-  explore: typeof GraphBuilder.explore;
+/** A writer scoped to a single plugin's compartment — the only way to mutate the stats store. */
+export type StatsCompartment = Readonly<{
+  /** Replace this compartment's value. */
+  set: (stats: unknown) => void;
+  /** Remove this compartment. */
+  clear: () => void;
 }>;
+
+/**
+ * A generic, reactive store for stats/telemetry, partitioned into one compartment per plugin. Every
+ * consumer can READ the entire store (all compartments) reactively, but can only WRITE its own
+ * compartment — obtained via `compartment(pluginKey)` with the plugin's own key (`meta.profile.key`).
+ * Currently in-memory (discarded on reload); persistence may be layered on later, so the name is not
+ * tied to transience. Contributed by a host plugin (plugin-debug) — writers resolve it with
+ * `Capability.getAll` so writing is a no-op when no host is loaded (e.g. production without devtools).
+ * @category Capability
+ */
+export type StatsPanelStore = Readonly<{
+  /** Reactive map of all compartments keyed by plugin key (full read access). */
+  statsAtom: Atom.Writable<Record<string, unknown>>;
+  /** Read one plugin's compartment. */
+  get: (pluginKey: string) => unknown;
+  /** A writer scoped to one plugin's compartment — the only write path. */
+  compartment: (pluginKey: string) => StatsCompartment;
+}>;
+
+/**
+ * @category Capability
+ */
+export const StatsPanel = Capability$.make<StatsPanelStore>('org.dxos.app-toolkit.capability.statsPanel');
+
+/**
+ * The graph builder instance. Its `graph` is the reactive node tree; the builder also carries the
+ * `urlKey` declarations and node→extension provenance that URL resolution (`@dxos/app-graph`'s
+ * `path-resolution.ts`) reads and reverse-maps — neither derivable from `graph` alone.
+ */
+export type AppGraph = GraphBuilder.GraphBuilder;
 
 /**
  * @category Capability
@@ -120,7 +154,9 @@ export const AppGraphBuilder = Capability$.make<BuilderExtensions>('org.dxos.app
 
 export type Settings = {
   prefix: string;
-  schema: Schema$.Schema.All;
+  // Settings are persisted as plain atoms, so the schema is always context-free
+  // (`R = never`); this lets a schema-driven form decode/validate it directly.
+  schema: Schema$.Schema.AnyNoContext;
   atom: Atom.Writable<any>;
 };
 
@@ -158,9 +194,7 @@ export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capabil
 /**
  * @category Capability
  */
-export const BlueprintDefinition = Capability$.make<Blueprint.Definition>(
-  'org.dxos.app-framework.capability.blueprintDefinition',
-);
+export const SkillDefinition = Capability$.make<Skill.Definition>('org.dxos.app-framework.capability.skillDefinition');
 
 /**
  * A static asset bundled with a plugin's published package, exposed for
@@ -213,6 +247,18 @@ export type AnchorSort = {
  */
 export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchorSort');
 
+/** Anchor→text resolution contributed per typename by plugins whose objects support cursor-range anchors. */
+export type AnchorResolver = Readonly<{
+  key: string;
+  /** Resolve an anchor (`"${fromCursor}:${toCursor}"`) to the text it spans, or `undefined` when unresolvable. */
+  getText: (obj: any, anchor: string) => string | undefined;
+}>;
+
+/**
+ * @category Capability
+ */
+export const AnchorResolver = Capability$.make<AnchorResolver>('org.dxos.app-framework.capability.anchorResolver');
+
 /** Text content extractor contributed per typename by plugins that support text extraction. */
 export type TextContent = Readonly<{
   id: string;
@@ -229,7 +275,6 @@ export type CommentConfig = Readonly<{
   id: string;
   comments: 'anchored' | 'unanchored';
   selectionMode?: string;
-  getAnchorLabel?: (obj: any, anchor: string) => string | undefined;
   scrollToAnchor?: Operation.Definition.Any;
 }>;
 
@@ -245,22 +290,54 @@ export type NavigationTarget = {
   label: string;
   /** Object type. */
   type: string;
+  /**
+   * Sort order among the targets resolved for one query. A resolver that only produces a generic path —
+   * the database subtree, which guarantees every ECHO object *a* path but is not where the tree shows
+   * it — declares `Position.last`, so a resolver that knows the object's canonical home (its collection,
+   * a type section) is preferred. Only the resolver knows how specific its answer is, hence a declared
+   * position rather than path sniffing by the caller.
+   */
+  position?: Position.Position;
 };
 
 export type NavigationQuery = {
-  dxn?: string;
+  uri?: URI.URI;
 };
 
 /**
  * Resolves a query to navigation targets.
  * Each plugin interprets the query and returns matching targets.
  * When called without a query, returns the plugin's default navigable pages.
+ *
+ * Requires `Database.Service`: a resolver turns an object URI into a path, which means loading the
+ * object. The caller derives the database from the query's space and provides the layer — see
+ * `NavigationOperation.ResolveNavigationTargets`, the one entry point that runs every resolver.
  * @category Capability
  */
-export type NavigationTargetResolver = (query?: NavigationQuery) => Effect$.Effect<NavigationTarget[]>;
+export type NavigationTargetResolver = (
+  query?: NavigationQuery,
+) => Effect$.Effect<NavigationTarget[], never, Database.Service>;
 
 export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
   'org.dxos.app-framework.capability.navigationTargetResolver',
+);
+
+/**
+ * Loads/verifies a navigation target by its `(spaceId, entityId)` so graph resolution can materialize
+ * its node. Contributed by the plugin that owns object storage (plugin-client), consumed by layout
+ * plugins — this is the abstraction that keeps layout plugins from depending on the client for
+ * loading. `load` loads the object into local ECHO when present locally (so a URL-driven restore
+ * materializes the plank's node), and resolves `true` if the object exists locally or, as a fallback,
+ * remotely. A remote-only object resolves `true` but cannot render until it replicates locally.
+ * @category Capability
+ */
+export type NavigationTargetLoader = Readonly<{
+  id: string;
+  load: (target: { spaceId: string; entityId: string }) => Effect$.Effect<boolean>;
+}>;
+
+export const NavigationTargetLoader = Capability$.make<NavigationTargetLoader>(
+  'org.dxos.app-framework.capability.navigationTargetLoader',
 );
 
 /**
@@ -275,15 +352,33 @@ export const NavigationHandler = Capability$.make<NavigationHandler>(
   'org.dxos.app-toolkit.capability.navigationHandler',
 );
 
+/** A transient progress monitor handle — the update side of one registry entry. */
+export type ProgressMonitor = Progress.TaskHandle;
+
 /**
- * Resolves a qualified graph path to a DXN.
- * Each plugin recognizes its own path patterns and returns the corresponding DXN.
- * Returns None if the path is not recognized by this resolver.
- * Used to validate navigation targets against remote services (e.g., edge).
+ * A registry of live progress providers, exposed as reactive atoms. Producers `register` a monitor
+ * (keyed by a stable `name`, with a display `label`), advance/complete it, and `remove()` it when
+ * done. Consumers read the aggregate `snapshotAtom` (e.g. the R0 rail popover) or a single provider's
+ * `monitorAtom(name)` (e.g. an article's inline meter). Contributed by an always-loaded host
+ * (`plugin-progress`); backed by the shared `@dxos/progress` core.
+ */
+export type ProgressRegistry = Readonly<{
+  /** Aggregate snapshot of all active providers. */
+  snapshotAtom: Atom.Atom<Progress.ProgressSnapshot>;
+  /** One provider's reactive state, by name (stable/memoized per name). */
+  monitorAtom: (name: string) => Atom.Atom<Progress.TaskProgress | undefined>;
+  /**
+   * Register (or resume) a provider and mark it running. Pass `onCancel` to make it cancellable — the
+   * meter then shows a cancel control that invokes {@link ProgressRegistry.cancel}.
+   */
+  register: (name: string, options?: { label?: string; total?: number; onCancel?: () => void }) => ProgressMonitor;
+  /** Invoke a provider's registered `onCancel` handler (no-op if it is not cancellable). */
+  cancel: (name: string) => void;
+  /** Non-reactive read of the current snapshot. */
+  snapshot: () => Progress.ProgressSnapshot;
+}>;
+
+/**
  * @category Capability
  */
-export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EID.EID>>;
-
-export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
-  'org.dxos.app-framework.capability.navigationPathResolver',
-);
+export const ProgressRegistry = Capability$.make<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');

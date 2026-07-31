@@ -6,9 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
 
+import { useListDisclosure } from '../../aspects';
 import { Listbox } from './Listbox';
 
 random.seed(1);
@@ -157,7 +159,7 @@ const popoverOptions: Option[] = random.helpers.multiple(
 const PopoverStory = () => {
   const [selected, setSelected] = useState<string | undefined>(popoverOptions[0]?.value);
   return (
-    <div className='max-w-xs p-2 ring-1 ring-subdued-separator rounded'>
+    <div className='max-w-xs p-2 border-1 border-subdued-separator rounded'>
       <Listbox.Root value={selected} onValueChange={setSelected}>
         <Listbox.Content aria-label='Models'>
           {popoverOptions.map((option) => (
@@ -177,6 +179,70 @@ const PopoverStory = () => {
   );
 };
 
+//
+// Plain (non-selectable) — no value model on Root, so rows render as `role=list`/`listitem`
+// with hover but no `aria-selected`. This is the styled-content-list mode that replaces the
+// deprecated `@dxos/react-ui` `List`/`ListItem`.
+//
+
+const PlainStory = () => (
+  <Listbox.Root>
+    <Listbox.Viewport>
+      <Listbox.Content aria-label='Items'>
+        {allItems.slice(0, 6).map((item) => (
+          <Listbox.Item key={item.id} id={item.id}>
+            <Listbox.ItemLabel>{item.name}</Listbox.ItemLabel>
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+    </Listbox.Viewport>
+  </Listbox.Root>
+);
+
+//
+// Disclosure — expandable rows showing icon + title, each with a single full-row header
+// button (icon + title + caret on one line) that toggles a description panel via the
+// `useListDisclosure` aspect. Plain (non-selectable) list, so the header button is the only
+// focusable element per row — arrow keys move row-to-row, not into the caret.
+//
+
+const DisclosureStory = () => {
+  const disclosure = useListDisclosure({ mode: 'multi' });
+  return (
+    <Listbox.Root>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label='Items'>
+          {allItems.slice(0, 8).map((item) => {
+            const { expanded, triggerProps, panelProps } = disclosure.bind(item.id);
+            return (
+              <Listbox.Item key={item.id} id={item.id} classNames='flex-col items-stretch p-0'>
+                <button
+                  {...triggerProps}
+                  type='button'
+                  className='flex items-center gap-2 px-3 py-2 text-start dx-hover dx-focus-ring-inset'
+                >
+                  <Icon icon='ph--package--regular' size={5} classNames='shrink-0' />
+                  <span className='flex-1 min-w-0 truncate'>{item.name}</span>
+                  <Icon
+                    icon='ph--caret-right--regular'
+                    size={4}
+                    classNames={mx('shrink-0 transition-transform', expanded && 'rotate-90')}
+                  />
+                </button>
+                {expanded && (
+                  <div {...panelProps} className='ps-[var(--dx-rail-item)] px-3 pb-2 text-sm text-description'>
+                    {item.description}
+                  </div>
+                )}
+              </Listbox.Item>
+            );
+          })}
+        </Listbox.Content>
+      </Listbox.Viewport>
+    </Listbox.Root>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-list/Listbox',
   render: (args) => <DefaultStory {...args} />,
@@ -191,8 +257,41 @@ export default meta;
 type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {};
-export const Thin: Story = { args: { thin: true, padding: true, showDescription: false } };
-export const WithDisabled: Story = { args: { items: allItems.slice(0, 6), disabledIndex: 2 } };
-export const MasterDetail: Story = { render: () => <MasterDetailStory /> };
-export const WithToolbar: Story = { render: () => <WithToolbarStory /> };
-export const Popover: Story = { render: () => <PopoverStory /> };
+
+export const Thin: Story = {
+  args: {
+    thin: true,
+    padding: true,
+    showDescription: false,
+  },
+};
+
+export const WithDisabled: Story = {
+  args: {
+    items: allItems.slice(0, 6),
+    disabledIndex: 2,
+  },
+};
+
+export const MasterDetail: Story = {
+  render: () => <MasterDetailStory />,
+};
+
+export const WithToolbar: Story = {
+  render: () => <WithToolbarStory />,
+};
+
+export const Popover: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  render: () => <PopoverStory />,
+};
+
+/** Non-selectable: opt-out of the selection model — plain styled rows (role=list/listitem). */
+export const Plain: Story = {
+  render: () => <PlainStory />,
+};
+
+/** Items with icon + title + description and a per-row expand caret (disclosure aspect). */
+export const Disclosure: Story = {
+  render: () => <DisclosureStory />,
+};

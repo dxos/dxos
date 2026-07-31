@@ -2,5 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './stack';
-export type * from './types';
+export * as Stack from './Stack';

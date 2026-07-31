@@ -1,0 +1,172 @@
+---
+id: org.dxos.plugin.ideogram
+name: IdeogramPlugin
+version: 0.1.0
+---
+
+A **headless** Composer plugin that makes [ideogram.ai](https://ideogram.ai)
+available as an image-generation provider. It has no React/UI surfaces. It
+contributes two things:
+
+1. A **Connector** entry (`source: "ideogram.ai"`) with an API-key
+   credential form, so the user connects Ideogram through the generic
+   `plugin-connector` UI. On submit the key is stored as an `AccessToken`
+   (source `ideogram.ai`) plus a `Connection` in ECHO.
+2. An **`GenerationService`** implementation (the abstraction owned by
+   `plugin-studio`) whose `generate()` calls the Ideogram HTTP API and
+   maps the response to `VariantData[]`.
+
+The credential set up by the Connector is resolved back at generation time
+by `plugin-studio`'s `generateImage` operation through
+`CredentialsService`, keyed by the provider's `source`. This plugin never
+reads the prompt UI and `plugin-studio` never reads Ideogram
+credentials — the Connector + `CredentialsService` are the seam.
+
+## Extensions
+
+| Term   | URI                     |
+| ------ | ----------------------- |
+| `type` | `org.dxos.mdl.type@1.0` |
+| `feat` | `org.dxos.mdl.feat@1.0` |
+| `test` | `org.dxos.mdl.test@1.0` |
+
+## Connector
+
+```mdl
+feat IdeogramConnector
+  desc: >
+    Contributes a ConnectorEntry via Capability.contributes(Connector,
+    [entry]) on the SetupConnectors activation event (mirrors
+    plugin-ibkr's non-OAuth credentialForm connector).
+  id: org.dxos.plugin.ideogram.connector
+  source: ideogram.ai
+  label: Ideogram
+  credentialForm:
+    schema: IdeogramTokenForm { token: string }   # the API key
+    onSubmit: >
+      Trim the token; if empty, throw. Build
+      Obj.make(AccessToken, { source: "ideogram.ai", token }) and
+      Obj.make(Connection, { name: "Ideogram", connectorId: <id>,
+      accessToken: Ref.make(accessToken) }); return
+      { kind: "complete", accessToken, connection }.
+```
+
+## Provider
+
+```mdl
+feat IdeogramImageGenerationService
+  desc: >
+    Contributes an GenerationService via
+    Capability.contributes(StudioCapabilities.GenerationService,
+    [service]) on Startup. Provider-agnostic contract from
+    @dxos/plugin-studio/types.
+  id: ideogram
+  label: Ideogram
+  source: ideogram.ai
+  generate:
+    endpoint: POST https://api.ideogram.ai/generate
+    auth: header "Api-Key: <token>"        # from options.apiKey (Redacted)
+    request:
+      # { image_request: { prompt, aspect_ratio?, model?, magic_prompt_option?,
+      #   negative_prompt?, seed?, style_type?, num_images? } }
+      prompt: request.prompt
+      aspect_ratio?: request.aspectRatio
+      model?: request.model                 # default V_2
+      negative_prompt?: request.negativePrompt
+      seed?: request.seed
+      style_type?: request.styleType
+      num_images?: request.count             # default 1
+    response:
+      # { created, request_id?, data: [{ url, prompt, resolution, seed,
+      #   is_image_safe, style_type? }] }
+      map: >
+        data[] → VariantData {
+          url, prompt, model: request.model ?? "V_2", resolution, seed,
+          styleType: style_type, isImageSafe: is_image_safe,
+          metadata: { requestId, created }
+        }
+    errors:
+      - missing apiKey → throw MissingCredential.
+      - non-2xx → throw GenerationError with status + body.
+    notes:
+      - Provider image URLs are ephemeral (documented by Ideogram).
+      - api.ideogram.ai does not permit browser CORS, so the request is routed
+        through the DXOS edge CORS proxy (`proxyFetchLegacy` from
+        `@dxos/edge-client`); the `Api-Key` header passes through unchanged.
+```
+
+## File layout (mirrors plugin-osrm)
+
+```text
+packages/plugins/plugin-ideogram/
+  PLUGIN.mdl                         # this file
+  README.md
+  package.json                       # "private": true
+  moon.yml                           # --entryPoint per export subpath; platform=neutral
+  src/
+    index.ts                         # exports meta + IdeogramPlugin
+    meta.ts                          # Plugin.getMetaFromConfig (id org.dxos.plugin.ideogram)
+    plugin.ts                        # Plugin.lazy
+    IdeogramPlugin.tsx               # Plugin.define(meta).pipe(addModule Connector on SetupConnectors, addModule Provider on Startup, Plugin.make)
+    dx.config.ts
+    capabilities/
+      index.ts                       # Capability.lazy(Connector, GenerationService)
+      connector.ts                   # Capability.contributes(Connector, [entry])
+      generation-service.ts    # Capability.contributes(StudioCapabilities.GenerationService, [service])
+    services/
+      index.ts
+      IdeogramClient.ts              # generate(request, { apiKey }) → VariantData[]
+      ideogram-mapping.ts            # response → VariantData[]
+      ideogram-mapping.test.ts       # fixture-based unit test
+```
+
+## Dependencies
+
+- `@dxos/plugin-studio` (workspace:\*) — `/types` subpath for the
+  `GenerationService` capability key + request/result schemas.
+- `@dxos/plugin-connector` (workspace:\*) — `Connector` capability key +
+  `Connection` type; `@dxos/types` for `AccessToken`.
+- `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/echo`, `effect`.
+- No `react` / `@dxos/react-ui*`.
+
+## Acceptance
+
+```mdl
+test T-1: Connector builds AccessToken + Connection
+  given: the Ideogram ConnectorEntry
+  when: credentialForm.onSubmit runs with { token: "sk-…" }
+  then:
+    - returns kind "complete"
+    - accessToken.source === "ideogram.ai" and accessToken.token === "sk-…"
+    - connection.connectorId === the entry id and references the accessToken
+```
+
+```mdl
+test T-2: Empty token rejected
+  given: the Ideogram ConnectorEntry
+  when: credentialForm.onSubmit runs with { token: "  " }
+  then: it throws (no AccessToken / Connection created)
+```
+
+```mdl
+test T-3: Response mapping (mocked fetch)
+  given: a mocked /generate response with 2 data entries
+  when: IdeogramClient.generate({ prompt }, { apiKey }) runs
+  then:
+    - 2 VariantData returned, url/seed/resolution/isImageSafe mapped
+    - the request body nests fields under image_request and sends header Api-Key
+```
+
+```mdl
+test T-4: Missing key
+  given: IdeogramClient.generate called with no apiKey
+  then: it throws MissingCredential (no network call)
+```
+
+## Out of scope (v1)
+
+- OAuth (Ideogram uses a static API key).
+- Edit / upscale / remix / describe endpoints; only `/generate`.
+- Multi-account and per-artifact provider configuration.
+- A server-side (edge function) transport that keeps the API key off the client
+  entirely; v1 resolves the key client-side and proxies the call.

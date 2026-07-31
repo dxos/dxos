@@ -6,7 +6,7 @@ runtime:
       dataStore: 1
     edgeFeatures:
       signaling: true
-      echoReplicator: true
+      subductionReplicator: true
       feedReplicator: true
       agents: true
     disableP2pReplication: true

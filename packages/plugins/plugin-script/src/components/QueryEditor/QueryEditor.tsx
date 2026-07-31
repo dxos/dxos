@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { ModuleResolutionKind, ScriptTarget } from 'typescript';
 
+// TODO(burdon): Document.
 import queryApi from '@dxos/echo-query/api.d.ts?raw';
 import { useAsyncEffect } from '@dxos/react-ui';
 

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Paths } from '@dxos/app-toolkit';
+import { GraphPath } from '@dxos/app-toolkit';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
@@ -28,7 +28,7 @@ const useEdgeStatus = (): EdgeStatus.ConnectionState => {
 
 export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean }) => {
   const { t } = useTranslation(meta.profile.key);
-  const qualifiedId = Paths.getSpacePath(space.id);
+  const qualifiedId = GraphPath.getSpacePath(space.id);
   const { hasAttention, isAncestor, isRelated } = useAttention(qualifiedId);
   const attended = hasAttention || isRelated;
   const containsAttended = isAncestor && !open;
@@ -49,3 +49,5 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
     </Tooltip.Trigger>
   );
 };
+
+InlineSyncStatus.displayName = 'InlineSyncStatus';

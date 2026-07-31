@@ -4,9 +4,9 @@
 
 import { SpaceState } from '@dxos/client/echo';
 import {
-  compactDocumentsEpochMigration,
   type CompactDocumentsOptions,
   type CompactDocumentsResult,
+  compactDocumentsEpochMigration,
 } from '@dxos/migrations';
 
 import { getRecoveryClient } from './boot-client';

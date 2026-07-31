@@ -4,10 +4,10 @@
 
 export { Thread } from './Thread';
 export type {
-  ThreadRootProps,
   ThreadContentProps,
   ThreadHeaderProps,
   ThreadMessagesProps,
-  ThreadTextboxProps,
+  ThreadRootProps,
   ThreadStatusProps,
+  ThreadTextboxProps,
 } from './Thread';

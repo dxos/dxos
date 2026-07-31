@@ -48,6 +48,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -88,9 +91,6 @@
     },
     {
       "path": "../react-ui-search"
-    },
-    {
-      "path": "../react-ui-stack"
     },
     {
       "path": "../react-ui-syntax-highlighter"

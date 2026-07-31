@@ -8,4 +8,11 @@ export {
   makeDiscordUserLayer,
   makeDiscordUserLayerFromToken,
 } from './discord';
-export { makeEdgeProxyHttpClientLayer, type EdgeProxyHttpClientOptions } from './proxy-http-client';
+export { type CrawlStores, getCrawlRuntime } from './crawl-stores';
+export {
+  discordSourceLayer,
+  discordSourceLayerFromConnection,
+  mapDiscordMessage,
+  threadRefsOf,
+} from './discord-source';
+export { type EdgeProxyHttpClientOptions, makeEdgeProxyHttpClientLayer } from './proxy-http-client';

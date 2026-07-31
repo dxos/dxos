@@ -6,13 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import {
-  type ViewStateManager,
-  defineViewState,
-  useSelection,
-  useSelectionActions,
-  useViewStateManager,
-} from '@dxos/react-ui-attention';
+import { ViewState, useManager, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { OrderedList } from '@dxos/react-ui-list';
@@ -34,14 +28,14 @@ import { mx } from '@dxos/ui-theme';
 // plugin-attention does not depend on plugin-markdown.
 //
 
-const editorViewStateAspect = defineViewState({
+const editorViewStateAspect = ViewState.define({
   key: 'story-editor',
   backend: 'local',
   schema: EditorSelectionStateSchema,
   defaultValue: () => ({}),
 });
 
-const makeEditorStore = (manager: ViewStateManager): EditorStateStore => ({
+const makeEditorStore = (manager: ViewState.Manager): EditorStateStore => ({
   getState: (id) => manager.get(editorViewStateAspect, id),
   setState: (id, state) => manager.set(editorViewStateAspect, id, state),
 });
@@ -126,7 +120,7 @@ const ItemEditor = ({ item, editorStore }: ItemEditorProps) => {
 //
 
 const SelectionStateStory = () => {
-  const manager = useViewStateManager();
+  const manager = useManager();
   const editorStore = useMemo(() => makeEditorStore(manager), [manager]);
 
   const selectedId = useSelection(LIST_CONTEXT, 'single');
@@ -136,7 +130,7 @@ const SelectionStateStory = () => {
 
   return (
     <div className='flex h-full overflow-hidden divide-x divide-separator'>
-      {/* Left pane: ordered list with selection */}
+      {/* Left pane: ordered list with selection. */}
       <div className='w-56 shrink-0 flex flex-col overflow-hidden'>
         <div className='px-3 py-2 text-sm font-medium text-subdued border-b border-separator'>Items</div>
         <OrderedList.Root<StoryItem> items={ITEMS} isItem={isItem} getId={(item) => item.id}>

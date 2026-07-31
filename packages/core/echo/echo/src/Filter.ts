@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
@@ -13,15 +14,19 @@ import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
+import type * as Entity from './Entity';
 import * as internal from './internal';
 import type * as Obj from './Obj';
 import * as Ref from './Ref';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Type$ from './Type';
 
+export const FilterTypeId = '~@dxos/echo/Filter' as const;
+export type FilterTypeId = typeof FilterTypeId;
+
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Filter': { value: Types.Covariant<T> };
+  readonly [FilterTypeId]: { value: Types.Covariant<T> };
 
   ast: QueryAST.Filter;
 }
@@ -36,15 +41,15 @@ export type Any = Filter<any>;
 export type Type<F extends Any> = F extends Filter<infer T> ? T : never;
 
 class FilterClass implements Any {
-  private static 'variance': Any['~Filter'] = {} as Any['~Filter'];
+  private static 'variance': Any[FilterTypeId] = {} as Any[FilterTypeId];
 
   constructor(public readonly ast: QueryAST.Filter) {}
 
-  '~Filter' = FilterClass.variance;
+  [FilterTypeId] = FilterClass.variance;
 }
 
 export const is = (value: unknown): value is Any => {
-  return typeof value === 'object' && value !== null && '~Filter' in value;
+  return typeof value === 'object' && value !== null && FilterTypeId in value;
 };
 
 /** Construct a filter from an ast. */
@@ -306,13 +311,27 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
 };
 
 /**
- * Predicate for property to be in the provided array.
- * @param values - Values to check against.
+ * Predicate for property to be in the provided array, or in the set of values projected
+ * from a subquery's results (an uncorrelated `col IN (SELECT property FROM ...)` semi-join —
+ * see `Query.project`). The subquery may target a different scope than the parent query; it
+ * is resolved once at execution time.
+ * @param values - Values to check against, or a single subquery projection.
  */
-const in$ = <T>(...values: T[]): Filter<T> => {
+const in$: {
+  <T>(projection: internal.Projection<T>): Filter<T>;
+  <T>(...values: T[]): Filter<T>;
+} = <T>(...args: [internal.Projection<T>] | T[]): Filter<T> => {
+  if (args.length === 1 && internal.isProjection(args[0])) {
+    const projection = args[0];
+    return new FilterClass({
+      type: 'in-query',
+      subquery: projection.query,
+      property: projection.property,
+    });
+  }
   return new FilterClass({
     type: 'in',
-    values,
+    values: args,
   });
 };
 export { in$ as in };
@@ -482,3 +501,16 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
  * Returns a human-readable string representation of a Filter AST.
  */
 export const pretty = (filter: Any): string => internal.prettyFilter(filter.ast);
+
+/**
+ * Create a predicate from a filter.
+ */
+export const toPredicate: {
+  <T extends Entity.Unknown>(filter: Filter<T>): (entity: Entity.Unknown) => entity is T;
+  <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>): entity is T;
+} = Function.dual<
+  <T extends Entity.Unknown>(filter: Filter<T>) => (entity: Entity.Unknown) => entity is T,
+  <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>) => entity is T
+>(2, <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>): entity is T =>
+  internal.filterMatchEntity(filter.ast, entity),
+);

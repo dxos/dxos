@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { mkdirSync, openSync, closeSync } from 'node:fs';
+import { closeSync, mkdirSync, openSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 /**

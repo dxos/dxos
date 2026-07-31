@@ -68,7 +68,7 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     const currentConnectionId = () => (openConnections[openConnections.length - 1] as any)._connectionId as string;
     await server.sendMessage(
       createSubductionErrorMessage(
-        { identityKey: client.identityKey, peerKey: client.peerKey },
+        { identityDid: client.identityDid, peerKey: client.peerKey },
         spaceId,
         currentConnectionId(),
       ),
@@ -82,7 +82,7 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     await connectionOpen.waitForCount(1);
     await server.sendMessage(
       createSubductionErrorMessage(
-        { identityKey: client.identityKey, peerKey: client.peerKey },
+        { identityDid: client.identityDid, peerKey: client.peerKey },
         spaceId,
         currentConnectionId(),
       ),

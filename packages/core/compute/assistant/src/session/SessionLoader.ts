@@ -23,7 +23,7 @@ export class SessionLoader {
     messages: Message.Message[],
   ): Effect.Effect<Message.Message[], never, Database.Service> {
     return Effect.gen(function* () {
-      const links = yield* Feed.runQuery(feed, Filter.type(SessionLink.SessionLink));
+      const links = yield* Feed.query(feed, Filter.type(SessionLink.SessionLink)).run;
       const sessionLinks = links.filter(Obj.instanceOf(SessionLink.SessionLink));
 
       const link = sessionLinks[0];
@@ -36,7 +36,7 @@ export class SessionLoader {
         return messages;
       }
 
-      const sourceMessages = yield* Feed.runQuery(sourceFeed, Filter.type(Message.Message));
+      const sourceMessages = yield* Feed.query(sourceFeed, Filter.type(Message.Message)).run;
       const filtered = sourceMessages.filter(Obj.instanceOf(Message.Message));
 
       // Sort by creation timestamp so history is in chronological order.

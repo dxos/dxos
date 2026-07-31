@@ -8,7 +8,7 @@ import * as babel from '@babel/core';
 import babelPresetTypeScript from '@babel/preset-typescript';
 // @ts-ignore — babel-preset-solid ships no .d.ts.
 import babelPresetSolid from 'babel-preset-solid';
-import { build, type Plugin as EsbuildPlugin } from 'esbuild';
+import { type Plugin as EsbuildPlugin, build } from 'esbuild';
 import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Plugin } from 'vite';
@@ -181,8 +181,8 @@ export const bootLoaderPlugin = ({ status, markSvg, include = ['index.html'] }: 
           tag: 'div',
           injectTo: 'body-prepend',
           attrs: {
-            id: rootId,
-            role: 'status',
+            'id': rootId,
+            'role': 'status',
             'aria-live': 'polite',
             'aria-label': 'Initializing',
           },

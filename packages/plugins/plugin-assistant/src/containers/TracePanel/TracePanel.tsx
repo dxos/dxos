@@ -10,7 +10,7 @@ import { pipe } from 'effect/Function';
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useCapability, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Process } from '@dxos/compute';
@@ -19,13 +19,13 @@ import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Timeline, type Commit } from '@dxos/react-ui-components';
+import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
-import { buildExecutionGraph, type ExecutionGraph } from '#execution-graph';
-import { useTraceMessages, getTraceMessagesAtom } from '#hooks';
+import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
+import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
@@ -158,17 +158,36 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 // Stable ref.
 const atomEmpty = Atom.make(() => [] as const);
 
+// How often the graph re-checks for spans that timed out with no closing event.
+// Coarse-grained on purpose: `spanTimeoutMs` operates on a 20-minute scale, so there is no
+// benefit to re-deriving the graph more often than this just to catch the timeout crossing.
+const SPAN_TIMEOUT_CHECK_INTERVAL_MS = 60_000;
+
 type UseExecutionGraphOptions = {
+  collapseCompletedSpans?: boolean;
   eventLimit?: number;
 };
 
-const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
+const useExecutionGraph = (
+  space: Space,
+  { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {},
+): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
 
+  // Ticks periodically so spans that are still open purely because no new trace event has
+  // arrived (e.g. the runtime crashed before writing its `operationEnd`) eventually get
+  // force-closed by `buildExecutionGraph`'s `spanTimeoutMs` check, instead of staying stuck
+  // until unrelated trace activity happens to trigger a recompute.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), SPAN_TIMEOUT_CHECK_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+
   const atom = useMemo(
-    () => getExecutionGraph(space, processesAtom, { eventLimit }),
-    [space, processesAtom, eventLimit],
+    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit, now }),
+    [space, processesAtom, collapseCompletedSpans, eventLimit, now],
   );
 
   return useAtomValue(atom);
@@ -177,7 +196,7 @@ const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOption
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
-  { eventLimit = 100 }: UseExecutionGraphOptions = {},
+  { collapseCompletedSpans = true, eventLimit = 100, now }: UseExecutionGraphOptions & { now: number },
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = getTraceMessagesAtom(space);
 
@@ -198,7 +217,9 @@ const getExecutionGraph = (
     buildExecutionGraph({
       traceMessages: get(traceMessages),
       activeProcesses: get(activeProcesses),
+      collapseCompletedSpans,
       eventLimit,
+      now,
     }),
   );
 };

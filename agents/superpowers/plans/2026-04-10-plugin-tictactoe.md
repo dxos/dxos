@@ -279,7 +279,7 @@ export const translations = [
   {
     'en-US': {
       'org.dxos.type.tictactoe': {
-        label: 'Game',
+        'label': 'Game',
         'label--plural': 'Games',
       },
       'org.dxos.plugin.tictactoe': {
@@ -288,7 +288,7 @@ export const translations = [
         'o-turn': "O's turn",
         'x-wins': 'X wins!',
         'o-wins': 'O wins!',
-        draw: "It's a draw!",
+        'draw': "It's a draw!",
         'ai-thinking': 'AI is thinking...',
         'difficulty-easy': 'Easy',
         'difficulty-medium': 'Medium',
@@ -1935,13 +1935,13 @@ import { TicTacToe } from '#types';
 import { translations } from '../../translations';
 import { TicTacToeArticle } from './TicTacToeArticle';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   size?: number;
   winCondition?: number;
   difficulty?: string;
 };
 
-const DefaultStory = ({ size = 3, winCondition, difficulty }: DefaultStoryProps) => {
+const DefaultStory = ({ size = 3, winCondition, difficulty }: StoryArgs) => {
   const game = useMemo(
     () => TicTacToe.make({ name: 'Test Game', size, winCondition, difficulty }),
     [size, winCondition, difficulty],

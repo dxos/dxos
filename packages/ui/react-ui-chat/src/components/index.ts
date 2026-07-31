@@ -5,3 +5,4 @@
 export * from './ChatDialog';
 export * from './ChatEditor';
 export * from './ChatStatus';
+export * from './ChatStatusIndicator';

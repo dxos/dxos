@@ -8,7 +8,7 @@ import { Input, type TextAreaProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldWrapper } from '../../FormFieldWrapper';
+import { FormRow } from '../../FormRow';
 
 export const TextAreaField = ({
   type,
@@ -24,7 +24,7 @@ export const TextAreaField = ({
   );
 
   return (
-    <FormFieldWrapper<string> readonly={readonly} {...props}>
+    <FormRow<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
         <Input.TextArea
           rows={5}
@@ -35,6 +35,6 @@ export const TextAreaField = ({
           onBlur={onBlur}
         />
       )}
-    </FormFieldWrapper>
+    </FormRow>
   );
 };

@@ -18,7 +18,7 @@ describe('EID.make', () => {
   });
 
   test('produces local echo URI from objectId only', ({ expect }) => {
-    expect(EID.make({ entityId: OBJECT })).toBe(`echo:/${OBJECT}`);
+    expect(EID.make({ entityId: OBJECT })).toBe(`echo:///${OBJECT}`);
   });
 
   test('produces space-only echo URI from spaceId only', ({ expect }) => {
@@ -52,6 +52,11 @@ describe('EID.parse', () => {
   test('passes through canonical format unchanged', ({ expect }) => {
     const id = `echo://${SPACE}/${OBJECT}`;
     expect(EID.parse(id)).toBe(id);
+    expect(EID.parse(`echo:///${OBJECT}`)).toBe(`echo:///${OBJECT}`);
+  });
+
+  test('normalizes the legacy single-slash local form to triple-slash', ({ expect }) => {
+    expect(EID.parse(`echo:/${OBJECT}`)).toBe(`echo:///${OBJECT}`);
   });
 
   test('throws on invalid input', ({ expect }) => {
@@ -67,7 +72,7 @@ describe('EID.parse', () => {
 describe('EID.tryParse', () => {
   test('returns undefined on failure instead of throwing', ({ expect }) => {
     expect(EID.tryParse('not-a-uri')).toBeUndefined();
-    expect(EID.tryParse(`echo:/${OBJECT}`)).toBe(`echo:/${OBJECT}`);
+    expect(EID.tryParse(`echo:/${OBJECT}`)).toBe(`echo:///${OBJECT}`);
   });
 });
 
@@ -123,6 +128,10 @@ describe('EID.equals', () => {
     const a = EID.make({ spaceId: SPACE, entityId: OBJECT });
     const b = EID.make({ spaceId: SPACE, entityId: OBJECT2 });
     expect(EID.equals(a, b)).toBe(false);
+  });
+
+  test('treats the legacy single-slash and canonical triple-slash local forms as equal', ({ expect }) => {
+    expect(EID.equals(`echo:/${OBJECT}` as EID.EID, `echo:///${OBJECT}` as EID.EID)).toBe(true);
   });
 });
 

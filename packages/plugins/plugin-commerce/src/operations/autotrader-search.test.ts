@@ -39,7 +39,7 @@ const AUTOTRADER_HTML = `<!doctype html><html><body><main>
 </main></body></html>`;
 
 /**
- * The kind of template the provider blueprint authors for AutoTrader UK: a request mapping that
+ * The kind of template the provider skill authors for AutoTrader UK: a request mapping that
  * binds criteria to the car-search URL, and a result mapping that locates each advert card and
  * extracts its fields.
  */
@@ -52,8 +52,8 @@ const makeAutoTraderProvider = (): Provider.Provider =>
       method: 'GET',
       urlTemplate: 'https://www.autotrader.co.uk/car-search',
       query: {
-        make: { field: 'make' },
-        model: { field: 'model' },
+        'make': { field: 'make' },
+        'model': { field: 'model' },
         'price-to': { field: 'priceTo' },
       },
     },

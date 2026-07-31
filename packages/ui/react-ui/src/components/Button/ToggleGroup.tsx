@@ -46,5 +46,5 @@ const ToggleGroupIconItem = forwardRef<HTMLButtonElement, ToggleGroupIconItemPro
   },
 );
 
-export { ToggleGroup, ToggleGroupItem, ToggleGroupIconItem };
-export type { ToggleGroupProps, ToggleGroupItemProps };
+export { ToggleGroup, ToggleGroupIconItem, ToggleGroupItem };
+export type { ToggleGroupItemProps, ToggleGroupProps };

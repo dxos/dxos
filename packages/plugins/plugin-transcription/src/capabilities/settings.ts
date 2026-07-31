@@ -18,6 +18,7 @@ export default Capability.makeModule(() =>
       schema: Settings.Settings,
       defaultValue: () => ({
         entityExtraction: true,
+        recordMode: 'toggle' as const,
       }),
     });
 

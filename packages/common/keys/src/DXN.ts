@@ -31,31 +31,64 @@ const DXN_SPEC_REGEXP =
 export type DXN = URI.URI & { readonly __DXN: unique symbol };
 
 /**
- * Compile-time validation for NSID strings (the `dxn:` prefix is absent here).
- *
- * Checks two rules expressible with template literal types:
- * - Must contain at least one dot (multi-segment).
- * - Final segment (after the last dot) must not contain a hyphen.
+ * Recursive segment-chain check used by {@link Name}: hyphens are permitted in
+ * every segment except the truly final one.
  *
  * TypeScript template literal inference is non-greedy: `${string}.${infer Rest}`
  * always splits at the first dot. The type recurses until `Rest` has no more dots,
  * at which point it is the true final segment and is checked for hyphens.
+ */
+type ValidSegmentChain<T extends string> = T extends `${string}.${infer Rest}`
+  ? Rest extends `${string}.${string}`
+    ? [ValidSegmentChain<Rest>] extends [never]
+      ? never
+      : T
+    : Rest extends `${string}-${string}`
+      ? never
+      : T
+  : never;
+
+/**
+ * Compile-time validation for NSID strings (the `dxn:` prefix is absent here).
  *
- * Broad `string` passes through unchanged so that template-literal call sites
- * whose prefix segment is `string` are not rejected — those are validated at
+ * Checks two rules expressible with template literal types:
+ * - Three-segment minimum (at least two dots) for names that are fully known at
+ *   compile time — matches the runtime grammar in {@link DXN_SPEC_REGEXP} and
+ *   `parse`.
+ * - Final segment (after the last dot) must not contain a hyphen.
+ *
+ * The three-segment minimum only applies once `Head` (the portion before the
+ * first dot) resolves to a concrete literal, so a fully literal two-segment
+ * name like `a.b` is rejected. Template-literal call sites whose prefix is a
+ * runtime `string` (e.g. `` `${meta.key}.event` ``) can't be proven to have
+ * enough segments at compile time — `Head` there infers as `string` itself —
+ * so only the known final segment is checked; the rest is validated at
  * runtime by the regex inside `parse`.
  */
 export type Name<T extends string> = [string] extends [T]
   ? string
-  : T extends `${string}.${infer Rest}`
+  : T extends `${infer Head}.${infer Rest}`
     ? Rest extends `${string}.${string}`
-      ? [Name<Rest>] extends [never]
+      ? [ValidSegmentChain<Rest>] extends [never]
         ? never
         : T
-      : Rest extends `${string}-${string}`
-        ? never
-        : T
+      : [string] extends [Head]
+        ? Rest extends `${string}-${string}`
+          ? never
+          : T
+        : never
     : never;
+
+/**
+ * Effect Schema validating an NSID name — the `dxn:`-less portion — at runtime, mirroring the rules
+ * the {@link Name} type checks at compile time (multi-segment; camelCase final segment). Pairs with
+ * the {@link Name} type for schema fields that hold a bare NSID (e.g. a model id passed to a creator
+ * helper). Named `NameSchema` because a value cannot share the generic `Name` type's name.
+ */
+export const NameSchema: Schema.Schema<string, string> = Schema.String.pipe(
+  Schema.filter((value) => DXN_SPEC_REGEXP.test(`dxn:${value}`), { message: () => 'Invalid NSID name' }),
+  Schema.annotations({ title: 'DXN.Name', description: 'NSID name (the dxn: prefix omitted)' }),
+);
 
 /**
  * Cheap prefix check — does not validate the full DXN grammar.

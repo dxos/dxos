@@ -52,7 +52,7 @@ export const bindRequest = (params: Record<string, unknown>, request: RequestMap
     }
   }
   const queryString = searchParams.toString();
-  // The urlTemplate may already carry a static query string (e.g. the blueprint bakes in
+  // The urlTemplate may already carry a static query string (e.g. the skill bakes in
   // `?advertising-location=at_cars`), so join with `&` in that case rather than a second `?`.
   const separator = base.includes('?') ? '&' : '?';
   const url = queryString.length > 0 ? `${base}${separator}${queryString}` : base;

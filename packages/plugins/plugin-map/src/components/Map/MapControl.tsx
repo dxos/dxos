@@ -8,9 +8,9 @@ import { composable } from '@dxos/react-ui';
 import {
   type ControlProps,
   Map,
-  type MapViewportProps,
   type MapController,
   type MapRootProps,
+  type MapViewportProps,
   useMapZoomHandler,
 } from '@dxos/react-ui-geo';
 

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Role } from '@dxos/app-framework';
 
-type PlaygroundRole = Surface.RoleToken<Record<string, any>>;
+type PlaygroundRole = Role.Role<Record<string, any>>;
 
 /** Shared role tokens for playground/test surfaces. */
 export const PlaygroundRoles: {
@@ -12,7 +12,7 @@ export const PlaygroundRoles: {
   Secondary: PlaygroundRole;
   Toolbar: PlaygroundRole;
 } = {
-  Primary: Surface.makeType<Record<string, any>>('org.dxos.test.role.primary'),
-  Secondary: Surface.makeType<Record<string, any>>('org.dxos.test.role.secondary'),
-  Toolbar: Surface.makeType<Record<string, any>>('org.dxos.test.role.toolbar'),
+  Primary: Role.make<Record<string, any>>('org.dxos.test.role.primary'),
+  Secondary: Role.make<Record<string, any>>('org.dxos.test.role.secondary'),
+  Toolbar: Role.make<Record<string, any>>('org.dxos.test.role.toolbar'),
 };

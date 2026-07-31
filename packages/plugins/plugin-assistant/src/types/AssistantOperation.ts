@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Routine, Operation } from '@dxos/compute';
+import { Instructions, Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
@@ -23,6 +23,11 @@ export const CreateChat = Operation.make({
   input: Schema.Struct({
     db: Database.Database,
     name: Schema.optional(Schema.String),
+    /**
+     * Instructions steering the conversation, rendered into the system prompt at request time.
+     * Held by reference so the chat follows later edits to them.
+     */
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions)),
     /** If false, chat is created in-memory only and not added to space. Defaults to true. */
     addToSpace: Schema.optional(Schema.Boolean),
   }),
@@ -60,58 +65,6 @@ export const SetCurrentChat = Operation.make({
   output: Schema.Void,
 });
 
-export const RunPromptInNewChat = Operation.make({
-  meta: {
-    key: makeKey('runPromptInNewChat'),
-    name: 'Run Prompt In New Chat',
-    icon: 'ph--chat-text--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    db: Database.Database,
-    /** Context objects to bind to the new chat. */
-    objects: Schema.optional(Schema.Array(Obj.Unknown)),
-    /** Blueprint keys to look up and bind to the new chat. */
-    blueprints: Schema.optional(Schema.Array(Schema.String)),
-    /** Raw instructions or an existing Routine object reference. */
-    prompt: Schema.Union(Schema.String, Ref.Ref(Routine.Routine)),
-    /**
-     * When true, skips opening the chat: runs the Agent prompt operation against the new chat via the compute runtime (traced).
-     */
-    background: Schema.optional(Schema.Boolean),
-  }),
-  output: Schema.Struct({
-    object: Type.getSchema(Chat.Chat),
-  }),
-});
-
-const NavigationTargetSchema = Schema.Struct({
-  path: Schema.String.annotations({ description: 'Navigation path to use with the Open operation.' }),
-  label: Schema.String.annotations({ description: 'Human-readable label.' }),
-  type: Schema.String.annotations({ description: 'Object type.' }),
-});
-
-export const ResolveNavigationTargets = Operation.make({
-  meta: {
-    key: makeKey('resolveNavigationTargets'),
-    name: 'Resolve navigation targets',
-    description:
-      'Resolve navigation targets within the application. The returned paths can be used with the Open operation. Without a query, returns pages that can be navigated to.',
-    icon: 'ph--compass--regular',
-  },
-  input: Schema.Struct({
-    query: Schema.optional(
-      Schema.Struct({
-        dxn: Schema.optional(DXN.Schema),
-      }),
-    ),
-  }),
-  output: Schema.Struct({
-    targets: Schema.Array(NavigationTargetSchema),
-  }),
-  services: [Capability.Service],
-});
-
 export const ForkChat = Operation.make({
   meta: { key: makeKey('forkChat'), name: 'Fork Chat', icon: 'ph--git-branch--regular', skipRegistry: true },
   services: [Capability.Service, Database.Service],
@@ -143,10 +96,23 @@ export const EnsureCompanionChat = Operation.make({
   }),
 });
 
-export const BlueprintForm = Schema.Struct({
+export const SkillForm = Schema.Struct({
   key: Schema.String,
   name: Schema.String,
   description: Schema.optional(Schema.String),
+});
+
+export const GenerateHomeSuggestions = Operation.make({
+  meta: {
+    key: makeKey('generateHomeSuggestions'),
+    name: 'Generate Home Suggestions',
+    icon: 'ph--sparkle--regular',
+    // Internal UI operation — not exposed as an agent tool.
+    skipRegistry: true,
+  },
+  services: [Capability.Service, AiService.AiService],
+  input: Schema.Struct({ db: Database.Database }),
+  output: Schema.Struct({ prompts: Schema.Array(Schema.String) }),
 });
 
 export const ToggleTracePanelDebug = Operation.make({

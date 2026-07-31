@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta, Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 
 import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';

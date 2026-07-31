@@ -8,7 +8,7 @@ import { expect, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useClient } from '../client';
 import { type Space, useSpaces } from '../echo';

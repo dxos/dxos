@@ -1,0 +1,36 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../core/compute/pipeline-rdf"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-graph"
+    },
+    {
+      "path": "../react-ui-list"
+    },
+    {
+      "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
+    }
+  ]
+}

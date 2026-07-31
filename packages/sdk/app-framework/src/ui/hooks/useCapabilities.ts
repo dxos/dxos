@@ -15,6 +15,9 @@ import { useOptionalPluginManager, usePluginManager } from '../components';
 /** Stable empty result for capability lookups made outside a plugin manager. */
 const emptyCapabilities = Atom.make(() => [] as const);
 
+/** Stable atom yielding `undefined`, used as the fallback for optional atom-capability lookups. */
+const emptyAtomValue = Atom.make(() => undefined);
+
 /**
  * Hook to request capabilities from the plugin context.
  * @returns An array of capabilities.
@@ -78,6 +81,28 @@ export const useAtomCapabilityState = <T>(
   const update = useCallback(
     (fn: (current: T) => T) => {
       registry.set(atom, fn(registry.get(atom)));
+    },
+    [registry, atom],
+  );
+  return [value, update];
+};
+
+/**
+ * Tolerant variant of {@link useAtomCapabilityState}: returns `[undefined, noop]` when the atom
+ * capability is not registered (e.g. the contributing plugin is not installed) rather than
+ * throwing. The updater is a no-op while the capability is absent.
+ */
+export const useOptionalAtomCapabilityState = <T>(
+  atomCapability: Capability.InterfaceDef<Atom.Writable<T>>,
+): [T | undefined, (fn: (current: T) => T) => void] => {
+  const registry = useOptionalCapability(Capabilities.AtomRegistry);
+  const atom = useOptionalCapability(atomCapability);
+  const value = useAtomValue(atom ?? emptyAtomValue);
+  const update = useCallback(
+    (fn: (current: T) => T) => {
+      if (registry && atom) {
+        registry.set(atom, fn(registry.get(atom)));
+      }
     },
     [registry, atom],
   );

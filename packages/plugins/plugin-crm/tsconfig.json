@@ -34,6 +34,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/assistant"
     },
     {
@@ -41,12 +44,6 @@
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/functions"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/echo/echo"
@@ -64,7 +61,13 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
@@ -73,16 +76,31 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../plugin-automation"
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-routine"
     }
   ]
 }

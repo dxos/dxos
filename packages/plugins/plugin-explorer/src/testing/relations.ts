@@ -4,6 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 import { Obj, Query, Relation } from '@dxos/echo';
+import { type BundleEdge, type TreeNode } from '@dxos/react-ui-graph';
 import {
   type RelationSpec,
   type TypeSpec,
@@ -12,9 +13,6 @@ import {
   createRelationFactory,
 } from '@dxos/schema/testing';
 import { HasConnection, Organization, Person } from '@dxos/types';
-
-import { type BundleEdge } from '../components/Tree/layout';
-import { type TreeNode } from '../components/Tree/types';
 
 const SECTORS = ['Technology', 'Finance', 'Research', 'Media'];
 const CONNECTION_KINDS = ['partner', 'investor', 'vendor', 'customer'];

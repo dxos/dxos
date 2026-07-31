@@ -156,7 +156,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/react-ui-mosaic',
   '@dxos/react-ui-pickers',
   '@dxos/react-ui-list',
-  '@dxos/react-ui-stack',
   '@dxos/react-ui-syntax-highlighter',
   '@dxos/react-ui-table',
   '@dxos/react-ui-tabs',

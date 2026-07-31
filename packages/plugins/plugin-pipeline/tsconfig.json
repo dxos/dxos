@@ -49,6 +49,9 @@
       "path": "../../core/echo/echo-query"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../devtools/devtools"
     },
     {
@@ -86,9 +89,6 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui-theme"

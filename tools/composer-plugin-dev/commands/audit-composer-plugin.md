@@ -34,11 +34,11 @@ Walk the plugin tree and report **every deviation** from the rules in `skills/co
 - `AccessToken` used for credentials; never in component state?
 - `AiService` used for inference; no direct LLM SDK calls in UI?
 
-### Operations & blueprints
+### Operations & skills
 
 - Operations split between `definitions.ts` and per-handler files?
 - `OperationHandlerSet.lazy()` in the barrel?
-- Blueprint defined and registered? Type metadata references `blueprints: [...]`?
+- Skill defined and registered? Type metadata references `skills: [...]`?
 
 ### Types
 

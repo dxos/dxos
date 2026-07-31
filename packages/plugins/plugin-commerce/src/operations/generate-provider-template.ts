@@ -5,22 +5,22 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine } from '@dxos/compute';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import { Instructions, Operation, Skill } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { ProviderBlueprint } from '../blueprints';
 import { meta } from '../meta';
+import { ProviderSkill } from '../skills';
 import { Provider, SearchOperation } from '../types';
 
 const TOAST_ID = `${meta.profile.key}/regenerate`;
 
 /**
- * Runs the provider blueprint agent: materializes the {@link ProviderBlueprint} as an ECHO
- * Blueprint object in the space (cloning the static definition on first use, mirroring the
- * `create-chat` operation), then invokes the {@link AgentPrompt} routine with the blueprint and
+ * Runs the provider skill agent: materializes the {@link ProviderSkill} as an ECHO
+ * Skill object in the space (cloning the static definition on first use, mirroring the
+ * `create-chat` operation), then invokes the {@link RunInstructions} instructions with the skill and
  * provider bound as context. The agent fetches the vendor site (analyzeProvider) and persists a
  * derived search schema + request/result mapping (setProviderTemplate). Returns the (mutated)
  * provider.
@@ -41,37 +41,36 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
           const { db } = yield* Database.Service;
           const provider = yield* Database.load(providerRef);
 
-          // Materialize the static blueprint definition as an ECHO Blueprint object in the space
-          // (cloned once and reused thereafter), keyed by `Provider.BLUEPRINT_KEY`.
-          const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-          const blueprint =
-            blueprints.find((candidate) => Obj.getMeta(candidate).key === Provider.BLUEPRINT_KEY) ??
-            db.add(ProviderBlueprint.make());
+          // Materialize the static skill definition as an ECHO Skill object in the space
+          // (cloned once and reused thereafter), keyed by `Provider.SKILL_KEY`.
+          const skills = yield* Effect.promise(() => db.query(Filter.type(Skill.Skill)).run());
+          const skill =
+            skills.find((candidate) => Obj.getMeta(candidate).key === Provider.SKILL_KEY) ??
+            db.add(ProviderSkill.make());
 
-          // The AgentPrompt routine loads `blueprints`/`context` and binds them to its own session,
-          // so the blueprint tools (analyzeProvider, setProviderTemplate) and the provider object are
+          // The RunInstructions instructions loads `skills`/`context` and binds them to its own session,
+          // so the skill tools (analyzeProvider, setProviderTemplate) and the provider object are
           // available to the agent without a pre-bound chat.
-          const routine = Routine.make({
+          const instructions = Instructions.make({
             name: 'Generate Provider Template',
-            instructions: trim`
+            text: trim`
             Analyze the provider at ${provider.url} and populate its search template by calling the
             available tools: first analyze-provider to fetch the vendor site, then set-provider-template
             to persist the result. Derive the typed search fields (search schema), the request mapping,
             and the result mapping. Only include fields and selectors you can justify from the page source.
           `,
-            blueprints: [Ref.make(blueprint)],
-            context: [Ref.make(provider)],
+            skills: [Ref.make(skill)],
           });
 
-          // Create the conversation feed in the space so the spawned AgentPrompt environment inherits
-          // space affinity (without it, AgentPrompt creates a space-less feed and Database.Service is
+          // Create the conversation feed in the space so the spawned RunInstructions environment inherits
+          // space affinity (without it, RunInstructions creates a space-less feed and Database.Service is
           // unavailable in the spawn). Mirrors the assistant e2e harness.
           const conversationFeed = yield* Database.add(Feed.make());
 
           yield* Database.flush();
           yield* Operation.invoke(
-            AgentPrompt,
-            { prompt: Ref.make(routine), input: {} },
+            RunInstructions,
+            { instructions: Ref.make(instructions), input: {} },
             { spaceId: db.spaceId, conversation: Obj.getURI(conversationFeed) },
           );
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/test-utils",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Test utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,14 +13,14 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./playwright": {
+      "source": "./src/playwright.ts",
       "types": "./dist/types/src/playwright.d.ts",
-      "browser": "./dist/lib/browser/playwright.mjs",
-      "node": "./dist/lib/node-esm/playwright.mjs"
+      "import": "./dist/lib/playwright.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

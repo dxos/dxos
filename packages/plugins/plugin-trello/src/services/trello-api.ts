@@ -16,7 +16,8 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration';
+import { type AccessToken } from '@dxos/link';
+import { Connection } from '@dxos/plugin-connector';
 
 import { TRELLO_API_BASE } from '../constants';
 import { InvalidTrelloAccessTokenError } from '../errors';
@@ -107,22 +108,26 @@ export type UpdateCardInput = {
  * Fails with {@link InvalidTrelloAccessTokenError} when the stored token is not
  * exactly two non-empty segments.
  */
-export const credentialsFromAccessToken = (record: {
-  token: string;
-}): Effect.Effect<TrelloCredentialsValue, InvalidTrelloAccessTokenError> => {
-  const parts = record.token.split(':');
+/**
+ * Splits a stored Trello credential into its `<power-up key>:<user token>` halves.
+ * Fails with {@link InvalidTrelloAccessTokenError} when the value is not exactly two non-empty parts.
+ */
+export const credentialsFromToken = (
+  token: string,
+): Effect.Effect<TrelloCredentialsValue, InvalidTrelloAccessTokenError> => {
+  const parts = token.split(':');
   if (parts.length !== 2 || !parts[0] || !parts[1]) {
     return Effect.fail(new InvalidTrelloAccessTokenError());
   }
-  const [key, token] = parts;
-  return Effect.succeed({ key, token });
+  const [key, userToken] = parts;
+  return Effect.succeed({ key, token: userToken });
 };
 
 /**
  * Layer-based credentials service. Mirrors the `GoogleCredentials` pattern in
  * plugin-inbox: every API call pulls creds from this service rather than
  * threading them through as an explicit parameter, so callers compose a
- * single `Effect.provide(TrelloApi.TrelloCredentials.fromIntegration(ref))`
+ * single `Effect.provide(TrelloApi.TrelloCredentials.fromConnection(ref))`
  * (with `{ TrelloApi }` from `../services`) at the operation boundary instead
  * of plumbing creds through every call site.
  */
@@ -130,14 +135,27 @@ export class TrelloCredentials extends Context.Tag('@dxos/plugin-trello/TrelloCr
   TrelloCredentials,
   TrelloCredentialsValue
 >() {
-  /** Loads the integration's access token and parses it into `TrelloCredentials`. */
-  static fromIntegration = (integrationRef: Ref.Ref<Integration.Integration>) =>
+  /** Loads the connection's access token and parses it into `TrelloCredentials`. */
+  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       TrelloCredentials,
       Effect.gen(function* () {
-        const integration = yield* Database.load(integrationRef);
-        const accessToken = yield* Database.load(integration.accessToken);
-        return yield* credentialsFromAccessToken(accessToken);
+        const connection = yield* Database.load(connectionRef);
+        const accessToken = yield* Database.load(connection.accessToken);
+        return yield* credentialsFromToken(accessToken.token);
+      }),
+    );
+
+  /**
+   * Loads the access token directly and parses it into `TrelloCredentials`. Used by callers that
+   * only have an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
+   */
+  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+    Layer.effect(
+      TrelloCredentials,
+      Effect.gen(function* () {
+        const accessToken = yield* Database.load(accessTokenRef);
+        return yield* credentialsFromToken(accessToken.token);
       }),
     );
 }

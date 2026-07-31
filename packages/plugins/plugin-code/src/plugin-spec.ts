@@ -10,7 +10,7 @@ const PLUGIN_SPEC_SUBJECT_BRAND = '@dxos/plugin-code/plugin-spec';
  * plugin's package) plus the file contents contributed via
  * {@link AppCapabilities.PluginAsset} by each plugin's
  * `addPluginAssetModule`, so the spec surface can render it via
- * {@link SpecView} without any ECHO binding.
+ * `SpecArticle` (with `content` and no `subject`) without any ECHO binding.
  */
 export type PluginSpecSubject = {
   readonly __brand: typeof PLUGIN_SPEC_SUBJECT_BRAND;

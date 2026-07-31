@@ -5,15 +5,18 @@
 import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
-import { PanelContainer, Searchbar } from '../../../components';
+import { Searchbar } from '../../../components';
 // import { DataSpaceSelector } from '../../../containers';
 // import { useDevtoolsState } from '../../../hooks';
 
+// TODO(queue-to-feed-migration): retains "Queue" naming — `FeedsPanel` already names the unrelated
+// hypercore feed-pipeline devtools panel (see ../FeedsPanel), so renaming this to `FeedsPanel` would
+// collide; needs a distinct name once this panel is rebuilt against `Feed.Feed`.
 export const QueuesPanel = () => {
   // const { space } = useDevtoolsState();
   const [_queueInput, setQueueInput] = useState('');
@@ -56,22 +59,23 @@ export const QueuesPanel = () => {
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           {/* <DataSpaceSelector /> */}
           <Searchbar onChange={setQueueInput} />
         </Toolbar.Root>
-      }
-    >
-      {/* TODO(burdon): Convert to MasterDetailTable. */}
-      <div className='flex grow flex-col overflow-hidden divide-y divide-separator'>
-        <DynamicTable rows={rows} properties={properties} features={features} onRowClick={handleRowClicked} />
-        <div className={mx('flex overflow-auto', 'h-1/2')}>
-          {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}
+      </Panel.Toolbar>
+      <Panel.Content>
+        {/* TODO(burdon): Convert to MasterDetailTable. */}
+        <div className='flex grow flex-col overflow-hidden divide-y divide-separator'>
+          <DynamicTable rows={rows} properties={properties} features={features} onRowClick={handleRowClicked} />
+          <div className={mx('flex overflow-auto', 'h-1/2')}>
+            {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}
+          </div>
         </div>
-      </div>
-    </PanelContainer>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

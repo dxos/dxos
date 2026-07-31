@@ -19,6 +19,14 @@ export const translations = [
 
         'start-recording.label': 'Start recording',
         'stop-recording.label': 'Stop recording',
+        'hold-to-record.label': 'Hold to record',
+
+        'recording-options.label': 'Recording options',
+        'record-mode.label': 'Record mode',
+        'record-mode.toggle.label': 'Toggle',
+        'record-mode.hold.label': 'Hold to record (push to talk)',
+        'audio-device.label': 'Microphone',
+        'audio-device.default.label': 'System default',
 
         'settings.entity-extraction.label': 'Entity extraction',
       },

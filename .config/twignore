@@ -1,0 +1,4 @@
+# .config/twignore
+
+**/data/**
+**/scripts/**

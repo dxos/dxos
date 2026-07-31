@@ -3,18 +3,18 @@
 //
 
 import { DatabaseDirectory, EntityStructure } from '@dxos/echo-protocol';
-import { EID, EntityId, PublicKey } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { Type } from '../index';
 import { TestSchema } from './test-schema';
 
 // Lazy init: Cloudflare workers disallow non-determinism at module scope (e.g. random keys).
-let cachedSpaceKeyHex: string | undefined;
-const getSpaceKeyHex = (): string => {
-  if (cachedSpaceKeyHex === undefined) {
-    cachedSpaceKeyHex = PublicKey.random().toHex();
+let cachedSpaceId: SpaceId | undefined;
+const getSpaceId = (): SpaceId => {
+  if (cachedSpaceId === undefined) {
+    cachedSpaceId = SpaceId.random();
   }
-  return cachedSpaceKeyHex;
+  return cachedSpaceId;
 };
 
 let cachedPeopleAlice: DatabaseDirectory | undefined;
@@ -32,7 +32,7 @@ export const PEOPLE = {
   get alice(): DatabaseDirectory {
     if (cachedPeopleAlice === undefined) {
       cachedPeopleAlice = DatabaseDirectory.make({
-        spaceKey: getSpaceKeyHex(),
+        spaceId: getSpaceId(),
         objects: {
           [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Person)!,
@@ -49,7 +49,7 @@ export const PEOPLE = {
   get bob(): DatabaseDirectory {
     if (cachedPeopleBob === undefined) {
       cachedPeopleBob = DatabaseDirectory.make({
-        spaceKey: getSpaceKeyHex(),
+        spaceId: getSpaceId(),
         objects: {
           [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Person)!,
@@ -68,7 +68,7 @@ export const ORGS = {
   get dxos(): DatabaseDirectory {
     if (cachedOrgsDxos === undefined) {
       cachedOrgsDxos = DatabaseDirectory.make({
-        spaceKey: getSpaceKeyHex(),
+        spaceId: getSpaceId(),
         objects: {
           [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Organization)!,
@@ -86,7 +86,7 @@ export const ORGS = {
   get cyberdyne(): DatabaseDirectory {
     if (cachedOrgsCyberdyne === undefined) {
       cachedOrgsCyberdyne = DatabaseDirectory.make({
-        spaceKey: getSpaceKeyHex(),
+        spaceId: getSpaceId(),
         objects: {
           [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Organization)!,
@@ -106,7 +106,7 @@ export const WORKS_FOR = {
   get fredWorksForCyberdyne(): DatabaseDirectory {
     if (cachedWorksFredCyberdyne === undefined) {
       cachedWorksFredCyberdyne = DatabaseDirectory.make({
-        spaceKey: getSpaceKeyHex(),
+        spaceId: getSpaceId(),
         objects: {
           [EntityId.random()]: EntityStructure.makeRelation({
             type: Type.getURI(TestSchema.EmployedBy)!,
@@ -126,7 +126,7 @@ export const WORKS_FOR = {
   get aliceWorksForAperture(): DatabaseDirectory {
     if (cachedWorksAliceAperture === undefined) {
       cachedWorksAliceAperture = DatabaseDirectory.make({
-        spaceKey: getSpaceKeyHex(),
+        spaceId: getSpaceId(),
         objects: {
           [EntityId.random()]: EntityStructure.makeRelation({
             type: Type.getURI(TestSchema.EmployedBy)!,
@@ -148,7 +148,7 @@ export const TASKS = {
   get task1(): DatabaseDirectory {
     if (cachedTasksTask1 === undefined) {
       cachedTasksTask1 = DatabaseDirectory.make({
-        spaceKey: getSpaceKeyHex(),
+        spaceId: getSpaceId(),
         objects: {
           [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Task)!,
@@ -169,7 +169,7 @@ export const TASKS = {
   get task2(): DatabaseDirectory {
     if (cachedTasksTask2 === undefined) {
       cachedTasksTask2 = DatabaseDirectory.make({
-        spaceKey: getSpaceKeyHex(),
+        spaceId: getSpaceId(),
         objects: {
           [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Task)!,

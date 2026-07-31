@@ -11,12 +11,12 @@ import { withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Tooltip } from './Tooltip';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   tooltips: { label: string; content: string }[];
   defaultOpen?: boolean;
 };
 
-const DefaultStory = ({ tooltips, defaultOpen }: DefaultStoryProps) => {
+const DefaultStory = ({ tooltips, defaultOpen }: StoryArgs) => {
   return (
     <Tooltip.Provider defaultOpen={defaultOpen}>
       <div className='w-32'>

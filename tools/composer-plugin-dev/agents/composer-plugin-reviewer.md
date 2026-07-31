@@ -22,7 +22,7 @@ The default audience for plugins is **community/external authors** (own repo, Vi
    - **Auth** — `external-services.md`. Credentials must be `AccessToken` Refs.
    - **AI** — `ai-service.md`. LLM calls go through operations + `AiService`.
    - **Operations** — `operations.md`. Definitions + per-handler files + lazy `OperationHandlerSet`.
-   - **Blueprints** — `blueprints.md`. Plugins should ship a blueprint exposing operations as tools.
+   - **Skills** — `skills.md`. Plugins should ship a skill exposing operations as tools.
    - **Types** — `types-schema.md`. Typename, version, `LabelAnnotation`, `IconAnnotation`, `make()` factory.
    - **Capabilities** — `capabilities.md`. Barrel uses only `Capability.lazy()`.
    - **Packaging** — `package-json.md`. Especially the **CLI entrypoint contract** — no React in `./cli`.
@@ -37,7 +37,7 @@ The default audience for plugins is **community/external authors** (own repo, Vi
 Markdown report grouped by severity:
 
 - **🚨 Critical** — must fix before merging (broken contracts, security issues, anti-patterns from `operations-vs-ui.md`).
-- **⚠️ Important** — should fix (missing tests, missing blueprint, layout deviations).
+- **⚠️ Important** — should fix (missing tests, missing skill, layout deviations).
 - **💡 Nit** — style and polish.
 
 Each finding cites `file:line` and proposes a concrete change. Skip categories that are clean — silence is approval.

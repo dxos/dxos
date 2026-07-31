@@ -6,9 +6,10 @@ import { Levenshtein } from 'autoevals';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { createEvalRunner, type VariantConfig } from '../runner';
+import { type VariantConfig, createEvalRunner } from '../runner';
 
 // TODO(dmaretskyi): Still some ways to go. I want this to be able to perform complex tasks inside composer, and then evaluate the output and effects (i.e. Database changes).
 // To that end:
@@ -26,15 +27,15 @@ const task = createEvalRunner({
 evalite.each<VariantConfig>([
   {
     name: 'claude-haiku-4-5',
-    input: { model: 'ai.claude.model.claude-haiku-4-5' },
+    input: { model: DXN.make('com.anthropic.model.claude-haiku-4-5.default') },
   },
   {
     name: 'claude-sonnet-4-5',
-    input: { model: 'ai.claude.model.claude-sonnet-4-5' },
+    input: { model: DXN.make('com.anthropic.model.claude-sonnet-4-6.default') },
   },
   {
     name: 'claude-opus-4-6',
-    input: { model: 'ai.claude.model.claude-opus-4-6' },
+    input: { model: DXN.make('com.anthropic.model.claude-opus-4-8.default') },
   },
 ])('Question answering', {
   data: [

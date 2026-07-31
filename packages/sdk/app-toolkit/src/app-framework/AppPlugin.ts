@@ -8,9 +8,9 @@ import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
 import {
-  ActivationEvent as ActivationEvent$,
   ActivationEvents,
   Capabilities,
+  ActivationEvent as ActivationEvent$,
   Capability as Capability$,
   Plugin as Plugin$,
 } from '@dxos/app-framework';
@@ -90,17 +90,17 @@ export function addSettingsModule<T = void>(
   });
 }
 
-export type BlueprintDefinitionModuleOptions = PluginModuleOptions;
+export type SkillDefinitionModuleOptions = PluginModuleOptions;
 
 /**
- * Creates a module that contributes blueprint definitions.
+ * Creates a module that contributes skill definitions.
  */
-export function addBlueprintDefinitionModule<T = void>(
-  options: BlueprintDefinitionModuleOptions,
+export function addSkillDefinitionModule<T = void>(
+  options: SkillDefinitionModuleOptions,
 ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
   assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
   return Plugin$.addModule({
-    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'blueprint-definition',
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'skill-definition',
     activatesOn: options.activatesOn ?? AppActivationEvents.SetupArtifactDefinition,
     firesBeforeActivation: options.firesBeforeActivation,
     firesAfterActivation: options.firesAfterActivation,
@@ -237,23 +237,6 @@ export function addReactRootModule<T = void>(
   return Plugin$.addModule({
     id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'react-root',
     activatesOn: options.activatesOn ?? ActivationEvents.Startup,
-    firesBeforeActivation: options.firesBeforeActivation,
-    firesAfterActivation: options.firesAfterActivation,
-    activate: options.activate,
-  });
-}
-
-export type NavigationResolverModuleOptions = PluginModuleOptions;
-
-/**
- * Creates a module that contributes navigation target resolvers.
- */
-export function addNavigationResolverModule<T = void>(
-  options: NavigationResolverModuleOptions,
-): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
-  return Plugin$.addModule({
-    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-resolver',
-    activatesOn: options.activatesOn ?? ActivationEvents.ProcessManagerReady,
     firesBeforeActivation: options.firesBeforeActivation,
     firesAfterActivation: options.firesAfterActivation,
     activate: options.activate,

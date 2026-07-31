@@ -9,7 +9,7 @@ A capability is a lazy module that contributes some functionality to the framewo
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/operation';
 
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),
@@ -29,11 +29,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
-      /* surfaces */
-    ]),
-  ),
+  Effect.succeed(Capability.contributes(Capabilities.ReactSurface, [/* surfaces */])),
 );
 ```
 

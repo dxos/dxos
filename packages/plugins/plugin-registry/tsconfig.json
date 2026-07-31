@@ -46,6 +46,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -70,22 +73,19 @@
       "path": "../../sdk/client-protocol"
     },
     {
-      "path": "../../sdk/types"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-markdown"
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui-theme"

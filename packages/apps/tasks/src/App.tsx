@@ -14,9 +14,10 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
+import { Config, defs } from '@dxos/config';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { parseId } from '@dxos/keys';
-import { ClientProvider, useShell } from '@dxos/react-client';
+import { ClientProvider, createClientServices, useShell } from '@dxos/react-client';
 import { useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { getConfig } from './config';
@@ -97,11 +98,27 @@ const router = createBrowserRouter([
   },
 ]);
 
-const createWorker = () =>
-  new SharedWorker(new URL('./shared-worker', import.meta.url), {
-    type: 'module',
-    name: 'dxos-client-worker',
-  });
+// Dedicated-worker client services. A coordinator SharedWorker elects a single leader tab that owns
+// the dedicated Worker hosting the ECHO services; follower tabs proxy through it.
+const createServices = (config?: Config) =>
+  createClientServices(
+    new Config(
+      { runtime: { client: { servicesMode: defs.Runtime.Client.ServicesMode.DEDICATED_WORKER } } },
+      ...(config ? [config.values] : []),
+    ),
+    {
+      createDedicatedWorker: () =>
+        new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
+          type: 'module',
+          name: 'dxos-client-worker',
+        }),
+      createCoordinatorWorker: () =>
+        new SharedWorker(new URL('@dxos/client/coordinator-worker', import.meta.url), {
+          type: 'module',
+          name: 'dxos-coordinator-worker',
+        }),
+    },
+  );
 
 export const App = () => {
   // Create a registry instance for atom reactivity
@@ -110,7 +127,7 @@ export const App = () => {
   return (
     <ClientProvider
       config={getConfig}
-      createWorker={createWorker}
+      services={createServices}
       shell='./shell.html'
       types={[Task]}
       onInitialized={async (client) => {

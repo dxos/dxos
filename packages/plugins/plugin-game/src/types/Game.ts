@@ -4,8 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { CardAnnotation } from '@dxos/schema';
+
+// @import-as-namespace
 
 /**
  * A player in a game.
@@ -36,24 +39,24 @@ export type Player = Schema.Schema.Type<typeof Player>;
  * Unifies all game variants (chess, tic-tac-toe, ...) under one typename so they share
  * graph node, create flow, and shared surface scaffolding.
  */
-export const Game = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  players: Schema.mutable(Schema.Array(Player))
-    .annotations({ description: 'Players in the game.' })
-    .pipe(FormInputAnnotation.set(false), Schema.optional),
-  variant: Ref.Ref(Obj.Unknown)
-    .annotations({ description: 'Reference to variant-specific state object.' })
-    .pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--sword--regular', hue: 'indigo' }),
-  // Delegate the graph-node icon to the referenced variant state's schema. Falls back to
-  // the static `ph--sword--regular` above while the variant ref is still loading.
-  Annotation.IconFromRefAnnotation.set('variant'),
-  Type.makeObject(DXN.make('org.dxos.type.game', '0.1.0')),
-);
-
-export type Game = Type.InstanceType<typeof Game>;
+export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    players: Schema.mutable(Schema.Array(Player))
+      .annotations({ description: 'Players in the game.' })
+      .pipe(FormInputAnnotation.set(false), Schema.optional),
+    variant: Ref.Ref(Obj.Unknown)
+      .annotations({ description: 'Reference to variant-specific state object.' })
+      .pipe(FormInputAnnotation.set(false)),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--sword--regular', hue: 'indigo' }),
+    CardAnnotation.set(true),
+    // Delegate the graph-node icon to the referenced variant state's schema. Falls back to
+    // the static `ph--sword--regular` above while the variant ref is still loading.
+    Annotation.IconFromRefAnnotation.set('variant'),
+  ),
+) {}
 
 /**
  * Variant-narrowed reference to a Game.

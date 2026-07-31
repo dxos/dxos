@@ -11,6 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
+import { Capabilities, Plugin } from '@dxos/app-framework';
 import { CommandConfig, performRecoveryOAuthFlow, print } from '@dxos/cli-util';
 import { type Client, ClientService } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
@@ -18,6 +19,8 @@ import { Context as DxContext } from '@dxos/context';
 import { HubHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
+
+import { ClientOperation } from '#operations';
 
 import { printIdentity, waitForState } from '../../halo/util';
 
@@ -33,8 +36,8 @@ const METHOD_CHOICES = [
 ];
 
 const INPUT_PROMPT: Record<LoginMethod, string> = {
-  email: 'Email address',
-  atproto: 'atproto handle or DID (e.g. alice.bsky.social)',
+  'email': 'Email address',
+  'atproto': 'atproto handle or DID (e.g. alice.bsky.social)',
   'device-invitation': 'Invitation code or URL',
   'recovery-code': 'Recovery code (seed phrase)',
 };
@@ -56,6 +59,8 @@ export const login = Command.make(
   Effect.fn(function* ({ method, input }) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
+    const manager = yield* Plugin.Service;
+    const { invoke } = manager.capabilities.get(Capabilities.OperationInvoker);
     // TODO(wittjosiah): How to surface this error to the user cleanly?
     invariant(!client.halo.identity.get(), 'Already logged in. Run `dx account logout` first.');
 
@@ -69,7 +74,7 @@ export const login = Command.make(
 
     const identity = yield* Match.value(resolvedMethod).pipe(
       Match.when('atproto', () => loginWithAtproto(client, resolvedInput)),
-      Match.when('email', () => loginWithEmail(client, resolvedInput)),
+      Match.when('email', () => loginWithEmail(client, resolvedInput, invoke)),
       Match.when('recovery-code', () => loginWithRecoveryCode(client, resolvedInput)),
       Match.when('device-invitation', () => loginWithDeviceInvitation(client, resolvedInput)),
       Match.exhaustive,
@@ -108,16 +113,53 @@ const loginWithRecoveryCode = (client: Client, recoveryCode: string) =>
   Effect.tryPromise(() => client.halo.recoverIdentity({ recoveryCode }));
 
 /**
- * Email login: hub-service inlines a one-time `token` for test emails and emails it out-of-band
- * otherwise. Redeems the token to admit this device into HALO.
+ * Email login, mirroring the gate's login tab (`WelcomeScreen.handleLogin`). Hub-service answers in
+ * one of three ways:
+ *
+ * - `needsIdentity`: the address may bind a fresh Account but has no identity yet. Create one
+ *   locally and retry with its DID; the hub then admits it directly — there is no token because
+ *   there is nothing to recover — and we provision the agent as the gate does.
+ * - `token`: an Account exists and the hub returned a one-time recovery token inline.
+ * - neither: the link went out by email, so prompt for the token from the message.
  */
-const loginWithEmail = (client: Client, email: string) =>
+const loginWithEmail = (client: Client, email: string, invoke: Capabilities.OperationInvoker['invoke']) =>
   Effect.gen(function* () {
     const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
     invariant(hubUrl, 'Hub URL not configured (runtime.app.env.DX_HUB_URL).');
     const hub = new HubHttpClient(hubUrl);
-    const { token: inlineToken } = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email }));
-    let token = inlineToken;
+    const result = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email }));
+
+    if (result.needsIdentity) {
+      // `CreateIdentity` fires `IdentityCreated`, which is what provisions the personal space.
+      yield* invoke(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] });
+      const identity = client.halo.identity.get();
+      invariant(identity, 'identity should exist after create');
+      // The local identity outlives any failure from here on, and the `Already logged in` guard
+      // above rejects a plain retry, so a rejected request and a non-admitting response both need
+      // the same recovery guidance.
+      const notAdmitted = (detail: string) =>
+        new Error(
+          `Hub did not admit ${email} (${detail}). A local identity was created and remains bound to ` +
+            'this profile; run `dx account logout` to clear it before retrying.',
+        );
+
+      const retry = yield* Effect.tryPromise({
+        try: () =>
+          hub.login(DxContext.default(), {
+            email,
+            identityDid: identity.did,
+            identityKey: identity.identityKey.toHex(),
+          }),
+        catch: (cause) => notAdmitted(cause instanceof Error ? cause.message : String(cause)),
+      });
+      if (!retry.admitted) {
+        return yield* Effect.fail(notAdmitted('no admission granted'));
+      }
+      yield* invoke(ClientOperation.CreateAgent);
+      return identity;
+    }
+
+    let token = result.token;
     if (!token) {
       yield* Console.log(`A login link was sent to ${email}. Paste the token from the email below.`);
       token = yield* Prompt.text({ message: 'Login token' }).pipe(Prompt.run);

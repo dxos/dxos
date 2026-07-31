@@ -16,10 +16,10 @@ import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type Space } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
-import { IconButton, Toolbar } from '@dxos/react-ui';
+import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
+import { Bitbar, MasterDetailTable, PublicKeySelector } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
 
@@ -100,8 +100,8 @@ export const FeedsPanel = (props: { space?: Space }) => {
   }, [tableRows]);
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <PublicKeySelector
@@ -114,13 +114,14 @@ export const FeedsPanel = (props: { space?: Space }) => {
 
           <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
         </Toolbar.Root>
-      }
-    >
-      <div className='h-full'>
-        <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
-        <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
-      </div>
-    </PanelContainer>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <div className='h-full'>
+          <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
+          <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

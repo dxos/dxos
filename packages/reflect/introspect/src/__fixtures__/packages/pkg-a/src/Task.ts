@@ -13,21 +13,21 @@ import { LabelAnnotation } from '@dxos/echo/Annotation';
  * Task item — fixture ECHO type used to verify symbol extraction against
  * realistic DXOS shapes (Schema.Struct + Type.makeObject + annotations).
  */
-export const Task = Schema.Struct({
-  title: Schema.String.annotations({
-    description: 'Short summary of the task.',
-  }),
-  description: Schema.optional(
-    Schema.String.annotations({
-      description: 'Longer free-form notes about the task.',
+export class Task extends Type.makeObject<Task>(DXN.make('com.example.type.Task', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.String.annotations({
+      description: 'Short summary of the task.',
     }),
-  ),
-  done: Schema.Boolean.annotations({
-    description: 'Whether the task has been completed.',
-  }),
-}).pipe(Type.makeObject(DXN.make('com.example.type.Task', '0.1.0')), LabelAnnotation.set(['title']));
-
-export type Task = Type.InstanceType<typeof Task>;
+    description: Schema.optional(
+      Schema.String.annotations({
+        description: 'Longer free-form notes about the task.',
+      }),
+    ),
+    done: Schema.Boolean.annotations({
+      description: 'Whether the task has been completed.',
+    }),
+  }).pipe(LabelAnnotation.set(['title'])),
+) {}
 
 /**
  * Task factory — mirrors the make/Obj.make pattern used by real plugins.

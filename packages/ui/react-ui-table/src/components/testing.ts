@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 import { useEffect } from 'react';
 
@@ -12,12 +12,14 @@ import { SchemaEx } from '@dxos/effect';
 import { random } from '@dxos/random';
 import { type ProjectionModel } from '@dxos/schema';
 
-export const TestSchema = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  age: Schema.optional(Schema.Number),
-  active: Schema.optional(Schema.Boolean),
-  netWorth: Schema.optional(Schema.Number),
-}).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+export const TestSchema = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    age: Schema.optional(Schema.Number),
+    active: Schema.optional(Schema.Boolean),
+    netWorth: Schema.optional(Schema.Number),
+  }),
+);
 
 export type TestItem = {
   name: string;

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { forwardRef, useMemo } from 'react';
@@ -13,12 +13,13 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
-import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Icon, List, ListItem, Panel } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Panel } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Position } from '@dxos/util';
@@ -29,11 +30,11 @@ import { translations } from '#translations';
 import {
   DeckCapabilities,
   type EphemeralDeckState,
+  PLANK_COMPANION_TYPE,
   type Settings,
   type StoredDeckState,
   defaultDeck,
   getMode,
-  PLANK_COMPANION_TYPE,
 } from '#types';
 
 import { DeckLayout } from './DeckLayout';
@@ -48,9 +49,7 @@ const storyDeckSettings = Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
-      enableDeck: true,
       enableNativeRedirect: false,
-      encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
 
     return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
@@ -66,7 +65,6 @@ const storyDeckState = Capability.makeModule(() =>
       complementarySidebarPanel: undefined,
       activeDeck: 'default',
       previousDeck: 'default',
-      previousMode: {},
       decks: {
         default: { ...defaultDeck },
       },
@@ -75,6 +73,7 @@ const storyDeckState = Capability.makeModule(() =>
     const stateAtom = Atom.make<StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
 
     const defaultEphemeralDeckState: EphemeralDeckState = {
+      fullscreen: undefined,
       dialogContent: null,
       dialogOpen: false,
       dialogBlockAlign: undefined,
@@ -96,12 +95,12 @@ const storyDeckState = Capability.makeModule(() =>
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: getMode(deck),
+        mode: getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.solo ? [deck.solo] : deck.active,
+        active: deck.active,
         inactive: deck.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
       } satisfies AppCapabilities.Layout;
@@ -242,14 +241,14 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           connector: (node) =>
             Effect.succeed([
               AppNode.makeCompanion({
-                id: linkedSegment('alpha'),
+                variant: 'alpha',
                 label: 'Companion Alpha',
                 icon: 'ph--sidebar--regular',
                 data: { variant: 'alpha', parentId: node.id },
                 position: Position.first,
               }),
               AppNode.makeCompanion({
-                id: linkedSegment('beta'),
+                variant: 'beta',
                 label: 'Companion Beta',
                 icon: 'ph--chat-circle--regular',
                 data: { variant: 'beta', parentId: node.id },
@@ -277,24 +276,23 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
 
   return (
     <div className='dx-container overflow-y-auto p-2' ref={forwardedRef}>
-      <List>
-        {items.map((node) => (
-          <ListItem.Root
-            key={node.id}
-            classNames={activeSet.has(node.id) ? 'bg-current-surface' : undefined}
-            onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
-          >
-            {node.properties.icon && (
-              <ListItem.Endcap>
-                <Icon icon={node.properties.icon} />
-              </ListItem.Endcap>
-            )}
-            <ListItem.Heading classNames='cursor-pointer'>
-              {typeof node.properties.label === 'string' ? node.properties.label : node.id}
-            </ListItem.Heading>
-          </ListItem.Root>
-        ))}
-      </List>
+      <Listbox.Root>
+        <Listbox.Content aria-label='Navigation'>
+          {items.map((node) => (
+            <Listbox.Item
+              key={node.id}
+              id={node.id}
+              classNames={activeSet.has(node.id) ? 'bg-current-surface' : undefined}
+              onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
+            >
+              <Listbox.ItemContent
+                icon={node.properties.icon}
+                title={typeof node.properties.label === 'string' ? node.properties.label : node.id}
+              />
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
     </div>
   );
 });
@@ -313,36 +311,22 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   );
 
   return (
-    <List>
-      {items.map((node) => {
-        const open = () =>
-          void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
-        return (
-          <ListItem.Root
-            key={node.id}
-            classNames='dx-hover cursor-pointer'
-            role='button'
-            tabIndex={0}
-            onClick={open}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                open();
-              }
-            }}
-          >
-            {node.properties.icon && (
-              <ListItem.Endcap>
-                <Icon icon={node.properties.icon} size={4} />
-              </ListItem.Endcap>
-            )}
-            <ListItem.Heading classNames='truncate'>
-              {typeof node.properties.label === 'string' ? node.properties.label : node.id}
-            </ListItem.Heading>
-          </ListItem.Root>
-        );
-      })}
-    </List>
+    <Listbox.Root>
+      <Listbox.Content aria-label='Items'>
+        {items.map((node) => {
+          const open = () =>
+            void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
+          return (
+            <Listbox.Item key={node.id} id={node.id} classNames='dx-hover cursor-pointer' onClick={open}>
+              <Listbox.ItemContent
+                icon={node.properties.icon}
+                title={typeof node.properties.label === 'string' ? node.properties.label : node.id}
+              />
+            </Listbox.Item>
+          );
+        })}
+      </Listbox.Content>
+    </Listbox.Root>
   );
 };
 
@@ -368,24 +352,28 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Solo: Story = {
+export const OnePlank: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
+      // A singleton `active` list renders fullbleed; opening into a fresh deck yields that directly.
       await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: STORY_ITEMS[0].id });
     });
 
     return <DeckLayout />;
   },
 };
 
-export const Multi: Story = {
+export const ManyPlanks: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
       await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'multi' });
+      await invokePromise(LayoutOperation.Open, {
+        subject: [STORY_ITEMS[1].id],
+        disposition: 'add',
+        navigation: 'immediate',
+      });
     });
 
     return <DeckLayout />;

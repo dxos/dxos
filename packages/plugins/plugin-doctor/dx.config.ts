@@ -11,7 +11,7 @@ export default Config2.make({
     name: 'Doctor',
     author: 'DXOS',
     description: trim`
-      Doctor adds a self-introspection blueprint to Composer. When the blueprint
+      Doctor adds a self-introspection skill to Composer. When the skill
       is loaded the assistant gains access to the queryComposerLogs tool, which
       reads the browser tab's own NDJSON log store (populated by
       @dxos/log-store-idb) directly from IndexedDB — no log file download or

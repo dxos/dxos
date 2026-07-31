@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type SystemService } from '@dxos/protocols/proto/dxos/client/services';
+import { type SystemService } from '@dxos/protocols/rpc';
 
 import {
   type CollectDiagnosticsBroadcastHandler,
@@ -13,7 +13,9 @@ export const createCollectDiagnosticsBroadcastSender = (): CollectDiagnosticsBro
   return { broadcastDiagnosticsRequest: async () => undefined };
 };
 
-export const createCollectDiagnosticsBroadcastHandler = (_: SystemService): CollectDiagnosticsBroadcastHandler => {
+export const createCollectDiagnosticsBroadcastHandler = (
+  _: SystemService.Handlers,
+): CollectDiagnosticsBroadcastHandler => {
   return {
     start: () => {},
     stop: () => {},

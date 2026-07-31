@@ -5,13 +5,15 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { PING_ACK_EVENT, PING_EVENT, isExtensionAvailable, pingExtension } from './pingExtension';
+import { Proxy } from '@dxos/crx-protocol';
+
+import { isExtensionAvailable, pingExtension } from './pingExtension';
 
 const setAvailable = (available: boolean) => {
   if (available) {
-    document.documentElement.dataset.composerProxy = '1';
+    document.documentElement.dataset[Proxy.RENDER_READY_DATASET_KEY] = '1';
   } else {
-    delete document.documentElement.dataset.composerProxy;
+    delete document.documentElement.dataset[Proxy.RENDER_READY_DATASET_KEY];
   }
 };
 
@@ -19,10 +21,10 @@ const setAvailable = (available: boolean) => {
 const installFakeRelay = (respond: (id: string) => unknown) => {
   const listener = (event: Event) => {
     const detail = (event as CustomEvent).detail as { id: string };
-    window.dispatchEvent(new CustomEvent(PING_ACK_EVENT, { detail: respond(detail.id) }));
+    window.dispatchEvent(new CustomEvent(Proxy.PING_ACK_EVENT, { detail: respond(detail.id) }));
   };
-  window.addEventListener(PING_EVENT, listener);
-  return () => window.removeEventListener(PING_EVENT, listener);
+  window.addEventListener(Proxy.PING_EVENT, listener);
+  return () => window.removeEventListener(Proxy.PING_EVENT, listener);
 };
 
 describe('pingExtension', () => {

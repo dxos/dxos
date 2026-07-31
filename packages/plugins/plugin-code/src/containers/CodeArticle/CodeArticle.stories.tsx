@@ -9,9 +9,10 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
@@ -88,12 +89,12 @@ const BROKEN_FILES = [
   },
 ];
 
-type StoryProps = {
+type StoryArgs = {
   seed: ReadonlyArray<{ path: string; content: string }>;
   name: string;
 };
 
-const DefaultStory = (_: StoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const [space] = useSpaces();
   const [project] = useQuery(space?.db, Filter.type(CodeProject.CodeProject));
   if (!project) {
@@ -109,7 +110,7 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<StoryProps>(({ args: { seed, name } }) => ({
+    withPluginManager<StoryArgs>(({ args: { seed, name } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
@@ -135,7 +136,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<StoryProps>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 

@@ -3,7 +3,7 @@
 //
 
 import { densityDimensions, staticDisabled } from '@dxos/ui-theme';
-import { getSize, getHeight, getWidth, mx, snapSize, sizeValue, textValence } from '@dxos/ui-theme';
+import { getSize, mx, sizeValue, snapSize, textValence } from '@dxos/ui-theme';
 import {
   type ComponentFragment,
   type ComponentFunction,
@@ -12,8 +12,6 @@ import {
   type MessageValence,
   type Size,
 } from '@dxos/ui-types';
-
-import { inputTextLabel } from './constants';
 
 export type InputStyleProps = Partial<{
   variant: 'default' | 'subdued' | 'static';
@@ -32,15 +30,9 @@ export type InputMetaStyleProps = Partial<{
 }>;
 
 const textInputSurfaceFocus =
-  'transition-colors bg-input-surface focus:bg-focus-surface border border-separator focus:border-separator';
+  'transition-colors bg-input-surface focus:bg-focus-surface border border-input-separator focus:border-separator';
 
 const textInputSurfaceHover = 'hover:bg-focus-surface';
-
-const booleanInputSurface =
-  'shadow-inner transition-colors bg-un-accent aria-checked:bg-accent-bg aria-[checked=mixed]:bg-accent-bg';
-
-const booleanInputSurfaceHover =
-  'hover:bg-un-accent-hover hover:aria-checked:bg-accent-bg-hover hover:aria-[checked=mixed]:bg-accent-bg-hover';
 
 // TODO(burdon): Replace with semantic tokens.
 const valence = (valence?: MessageValence) => {
@@ -66,8 +58,8 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
-  'py-0 w-full text-base-fg rounded-xs placeholder-placeholder',
-  textInputSurfaceFocus,
+  'py-0 w-full text-base-fg placeholder-placeholder',
+  'dx-input',
   densityDimensions(props.density),
   props.disabled ? staticDisabled : textInputSurfaceHover,
 ];
@@ -88,41 +80,35 @@ const input: ComponentFunction<InputStyleProps> = (props, ...etc) =>
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
       ? mx(...sharedStaticInputStyles(props), ...etc)
-      : mx(
-          ...sharedDefaultInputStyles(props),
-          !props.disabled && 'dx-focus-ring',
-          valence(props.validationValence),
-          ...etc,
-        );
+      : mx(...sharedDefaultInputStyles(props), valence(props.validationValence), ...etc);
 
 const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, ...etc);
 
-const checkbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+// Container that carries the input surface/border/focus when the field has adornments; the inner
+// `<input>` renders "bare" (subdued) so the box wraps the whole row (start adornment · field · end).
+const container: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  props.variant === 'subdued' || props.variant === 'static'
+    ? mx('flex items-center w-full', props.disabled && staticDisabled, ...etc)
+    : mx(
+        // `p-0` cancels dx-input's default padding: the inset comes from the adornments and the inner field.
+        'flex items-center w-full dx-input p-0',
+        valence(props.validationValence),
+        props.disabled ? staticDisabled : textInputSurfaceHover,
+        ...etc,
+      );
+
+const adornment: ComponentFunction<Partial<{ side: 'start' | 'end' }>> = (props, ...etc) =>
+  mx('shrink-0 flex items-center gap-1 text-description', props.side === 'start' ? 'ps-2' : 'pe-2', ...etc);
+
+const checkbox: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...etc) =>
   mx('dx-checkbox dx-focus-ring', getSize(size), ...etc);
 
-const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5, checked }, ...etc) =>
+const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 4, checked }, ...etc) =>
   mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), !checked && 'invisible', ...etc);
 
-const switchRoot: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
-  mx(
-    getHeight(size),
-    getWidth(snapSize(sizeValue(size) * 1.75, 9)),
-    booleanInputSurface,
-    !disabled && booleanInputSurfaceHover,
-    // TODO(burdon): Added m-1 margin to make 40px width to align with 40px icon button.
-    'cursor-pointer shrink-0 rounded-full px-1 mx-1 relative',
-    'dx-focus-ring',
-    ...etc,
-  );
+const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('dx-checkbox--switch dx-focus-ring', ...etc);
 
-const switchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
-  mx(
-    getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
-    'block bg-white rounded-full transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
-    ...etc,
-  );
-
-const withSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'font-mono selection:bg-transparent mx-auto',
     props.density === 'lg'
@@ -138,7 +124,7 @@ const withSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 
 const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
-    'flex items-center justify-center font-mono',
+    'flex items-center justify-center tabular-nums',
     props.density === 'lg'
       ? 'size-12 rounded-xs'
       : props.density === 'sm'
@@ -146,7 +132,7 @@ const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
         : props.density === 'xs'
           ? 'size-6 rounded-xs'
           : 'size-10 pointer-fine:size-8 rounded-xs',
-    'bg-input-surface text-base-fg transition-colors border border-separator',
+    'bg-input-surface text-base-fg transition-colors border border-input-separator',
     'data-[focused]:bg-attention-surface data-[focused]:border-focus-ring-subtle',
     'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-focus-ring-subtle',
     valence(props.validationValence),
@@ -155,7 +141,7 @@ const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   );
 
 const label: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('block', inputTextLabel, props.srOnly && 'sr-only', ...etc);
+  mx('block text-sm text-description', props.srOnly && 'sr-only', ...etc);
 
 const description: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('text-description', props.srOnly && 'sr-only', ...etc);
@@ -164,7 +150,7 @@ const descriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props,
   mx('leading-none my-1.5', props.srOnly && 'sr-only', ...etc);
 
 const validation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx(inputTextLabel, props.srOnly ? 'sr-only' : textValence(props.validationValence), ...etc);
+  mx('text-sm text-description', props.srOnly ? 'sr-only' : textValence(props.validationValence), ...etc);
 
 const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
   mx(
@@ -174,17 +160,22 @@ const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
     ...etc,
   );
 
+const block: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  mx('grid place-items-center w-[var(--dx-rail-item)] h-[var(--dx-rail-item)]', ...etc);
+
 export const inputTheme = {
   input,
+  container,
+  adornment,
   textArea,
-  inputWithSegments: withSegmentsInput,
+  pin,
   segment,
-  checkbox,
-  checkboxIndicator,
   label,
   description,
-  switch: switchRoot,
-  switchThumb,
+  checkbox,
+  checkboxIndicator,
+  switch: switch_,
+  block,
   validation,
   descriptionAndValidation,
   triggerIcon,

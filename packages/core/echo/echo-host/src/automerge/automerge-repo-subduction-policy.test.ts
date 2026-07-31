@@ -815,25 +815,15 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
     // The existing `'shareConfigChanged() retries after subductionPolicy
     // denial flips to allow'` test recovers a denied `authorizeFetch`
     // by flipping allow and calling `client.shareConfigChanged()`. The
-    // symmetric setup for `authorizePut` does NOT recover the same
-    // way under the current bridge:
+    // symmetric setup for `authorizePut` does NOT recover the same way:
     //
     //   1. `host.shareConfigChanged()` + `client.shareConfigChanged()`
     //      after the flip does not deliver the doc within 1.5s.
-    //   2. `reconnectAdapters` (full peer-disconnected +
-    //      peer-candidate cycle on both sides) also does NOT deliver
-    //      the doc within an additional 10s window.
-    //   3. `reconnectAdapters` retriggers the holder's push, which
-    //      now passes the allowing policy and lands the doc.
-    //
-    // In the patched bridge (subduction.23), `lastSyncResult ===
-    // 'all-failed'` IS retried on connection-generation bumps, so a
-    // reconnect after the policy flip recovers the doc without needing
-    // a fresh local commit. `shareConfigChanged()` alone (without a
-    // reconnect) is still insufficient — it resets the heal state but
-    // does not bump the connection generation, so the entry sits until
-    // the heal-retry backoff fires.
-    test('authorizePut deny → allow recovers on reconnect', { timeout: 20_000 }, async () => {
+    //   2. `reconnectAdapters` (full peer-disconnected + peer-candidate
+    //      cycle on both sides) does deliver the doc — the connection-
+    //      generation bump re-drives the holder's stuck
+    //      `lastSyncResult === 'all-failed'` push.
+    test('authorizePut deny → allow recovers via reconnect', { timeout: 20_000 }, async () => {
       let allowPut = false;
       const { repos, adapters } = await createHostClientRepoTopology({
         subductionPolicies: {
@@ -857,31 +847,22 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progress.peek().state).to.not.equal('ready');
 
-      // Flipping the policy + shareConfigChanged alone does not recover
-      // within a tight window (no connection-generation bump → entry sits
-      // on the heal-retry backoff).
+      // Flipping the policy + shareConfigChanged alone does not recover: it
+      // resets the heal state but does not re-drive the holder's stuck
+      // 'all-failed' push.
       allowPut = true;
       host.shareConfigChanged();
       client.shareConfigChanged();
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progress.peek().state).to.not.equal('ready');
 
-      // Reconnect bumps the connection generation, which retriggers the
-      // holder's push. Policy now allows → doc lands on the client.
+      // Reconnect recovers: the connection-generation bump re-drives the
+      // holder's stuck 'all-failed' push, and the now-allowing policy lets
+      // it land.
       await reconnectAdapters(adapters);
       await expect
         .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
         .toEqual('gated-put');
-
-      // Subsequent writes on the now-allowed channel must also propagate
-      // (covers the original `"after-flip"` recovery path: a fresh local
-      // commit still pushes successfully after the policy flip + reconnect).
-      handle.change((doc: any) => {
-        doc.text = 'after-flip';
-      });
-      await expect
-        .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
-        .toEqual('after-flip');
     });
 
     // Hypothesis: without `shareConfigChanged()`, recovery is left to

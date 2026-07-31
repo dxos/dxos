@@ -2,30 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Proxy } from '@dxos/crx-protocol';
+
 /**
  * Page side of the composer-crx extension's ping contract — a health-check round-trip that proves
  * the page → content-script → background messaging path and reports the extension's identity.
  *
- * The event names and wire shapes mirror `packages/apps/composer-crx/src/proxy/types.ts` (the source
- * of truth); they are re-declared here because the plugin must not depend on the extension app
- * package.
+ * The event names and wire shapes are the shared `@dxos/crx-protocol` `Proxy` protocol (the single
+ * source of truth, consumed by both the plugin and the extension).
  */
-
-/**
- * Window CustomEvent name the page dispatches to probe the extension. Exported so tests and
- * stories can stand in for the extension's content relay.
- */
-export const PING_EVENT = 'composer:proxy:ping';
-
-/**
- * Window CustomEvent name the extension's content relay dispatches with the ping ack.
- */
-export const PING_ACK_EVENT = 'composer:proxy:ping:ack';
-
-/**
- * `documentElement` dataset key the extension's content relay sets once it is listening.
- */
-export const RENDER_READY_DATASET_KEY = 'composerProxy';
 
 const DEFAULT_PING_TIMEOUT_MS = 4_000;
 
@@ -44,7 +29,7 @@ const nextId = (): string => globalThis.crypto?.randomUUID?.() ?? `ping-${(count
  * dataset marker once the relay is listening).
  */
 export const isExtensionAvailable = (): boolean =>
-  typeof document !== 'undefined' && document.documentElement?.dataset[RENDER_READY_DATASET_KEY] === '1';
+  typeof document !== 'undefined' && document.documentElement?.dataset[Proxy.RENDER_READY_DATASET_KEY] === '1';
 
 /**
  * Ping the composer-crx extension and resolve with its identity. Rejects if the extension is not
@@ -61,7 +46,7 @@ export const pingExtension = (timeoutMs: number = DEFAULT_PING_TIMEOUT_MS): Prom
     let settled = false;
 
     const cleanup = () => {
-      window.removeEventListener(PING_ACK_EVENT, onAck);
+      window.removeEventListener(Proxy.PING_ACK_EVENT, onAck);
       clearTimeout(timer);
     };
 
@@ -93,6 +78,6 @@ export const pingExtension = (timeoutMs: number = DEFAULT_PING_TIMEOUT_MS): Prom
       reject(new Error(`Extension did not respond within ${timeoutMs}ms`));
     }, timeoutMs);
 
-    window.addEventListener(PING_ACK_EVENT, onAck);
-    window.dispatchEvent(new CustomEvent(PING_EVENT, { detail: { version: 1, id } }));
+    window.addEventListener(Proxy.PING_ACK_EVENT, onAck);
+    window.dispatchEvent(new CustomEvent(Proxy.PING_EVENT, { detail: { version: 1, id } }));
   });

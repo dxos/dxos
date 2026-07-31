@@ -8,8 +8,9 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Integration } from '@dxos/plugin-integration';
-import { AccessToken, Project, Task } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/link';
+import { Connection } from '@dxos/plugin-connector';
+import { ExternalProject, Task } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
 import { LinearApi } from '../services';
@@ -50,22 +51,42 @@ describe('plugin-linear sync', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([AccessToken.AccessToken, Integration.Integration, Project.Project, Task.Task]);
+    graph.registry.add([
+      AccessToken.AccessToken,
+      Connection.Connection,
+      Cursor.Cursor,
+      ExternalProject.ExternalProject,
+      Task.Task,
+    ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: LINEAR_SOURCE, token: 'tok' }));
-    const integration = db.add(Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }));
-    return { db, integration };
+    const connection = db.add(
+      Obj.make(Connection.Connection, { name: 'Linear', connectorId: 'linear', accessToken: Ref.make(token) }),
+    );
+    // The binding's target is the team's local root Project.
+    const teamRoot = db.add(ExternalProject.make({ name: 'TEAM · Example' }));
+    const binding = db.add(
+      Cursor.makeExternal({
+        source: connection.accessToken,
+        target: Ref.make(teamRoot),
+        externalId: 'team-1',
+      }),
+    );
+    if (!Cursor.isExternal(binding)) {
+      throw new Error('expected external cursor');
+    }
+    return { db, binding };
   };
 
   test('first pull seeds snapshot and creates a Task', async ({ expect }) => {
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     const result = await Effect.gen(function* () {
-      return yield* upsertTask(integration, issue(), undefined);
+      return yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.created).toBe(true);
-    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['issue-1']?.title).toBe('Investigate flake');
     expect(snapshots['issue-1']?.status).toBe('in-progress');
     expect(snapshots['issue-1']?.priority).toBe('medium');
@@ -73,15 +94,15 @@ describe('plugin-linear sync', () => {
   });
 
   test('second pull is idempotent (no changes either side)', async ({ expect }) => {
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     await Effect.gen(function* () {
-      yield* upsertTask(integration, issue(), undefined);
+      yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     const second = await Effect.gen(function* () {
-      return yield* upsertTask(integration, issue(), undefined);
+      return yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(second.created).toBe(false);
@@ -90,11 +111,11 @@ describe('plugin-linear sync', () => {
   });
 
   test('local-only edit is preserved across pull', async ({ expect }) => {
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     const first = await Effect.gen(function* () {
-      return yield* upsertTask(integration, issue(), undefined);
+      return yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(first.task, (task) => {
@@ -103,35 +124,35 @@ describe('plugin-linear sync', () => {
 
     // Pull again with unchanged remote — local edit must survive.
     await Effect.gen(function* () {
-      yield* upsertTask(integration, issue(), undefined);
+      yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(first.task.description).toBe('edited locally');
   });
 
   test('remote-only change pulls into local and refreshes snapshot', async ({ expect }) => {
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     await Effect.gen(function* () {
-      yield* upsertTask(integration, issue(), undefined);
+      yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     const second = await Effect.gen(function* () {
-      return yield* upsertTask(integration, issue({ title: 'Renamed remotely' }), undefined);
+      return yield* upsertTask(binding, issue({ title: 'Renamed remotely' }), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(second.task.title).toBe('Renamed remotely');
-    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['issue-1']?.title).toBe('Renamed remotely');
   });
 
   test('both-changed → remote wins (conflict policy)', async ({ expect }) => {
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     const first = await Effect.gen(function* () {
-      return yield* upsertTask(integration, issue({ description: 'orig' }), undefined);
+      return yield* upsertTask(binding, issue({ description: 'orig' }), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(first.task, (task) => {
@@ -139,18 +160,18 @@ describe('plugin-linear sync', () => {
     });
 
     await Effect.gen(function* () {
-      yield* upsertTask(integration, issue({ description: 'remote edit' }), undefined);
+      yield* upsertTask(binding, issue({ description: 'remote edit' }), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(first.task.description).toBe('remote edit');
   });
 
   test('push: locally-edited title PATCHes only diverged fields', async ({ expect }) => {
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     const first = await Effect.gen(function* () {
-      return yield* upsertTask(integration, issue(), undefined);
+      return yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(first.task, (task) => {
@@ -159,7 +180,7 @@ describe('plugin-linear sync', () => {
 
     let issueUpdateInput: LinearApi.IssueUpdateInput | undefined;
     const result = await Effect.gen(function* () {
-      return yield* pushTeamUpdates(integration, new Map([['issue-1', issue()]]), new Map(), {
+      return yield* pushTeamUpdates(binding, new Map([['issue-1', issue()]]), new Map(), {
         updateIssue: (_id, input) => {
           issueUpdateInput = input;
           return Effect.succeed(undefined);
@@ -172,21 +193,21 @@ describe('plugin-linear sync', () => {
     expect(result.tasks).toBe(1);
     expect(issueUpdateInput).toEqual({ title: 'Edited locally' });
     // Snapshot refreshed so a subsequent push is a no-op.
-    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['issue-1']?.title).toBe('Edited locally');
   });
 
   test('push: snapshot-equal task is not pushed (no bouncing)', async ({ expect }) => {
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     await Effect.gen(function* () {
-      yield* upsertTask(integration, issue(), undefined);
+      yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     let calls = 0;
     const result = await Effect.gen(function* () {
-      return yield* pushTeamUpdates(integration, new Map([['issue-1', issue()]]), new Map(), {
+      return yield* pushTeamUpdates(binding, new Map([['issue-1', issue()]]), new Map(), {
         updateIssue: () => {
           calls++;
           return Effect.succeed(undefined);
@@ -201,11 +222,11 @@ describe('plugin-linear sync', () => {
   });
 
   test('push: status divergence resolves to a Linear stateId', async ({ expect }) => {
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     const first = await Effect.gen(function* () {
-      return yield* upsertTask(integration, issue(), undefined);
+      return yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(first.task, (task) => {
@@ -214,7 +235,7 @@ describe('plugin-linear sync', () => {
 
     let issueUpdateInput: LinearApi.IssueUpdateInput | undefined;
     await Effect.gen(function* () {
-      yield* pushTeamUpdates(integration, new Map([['issue-1', issue()]]), new Map(), {
+      yield* pushTeamUpdates(binding, new Map([['issue-1', issue()]]), new Map(), {
         updateIssue: (_id, input) => {
           issueUpdateInput = input;
           return Effect.succeed(undefined);
@@ -231,15 +252,15 @@ describe('plugin-linear sync', () => {
     // Regression: an earlier guard `snapshot.priority !== undefined` silently
     // dropped pushes when the remote had no priority — exactly the common
     // "user sets a priority on a freshly-pulled issue" case.
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     const first = await Effect.gen(function* () {
-      return yield* upsertTask(integration, issue({ priority: 0 }), undefined);
+      return yield* upsertTask(binding, issue({ priority: 0 }), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     // Sanity check: the seeded snapshot really does say "no priority".
-    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['issue-1']?.priority).toBeUndefined();
 
     Obj.update(first.task, (task) => {
@@ -248,7 +269,7 @@ describe('plugin-linear sync', () => {
 
     let issueUpdateInput: LinearApi.IssueUpdateInput | undefined;
     await Effect.gen(function* () {
-      yield* pushTeamUpdates(integration, new Map([['issue-1', issue({ priority: 0 })]]), new Map(), {
+      yield* pushTeamUpdates(binding, new Map([['issue-1', issue({ priority: 0 })]]), new Map(), {
         updateIssue: (_id, input) => {
           issueUpdateInput = input;
           return Effect.succeed(undefined);
@@ -263,11 +284,11 @@ describe('plugin-linear sync', () => {
   });
 
   test('push: locally clearing priority sends null to Linear', async ({ expect }) => {
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     const first = await Effect.gen(function* () {
-      return yield* upsertTask(integration, issue(), undefined);
+      return yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(first.task, (task) => {
@@ -276,7 +297,7 @@ describe('plugin-linear sync', () => {
 
     let issueUpdateInput: LinearApi.IssueUpdateInput | undefined;
     await Effect.gen(function* () {
-      yield* pushTeamUpdates(integration, new Map([['issue-1', issue()]]), new Map(), {
+      yield* pushTeamUpdates(binding, new Map([['issue-1', issue()]]), new Map(), {
         updateIssue: (_id, input) => {
           issueUpdateInput = input;
           return Effect.succeed(undefined);
@@ -295,12 +316,12 @@ describe('plugin-linear sync', () => {
     // it as "first sync" and clobber the user's local edit. This is the bug
     // path that motivated the snapshotField/Snapshot wrapper API in
     // app-toolkit/integration-sync.
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     // First pull: Linear says "no priority" (0 → undefined via the mapper).
     const first = await Effect.gen(function* () {
-      return yield* upsertTask(integration, issue({ priority: 0 }), undefined);
+      return yield* upsertTask(binding, issue({ priority: 0 }), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     // User assigns priority locally.
@@ -312,18 +333,18 @@ describe('plugin-linear sync', () => {
     // Second pull with unchanged remote (still no priority). The local edit
     // must survive.
     await Effect.gen(function* () {
-      yield* upsertTask(integration, issue({ priority: 0 }), undefined);
+      yield* upsertTask(binding, issue({ priority: 0 }), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(first.task.priority).toBe('medium');
   });
 
   test('push: project description divergence calls updateProject', async ({ expect }) => {
-    const { db, integration } = await setup();
+    const { db, binding } = await setup();
     const layer = Database.layer(db);
 
     const { project: local } = await Effect.gen(function* () {
-      return yield* upsertProject(integration, project());
+      return yield* upsertProject(binding, project());
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(local, (local) => {
@@ -332,7 +353,7 @@ describe('plugin-linear sync', () => {
 
     let projectInput: LinearApi.ProjectUpdateInput | undefined;
     const result = await Effect.gen(function* () {
-      return yield* pushTeamUpdates(integration, new Map(), new Map([['proj-1', project()]]), {
+      return yield* pushTeamUpdates(binding, new Map(), new Map([['proj-1', project()]]), {
         updateIssue: () => Effect.succeed(undefined),
         updateProject: (_id, input) => {
           projectInput = input;

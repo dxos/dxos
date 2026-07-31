@@ -39,7 +39,7 @@ const header: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('dx-dialog__header flex pb-4 items-center justify-between', withColumn.center(), ...etc);
 
 const body: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('dx-dialog__body dx-expander', withColumn.propagate(), ...etc);
+  mx('dx-dialog__body dx-expander gap-y-2', withColumn.propagate(), ...etc);
 
 const actionBar: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('dx-dialog__actionbar flex items-center pt-4 gap-2', withColumn.center(), ...etc);

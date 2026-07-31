@@ -8,6 +8,7 @@ import React from 'react';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withLayoutVariants, withTheme } from '../../testing';
+import { Icon } from '../Icon';
 import {
   type CheckboxProps,
   type DateInputProps,
@@ -33,7 +34,7 @@ type VariantMap = {
 
 type Variant = { [K in keyof VariantMap]: { type: K } & VariantMap[K] }[keyof VariantMap];
 
-type DefaultStoryProps = Partial<{
+type StoryArgs = Partial<{
   kind: keyof VariantMap;
   label: string;
   labelVisuallyHidden: boolean;
@@ -52,7 +53,7 @@ const DefaultStory = ({
   validationValence,
   validationMessage,
   ...props
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   return (
     <Input.Root {...{ validationValence }}>
       <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
@@ -63,8 +64,16 @@ const DefaultStory = ({
       {kind === 'time' && <Input.Time {...props} />}
       {kind === 'date' && <Input.Date {...props} />}
       {kind === 'datetime' && <Input.DateTime {...props} />}
-      {kind === 'checkbox' && <Input.Checkbox {...props} />}
-      {kind === 'switch' && <Input.Switch {...props} />}
+      {kind === 'checkbox' && (
+        <Input.Block>
+          <Input.Checkbox {...props} />
+        </Input.Block>
+      )}
+      {kind === 'switch' && (
+        <Input.Block>
+          <Input.Switch {...props} />
+        </Input.Block>
+      )}
 
       <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && <Input.Validation classNames='block'>{validationMessage}</Input.Validation>}
@@ -83,7 +92,7 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<DefaultStoryProps & Variant>;
+type Story = StoryObj<StoryArgs & Variant>;
 
 export const Density: Story = {
   render: () => (
@@ -169,6 +178,68 @@ export const TextArea: Story = {
     description: 'Type a long paragraph',
     placeholder: 'Lorem ipsum dolor sit amet',
   },
+};
+
+/**
+ * Native HTML input types. `Input.TextInput` accepts every standard
+ * `<input type="…">` value via its `type` prop; this story exercises the most
+ * commonly used ones so the rendering across themes/browsers can be
+ * inspected at a glance.
+ */
+const TEXT_INPUT_TYPES: { type: string; placeholder: string }[] = [
+  { type: 'text', placeholder: 'Plain text' },
+  { type: 'email', placeholder: 'name@example.com' },
+  { type: 'password', placeholder: '••••••••' },
+  { type: 'search', placeholder: 'Search…' },
+  { type: 'tel', placeholder: '+1 (555) 555-5555' },
+  { type: 'url', placeholder: 'https://example.com' },
+  { type: 'number', placeholder: '42' },
+  { type: 'date', placeholder: '' },
+  { type: 'time', placeholder: '' },
+  { type: 'datetime-local', placeholder: '' },
+  { type: 'month', placeholder: '' },
+  { type: 'week', placeholder: '' },
+];
+
+export const _TextInput: Story = {
+  render: () => (
+    <div className='flex flex-col gap-3 min-w-[24rem]'>
+      {TEXT_INPUT_TYPES.map(({ type, placeholder }) => (
+        <Input.Root key={type}>
+          <Input.Label>{`type="${type}"`}</Input.Label>
+          <Input.TextInput type={type} placeholder={placeholder} />
+        </Input.Root>
+      ))}
+    </div>
+  ),
+};
+
+/**
+ * MUI-style adornments: text or icon placed inside the input container. The container carries the
+ * surface/border/focus (via `focus-within`) and the field renders bare. `subdued` drops the box for a
+ * borderless row (compose a bottom rule via `classNames`).
+ */
+export const TextInputAdornments: Story = {
+  render: () => (
+    <div className='flex flex-col gap-4 min-w-[28rem]'>
+      <Input.Root>
+        <Input.Label>Start icon</Input.Label>
+        <Input.TextInput start={<Icon icon='ph--magnifying-glass--regular' size={4} />} placeholder='Search…' />
+      </Input.Root>
+      <Input.Root>
+        <Input.Label>End text</Input.Label>
+        <Input.TextInput end={<span className='text-sm'>.dxos.org</span>} placeholder='workspace' />
+      </Input.Root>
+      <Input.Root>
+        <Input.Label>Both</Input.Label>
+        <Input.TextInput
+          start={<span className='text-sm'>$</span>}
+          end={<Icon icon='ph--currency-circle-dollar--regular' size={4} />}
+          placeholder='0.00'
+        />
+      </Input.Root>
+    </div>
+  ),
 };
 
 export const PinInput: Story = {
@@ -273,39 +344,4 @@ export const Switch: Story = {
     label: 'This is a switch',
     description: 'On or off',
   },
-};
-
-/**
- * Native HTML input types. `Input.TextInput` accepts every standard
- * `<input type="…">` value via its `type` prop; this story exercises the most
- * commonly used ones so the rendering across themes/browsers can be
- * inspected at a glance.
- */
-const TEXT_INPUT_TYPES: { type: string; placeholder: string }[] = [
-  { type: 'text', placeholder: 'Plain text' },
-  { type: 'email', placeholder: 'name@example.com' },
-  { type: 'password', placeholder: '••••••••' },
-  { type: 'search', placeholder: 'Search…' },
-  { type: 'tel', placeholder: '+1 (555) 555-5555' },
-  { type: 'url', placeholder: 'https://example.com' },
-  { type: 'number', placeholder: '42' },
-  { type: 'date', placeholder: '' },
-  { type: 'time', placeholder: '' },
-  { type: 'datetime-local', placeholder: '' },
-  { type: 'month', placeholder: '' },
-  { type: 'week', placeholder: '' },
-  { type: 'color', placeholder: '' },
-];
-
-export const TextInputTypes: Story = {
-  render: () => (
-    <div className='flex flex-col gap-3 min-w-[24rem]'>
-      {TEXT_INPUT_TYPES.map(({ type, placeholder }) => (
-        <Input.Root key={type}>
-          <Input.Label>{`type="${type}"`}</Input.Label>
-          <Input.TextInput type={type} placeholder={placeholder} />
-        </Input.Root>
-      ))}
-    </div>
-  ),
 };

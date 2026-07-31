@@ -68,51 +68,61 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
   // Trailing-edge debounce handle for theme CSS reloads (see `handleHotUpdate`).
   let themeReloadTimer: ReturnType<typeof setTimeout> | undefined;
 
+  // Under Vitest there is no HMR, and a live watcher leaks per-file `fs_event` handles: Tailwind's
+  // `@source` scan registers every scanned source file as a Vite watch dependency, and those handles
+  // are never released on close, hanging single-pass `vitest run` teardown. A non-null `server.watch`
+  // here also overrides the `watch: null` set by the test configs, so gate it: disable the watcher
+  // entirely under Vitest (`VITEST` is exported to the whole process tree), keep the HMR-ignore
+  // patterns for interactive `storybook dev` / `vite dev` (where `VITEST` is unset).
+  const isVitest = process.env.VITEST === 'true';
+
   const themePlugin: Plugin = {
     name: 'vite-plugin-dxos-ui-theme',
     config: (): UserConfig => {
       return {
         server: {
-          watch: {
-            // Stop build outputs from driving HMR — they are the root of the
-            // `main.css` HMR storm.
-            //
-            // Tailwind's `@source` scanning (see `src/main.css`) registers its
-            // scanned source files as Vite watch dependencies of the compiled
-            // theme CSS. Tailwind's own scanner respects `.gitignore` (and the
-            // `@source not` directives), so it never *scans* `dist/`. BUT the
-            // scanner hands Vite a coarse `dir-dependency` glob — e.g.
-            // `{**/*.html,**/*.ts,**/*.tsx}` — and Vite re-expands that glob
-            // itself, ignoring only `node_modules` (not `.gitignore`, not the
-            // `@source not` negations). The re-expansion therefore sweeps in
-            // every `packages/*/dist/**/*.d.ts` (`.d.ts` matches `**/*.ts`),
-            // making each emitted declaration file a watch-dependency of
-            // `main.css`. A single package rebuild emits dozens of `.d.ts` in a
-            // tight burst, and each write re-invalidates the theme — 40+ HMR
-            // pings for `main.css` in one second, repeating on every rebuild.
-            //
-            // Ignoring build outputs in the watcher is also semantically
-            // correct: in dev the workspace resolves `@dxos/*` via the `source`
-            // export condition (see `vite-plugin-import-source`), so `dist/`
-            // is never consumed at runtime and its churn should never trigger
-            // HMR. Vite concatenates these patterns with its built-in ignores
-            // (`**/node_modules/**`, `**/.git/**`, …), so this is purely
-            // additive.
-            //
-            // `<root>/.claude/**` covers agent worktrees checked out under the
-            // repo root (`.claude/worktrees/<name>/packages/**`): they are full
-            // source copies, so the glob re-expansion above sweeps them in and
-            // every agent-side edit burst or checkout invalidates the theme in
-            // the user's dev server. The pattern is anchored at the resolved
-            // repo root (not `**/.claude/**`) because chokidar matches against
-            // absolute paths — a bare pattern would match *everything* when the
-            // dev server itself runs from inside a worktree whose path contains
-            // a `.claude` segment. `*.log` covers runtime log sinks (e.g.
-            // vite-plugin-log's `app.log` in the app root), which are appended
-            // continuously at runtime and must never feed back into the
-            // watcher.
-            ignored: ['**/dist/**', '**/out/**', '**/*.log', `${resolve(import.meta.dirname, ROOT, '.claude')}/**`],
-          },
+          watch: isVitest
+            ? null
+            : {
+                // Stop build outputs from driving HMR — they are the root of the
+                // `main.css` HMR storm.
+                //
+                // Tailwind's `@source` scanning (see `src/main.css`) registers its
+                // scanned source files as Vite watch dependencies of the compiled
+                // theme CSS. Tailwind's own scanner respects `.gitignore` (and the
+                // `@source not` directives), so it never *scans* `dist/`. BUT the
+                // scanner hands Vite a coarse `dir-dependency` glob — e.g.
+                // `{**/*.html,**/*.ts,**/*.tsx}` — and Vite re-expands that glob
+                // itself, ignoring only `node_modules` (not `.gitignore`, not the
+                // `@source not` negations). The re-expansion therefore sweeps in
+                // every `packages/*/dist/**/*.d.ts` (`.d.ts` matches `**/*.ts`),
+                // making each emitted declaration file a watch-dependency of
+                // `main.css`. A single package rebuild emits dozens of `.d.ts` in a
+                // tight burst, and each write re-invalidates the theme — 40+ HMR
+                // pings for `main.css` in one second, repeating on every rebuild.
+                //
+                // Ignoring build outputs in the watcher is also semantically
+                // correct: in dev the workspace resolves `@dxos/*` via the `source`
+                // export condition (see `vite-plugin-import-source`), so `dist/`
+                // is never consumed at runtime and its churn should never trigger
+                // HMR. Vite concatenates these patterns with its built-in ignores
+                // (`**/node_modules/**`, `**/.git/**`, …), so this is purely
+                // additive.
+                //
+                // `<root>/.claude/**` covers agent worktrees checked out under the
+                // repo root (`.claude/worktrees/<name>/packages/**`): they are full
+                // source copies, so the glob re-expansion above sweeps them in and
+                // every agent-side edit burst or checkout invalidates the theme in
+                // the user's dev server. The pattern is anchored at the resolved
+                // repo root (not `**/.claude/**`) because chokidar matches against
+                // absolute paths — a bare pattern would match *everything* when the
+                // dev server itself runs from inside a worktree whose path contains
+                // a `.claude` segment. `*.log` covers runtime log sinks (e.g.
+                // vite-plugin-log's `app.log` in the app root), which are appended
+                // continuously at runtime and must never feed back into the
+                // watcher.
+                ignored: ['**/dist/**', '**/out/**', '**/*.log', `${resolve(import.meta.dirname, ROOT, '.claude')}/**`],
+              },
         },
         css: {
           postcss: {

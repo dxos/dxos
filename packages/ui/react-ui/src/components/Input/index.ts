@@ -4,4 +4,3 @@
 
 export * from './Input';
 export * from './SegmentedInput';
-export * from './constants';

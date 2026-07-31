@@ -20,7 +20,7 @@ export type TreeItemHeadingProps = {
   count?: number;
   /** Optional count of new/modified items; when greater than zero it replaces {@link count} with a rose badge. */
   modifiedCount?: number;
-  onSelect?: (option: boolean) => void;
+  onSelect?: (modifiers: { option: boolean; shift: boolean }) => void;
 };
 
 export const TreeItemHeading = memo(
@@ -31,7 +31,7 @@ export const TreeItemHeading = memo(
 
       const handleSelect = useCallback(
         (event: MouseEvent) => {
-          onSelect?.(event.altKey);
+          onSelect?.({ option: event.altKey, shift: event.shiftKey });
         },
         [onSelect],
       );
@@ -41,7 +41,7 @@ export const TreeItemHeading = memo(
           if (event.key === ' ' || event.key === 'Enter') {
             event.preventDefault();
             event.stopPropagation();
-            onSelect?.(event.altKey);
+            onSelect?.({ option: event.altKey, shift: event.shiftKey });
           }
         },
         [onSelect],
@@ -88,7 +88,7 @@ export const TreeItemHeading = memo(
 const CountBadge = ({ count, modifiedCount }: Pick<TreeItemHeadingProps, 'count' | 'modifiedCount'>) => {
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Tag palette='rose' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='rose' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
         {modifiedCount}
       </Tag>
     );
@@ -96,7 +96,7 @@ const CountBadge = ({ count, modifiedCount }: Pick<TreeItemHeadingProps, 'count'
 
   if (typeof count === 'number') {
     return (
-      <Tag palette='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
         {count}
       </Tag>
     );

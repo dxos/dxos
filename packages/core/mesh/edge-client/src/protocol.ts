@@ -69,11 +69,14 @@ export class Protocol {
     {
       source,
       target,
+      tags,
       payload,
       serviceId,
     }: {
       source?: PeerData;
       target?: PeerData[];
+      // Broadcast tags (DX-1125). Set with no resolvable `target` to publish to the swarm.
+      tags?: string[];
       payload?: buf.MessageInitShape<Desc>;
       serviceId?: string;
     },
@@ -82,6 +85,7 @@ export class Protocol {
       timestamp: new Date().toISOString(),
       source,
       target,
+      tags,
       serviceId,
       payload: payload ? bufWkt.anyPack(type, buf.create(type, payload)) : undefined,
     });
@@ -97,9 +101,14 @@ export const toUint8Array = async (data: any): Promise<Uint8Array> => {
     return bufferToArray(data);
   }
 
-  // Browser.
+  // Browser with `binaryType = 'arraybuffer'`.
+  if (data instanceof ArrayBuffer) {
+    return new Uint8Array(data);
+  }
+
+  // Browser fallback (`binaryType = 'blob'`, the WebSocket default).
   if (data instanceof Blob) {
-    return new Uint8Array(await (data as Blob).arrayBuffer());
+    return new Uint8Array(await data.arrayBuffer());
   }
 
   throw new Error(`Unexpected datatype: ${data}`);

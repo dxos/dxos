@@ -33,9 +33,7 @@ const EXAMPLE_NAMESPACE = '@example';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
-    const Test = Schema.Struct({ name: Schema.String }).pipe(
-      Type.makeObject(DXN.make('com.example.type.test', '0.1.0')),
-    );
+    const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(Schema.Struct({ name: Schema.String }));
     const jsonSchema = toJsonSchema(Test);
     expect(jsonSchema.$id).toEqual('dxn:com.example.type.test:0.1.0');
     expect(jsonSchema.version).toEqual('0.1.0');
@@ -43,20 +41,26 @@ describe('effect-to-json', () => {
 
   test('property meta annotation', () => {
     const meta = { maxLength: 0 };
-    const Test = Schema.Struct({
-      name: Schema.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
+      }),
+    );
     const jsonSchema = toJsonSchema(Test);
     expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)!.meta![EXAMPLE_NAMESPACE]).to.deep.eq(meta);
   });
 
   test('reference annotation', () => {
-    const Nested = Schema.Struct({
-      name: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0')));
-    const Test = Schema.Struct({
-      name: Ref(Nested),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const Nested = Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+      }),
+    );
+    const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        name: Ref(Nested),
+      }),
+    );
     const jsonSchema = toJsonSchema(Test);
     // log.info('schema', { jsonSchema });
     const nested = jsonSchema.properties!.name;
@@ -66,12 +70,16 @@ describe('effect-to-json', () => {
   // TODO(ZaymonFC): @dmaretskyi we still need to fix this.
   // TODO(dmaretskyi): Remove FieldLookupAnnotationId.
   test.skip('reference annotation with lookup property', () => {
-    const Nested = Schema.Struct({
-      name: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0')));
-    const Test = Schema.Struct({
-      name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const Nested = Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+      }),
+    );
+    const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
+      }),
+    );
     const jsonSchema = toJsonSchema(Test);
     const effectSchema = toEffectSchema(jsonSchema);
 
@@ -80,24 +88,32 @@ describe('effect-to-json', () => {
   });
 
   test('array of references', () => {
-    const Nested = Schema.Struct({
-      name: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0')));
-    const Test = Schema.Struct({
-      name: Schema.Array(Ref(Nested)),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const Nested = Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+      }),
+    );
+    const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.Array(Ref(Nested)),
+      }),
+    );
 
     const jsonSchema = toJsonSchema(Test);
     expectReferenceAnnotation((jsonSchema.properties!.name as any).items);
   });
 
   test('optional references', () => {
-    const Nested = Schema.Struct({
-      name: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0')));
-    const Test = Schema.Struct({
-      name: Schema.optional(Ref(Nested)),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const Nested = Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+      }),
+    );
+    const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Ref(Nested)),
+      }),
+    );
     const jsonSchema = toJsonSchema(Test);
     expectReferenceAnnotation(jsonSchema.properties!.name);
   });
@@ -110,12 +126,14 @@ describe('effect-to-json', () => {
   });
 
   test('annotations', () => {
-    const TempSchema = Schema.Struct({
-      name: Schema.String.annotations({ description: 'Person name', title: 'Name' }),
-      email: Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email)).annotations({
-        description: 'Email address',
+    const TempSchema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String.annotations({ description: 'Person name', title: 'Name' }),
+        email: Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email)).annotations({
+          description: 'Email address',
+        }),
       }),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    );
 
     const jsonSchema = toJsonSchema(TempSchema);
     expect(jsonSchema).to.deep.eq({
@@ -159,14 +177,18 @@ describe('effect-to-json', () => {
   });
 
   test('reference property by ref', () => {
-    const Organization = Schema.Struct({
-      field: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
+    const Organization = Type.makeObject(DXN.make('com.example.type.organization', '0.1.0'))(
+      Schema.Struct({
+        field: Schema.String,
+      }),
+    );
 
-    const Contact = Schema.Struct({
-      name: Schema.String,
-      organization: Ref(Organization).annotations({ description: 'Contact organization' }),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    const Contact = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        organization: Ref(Organization).annotations({ description: 'Contact organization' }),
+      }),
+    );
 
     // log.info('Contact', { ast: Contact.ast });
 
@@ -211,14 +233,18 @@ describe('effect-to-json', () => {
   });
 
   test('add reference property', () => {
-    const Organization = Schema.Struct({
-      field: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
+    const Organization = Type.makeObject(DXN.make('com.example.type.organization', '0.1.0'))(
+      Schema.Struct({
+        field: Schema.String,
+      }),
+    );
 
-    const Contact = Schema.Struct({
-      name: Schema.String,
-      organization: Ref(Organization).annotations({ description: 'Contact organization' }),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    const Contact = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        organization: Ref(Organization).annotations({ description: 'Contact organization' }),
+      }),
+    );
 
     const jsonSchema = toJsonSchema(Contact);
     setSchemaProperty(
@@ -238,6 +264,33 @@ describe('effect-to-json', () => {
     // TODO(dmaretskyi): Currently unable to deserialize.
     // const effectSchema = toEffectSchema(jsonSchema);
     log('schema', { jsonSchema });
+  });
+
+  test('serialize a pair of mutually-recursive schemas (A embeds B, B embeds A)', () => {
+    // Unlike a schema that's self-referential (caught by suspendCache within one expansion), a
+    // *mutual* cycle across two distinct schemas isn't: each side starts a fresh suspendCache with
+    // no memory of the other already being in flight, so without the `inProgress` guard this
+    // recurses forever (A -> B -> A -> B -> ...).
+    interface A {
+      readonly kind: 'a';
+      readonly b?: B;
+    }
+    interface B {
+      readonly kind: 'b';
+      readonly a?: A;
+    }
+    const A: Schema.Schema<A> = Schema.Struct({
+      kind: Schema.Literal('a'),
+      b: Schema.optional(Schema.suspend((): Schema.Schema<B> => B)),
+    });
+    const B: Schema.Schema<B> = Schema.Struct({
+      kind: Schema.Literal('b'),
+      a: Schema.optional(Schema.suspend((): Schema.Schema<A> => A)),
+    });
+
+    const jsonSchema = toJsonSchema(A);
+    expect(jsonSchema.properties?.kind).toEqual({ type: 'string', enum: ['a'] });
+    expect(jsonSchema.properties?.b).toBeDefined();
   });
 
   test('tuple schema with description', () => {
@@ -418,9 +471,11 @@ describe('json-to-effect', () => {
 
   for (const partial of [false, true]) {
     test(`deserialized equals original ${partial ? 'with partial' : ''}`, () => {
-      const Organization = Schema.Struct({
-        field: Schema.String,
-      }).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
+      const Organization = Type.makeObject(DXN.make('com.example.type.organization', '0.1.0'))(
+        Schema.Struct({
+          field: Schema.String,
+        }),
+      );
 
       const fields = {
         string: Schema.String,
@@ -436,8 +491,8 @@ describe('json-to-effect', () => {
         null: Schema.Null,
       } as const;
 
-      const Test = (partial ? Schema.partial(Schema.Struct(fields)) : Schema.Struct(fields)).pipe(
-        Type.makeObject(DXN.make('com.example.type.test', '0.1.0')),
+      const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+        partial ? Schema.partial(Schema.Struct(fields)) : Schema.Struct(fields),
       );
 
       const jsonSchema = toJsonSchema(Test);
@@ -498,7 +553,7 @@ describe('json-to-effect', () => {
       typename: 'com.example.type.project',
       version: '0.1.0',
     });
-    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('echo:/01JERV1HQCQZDQ4NVCJ42QB38F');
+    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('echo:///01JERV1HQCQZDQ4NVCJ42QB38F');
   });
 
   test('symbol annotations get compared', () => {

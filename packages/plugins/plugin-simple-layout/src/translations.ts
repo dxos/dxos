@@ -13,7 +13,6 @@ export const translations = [
     'en-US': {
       [meta.profile.key]: {
         'plugin.name': 'Simple layout',
-        'settings.title': 'Simple layout settings',
         'workspaces.heading': 'Workspaces',
         'settings.heading': 'Settings',
         'back.label': 'Back',

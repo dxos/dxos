@@ -2,10 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type EditorView } from '@codemirror/view';
+
 import { insertAtLineStart } from '@dxos/ui-editor';
 
 import { type EditorMenuGroup } from './menu';
 import { popoverRangeEffect } from './popover';
+
+/**
+ * Re-open the popover in link-query ("@") mode at the cursor, seeding the same query shape the user
+ * would get by typing the trigger manually: a single "@" for an inline link, "@@" for a block embed.
+ * The consumer's `@` handler (e.g. plugin-markdown's link query) renders the object picker and, on
+ * selection, replaces this range with the corresponding markdown link.
+ *
+ * Deferred to the next frame: selecting a slash-menu item deletes the "/" range, which closes the
+ * popover; opening synchronously races that close (`onActivate` reads a stale open state) and the
+ * picker never appears.
+ */
+const openLinkQuery = (view: EditorView, insert: '@' | '@@'): void => {
+  requestAnimationFrame(() => {
+    const { head } = view.state.selection.main;
+    const to = head + insert.length;
+    view.dispatch({
+      changes: { from: head, insert },
+      selection: { anchor: to, head: to },
+      // The popover trigger is the single "@"; a second "@" lives in the query range and switches to block mode.
+      effects: popoverRangeEffect.of({ trigger: '@', range: { from: head, to } }),
+    });
+  });
+};
 
 export const formattingCommands: EditorMenuGroup = {
   id: 'markdown',
@@ -94,32 +119,13 @@ export const linkSlashCommands: EditorMenuGroup = {
       id: 'inline-link',
       label: 'Inline link',
       icon: 'ph--link--regular',
-      onSelect: ({ view, head }) => {
-        view.dispatch({
-          changes: { from: head, insert: '@' },
-          selection: { anchor: head + 1, head: head + 1 },
-          effects: popoverRangeEffect.of({
-            trigger: '@',
-            range: { from: head, to: head + 1 },
-          }),
-        });
-      },
+      onSelect: ({ view }) => openLinkQuery(view, '@'),
     },
     {
-      id: 'block-embed',
-      label: 'Block embed',
+      id: 'inline-object',
+      label: 'Inline object',
       icon: 'ph--lego--regular',
-      onSelect: ({ view, head }) => {
-        // Seed the same query shape as typing "@@" manually.
-        view.dispatch({
-          changes: { from: head, insert: '@@' },
-          selection: { anchor: head + 2, head: head + 2 },
-          effects: popoverRangeEffect.of({
-            trigger: '@',
-            range: { from: head, to: head + 2 },
-          }),
-        });
-      },
+      onSelect: ({ view }) => openLinkQuery(view, '@@'),
     },
   ],
 };

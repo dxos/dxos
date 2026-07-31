@@ -11,7 +11,7 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import * as ts from 'typescript';
 
 import { Capability } from '@dxos/app-framework';
-import { initializeBundler } from '@dxos/functions-runtime/bundler';
+import { initializeBundler } from '@dxos/edge-compute/bundler';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 

@@ -8,9 +8,9 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
-import { type InspectSpaceResponse } from '@dxos/protocols';
+import { type InspectSpaceResponse, type LegacyInspectSpaceResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError } from '../util';
+import { adminRequest, formatAdminError, readIdentityDid } from '../util';
 
 const printSection = function* (title: string, lines: string[]) {
   yield* Console.log(`\n  ${title}`);
@@ -23,9 +23,10 @@ export const inspect = Command.make(
   'inspect',
   { spaceId: Args.text({ name: 'spaceId' }) },
   Effect.fn(function* ({ spaceId }) {
-    const result = yield* adminRequest<InspectSpaceResponse>('GET', `/admin/spaces/${spaceId}`).pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
-    );
+    const result = yield* adminRequest<InspectSpaceResponse | LegacyInspectSpaceResponse>(
+      'GET',
+      `/admin/spaces/${spaceId}`,
+    ).pipe(Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(result, null, 2));
@@ -35,8 +36,12 @@ export const inspect = Command.make(
       if (result.metadata) {
         yield* Console.log(`  Status:   ${result.metadata.status ?? 'unknown'}`);
         yield* Console.log(`  Created:  ${result.metadata.createdAt}`);
-        if (result.metadata.identityKey) {
-          yield* Console.log(`  Identity: ${result.metadata.identityKey}`);
+        const metaIdentity =
+          ('identityDid' in result.metadata && result.metadata.identityDid) ||
+          ('identityKey' in result.metadata && result.metadata.identityKey) ||
+          undefined;
+        if (metaIdentity) {
+          yield* Console.log(`  Identity: ${metaIdentity}`);
         }
       } else {
         yield* Console.log('  Metadata: not in registry');
@@ -47,7 +52,7 @@ export const inspect = Command.make(
         result.members.list.map((member) => {
           const role = member.role ? ` [${member.role}]` : '';
           const agent = member.agentKey ? ` agent:${member.agentKey.slice(0, 12)}...` : '';
-          return `${member.identityKey}${role}${agent}`;
+          return `${readIdentityDid(member)}${role}${agent}`;
         }),
       );
 

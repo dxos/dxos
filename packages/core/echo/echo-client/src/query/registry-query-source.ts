@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Registry, type QueryResult } from '@dxos/echo';
+import { type QueryResult, type Registry } from '@dxos/echo';
 import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 
@@ -47,6 +47,11 @@ export class RegistryQuerySource implements QuerySource {
       return [];
     }
     return this.#match(simple.filter);
+  }
+
+  /** The in-process registry is matched synchronously. */
+  isSynchronous(): boolean {
+    return this.#query !== undefined && this.#isValidSourceForQuery(this.#query);
   }
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {

@@ -13,7 +13,6 @@ import { STORAGE_VERSION } from '@dxos/protocols';
 import {
   type Device,
   type Identity,
-  type LogEntry,
   type Metrics,
   type NetworkStatus,
   type Platform,
@@ -23,8 +22,6 @@ import {
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { DXOS_VERSION } from '../../version';
 import { type ServiceContext } from '../services';
@@ -36,10 +33,8 @@ const DEFAULT_TIMEOUT = 1_000;
 export type Diagnostics = {
   client: {
     config: ConfigProto;
-    trace: TraceDiagnostic;
   };
   services: {
-    trace: TraceDiagnostic;
     created: string;
     platform: Platform;
     config?: ConfigProto;
@@ -58,11 +53,6 @@ export type Diagnostics = {
     metrics?: Metrics;
     storage?: { file: string; count: number }[];
   };
-};
-
-export type TraceDiagnostic = {
-  resources: Record<string, Resource>;
-  logs: LogEntry[];
 };
 
 // TODO(burdon): Normalize for ECHO/HALO.
@@ -99,7 +89,6 @@ export const createDiagnostics = async (
         version: STORAGE_VERSION,
       },
     },
-    trace: TRACE_PROCESSOR.getDiagnostics(),
   };
 
   await Promise.all([

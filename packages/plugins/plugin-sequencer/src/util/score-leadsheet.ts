@@ -8,7 +8,7 @@ import { type LeadSheetDocument } from './lead-sheet';
 
 /**
  * Mutable view of a Score subject — usable inside `Obj.update` callbacks.
- * Exposes the fields a write-through (lead-sheet import, blueprint Write) needs.
+ * Exposes the fields a write-through (lead-sheet import, skill Write) needs.
  */
 export type MutableScore = {
   name?: string;

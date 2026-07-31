@@ -5,51 +5,51 @@
 import * as Schema from 'effect/Schema';
 
 import { AppNode, LayoutOperation, Translations } from '@dxos/app-toolkit';
-import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '#meta';
 
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 
-export type Part = 'solo' | 'multi' | 'complementary';
-export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
+export type Part = 'main' | 'complementary';
+export type ResolvedPart = Part;
 
 export const PlankSizing = Schema.Record({ key: Schema.String, value: Schema.Number });
 export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
 export const DeckState = Schema.Struct({
-  /** If false, the deck has not yet left solo mode and new planks should be soloed. */
-  initialized: Schema.Boolean,
-  /** Item IDs of planks currently displayed in multi-mode. */
+  /** Item IDs of planks currently active. A singleton list renders fullbleed; 2+ render as a sliding deck. */
   active: Schema.mutable(Schema.Array(Schema.String)),
   /** Item IDs of planks that have been closed; used for state persistence and reopening. */
   inactive: Schema.mutable(Schema.Array(Schema.String)),
-  /** Item ID of the single plank displayed in solo or fullscreen mode. */
-  solo: Schema.optional(Schema.String),
-  /** Whether the solo plank is displayed in fullscreen mode (no heading or sidebars). */
-  fullscreen: Schema.Boolean,
-  /** Persisted plank widths in rem, keyed by item ID. */
+  //
+  // Sizing. Both in rem, differing in what they key on (see `useDeckPresentation`): a sliding plank
+  // owns its width wherever it sits, while the tiling split belongs to the deck's single seam.
+  //
+  /** Sliding: absolute plank widths in rem, keyed by item ID — a plank keeps its width wherever it sits. */
   plankSizing: Schema.mutable(PlankSizing),
+  /**
+   * Tiling: the start pane's width in rem; the end pane fills the remainder, so the split survives a
+   * viewport resize and swapping which plank occupies a slot. Absent means an even split.
+   */
+  tilingSizing: Schema.optional(Schema.Number),
   /** Whether the companion pane is visible alongside the active plank(s). */
   companionOpen: Schema.Boolean,
-  /** Which companion variant to display when the companion pane is open. */
-  companionVariant: Schema.optional(Schema.String),
-  /** Persisted companion frame widths in rem, keyed by frame ID. */
-  companionFrameSizing: Schema.mutable(PlankSizing),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
+/**
+ * Deck key for the "no workspace resolved yet" sentinel — the initial `activeDeck` of a fresh profile,
+ * held until the plugin that owns spaces switches to a real workspace. Not a graph node id, so it is
+ * never serialized into the URL (see the deck's url-handler).
+ */
+export const DEFAULT_DECK_ID = 'default';
+
 export const defaultDeck: DeckState = {
-  initialized: false,
   active: [],
   inactive: [],
-  solo: undefined,
-  fullscreen: false,
   plankSizing: {},
   companionOpen: false,
-  companionVariant: undefined,
-  companionFrameSizing: {},
 };
 
 //
@@ -59,13 +59,13 @@ export const defaultDeck: DeckState = {
 const LayoutMode = Schema.Literal('multi', 'solo', 'solo--fullscreen');
 export type LayoutMode = Schema.Schema.Type<typeof LayoutMode>;
 export const isLayoutMode = (value: any): value is LayoutMode => Schema.is(LayoutMode)(value);
-export const getMode = (deck: DeckState | DeepReadonly<DeckState>): LayoutMode => {
-  if (deck.solo) {
-    return deck.fullscreen ? 'solo--fullscreen' : 'solo';
-  }
 
-  return 'multi';
-};
+/**
+ * The `Layout` capability's mode: a fullscreen plank renders alone and headless, so it reports as
+ * `solo--fullscreen`; otherwise the mode follows the active plank count (companions excluded).
+ */
+export const getMode = (deck: { active: readonly string[] }, fullscreen: boolean): LayoutMode =>
+  fullscreen ? 'solo--fullscreen' : deck.active.length > 1 ? 'multi' : 'solo';
 
 // Persisted plugin state (stored in KVS/localStorage).
 export const StoredDeckState = Schema.Struct({
@@ -75,12 +75,13 @@ export const StoredDeckState = Schema.Struct({
   activeDeck: Schema.String,
   previousDeck: Schema.String,
   decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckState) })),
-  previousMode: Schema.mutable(Schema.Record({ key: Schema.String, value: LayoutMode })),
 }).pipe(Schema.mutable);
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 
 // Transient/ephemeral plugin state (not persisted).
 export const EphemeralDeckState = Schema.Struct({
+  /** Item ID of the plank currently displayed fullscreen (headless); transient, never in the URL. */
+  fullscreen: Schema.optional(Schema.String),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literal('default', 'alert')),
   dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
@@ -116,9 +117,8 @@ export type DeckPluginState = StoredDeckState & EphemeralDeckState;
 export namespace DeckAction {
   const PartAdjustmentSchema = Schema.Union(
     Schema.Literal('close').annotations({ description: 'Close the plank.' }),
-    Schema.Literal('companion').annotations({ description: 'Open the companion plank.' }),
-    Schema.Literal('solo').annotations({ description: 'Solo the plank.' }),
-    Schema.Literal('solo--fullscreen').annotations({ description: 'Fullscreen the plank.' }),
+    Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
+    Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
     Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
     Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
   );

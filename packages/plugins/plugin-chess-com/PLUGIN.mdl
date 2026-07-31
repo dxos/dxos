@@ -1,0 +1,123 @@
+---
+id: org.dxos.plugin.chessCom
+name: ChessComPlugin
+version: 0.1.0
+---
+
+Chess.com account integration for DXOS Composer. Links a Chess.com username,
+syncs archived games into a local feed as `Game` objects (chess variant), and
+displays them in a masonry gallery rendered by plugin-chess game cards.
+
+## Extensions
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type ChessComAccount
+  fields:
+    username: string @label/title
+    playerId?: number
+    profileUrl?: string
+    followers?: number
+    country?: string
+    lastOnline?: number
+    joined?: number
+    status?: string
+    isStreamer?: boolean
+    verified?: boolean
+    league?: string
+    streamingPlatforms?: string[]
+    games: Ref<Feed>   # Game (org.dxos.type.game) entries with Chess.State variants
+  foreignKeys:
+    service: chess.com
+    id: <username>
+  typename: org.dxos.type.chessCom.account
+  version: 0.1.0
+```
+
+## Components
+
+```mdl
+component ChessGameArticle
+  desc: Masonry gallery of synced chess games; each tile renders a Game card surface.
+  props:
+    account: ChessComAccount
+  actions:
+    syncGames()
+  layout: |
+    ┌─────────────────────────┐
+    │ [Sync games] toolbar    │
+    ├─────────────────────────┤
+    │ masonry of game cards   │
+    └─────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op SyncGames
+  desc: Fetch all archived games from chess.com and append new Game objects to the account feed.
+  input:
+    account: Ref<ChessComAccount>
+  output:
+    appended: number
+  effects: [http, echo:write]
+
+op ClearSyncedGames
+  desc: Replace the account games feed with a fresh empty feed, discarding synced games.
+  input:
+    account: Ref<ChessComAccount>
+  output:
+    removed: number
+  effects: [echo:write]
+```
+
+## Features
+
+```mdl
+feat F-1: Create account
+
+  req F-1.1: Create form asks only for Chess.com username.
+  req F-1.2: Account is stamped with foreign key `{ source: chess.com, id: username }`.
+  req F-1.3: A backing ECHO feed is created for synced games.
+```
+
+```mdl
+feat F-2: Sync games
+
+  req F-2.1: SyncGames loads player profile fields from the chess.com Published API.
+  req F-2.2: SyncGames walks monthly archives and imports each game as a `Game` with `Chess.State` (PGN/FEN).
+  req F-2.3: Re-sync does not duplicate games already present in the feed (uuid foreign key).
+```
+
+```mdl
+feat F-3: Game gallery
+
+  req F-3.1: ChessGameArticle lists games from the account feed in a masonry layout.
+  req F-3.2: Each tile renders `AppSurface.CardContent` so plugin-chess supplies the game card.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create with username only
+  given: user enters username "hhhhthrv"
+  then:
+    - ChessComAccount.username === "hhhhthrv"
+    - foreign key chess.com/hhhhthrv is set
+```
+
+```mdl
+test T-2: Sync deduplicates games
+  given: account with two games already synced
+  when: SyncGames runs against the same upstream archive
+  then: appended === 0
+```

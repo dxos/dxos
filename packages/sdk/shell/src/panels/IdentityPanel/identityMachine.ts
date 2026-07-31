@@ -124,11 +124,11 @@ const useIdentityMachine = (client: Client, options?: Parameters<typeof useMachi
 };
 
 export type {
-  IdentityMachine,
-  IdentityEvent,
-  IdentityMachineContext,
   IdentityChooseActionEvent,
-  IdentityState,
+  IdentityEvent,
+  IdentityMachine,
+  IdentityMachineContext,
   IdentitySend,
+  IdentityState,
 };
 export { identityMachine, useIdentityMachine };

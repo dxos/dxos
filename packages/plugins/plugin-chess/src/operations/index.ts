@@ -8,4 +8,5 @@ export const ChessOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./move'),
   () => import('./play'),
   () => import('./print'),
+  () => import('./rebuild-position-index'),
 );

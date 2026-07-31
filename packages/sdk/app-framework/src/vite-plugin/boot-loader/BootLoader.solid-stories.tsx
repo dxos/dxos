@@ -148,12 +148,12 @@ const LoaderHarness = () => {
       {/* Float the controls above the loader's `z-index: 10` fixed backdrop. */}
       <div
         style={{
-          position: 'fixed',
-          top: '12px',
-          left: '12px',
+          'position': 'fixed',
+          'top': '12px',
+          'left': '12px',
           'z-index': 9999,
-          display: 'flex',
-          gap: '12px',
+          'display': 'flex',
+          'gap': '12px',
           'align-items': 'center',
         }}
       >
@@ -161,20 +161,20 @@ const LoaderHarness = () => {
           type='button'
           onClick={advance}
           style={{
-            padding: '6px 14px',
+            'padding': '6px 14px',
             'font-size': '13px',
             'font-weight': '600',
-            color: '#fff',
-            background: '#017ab7',
-            border: 'none',
+            'color': '#fff',
+            'background': '#017ab7',
+            'border': 'none',
             'border-radius': '6px',
-            cursor: 'pointer',
+            'cursor': 'pointer',
             'box-shadow': '0 1px 3px rgba(0,0,0,0.25)',
           }}
         >
           {sim() === 'creep' ? 'Start progress' : 'Finish + reset'}
         </button>
-        <span style={{ 'font-family': 'ui-sans-serif, system-ui, sans-serif', 'font-size': '12px', color: '#888' }}>
+        <span style={{ 'font-family': 'ui-sans-serif, system-ui, sans-serif', 'font-size': '12px', 'color': '#888' }}>
           {sim()}
         </span>
       </div>

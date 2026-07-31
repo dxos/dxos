@@ -8,12 +8,14 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type PresentationShellProps = PropsWithChildren<{
-  /** Invoked once the exit fade-out has completed. */
-  onExit?: () => void;
   /** Fade-in/out duration (ms). */
   fadeDuration?: number;
   /** Duration the [ESC] hint remains visible (ms). */
   hintDuration?: number;
+  /** Whether the presentation is fullscreen. */
+  fullscreen?: boolean;
+  /** Invoked once the exit fade-out has completed. */
+  onExit?: () => void;
 }>;
 
 /**
@@ -22,7 +24,7 @@ export type PresentationShellProps = PropsWithChildren<{
  * caption shown on enter.
  */
 export const PresentationShell = composable<HTMLDivElement, PresentationShellProps>(
-  ({ children, onExit, fadeDuration = 300, hintDuration = 3000, ...props }, forwardedRef) => {
+  ({ children, fadeDuration = 300, hintDuration = 3000, fullscreen = true, onExit, ...props }, forwardedRef) => {
     const [visible, setVisible] = useState(false);
     const [exiting, setExiting] = useState(false);
     const [showHint, setShowHint] = useState(true);
@@ -81,15 +83,16 @@ export const PresentationShell = composable<HTMLDivElement, PresentationShellPro
         ref={forwardedRef}
       >
         {children}
-
-        <div
-          className={mx(
-            'absolute top-4 left-4 z-[300] transition-opacity duration-500',
-            showHint && !exiting ? 'opacity-100' : 'opacity-0',
-          )}
-        >
-          <span className='rounded-sm bg-white/10 px-2 py-1 font-mono text-sm text-white/70'>[ESC]</span>
-        </div>
+        {fullscreen && (
+          <div
+            className={mx(
+              'absolute top-4 left-4 z-[300] transition-opacity duration-500',
+              showHint && !exiting ? 'opacity-100' : 'opacity-0',
+            )}
+          >
+            <span className='rounded-sm bg-white/10 px-2 py-1 font-mono text-sm text-white/70'>[ESC]</span>
+          </div>
+        )}
       </div>
     );
   },

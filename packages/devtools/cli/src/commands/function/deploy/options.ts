@@ -30,11 +30,6 @@ export const parseOptions = Effect.fn(function* (options: {
     onSome: (spaceId) => getSpace(spaceId).pipe(Effect.map(Option.some)),
   });
 
-  const ownerPublicKey = Option.match(space, {
-    onNone: () => identity.identityKey.toString(),
-    onSome: (space) => space.key.toString(),
-  });
-
   const functionId = Option.getOrUndefined(options.functionId);
 
   const existingObject = yield* Option.all([space, options.functionId]).pipe(
@@ -49,7 +44,6 @@ export const parseOptions = Effect.fn(function* (options: {
 
   return {
     space,
-    ownerPublicKey,
     functionId,
     existingObject,
     name,

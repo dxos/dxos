@@ -5,7 +5,7 @@
 import { join } from 'node:path';
 import { describe, it } from 'vitest';
 
-import { bundleFunction } from '@dxos/functions-runtime/native';
+import { bundleFunction } from '@dxos/edge-compute/native';
 
 import { writeBundle } from './testing';
 

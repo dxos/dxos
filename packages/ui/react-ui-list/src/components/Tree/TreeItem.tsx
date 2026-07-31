@@ -25,7 +25,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { TreeItem as NaturalTreeItem, Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '@dxos/react-ui';
+import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
   ghostFocusWithin,
   ghostHover,
@@ -35,13 +35,29 @@ import {
   mx,
 } from '@dxos/ui-theme';
 
+import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '../Treegrid';
 import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 import { useTree } from './TreeContext';
+import { TreeDropIndicator } from './TreeDropIndicator';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
+
+/** Renders a section-group label spanning the full tree row. Used when a node has `disposition === 'group'`. */
+const NavTreeSectionHeader = ({ label }: { label: Label }) => {
+  const { t } = useTranslation();
+  return (
+    <div
+      role='heading'
+      aria-level={2}
+      className='col-[tree-row] pl-7 pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none'
+    >
+      {toLocalizedString(label, t)}
+    </div>
+  );
+};
 
 type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
@@ -73,7 +89,7 @@ export type TreeItemProps<T extends { id: string } = any> = {
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
-  onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
+  onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
 };
 
@@ -110,6 +126,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   const {
     id,
     parentOf,
+    disposition,
     draggable: itemDraggable,
     droppable: itemDroppable,
     label,
@@ -145,7 +162,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   const nativeDragText = id;
 
   useEffect(() => {
-    if (!draggableProp) {
+    if (!draggableProp || (!isItemDraggable && !isItemDroppable)) {
       return;
     }
 
@@ -250,7 +267,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   );
 
   const handleSelect = useCallback(
-    (option = false) => {
+    ({ option, shift }: { option: boolean; shift: boolean } = { option: false, shift: false }) => {
       // If the item is a branch, toggle it if:
       //   - also holding down the option key
       //   - or the item is currently selected
@@ -259,7 +276,7 @@ const RawTreeItem = <T extends { id: string } = any>({
       } else if (canSelectItem) {
         canSelect?.({ item, path });
         rowRef.current?.focus();
-        onSelect?.({ item, path, current: !current, option });
+        onSelect?.({ item, path, current: !current, option, shift });
       }
     },
     [item, path, current, isBranch, canSelectItem, handleOpenToggle, onSelect],
@@ -299,6 +316,29 @@ const RawTreeItem = <T extends { id: string } = any>({
     onOpenChange,
     onSelect,
   };
+
+  // Group nodes render as a flat section header with their children always expanded at the same visual level.
+  // Suppress the header entirely when there are no children to avoid orphaned section labels.
+  if (disposition === 'group') {
+    if (childIds.length === 0) {
+      return null;
+    }
+    return (
+      <>
+        <NavTreeSectionHeader label={label} />
+        {childIds.map((childId, index) => (
+          <TreeItemById
+            key={childId}
+            id={childId}
+            path={path}
+            last={index === childIds.length - 1}
+            levelOffset={levelOffset + 1}
+            {...childProps}
+          />
+        ))}
+      </>
+    );
+  }
 
   return (
     <>
@@ -347,7 +387,7 @@ const RawTreeItem = <T extends { id: string } = any>({
             />
           </Treegrid.Cell>
           {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
-          {instruction && <NaturalTreeItem.DropIndicator instruction={instruction} gap={2} />}
+          {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
         </div>
       </Treegrid.Row>
       {open &&

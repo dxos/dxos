@@ -46,6 +46,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../ui/react-primitives/react-list"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

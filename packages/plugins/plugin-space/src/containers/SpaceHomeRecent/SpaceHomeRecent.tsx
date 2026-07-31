@@ -5,12 +5,13 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { HomeSection, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { Card, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { getStyles } from '@dxos/ui-theme';
@@ -22,6 +23,7 @@ const RECENT_LIMIT = 10;
 
 type SpaceScopedProps = {
   space?: Space;
+  onClose?: () => void;
 };
 
 /**
@@ -30,7 +32,7 @@ type SpaceScopedProps = {
  * tiles. Renders nothing (no heading) when the space has no recent objects — the starter-prompt
  * contributor (plugin-assistant) fills the empty state instead.
  */
-export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
+export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   const schemas = useCapabilities(AppCapabilities.Schema);
@@ -52,21 +54,21 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
         .limit(RECENT_LIMIT),
     [filter],
   );
-  const recent = useQuery(filter && space ? space.db : undefined, query);
 
+  const recent = useQuery(filter && space ? space.db : undefined, query);
   if (recent.length === 0) {
     return null;
   }
 
   return (
-    <>
-      <h2 className='text-sm font-medium text-description'>{t('space-home.recent.heading')}</h2>
+    <HomeSection.Root>
+      <HomeSection.Header title={t('space-home.recent.heading')} onClose={onClose} />
       <Masonry.Root Tile={RecentObjectTile}>
-        <Masonry.Content padding={false}>
-          <Masonry.Viewport classNames='py-2' items={recent} getId={(object) => object.id} />
+        <Masonry.Content padding={false} scrollbars={false}>
+          <Masonry.Viewport items={recent} getId={(object) => object.id} />
         </Masonry.Content>
       </Masonry.Root>
-    </>
+    </HomeSection.Root>
   );
 };
 
@@ -83,11 +85,11 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
 
   const handleClick = useCallback(() => {
-    void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(data)] });
+    void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(data)] });
   }, [invokePromise, data]);
 
   return (
-    <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Card.Root role='button' fullWidth classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
         <Card.Block>
           <Icon icon={icon} classNames={iconStyles?.text} />
@@ -99,3 +101,5 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
 };
 
 RecentObjectTile.displayName = 'RecentObjectTile';
+
+SpaceHomeRecent.displayName = 'SpaceHomeRecent';

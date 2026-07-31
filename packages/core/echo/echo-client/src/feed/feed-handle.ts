@@ -3,20 +3,31 @@
 //
 
 import * as Predicate from 'effect/Predicate';
+import * as Runtime from 'effect/Runtime';
 
-import { DeferredTask, Event } from '@dxos/async';
+import { DeferredTask, Event, UpdateScheduler } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Entity, type Feed, Obj, type Query, type Ref } from '@dxos/echo';
-import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
+import { Entity, type Feed, Obj, type Ref } from '@dxos/echo';
+import {
+  ObjectDatabaseId,
+  type ObjectJSON,
+  ParentId,
+  SelfURIId,
+  assertObjectModel,
+  isProxy,
+  makeDecodedEntityLive,
+  objectFromJSON,
+  setRefResolverOnData,
+} from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { runServiceCall } from '@dxos/protocols';
+import { type FeedService } from '@dxos/protocols/rpc';
 
 import { type DatabaseImpl } from '../proxy-db';
-import { QueryResultCache, QueryResultImpl } from '../query';
-import { FeedQueryContext } from './feed-query-context';
+import { FeedObjectCore } from './feed-object-core';
 
 const TRACE_FEED_LOAD = false;
 
@@ -41,13 +52,16 @@ export class FeedHandle {
     try {
       TRACE_FEED_LOAD &&
         log.info('feed refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const { objects } = await this._service.queryQueue({
-        query: {
-          queuesNamespace: this._namespace,
-          spaceId: this._spaceId,
-          queueIds: [this._feedId],
-        },
-      });
+      const { objects } = await runServiceCall(
+        this._runtime,
+        this._service.FeedService.queryFeed({
+          query: {
+            feedNamespace: this._namespace,
+            spaceId: this._spaceId,
+            feedIds: [this._feedId],
+          },
+        }),
+      );
       TRACE_FEED_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects?.length ?? 0 });
       if (thisRefreshId !== this._refreshId) {
         return;
@@ -56,39 +70,28 @@ export class FeedHandle {
         return;
       }
 
-      const decodedObjects = await Promise.all(
-        (objects ?? []).map(async (encoded) => {
-          let obj: ObjectJSON;
-          try {
-            obj = JSON.parse(encoded) as ObjectJSON;
-          } catch (err) {
-            log.verbose('feed object JSON parse failed; object ignored', { encoded, error: err });
-            return undefined;
-          }
+      const parsedObjects = (objects ?? []).flatMap((encoded) => {
+        try {
+          const obj = JSON.parse(encoded) as ObjectJSON;
           if (!EntityId.isValid(obj.id)) {
             log.verbose('feed object missing valid id; ignored', { obj });
-            return undefined;
+            return [];
           }
-          try {
-            return await Obj.fromJSON(obj, {
-              refResolver: this._refResolver,
-              uri: EID.make({ spaceId: this._spaceId, entityId: obj.id }),
-              database: this._database,
-              parent: this._parentEntity,
-            });
-          } catch (err) {
-            log.verbose('schema validation error; object ignored', { obj, error: err });
-            return undefined;
-          }
-        }),
-      ).then((objects) => objects.filter(Predicate.isNotUndefined));
+          return [obj];
+        } catch (err) {
+          log.verbose('feed object JSON parse failed; object ignored', { encoded, error: err });
+          return [];
+        }
+      });
+
+      // Routes through the same core-tracking materialization as query hydration, so a polled
+      // re-read never clobbers a not-yet-echoed local `Obj.update` and preserves entity identity.
+      const decodedObjects = await Promise.all(parsedObjects.map((obj) => this.upsertFromJSON(obj))).then((objects) =>
+        objects.filter(Predicate.isNotUndefined),
+      );
 
       if (thisRefreshId !== this._refreshId) {
         return;
-      }
-
-      for (const obj of decodedObjects) {
-        this._objectCache.set(obj.id, obj);
       }
 
       changed = objectSetChanged(this._objects, decodedObjects);
@@ -110,6 +113,12 @@ export class FeedHandle {
     }
   });
 
+  /**
+   * Debounces `Obj.update` mutations on live feed objects into a single background append per
+   * flush cycle (coalescing), mirroring `RepoProxy._sendUpdatesJob`'s use of the same primitive.
+   */
+  readonly #appendScheduler = new UpdateScheduler(this._ctx, () => this.#flushDirty());
+
   private readonly _spaceId: SpaceId;
   private readonly _feedId: string;
 
@@ -120,19 +129,24 @@ export class FeedHandle {
 
   private _parentEntity: Obj.Unknown | undefined = undefined;
 
-  private _objectCache = new Map<EntityId, Entity.Unknown>();
+  /** Per-object client-side state, keyed by id — the single source of truth for entity identity. */
+  readonly #cores = new Map<EntityId, FeedObjectCore>();
+  /** Cores with a local `Obj.update` not yet captured for append. */
+  readonly #dirtyCores = new Set<FeedObjectCore>();
+  /** In-flight append RPCs, awaited by {@link waitForPendingWrites}. */
+  readonly #inFlight = new Set<Promise<void>>();
+  /** Dedupes concurrent hydrations of the same id (reactive query + one-shot query racing). */
+  readonly #hydrating = new Map<EntityId, Promise<Entity.Unknown | undefined>>();
+
   private _objects: Entity.Unknown[] = [];
   private _isLoading = true;
   private _error: Error | null = null;
   private _refreshId = 0;
   private _loadObjectsPromise: Promise<Entity.Unknown[]> | undefined;
 
-  // Shares one QueryResult instance (and its subscription) across repeated calls with the same
-  // serialized query against this feed.
-  readonly #queryResultCache = new QueryResultCache();
-
   constructor(
-    private readonly _service: FeedProtocol.QueueService,
+    private readonly _service: FeedService.Client,
+    private readonly _runtime: Runtime.Runtime<never>,
     private readonly _refResolver: Ref.Resolver,
     private readonly _echoUri: EID.EID,
     private readonly _database: DatabaseImpl,
@@ -144,6 +158,10 @@ export class FeedHandle {
 
   get uri(): EID.EID {
     return this._echoUri;
+  }
+
+  get namespace(): string {
+    return this._namespace;
   }
 
   get refResolver(): Ref.Resolver {
@@ -166,96 +184,232 @@ export class FeedHandle {
   }
 
   /**
-   * Insert into feed with optimistic update.
+   * Insert into feed with optimistic update, awaiting the append RPC. Re-appending an id that
+   * already has a core is an update (see `EntityMetaIndex`'s upsert-by-id): the argument's state is
+   * applied onto the existing working-set instance, which stays canonical, rather than registering a
+   * second core.
    */
   async append(items: Entity.Unknown[]): Promise<void> {
-    items.forEach((item) => assertObjectModel(item));
+    const cores = this.#registerItemsForAppend(items);
 
-    for (const item of items) {
-      setRefResolverOnData(item, this._refResolver);
-      defineHiddenProperty(item, SelfURIId, EID.make({ spaceId: this._spaceId, entityId: item.id }));
-      if (this._parentEntity) {
-        defineHiddenProperty(item, ParentId, this._parentEntity);
-      }
-    }
+    const batch = cores.map((core) => {
+      // Captured explicitly below — don't let the background scheduler also flush this core.
+      this.#dirtyCores.delete(core);
+      const { json, token } = core.captureForAppend();
+      return { core, json, token };
+    });
 
-    // Optimistic update.
-    this._objects = [...this._objects, ...items];
-    for (const item of items) {
-      this._objectCache.set(item.id, item);
-    }
-    this.updated.emit();
+    this.#addOptimistic(cores);
 
-    const encoded = items.map((item) => JSON.stringify(Entity.toJSON(item)));
-
-    try {
-      for (let i = 0; i < encoded.length; i += FEED_APPEND_BATCH_SIZE) {
-        await this._service.insertIntoQueue({
-          subspaceTag: this._namespace,
-          spaceId: this._spaceId,
-          queueId: this._feedId,
-          objects: encoded.slice(i, i + FEED_APPEND_BATCH_SIZE),
-        });
-      }
-    } catch (err) {
+    const encoded = batch.map(({ json }) => JSON.stringify(json));
+    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
       log.catch(err);
       this._error = err as Error;
       this.updated.emit();
+      for (const { core, token } of batch) {
+        core.revertCapture(token);
+        this.#dirtyCores.add(core);
+      }
+      this.#appendScheduler.trigger();
+    });
+    this.#inFlight.add(sendPromise);
+    try {
+      await sendPromise;
+    } finally {
+      this.#inFlight.delete(sendPromise);
     }
+  }
+
+  /**
+   * Synchronous alternative to {@link append}: registers each item as a live feed object and
+   * schedules the append in the background (no RPC awaited). Persistence is confirmed by
+   * {@link waitForPendingWrites} (which `db.flush()` awaits). Backs `db.add(obj, { to: feed })`.
+   */
+  appendSync(items: Entity.Unknown[]): void {
+    const cores = this.#registerItemsForAppend(items);
+    for (const core of cores) {
+      this.#onCoreDirty(core);
+    }
+    this.#addOptimistic(cores);
+  }
+
+  /**
+   * Shared preamble for {@link append}/{@link appendSync}: validate inputs, stamp feed metadata, and
+   * register (or update in place, for a re-append-by-id) the working-set core for each item.
+   */
+  #registerItemsForAppend(items: Entity.Unknown[]): FeedObjectCore[] {
+    for (const item of items) {
+      if (!isProxy(item) && !Entity.isEntity(item)) {
+        throw new TypeError(
+          'feed.append expects reactive ECHO objects. Plain objects must be created using Obj.make(Type, props).',
+        );
+      }
+    }
+    items.forEach((item) => assertObjectModel(item));
+
+    return items.map((item) => {
+      setRefResolverOnData(item, this._refResolver);
+      defineHiddenProperty(item, SelfURIId, EID.make({ spaceId: this._spaceId, entityId: item.id }));
+      defineHiddenProperty(item, ObjectDatabaseId, this._database);
+      if (this._parentEntity) {
+        defineHiddenProperty(item, ParentId, this._parentEntity);
+      }
+
+      const id = EntityId.make(item.id);
+      const existingCore = this.#cores.get(id);
+      const core = existingCore ?? this.#registerCore(item);
+      if (existingCore && existingCore.entity !== item) {
+        existingCore.applyLocalUpdate(item);
+      }
+      return core;
+    });
+  }
+
+  /** Append newly-tracked core entities to the ordered working-set view and notify subscribers. */
+  #addOptimistic(cores: FeedObjectCore[]): void {
+    const existingIds = new Set(this._objects.map((obj) => obj.id));
+    this._objects = [...this._objects, ...cores.map((core) => core.entity).filter((obj) => !existingIds.has(obj.id))];
+    this.updated.emit();
+  }
+
+  /** Enqueue a core for the next background append and wake the scheduler. */
+  #onCoreDirty(core: FeedObjectCore): void {
+    this.#dirtyCores.add(core);
+    this.#appendScheduler.trigger();
   }
 
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
-    this._objects = this._objects.filter((item) => !ids.includes(item.id));
     for (const id of ids) {
-      this._objectCache.delete(id);
+      if (!EntityId.isValid(id)) {
+        continue;
+      }
+      const core = this.#cores.get(id);
+      if (core) {
+        core.markDeleted();
+        this.#cores.delete(id);
+        this.#dirtyCores.delete(core);
+      }
     }
+    this._objects = this._objects.filter((item) => !ids.includes(item.id));
     this.updated.emit();
 
     try {
-      await this._service.deleteFromQueue({
-        subspaceTag: this._namespace,
-        spaceId: this._spaceId,
-        queueId: this._feedId,
-        objectIds: ids,
-      });
+      await runServiceCall(
+        this._runtime,
+        this._service.FeedService.deleteFromFeed({
+          subspaceTag: this._namespace,
+          spaceId: this._spaceId,
+          feedId: this._feedId,
+          objectIds: ids,
+        }),
+      );
     } catch (err) {
       this._error = err as Error;
       this.updated.emit();
     }
   }
 
-  // Odd way to define method's types from a typedef.
-  declare query: Database.QueryFn;
-  static {
-    this.prototype.query = this.prototype._query;
+  /**
+   * Send captured append batches to the feed service, chunked to `FEED_APPEND_BATCH_SIZE` (the
+   * server rejects overly large single inserts).
+   */
+  async #sendAppendBatches(encoded: string[]): Promise<void> {
+    for (let i = 0; i < encoded.length; i += FEED_APPEND_BATCH_SIZE) {
+      await runServiceCall(
+        this._runtime,
+        this._service.FeedService.insertIntoFeed({
+          subspaceTag: this._namespace,
+          spaceId: this._spaceId,
+          feedId: this._feedId,
+          objects: encoded.slice(i, i + FEED_APPEND_BATCH_SIZE),
+        }),
+      );
+    }
   }
 
-  private _query(query: Query.Any) {
-    return this.#queryResultCache.getOrCreate(
-      query,
-      () => new QueryResultImpl(new FeedQueryContext(this, this._ctx), query),
-    );
+  /**
+   * Flush every dirty core's pending `Obj.update`(s) as a single feed append per core (coalescing).
+   * Scheduled via `#appendScheduler`; also runs synchronously (via `runBlocking`) from
+   * {@link waitForPendingWrites}.
+   */
+  async #flushDirty(): Promise<void> {
+    if (this.#dirtyCores.size === 0) {
+      return;
+    }
+    const batch = [...this.#dirtyCores].map((core) => {
+      const { json, token } = core.captureForAppend();
+      return { core, json, token };
+    });
+    this.#dirtyCores.clear();
+
+    const encoded = batch.map(({ json }) => JSON.stringify(json));
+    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
+      log.catch(err);
+      this._error = err as Error;
+      this.updated.emit();
+      for (const { core, token } of batch) {
+        core.revertCapture(token);
+        this.#dirtyCores.add(core);
+      }
+      this.#appendScheduler.trigger();
+    });
+    this.#inFlight.add(sendPromise);
+    try {
+      await sendPromise;
+    } finally {
+      this.#inFlight.delete(sendPromise);
+    }
+  }
+
+  /**
+   * Wait for every pending local `Obj.update` to be captured and sent (not for it to be echoed back
+   * through polling — the index that serves queries is caught up synchronously by the query host
+   * itself, so callers don't need to wait on our own poll cycle). Mirrors `RepoProxy.flush`.
+   *
+   * Best-effort, matching the pre-existing append contract: a failed send re-queues its cores and
+   * reschedules, so this can return with a retry still pending, and the failure surfaces only via
+   * {@link error} rather than rejecting.
+   *
+   * TODO(wittjosiah): Drain until `#dirtyCores` and `#inFlight` both settle and propagate a
+   *   persistent failure, so `db.flush()` cannot report success over unwritten state. Needs a
+   *   bounded retry policy first — an unbounded drain would hang on a permanently failing send.
+   */
+  async waitForPendingWrites(): Promise<void> {
+    if (this.#dirtyCores.size > 0) {
+      await this.#appendScheduler.runBlocking();
+    }
+    await Promise.allSettled([...this.#inFlight]);
   }
 
   async sync({
     shouldPush = true,
     shouldPull = true,
   }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
-    await this._service.syncQueue({
-      subspaceTag: this._namespace,
-      spaceId: this._spaceId,
-      queueId: this._feedId,
-      shouldPush,
-      shouldPull,
-    });
+    await runServiceCall(
+      this._runtime,
+      this._service.FeedService.syncFeed({
+        subspaceTag: this._namespace,
+        spaceId: this._spaceId,
+        feedId: this._feedId,
+        shouldPush,
+        shouldPull,
+      }),
+    );
+  }
+
+  async refresh(): Promise<void> {
+    await this._refreshTask.runBlocking();
   }
 
   async getSyncState(): Promise<Feed.SyncState> {
-    const response = await this._service.getSyncState({
-      spaceId: this._spaceId,
-      namespaces: [this._namespace],
-    });
+    const response = await runServiceCall(
+      this._runtime,
+      this._service.FeedService.getSyncState({
+        spaceId: this._spaceId,
+        namespaces: [this._namespace],
+      }),
+    );
     const entry = response.namespaces?.find((state) => state.namespace === this._namespace);
     return {
       blocksToPull: Number(entry?.blocksToPull ?? 0),
@@ -265,13 +419,16 @@ export class FeedHandle {
   }
 
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
-    const { objects } = await this._service.queryQueue({
-      query: {
-        queuesNamespace: this._namespace,
-        spaceId: this._spaceId,
-        queueIds: [this._feedId],
-      },
-    });
+    const { objects } = await runServiceCall(
+      this._runtime,
+      this._service.FeedService.queryFeed({
+        query: {
+          feedNamespace: this._namespace,
+          spaceId: this._spaceId,
+          feedIds: [this._feedId],
+        },
+      }),
+    );
     return (objects ?? []).flatMap((encoded) => {
       try {
         return [JSON.parse(encoded) as ObjectJSON];
@@ -282,15 +439,74 @@ export class FeedHandle {
     });
   }
 
-  async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
-    invariant(EntityId.isValid(obj.id), 'object missing valid id');
-    const decoded = await Obj.fromJSON(obj, {
-      refResolver: this._refResolver,
-      uri: EID.make({ spaceId: this._spaceId, entityId: obj.id }),
-      database: this._database,
-      parent: this._parentEntity,
-    });
-    return decoded;
+  /**
+   * The single materialization entry point for feed JSON: reconciles into an existing core's
+   * working-set instance, or decodes and registers a fresh live core. Used by polling, reference
+   * resolution, and (via `DatabaseImpl._getFeedHandleIfAvailable`) index-backed query hydration —
+   * whichever of these observes an id first wins the identity for that entity.
+   */
+  async upsertFromJSON(json: ObjectJSON): Promise<Entity.Unknown | undefined> {
+    if (!EntityId.isValid(json.id)) {
+      log.verbose('feed object missing valid id; ignored', { json });
+      return undefined;
+    }
+    const id = json.id;
+
+    const existingCore = this.#cores.get(id);
+    if (existingCore) {
+      try {
+        const decoded = await Obj.fromJSON(json, {
+          refResolver: this._refResolver,
+          uri: EID.make({ spaceId: this._spaceId, entityId: id }),
+          database: this._database,
+          parent: this._parentEntity,
+        });
+        existingCore.reconcile(decoded, json);
+      } catch (err) {
+        log.verbose('schema validation error; object ignored', { json, error: err });
+      }
+      return existingCore.entity;
+    }
+
+    let hydrating = this.#hydrating.get(id);
+    if (!hydrating) {
+      hydrating = this.#hydrateNew(json, id);
+      this.#hydrating.set(id, hydrating);
+      void hydrating.finally(() => this.#hydrating.delete(id));
+    }
+    return hydrating;
+  }
+
+  async #hydrateNew(json: ObjectJSON, id: EntityId): Promise<Entity.Unknown | undefined> {
+    try {
+      const snapshot = await objectFromJSON(json, {
+        refResolver: this._refResolver,
+        uri: EID.make({ spaceId: this._spaceId, entityId: id }),
+        database: this._database,
+        parent: this._parentEntity,
+      });
+      // Rewrap the decoded snapshot as a live reactive proxy so `Obj.update` mutates and notifies.
+      const decoded = makeDecodedEntityLive(snapshot);
+      invariant(Entity.isEntity(decoded), 'objectFromJSON produced an invalid entity');
+      // A concurrent writer (e.g. `append`) may have registered a core for this id while we were
+      // decoding — discard this (possibly stale) hydration rather than clobber the fresher core;
+      // the next poll or query reconciles it properly via the "existing core" branch above.
+      const racedCore = this.#cores.get(id);
+      if (racedCore) {
+        return racedCore.entity;
+      }
+      this.#registerCore(decoded);
+      return decoded;
+    } catch (err) {
+      log.verbose('schema validation error; object ignored', { json, error: err });
+      return undefined;
+    }
+  }
+
+  #registerCore(entity: Entity.Unknown): FeedObjectCore {
+    const core = new FeedObjectCore(entity, (dirtyCore) => this.#onCoreDirty(dirtyCore));
+    this.#cores.set(EntityId.make(entity.id), core);
+    return core;
   }
 
   /**
@@ -301,15 +517,17 @@ export class FeedHandle {
     return this._objects;
   }
 
-  getCachedObjectById(id: EntityId): Entity.Unknown | undefined {
-    return this._objectCache.get(id);
+  getCachedObjectById<T extends Entity.Unknown = Entity.Unknown>(id: EntityId): T | undefined {
+    // Feed entries may be objects or relations; callers narrow via the generic, mirroring
+    // DatabaseImpl.getObjectById.
+    return this.#cores.get(id)?.entity as T | undefined;
   }
 
   /**
    * Resolves feed items by id. Used by reference resolution.
    */
   async getObjectsById(ids: EntityId[]): Promise<(Entity.Unknown | undefined)[]> {
-    const missingIds = ids.filter((id) => !this._objectCache.has(id));
+    const missingIds = ids.filter((id) => !this.#cores.has(id));
     if (missingIds.length > 0) {
       this._loadObjectsPromise ??= this._loadObjects().finally(() => {
         this._loadObjectsPromise = undefined;
@@ -317,24 +535,13 @@ export class FeedHandle {
       await this._loadObjectsPromise;
     }
 
-    return ids.map((id) => this._objectCache.get(id));
+    return ids.map((id) => this.#cores.get(id)?.entity);
   }
 
   private async _loadObjects(): Promise<Entity.Unknown[]> {
     const objects = await this.fetchObjectsJSON();
     const decodedObjects = await Promise.all(
-      objects
-        .filter((obj) => EntityId.isValid(obj.id))
-        .map(async (obj) => {
-          try {
-            const decoded = await this.hydrateObject(obj);
-            this._objectCache.set(decoded.id, decoded);
-            return decoded;
-          } catch (err) {
-            log.verbose('schema validation error; object ignored', { obj, error: err });
-            return undefined;
-          }
-        }),
+      objects.filter((obj) => EntityId.isValid(obj.id)).map((obj) => this.upsertFromJSON(obj)),
     ).then((objects) => objects.filter(Predicate.isNotUndefined));
 
     return decodedObjects;
@@ -362,11 +569,21 @@ export class FeedHandle {
   }
 
   async dispose() {
+    // Drain before teardown: a same-tick `Obj.update` is still queued for the background append,
+    // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still
+    // live, and cannot reject — `waitForPendingWrites` is best-effort by contract.
+    await this.waitForPendingWrites();
+
     this._pollingHandlers = 0;
     if (this._pollingInterval) {
       clearTimeout(this._pollingInterval);
       this._pollingInterval = null;
     }
+    for (const core of this.#cores.values()) {
+      core.dispose();
+    }
+    this.#cores.clear();
+    this.#dirtyCores.clear();
     await this._ctx.dispose();
     await this._refreshTask.join();
   }

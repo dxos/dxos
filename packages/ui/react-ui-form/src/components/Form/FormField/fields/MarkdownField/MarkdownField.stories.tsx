@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { expect, userEvent } from 'storybook/test';
 
 import { Filter, Format, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -61,7 +61,7 @@ const RefStory = () => {
   return (
     <TestLayout>
       <Panel.Root>
-        <Panel.Content asChild>
+        <Panel.Content>
           <Form.Root schema={TextNoteHolder} values={values as any} db={space.db}>
             <Form.Viewport>
               <Form.Content>
@@ -96,7 +96,7 @@ const EmptyRefStory = () => {
   return (
     <TestLayout>
       <Panel.Root>
-        <Panel.Content asChild>
+        <Panel.Content>
           <Form.Root schema={EmptyRefSchema} defaultValues={{}} db={space.db}>
             <Form.Viewport>
               <Form.Content>

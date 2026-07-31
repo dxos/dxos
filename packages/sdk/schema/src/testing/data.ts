@@ -12,34 +12,34 @@ import { ViewModel } from '../types';
  * @deprecated Use (@dxos/echo/testing)
  */
 // TODO(burdon): REMOVE
-export const Example = Schema.Struct({
-  name: Schema.optional(
-    Schema.String.pipe(
-      Schema.annotations({
-        description: 'Full name.',
-      }),
+export class Example extends Type.makeObject<Example>(DXN.make('com.example.type.example', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(
+      Schema.String.pipe(
+        Schema.annotations({
+          description: 'Full name.',
+        }),
+      ),
     ),
-  ),
-  email: Format.Email.pipe(Schema.optional),
-  // TODO(burdon): Define transforms for objects?
-  // address: Schema.optional(
-  //   Schema.Struct({
-  //     city: Schema.optional(S.String),
-  //     zip: Schema.optional(
-  //       Schema.String.pipe(
-  //         Schema.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
-  //         Schema.annotations({
-  //           description: 'ZIP code.',
-  //         }),
-  //       ),
-  //     ),
-  //   }),
-  // ),
-  admin: Schema.optional(Schema.Boolean),
-  rating: Schema.optional(Schema.Number),
-}).pipe(Type.makeObject(DXN.make('com.example.type.example', '0.1.0')));
-
-export type Example = Type.InstanceType<typeof Example>;
+    email: Format.Email.pipe(Schema.optional),
+    // TODO(burdon): Define transforms for objects?
+    // address: Schema.optional(
+    //   Schema.Struct({
+    //     city: Schema.optional(S.String),
+    //     zip: Schema.optional(
+    //       Schema.String.pipe(
+    //         Schema.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
+    //         Schema.annotations({
+    //           description: 'ZIP code.',
+    //         }),
+    //       ),
+    //     ),
+    //   }),
+    // ),
+    admin: Schema.optional(Schema.Boolean),
+    rating: Schema.optional(Schema.Number),
+  }),
+) {}
 
 export const testSchema = Type.makeObjectFromJsonSchema({
   typename: 'com.example.type.test',

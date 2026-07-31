@@ -10,4 +10,4 @@ import process from 'node:process';
 
 const global = globalThis;
 
-export { global, Buffer, process };
+export { Buffer, global, process };

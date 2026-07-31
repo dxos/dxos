@@ -94,7 +94,7 @@ describe('LanguageModel', () => {
       Effect.provide(OpenAiLayer),
       TestHelpers.runIf(process.env.OPENAI_API_KEY),
     ),
-    { tags: ['llm'] },
+    { tags: ['manual'] },
   );
 
   it.effect(
@@ -120,7 +120,7 @@ describe('LanguageModel', () => {
       Effect.provide([CalculatorLayer, OpenAiLayer]),
       TestHelpers.runIf(process.env.OPENAI_API_KEY),
     ),
-    { tags: ['llm'] },
+    { tags: ['manual'] },
   );
 
   it.effect(
@@ -155,7 +155,7 @@ describe('LanguageModel', () => {
       log.info('result', { result });
       expect(result).toContain('42');
     }, TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY)),
-    { tags: ['llm'] },
+    { tags: ['manual'] },
   );
 
   it.effect(
@@ -174,7 +174,7 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
-    { timeout: 120_000, tags: ['llm'] },
+    { timeout: 120_000, tags: ['manual'] },
   );
 
   it.effect(
@@ -195,7 +195,7 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
-    { timeout: 120_000, tags: ['llm'] },
+    { timeout: 120_000, tags: ['manual'] },
   );
 
   it.effect(
@@ -227,7 +227,7 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
-    { timeout: 120_000, tags: ['llm'] },
+    { timeout: 120_000, tags: ['manual'] },
   ); //
 
   it.effect(
@@ -260,7 +260,7 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
-    { timeout: 120_000, tags: ['llm'] },
+    { timeout: 120_000, tags: ['manual'] },
   ); //
 
   it.effect(
@@ -296,7 +296,7 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
-    { timeout: 120_000, tags: ['llm'] },
+    { timeout: 120_000, tags: ['manual'] },
   );
 
   it.effect(
@@ -320,14 +320,14 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
-    { timeout: 120_000, tags: ['llm'] },
+    { timeout: 120_000, tags: ['manual'] },
   ); //
 });
 
 const TestLayer = Layer.mergeAll(
   testingLayer,
   CalculatorLayer,
-  AiService.model('ai.claude.model.claude-sonnet-4-6'),
+  AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
 ).pipe(Layer.provideMerge(MemoizedAiService.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
 
 // TODO(wittjosiah): GeoPoint breaks Anthropic validation.

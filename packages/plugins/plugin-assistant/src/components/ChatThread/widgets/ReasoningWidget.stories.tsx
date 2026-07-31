@@ -9,12 +9,12 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ReasoningWidget } from './ReasoningWidget';
 
-export type DefaultStoryProps = {
+export type StoryArgs = {
   text: string;
 };
 
 // TODO(burdon): Generalize factory for DOM widgets.
-const DefaultStory = ({ text }: DefaultStoryProps) => {
+const DefaultStory = ({ text }: StoryArgs) => {
   const hostRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const host = hostRef.current;

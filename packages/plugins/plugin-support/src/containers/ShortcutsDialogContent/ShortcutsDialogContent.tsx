@@ -26,3 +26,5 @@ export const ShortcutsDialogContent = () => {
     </Dialog.Content>
   );
 };
+
+ShortcutsDialogContent.displayName = 'ShortcutsDialogContent';

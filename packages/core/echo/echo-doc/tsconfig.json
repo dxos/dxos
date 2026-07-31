@@ -1,0 +1,24 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../echo"
+    },
+    {
+      "path": "../echo-client"
+    }
+  ]
+}

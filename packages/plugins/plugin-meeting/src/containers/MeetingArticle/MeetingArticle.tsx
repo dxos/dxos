@@ -134,3 +134,5 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
     </Panel.Root>
   );
 };
+
+MeetingArticle.displayName = 'MeetingArticle';

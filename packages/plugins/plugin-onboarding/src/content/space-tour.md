@@ -8,18 +8,17 @@ We made it so you can see what Composer is for without having to build a workspa
 
 ### Contacts
 
-Open **Contacts → Organizations**. You'll find the same set of organizations rendered four different ways:
+Open **Contacts → Organizations**. You'll find the same set of organizations rendered three different ways:
 
 - A **Table** view — rows and columns.
 - A **Kanban** view — grouped by relationship (supplier / wholesale / partner).
 - A **Map** view — plotted by location (Oakland, Portland, Brooklyn, Austin, plus the partner farms in Colombia and Ethiopia).
-- A **Masonry** view — visual cards.
 
 Open **Contacts → People** to see the team and partner contacts. Each Person links back to their Organization — clicking the org name navigates to it.
 
 ### Inbox
 
-Open **Inbox**. There are ~20 emails — supplier updates, wholesale reorders, internal memos, plus a few unrelated newsletters and shipping notifications, the kind of noise a real inbox has. The senders are the same people you saw in Contacts.
+Open **Inbox**. There are ~30 emails, grouped into conversations — supplier updates, wholesale reorders, internal memos, plus a few unrelated newsletters and shipping notifications, the kind of noise a real inbox has. The senders are the same people you saw in Contacts.
 
 ```prompt
 Look through my inbox and tell me which contacts I haven't replied to yet.

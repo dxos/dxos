@@ -6,6 +6,7 @@ import { type Context } from '@dxos/context';
 import {
   type CheckEmailExistsResponse,
   type GetAccountResponse,
+  type GetProfileUsageResponse,
   type IssueInvitationResponse,
   type ListAccountInvitationsResponse,
   type LoginRequest,
@@ -14,7 +15,6 @@ import {
   type RedeemInvitationCodeResponse,
   type RequestAccessRequest,
   type RequestAccessResponse,
-  type GetProfileUsageResponse,
   type ResendVerificationEmailResponse,
   type ValidateInvitationCodeResponse,
 } from '@dxos/protocols';

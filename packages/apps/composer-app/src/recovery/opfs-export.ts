@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createSqliteProfileArchive, encodeProfileArchive, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
+import { OPFS_SQLITE_DB_FILENAME, createSqliteProfileArchive, encodeProfileArchive } from '@dxos/client-services';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 
 import { verifyOpfsSqliteImport } from './opfs-import-verify';

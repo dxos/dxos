@@ -7,7 +7,6 @@ import { trace } from '@dxos/tracing';
 
 import { ReplicantRegistry } from '../env';
 
-@trace.resource()
 export class DumbReplicant {
   constructor() {
     log.trace('DumbReplicant created');

@@ -51,6 +51,12 @@ export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/Version');
 export const ObjectDatabaseId = Symbol.for('@dxos/echo/Database');
 
 /**
+ * Branch accessor symbol. Resolves to the branch name this object instance is bound to (`'main'` for
+ * the canonical object, or the branch of a `db.branch()` independent instance). Read via `Obj.getBranch`.
+ */
+export const ObjectBranchId = Symbol.for('@dxos/echo/Branch');
+
+/**
  * Property name for relation source when object is serialized to JSON.
  */
 export const ATTR_RELATION_SOURCE = '@relationSource';

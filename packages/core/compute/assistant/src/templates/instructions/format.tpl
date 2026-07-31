@@ -2,10 +2,10 @@
 
 ## Input Formats
 
-### Blueprints
+### Skills
 
-You may be provided with Blueprint definitions that include specific instructions and tools for a given set of tasks.
-Blue print instructions will be enclosed in a <blueprint> tag.
+You may be provided with Skill definitions that include specific instructions and tools for a given set of tasks.
+Blue print instructions will be enclosed in a <skill> tag.
 
 ### Context objects
 

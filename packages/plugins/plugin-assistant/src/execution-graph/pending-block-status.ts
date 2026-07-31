@@ -60,11 +60,12 @@ export const pendingStatusFromEphemeralMessage = (message: Trace.Message): strin
     }
 
     if (Trace.isOfType(Trace.StatusUpdate, event)) {
+      const message = event.data.message?.trim();
       // Suppress opaque routine ULID lines so descriptive partial-block / operation-input lines win.
-      if (ROUTINE_ULID_STATUS.test(event.data.message.trim())) {
+      if (!message || ROUTINE_ULID_STATUS.test(message)) {
         continue;
       }
-      return event.data.message;
+      return message;
     }
   }
   return undefined;

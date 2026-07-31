@@ -31,12 +31,6 @@
       "path": "../../../common/errors"
     },
     {
-      "path": "../../../common/feed-store"
-    },
-    {
-      "path": "../../../common/hypercore"
-    },
-    {
       "path": "../../../common/invariant"
     },
     {
@@ -50,9 +44,6 @@
     },
     {
       "path": "../../../common/node-std"
-    },
-    {
-      "path": "../../../common/random-access-storage"
     },
     {
       "path": "../../../common/sql-sqlite"
@@ -73,34 +64,13 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../halo/credentials"
-    },
-    {
-      "path": "../../halo/keyring"
-    },
-    {
       "path": "../../mesh/edge-client"
-    },
-    {
-      "path": "../../mesh/messaging"
-    },
-    {
-      "path": "../../mesh/network-manager"
     },
     {
       "path": "../../mesh/teleport"
     },
     {
       "path": "../../mesh/teleport-extension-automerge-replicator"
-    },
-    {
-      "path": "../../mesh/teleport-extension-gossip"
-    },
-    {
-      "path": "../../mesh/teleport-extension-object-sync"
-    },
-    {
-      "path": "../../mesh/teleport-extension-replicator"
     },
     {
       "path": "../../protocols"

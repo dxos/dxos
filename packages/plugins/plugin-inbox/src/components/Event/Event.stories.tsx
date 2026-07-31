@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { Fragment, useMemo } from 'react';
 
 import { type Database, Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
-import { createObject, useQuery } from '@dxos/react-client/echo';
+import { createObject } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -62,7 +63,7 @@ const PeopleGrid = ({ db }: { db?: Database.Database }) => {
 };
 
 // `createObject` yields a live, reactive ECHO object so the editable inputs (useObject) and the
-// markdown body editor (createDocAccessor) work in the story; the client space provides the
+// markdown body editor (Doc.createAccessor) work in the story; the client space provides the
 // Person registry backing the attendee typeahead.
 const DefaultStory = ({ editable }: { editable?: boolean }) => {
   const { space } = useClientStory();

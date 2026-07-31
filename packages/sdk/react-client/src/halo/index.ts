@@ -4,13 +4,13 @@
 
 // NOTE: Export * fails here.
 export {
-  type Credential,
   type Contact,
-  type Identity,
-  type Halo,
+  type Credential,
   Device,
   DeviceKind,
   DeviceType,
+  type Halo,
+  type Identity,
 } from '@dxos/client/halo';
 
 export * from './useContacts';

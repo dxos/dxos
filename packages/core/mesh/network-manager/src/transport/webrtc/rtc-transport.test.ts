@@ -4,7 +4,8 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { TestStream, sleep } from '@dxos/async';
+import { sleep } from '@dxos/async';
+import { TestStream } from '@dxos/async/testing';
 import { PublicKey } from '@dxos/keys';
 
 import { type TransportOptions } from '../transport';

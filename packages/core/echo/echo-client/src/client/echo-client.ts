@@ -2,16 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Runtime from 'effect/Runtime';
+
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
-import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
+import { type BranchStore } from '../core-db';
 import { HypergraphImpl } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider';
@@ -19,9 +20,12 @@ import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } fro
 export type EchoClientProps = {};
 
 export type ConnectToServiceProps = {
-  dataService: DataService;
-  queryService: QueryService;
-  queueService?: FeedProtocol.QueueService;
+  dataService: DataService.Client;
+  queryService: QueryService.Client;
+  feedService?: FeedService.Client;
+
+  /** Runtime used to run effect-rpc service calls at Promise/callback boundaries. */
+  runtime?: Runtime.Runtime<never>;
 };
 
 export type ConstructDatabaseProps = {
@@ -47,6 +51,9 @@ export type ConstructDatabaseProps = {
    */
   // TODO(dmaretskyi): Remove.
   owningObject?: unknown;
+
+  /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
+  branchStore?: BranchStore;
 };
 
 /**
@@ -60,9 +67,10 @@ export class EchoClient extends Resource {
   // TODO(burdon): This already exists in Hypergraph.
   private readonly _databases = new Map<SpaceId, DatabaseImpl>();
 
-  private _dataService: DataService | undefined = undefined;
-  private _queryService: QueryService | undefined = undefined;
-  private _queuesService: FeedProtocol.QueueService | undefined = undefined;
+  private _dataService: DataService.Client | undefined = undefined;
+  private _queryService: QueryService.Client | undefined = undefined;
+  private _feedService: FeedService.Client | undefined = undefined;
+  private _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -86,11 +94,12 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, queueService }: ConnectToServiceProps): this {
+  connectToService({ dataService, queryService, feedService, runtime }: ConnectToServiceProps): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
-    this._queuesService = queueService;
+    this._feedService = feedService;
+    this._runtime = runtime ?? Runtime.defaultRuntime;
     return this;
   }
 
@@ -98,7 +107,7 @@ export class EchoClient extends Resource {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = undefined;
     this._queryService = undefined;
-    this._queuesService = undefined;
+    this._feedService = undefined;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
@@ -106,6 +115,7 @@ export class EchoClient extends Resource {
 
     this._indexQuerySourceProvider = new IndexQuerySourceProvider({
       service: this._queryService,
+      runtime: this._runtime,
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
         updateEvent: this._objectsUpdated,
@@ -137,18 +147,21 @@ export class EchoClient extends Resource {
     reactiveSchemaQuery,
     preloadSchemaOnOpen,
     spaceKey,
+    branchStore,
   }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new DatabaseImpl({
       dataService: this._dataService!,
       queryService: this._queryService!,
-      queueService: this._queuesService,
+      feedService: this._feedService,
+      runtime: this._runtime,
       graph: this._graph,
       spaceId,
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
       spaceKey,
+      branchStore,
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
@@ -172,22 +185,23 @@ export class EchoClient extends Resource {
   _updateServices({
     dataService,
     queryService,
-    queueService,
+    feedService,
   }: {
-    dataService: DataService;
-    queryService: QueryService;
-    queueService?: FeedProtocol.QueueService;
+    dataService: DataService.Client;
+    queryService: QueryService.Client;
+    feedService?: FeedService.Client;
   }): void {
     log('updating service references');
     this._dataService = dataService;
     this._queryService = queryService;
-    this._queuesService = queueService;
+    this._feedService = feedService;
 
     // Update IndexQuerySourceProvider with new service.
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
       this._indexQuerySourceProvider = new IndexQuerySourceProvider({
         service: this._queryService,
+        runtime: this._runtime,
         objectLoader: {
           loadObject: this._loadObjectFromDocument.bind(this),
           updateEvent: this._objectsUpdated,
@@ -199,7 +213,7 @@ export class EchoClient extends Resource {
 
     // Update all databases with new services.
     for (const db of this._databases.values()) {
-      db._updateServices({ dataService, queryService, queueService });
+      db._updateServices({ dataService, queryService, feedService });
     }
   }
 

@@ -5,11 +5,11 @@
 export { Compiler, type Diagnostic, type DiagnosticSeverity } from './compiler';
 export { getCompiler, resetCompiler } from './singleton';
 export {
-  compileEntry,
-  executeScript,
-  ENTRY_CANDIDATES,
   type BuildResult,
+  ENTRY_CANDIDATES,
   type LoadedFile,
   type RunResult,
+  compileEntry,
+  executeScript,
 } from './build';
-export { bundleEntry, ensureEsbuild, needsBundling, type BundleResult } from './bundle';
+export { type BundleResult, bundleEntry, ensureEsbuild, needsBundling } from './bundle';

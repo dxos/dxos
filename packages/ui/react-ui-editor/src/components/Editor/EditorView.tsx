@@ -62,11 +62,15 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
     // disagree. After internal typing the prop will already match the editor's
     // doc, and dispatching anyway would race fast keystrokes — a stale rAF
     // closure can replace doc content with an older value, dropping characters.
+    //
+    // `undefined` means uncontrolled: the doc was seeded once from `value` at creation and the caller
+    // isn't driving it, so leave it be (coalescing undefined→'' here would wipe that seed on mount). A
+    // controlled caller clears the doc by passing '' explicitly.
     useEffect(() => {
-      if (!view) {
+      if (!view || value === undefined) {
         return;
       }
-      const next = value ?? '';
+      const next = value;
       if (view.state.doc.toString() === next) {
         return;
       }
@@ -86,9 +90,10 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
       });
     }, [view, value, selectionEnd]);
 
+    // Focus chrome (border/ring) is the caller's responsibility (e.g. `dx-input`).
     return (
       <div
-        className={mx('w-full outline-hidden focus:border-accent-bg focus-within:border-focus-ring-subtle', classNames)}
+        className={mx('w-full outline-hidden', classNames)}
         {...(focusable ? focusAttributes : {})}
         ref={parentRef}
       />

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Filter, Query } from '@dxos/echo';
+import { Aggregate, Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
@@ -231,6 +231,57 @@ describe('QueryExecutor.matchesHint — typed query', () => {
 });
 
 // ---------------------------------------------------------------------------
+// QueryExecutor.matchesHint — aggregate queries
+// ---------------------------------------------------------------------------
+
+// An aggregate clause on top of a simple type selector stays "simple" for hint purposes — like
+// OrderStep/LimitStep, it reorders/annotates the working set but doesn't change which typenames,
+// spaces, or object ids the query is scoped to. Any property edit on a matching object still
+// triggers re-execution (via the typename/space hint match below); the executor's `changed` diff
+// then decides whether the edit actually moved the object between groups and needs to reach the
+// client — that end-to-end behavior is covered by the reactive aggregate tests in
+// `echo-client-e2e/src/query.test.ts`.
+describe('QueryExecutor.matchesHint — aggregate query', () => {
+  test('a grouped query with a simple type selector still matches on typename/space (isSimple stays true)', ({
+    expect,
+  }) => {
+    const executor = makeExecutor(
+      withSpace(Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group('age') })),
+    );
+    expect(
+      executor.matchesHint(makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet(PERSON_TYPENAME) })),
+    ).toBe(true);
+  });
+
+  test('a grouped query does NOT match a disjoint type/space hint', ({ expect }) => {
+    const executor = makeExecutor(
+      withSpace(Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group('age') })),
+    );
+    const hint = makeHint({
+      spaceIds: makeSpaceSet(SpaceId.random()),
+      typenames: makeTypeSet(ORG_TYPENAME),
+    });
+    expect(executor.matchesHint(hint)).toBe(false);
+  });
+
+  test('aggregate combined with a traversal still forces conservative (isSimple=false) matching', ({ expect }) => {
+    const executor = makeExecutor(
+      withSpace(
+        Query.select(Filter.id(EntityId.random()))
+          .referencedBy()
+          .aggregate({ age: Aggregate.group('age') }),
+      ),
+    );
+    const hint = makeHint({
+      spaceIds: makeSpaceSet(SpaceId.random()),
+      typenames: makeTypeSet(ORG_TYPENAME),
+    });
+    // Traversal forces isSimple=false regardless of the trailing aggregate, so it always re-runs.
+    expect(executor.matchesHint(hint)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // QueryExecutor.matchesHint — complex / non-simple queries
 // ---------------------------------------------------------------------------
 
@@ -269,6 +320,43 @@ describe('QueryExecutor.matchesHint — non-simple queries always match', () => 
       typenames: makeTypeSet('dxn:unrelated:0.1.0'),
     });
     expect(executor.matchesHint(hint)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// QueryExecutor.matchesHint — nested Filter.in(projection) (subquery semi-join)
+//
+// The subquery's result depends on its own scope/typenames, which may differ entirely from the
+// parent query's — a hint scoped to the parent's dimensions could miss a change that alters the
+// subquery's result set. `extractScopes` marks such a query non-simple (like `child-of`,
+// `text-search`, unions) so it conservatively re-runs on every invalidation, regardless of
+// whether the parent and subquery target the same or different types/spaces.
+// ---------------------------------------------------------------------------
+
+describe('QueryExecutor.matchesHint — nested Filter.in(projection)', () => {
+  test('a query with a nested subquery semi-join always matches (isSimple=false)', ({ expect }) => {
+    const subquery = Query.select(Filter.type(TestSchema.Organization));
+    const executor = makeExecutor(
+      withSpace(Query.select(Filter.type(TestSchema.Person, { name: Filter.in(subquery.project('name')) }))),
+    );
+    // Even a fully disjoint hint (different type, different space) must re-run this query.
+    const hint = makeHint({
+      spaceIds: makeSpaceSet(SpaceId.random()),
+      typenames: makeTypeSet('com.example.unrelated'),
+    });
+    expect(executor.matchesHint(hint)).toBe(true);
+  });
+
+  test('negative control: the same query without the subquery predicate stays simple (hint-selective)', ({
+    expect,
+  }) => {
+    const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' }))));
+    const disjointHint = makeHint({
+      spaceIds: makeSpaceSet(SpaceId.random()),
+      typenames: makeTypeSet(ORG_TYPENAME),
+    });
+    expect(executor.matchesHint(disjointHint)).toBe(false);
+    expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_TYPENAME) }))).toBe(true);
   });
 });
 

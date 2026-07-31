@@ -16,7 +16,7 @@ import {
 } from '@dxos/ai';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
-import { Trace, Operation } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Database, Type } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -58,7 +58,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
   },
   Effect.provide(
     Layer.mergeAll(
-      AiService.model('ai.claude.model.claude-haiku-4-5'),
+      AiService.model('com.anthropic.model.claude-haiku-4-5.default'),
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
       Trace.writerLayerNoop,

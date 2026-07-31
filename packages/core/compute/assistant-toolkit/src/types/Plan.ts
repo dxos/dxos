@@ -7,9 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Process } from '@dxos/compute';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-
-import * as Chat from './Chat';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
 export const TaskId = Schema.String.pipe(Schema.brand('@dxos/assistant-toolkit/TaskId'));
 export type TaskId = Schema.Schema.Type<typeof TaskId>;
@@ -46,14 +44,12 @@ export const Task = Schema.Struct({
   parent: Schema.optional(TaskId).annotations({
     description: 'Parent task ID.',
   }),
-
-  /**
-   * Chat object that this task is associated with.
-   */
-  chat: Schema.optional(Ref.Ref(Chat.Chat)),
 });
 
 export type Task = Schema.Schema.Type<typeof Task>;
+
+/** Lifecycle status of a {@link Task}. */
+export type TaskStatus = Task['status'];
 
 /**
  * Short tag label for a delegated sub-agent process id (e.g. `agent-a1b2`).
@@ -63,10 +59,11 @@ export const formatAgentPidTag = (pid: Process.ID): string => `agent-${String(pi
 /**
  * Hierarchical collection of tasks for humans and agents to track progress.
  */
-export const Plan = Schema.Struct({
-  tasks: Schema.Array(Task),
-}).pipe(Annotation.HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')));
-export type Plan = Type.InstanceType<typeof Plan>;
+export class Plan extends Type.makeObject<Plan>(DXN.make('org.dxos.type.plan', '0.1.0'))(
+  Schema.Struct({
+    tasks: Schema.Array(Task),
+  }).pipe(Annotation.HiddenAnnotation.set(true)),
+) {}
 export const generateTaskId = (plan: Plan): TaskId => {
   const existingIds = plan.tasks
     .map((task) => {
@@ -90,7 +87,7 @@ export const generateTaskId = (plan: Plan): TaskId => {
  */
 export const addTasks = (
   plan: Obj.Mutable<Plan>,
-  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status' | 'parent' | 'chat' | 'delegated'>>)[],
+  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status' | 'parent' | 'delegated'>>)[],
 ) => {
   for (const task of tasks) {
     const taskId = generateTaskId(plan);
@@ -119,3 +116,8 @@ export const formatPlan = (plan: Plan): string => {
     .map((task) => `- **${task.status?.toLocaleUpperCase()}**: ${task.title ?? 'No title'} <!-- id=${task.id} -->`)
     .join('\n');
 };
+
+/**
+ * True when the plan has any task that is not yet `done`.
+ */
+export const hasIncompleteTasks = (plan: Plan): boolean => plan.tasks.some((task) => task.status !== 'done');

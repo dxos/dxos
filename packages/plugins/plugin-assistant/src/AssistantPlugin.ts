@@ -6,10 +6,9 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
 import { DeckEvents } from '@dxos/plugin-deck';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
@@ -20,20 +19,19 @@ import {
   AgentRuntime,
   AiContext as AiContextCapability,
   AiService,
-  IntegrationProvider,
   AppGraphBuilder,
-  AutomationTemplates,
   AssistantState,
-  BlueprintDefinition,
+  AutomationTemplates,
   CompanionChatProvisioner,
+  Connector,
   CreateObject,
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
-  Migrations,
   OperationHandler,
   ReactSurface,
   Settings,
+  SkillDefinition,
   Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -48,19 +46,19 @@ const StateReady = AppActivationEvents.createStateEvent(meta.profile.key);
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
     AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-    AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+    AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
     AppPlugin.addCreateObjectModule({ activate: CreateObject }),
     AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
     AppPlugin.addSchemaModule({
       schema: [
         Chat.Chat,
         Chat.CompanionTo,
-        Blueprint.Blueprint,
+        Skill.Skill,
         AiContext.Binding,
         Feed.Feed,
         HasSubject.HasSubject,
         Message.Message,
-        Routine.Routine,
+        Instructions.Instructions,
         Agent.Agent,
         McpServer.McpServer,
         Plan.Plan,
@@ -109,7 +107,7 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       activate: () => AiService(options),
     })),
     Plugin.addModule({
-      // Process-affinity `AiContext.Service` LayerSpec — needed so operations
+      // Process-affinity `Harness.HarnessService` LayerSpec — needed so operations
       // dispatched as their own processes (e.g. via `Operation.invoke` from
       // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
       // conversation-scoped services without an inline `Effect.provideService`
@@ -142,12 +140,8 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       activate: CompanionChatProvisioner,
     }),
     Plugin.addModule({
-      activatesOn: ClientEvents.SetupMigration,
-      activate: Migrations,
-    }),
-    Plugin.addModule({
-      activatesOn: AppActivationEvents.SetupIntegrationProviders,
-      activate: IntegrationProvider,
+      activatesOn: AppActivationEvents.SetupConnectors,
+      activate: Connector,
     }),
     AppPlugin.addPluginAssetModule({
       asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

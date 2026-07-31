@@ -100,19 +100,19 @@ export class ConsolePrinter {
                 const input = Schema.decodeUnknownSync(tool.parametersSchema as any)(JSON.parse(content.input));
                 payload = formatter.debugFormatCall(input as never);
                 if (typeof payload !== 'string') {
-                  payload = inspect(payload, { depth: null, colors: true });
+                  payload = inspect(payload, { colors: true });
                 }
               } catch {}
             } else {
               try {
                 payload = JSON.parse(content.input);
                 if (typeof payload !== 'string') {
-                  payload = inspect(payload, { depth: null, colors: true });
+                  payload = inspect(payload, { colors: true });
                 }
               } catch {}
             }
             if (!payload) {
-              payload = inspect(content.input, { depth: null, colors: true });
+              payload = inspect(content.input, { colors: true });
             }
             this.log(`${prefix}⚙️ [Tool Use] ${content.name} ${payload}`);
             break;
@@ -158,7 +158,7 @@ export class ConsolePrinter {
             break;
           case 'stats':
             this.log(
-              `${prefix}📊 [Stats] ${content.usage?.inputTokens} tokens in, ${content.usage?.outputTokens} tokens out, ${content.usage?.totalTokens} total tokens, ${content.duration}ms duration, ${content.toolCalls} tool calls, ${content.errors} errors, ${content.model}`,
+              `${prefix}→ [End Turn] ${content.usage?.inputTokens} tokens in, ${content.usage?.outputTokens} tokens out, ${content.usage?.totalTokens} total tokens, ${content.duration}ms duration, ${content.toolCalls} tool calls, ${content.errors} errors, ${content.model}`,
             );
             break;
           default: {

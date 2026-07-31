@@ -2,71 +2,48 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
+import { Model, Provider } from '@dxos/ai';
+import { DXN } from '@dxos/keys';
 
-import { type ModelName } from '@dxos/ai';
-
-const ModelProviders = ['dxos-local', 'dxos-remote', 'lm-studio', 'ollama'] as const;
-
-const ModelProvider = Schema.Literal(...ModelProviders);
-type ModelProvider = Schema.Schema.Type<typeof ModelProvider>;
-
+/**
+ * A chat preset: a model offered for a provider, with a display label. Derived from the {@link Model}
+ * catalog — see {@link presetsForProvider}.
+ */
 export type AiServicePreset = {
   id: string;
-  provider: ModelProvider;
-  model: ModelName;
-  label?: string;
+  provider: DXN.DXN;
+  model: DXN.DXN;
+  /** Provider-specific back-end name (e.g. an Ollama pull tag); used to match installed models. */
+  backend: string;
+  label: string;
 };
 
-const createModelLabel = (model: ModelName) => {
-  const parts = model.split('.');
-  return parts[parts.length - 1];
+/** Presets for a provider: every model the provider serves (the catalog filtered by provider). */
+export const presetsForProvider = (provider: DXN.DXN): AiServicePreset[] =>
+  Model.forProvider(provider).map((model) => ({
+    id: model.id,
+    provider,
+    model: model.id,
+    backend: model.backend,
+    label: model.label,
+  }));
+
+/**
+ * Reconcile a stored provider DXN with the runtime: map the bundled sidecar (`built-in`) and an
+ * external server (`ollama`) onto whichever is actually available — they are environment-exclusive
+ * (the sidecar exists only on desktop). Defaults to `edge` when unset or unparseable.
+ */
+export const resolveProvider = (provider: string | undefined, hasBuiltIn: boolean): DXN.DXN => {
+  const resolved = (provider ? DXN.tryMake(provider) : undefined) ?? Provider.edge.id;
+  if (resolved === Provider.ollama.id && hasBuiltIn) {
+    return Provider.builtIn.id;
+  }
+  if (resolved === Provider.builtIn.id && !hasBuiltIn) {
+    return Provider.ollama.id;
+  }
+  return resolved;
 };
 
-// TODO(burdon): Users should be able to create and edit presets.
-export const AiServicePresets: AiServicePreset[] = [
-  // Sonnet is first so it is the default selection.
-  {
-    provider: 'dxos-remote' as const,
-    model: 'ai.claude.model.claude-sonnet-4-6' as const,
-    label: 'Claude Sonnet',
-  },
-  {
-    provider: 'dxos-remote' as const,
-    model: 'ai.claude.model.claude-opus-4-8' as const,
-    label: 'Claude Opus',
-  },
-  {
-    provider: 'dxos-remote' as const,
-    model: 'ai.claude.model.claude-haiku-4-5' as const,
-    label: 'Claude Haiku',
-  },
-  {
-    provider: 'ollama' as const,
-    model: 'ai.ollama.model.gpt-oss:20b' as const,
-  },
-  {
-    provider: 'ollama' as const,
-    model: 'ai.ollama.model.gemma4:latest' as const,
-  },
-  {
-    provider: 'lm-studio' as const,
-    model: 'ai.google.model.gemma-3-27b' as const,
-  },
-  {
-    provider: 'lm-studio' as const,
-    model: 'ai.meta.model.llama-3.2-3b-instruct' as const,
-  },
-  {
-    model: 'ai.ollama.model.deepseek-r1:latest' as const,
-    provider: 'dxos-local' as const,
-  },
-].map(
-  ({ model, provider, label }, i) =>
-    ({
-      id: `preset-${i}`,
-      provider,
-      model,
-      label: label ?? createModelLabel(model),
-    }) satisfies AiServicePreset,
-);
+/** The {@link Settings.modelDefaults} key for a provider (`built-in` shares the `ollama` key). */
+export const defaultsKeyForProvider = (provider: DXN.DXN): 'edge' | 'ollama' | 'lmstudio' =>
+  provider === Provider.edge.id ? 'edge' : provider === Provider.lmStudio.id ? 'lmstudio' : 'ollama';

@@ -75,3 +75,5 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
     </Panel.Root>
   );
 };
+
+JournalArticle.displayName = 'JournalArticle';

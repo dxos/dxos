@@ -123,6 +123,26 @@ describe('create subscription', () => {
     expect(counter.value).to.equal(2);
   });
 
+  test('subscribing directly to a nested record proxy is notified on mutation', async () => {
+    const { db } = await builder.createDatabase();
+    const task = Obj.make(TestSchema.Expando, { nested: { title: 'Test title' } });
+    db.add(task);
+
+    // The nested record proxy reuses the root object's event, so its own subscribers fire on
+    // change (a derived proxy with its own event would never be notified by `core.updates`).
+    let subscribeCalls = 0;
+    const unsubscribe = Obj.subscribe(task.nested, () => {
+      subscribeCalls++;
+    });
+
+    Obj.update(task, (task) => {
+      task.nested.title = 'New title';
+    });
+    expect(subscribeCalls).toBeGreaterThan(0);
+
+    unsubscribe();
+  });
+
   test('updates for array objects', async () => {
     const { db } = await builder.createDatabase();
     const task = Obj.make(TestSchema.Expando, { array: ['Test value'] });

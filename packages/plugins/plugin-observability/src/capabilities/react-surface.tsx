@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { ObservabilitySettings } from '#components';
+import { ObservabilitySettings } from '#containers';
 import { meta } from '#meta';
 import { ObservabilityOperation } from '#types';
 import { type Settings } from '#types';

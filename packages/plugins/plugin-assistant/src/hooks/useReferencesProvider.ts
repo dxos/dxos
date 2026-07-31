@@ -20,7 +20,7 @@ export const useReferencesProvider = (space?: Space): ReferencesProvider | undef
     return {
       getReferences: async ({ query }) => {
         // TODO(burdon): Previously we filtered by types declared by the artifact definitions.
-        // const schemas = blueprints.map((blueprint) => blueprint.schema).flat();
+        // const schemas = skills.map((skill) => skill.schema).flat();
         // const objects = await space.db
         //   .query(Filter.or(...schemas.map((schema) => Filter.type(schema as Type.Schema))))
         //   .run();

@@ -13,6 +13,7 @@ export * from './jsonl';
 export * from './log';
 export { parseFilter } from './options';
 export * from './processors';
+export * from './registry';
 export * from './scope';
 export type { CallMetadata } from './meta';
 export { LOG_META_MARKER, isLogMeta } from './meta';

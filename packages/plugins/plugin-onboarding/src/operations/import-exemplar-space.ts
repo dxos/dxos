@@ -9,7 +9,7 @@ import { AppSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 

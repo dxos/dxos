@@ -100,7 +100,7 @@ const PipelineColumns = composable<HTMLDivElement, PipelineColumnsProps>(({ pipe
     onChange: (mutate) => Obj.update(pipeline, (pipeline) => mutate(pipeline.columns)),
   });
 
-  return <Board.Content {...props} id='pipeline' eventHandler={eventHandler} Tile={PipelineColumn} />;
+  return <Board.Content {...props} eventHandler={eventHandler} Tile={PipelineColumn} />;
 });
 
 PipelineColumns.displayName = PIPELINE_COLUMNS_NAME;
@@ -137,4 +137,4 @@ export const PipelineComponent = {
 
 export { usePipeline };
 
-export type { ItemProps, PipelineContextValue, PipelineRootProps, PipelineContentProps, PipelineColumnsProps };
+export type { ItemProps, PipelineColumnsProps, PipelineContentProps, PipelineContextValue, PipelineRootProps };

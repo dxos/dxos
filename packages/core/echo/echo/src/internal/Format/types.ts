@@ -7,7 +7,7 @@ import type * as JSONSchema from 'effect/JSONSchema';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { createAnnotationHelper } from '../Annotation/util';
+import { createAnnotationHelper } from '../Annotation';
 import { type JsonSchemaType } from '../JsonSchema';
 
 // TODO(burdon): Rename PropertyType.
@@ -79,10 +79,11 @@ export enum TypeFormat {
   DID = 'did', // Users, etc.
   DXN = 'dxn',
   Email = 'email',
-  Formula = 'formula', // Spreadsheet formula.
+  Formula = 'formula', // Spreadsheet (Excel, Google Sheets, etc.) formula.
   Hostname = 'hostname',
   JSON = 'json',
   Markdown = 'markdown',
+  Password = 'password',
   Regex = 'regex',
   SingleSelect = 'single-select',
   Text = 'text',
@@ -149,6 +150,7 @@ export const formatToType: Record<TypeFormat, TypeEnum> = {
   [TypeFormat.Hostname]: TypeEnum.String,
   [TypeFormat.JSON]: TypeEnum.String,
   [TypeFormat.Markdown]: TypeEnum.String,
+  [TypeFormat.Password]: TypeEnum.String,
   [TypeFormat.Regex]: TypeEnum.String,
   [TypeFormat.URL]: TypeEnum.String,
   [TypeFormat.UUID]: TypeEnum.String,

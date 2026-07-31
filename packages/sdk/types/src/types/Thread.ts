@@ -38,14 +38,15 @@ export interface AgentConfig extends Schema.Schema.Type<typeof AgentConfig> {}
 /**
  * ECHO-backed message thread.
  */
-export const Thread = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  status: ThreadStatus.pipe(Schema.optional),
-  messages: Schema.Array(Ref.Ref(Message.Message)),
-  agent: Schema.optional(AgentConfig),
-}).pipe(HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.thread', '0.2.0')));
+export class Thread extends Type.makeObject<Thread>(DXN.make('org.dxos.type.thread', '0.2.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.optional),
+    status: ThreadStatus.pipe(Schema.optional),
+    messages: Schema.Array(Ref.Ref(Message.Message)),
+    agent: Schema.optional(AgentConfig),
+  }).pipe(HiddenAnnotation.set(true)),
+) {}
 
-export type Thread = Type.InstanceType<typeof Thread>;
 export const make = ({
   status = 'staged',
   messages = [],

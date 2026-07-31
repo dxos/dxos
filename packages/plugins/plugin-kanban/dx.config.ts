@@ -25,12 +25,13 @@ export default Config2.make({
       optionally hide the uncategorized column for items that have no pivot value.
       Field-level undo support allows deleted card fields to be restored without data loss.
 
-      The plugin contributes a Kanban blueprint that exposes board creation and card management
+      The plugin contributes a Kanban skill that exposes board creation and card management
       to AI agents, enabling automated project tracking workflows.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-kanban',
     icon: { key: 'ph--kanban--regular', hue: 'green' },
     spec: 'PLUGIN.mdl',
     screenshots: [{ dark: 'https://dxos.network/plugin-details-kanban-dark.png' }],
+    tags: ['beta'],
   },
 });

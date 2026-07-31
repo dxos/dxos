@@ -20,6 +20,64 @@ export class EntityNotFoundError extends BaseError.extend('EntityNotFoundError',
 }
 
 /**
+ * Thrown when a `Text` mutation is attempted on an object whose reactive handler does not implement
+ * string CRDT editing (e.g. a snapshot or a non-reactive value).
+ */
+export class TextNotSupportedError extends BaseError.extend(
+  'TextNotSupportedError',
+  'Text operation is not supported for this object',
+) {
+  constructor(operation: string, options?: BaseErrorOptions) {
+    super({ context: { operation }, ...options });
+  }
+}
+
+/**
+ * Thrown by `Text.apply` when a non-`replaceAll` edit's `oldString` is not found in the text.
+ */
+export class TextEditNotFoundError extends BaseError.extend('TextEditNotFoundError', 'Edit text not found') {
+  constructor(oldString: string, options?: BaseErrorOptions) {
+    super({ context: { oldString }, ...options });
+  }
+}
+
+/**
+ * Thrown when a blob's bytes exceed the size limit of the storage backend writing them (inline
+ * storage's fixed cap, or a registered backend's own `maxSize`).
+ */
+export class BlobTooLargeError extends BaseError.extend('BlobTooLargeError', 'Blob is too large for its backend') {
+  constructor(context: { size: number; limit: number }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}
+
+/**
+ * Reason why a blob's bytes could not be read.
+ * - `offline`: The backend's transport failed (e.g. network unavailable).
+ * - `not-found`: The backend could not locate the bytes for the given URI.
+ * - `backend-not-registered`: No backend is registered for the URI's scheme.
+ */
+export type BlobNotAvailableReason = 'offline' | 'not-found' | 'backend-not-registered';
+
+/**
+ * Thrown when a blob's bytes cannot be read from its backend.
+ */
+export class BlobNotAvailableError extends BaseError.extend('BlobNotAvailableError', 'Blob is not available') {
+  constructor(context: { backend: string; key: string; reason: BlobNotAvailableReason }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}
+
+/**
+ * Thrown when a blob's bytes fail to upload to its backend.
+ */
+export class BlobWriteError extends BaseError.extend('BlobWriteError', 'Failed to write blob') {
+  constructor(context: { backend: string }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}
+
+/**
  * Reason why getting a reactive object from a snapshot failed.
  * - `no-database`: The snapshot is not associated with a database.
  * - `object-not-found`: The object was removed or does not exist in the database.

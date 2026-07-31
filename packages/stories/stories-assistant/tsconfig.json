@@ -12,7 +12,8 @@
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ],
   "references": [
     {
@@ -49,9 +50,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute-runtime"
-    },
-    {
       "path": "../../core/compute/ai"
     },
     {
@@ -64,19 +62,22 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../core/echo/echo-protocol"
@@ -91,16 +92,10 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../devtools/devtools"
-    },
-    {
       "path": "../../plugins/plugin-assistant"
     },
     {
       "path": "../../plugins/plugin-attention"
-    },
-    {
-      "path": "../../plugins/plugin-automation"
     },
     {
       "path": "../../plugins/plugin-board"
@@ -112,7 +107,10 @@
       "path": "../../plugins/plugin-client"
     },
     {
-      "path": "../../plugins/plugin-comments"
+      "path": "../../plugins/plugin-connector"
+    },
+    {
+      "path": "../../plugins/plugin-crm"
     },
     {
       "path": "../../plugins/plugin-deck"
@@ -127,10 +125,10 @@
       "path": "../../plugins/plugin-graph"
     },
     {
-      "path": "../../plugins/plugin-inbox"
+      "path": "../../plugins/plugin-illustrator"
     },
     {
-      "path": "../../plugins/plugin-integration"
+      "path": "../../plugins/plugin-inbox"
     },
     {
       "path": "../../plugins/plugin-map"
@@ -145,16 +143,19 @@
       "path": "../../plugins/plugin-preview"
     },
     {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
+      "path": "../../plugins/plugin-review"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
+    },
+    {
       "path": "../../plugins/plugin-script"
     },
     {
-      "path": "../../plugins/plugin-sketch"
-    },
-    {
       "path": "../../plugins/plugin-space"
-    },
-    {
-      "path": "../../plugins/plugin-stack"
     },
     {
       "path": "../../plugins/plugin-table"
@@ -167,6 +168,9 @@
     },
     {
       "path": "../../plugins/plugin-thread"
+    },
+    {
+      "path": "../../plugins/plugin-tldraw"
     },
     {
       "path": "../../plugins/plugin-transcription"
@@ -220,6 +224,9 @@
       "path": "../../ui/react-ui-components"
     },
     {
+      "path": "../../ui/react-ui-debug"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
@@ -244,9 +251,6 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -260,6 +264,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../storybook-testing"
     }
   ]
 }

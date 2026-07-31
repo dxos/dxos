@@ -13,7 +13,7 @@ import { type SearchResult } from '#types';
 import { filterObjectsSync, queryStringToMatch } from './sync';
 
 // Re-export for backward compatibility.
-export { useGlobalFilteredObjects, GlobalFilterProvider } from '@dxos/react-ui-search';
+export { GlobalFilterProvider, useGlobalFilteredObjects } from '@dxos/react-ui-search';
 
 type SearchContextType = {
   match?: RegExp;

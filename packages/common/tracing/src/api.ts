@@ -2,177 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context, LifecycleState, Resource, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
+import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
-import { getTracingContext } from './symbols';
 import { TRACE_PROCESSOR, sanitizeClassName } from './trace-processor';
 import type { RemoteSpan } from './tracing-types';
 
-const LIFECYCLE_SPAN = Symbol('dxos.tracing.lifecycle-span');
-
 /** localStorage key that switches the browser OTEL sampler from 30% to 100%. */
 export const TRACE_ALL_KEY = 'dxos.debug.traceAll';
-
-/**
- * Reads `@trace.info({ spanAttribute: true })` properties from the instance
- * and writes them into the span attributes map.
- */
-const collectSpanAttributes = (instance: any, spanAttributes: Record<string, any>) => {
-  const proto = Object.getPrototypeOf(instance);
-  if (!proto) {
-    return;
-  }
-  const tracingContext = getTracingContext(proto);
-  for (const [key, { options }] of Object.entries(tracingContext.infoProperties)) {
-    if (!options.spanAttribute) {
-      continue;
-    }
-    try {
-      const value = typeof instance[key] === 'function' ? instance[key]() : instance[key];
-      if (value != null) {
-        const resolved = options.enum ? options.enum[value] : String(value);
-        spanAttributes[`ctx.${key}`] = resolved;
-      }
-    } catch {
-      // Skip properties that throw (e.g. uninitialized).
-    }
-  }
-};
-
-export type ResourceOptions = {
-  annotation?: symbol;
-  /**
-   * Start a lifecycle span on `open()` and end it on `close()`.
-   * `this._ctx` carries the lifecycle span's trace context, so background work
-   * (subscriptions, timers) becomes children of the lifecycle span.
-   * Direct calls within `_open` use the `_open` span's context as usual.
-   * Requires the class to extend {@link Resource}.
-   */
-  lifecycle?: boolean;
-};
-
-/**
- * Annotates a class as a tracked resource.
- */
-const resource =
-  (options?: ResourceOptions) =>
-  <T extends { new (...args: any[]): {} }>(constructor: T) => {
-    if (options?.lifecycle && !(constructor.prototype instanceof Resource)) {
-      throw new Error(`@trace.resource({ lifecycle: true }) requires ${constructor.name} to extend Resource`);
-    }
-
-    const klass = (() =>
-      class extends constructor {
-        constructor(...rest: any[]) {
-          super(...rest);
-          TRACE_PROCESSOR.createTraceResource({ constructor, annotation: options?.annotation, instance: this });
-        }
-      })();
-
-    if (options?.lifecycle) {
-      const sanitizedName = sanitizeClassName(constructor.name);
-      const proto = klass.prototype as any;
-      const originalOpen = proto.open;
-      const originalClose = proto.close;
-
-      proto.open = async function (ctx?: Context): Promise<any> {
-        const self = this as any;
-
-        if (self._lifecycleState !== LifecycleState.CLOSED) {
-          return originalOpen.call(this, ctx);
-        }
-
-        const parentSpanContext = ctx?.getAttribute(TRACE_SPAN_ATTRIBUTE);
-        const resourceEntry = TRACE_PROCESSOR.resourceInstanceIndex.get(this);
-        const spanAttributes: Record<string, any> = {};
-        if (resourceEntry) {
-          spanAttributes.entryPoint = resourceEntry.sanitizedClassName;
-        }
-
-        const remoteSpan = TRACE_PROCESSOR.tracingBackend?.startSpan({
-          name: `${sanitizedName}.lifecycle`,
-          op: 'lifecycle',
-          attributes: spanAttributes,
-          parentContext: parentSpanContext,
-        });
-        self[LIFECYCLE_SPAN] = remoteSpan;
-
-        let openCtx = ctx;
-        if (remoteSpan?.spanContext != null) {
-          const traceAttrs = { [TRACE_SPAN_ATTRIBUTE]: remoteSpan.spanContext };
-          openCtx = ctx ? ctx.derive({ attributes: traceAttrs }) : new Context({ attributes: traceAttrs });
-        }
-
-        try {
-          return await originalOpen.call(this, openCtx);
-        } catch (err) {
-          remoteSpan?.setError?.(err);
-          remoteSpan?.end();
-          self[LIFECYCLE_SPAN] = undefined;
-          throw err;
-        }
-      };
-
-      proto.close = async function (ctx?: Context): Promise<any> {
-        const self = this as any;
-        const remoteSpan: RemoteSpan | undefined = self[LIFECYCLE_SPAN];
-        try {
-          return await originalClose.call(this, ctx);
-        } catch (err) {
-          remoteSpan?.setError?.(err);
-          throw err;
-        } finally {
-          if (remoteSpan) {
-            remoteSpan.end();
-            self[LIFECYCLE_SPAN] = undefined;
-          }
-        }
-      };
-    }
-
-    Object.defineProperty(klass, 'name', { value: constructor.name });
-    return klass;
-  };
-
-export interface TimeAware {
-  tick(timeMs: number): void;
-}
-
-export type InfoOptions = {
-  /**
-   * Value is of enum type and should be converted to string.
-   *
-   * Example:
-   *
-   * ```ts
-   * @trace.info({ enum: SpaceState })
-   * get state(): SpaceState { ... }
-   * ```
-   */
-  enum?: Record<string, any>;
-
-  /**
-   * Max depth of the object to be included in the resource info section.
-   *
-   * null means no limit (a limit of 8 nested objects is still imposed).
-   *
-   * Default: 0 - objects will be stringified with toString.
-   */
-  depth?: number | null;
-
-  /** When true, the property value is also set as an OTEL span attribute on every span created by this resource. */
-  spanAttribute?: boolean;
-};
-
-/**
- * Marks a property or a method to be included in the resource info section.
- */
-const info =
-  (opts: InfoOptions = {}) =>
-  (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
-    getTracingContext(target).infoProperties[propertyKey] = { options: opts };
-  };
 
 const mark = (name: string) => {
   performance.mark(name);
@@ -201,15 +38,10 @@ const span =
 
       const parentSpanContext = parentCtx?.getAttribute(TRACE_SPAN_ATTRIBUTE);
 
-      const resourceEntry = TRACE_PROCESSOR.resourceInstanceIndex.get(this);
-      const className = resourceEntry?.sanitizedClassName ?? sanitizeClassName(target.constructor?.name ?? 'unknown');
+      const className = sanitizeClassName(target.constructor?.name ?? 'unknown');
       const spanName = `${className}.${propertyKey}`;
 
       const spanAttributes: Record<string, any> = {};
-      if (resourceEntry) {
-        spanAttributes.entryPoint = resourceEntry.sanitizedClassName;
-      }
-      collectSpanAttributes(this, spanAttributes);
       if (attributes) {
         for (const [key, value] of Object.entries(attributes)) {
           spanAttributes[key.startsWith('ctx.') ? key : `ctx.${key}`] = value;
@@ -278,8 +110,7 @@ const spanStart = (params: ManualSpanParams): Context | null => {
     return params.parentCtx;
   }
 
-  const resourceEntry = TRACE_PROCESSOR.resourceInstanceIndex.get(params.instance);
-  const className = resourceEntry?.sanitizedClassName ?? 'unknown';
+  const className = sanitizeClassName(params.instance?.constructor?.name ?? 'unknown');
   const spanName = `${className}.${params.methodName}`;
 
   if (params.showInBrowserTimeline) {
@@ -293,10 +124,6 @@ const spanStart = (params: ManualSpanParams): Context | null => {
   const parentSpanContext = params.parentCtx?.getAttribute(TRACE_SPAN_ATTRIBUTE);
 
   const spanAttributes: Record<string, any> = {};
-  if (resourceEntry) {
-    spanAttributes.entryPoint = resourceEntry.sanitizedClassName;
-  }
-  collectSpanAttributes(params.instance, spanAttributes);
   if (params.attributes) {
     for (const [key, value] of Object.entries(params.attributes)) {
       spanAttributes[key.startsWith('ctx.') ? key : `ctx.${key}`] = value;
@@ -334,13 +161,6 @@ const spanEnd = (id: string) => {
   }
 };
 
-/**
- * Attaches metrics counter to the resource.
- */
-const metricsCounter = () => (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
-  getTracingContext(target).metricsProperties[propertyKey] = {};
-};
-
 export type AddLinkOptions = {};
 
 const addLink = (parent: any, child: any, opts: AddLinkOptions = {}) => {
@@ -376,10 +196,7 @@ const diagnostic = <T>(params: TraceDiagnosticProps<T>): TraceDiagnostic => {
 export const trace = {
   addLink,
   diagnostic,
-  info,
   mark,
-  metricsCounter,
-  resource,
   span,
   spanStart,
   spanEnd,

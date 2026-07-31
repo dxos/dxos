@@ -3,34 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { TranscriptionCapabilities } from '#types';
 
-import { MediaStreamRecorder, Transcriber, TranscriptionManager } from '../transcriber';
-
-// TODO(burdon): Move to config?
+import { TranscriptionManagerImpl } from '../transcription-manager';
 
 /**
- * Length of the chunk in ms.
- */
-const RECORD_INTERVAL = 200;
-
-/**
- * Number of chunks to save before the user starts speaking.
- */
-const PREFIXED_CHUNKS_AMOUNT = 10;
-
-/**
- * Number of chunks to transcribe automatically after.
- * Combined should be mess than 25MB or whisper would fail.
- */
-const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
-
-/**
- * Records audio while user is speaking and transcribes it after user is done speaking.
+ * Provides the higher-level transcription manager to the app-framework so other plugins can obtain it
+ * via DI. The low-level construction lives in `@dxos/react-ui-transcription`; this module is the
+ * provision seam.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -38,43 +23,18 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
 
-    const transcriberProvider: TranscriptionCapabilities.TranscriberProvider = ({
-      audioStreamTrack,
-      onSegments,
-      transcriberConfig,
-      recorderConfig,
-      transcribe,
-    }) => {
-      // Initialize audio transcription.
-      return new Transcriber({
-        config: {
-          transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
-          prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
-          ...transcriberConfig,
-        },
-        recorder: new MediaStreamRecorder({
-          mediaStreamTrack: audioStreamTrack,
-          config: {
-            interval: RECORD_INTERVAL,
-            ...recorderConfig,
-          },
-        }),
-        onSegments,
-        transcribe,
-      });
-    };
-
     const transcriptionManagerProvider: TranscriptionCapabilities.TranscriptionManagerProvider = ({
       messageEnricher,
     }) => {
       const client = capabilities.get(ClientCapabilities.Client);
-      const transcriptionManager = new TranscriptionManager({
+      const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
+      const transcriptionManager = new TranscriptionManagerImpl({
         edgeClient: client.edge.http,
         messageEnricher,
         registry,
       });
 
-      const identity = client.halo.identity.get();
+      const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
       if (identity) {
         transcriptionManager.setIdentityDid(identity.did);
       }
@@ -83,7 +43,6 @@ export default Capability.makeModule(
     };
 
     return [
-      Capability.contributes(TranscriptionCapabilities.TranscriberProvider, transcriberProvider),
       Capability.contributes(TranscriptionCapabilities.TranscriptionManagerProvider, transcriptionManagerProvider),
     ];
   }),

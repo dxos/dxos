@@ -37,7 +37,7 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
       <Input.Root>
         <Input.Label>{t('range-list.heading')}</Input.Label>
       </Input.Root>
-      {sheet.ranges.length < 1 ? (
+      {sheet.ranges.length === 0 ? (
         <Message.Root>
           <Message.Title>{t('no-ranges.message')}</Message.Title>
         </Message.Root>
@@ -79,3 +79,5 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
     </>
   );
 };
+
+RangeList.displayName = 'RangeList';

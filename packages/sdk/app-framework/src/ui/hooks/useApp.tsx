@@ -19,7 +19,7 @@ import { ContextProtocolProvider } from '@dxos/web-context-react';
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
-import { App, PluginManagerProvider } from '../components';
+import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 
@@ -317,19 +317,23 @@ export const useApp = ({
   const progressRef = useRef(startupProgress);
   progressRef.current = startupProgress;
 
+  const surfaces = useMemo(() => new SurfaceManager(manager.capabilities), [manager]);
+
   return useCallback(
     () => (
       <ErrorBoundary name='app' FallbackComponent={fallback}>
         <PluginManagerProvider value={manager}>
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>
-              <App ready={ready} error={error} debounce={debounce} progress={progressRef.current} />
+              <SurfaceManagerProvider value={surfaces}>
+                <App ready={ready} error={error} debounce={debounce} progress={progressRef.current} />
+              </SurfaceManagerProvider>
             </RegistryContext.Provider>
           </ContextProtocolProvider>
         </PluginManagerProvider>
       </ErrorBoundary>
     ),
-    [fallback, manager, ready, error],
+    [fallback, manager, surfaces, ready, error],
   );
 };
 

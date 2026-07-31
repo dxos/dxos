@@ -24,6 +24,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -46,9 +49,6 @@
     },
     {
       "path": "../react-ui-mosaic"
-    },
-    {
-      "path": "../react-ui-stack"
     },
     {
       "path": "../ui-theme"

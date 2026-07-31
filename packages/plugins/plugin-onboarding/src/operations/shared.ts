@@ -7,7 +7,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 
 // atproto OAuth scopes for the recovery flows — shared with the Atmosphere integration provider.
-export { ATPROTO_OAUTH_SCOPES } from '@dxos/plugin-integration';
+export { ATPROTO_OAUTH_SCOPES } from '@dxos/plugin-connector';
 
 /**
  * Create an `EdgeHttpClient` pointed at the configured edge URL. Extracted here

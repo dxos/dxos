@@ -189,7 +189,14 @@ export interface Ref<T> extends Pipeable.Pipeable {
   /**
    * @returns Promise that will resolves with the target object.
    * Will load the object from disk if it is not present in the working set.
+   * Short-circuits immediately when the target is already loaded.
    * @throws If the object is not available locally.
+   *
+   * @idiom org.dxos.echo.refLoad
+   *   applies: Resolving a ref inside an async function or Effect handler — guarantees the object is available before proceeding
+   *   instead-of: `ref.target` — not guaranteed to be defined in async contexts; use `await ref.load()` (or `yield* Database.load(ref)` in Effect) to ensure the target is present
+   *   uses: {@link load}
+   *   related: org.dxos.echo-react.useObjectReactive
    */
   load(): Promise<T>;
 
@@ -484,15 +491,18 @@ export const makeSettledRequest = (
 });
 
 export class RefImpl<T> implements Ref<T> {
+  [RefTypeId] = refVariance;
+
   #uri: URI.URI;
-  #resolver?: RefResolver = undefined;
-  #resolved = new Event<void>();
 
   /**
    * Target is set when the reference is created from a specific object.
    * In this case, the target might not be in the database.
    */
   #target: T | undefined = undefined;
+
+  #resolver?: RefResolver = undefined;
+  #resolved = new Event<void>();
 
   /**
    * Callback to issue a reactive notification when object is resolved.
@@ -516,13 +526,6 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
-  get isAvailable(): boolean {
-    return this.#target !== undefined || this.#resolver !== undefined;
-  }
-
-  /**
-   * @inheritdoc
-   */
   get target(): T | undefined {
     if (this.#target) {
       return this.#target;
@@ -530,6 +533,17 @@ export class RefImpl<T> implements Ref<T> {
 
     invariant(this.#resolver, 'Resolver is not set');
     return this.#resolver.resolveSync(this.#uri, true, this.#resolverCallback) as T | undefined;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get isAvailable(): boolean {
+    return this.#target !== undefined || this.#resolver !== undefined;
+  }
+
+  get atom(): Atom.Atom<T | undefined> {
+    return RefAtoms.refSimpleFamily(this);
   }
 
   /**
@@ -605,8 +619,6 @@ export class RefImpl<T> implements Ref<T> {
     return this.toString();
   };
 
-  [RefTypeId] = refVariance;
-
   /**
    * Effect Hash trait. Required for MutableHashMap-based caches (e.g., Atom.family)
    * to deduplicate Ref instances that point to the same object.
@@ -622,13 +634,12 @@ export class RefImpl<T> implements Ref<T> {
     return that instanceof RefImpl && this.#uri === that.uri;
   }
 
-  get atom(): Atom.Atom<T | undefined> {
-    return RefAtoms.refSimpleFamily(this);
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
   }
 
   /**
-   * Internal method to set the resolver.
-   *
    * @internal
    */
   _setResolver(resolver: RefResolver): void {
@@ -640,11 +651,6 @@ export class RefImpl<T> implements Ref<T> {
    */
   _getSavedTarget(): T | undefined {
     return this.#target;
-  }
-
-  pipe() {
-    // eslint-disable-next-line prefer-rest-params
-    return Pipeable.pipeArguments(this, arguments);
   }
 }
 

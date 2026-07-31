@@ -7,17 +7,25 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppSpace, LayoutOperation, TypeSection } from '@dxos/app-toolkit';
-import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
+import {
+  AppCapabilities,
+  AppNode,
+  AppNodeMatcher,
+  AppSpace,
+  GraphPath,
+  LayoutOperation,
+  TypeSection,
+} from '@dxos/app-toolkit';
+import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Operation, Routine } from '@dxos/compute';
+import { Instructions, Operation, Project } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { DXN, Database, Filter, Obj, Query, Type, type Ref } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
@@ -26,7 +34,24 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 import { getChatsPath } from '../paths';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
-const computeOperationsToImport = [AgentPrompt] as const;
+const computeOperationsToImport = [RunInstructions] as const;
+
+/**
+ * Chats belonging to the top-level Chats section: every chat minus the two kinds that already appear
+ * elsewhere in the tree. A chat sourcing a `CompanionTo` relation belongs to its primary object's
+ * companion panel; a chat parented to a `Project` is that project's navtree child (plugin-projects
+ * `projectChats`). Without the second exclusion a project chat appears twice.
+ *
+ * The project exclusion subtracts every project child rather than just chats — `children()` takes no
+ * type filter, and subtracting a non-chat from a chat-typed source is a no-op.
+ */
+export const standaloneChatsQuery = Query.without(
+  Query.without(
+    Query.select(Filter.type(Chat.Chat)),
+    Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
+  ),
+  Query.select(Filter.type(Project.Project)).children(),
+);
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(
@@ -39,6 +64,22 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
+      // AI section group — created here so it shows only when the assistant plugin is active.
+      GraphBuilder.createExtension({
+        id: GraphPath.GroupSegments.ai,
+        match: AppNodeMatcher.whenSpace,
+        connector: (space) =>
+          Effect.succeed([
+            AppNode.makeGroup({
+              id: GraphPath.GroupSegments.ai,
+              type: GraphPath.GroupTypes.ai,
+              label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
+              space,
+              position: 300,
+            }),
+          ]),
+      }),
+
       GraphBuilder.createTypeExtension({
         id: 'root',
         type: Chat.Chat,
@@ -131,26 +172,26 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: linkedSegment(ASSISTANT_COMPANION_VARIANT),
+                variant: ASSISTANT_COMPANION_VARIANT,
                 label: ['assistant-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
                 position: Position.first,
               }),
             ];
-          }),
+          }).pipe(Effect.orDie),
       }),
 
       GraphBuilder.createExtension({
         id: 'invocations',
         match: NodeMatcher.whenAny(
           NodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
-          NodeMatcher.whenEchoTypeMatches(Routine.Routine),
+          NodeMatcher.whenEchoTypeMatches(Instructions.Instructions),
         ),
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'invocations',
+              variant: 'invocations',
               label: ['invocations.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'invocations',
@@ -164,7 +205,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: linkedSegment('trace'),
+              id: Attention.linkedSegment('trace'),
               label: ['trace.label', { ns: meta.profile.key }],
               icon: 'ph--line-segments--regular',
               data: 'trace',
@@ -173,15 +214,12 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Section node: standalone Chat.Chat objects per space (companions are excluded).
+      // Section node: standalone Chat.Chat objects per AI group (companions and project chats excluded).
       TypeSection.createTypeSectionExtension(Chat.Chat, {
-        position: 100,
-        // Exclude chats that are the source of a CompanionTo relation; those belong to
-        // their primary object's companion panel and should not appear in the top-level list.
-        query: Query.without(
-          Query.select(Filter.type(Chat.Chat)),
-          Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
-        ),
+        query: standaloneChatsQuery,
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
+        groupSegment: GraphPath.GroupSegments.ai,
+        urlKey: 'chat',
       }),
 
       // Create-chat action on the Chats section header.
@@ -223,12 +261,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return [
-      Capability.contributes(AppCapabilities.AppGraphBuilder, extensions),
-      Capability.contributes(
-        AppCapabilities.NavigationPathResolver,
-        TypeSection.createTypeSectionPathResolver(Chat.Chat),
-      ),
-    ];
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

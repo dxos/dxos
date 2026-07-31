@@ -33,7 +33,7 @@ describe('Schema', () => {
           type: TaskType.COMPLETED,
           googleAny: {
             '@type': 'example.testing.types.SubstitutedByInterface',
-            data: 'test',
+            'data': 'test',
           },
         },
         {
@@ -92,15 +92,15 @@ describe('Schema', () => {
       },
       googleAny: {
         '@type': 'example.testing.types.Task',
-        id: 'baz',
-        title: 'Baz',
-        key: new MyKey(Buffer.from('foo')),
-        type: TaskType.IN_PROGRESS,
+        'id': 'baz',
+        'title': 'Baz',
+        'key': new MyKey(Buffer.from('foo')),
+        'type': TaskType.IN_PROGRESS,
       },
       undecodedAny: {
         '@type': 'google.protobuf.Any',
-        type_url: 'bar',
-        value: Buffer.from('foo'),
+        'type_url': 'bar',
+        'value': Buffer.from('foo'),
       },
       importedAny: {
         bar: 123,
@@ -129,15 +129,15 @@ describe('Schema', () => {
       },
       googleAny: {
         '@type': 'example.testing.types.Task',
-        id: 'baz',
-        title: 'Baz',
-        key: new MyKey(Buffer.from('foo')),
-        type: TaskType.IN_PROGRESS,
+        'id': 'baz',
+        'title': 'Baz',
+        'key': new MyKey(Buffer.from('foo')),
+        'type': TaskType.IN_PROGRESS,
       },
       undecodedAny: {
         '@type': 'google.protobuf.Any',
-        type_url: 'bar',
-        value: Buffer.from('foo'),
+        'type_url': 'bar',
+        'value': Buffer.from('foo'),
       },
       importedAny: {
         bar: 123,

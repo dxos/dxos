@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-/** Stable id used by `plugin-integration` to look up the Discord Bot provider entry. */
+/** Stable id used by `plugin-connector` to look up the Discord Bot provider entry. */
 export const DISCORD_PROVIDER_ID = 'discord';
 
-/** Stable id used by `plugin-integration` to look up the Discord User OAuth provider entry. */
+/** Stable id used by `plugin-connector` to look up the Discord User OAuth provider entry. */
 export const DISCORD_USER_PROVIDER_ID = 'discord-user';
 
 /** Display label for the Discord Bot (manual bot-token) integration. */
@@ -56,8 +56,8 @@ export const snowflakeForTimestamp = (timestampMs: number): string => {
   return (BigInt(Math.floor(adjusted)) << 22n).toString();
 };
 
-/** Default lookback window for the first sync of a channel when the user hasn't set `daysOfHistory`. */
-export const DEFAULT_DAYS_OF_HISTORY = 30;
+/** Default lookback window for the first sync of a channel when the user hasn't set `maxDays`. */
+export const DEFAULT_DAYS = 30;
 
 /**
  * Builds the Discord OAuth invite URL for adding the bot to a guild.

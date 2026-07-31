@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package dxos.client.services;
+
+import "google/protobuf/empty.proto";
+
+
+message FeedQuery {
+  string space_id = 1;
+
+  optional string feed_namespace = 2;
+
+  /// Queries the whole space if missing.
+  repeated string feed_ids = 3;
+
+  /// Filter items after this cursor. Exclusive.
+  optional string after = 4;
+
+  /// Filter items before this cursor. Exclusive.
+  optional string before = 5;
+
+  /// Filter items after this position. Inclusive.
+  optional int64 begin_position = 6;
+
+  /// Filter items before this position. Exclusive.
+  optional int64 end_position = 7;
+
+  optional int32 limit = 8;
+  optional bool reverse = 9;
+
+  // TODO(dmaretskyi): Remove this field -- raw feeds dont index object IDs anymore.
+  repeated string object_ids = 100;
+}
+
+message FeedQueryResult {
+  /// JSON-encoded object payloads. Each entry is a serialized ObjectJSON.
+  /// We use JSON strings instead of google.protobuf.Struct because Struct
+  /// coerces `undefined` to `null`, corrupting optional fields.
+  repeated string objects = 1;
+
+  /// Cursor to query the next items. Can be passed to `after` in query to keep querying.
+  string next_cursor = 2;
+
+  string prev_cursor = 3;
+}
+
+message QueryFeedRequest {
+  FeedQuery query = 1;
+}
+
+message InsertIntoFeedRequest {
+  string subspace_tag = 1;
+  string space_id = 2;
+  string feed_id = 3;
+  /// JSON-encoded object payloads. Each entry is a serialized ObjectJSON.
+  repeated string objects = 4;
+}
+
+message DeleteFromFeedRequest {
+  string subspace_tag = 1;
+  string space_id = 2;
+  string feed_id = 3;
+  repeated string object_ids = 4;
+}
+
+message SyncFeedRequest {
+  string subspace_tag = 1;
+  string space_id = 2;
+  string feed_id = 3;
+  /// Whether to push local changes to the server. Defaults to true.
+  optional bool should_push = 4;
+  /// Whether to pull remote changes from the server. Defaults to true.
+  optional bool should_pull = 5;
+}
+
+message GetSyncStateRequest {
+  string space_id = 1;
+  /// If empty, returns state for all namespaces synced by the client.
+  repeated string namespaces = 2;
+}
+
+message FeedNamespaceSyncState {
+  string namespace = 1;
+  /// Blocks still to pull from remote. 0 when caught up.
+  int64 blocks_to_pull = 2;
+  /// Unpositioned blocks still to push to remote. 0 when caught up.
+  int64 blocks_to_push = 3;
+  /// Total blocks stored locally for this namespace in the space.
+  int64 total_blocks = 4;
+}
+
+message GetSyncStateResponse {
+  repeated FeedNamespaceSyncState namespaces = 1;
+}
+
+service FeedService {
+  rpc QueryFeed(QueryFeedRequest) returns (FeedQueryResult);
+  rpc InsertIntoFeed(InsertIntoFeedRequest) returns (google.protobuf.Empty);
+  rpc DeleteFromFeed(DeleteFromFeedRequest) returns (google.protobuf.Empty);
+  rpc SyncFeed(SyncFeedRequest) returns (google.protobuf.Empty);
+  rpc GetSyncState(GetSyncStateRequest) returns (GetSyncStateResponse);
+}

@@ -35,20 +35,6 @@ export const useSpace = (spaceId?: SpaceId | PublicKey): Space | undefined => {
   });
 };
 
-/**
- * Get a Space database by the id of the space.
- * The space is not guaranteed to be in the ready state.
- * Returns undefined if no id is provided.
- * Requires a ClientProvider somewhere in the parent tree.
- *
- * @param spaceId the id of the space to look for.
- * @deprecated Use useSpace.
- */
-export const useDatabase = (spaceId?: SpaceId): Space['db'] | undefined => {
-  const space = useSpace(spaceId);
-  return space?.db;
-};
-
 export type UseSpacesProps = {
   /**
    * Return uninitialized spaces as well.

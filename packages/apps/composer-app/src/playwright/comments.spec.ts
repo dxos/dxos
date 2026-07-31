@@ -166,9 +166,12 @@ test.describe('Comments tests', () => {
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
     const editorText = random.lorem.paragraphs(3);
-    const firstMessage = editorText.slice(0, 10);
-    const secondMessage = editorText.slice(100, 115);
-    const thirdMessage = editorText.slice(-20);
+    // Split into paragraphs so each slice stays within a single line;
+    // cm-comment decorations are per-line and cannot match text spanning newlines.
+    const [firstParagraph, secondParagraph, thirdParagraph] = editorText.split('\n');
+    const firstMessage = firstParagraph.slice(0, 10);
+    const secondMessage = secondParagraph.slice(0, 15);
+    const thirdMessage = thirdParagraph.slice(-20);
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, firstMessage);
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());

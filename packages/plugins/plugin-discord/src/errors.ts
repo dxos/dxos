@@ -4,6 +4,7 @@
 
 import * as Predicate from 'effect/Predicate';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { BaseError } from '@dxos/errors';
 
 /**
@@ -68,6 +69,9 @@ export const formatDiscordSyncFailure = (error: unknown): string => {
       return typeof code === 'number' ? `Discord API error ${code}: ${message}` : `Discord API error: ${message}`;
     }
     return typeof code === 'number' ? `Discord API error ${code}` : `Discord API error (HTTP ${error.response.status})`;
+  }
+  if (SyncDatabaseMissingError.is(error)) {
+    return error.message;
   }
   if (error instanceof BaseError) {
     const keys = Object.keys(error.context);

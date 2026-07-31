@@ -5,3 +5,5 @@
 import { type ComponentType, lazy } from 'react';
 
 export const FileArticle: ComponentType<any> = lazy(() => import('./FileArticle'));
+
+export * from './FileSettings';

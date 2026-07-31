@@ -3,8 +3,8 @@
 //
 
 import { DeckContent, DeckContentProps } from './DeckContent';
-import { DeckRoot, DeckLayoutChangeRequest, DeckRootProps } from './DeckRoot';
-import { DeckViewport, DeckMultiMode, DeckSoloMode, DeckViewportProps, DeckContentEmpty } from './DeckViewport';
+import { DeckRoot, DeckRootProps } from './DeckRoot';
+import { DeckContentEmpty, DeckPlanks, DeckViewport, DeckViewportProps } from './DeckViewport';
 
 /**
  * Radix-style composite Deck component.
@@ -14,8 +14,7 @@ export const Deck = {
   Content: DeckContent,
   Viewport: DeckViewport,
   ContentEmpty: DeckContentEmpty,
-  MultiMode: DeckMultiMode,
-  SoloMode: DeckSoloMode,
+  Planks: DeckPlanks,
 };
 
-export type { DeckLayoutChangeRequest, DeckRootProps, DeckContentProps, DeckViewportProps };
+export type { DeckContentProps, DeckRootProps, DeckViewportProps };

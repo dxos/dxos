@@ -6,37 +6,15 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppCapabilities } from '@dxos/app-toolkit';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { Position } from '@dxos/util';
 
-/**
- * Generic settings surface rendered for any plugin that contributes an
- * `AppCapabilities.Settings` entry. It drives a schema-based form from the
- * contributed `schema`/`atom`, so plugins whose settings are plain editable
- * fields need not register a bespoke settings surface.
- *
- * No section title is rendered: the settings plank heading already names the
- * plugin. Registered with `position: Position.last` so a plugin-specific surface
- * (matching by prefix) always wins under the settings article's `limit={1}`
- * dispatch.
- */
-const DefaultSettings = ({ subject }: { subject: AppCapabilities.Settings }) => {
-  const { settings, updateSettings } = useSettingsState<Record<string, any>>(subject.atom);
+import { DefaultSettings } from '#containers';
 
-  return (
-    <SettingsForm.Viewport>
-      <SettingsForm.FieldSet
-        schema={subject.schema}
-        values={settings}
-        onValuesChanged={(values) => updateSettings(() => values)}
-      />
-    </SettingsForm.Viewport>
-  );
-};
-
+// `DefaultSettings` is registered with `position: Position.last` so a
+// plugin-specific surface (matching by prefix) always wins under the settings
+// article's `limit={1}` dispatch.
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [

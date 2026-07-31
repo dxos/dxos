@@ -5,15 +5,15 @@
 import * as path from 'path-browserify';
 
 export {
-  resolve,
-  normalize,
-  isAbsolute,
-  join,
-  relative,
-  dirname,
   basename,
+  dirname,
   extname,
   format,
+  isAbsolute,
+  join,
+  normalize,
   parse,
+  relative,
+  resolve,
 } from 'path-browserify';
 export default path;

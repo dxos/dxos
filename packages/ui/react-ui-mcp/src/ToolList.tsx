@@ -181,4 +181,4 @@ export const ToolList = {
 };
 
 // Direct exports too for callers that prefer them over the namespace.
-export { ToolListRoot, ToolListContent, ToolListItem, ToolListItemTitle, ToolListItemDescription };
+export { ToolListContent, ToolListItem, ToolListItemDescription, ToolListItemTitle, ToolListRoot };

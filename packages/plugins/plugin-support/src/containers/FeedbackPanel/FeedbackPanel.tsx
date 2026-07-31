@@ -13,7 +13,7 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { Panel } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { type FeedbackPluginOption, FeedbackForm } from '#components';
+import { FeedbackForm, type FeedbackPluginOption } from '#components';
 import { SupportCapabilities } from '#types';
 
 import { DiscordAction } from './DiscordAction';
@@ -64,7 +64,7 @@ export const FeedbackPanel = () => {
         <FeedbackForm.Root hidden={hidden} plugins={plugins}>
           <Form.Viewport>
             <Form.Content>
-              <Form.FieldSet exclude={excludeImage ? (props) => props.filter((p) => p.name !== 'image') : undefined} />
+              <Form.FieldSet filter={excludeImage ? (props) => props.filter((p) => p.name !== 'image') : undefined} />
               <DownloadLogsAction />
               {/* GH only opens a prefilled URL — independent of PostHog feedback availability. */}
               {/* PostHog + Discord both call `CaptureUserFeedback`, so they share the gate. */}
@@ -78,3 +78,5 @@ export const FeedbackPanel = () => {
     </Panel.Root>
   );
 };
+
+FeedbackPanel.displayName = 'FeedbackPanel';
