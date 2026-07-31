@@ -22,6 +22,16 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./fact-store": {
+      "source": "./src/store/fact-store.ts",
+      "types": "./dist/types/src/store/fact-store.d.ts",
+      "import": "./dist/lib/fact-store.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

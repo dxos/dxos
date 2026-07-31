@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Instructions, Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Type } from '@dxos/echo';

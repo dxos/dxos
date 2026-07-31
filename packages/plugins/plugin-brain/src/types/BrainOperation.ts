@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { DXN } from '@dxos/echo';
-import { FactStore, RDF } from '@dxos/pipeline-rdf';
+import { FactStore } from '@dxos/pipeline-rdf/fact-store';
+import * as RDF from '@dxos/pipeline-rdf/types';
 
 import { meta } from '../meta';
 

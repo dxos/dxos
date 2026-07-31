@@ -7,7 +7,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { ExtractedQuestionStore, MessageStore, QuestionStore } from '@dxos/pipeline-discord';
-import { FactStore } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 export type CrawlStores =
@@ -24,7 +24,7 @@ export type CrawlStores =
 const storesLayer: Layer.Layer<CrawlStores> = Layer.mergeAll(
   StateStore.layerSql,
   AgentRegistry.layerSql,
-  FactStore.layer,
+  FactStoreLive.layer,
   MessageStore.layerSql,
   QuestionStore.layerSql,
   ExtractedQuestionStore.layerSql,

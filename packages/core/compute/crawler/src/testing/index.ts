@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
-import { FactStore } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry } from '../AgentRegistry';
 import { type Page, Source, type SourceApi, type ThreadRef } from '../Source';
@@ -274,7 +274,7 @@ export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
 export const coreLayer: Layer.Layer<StateStore | AgentRegistry | FactStore> = Layer.mergeAll(
   StateStore.layerMemory,
   AgentRegistry.layerMemory,
-  FactStore.layerMemory,
+  FactStoreLive.layerMemory,
 );
 
 /**

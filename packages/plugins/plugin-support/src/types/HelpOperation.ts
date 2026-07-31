@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
 import { DXN } from '@dxos/keys';

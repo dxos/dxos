@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './anthropic-web-search';
 export * from './call';
 export * from './tool';
 export * from './tool-execution-service';

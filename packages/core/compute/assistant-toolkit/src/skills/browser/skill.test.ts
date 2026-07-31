@@ -16,7 +16,7 @@ import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Person } from '@dxos/types';
 

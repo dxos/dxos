@@ -7,5 +7,3 @@ import { Plugin } from '@dxos/app-framework';
 import { meta } from './meta';
 
 export const VoxelPlugin = Plugin.lazy(meta, () => import('#plugin'));
-
-export { VoxelOperationHandlerSet } from './operations';

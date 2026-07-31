@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { EffectEx } from '@dxos/effect';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { queryCompactFacts } from './query-facts';
 import { summarizeSubject } from './summarize-subject';
@@ -68,7 +68,7 @@ describe('QueryFacts', () => {
       Effect.gen(function* () {
         yield* seededStore;
         return yield* queryCompactFacts({ entity: 'acme' });
-      }).pipe(Effect.provide(FactStore.layerMemory)),
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
     );
     expect(facts.map((fact) => fact.id).sort()).toEqual(['f-1', 'f-3']);
     expect(facts[0]).toMatchObject({ subject: 'alice', predicate: 'works-at', object: 'acme', factuality: 'CT+' });
@@ -81,7 +81,7 @@ describe('QueryFacts', () => {
         const confident = yield* queryCompactFacts({ entity: 'alice', minConfidence: 0.9 });
         const bounded = yield* queryCompactFacts({ limit: 1 });
         return { confident, bounded };
-      }).pipe(Effect.provide(FactStore.layerMemory)),
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
     );
     expect(confident.map((fact) => fact.id)).toEqual(['f-1']);
     expect(bounded).toHaveLength(1);
@@ -94,7 +94,7 @@ describe('SummarizeSubject', () => {
       Effect.gen(function* () {
         yield* seededStore;
         return yield* summarizeSubject({ subject: 'Alice' });
-      }).pipe(Effect.provide(FactStore.layerMemory), Effect.provide(textAiService('Alice works at Acme [f-1].'))),
+      }).pipe(Effect.provide(FactStoreLive.layerMemory), Effect.provide(textAiService('Alice works at Acme [f-1].'))),
     );
     expect(result.factCount).toBe(2);
     expect(result.summary).toContain('[f-1]');
@@ -109,7 +109,7 @@ describe('SummarizeSubject', () => {
         yield* seededStore;
         return yield* summarizeSubject({ subject: 'nobody' });
       }).pipe(
-        Effect.provide(FactStore.layerMemory),
+        Effect.provide(FactStoreLive.layerMemory),
         // A dying stub proves the LLM path is never reached for an ungrounded subject.
         Effect.provide(
           Layer.succeed(AiService.AiService, {

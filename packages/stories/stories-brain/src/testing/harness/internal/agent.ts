@@ -15,7 +15,7 @@ import { TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { BrainSkill } from '@dxos/plugin-brain';
-import { BrainOperationHandlerSet } from '@dxos/plugin-brain/plugin';
+import { BrainOperationHandlerSet } from '@dxos/plugin-brain/operations';
 import { Message } from '@dxos/types';
 
 import { type ModelVariant } from '../models';

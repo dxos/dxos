@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import { Mailbox } from '../../types';
@@ -79,7 +79,11 @@ describe('runFactPipeline', () => {
       const storedFacts = yield* store.query({});
       const second = yield* runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 10 });
       return { first, second, storedFacts, cursorValue: Cursor.parseKey(cursor.max) };
-    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FactStore.layerMemory), EffectEx.runAndForwardErrors);
+    }).pipe(
+      Effect.provide(Database.layer(db)),
+      Effect.provide(FactStoreLive.layerMemory),
+      EffectEx.runAndForwardErrors,
+    );
 
     expect(result.first.processed).toBe(2);
     expect(result.first.facts).toBe(2);

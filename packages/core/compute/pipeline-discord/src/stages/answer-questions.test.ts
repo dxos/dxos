@@ -10,12 +10,13 @@ import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { QuestionStore } from '../stores';
 import { answerOpenQuestions } from './answer-questions';
 
-const TestLayer = (answer?: string) => Layer.mergeAll(QuestionStore.layerMemory, FactStore.layerMemory, fakeAi(answer));
+const TestLayer = (answer?: string) =>
+  Layer.mergeAll(QuestionStore.layerMemory, FactStoreLive.layerMemory, fakeAi(answer));
 
 describe('answerOpenQuestions', () => {
   it.effect(

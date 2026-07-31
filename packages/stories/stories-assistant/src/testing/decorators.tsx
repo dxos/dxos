@@ -40,7 +40,7 @@ import { translations as assistantTranslations } from '@dxos/plugin-assistant/tr
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';

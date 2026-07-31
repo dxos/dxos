@@ -13,7 +13,7 @@ import { Database, Obj } from '@dxos/echo';
 import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Message } from '@dxos/types';
 
@@ -90,7 +90,7 @@ describe('generateReply', () => {
         const store = yield* FactStore;
         yield* store.putFacts([ALICE_FACT]);
         return yield* generateReply({ mailbox, message: thread[0] });
-      }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FactStore.layerMemory), Effect.provide(ai.layer)),
+      }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FactStoreLive.layerMemory), Effect.provide(ai.layer)),
     );
 
     expect(result.subject).toBe('Re: Q2 report');
@@ -116,7 +116,7 @@ describe('generateReply', () => {
     const result = await EffectEx.runPromise(
       generateReply({ mailbox, message }).pipe(
         Effect.provide(Database.layer(db)),
-        Effect.provide(FactStore.layerMemory),
+        Effect.provide(FactStoreLive.layerMemory),
         Effect.provide(ai.layer),
       ),
     );

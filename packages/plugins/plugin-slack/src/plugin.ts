@@ -7,5 +7,3 @@ import { Plugin } from '@dxos/app-framework';
 import { meta } from './meta';
 
 export const SlackPlugin = Plugin.lazy(meta, () => import('#plugin'));
-
-export { SlackOperationHandlerSet } from './operations';

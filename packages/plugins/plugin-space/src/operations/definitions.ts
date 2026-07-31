@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Operation } from '@dxos/compute';

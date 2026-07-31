@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
-import { FactPipeline, FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { FactPipeline, FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
 import { mockAiService } from '@dxos/pipeline-rdf/testing';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
@@ -35,7 +35,7 @@ const LLM_OUTPUT = {
 
 describe('extractFactsStage', () => {
   test('extracts and persists a fact per message into the store', async ({ expect }) => {
-    const runtime = ManagedRuntime.make(FactStore.layerMemory.pipe(Layer.provideMerge(mockAiService(LLM_OUTPUT))));
+    const runtime = ManagedRuntime.make(FactStoreLive.layerMemory.pipe(Layer.provideMerge(mockAiService(LLM_OUTPUT))));
     const indexFacts: FactIndexer = (message) =>
       runtime.runPromise(FactPipeline.run([messageToDocument(message)], EMAIL_EXTRACT_OPTIONS));
 

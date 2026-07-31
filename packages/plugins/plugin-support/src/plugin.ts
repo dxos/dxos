@@ -8,5 +8,3 @@ import { meta } from './meta';
 
 export const SupportPlugin = Plugin.lazy(meta, () => import('#plugin'));
 export type { SupportPluginOptions } from '#plugin';
-
-export { SupportOperationHandlerSet } from './operations';

@@ -5,7 +5,8 @@
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Layer from 'effect/Layer';
 
-import { AnthropicWebSearchTool, OpaqueToolkit } from '@dxos/ai';
+import { OpaqueToolkit } from '@dxos/ai';
+import { AnthropicWebSearchTool } from '@dxos/ai/resolvers';
 
 export const WebSearchToolkit = Toolkit.make(AnthropicWebSearchTool);
 

@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterAll, describe, test } from 'vitest';
 
-import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, normalizeEntityId, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { commitmentLedger } from './ledger';
 
-const runtime = ManagedRuntime.make(FactStore.layerMemory);
+const runtime = ManagedRuntime.make(FactStoreLive.layerMemory);
 
 describe('commitmentLedger', () => {
   afterAll(async () => {

@@ -10,7 +10,7 @@ import { Database, type Feed, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, extractDocFacts, FactStoreLive } from '@dxos/pipeline-rdf';
 import { Expando } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
@@ -108,7 +108,7 @@ export const extractFactsForVariant = (
       return { processed, facts } satisfies FactsRunResult;
     }).pipe(
       Effect.provide(Database.layer(db)),
-      Effect.provide(FactStore.layerMemory),
+      Effect.provide(FactStoreLive.layerMemory),
       Effect.provide(AiServiceTestingPreset(variant.preset)),
     ),
   );

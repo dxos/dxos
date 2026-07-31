@@ -17,27 +17,27 @@ import { makeRegistry } from '@dxos/echo-client';
 // whose `source` export condition advertises a TS file that isn't shipped in
 // its dist, causing Bun resolution to fail).
 import { AssistantSkill } from '@dxos/plugin-assistant/skills';
-import { ChessOperationHandlerSet } from '@dxos/plugin-chess/plugin';
+import { ChessOperationHandlerSet } from '@dxos/plugin-chess/operations';
 import { ChessSkill } from '@dxos/plugin-chess/skills';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Game } from '@dxos/plugin-game/types';
-import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
+import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
 import { CalendarSkill, InboxSendSkill, InboxSkill } from '@dxos/plugin-inbox/skills';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
-import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/plugin';
+import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/operations';
 import { KanbanSkill } from '@dxos/plugin-kanban/skills';
-import { MapOperationHandlerSet } from '@dxos/plugin-map/plugin';
+import { MapOperationHandlerSet } from '@dxos/plugin-map/operations';
 import { MapSkill } from '@dxos/plugin-map/skills';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { MarkdownSkill } from '@dxos/plugin-markdown/skills';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { CommentOperationHandlerSet } from '@dxos/plugin-review/plugin';
+import { CommentOperationHandlerSet } from '@dxos/plugin-review/operations';
 import { CommentSkill } from '@dxos/plugin-review/skills';
-import { ScriptOperationHandlerSet } from '@dxos/plugin-script/plugin';
+import { ScriptOperationHandlerSet } from '@dxos/plugin-script/operations';
 import { ScriptSkill } from '@dxos/plugin-script/skills';
-import { TableOperationHandlerSet } from '@dxos/plugin-table/plugin';
+import { TableOperationHandlerSet } from '@dxos/plugin-table/operations';
 import { TableSkill } from '@dxos/plugin-table/skills';
-import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/plugin';
+import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/operations';
 import { TranscriptionSkill } from '@dxos/plugin-transcription/skills';
 import { DataTypes } from '@dxos/schema';
 import {

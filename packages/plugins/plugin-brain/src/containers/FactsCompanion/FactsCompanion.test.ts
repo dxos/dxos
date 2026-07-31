@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { queryFacts } from './FactsCompanion';
 
@@ -21,7 +21,7 @@ const mk = (over: Partial<RDF.Fact> & Pick<RDF.Fact, 'id'>): RDF.Fact => ({
 
 describe('queryFacts', () => {
   test('reads all facts from a seeded store', async ({ expect }) => {
-    const store = FactStore.makeMemory();
+    const store = FactStoreLive.makeMemory();
     await EffectEx.runPromise(store.putFacts([mk({ id: 'f1' })]));
 
     const facts = await queryFacts(store);
@@ -30,7 +30,7 @@ describe('queryFacts', () => {
   });
 
   test('returns an empty list for an empty store', async ({ expect }) => {
-    const store = FactStore.makeMemory();
+    const store = FactStoreLive.makeMemory();
     const facts = await queryFacts(store);
     expect(facts).toEqual([]);
   });

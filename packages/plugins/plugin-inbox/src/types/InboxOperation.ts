@@ -7,11 +7,11 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { FactStore } from '@dxos/pipeline-rdf';
+import { FactStore } from '@dxos/pipeline-rdf/fact-store';
 import {
   Connection,
   GetSyncTargetsInput,

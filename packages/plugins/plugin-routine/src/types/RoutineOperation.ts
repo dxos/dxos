@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, Routine, Trigger } from '@dxos/compute';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';

@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, extractDocFacts, FactStoreLive } from '@dxos/pipeline-rdf';
 import { Expando } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -63,7 +63,7 @@ describe.skipIf(!fixtureExists())('runFactPipeline over a mailbox feed fixture (
         return { run, facts };
       }).pipe(
         Effect.provide(Database.layer(db)),
-        Effect.provide(FactStore.layerMemory),
+        Effect.provide(FactStoreLive.layerMemory),
         Effect.provide(OllamaAiServiceLayer),
         EffectEx.runAndForwardErrors,
       );
