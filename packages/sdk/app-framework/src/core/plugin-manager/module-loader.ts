@@ -223,6 +223,32 @@ export class ModuleLoader {
   }
 
   /**
+   * Yields the host's event loop before a module body runs. Effect's scheduler drains its run
+   * queue within one macrotask, so a wave of cache-hit module activations otherwise fuses into
+   * one multi-second long task that blocks paint and input (measured: 2 s max task, ~4.7 s TBT
+   * at boot). `scheduler.yield()` where available (input-priority aware); a MessageChannel hop
+   * otherwise (a real macrotask boundary without the setTimeout clamp).
+   */
+  static yieldToHost(): Promise<void> {
+    const scheduler = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
+    if (scheduler?.yield) {
+      return scheduler.yield();
+    }
+    if (typeof MessageChannel === 'undefined') {
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      const { port1, port2 } = new MessageChannel();
+      port1.onmessage = () => {
+        port1.close();
+        port2.close();
+        resolve();
+      };
+      port2.postMessage(null);
+    });
+  }
+
+  /**
    * The activation pipeline for one module: settle in-flight multi providers, build the
    * requires context, run the module's activate under the activation timeout, validate the
    * result against the declared provides, and expand it to registry entries. Instrumented
@@ -240,6 +266,9 @@ export class ModuleLoader {
       const pluginId = this.#state.pluginIdOfModule(module.id);
       yield* this.#awaitProvidersInFlight(module);
       const requiresContext = yield* this.#resolveRequires(module);
+      // One host yield per module keeps activation tasks under the long-task threshold;
+      // counted as wait, not run, by the split below.
+      yield* Effect.promise(() => ModuleLoader.yieldToHost());
       // Wait/run split: `module:<id>` spans the whole pipeline, so scheduling delay (in-flight
       // providers + requires resolution) is indistinguishable from work without these sub-measures.
       performance.mark(`module:${module.id}:run`);
