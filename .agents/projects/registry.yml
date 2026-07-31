@@ -148,6 +148,17 @@ projects:
     prs: []
     resume: 'Research COMPLETE and committed (DESIGN.md) on branch claude/echo-object-merging-research-dqtjx1 (no PR by request). Decisions so far: merge only distinct-id duplicates (collision class 2); same-id-two-docs stays an error (no deterministic ids — rejected, §4.5); merge direction = deterministic ordering, winner = min EntityId. Next: design review of the 5 open questions in DESIGN.md §7 (identity field, version matching, merge-policy pluggability, where the merge runs, relation scope), then Phase 0 spike (§6).'
 
+  - name: object-deduplication
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-07-31
+    summary: One identity rule per type (IdentitySpec) shared by extractors and an after-the-fact duplicate scan, plus a Duplicates tab on the Database type article for human-reviewed merges. Distinct from object-merging (external-source duplicates, human-gated) — see DESIGN.md §1.1.
+    tasks: .agents/projects/object-deduplication/TASKS.md
+    design: .agents/projects/object-deduplication/DESIGN.md
+    prs: []
+    resume: 'DESIGN.md written (diagnosis of F1-F4, three-layer architecture, merge policy, table-cell prior art). Next: phase 1 — IdentitySpec/IdentityIndex/findDuplicates/planMerge in @dxos/extractor + personIdentitySpec + unit suite.'
+
   - name: chat
     status: active
     user: josiah
