@@ -94,9 +94,16 @@ where fixtures get captured. Three defects found while wiring that up.
       `AppSurface.subject(AppSurface.Article, isNonDraftMessage)`, which matches a single
       non-draft Message. Now passes the selected message; `MessageArticle` looks the
       conversation up itself from `threadId` + `companionTo`.
-- [x] **No panel was ever attended** — the story's decorators were missing
-      `withAttention()`, which `ModuleContainer` documents as required for its
-      `AttendableContainer` cells to register. Without it nothing attention-gated works.
+- [x] **The mailbox article was never the attended entity** — `ModuleContainer` makes each
+      cell attendable under its _positional_ id (`<role>:<col>:<row>`,
+      [ModuleContainer.tsx:237](../../../packages/stories/storybook-testing/src/ModuleContainer.tsx:237))
+      while `MailboxModule` advertises the mailbox object path to the article, so nothing
+      inside it read as attended. `MailboxModule` now wraps the surface in its own
+      `AttendableContainer` keyed on that path (`contents`, so the height chain is unaffected).
+  - Do NOT reach for `withAttention()` here: it installs a fresh `RegistryContext`, which
+    shadows the plugin manager's atom registry and makes every `useCapability` call throw
+    (`No capability found for …atomRegistry`). Attention is already provided by
+    `AttentionPlugin()` inside `corePlugins()`.
 - [x] **Save a single message as a fixture** — `ArchiveModule` gains a save button for the
       selected message: its raw email HTML as `<date>-<sender>.html` when it has an html
       body, else the serialized message as JSON.
@@ -111,11 +118,11 @@ where fixtures get captured. Three defects found while wiring that up.
 
 ## Open questions for the user
 
-- [ ] **`StoryRole.Mailbox` attendable id divergence** — `ModuleContainer` registers each
-      role cell's `AttendableContainer` under a _positional_ id, while `MailboxModule` and
-      `MessageModule` deliberately swap in the mailbox object path for their selection
-      context. Attention and selection are therefore keyed differently in this story;
-      `withAttention()` fixes "nothing is attended" but not the divergence.
+- [ ] **Should `ModuleContainer` support a runtime attendable id for role cells?** — the
+      per-module `AttendableContainer` above is a workaround: a role cell's id is fixed at
+      story-definition time, but the id that matters (the object path) only exists once the
+      object is queried. Every module that scopes attention to an object will need the same
+      workaround.
 
 ## References
 
