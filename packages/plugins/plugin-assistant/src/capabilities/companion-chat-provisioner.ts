@@ -6,7 +6,8 @@ import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Graph, type Node } from '@dxos/app-graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Chat } from '@dxos/assistant-toolkit';

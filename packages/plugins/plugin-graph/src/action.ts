@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { Capability, type CapabilityManager } from '@dxos/app-framework';
+import { type CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Node } from '@dxos/app-graph';
 import * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';

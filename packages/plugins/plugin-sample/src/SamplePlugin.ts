@@ -9,7 +9,7 @@
 // that activates at the appropriate lifecycle event.
 // `Plugin.make` finalizes the plugin (must be the last call in the chain).
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings } from '#capabilities';

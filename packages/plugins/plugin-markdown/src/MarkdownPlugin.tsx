@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { Text } from '@dxos/schema';

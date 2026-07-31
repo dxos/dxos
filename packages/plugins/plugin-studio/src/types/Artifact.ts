@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { type CapabilityManager } from '@dxos/app-framework';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
+import { ConnectorAuthAnnotation } from '@dxos/plugin-connector/types';
 
 import * as StudioCapabilities from './StudioCapabilities';
 import * as Variant from './Variant';

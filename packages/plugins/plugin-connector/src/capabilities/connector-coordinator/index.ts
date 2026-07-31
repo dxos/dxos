@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { ConnectorCoordinator } from '#types';

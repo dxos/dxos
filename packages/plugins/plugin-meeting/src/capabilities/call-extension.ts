@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type CallState, type MediaState } from '@dxos/plugin-calls';

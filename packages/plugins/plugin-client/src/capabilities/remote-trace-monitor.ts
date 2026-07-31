@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { RemoteTraceMonitor } from '@dxos/compute-runtime';
 
 import { ClientCapabilities } from '#types';

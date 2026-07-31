@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
 import { ViewState } from '@dxos/react-ui-attention/types';
 import { type Text } from '@dxos/schema';

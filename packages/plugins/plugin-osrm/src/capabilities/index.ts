@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { TripCapabilities } from '@dxos/plugin-trip/types';
 
 export const RoutingService = Capability.lazyModule(

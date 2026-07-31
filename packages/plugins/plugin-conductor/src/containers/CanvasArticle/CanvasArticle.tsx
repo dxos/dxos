@@ -7,7 +7,7 @@ import type * as Exit from 'effect/Exit';
 import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Credential from '@dxos/compute/Credential';

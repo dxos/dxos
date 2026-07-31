@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Plugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 

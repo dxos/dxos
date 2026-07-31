@@ -7,7 +7,7 @@
 import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type GeoMarker, type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { type MapControlType } from '#containers';

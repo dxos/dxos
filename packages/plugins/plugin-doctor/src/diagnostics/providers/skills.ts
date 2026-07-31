@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';

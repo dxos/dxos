@@ -4,7 +4,7 @@
 
 import { type Accessor } from 'solid-js';
 
-import { type Capability } from '@dxos/app-framework';
+import type * as Capability from '@dxos/app-framework/Capability';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { invariant } from '@dxos/invariant';
 

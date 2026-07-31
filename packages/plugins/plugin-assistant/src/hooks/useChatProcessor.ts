@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { useContext, useMemo, useState } from 'react';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';

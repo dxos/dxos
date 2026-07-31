@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Collection } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';

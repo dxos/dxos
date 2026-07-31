@@ -8,7 +8,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
+import { ConnectorAuthAnnotation } from '@dxos/plugin-connector/types';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 

@@ -13,7 +13,10 @@ import * as Stream from 'effect/Stream';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
-import { Capabilities, Capability, Plugin, PluginManager } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { AiSession, PartialBlock } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { ProcessManager } from '@dxos/compute-runtime';

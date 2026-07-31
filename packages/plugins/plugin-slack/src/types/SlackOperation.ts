@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { Connection, MaterializeTargetInput, MaterializeTargetOutput } from '@dxos/plugin-connector';
+import { Connection, MaterializeTargetInput, MaterializeTargetOutput } from '@dxos/plugin-connector/types';
 
 import { meta } from '#meta';
 

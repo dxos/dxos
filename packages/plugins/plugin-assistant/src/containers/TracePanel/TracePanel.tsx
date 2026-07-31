@@ -9,7 +9,7 @@ import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';

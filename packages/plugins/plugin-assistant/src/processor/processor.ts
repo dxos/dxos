@@ -13,7 +13,7 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import {
   AiContext,
   AiSession,

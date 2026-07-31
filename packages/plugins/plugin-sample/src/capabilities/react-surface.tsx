@@ -11,7 +11,8 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';

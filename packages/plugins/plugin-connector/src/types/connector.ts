@@ -6,7 +6,7 @@ import type * as HttpClient from '@effect/platform/HttpClient';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import type { Client } from '@dxos/client';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';

@@ -7,7 +7,10 @@
 import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, ActivationEvents, Capabilities, Capability as Capability$ } from '@dxos/app-framework';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability$ from '@dxos/app-framework/Capability';
 import { type Type } from '@dxos/echo';
 
 import { type Translations } from '../app';

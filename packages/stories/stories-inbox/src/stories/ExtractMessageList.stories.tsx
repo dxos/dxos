@@ -11,7 +11,10 @@ import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as LayerSpec from '@dxos/compute/LayerSpec';

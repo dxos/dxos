@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { TripCapabilities } from '@dxos/plugin-trip/types';
 

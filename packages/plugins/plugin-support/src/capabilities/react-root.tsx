@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 
 import { WelcomeTour } from '#components';

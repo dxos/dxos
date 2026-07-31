@@ -7,7 +7,8 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability, CapabilityManager } from '@dxos/app-framework';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';

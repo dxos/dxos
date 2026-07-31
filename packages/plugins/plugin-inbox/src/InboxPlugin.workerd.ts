@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Event, Message } from '@dxos/types';
 

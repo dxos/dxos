@@ -5,7 +5,8 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { log } from '@dxos/log';

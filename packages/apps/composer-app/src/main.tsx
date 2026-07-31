@@ -15,8 +15,10 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
+import { EdgeRegistryPluginProvider, PluginAssetCache } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { bootLoader, useApp } from '@dxos/app-framework/ui';
+import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';

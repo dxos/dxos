@@ -8,7 +8,9 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';

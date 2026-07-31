@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { useCapability } from '@dxos/app-framework/ui';
 import { RootAttentionProvider, ViewStateProvider } from '@dxos/react-ui-attention';
 

@@ -5,7 +5,8 @@
 import { render, screen } from '@solidjs/testing-library';
 import { describe, expect, test } from 'vitest';
 
-import { type PluginManager, PluginManagerContext } from '@dxos/app-framework';
+import { PluginManagerContext } from '@dxos/app-framework';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { ContextProtocolProvider } from '@dxos/web-context-solid';
 
 import { usePluginManager } from './usePluginManager';

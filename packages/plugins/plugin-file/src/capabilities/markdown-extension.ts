@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { MarkdownCapabilities, type MarkdownExtensionProvider } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
 

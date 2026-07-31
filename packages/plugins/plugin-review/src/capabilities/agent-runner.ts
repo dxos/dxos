@@ -10,7 +10,8 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { getRangeFromCursor, toCursorRange, updateText } from '@dxos/echo-client';

@@ -6,7 +6,8 @@
 // Only exports capabilities that work in headless environments (no React, no browser APIs).
 // The `#capabilities` import resolves to this file in Node.js contexts.
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 export const CreateObject = Capability.lazyModule(

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';

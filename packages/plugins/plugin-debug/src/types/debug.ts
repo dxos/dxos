@@ -5,7 +5,7 @@
 import { type Atom } from '@effect-atom/atom';
 import { type Context, createContext } from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 

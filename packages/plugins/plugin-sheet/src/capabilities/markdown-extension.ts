@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { getSpace } from '@dxos/client/echo';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 

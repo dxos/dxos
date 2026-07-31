@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Header from '@dxos/compute/Header';

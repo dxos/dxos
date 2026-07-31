@@ -9,7 +9,9 @@ import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import { afterAll, beforeAll, describe, onTestFinished, test } from 'vitest';
 
-import { ActivationEvents, Capabilities, type Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { RpcClosedError } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

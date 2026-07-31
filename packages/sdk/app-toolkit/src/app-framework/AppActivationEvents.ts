@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { ActivationEvent as ActivationEvent$ } from '@dxos/app-framework';
+import * as ActivationEvent$ from '@dxos/app-framework/ActivationEvent';
 
 import * as AppCapabilities from './AppCapabilities';
 

@@ -10,7 +10,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withAuthorization } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Trigger from '@dxos/compute/Trigger';

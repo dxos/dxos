@@ -4,7 +4,7 @@
 
 import * as Layer from 'effect/Layer';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Identity, Space } from '@dxos/halo';
 
 import { ClientCapabilities } from './types';

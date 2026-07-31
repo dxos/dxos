@@ -7,7 +7,7 @@
 import { type EditorView } from '@codemirror/view';
 import { type Atom } from '@effect-atom/atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type ViewModeItem } from '@dxos/react-ui-editor';
 import { type EditorStateStore } from '@dxos/ui-editor';
 

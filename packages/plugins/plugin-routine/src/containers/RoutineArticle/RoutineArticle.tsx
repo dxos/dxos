@@ -6,7 +6,7 @@ import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
-import { ActivationEvents } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Routine from '@dxos/compute/Routine';

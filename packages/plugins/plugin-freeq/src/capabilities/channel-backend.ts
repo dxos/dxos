@@ -6,7 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { Message } from '@dxos/types';

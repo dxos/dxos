@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 

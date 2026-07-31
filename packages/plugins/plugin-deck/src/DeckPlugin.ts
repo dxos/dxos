@@ -4,7 +4,7 @@
 
 import { setAutoFreeze } from 'immer';
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {

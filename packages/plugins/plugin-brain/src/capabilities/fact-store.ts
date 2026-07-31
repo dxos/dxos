@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { invariant } from '@dxos/invariant';
 import { FactStore, type FactStoreApi, FactStoreLive } from '@dxos/pipeline-rdf';

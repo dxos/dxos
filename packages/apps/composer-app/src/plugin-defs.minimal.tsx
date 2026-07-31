@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';

@@ -6,8 +6,9 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Plugin, UrlLoader } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { ObservabilityOperation } from '@dxos/plugin-observability';

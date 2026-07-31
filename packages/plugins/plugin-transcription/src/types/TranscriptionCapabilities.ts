@@ -6,7 +6,7 @@
 
 import { type Atom } from '@effect-atom/atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Space } from '@dxos/client/echo';
 import { type Feed } from '@dxos/echo';
 import { type EntityLookup as EntityLookupFn } from '@dxos/pipeline-transcription';

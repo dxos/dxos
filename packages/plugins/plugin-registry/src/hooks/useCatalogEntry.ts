@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type Plugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 
 import { useRegistryPlugins } from './useRegistryPlugins';
 

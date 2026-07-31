@@ -8,7 +8,8 @@ import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Capability, CapabilityManager } from '@dxos/app-framework';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';

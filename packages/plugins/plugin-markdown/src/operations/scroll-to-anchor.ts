@@ -5,7 +5,7 @@
 import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Cursor, isRangeVisible, scrollCommentIntoView } from '@dxos/ui-editor/headless';
 

@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin, UrlLoader } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 
 export type PluginPredicate = (plugin: Plugin.Plugin) => boolean;
 

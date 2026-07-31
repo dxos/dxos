@@ -7,7 +7,10 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability, type PluginManager, makeOperationHandlerPull } from '@dxos/app-framework';
+import { makeOperationHandlerPull } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import type * as Operation from '@dxos/compute/Operation';

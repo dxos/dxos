@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { DXN } from '@dxos/keys';
 import { ExtractedQuestionStore, MessageStore, QuestionStore } from '@dxos/pipeline-discord';

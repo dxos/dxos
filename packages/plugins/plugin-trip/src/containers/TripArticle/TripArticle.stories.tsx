@@ -6,7 +6,8 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';

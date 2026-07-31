@@ -8,7 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
 import React, { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as Trace from '@dxos/compute/Trace';

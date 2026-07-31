@@ -7,7 +7,7 @@ import * as Exit from 'effect/Exit';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Ref } from '@dxos/echo';

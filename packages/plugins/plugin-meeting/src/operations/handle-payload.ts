@@ -2,7 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { EID, parseId } from '@dxos/keys';

@@ -20,9 +20,9 @@ import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, URI 
 import { Doc } from '@dxos/echo-doc';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
-import { Chess } from '@dxos/plugin-chess';
-import { Game, loadGame } from '@dxos/plugin-game';
-import { Markdown } from '@dxos/plugin-markdown';
+import { Chess } from '@dxos/plugin-chess/types';
+import { Game, loadGame } from '@dxos/plugin-game/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';

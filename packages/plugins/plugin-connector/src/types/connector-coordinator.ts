@@ -4,7 +4,7 @@
 
 import type * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import type { Database, Key, Obj, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';

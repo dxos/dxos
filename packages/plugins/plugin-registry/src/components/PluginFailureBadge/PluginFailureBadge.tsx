@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type PluginManager } from '@dxos/app-framework';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

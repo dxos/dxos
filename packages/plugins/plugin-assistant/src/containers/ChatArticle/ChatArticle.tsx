@@ -5,7 +5,7 @@
 import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
 
 import { Provider } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/client/echo';

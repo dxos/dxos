@@ -12,7 +12,7 @@ import type { Evalite } from 'evalite';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { type Plugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { FeedTraceSink } from '@dxos/compute-runtime';

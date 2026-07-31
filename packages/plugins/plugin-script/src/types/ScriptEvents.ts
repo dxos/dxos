@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { ActivationEvent } from '@dxos/app-framework';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
 import { meta } from '#meta';
 

@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';

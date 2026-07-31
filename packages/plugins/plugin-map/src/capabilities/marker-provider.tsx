@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import { useMemo } from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { CrxCapabilities, type PageAction } from '@dxos/plugin-crx/types';
 
 import { meta } from '#meta';

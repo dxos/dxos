@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 import { traceFeedPrettyPrintSubscription } from '@dxos/agent-runtime/testing';
 import { AiService } from '@dxos/ai';
 import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
-import { type Plugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';

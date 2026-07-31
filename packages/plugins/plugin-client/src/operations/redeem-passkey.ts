@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';

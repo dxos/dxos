@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
-import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
+import { ConnectorAuthAnnotation } from '@dxos/plugin-connector/types';
 
 import { EdgarAdditionalFactsAnnotation, EdgarAsOfConceptsAnnotation, EdgarFieldAnnotation } from '../annotations';
 import { IBKR_CONNECTOR_ID, IBKR_FEED_KIND } from '../constants';

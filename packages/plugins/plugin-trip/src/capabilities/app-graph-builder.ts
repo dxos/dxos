@@ -7,7 +7,7 @@ import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';

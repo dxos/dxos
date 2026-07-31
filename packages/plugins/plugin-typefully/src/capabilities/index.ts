@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { BloggerCapabilities } from '@dxos/plugin-blogger/types';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 

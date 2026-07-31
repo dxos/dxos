@@ -6,7 +6,8 @@ import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Capability, CapabilityManager } from '@dxos/app-framework';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Database } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';

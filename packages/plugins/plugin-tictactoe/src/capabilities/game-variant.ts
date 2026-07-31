@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 import { GameCapabilities, type GameVariant } from '@dxos/plugin-game/types';
 

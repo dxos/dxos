@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin, UrlLoader } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 
 /**
  * Returns a set of plugin ids for which the registry has a newer version

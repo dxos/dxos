@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
+import { ConnectorAuthAnnotation } from '@dxos/plugin-connector/types';
 import { FeedAnnotation, TagIndex } from '@dxos/schema';
 
 import { GOOGLE_CALENDAR_CONNECTOR_ID } from '../constants';

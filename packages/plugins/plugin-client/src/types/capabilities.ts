@@ -4,7 +4,7 @@
 
 import { type Atom } from '@effect-atom/atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Client } from '@dxos/client';
 import { type ObjectMigration } from '@dxos/client/echo';
 import { type Type } from '@dxos/echo';

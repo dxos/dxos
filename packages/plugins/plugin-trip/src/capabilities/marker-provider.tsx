@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { MapCapabilities } from '@dxos/plugin-map/types';

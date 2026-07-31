@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capabilities } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useActivationSignal, useCapability } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Key } from '@dxos/echo';

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { RoutineCapabilities } from '@dxos/plugin-routine';
 
 import { crm } from '../templates/crm';

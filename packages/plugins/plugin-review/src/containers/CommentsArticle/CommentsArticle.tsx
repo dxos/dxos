@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';

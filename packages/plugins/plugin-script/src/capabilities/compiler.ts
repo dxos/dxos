@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import * as ts from 'typescript';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { initializeBundler } from '@dxos/edge-compute/bundler';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';

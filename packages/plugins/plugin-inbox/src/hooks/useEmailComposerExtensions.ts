@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Obj } from '@dxos/echo';
 import { type Message } from '@dxos/types';

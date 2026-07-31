@@ -8,7 +8,11 @@ import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
-import { Capabilities, Capability, CapabilityManager, Plugin, PluginManager } from '@dxos/app-framework';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type WithPluginManagerOptions } from '@dxos/app-framework/testing';
 import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';

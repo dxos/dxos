@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useCallback } from 'react';
 
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';

@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type CancelTarget, createProgressTraceSink, resolveTriggerId } from '@dxos/app-toolkit';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { RemoteProcessManager } from '@dxos/compute-runtime';

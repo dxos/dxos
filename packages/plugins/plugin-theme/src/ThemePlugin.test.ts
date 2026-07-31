@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 import { beforeEach, describe, test, vi } from 'vitest';
 
-import { Capabilities, Capability, ProcessManagerPlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { createTestApp } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 

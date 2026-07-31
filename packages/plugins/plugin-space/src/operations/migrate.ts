@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { SpaceState } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation } from '@dxos/echo';

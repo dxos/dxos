@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 
 const Main = Capability.lazyModule('Main', { provides: [Capabilities.ReactSurface] }, () => import('./Main'));

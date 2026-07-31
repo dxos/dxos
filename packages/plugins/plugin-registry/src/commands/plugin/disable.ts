@@ -7,7 +7,7 @@ import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig } from '@dxos/cli-util';
 import { invariant } from '@dxos/invariant';
 

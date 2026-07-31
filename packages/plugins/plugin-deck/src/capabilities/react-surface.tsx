@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';

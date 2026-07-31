@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';

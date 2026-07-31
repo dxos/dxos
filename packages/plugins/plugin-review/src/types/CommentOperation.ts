@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown/types';
 // Person is referenced in Actor.Actor's inferred type; importing it allows TypeScript to name
 // it in the emitted .d.ts for AddMessage.
 // eslint-disable-next-line unused-imports/no-unused-imports

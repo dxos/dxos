@@ -12,7 +12,8 @@ import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 

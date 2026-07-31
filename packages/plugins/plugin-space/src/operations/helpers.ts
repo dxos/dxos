@@ -1,6 +1,6 @@
 // Copyright 2025 DXOS.org
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 export type SpaceOperationConfig = {
   createInvitationUrl: (invitationCode: string) => string;

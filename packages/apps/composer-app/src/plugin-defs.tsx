@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AtprotoPlugin } from '@dxos/plugin-atproto/plugin';
 import { BloggerPlugin } from '@dxos/plugin-blogger/plugin';

@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 
 import type { DelegationStrategy } from '@dxos/agent-runtime';
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Routine from '@dxos/compute/Routine';
 import type { Database, Obj } from '@dxos/echo';
 

@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { InboxOperation } from '@dxos/plugin-inbox';
+import { InboxOperation } from '@dxos/plugin-inbox/types';
 
 import { meta } from '#meta';
 

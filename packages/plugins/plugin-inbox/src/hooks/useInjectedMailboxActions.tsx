@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 

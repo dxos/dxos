@@ -25,7 +25,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Text as EchoText, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

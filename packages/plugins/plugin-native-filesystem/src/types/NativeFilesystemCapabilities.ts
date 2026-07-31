@@ -6,7 +6,7 @@
 
 import { type Atom } from '@effect-atom/atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import type { FilesystemManager as FilesystemManagerNs } from '#capabilities';
 import { meta } from '#meta';

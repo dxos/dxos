@@ -6,7 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { useCapability } from '@dxos/app-framework/ui';
 import { Identity, Space } from '@dxos/halo';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';

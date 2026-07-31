@@ -4,7 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as Plugin$ from '@dxos/app-framework/Plugin';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';

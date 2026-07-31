@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';

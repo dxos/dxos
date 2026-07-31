@@ -8,13 +8,9 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import {
-  Capabilities,
-  Capability,
-  LayoutAction,
-  type PromiseIntentDispatcher,
-  createIntent,
-} from '@dxos/app-framework';
+import { LayoutAction, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { invariant } from '@dxos/invariant';
 import { type OperationInvoker } from '@dxos/operation';

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { NativeFilesystemCapabilities } from '#types';

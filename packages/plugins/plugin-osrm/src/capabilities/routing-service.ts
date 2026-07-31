@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Routing, TripCapabilities } from '@dxos/plugin-trip/types';
 
 import { makeOsrmRoutingService } from '#services';

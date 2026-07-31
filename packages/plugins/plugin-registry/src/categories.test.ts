@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
 import { getCategoryPredicate } from './categories';
 

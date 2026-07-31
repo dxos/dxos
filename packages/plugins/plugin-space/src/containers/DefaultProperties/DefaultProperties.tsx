@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import {
   Surface,
   useActivationSignal,

@@ -22,7 +22,8 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';

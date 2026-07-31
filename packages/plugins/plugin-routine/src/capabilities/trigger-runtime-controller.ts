@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Obj } from '@dxos/echo';

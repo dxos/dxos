@@ -4,7 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { Client, ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';

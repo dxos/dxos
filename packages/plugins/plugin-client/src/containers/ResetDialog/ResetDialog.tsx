@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capability, type CapabilityManager } from '@dxos/app-framework';
+import { type CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';

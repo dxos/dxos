@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 import { StudioCapabilities } from '@dxos/plugin-studio/types';
 

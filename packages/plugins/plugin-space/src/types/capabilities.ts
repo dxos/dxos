@@ -7,7 +7,7 @@ import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import type { ComponentType } from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Space } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { type Collection, type Database, type Type } from '@dxos/echo';

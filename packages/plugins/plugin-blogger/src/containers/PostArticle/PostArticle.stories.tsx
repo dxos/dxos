@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';

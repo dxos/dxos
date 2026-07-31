@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type Config } from '@dxos/client';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';

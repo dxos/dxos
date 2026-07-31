@@ -6,7 +6,7 @@
 
 import { type Atom } from '@effect-atom/atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 
 import { meta } from '#meta';

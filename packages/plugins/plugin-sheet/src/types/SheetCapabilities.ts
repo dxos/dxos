@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type ComputeGraphRegistry as ComputeGraphRegistryType } from '@dxos/compute-hyperformula';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 

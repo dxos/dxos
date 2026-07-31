@@ -7,7 +7,7 @@
 // schema (so the CLI can query/create objects) and metadata (for the createObject factory).
 // No surfaces, graph builders, settings, or translations are needed.
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { CreateObject, OperationHandler } from '#capabilities';

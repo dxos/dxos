@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Obj } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { log } from '@dxos/log';

@@ -20,7 +20,8 @@ import * as Stream from 'effect/Stream';
 
 import { type AiModelResolver, Provider } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { log } from '@dxos/log';
 import { AssistantCapabilities, type Ollama } from '@dxos/plugin-assistant';

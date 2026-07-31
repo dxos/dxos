@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Client, type ClientOptions } from '@dxos/client';
 import { IdentityDid, SpaceId } from '@dxos/keys';
 

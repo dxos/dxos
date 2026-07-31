@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo } from 'react';
 
-import { type PluginManager } from '@dxos/app-framework';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useMediaQuery } from '@dxos/react-ui';
 
 import { type Settings } from '#types';

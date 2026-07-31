@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { useCallback, useMemo, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import { Obj } from '@dxos/echo';
