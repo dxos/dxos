@@ -18,8 +18,10 @@ the phased rollout this ledger mirrors).
   - Identity field: **a new dedicated `EntityMeta` field** (not `meta.key`/`version`,
     not a `ForeignKey`); the derived-key namespacing sub-question is moot as a result.
   - Version matching: **exact**.
-  - Where the merge runs: every client — **on entity load**, revised from "on space
-    open" after the scan proved to hydrate the whole space (DESIGN.md §4.7).
+  - Where the merge runs: **in the worker, off the indexing stream** — the final
+    answer after three homes: on space open (reverted: hydrated the whole space),
+    inside query evaluation (superseded: writes on the read path), on entity load
+    (subsumed: detection is write-driven now). DESIGN.md §4.8.
   - Scope: **all entity kinds** (object, relation, type), phased — relations are
     merge subjects eventually, not just endpoints.
   - Merge-policy pluggability: left open, non-blocking; fixed semantics first.
@@ -123,63 +125,6 @@ Scope decision 2026-07-30: every entity kind that can be stored is in scope, pha
 ## Phase 5: GC (optional)
 
 - [ ] Epoch-based compaction of merged-away tombstones.
-
-### Next: merge on entity load (decision 2026-07-30, DESIGN.md §4.7)
-
-Merging on space open was implemented and **reverted**: detection had to enumerate
-every entity declaring a natural key, so it scanned `Filter.everything()` and
-hydrated the whole space. Not a test artifact — it broke three tests asserting lazy
-loading (`entity-manager.test.ts` "pending links are loaded" and "linked objects are
-loaded on update only if they were loaded before"; `query-api-stall.test.ts`).
-
-**Do the query-pipeline step first (DESIGN.md §4.8).** A `MergeStep` in the query
-plan collapses duplicates in the working set before results are returned, so a caller
-never observes two. It needs **no index** — the working set is already hydrated, so
-grouping by natural key is one in-memory pass — and it covers every failure in §2,
-all of which are query-shaped. Pieces:
-
-- `echo-host/src/query/plan.ts` — add `MergeStep` to the `Step` union, beside
-  `FilterDeletedStep`.
-- `echo-host/src/query/query-executor.ts` — the dispatch branch: group the working
-  set by natural key, merge groups of more than one, drop the losers.
-- `echo-host/src/query/query-planner.ts` — emit the step.
-- Guard the reactive path: the step writes during query evaluation, which
-  invalidates queries. Bounded and idempotent, but it must not loop.
-
-**Then the load-path hook**, for entities reached by id or reference, which have no
-siblings in a result set to compare against. This is where the index earns its keep,
-and it is now completeness rather than a blocker — `resolveRedirect` already covers
-an entity once merged, and any query that surfaces it performs the merge. Pieces:
-
-1. `index-core/src/indexes/entity-meta-index.ts` — `naturalKey TEXT` column, the
-   `ALTER TABLE` migration (same pattern as `parent`/`createdAt`), populate from
-   `castData[ATTR_META]?.naturalKey` in both the INSERT and UPDATE branches, and an
-   index on `(spaceId, naturalKey)`.
-2. `echo-protocol/src/query/ast.ts` — a `metaNaturalKey` filter field beside the
-   existing `metaKey`.
-3. `echo/src/Filter.ts` — `Filter.naturalKey(key)`, mirroring `Filter.key`.
-4. `echo-host/src/filter/filter-match.ts` — the post-filter branch, so the filter is
-   correct whether or not the fast path is taken.
-5. `echo-host/src/query/query-planner.ts` — index fast path for the equality case.
-   Same shape as the typename fast path, so likely no new `QueryPlan.Selector` —
-   this is where the on-load design is materially cheaper than merging on open,
-   which would have needed a novel "all non-null, grouped" selector.
-6. `echo-client/src/core-db/entity-manager.ts` — the hook. `loadObjectCoreById` /
-   `_loadObjectDocument` and the `_updateEvent` path are the seam.
-
-Needs **no new RPC**: `execQuery` already carries a `QueryAST`.
-
-Open questions before implementing:
-
-- **Transient double-result** — a query's result set is computed from the index
-  before hydration completes, so a query spanning both duplicates can return two and
-  settle to one. Reactive queries re-emit; a one-shot `run()` may see the pair.
-  Acceptable, or does the query path need a merge barrier?
-- **Re-entrancy** — the merge hydrates the other candidates, which would re-trigger
-  it. Needs an in-flight guard keyed by natural key.
-
-Until this lands, `db.mergeDuplicates()` is an explicit call: the caller opts into
-the scan.
 
 ### Gotchas found while implementing
 

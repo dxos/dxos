@@ -368,9 +368,13 @@ bootstrap changes) whose complexity is not justified when the merge engine handl
 the distinct-id case anyway. Class-1 collisions therefore remain errors; optionally,
 Phase 2's doctor diagnostic can surface them explicitly instead of a log warning.
 
-### 4.7 Where the merge runs: on load, not on open
+### 4.7 Where the merge runs: on load, not on open — SUPERSEDED by §4.8
 
-**Decided 2026-07-30, revising the earlier "client on space open".**
+**Decided 2026-07-30, revising "client on space open"; superseded 2026-07-31.** The
+load-path hook was never built: the worker/indexing trigger (§4.8) is write-driven,
+so it covers entities reached by id or reference without any per-load hook, and the
+`meta.naturalKey` index this section called for shipped as part of §4.8. Kept for
+the reasoning about why space-open scanning was wrong.
 
 Merging on space open was implemented and reverted (see the ledger). Detection had to
 enumerate every entity declaring a natural key, so it scanned and hydrated the whole
@@ -638,9 +642,10 @@ settled, and the derived-key sub-question dissolved with them.
    would surface. If/when pluggability is wanted, the lens mapping vocabulary
    (typed, bidirectional, law-checked — lenses project) is a candidate merge-policy
    surface rather than inventing a new one.
-4. ~~**Where the merge runs**~~ — **settled**: every client, **on entity load**.
-   Revised from "on space open" once that proved to hydrate the whole space; see
-   §4.7 for why the load trigger is both cheaper and a smaller change.
+4. ~~**Where the merge runs**~~ — **settled**: **in the worker, off the indexing
+   stream** (§4.8). The path here ran on-space-open → on-entity-load (§4.7) →
+   in-query-evaluation → worker; each revision and its reason is in the decision
+   log.
 5. ~~**Scope**~~ — **settled**: all three entity kinds (object, relation, type),
    phased.
 
