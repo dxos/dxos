@@ -6,14 +6,13 @@ import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, GraphPath } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
 import { NavTreeCapabilities } from '#types';
 
-import { activeIdentities, isPathCurrent } from './active-planks';
 import { navTreeOpenAspect } from './nav-tree-view-state';
 
 /** Default `open` value for new entries; `current` is derived from the layout when the entry is created. */
@@ -35,8 +34,10 @@ export default Capability.makeModule(
     // Persistence backend for per-path expansion (`open`); replaces the hand-rolled localStorage blob.
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
 
-    let activeKeys: ReadonlySet<string> = activeIdentities(registry.get(layoutAtom).active);
-    const isCurrent = (pathString: string): boolean => isPathCurrent(activeKeys, pathString);
+    // Mirror of the layout's active planks keyed by identity rather than node id: an object is reachable
+    // through several subgraphs, and a plank may address it by a path the tree never shows.
+    let activeKeys = new Set(registry.get(layoutAtom).active.map(GraphPath.getIdentityKey));
+    const isCurrent = (pathString: string): boolean => activeKeys.has(GraphPath.getIdentityKey(Path.last(pathString)));
 
     /**
      * Item state for a path not seen before: `current` follows the layout, `open` starts closed. An
@@ -101,7 +102,7 @@ export default Capability.makeModule(
 
     // Subscribe to layout changes to update current state.
     const unsubscribe = registry.subscribe(layoutAtom, (layout) => {
-      activeKeys = activeIdentities(layout.active);
+      activeKeys = new Set(layout.active.map(GraphPath.getIdentityKey));
 
       const handleUpdate = () => {
         // Snapshot the paths first: `setItem` writes back into `backingState`.

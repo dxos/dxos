@@ -8,6 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppSpace, NavigationOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, EID } from '@dxos/echo';
+import { Position } from '@dxos/util';
 
 import { ClientCapabilities } from '../types';
 
@@ -40,7 +41,14 @@ const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigatio
           resolver(query).pipe(Effect.catchAll(() => Effect.succeed([]))),
         ).pipe(Effect.provide(Database.layer(space.db)));
 
-        return { targets: NavigationOperation.orderTargets(results.flat()) };
+        // Best-first, as the operation's output promises. Sort is stable, so resolvers that declare no
+        // position keep contribution order; `position` itself is resolver metadata and not returned.
+        return {
+          targets: results
+            .flat()
+            .sort(Position.compare)
+            .map(({ path, label, type }) => ({ path, label, type })),
+        };
       }),
     ),
   );

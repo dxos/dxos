@@ -20,6 +20,7 @@ import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
+import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations';
@@ -282,20 +283,22 @@ export type CommentConfig = Readonly<{
  */
 export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.commentConfig');
 
-export const NavigationTargetSchema = Schema$.Struct({
-  path: Schema$.String.annotations({ description: 'Navigation path to use with the Open operation.' }),
-  label: Schema$.String.annotations({ description: 'Human-readable label.' }),
-  type: Schema$.String.annotations({ description: 'Object type.' }),
+export type NavigationTarget = {
+  /** Navigation path usable with the Open operation. */
+  path: string;
+  /** Human-readable label. */
+  label: string;
+  /** Object type. */
+  type: string;
   /**
-   * Set by a resolver that only produces a generic path — the database subtree, which guarantees every
-   * ECHO object *a* path but is not where the tree shows it. Resolution prefers non-fallback targets,
-   * so a resolver that knows an object's canonical home (its collection, a type section) wins. Only
-   * the resolver knows whether it is being generic, hence a declared flag rather than path sniffing.
+   * Sort order among the targets resolved for one query. A resolver that only produces a generic path —
+   * the database subtree, which guarantees every ECHO object *a* path but is not where the tree shows
+   * it — declares `Position.last`, so a resolver that knows the object's canonical home (its collection,
+   * a type section) is preferred. Only the resolver knows how specific its answer is, hence a declared
+   * position rather than path sniffing by the caller.
    */
-  fallback: Schema$.optional(Schema$.Boolean),
-});
-
-export type NavigationTarget = Schema$.Schema.Type<typeof NavigationTargetSchema>;
+  position?: Position.Position;
+};
 
 export type NavigationQuery = {
   uri?: URI.URI;

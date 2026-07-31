@@ -9,6 +9,7 @@ import { AppCapabilities, type AppCapabilities as AppCaps, GraphPath } from '@dx
 import { Database, Entity } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -47,8 +48,8 @@ export default Capability.makeModule(
 
         const label = Entity.getLabel(object) ?? '';
 
-        // Where the tree actually shows the object, when it lives in the collection tree. Offered ahead
-        // of the database path, which every object has but no visible node bears.
+        // Where the tree actually shows the object, when it lives in the collection tree. Preferred over
+        // the database path, which every object has but no visible node bears — hence `Position.last`.
         const collectionPath = yield* resolveCollectionObjectPath({ objectId: object.id });
 
         return [
@@ -57,7 +58,7 @@ export default Capability.makeModule(
             path: GraphPath.getObjectPath(db.spaceId, typename, object.id),
             label,
             type: typename,
-            fallback: true,
+            position: Position.last,
           },
         ];
       });

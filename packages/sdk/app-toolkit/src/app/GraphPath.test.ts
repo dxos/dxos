@@ -104,5 +104,14 @@ describe('GraphPath', () => {
       expect(GraphPath.getIdentityKey('root')).toBe('root');
       expect(GraphPath.getIdentityKey(GraphPath.getPinnedWorkspacePath('dxos:settings'))).toBe('root/!dxos:settings');
     });
+
+    test('a linked segment keeps its own identity, not its subject’s', ({ expect }) => {
+      // A companion (`…/<objectId>/~settings`) is a distinct plank from the object it hangs off, so it
+      // must not collapse onto the object's key — else opening a companion would mark the object current.
+      const objectPath = GraphPath.getObjectPath(spaceId, 'test.document', objectId);
+      const companionPath = `${objectPath}/~settings`;
+      expect(GraphPath.getIdentityKey(companionPath)).toBe(companionPath);
+      expect(GraphPath.getIdentityKey(companionPath)).not.toBe(GraphPath.getIdentityKey(objectPath));
+    });
   });
 });
