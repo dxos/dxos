@@ -1,0 +1,89 @@
+# QA — Tasks
+
+_Resume: answer open question in §3 (fixture capture vs dark-mode implementation order); the Sync-routine picker (§4) needs a live app check. Uncommitted: none. Last: single-message toggle + latest-message auto-expand landed._
+
+User-reported defects and small UX corrections found while using Composer, tracked
+across whichever package owns the fix. Findings and rationale live in
+[DESIGN.md](DESIGN.md); this file is the ledger.
+
+## Phase 1: Inbox message article
+
+- [x] **Drop per-message expand/collapse when a conversation has one message**
+      — `useMessageExpansion` withholds `onExpandedChange`/`onCollapseAll`/`onExpandAll`
+      when `messageIds.length <= 1`, so the header stops being a click target and the
+      thread toolbar drops both fold actions
+      ([MessageArticle.tsx](../../../packages/plugins/plugin-inbox/src/containers/MessageArticle/MessageArticle.tsx),
+      [ConversationStack.tsx](../../../packages/plugins/plugin-inbox/src/components/ConversationStack/ConversationStack.tsx)).
+- [x] **Auto-open the conversation's latest message on navigation**
+      — expansion is now derived (`latest message` + per-message overrides) rather than
+      seeded once at mount, so it follows the thread query as it resolves and resets when
+      `subject.threadId` changes. Drafts are skipped when picking "latest" so adding a
+      reply draft doesn't fold the message it answers.
+
+## Phase 2: HtmlViewer dark mode
+
+Email bodies render in a shadow root and are recolored only for personal/non-table
+mail. Two gaps, both detailed in DESIGN.md §1.
+
+- [ ] **Capture real email fixtures to analyze against**
+  - Add a per-message `Save message` action (dev tier) in
+    `ConversationStack/useToolbar.tsx` — download the `text/html` block (or the
+    full `.eml`, which `scripts/mbox.ts` can already parse).
+  - Store under `src/testing/data/emails/`, loaded via `import.meta.glob` raw.
+  - New `HtmlViewer.fixtures.stories.tsx` rendering every fixture as a light/dark
+    pair — the analysis harness, and the regression net afterwards.
+- [ ] **Detect sender-authored dark mode**
+  - Scan the _raw_ html pre-sanitize for `prefers-color-scheme: dark` and
+    `<meta name="(supported-)?color-scheme">`; `<meta>` is stripped by DOMPurify
+    (`FORBID_TAGS`), so the signal must be read before sanitization.
+- [ ] **Honour the app theme instead of the OS for dark-capable email**
+  - `<style>` survives sanitization, so an email's own dark rules fire off the OS
+    preference — unfixable via `color-scheme`. Rewrite the CSSOM instead: hoist the
+    dark block's rules when `themeMode === 'dark'`, delete them when light.
+- [ ] **Give un-themed (marketing/table) email an explicit paper sheet in dark mode**
+  - Today those bodies keep authored dark text while unpainted regions show the dark
+    app surface. Render on `background:#fff; color:#111; color-scheme:light`. Never
+    `filter: invert()`.
+- [ ] **Improve the personal-mail inversion curve**
+  - `transform-colors.ts:69` (`l = min(1 - l, inkL)`) flattens the authored contrast
+    ladder onto the ink clamp; replace with a curve preserving relative lightness plus
+    a chroma clamp.
+
+## Phase 3: Factor out `react-ui-html`
+
+Decision recorded in DESIGN.md §2 — factor in three layers, keep the email policy in
+plugin-inbox. Supersedes the inline TODOs at `HtmlViewer.tsx:19` and
+`transform-colors.ts:14`.
+
+- [ ] **Move color primitives to `react-ui-theme`** — sRGB↔OKLCH, CSS color parse,
+      contrast. No email content in any of it.
+- [ ] **New `react-ui-html`** — shadow-root host + DOMPurify + remote-image blocking +
+      theme adoption + async `src` resolution, exposed as
+      `<Html html transforms={…} resolveSrc={…} />`.
+- [ ] **Keep email policy in plugin-inbox** — quoted-reply collapse, `cid:` attachment
+      resolution, the `isPersonal`/table heuristic, the Gmail/Proton/Yahoo selectors.
+
+## Phase 4: Mailbox "Sync" routine shows no Operation
+
+Adding a mailbox creates a `Sync` Routine (cron `*/10 * * * *`) whose Operation field
+renders empty in the routine form. Established so far (DESIGN.md §3): the routine is
+created deliberately, not a failed attempt.
+
+- [ ] **Find why the operation picker doesn't resolve the runnable**
+  - Verified: `Ref.fromURI(op.meta.key).uri` and the picker option id
+    (`Entity.getURI(persisted, { prefer: 'named' })`) are both
+    `dxn:org.dxos.plugin.inbox.operation.googleMailSync`, and both sync operations are
+    `Operation.visible` — so URI matching and the visibility filter are not the cause.
+  - Remaining suspect: whether `Scope.registry()` actually returns the operation at the
+    time the form renders (`useOperations`, RoutineForm.tsx:280). Needs a live app or a
+    harness check, not static analysis.
+- [ ] **Decide whether a system-managed routine should be editable at all**
+  - The action is bound by registry key on purpose (nothing persisted into the space);
+    an empty _editable_ picker invites the user to break the binding.
+
+## References
+
+- [DESIGN.md](DESIGN.md) — findings and rationale.
+- `packages/plugins/plugin-inbox/src/components/HtmlViewer/`
+- `packages/plugins/plugin-connector/src/util/sync-routine.ts`
+- `packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.tsx`

@@ -17,8 +17,8 @@ import { Avatar, Row } from '@dxos/react-ui-card';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { TagIndex } from '@dxos/schema';
-import { mx } from '@dxos/ui-theme';
 import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';

@@ -261,8 +261,7 @@ const useMessageExpansion = ({ messageIds, latestMessageId, threadId }: UseMessa
   // so neither the message header nor the thread toolbar offers a fold the user gains nothing from.
   const collapsible = messageIds.length > 1;
   const expanded = useMemo(
-    () =>
-      new Set(messageIds.filter((id) => (collapsible ? (overrides.get(id) ?? id === latestMessageId) : true))),
+    () => new Set(messageIds.filter((id) => (collapsible ? (overrides.get(id) ?? id === latestMessageId) : true))),
     [messageIds, collapsible, overrides, latestMessageId],
   );
 
