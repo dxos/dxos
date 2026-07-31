@@ -82,7 +82,7 @@ export const Marketing: Story = {
 };
 
 /** Real mail, undeclared: the case that motivated dropping the layout exemption. */
-export const CapturedUndeclared: Story = {
+export const Example1: Story = {
   args: {
     sample: 'm1',
   },
@@ -92,8 +92,22 @@ export const CapturedUndeclared: Story = {
  * Real mail declaring `color-scheme: light`. The declaration says the sender has no dark design of its
  * own — not that ours is unwelcome — so this is recolored like anything else. Both panes must differ.
  */
-export const Example1: Story = {
+export const Example2: Story = {
   args: {
     sample: 'm2',
+  },
+};
+
+/**
+ * Real mail declaring `color-scheme: light dark` *and* shipping its own `@media (prefers-color-scheme:
+ * dark)` rules — the one case that would be exempt from recoloring, if those rules survived. They do
+ * not: sanitization strips the `<style>` blocks carrying them (DESIGN.md Gap A), so
+ * `applyAuthoredDarkRules` finds nothing and the body falls through to the recolor rather than
+ * rendering light inside a dark app. Both panes must differ; when Gap A is closed this story is what
+ * should switch to the sender's own dark design.
+ */
+export const Example3: Story = {
+  args: {
+    sample: 'm3',
   },
 };
