@@ -156,8 +156,8 @@ projects:
     summary: One identity rule per type (IdentitySpec) shared by extractors and an after-the-fact duplicate scan, plus a Duplicates tab on the Database type article for human-reviewed merges. Distinct from object-merging (external-source duplicates, human-gated) — see DESIGN.md §1.1.
     tasks: .agents/projects/object-deduplication/TASKS.md
     design: .agents/projects/object-deduplication/DESIGN.md
-    prs: []
-    resume: 'DESIGN.md written (diagnosis of F1-F4, three-layer architecture, merge policy, table-cell prior art). Next: phase 1 — IdentitySpec/IdentityIndex/findDuplicates/planMerge in @dxos/extractor + personIdentitySpec + unit suite.'
+    prs: [12417]
+    resume: 'PR #12417 OPEN (phases 1-4 complete, live-verified in storybook). Engine in @dxos/extractor (IdentitySpec/IdentityIndex/findDuplicates/planMerge/applyMerge), specs in extractor-lib, operations+Duplicates tab in plugin-space, specs contributed by plugin-crm. F1-F4 all fixed; selective extraction (allow-list) wired into the email pipeline. NEXT: (1) watch Check, (2) task 4.5a — nothing sets SenderSignals.outbound, which needs recipient extraction for sent mail, so the allow-list is currently stricter than intended; (3) phase 5 compound table cells (chips / primary+popover / schema-driven summary, design in DESIGN.md §5); (4) factor the duplicates tab out of TypeArticle as a registered aspect — Panel.Content was normalized to one Tabs.Panel per layout as step 1, the seam should also carry the merge-preview companion contribution, which is still hardcoded in react-surface.tsx; (5) task 4.4 audit plugin-github/sync + assistant-toolkit linear sync-issues. KNOWN: refs to a merged-away object are not rewritten (feed-stored Message.sender.contact cannot be); coordinate with josiah/object-merging. Commits are UNSIGNED (1Password agent failing to fill).'
 
   - name: chat
     status: active
