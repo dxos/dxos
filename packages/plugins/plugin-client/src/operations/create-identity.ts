@@ -22,6 +22,8 @@ const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pip
       const manager = yield* Capability.get(Capabilities.PluginManager);
       const client = yield* Capability.get(ClientCapabilities.Client);
       const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
+      // Boot-waterfall milestone: the identity exists from here (first-run path).
+      performance.mark('milestone:identity-created');
       const spaceKey = data.spaceKey;
       const spaceId = spaceKey ? yield* Effect.promise(() => createIdFromSpaceKey(spaceKey)) : undefined;
       yield* Effect.promise(() => EffectEx.runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));

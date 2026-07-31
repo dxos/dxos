@@ -23,6 +23,8 @@ export default Capability.makeModule(
       client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
     );
     yield* Effect.tryPromise(() => personalSpace.waitUntilReady());
+    // Boot-waterfall milestone: the default space is usable from here (first-run path).
+    performance.mark('milestone:default-space-ready');
 
     // Create root collection structure.
     yield* Effect.tryPromise(() => personalSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));

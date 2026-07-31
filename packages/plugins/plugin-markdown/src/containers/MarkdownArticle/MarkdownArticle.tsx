@@ -396,6 +396,11 @@ const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: s
   const view = controller?.view;
   useEffect(() => {
     if (view && editorViews) {
+      // Boot-waterfall milestone (once per page): the first editor can accept input from here —
+      // the "time to first meaningful action" anchor for the returning-user entry path.
+      if (performance.getEntriesByName('milestone:first-editor-interactive').length === 0) {
+        performance.mark('milestone:first-editor-interactive');
+      }
       editorViews.register(attendableId ?? id, view, id);
       return () => editorViews.unregister(attendableId ?? id);
     }

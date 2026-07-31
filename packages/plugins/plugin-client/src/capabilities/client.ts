@@ -72,6 +72,8 @@ export default Capability.makeModule(
     const subscription = client.spaces.subscribe(async () => {
       if (!spacesReadyFired) {
         spacesReadyFired = true;
+        // Boot-waterfall milestone: ECHO spaces observable from here (both entry paths).
+        performance.mark('milestone:spaces-ready');
         await Effect.gen(function* () {
           yield* Plugin.activate(ClientEvents.SpacesReady);
           if (onSpacesReady) {
