@@ -7,8 +7,12 @@
 import { Capability } from '@dxos/app-framework';
 
 import { SpaceCapabilities } from './capabilities';
+import { SpaceEvents } from './events';
 
 /**
- * Module maker contributing a typed create-object entry.
+ * Module maker contributing a typed create-object entry. Gated by default on the create flow
+ * opening (all consumers read the entries reactively); declare `activatesOn` to override.
  */
-export const createObject = Capability.moduleMaker('CreateObject', SpaceCapabilities.CreateObjectEntry);
+export const createObject = Capability.moduleMaker('CreateObject', SpaceCapabilities.CreateObjectEntry, {
+  activatesOn: SpaceEvents.CreateObjectRequested,
+});

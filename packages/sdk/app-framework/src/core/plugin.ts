@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protocols';
 
-import type * as ActivationEvent from './activation-event';
+import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import type * as PluginManager from './plugin-manager';
 
@@ -228,24 +228,6 @@ class PluginModuleImpl implements PluginModule {
     this.activate = options.activate;
   }
 }
-
-/**
- * Returns a copy of the module parked on the given activation events (event mode), with
- * requires/provides/activate unchanged. Used by the manager's activation policy so a host app can
- * defer families of modules without touching the module definitions — which stay runtime-neutral
- * for hosts (CLI, workerd) that activate everything eagerly.
- */
-export const withActivatesOn = (module: PluginModule, activatesOn: ActivationEvent.Events): PluginModule =>
-  new PluginModuleImpl({
-    id: module.id,
-    activation: {
-      mode: 'event',
-      activatesOn,
-      requires: module.activation.requires,
-      provides: module.activation.provides,
-    },
-    activate: module.activate,
-  });
 
 /**
  * Runtime plugin metadata, derived from the `@dxos/protocols` registry schemas (protocols owns the
@@ -505,9 +487,15 @@ const resolveModule = (
       onSome: (id) => computeModuleId(pluginName, id),
     }),
   );
+  const activation = normalizeActivation(moduleOptions);
   return new PluginModuleImpl({
     id,
-    activation: normalizeActivation(moduleOptions),
+    // Plugin-scoped default events (see {@link ActivationEvent.OWN_PLUGIN_SPECIFIER}) resolve
+    // here — the first point where the module meets its plugin meta.
+    activation:
+      activation.mode === 'event'
+        ? { ...activation, activatesOn: ActivationEvent.resolveOwnPlugin(activation.activatesOn, pluginName) }
+        : activation,
     // Erasure boundary: the authoring layer constrained the effect's environment to the
     // declared requires; the manager supplies exactly those services plus the ambient ones.
     activate: moduleOptions.activate as PluginModule['activate'],

@@ -2716,53 +2716,57 @@ describe('PluginManager', () => {
     );
   });
 
-  describe('activation policy', () => {
+  describe('default demand gates', () => {
     const DemandEvent = ActivationEvent.make('org.dxos.test.demand');
 
-    const makePolicyPlugin = () =>
-      Plugin.make(
-        Plugin.define(testMeta).pipe(
-          Plugin.addModule({
-            id: 'parked',
-            provides: [MultiString],
-            activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'parked' })]),
-          }),
-          Plugin.addModule({
-            id: 'eager',
-            provides: [MultiNumber],
-            activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 1 })]),
-          }),
-        ),
-      )();
-
-    it.effect('parked modules skip startup and activate on their demand event', () =>
+    it.effect('a maker default with the own-plugin specifier resolves to the plugin key', () =>
       Effect.gen(function* () {
-        plugins = [makePolicyPlugin()];
-        const manager = PluginManager.make({
-          pluginLoader,
-          plugins,
-          enabled: [testMeta.profile.key],
-          activationPolicy: (module) => (module.id.endsWith('.parked') ? DemandEvent : undefined),
-        });
+        const Gated = Capability.lazyModule(
+          'Gated',
+          {
+            provides: [MultiString],
+            activatesOn: ActivationEvent.make('org.dxos.test.family', ActivationEvent.OWN_PLUGIN_SPECIFIER),
+          },
+          () =>
+            Promise.resolve({
+              default: () => Effect.succeed([Capability.contribute(MultiString, { string: 'gated' })]),
+            }),
+        );
+        const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Gated)));
+        const [module] = Test().modules;
+        assert(module.activation.mode === 'event');
+        const [event] = ActivationEvent.getEvents(module.activation.activatesOn);
+        assert.strictEqual(event.specifier, testMeta.profile.key);
 
+        // Firing the plugin-scoped event activates the module.
+        plugins = [Test()];
+        const manager = PluginManager.make({ pluginLoader, plugins, enabled: [testMeta.profile.key] });
         yield* manager.activate(ActivationEvents.Startup);
-        // The eager module ran in the startup pass; the parked one did not.
-        assert.deepStrictEqual(manager.capabilities.getAll(MultiNumber), [{ number: 1 }]);
         assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
-
-        yield* manager.activate(DemandEvent);
-        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'parked' }]);
+        yield* manager.activate(ActivationEvent.make('org.dxos.test.family', testMeta.profile.key));
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'gated' }]);
       }),
     );
 
     it.effect('a plugin enabled after its demand event fired activates via pending reset', () =>
       Effect.gen(function* () {
-        plugins = [makePolicyPlugin()];
-        const manager = PluginManager.make({
-          pluginLoader,
-          plugins,
-          activationPolicy: (module) => (module.id.endsWith('.parked') ? DemandEvent : undefined),
-        });
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'gated',
+              activatesOn: DemandEvent,
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'gated' })]),
+            }),
+            Plugin.addModule({
+              id: 'eager',
+              provides: [MultiNumber],
+              activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 1 })]),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({ pluginLoader, plugins });
 
         yield* manager.activate(ActivationEvents.Startup);
         yield* manager.activate(DemandEvent);
@@ -2770,39 +2774,10 @@ describe('PluginManager', () => {
 
         yield* manager.add(testMeta.profile.key);
         yield* manager.enable(testMeta.profile.key);
-        // The parked module joined after its event fired; pending-reset refired it on enable.
-        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'parked' }]);
+        // The gated module joined after its event fired; pending-reset refired it on enable,
+        // and the eager module ran in the incremental dependency pass.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'gated' }]);
         assert.deepStrictEqual(manager.capabilities.getAll(MultiNumber), [{ number: 1 }]);
-      }),
-    );
-
-    it.effect('declared event-mode modules keep their own gating under a policy', () =>
-      Effect.gen(function* () {
-        const Test = Plugin.make(
-          Plugin.define(testMeta).pipe(
-            Plugin.addModule({
-              id: 'declared',
-              activatesOn: CountEvent,
-              provides: [MultiString],
-              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'declared' })]),
-            }),
-          ),
-        );
-        plugins = [Test()];
-        const manager = PluginManager.make({
-          pluginLoader,
-          plugins,
-          enabled: [testMeta.profile.key],
-          // A policy that would claim everything must not re-park declared event modules.
-          activationPolicy: () => DemandEvent,
-        });
-
-        yield* manager.activate(ActivationEvents.Startup);
-        yield* manager.activate(DemandEvent);
-        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
-
-        yield* manager.activate(CountEvent);
-        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'declared' }]);
       }),
     );
   });

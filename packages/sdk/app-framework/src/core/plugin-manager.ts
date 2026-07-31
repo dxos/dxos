@@ -124,15 +124,6 @@ export type ManagerOptions = {
    * pass `Duration.infinity` to disable.
    */
   activationTimeout?: Duration.DurationInput;
-  /**
-   * Host-supplied deferral policy. For a dependency-mode module, returning activation events
-   * parks it on those events (see {@link Plugin.withActivatesOn}) instead of activating it during
-   * the startup dependency pass; returning `undefined` leaves the module as declared. Module
-   * definitions stay runtime-neutral — hosts without a policy (CLI, workerd) activate everything
-   * eagerly. Consumers of a parked module's capabilities must read them reactively (a one-shot
-   * snapshot taken before the demand signal fires misses the contribution).
-   */
-  activationPolicy?: (module: Plugin.PluginModule) => ActivationEvent.Events | undefined;
 };
 
 /**
@@ -303,7 +294,6 @@ class ManagerImpl implements PluginManager {
   private readonly _onRemove: ManagerOptions['onRemove'];
   private readonly _loadTimeout: Duration.DurationInput;
   private readonly _activationTimeout: Duration.DurationInput;
-  private readonly _activationPolicy: ManagerOptions['activationPolicy'];
   private readonly _loader: ModuleLoader;
   private readonly _scheduler: ActivationScheduler;
   // Coalesces concurrent `_resolveLazyPlugin` calls per plugin id. Without
@@ -349,7 +339,6 @@ class ManagerImpl implements PluginManager {
     onRemove,
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
-    activationPolicy,
   }: ManagerOptions) {
     // Core plugins are derived from `meta.tags.includes('system')`; the set is
     // a snapshot of the initial `plugins` array (later `add()` calls do not
@@ -367,7 +356,6 @@ class ManagerImpl implements PluginManager {
     this._onRemove = onRemove;
     this._loadTimeout = loadTimeout;
     this._activationTimeout = activationTimeout;
-    this._activationPolicy = activationPolicy;
     this._loader = new ModuleLoader({
       capabilities: this.capabilities,
       pluginService: () => this,
@@ -751,13 +739,9 @@ class ManagerImpl implements PluginManager {
 
       this._update(this._enabledAtom, (enabled) => (enabled.includes(id) ? enabled : [...enabled, id]));
 
-      // Register through `_addModule` and continue with the effective (possibly policy-parked)
-      // modules — the incremental pass below must not see the raw dependency-mode originals, or
-      // it would activate parked modules eagerly on enable.
-      const effectiveModules = plugin.modules.map((module) => {
-        const effective = this._addModule(module);
-        this._setPendingResetByModule(effective);
-        return effective;
+      plugin.modules.forEach((module) => {
+        this._addModule(module);
+        this._setPendingResetByModule(module);
       });
 
       log('pending reset', { events: [...this.getPendingReset()] });
@@ -768,12 +752,12 @@ class ManagerImpl implements PluginManager {
 
       // After startup, newly enabled dependency-mode modules activate incrementally against
       // the already-contributed capability set. Failures are scoped to this plugin. Event-mode
-      // modules (declared or policy-parked) are excluded: they wait for their events, and the
-      // pending-reset dispatch above re-fires any of their events that already fired.
+      // modules are excluded: they wait for their events, and the pending-reset dispatch above
+      // re-fires any of their events that already fired.
       if (yield* Ref.get(this._started)) {
         const result = yield* this._scheduler
           .runDependencyPass({
-            candidateModules: effectiveModules.filter((module) => module.activation.mode === 'dependency'),
+            candidateModules: plugin.modules.filter((module) => module.activation.mode === 'dependency'),
           })
           .pipe(Effect.either);
         if (result._tag === 'Left') {
@@ -1508,36 +1492,12 @@ class ManagerImpl implements PluginManager {
     this._update(this._pluginsAtom, (plugins) => plugins.filter((plugin) => plugin.meta.profile.key !== id));
   }
 
-  private _addModule(module: Plugin.PluginModule): Plugin.PluginModule {
+  private _addModule(module: Plugin.PluginModule): void {
     log('add module', { id: module.id });
-    const effective = this._applyActivationPolicy(module);
-    // Dedup by id (not identity): the policy wraps modules, so re-enable would otherwise
-    // re-add a fresh wrapper for an already-registered module.
     // TODO(wittjosiah): Find a way to add a warning for duplicate modules that doesn't cause log spam.
     this._update(this._modulesAtom, (modules) =>
-      modules.some((existing) => existing.id === module.id) ? modules : [...modules, effective],
+      modules.some((existing) => existing.id === module.id) ? modules : [...modules, module],
     );
-    return effective;
-  }
-
-  /**
-   * Applies the host's {@link ManagerOptions.activationPolicy}: a dependency-mode module the
-   * policy claims is re-parked on the returned events. Event-mode modules keep their declared
-   * gating — the policy only defers work that would otherwise run in the startup pass.
-   */
-  private _applyActivationPolicy(module: Plugin.PluginModule): Plugin.PluginModule {
-    if (!this._activationPolicy || module.activation.mode !== 'dependency') {
-      return module;
-    }
-    const activatesOn = this._activationPolicy(module);
-    if (!activatesOn) {
-      return module;
-    }
-    log('module parked by activation policy', {
-      id: module.id,
-      events: ActivationEvent.getEvents(activatesOn).map(ActivationEvent.eventKey),
-    });
-    return Plugin.withActivatesOn(module, activatesOn);
   }
 
   private _removeModule(id: string): void {

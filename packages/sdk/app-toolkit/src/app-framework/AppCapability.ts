@@ -7,7 +7,7 @@
 import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability as Capability$ } from '@dxos/app-framework';
+import { ActivationEvents, Capabilities, Capability as Capability$ } from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
 
 import { type Translations } from '../app';
@@ -45,16 +45,27 @@ export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.modu
   AppCapabilities.Settings,
 );
 
-/** Module maker contributing skill definitions. */
+/**
+ * Module maker contributing skill definitions. Gated by default on the assistant being in use
+ * (skills register into a shared registry whose consumers are reactive); declare `activatesOn`
+ * to override.
+ */
 export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Capability$.moduleMaker(
   'SkillDefinition',
   AppCapabilities.SkillDefinition,
+  { activatesOn: ActivationEvents.SkillsRequested },
 );
 
-/** Module maker contributing operation handlers. */
+/**
+ * Module maker contributing operation handlers. Gated by default on the plugin's own
+ * handlers-requested event — the handler-set resolver fires it when an operation of this plugin
+ * is first invoked, so handlers load per demand, not at startup; declare `activatesOn` to
+ * override.
+ */
 export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
+  { activatesOn: ActivationEvents.OwnOperationHandlersRequested },
 );
 
 /** Module maker contributing undo operation mappings. */

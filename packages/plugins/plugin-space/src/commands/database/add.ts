@@ -21,7 +21,7 @@ import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type SpaceId } from '@dxos/keys';
 
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, SpaceEvents } from '#types';
 
 import { printObject } from './util';
 
@@ -43,9 +43,11 @@ export const add: Command.Command<
       const manager = yield* Plugin.Service;
       const { db } = yield* Database.Service;
 
-      // Ensures the dependency pass has run so `SpaceCapabilities.CreateObjectEntry` providers
-      // (dependency-mode modules) have contributed before they're queried below.
+      // Ensures the dependency pass has run, then fires the create-flow demand event —
+      // `SpaceCapabilities.CreateObjectEntry` providers are gated on it by default and must
+      // have contributed before they're queried below.
       yield* manager.start();
+      yield* manager.activate(SpaceEvents.CreateObjectRequested);
 
       const resolve = (typename: string) => {
         const entry = manager.capabilities

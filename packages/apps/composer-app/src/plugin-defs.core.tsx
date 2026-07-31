@@ -4,15 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import {
-  ActivationEvent,
-  ActivationEvents,
-  Capabilities,
-  type Plugin,
-  type PluginManager,
-  ProcessManagerPlugin,
-} from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { NativePasskey } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -30,7 +22,6 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/plugin';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight/plugin';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar/plugin';
 import { ThemePlugin } from '@dxos/plugin-theme/plugin';
@@ -119,46 +110,4 @@ export const getCorePlugins = ({
       platform: isMobile ? 'mobile' : 'desktop',
     }),
   ];
-};
-
-/**
- * Demand-driven activation policy (startup-latency wave 1): parks content plugins' operation
- * handlers, skill definitions, and create-object entries on their demand events instead of the
- * startup pass. A module is parked only when every capability it provides belongs to a parked
- * family — anything else stays eager. Core plugins stay eager wholesale: boot-time operations
- * (layout restore, navigation) invoke into them before any demand signal could fire.
- *
- * Consumers of all three families read reactively (see
- * `.agents/projects/startup-latency/CONSUMERS.md`); the demand paths are the handler-set
- * resolver (operation invoke), `SpaceEvents.CreateObjectRequested` fire sites, and
- * `ActivationEvents.SkillsRequested` fire sites.
- */
-export const getActivationPolicy = (config: PluginConfig): PluginManager.ManagerOptions['activationPolicy'] => {
-  const coreKeys = new Set(getCorePlugins(config).map((plugin) => plugin.meta.profile.key));
-  const familyEvents: Record<string, (pluginKey: string) => ActivationEvent.ActivationEvent> = {
-    [Capabilities.OperationHandler.identifier]: (pluginKey) => ActivationEvents.OperationHandlersRequested(pluginKey),
-    [AppCapabilities.SkillDefinition.identifier]: () => ActivationEvents.SkillsRequested,
-    [SpaceCapabilities.CreateObjectEntry.identifier]: () => SpaceEvents.CreateObjectRequested,
-  };
-  return (module) => {
-    const pluginKey = module.id.split('.module.')[0];
-    if (coreKeys.has(pluginKey)) {
-      return undefined;
-    }
-    const provides = module.activation.provides;
-    if (provides.length === 0) {
-      return undefined;
-    }
-    const events = new Map<string, ActivationEvent.ActivationEvent>();
-    for (const capability of provides) {
-      const makeEvent = familyEvents[capability.identifier];
-      if (!makeEvent) {
-        return undefined;
-      }
-      const event = makeEvent(pluginKey);
-      events.set(ActivationEvent.eventKey(event), event);
-    }
-    const unique = [...events.values()];
-    return unique.length === 1 ? unique[0] : ActivationEvent.oneOf(...unique);
-  };
 };

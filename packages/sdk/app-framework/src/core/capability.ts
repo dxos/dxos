@@ -615,9 +615,14 @@ export type MakerOptions<
  * Builds a lazy-module maker for a capability, with the tag and default module name baked
  * in so the maker takes only a loader in the common case. Capability owners export makers
  * so consumers author modules without restating the spec.
+ *
+ * `defaults.activatesOn` sets the family's default demand gate: modules made by the maker are
+ * event-mode on it unless the call site declares its own `activatesOn`. This is how a capability
+ * owner makes the well-behaved activation the default for every provider (e.g. operation
+ * handlers park until an operation is invoked) — startup is not assumed.
  */
 export const moduleMaker =
-  <C extends AnyTag>(defaultName: string, capability: C) =>
+  <C extends AnyTag>(defaultName: string, capability: C, defaults?: { activatesOn?: ActivationEvent.Events }) =>
   <
     Props = void,
     Options = Props,
@@ -633,7 +638,12 @@ export const moduleMaker =
     const extra = (options?.provides ?? []) as Extra;
     return lazyModule(
       options?.name ?? defaultName,
-      { requires, provides: [capability, ...extra], activatesOn: options?.activatesOn, props: options?.props },
+      {
+        requires,
+        provides: [capability, ...extra],
+        activatesOn: options?.activatesOn ?? defaults?.activatesOn,
+        props: options?.props,
+      },
       loader,
     );
   };

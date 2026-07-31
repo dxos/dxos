@@ -44,6 +44,27 @@ export const eventKey = (event: ActivationEvent) =>
   event.specifier ? compositeKey(event.id, event.specifier) : event.id;
 
 /**
+ * Reserved specifier meaning "the key of the plugin this module belongs to". A maker can declare
+ * a plugin-scoped default event without knowing the plugin (module ids are assigned at
+ * `Plugin.addModule`); the placeholder is substituted with the real key when the module is
+ * resolved against its plugin meta.
+ */
+export const OWN_PLUGIN_SPECIFIER = ':own-plugin:';
+
+/**
+ * Substitutes {@link OWN_PLUGIN_SPECIFIER} with the plugin key across an events declaration.
+ * Events without the placeholder pass through unchanged.
+ */
+export const resolveOwnPlugin = (events: Events, pluginKey: string): Events => {
+  const resolve = (event: ActivationEvent): ActivationEvent =>
+    event.specifier === OWN_PLUGIN_SPECIFIER ? { ...event, specifier: pluginKey } : event;
+  if ('type' in events) {
+    return { type: events.type, events: events.events.map(resolve) };
+  }
+  return resolve(events);
+};
+
+/**
  * Helper to create an activation event that triggers when any of the given events are activated.
  */
 export const oneOf = (...events: ActivationEvent[]) => ({ type: 'one-of' as const, events });
