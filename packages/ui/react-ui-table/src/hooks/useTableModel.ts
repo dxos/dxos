@@ -24,6 +24,13 @@ export type UseTableModelProps<T extends TableRow = TableRow> = {
   db?: Database.Database;
   rows?: T[];
   rowActions?: TableRowAction[];
+  /**
+   * Rows to select when the model is built. Overrides the selection read from the view state for
+   * the table object — pass this when the surrounding container owns the selection under a
+   * different context id (e.g. a type article keyed by the type's URI), so switching into the
+   * table preserves what was already selected.
+   */
+  selection?: readonly string[];
   onSelectionChanged?: (selection: string[]) => void;
   onRowAction?: (actionId: string, data: T) => void;
 } & Pick<
@@ -38,6 +45,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
   rows,
   rowActions,
   features,
+  selection,
   onSelectionChanged,
   onRowAction,
   ...props
@@ -45,7 +53,10 @@ export const useTableModel = <T extends TableRow = TableRow>({
   const registry = useContext(RegistryContext);
   const viewState = useManagerOptional();
   const selected = useSelection(object && Obj.getURI(object), 'multi');
-  const initialSelection = useMemo(() => selected, [object]);
+  // Snapshot once per table object: this seeds the model, and re-running it on every selection
+  // change would rebuild the model underneath the user.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const initialSelection = useMemo(() => [...(selection ?? selected)], [object]);
 
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {

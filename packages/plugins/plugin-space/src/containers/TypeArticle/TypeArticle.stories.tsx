@@ -49,18 +49,6 @@ class CardType extends Type.makeObject<CardType>(DXN.make('org.dxos.type.test.ca
 ) {}
 
 /**
- * Type without the annotation; renders as a header-only tile.
- */
-class PlainType extends Type.makeObject<PlainType>(DXN.make('org.dxos.type.test.plainType', '0.1.0'))(
-  Schema.Struct({
-    name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
-  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--circle--regular', hue: 'indigo' })),
-) {}
-
-const OBJECT_COUNT = 6;
-
-/**
  * Seed people covering every branch of the duplicate scan:
  *  - Alice: three records sharing one address, in two different cases (email identity);
  *  - Bob: two records with no shared address, chained through a Google resource name (foreign-key
@@ -80,8 +68,19 @@ const seedPeople = (space: Space) => {
     Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(rootCollection));
   });
 
-  space.db.add(Person.make({ fullName: 'Alice Andrews', emails: [{ value: 'alice@dxos.org' }] }));
-  space.db.add(Person.make({ fullName: 'Alice A.', jobTitle: 'Engineer', emails: [{ value: 'ALICE@dxos.org' }] }));
+  space.db.add(
+    Person.make({
+      fullName: 'Alice Andrews',
+      emails: [{ value: 'alice@dxos.org' }],
+    }),
+  );
+  space.db.add(
+    Person.make({
+      fullName: 'Alice A.',
+      jobTitle: 'Engineer',
+      emails: [{ value: 'ALICE@dxos.org' }],
+    }),
+  );
   space.db.add(
     Person.make({
       fullName: 'A. Andrews',
@@ -115,6 +114,7 @@ const seedPeople = (space: Space) => {
 
 type StoryArgs = {
   type: Type.AnyObj;
+  count?: number;
 };
 
 const DefaultStory = ({ type }: StoryArgs) => {
@@ -163,7 +163,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
+    withPluginManager<StoryArgs>(({ args: { count = 10 } }) => ({
       capabilities: [
         Capability.contributes(AppCapabilities.Translations, translations),
         // The Duplicates tab is driven by real operations, so the story registers the handler set
@@ -180,27 +180,26 @@ const meta = {
         StorybookPlugin({}),
         PreviewPlugin(),
         ClientPlugin({
-          types: [CardType, PlainType, Collection.Collection, Person.Person, Organization.Organization],
+          types: [CardType, Collection.Collection, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => client.halo.createIdentity());
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
 
-              for (let i = 0; i < OBJECT_COUNT; i++) {
+              seedPeople(space);
+              for (let i = 0; i < count; i++) {
                 space.db.add(
                   Obj.make(CardType, { name: `Card ${i + 1}`, description: `Preview body for card ${i + 1}.` }),
                 );
-                space.db.add(Obj.make(PlainType, { name: `Plain ${i + 1}`, description: `Plain object ${i + 1}.` }));
               }
 
-              seedPeople(space);
               // The scan queries the space, so the seed must be indexed before the tab is opened.
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
       ],
-    }),
+    })),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -211,17 +210,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Collection of objects without the annotation — header-only tiles. */
 export const Default: Story = {
   args: {
-    type: PlainType,
-  },
-};
-
-/** Collection of objects whose type carries `CardAnnotation` — tiles render a preview body. */
-export const WithCardContent: Story = {
-  args: {
     type: CardType,
+    count: 8,
   },
 };
 
