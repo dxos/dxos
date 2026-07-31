@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { Html, type HtmlSrcResolver } from './Html';
-import { Compare, SANDBOX_SAMPLES, SampleFrame, findShadowHost } from './testing';
+import { Compare, SampleFrame, SANDBOX_SAMPLES, findShadowHost } from './testing';
 
 //
 // The sandbox on its own — no dialect. Everything here is behaviour `Html` guarantees to any caller:

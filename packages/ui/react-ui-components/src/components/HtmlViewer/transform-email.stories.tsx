@@ -83,11 +83,17 @@ export const MarketingThemed: Story = {
 
 /** Real mail: a table layout that declares nothing, so it takes the heuristic. */
 export const CapturedUndeclared: Story = {
-  args: { sample: 'm1' },
+  args: {
+    sample: 'm1',
+  },
 };
 
 /**
  * Real mail declaring `color-scheme: light` — the sender stating it has no dark rendering. The dark pane
  * must show the light sheet, not a recolor: an explicit declaration outranks our heuristic.
  */
-export const CapturedLightOnly: Story = { args: { sample: 'm2' } };
+export const CapturedLightOnly: Story = {
+  args: {
+    sample: 'm2',
+  },
+};
