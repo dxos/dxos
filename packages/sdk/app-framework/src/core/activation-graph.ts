@@ -8,15 +8,20 @@ import type * as Capability from './capability';
 import type * as Plugin from './plugin';
 
 //
-// Pure ordering logic for the dependency scheduler (`plugin-manager.ts`), built on the shared
-// `@dxos/graph` model. Everything here is side-effect free and operates on explicit inputs so
-// the scheduler's decisions can be read — and tested — independently of manager state.
+// Pure ordering logic for the activation scheduler, built on the shared `@dxos/graph` model.
+// Everything here is side-effect free and operates on explicit inputs so the scheduler's
+// decisions can be read — and tested — independently of manager state.
 //
-// A round is one graph: nodes carry the modules, edges point provider -> consumer and carry the
-// capability identifier that induced them. Edge kind distinguishes ordering strength:
-// - `hard`: an unsatisfied singleton require; violating it breaks activation.
-// - `soft`: a multi require; best-effort ordering so same-round contributions are visible to
-//   one-shot snapshot reads (multi never hard-gates).
+// This module's vocabulary (kept out of the rest of the manager):
+//
+// - A ROUND is one graph: nodes carry the modules being considered for activation, edges point
+//   provider -> consumer and carry the capability identifier that induced them.
+// - Edge KIND distinguishes ordering strength:
+//   - `hard`: an unsatisfied singleton require; the consumer must not run before the provider.
+//   - `soft`: a multi require; ordering is best-effort so same-round contributions are visible
+//     to consumers that read the collection once at startup (multi requires never block).
+// - A WAVE is a batch of modules with no ordering edges among them: waves run one after
+//   another, and the modules within a wave run concurrently.
 //
 
 export type EdgeKind = 'hard' | 'soft';
@@ -47,74 +52,103 @@ const addEdge = (
   model.addEdge({ id: edgeId(kind, source, target, capability), type: kind, source, target, data: { capability } });
 };
 
-export type FixpointInputs = {
+export type SelectRunnableInputs = {
   candidates: readonly Plugin.PluginModule[];
   /** Module ids excluded up front (e.g. duplicate singleton providers). */
   excluded: ReadonlySet<string>;
   /** Whether a singleton capability already has a contribution. */
   isSatisfied: (capability: Capability.AnyTag) => boolean;
-  /** Runnable-round singleton provider for a capability identifier, if any. */
+  /** This round's singleton provider for a capability identifier, if any. */
   providerOf: (identifier: string) => string | undefined;
   /** Already-active module ids (an active provider resolves via the bounded waitFor bridge). */
   activeIds: readonly string[];
-  /** Whether ANY registered module (active or not, latched or not) provides this capability. */
+  /** Whether ANY registered module (active or not, fired or not) provides this capability. */
   anyRegisteredProvider: (identifier: string) => boolean;
 };
 
-export type FixpointResult = {
+export type SelectRunnableResult = {
   runnable: Plugin.PluginModule[];
   /** Requires with no possible provider at all — a configuration error for the caller to report. */
   missing: Array<{ module: Plugin.PluginModule; capability: string }>;
-  /** Every pend decision (including the `missing` ones), for the caller's diagnostics. */
-  pended: Array<{ module: Plugin.PluginModule; capability: string }>;
+  /** Modules left out of this round (including the `missing` ones), with the require that made
+   * them wait — a later round reconsiders them once the provider becomes available. */
+  waiting: Array<{ module: Plugin.PluginModule; capability: string }>;
 };
 
 /**
- * Satisfiability fixpoint: a candidate is runnable when every unsatisfied singleton require is
- * provided by another runnable candidate (or an active module). Everything else pends for a
- * later cascade round (e.g. providers gated on an event that has not fired yet). Multi
- * requires never gate. Requires with no possible provider at all are returned in `missing`.
+ * Selects the candidates that can run this round: a module is runnable when every unsatisfied
+ * singleton require is provided by another runnable candidate or an already-active module.
+ * Everything else waits for a later round (e.g. providers gated on an event that has not fired
+ * yet). Multi requires never block. Requires with no possible provider at all are returned in
+ * `missing`.
+ *
+ * Removing one module can strand its dependents, so removals propagate: dropping a provider
+ * re-checks exactly the modules that relied on it within the round, until the selection is
+ * stable.
  */
-export const computeRunnableFixpoint = ({
+export const selectRunnableModules = ({
   candidates,
   excluded,
   isSatisfied,
   providerOf,
   activeIds,
   anyRegisteredProvider,
-}: FixpointInputs): FixpointResult => {
-  const runnable = new Map(
+}: SelectRunnableInputs): SelectRunnableResult => {
+  const selected = new Map(
     candidates.filter((module) => !excluded.has(module.id)).map((module) => [module.id, module]),
   );
-  const missing: FixpointResult['missing'] = [];
-  const pended: FixpointResult['pended'] = [];
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const module of [...runnable.values()]) {
-      for (const capability of module.activation.requires) {
-        if (capability.arity === 'multi' || isSatisfied(capability)) {
-          continue;
-        }
-        const provider = providerOf(capability.identifier);
-        if (provider !== undefined && (runnable.has(provider) || activeIds.includes(provider))) {
-          // Ordered within this round, or active (an active provider whose capability
-          // was conditionally skipped resolves via the bounded waitFor bridge).
-          continue;
-        }
-        if (provider === undefined && !anyRegisteredProvider(capability.identifier)) {
-          missing.push({ module, capability: capability.identifier });
-        }
-        // A provider exists but is not in play (event not fired, module pending in a
-        // different chain, plugin disabled): pend until a cascade round unlocks it.
-        pended.push({ module, capability: capability.identifier });
-        runnable.delete(module.id);
-        changed = true;
-        break;
+  const missing: SelectRunnableResult['missing'] = [];
+  const waiting: SelectRunnableResult['waiting'] = [];
+
+  // In-round reliance edges: provider id -> the modules (and requires) that count on it. Only
+  // these need re-checking when a provider drops out.
+  const consumersOf = new Map<string, Array<{ module: Plugin.PluginModule; capability: string }>>();
+  const removalQueue: string[] = [];
+  const remove = (module: Plugin.PluginModule, capability: string): void => {
+    if (!selected.delete(module.id)) {
+      return;
+    }
+    waiting.push({ module, capability });
+    removalQueue.push(module.id);
+  };
+
+  // First pass: drop modules whose provider is outside the round and not active; record
+  // in-round reliance edges for everything else.
+  for (const module of [...selected.values()]) {
+    for (const capability of module.activation.requires) {
+      if (capability.arity === 'multi' || isSatisfied(capability)) {
+        continue;
       }
+      const provider = providerOf(capability.identifier);
+      if (provider !== undefined && selected.has(provider)) {
+        const consumers = consumersOf.get(provider) ?? [];
+        consumers.push({ module, capability: capability.identifier });
+        consumersOf.set(provider, consumers);
+        continue;
+      }
+      if (provider !== undefined && activeIds.includes(provider)) {
+        // Active provider whose capability was conditionally skipped: the consumer resolves it
+        // via the bounded waitFor bridge.
+        continue;
+      }
+      if (provider === undefined && !anyRegisteredProvider(capability.identifier)) {
+        missing.push({ module, capability: capability.identifier });
+      }
+      // A provider exists but is not in play (event not fired, module in a different chain,
+      // plugin disabled): wait until a later round unlocks it.
+      remove(module, capability.identifier);
+      break;
     }
   }
-  return { runnable: [...runnable.values()], missing, pended };
+
+  // Propagate: a removed provider strands the modules that relied on it, transitively.
+  for (let next = removalQueue.shift(); next !== undefined; next = removalQueue.shift()) {
+    for (const consumer of consumersOf.get(next) ?? []) {
+      remove(consumer.module, consumer.capability);
+    }
+  }
+
+  return { runnable: [...selected.values()], missing, waiting };
 };
 
 /**
@@ -292,8 +326,8 @@ export const findCyclePath = (model: ActivationGraphModel, kinds: readonly EdgeK
   return cycle;
 };
 
-/** Ids of the module's hard-edge providers within the graph (its incoming hard edges). */
-export const hardProviderIds = (model: ActivationGraphModel, moduleId: string): string[] =>
+/** Ids of the providers the module must not run before (its incoming hard edges). */
+export const requiredProviderIds = (model: ActivationGraphModel, moduleId: string): string[] =>
   model.filterEdges({ target: moduleId, type: 'hard' }).map((edge) => edge.source);
 
 /** Whether the graph carries any soft (multi-capability) ordering edges. */

@@ -10,13 +10,12 @@
 //
 // 2. The activation scheduler — deciding when each module's `activate` runs. Its model:
 //
-//    - Dependency-mode modules activate in ROUNDS. A round collects candidates, indexes
-//      singleton providers (duplicates error out), runs a satisfiability fixpoint (pends
-//      anything whose provider is not in play), orders survivors into topological WAVES
-//      (hard edges = singleton requires; soft edges = multi requires, best-effort so
-//      same-round contributions are visible to one-shot snapshot reads), and executes
-//      wave by wave. The pure graph math lives in `activation-graph.ts`.
-//      Cascade rounds re-run with an open candidate pool until nothing new is runnable.
+//    - Dependency-mode modules activate in rounds. A round collects candidates, indexes
+//      singleton providers (duplicates error out), selects what can run now (anything whose
+//      provider is not in play waits for a later round), orders the selection so providers
+//      run before consumers, and executes it in concurrent batches. The ordering logic and
+//      its vocabulary (rounds, waves, edge kinds) live in `activation-graph.ts`. Rounds
+//      repeat until one activates nothing new.
 //
 //    - Event-mode modules park until their `activatesOn` event fires (`_activateEvent`),
 //      then activate as an event wave. Inactive dependency-mode providers of their
@@ -26,10 +25,10 @@
 //      which owns the whole load pipeline. Every activation path converges on `loader.load`;
 //      concurrent paths await the same deferred, and contribution is idempotent per module.
 //
-//    - Rounds RUN CONCURRENTLY (e.g. the startup graph and an event fired mid-startup).
+//    - Rounds RUN CONCURRENTLY (e.g. the startup pass and an event fired mid-startup).
 //      A provider mid-load in one round is invisible to another round's ordering, so the
-//      loader awaits in-flight multi providers before a module's activate runs — the
-//      cross-round complement to same-round soft edges.
+//      loader waits for in-flight multi providers before a module's activate runs — the
+//      cross-round complement to the ordering within a round.
 //
 //    - Failures are STRUCTURAL, not fatal: missing/duplicate providers and cycles put the
 //      owning plugin into an error state (`failed` atom) and exclude its modules; everything
@@ -382,7 +381,7 @@ class ManagerImpl implements PluginManager {
       getInactiveModulesByEvent: (key) => this._getInactiveModulesByEvent(key),
       eventsFired: {
         has: (key) => this._get(this._eventsFiredAtom).includes(key),
-        latch: (key) => {
+        markFired: (key) => {
           if (!this._get(this._eventsFiredAtom).includes(key)) {
             this._update(this._eventsFiredAtom, (events) => [...events, key]);
           }

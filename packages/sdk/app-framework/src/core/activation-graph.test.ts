@@ -28,7 +28,7 @@ const modulesOf = (...entries: Plugin.ModuleEntry[]): Plugin.PluginModule[] => {
 const id = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ActivationGraph', () => {
-  it.effect('computeRunnableFixpoint pends a consumer whose provider is out of play and reports missing', () =>
+  it.effect('selectRunnableModules holds back a consumer whose provider is out of play and reports missing', () =>
     Effect.gen(function* () {
       const [provider, consumer, orphan] = modulesOf(
         { id: 'provider', provides: [Single], activate: () => Effect.succeed([]) },
@@ -37,7 +37,7 @@ describe('ActivationGraph', () => {
       );
 
       // Provider runnable: both consumers admitted (multi never gates).
-      const admitted = ActivationGraph.computeRunnableFixpoint({
+      const admitted = ActivationGraph.selectRunnableModules({
         candidates: [provider, consumer, orphan],
         excluded: new Set(),
         isSatisfied: () => false,
@@ -51,8 +51,8 @@ describe('ActivationGraph', () => {
       );
       assert.deepStrictEqual(admitted.missing, []);
 
-      // Provider excluded and unregistered: consumers pend; the unprovidable require is missing.
-      const pended = ActivationGraph.computeRunnableFixpoint({
+      // Provider excluded and unregistered: consumers wait; the unprovidable require is missing.
+      const heldBack = ActivationGraph.selectRunnableModules({
         candidates: [consumer, orphan],
         excluded: new Set(),
         isSatisfied: () => false,
@@ -60,21 +60,21 @@ describe('ActivationGraph', () => {
         activeIds: [],
         anyRegisteredProvider: () => false,
       });
-      assert.deepStrictEqual(pended.runnable, []);
-      assert.strictEqual(pended.missing.length, 2);
-      assert.strictEqual(pended.pended.length, 2);
+      assert.deepStrictEqual(heldBack.runnable, []);
+      assert.strictEqual(heldBack.missing.length, 2);
+      assert.strictEqual(heldBack.waiting.length, 2);
     }),
   );
 
-  it.effect('computeRunnableFixpoint cascades pends through provider chains', () =>
+  it.effect('selectRunnableModules propagates removals through provider chains', () =>
     Effect.gen(function* () {
-      // gated provides for dependent but itself pends on an out-of-play provider: the fixpoint
-      // removes gated first, which unseats dependent in the next iteration.
+      // gated provides for dependent but itself waits on an out-of-play provider: removing
+      // gated propagates and unseats dependent.
       const [gated, dependent] = modulesOf(
         { id: 'gated', requires: [Single2], provides: [Single], activate: () => Effect.succeed([]) },
         { id: 'dependent', requires: [Single], provides: [], activate: () => Effect.succeed([]) },
       );
-      const result = ActivationGraph.computeRunnableFixpoint({
+      const result = ActivationGraph.selectRunnableModules({
         candidates: [gated, dependent],
         excluded: new Set(),
         isSatisfied: () => false,
@@ -87,7 +87,7 @@ describe('ActivationGraph', () => {
       assert.deepStrictEqual(result.runnable, []);
       assert.deepStrictEqual(result.missing, []);
       assert.deepStrictEqual(
-        result.pended.map((pend) => pend.module.id),
+        result.waiting.map((waits) => waits.module.id),
         [gated.id, dependent.id],
       );
     }),
@@ -112,7 +112,7 @@ describe('ActivationGraph', () => {
         graph.filterEdges({ type: 'soft' }).map((edge) => [edge.source, edge.target, edge.data.capability]),
         [[multiProvider.id, consumer.id, Multi.identifier]],
       );
-      assert.deepStrictEqual(ActivationGraph.hardProviderIds(graph, consumer.id), [singleProvider.id]);
+      assert.deepStrictEqual(ActivationGraph.requiredProviderIds(graph, consumer.id), [singleProvider.id]);
       assert.isTrue(ActivationGraph.hasSoftEdges(graph));
     }),
   );

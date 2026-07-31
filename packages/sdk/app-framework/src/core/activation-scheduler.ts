@@ -32,7 +32,7 @@ export type ActivationSchedulerContext = {
   getModules: () => readonly Plugin.PluginModule[];
   /** Inactive modules whose `activatesOn` includes the event. */
   getInactiveModulesByEvent: (key: string) => Plugin.PluginModule[];
-  eventsFired: { has: (key: string) => boolean; latch: (key: string) => void };
+  eventsFired: { has: (key: string) => boolean; markFired: (key: string) => void };
   /** Whether `start()` has completed registration — gates event-wave cascades. */
   isStarted: () => Effect.Effect<boolean>;
   /** Clears a pending-reset marker when its event re-fires (owned by the reset flow). */
@@ -52,9 +52,10 @@ export type ActivationSchedulerContext = {
 /**
  * Decides when each module's `activate` runs. Two coexisting paths:
  *
- * - {@link runDependencyPass}: dependency-mode modules activate in topological ROUNDS over the
- *   capability graph (see `activation-graph.ts`), to a fixpoint — each round's contributions
- *   (or a concurrent event wave's) can unlock previously pending modules.
+ * - {@link runDependencyPass}: dependency-mode modules activate in rounds over the capability
+ *   graph (vocabulary and ordering logic in `activation-graph.ts`), repeated until nothing new
+ *   is runnable — each round's contributions (or a concurrent event wave's) can unlock modules
+ *   that were waiting.
  * - {@link activateEvent}: event-mode modules park until their `activatesOn` fires, then run as
  *   an event wave; inactive dependency-mode providers of their requires are pulled on demand
  *   first.
@@ -63,7 +64,7 @@ export type ActivationSchedulerContext = {
  * plugins into an error state and exclude their modules; everything independent proceeds.
  */
 export class ActivationScheduler {
-  /** Events currently mid-activation (allOf latching counts them as fired). */
+  /** Events currently mid-activation (an `allOf` gate counts them as already fired). */
   readonly #activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   /** Modules currently claimed by an event wave (excluded from re-matching). */
   readonly #activatingModules = Effect.runSync(Ref.make<string[]>([]));
@@ -79,9 +80,10 @@ export class ActivationScheduler {
   }
 
   /**
-   * Runs one activation event: matches parked event-mode modules (with allOf latching), pulls
-   * their inactive dependency providers on demand, activates the wave, and cascades the
-   * dependency graph so contributions made by the wave can unlock pending chain members.
+   * Runs one activation event: matches parked event-mode modules (an `allOf` module joins once
+   * all its events have fired), pulls their inactive dependency providers on demand, activates
+   * them, then re-runs the dependency pass so contributions made here can unlock modules that
+   * were waiting.
    */
   activateEvent(
     key: string,
@@ -100,7 +102,7 @@ export class ActivationScheduler {
       const modules = this.#getModulesForActivation(key, activatingEvents, activatingModules);
       if (modules.length === 0) {
         log('no modules to activate', { key });
-        this.#ctx.eventsFired.latch(key);
+        this.#ctx.eventsFired.markFired(key);
         return false;
       }
 
@@ -113,8 +115,8 @@ export class ActivationScheduler {
 
       const activated = yield* this.#activateModulesForEvent(key, modules, opts);
 
-      // Cascade: this wave's contributions may unlock pending chain members (modules whose
-      // providers were gated on this event). Cheap no-op when nothing became satisfiable.
+      // Follow-up pass: contributions made by this event may unlock modules that were waiting
+      // on them. Cheap no-op when nothing became runnable.
       if (yield* this.#ctx.isStarted()) {
         yield* this.runDependencyPass({});
       }
@@ -131,13 +133,13 @@ export class ActivationScheduler {
   }
 
   /**
-   * Activates inactive typed modules in topological order of the capability graph, to a
-   * fixpoint. Candidates are dependency-mode modules plus event-mode modules whose
-   * `activatesOn` events have already fired (the fired-events latch); modules whose singleton
-   * requires cannot be satisfied by this pass stay PENDING — they are reconsidered by the
-   * next cascade round (each round of contributions, and each event wave, can unlock them).
-   * With `candidateModules`, the first round is scoped to those modules (plus pending
-   * reactivations); cascade rounds always consider the full pool.
+   * Activates inactive modules in dependency order of the capability graph, in rounds,
+   * repeated until a round activates nothing new. Candidates are dependency-mode modules plus
+   * event-mode modules whose `activatesOn` events have already fired; modules whose singleton
+   * requires cannot be satisfied by this pass WAIT — they are reconsidered by the next round
+   * (each round of contributions, and each event wave, can unlock them). With
+   * `candidateModules`, the first round is scoped to those modules (plus any marked for
+   * reactivation); follow-up rounds always consider the full pool.
    *
    * Structural problems — duplicate singleton providers within a round, capability cycles,
    * or a singleton requirement no registered module of any mode could ever provide — put
@@ -151,9 +153,9 @@ export class ActivationScheduler {
       let scoped = options?.candidateModules;
       let ranAny = false;
       let allSucceeded = true;
-      // Fixpoint: contributions made by one round (or concurrently by event waves) can make
-      // previously pending modules satisfiable. Each round activates at least one module or
-      // ends the loop, so this terminates.
+      // Contributions made by one round (or concurrently by event waves) can make modules that
+      // were waiting runnable, so keep running rounds until one activates nothing. Each round
+      // activates at least one module or ends the loop, so this terminates.
       for (;;) {
         const round = yield* this.#runRound(scoped);
         if (round === undefined) {
@@ -161,7 +163,7 @@ export class ActivationScheduler {
         }
         ranAny = true;
         allSucceeded = allSucceeded && round;
-        // Cascade rounds consider everything that might have been unlocked.
+        // Follow-up rounds consider everything that might have been unlocked.
         scoped = undefined;
       }
       return ranAny && allSucceeded;
@@ -207,7 +209,7 @@ export class ActivationScheduler {
       // contribution via the capability-graph machinery.
       yield* this.runDependencyPass({ candidateModules: modules });
 
-      this.#ctx.eventsFired.latch(key);
+      this.#ctx.eventsFired.markFired(key);
 
       performance.mark(`event:${key}:end`);
       performance.measure(`event:${key}`, `event:${key}:start`, `event:${key}:end`);
@@ -290,7 +292,7 @@ export class ActivationScheduler {
       const active = this.#ctx.getActive();
       const allModules = this.#ctx.getModules();
 
-      // Event-mode modules join a round once their activation events have fired (latch).
+      // Event-mode modules join a round once their activation events have fired.
       const eventSatisfied = (module: Plugin.PluginModule): boolean => {
         const spec = module.activation;
         if (spec.mode !== 'event') {
@@ -302,12 +304,12 @@ export class ActivationScheduler {
           : events.some((event) => this.#ctx.eventsFired.has(event));
       };
 
-      const pendingReactivate = allModules.filter((module) => this.#ctx.pendingReactivate.has(module.id));
-      // Explicitly passed candidates are trusted to be triggered (e.g. an event wave passes
-      // its matched modules before the event key is latched); pooled candidates require
-      // dependency mode or a satisfied event latch.
+      const reactivations = allModules.filter((module) => this.#ctx.pendingReactivate.has(module.id));
+      // Explicitly passed candidates are trusted to be triggered (an event wave passes its
+      // matched modules before the event is marked fired); pooled candidates must be
+      // dependency-mode or have their events already fired.
       const explicit = new Set((candidateModules ?? []).map((module) => module.id));
-      const pool = candidateModules ? [...candidateModules, ...pendingReactivate] : allModules;
+      const pool = candidateModules ? [...candidateModules, ...reactivations] : allModules;
       const seen = new Set<string>();
       const candidates = pool.filter((module) => {
         if (
@@ -332,8 +334,8 @@ export class ActivationScheduler {
 
       // Singleton provider index across candidates and already-active typed modules.
       // The duplicate check spans only modules in play, so mutually-exclusive event-gated
-      // alternatives (only one latched) do not trip it. Duplicates put both providers into
-      // an error state and exclude them; their dependents pend.
+      // alternatives (only one has fired) do not trip it. Duplicates put both providers into
+      // an error state and exclude them; their dependents wait.
       const providerIndex = new Map<string, string>();
       const structurallyExcluded = new Set<string>();
       const activeTypedModules = allModules.filter((module) => active.includes(module.id));
@@ -360,14 +362,14 @@ export class ActivationScheduler {
         }
       }
 
-      // Does ANY registered module (active or not, latched or not) provide this?
+      // Does ANY registered module (active or not, fired or not) provide this?
       const anyRegisteredProvider = (identifier: string): boolean =>
         allModules.some((module) => module.activation.provides.some((provided) => provided.identifier === identifier));
 
-      // Satisfiability fixpoint (pure): everything that pends here is reconsidered by a later
-      // cascade round; requires with no possible provider at all are a configuration error
-      // recorded against the requiring plugin.
-      const { runnable, missing, pended } = ActivationGraph.computeRunnableFixpoint({
+      // Pure selection: everything that waits here is reconsidered by a later round; requires
+      // with no possible provider at all are a configuration error recorded against the
+      // requiring plugin.
+      const { runnable, missing, waiting } = ActivationGraph.selectRunnableModules({
         candidates,
         excluded: structurallyExcluded,
         isSatisfied: (capability) => this.#ctx.capabilities.getAll(capability).length > 0,
@@ -375,8 +377,8 @@ export class ActivationScheduler {
         activeIds: [...active],
         anyRegisteredProvider,
       });
-      for (const pend of pended) {
-        log('module pending on capability', { module: pend.module.id, capability: pend.capability });
+      for (const waits of waiting) {
+        log('module waiting on capability', { module: waits.module.id, capability: waits.capability });
       }
       for (const miss of missing) {
         yield* this.#reportStructuralError(
@@ -413,11 +415,11 @@ export class ActivationScheduler {
   }
 
   /**
-   * Orders a round's graph into activation waves, repeatedly excising hard-edge cycles
-   * (recorded as an error state on the involved plugins; their dependents skip via the failed
-   * set) until the remaining graph is acyclic. Soft edges are then layered best-effort: if they
-   * cycle, the round falls back to hard-edge order wholesale. Returns `undefined` when nothing
-   * survives cycle excision.
+   * Orders a round's graph into activation waves (see `activation-graph.ts` for the terms),
+   * repeatedly removing required-edge cycles (recorded as an error state on the involved
+   * plugins; their dependents skip via the failed set) until the remaining graph is acyclic.
+   * Best-effort ordering edges are then layered on top: if they cycle, the round falls back to
+   * required-edge order wholesale. Returns `undefined` when nothing survives cycle removal.
    */
   #orderRoundBreakingCycles(
     graph: ActivationGraph.ActivationGraphModel,
@@ -453,7 +455,7 @@ export class ActivationScheduler {
 
   /**
    * Activates a round wave by wave (modules within a wave run concurrently). A module whose
-   * hard-edge provider failed is skipped and marked failed so its own dependents skip too;
+   * required provider failed is skipped and marked failed so its own dependents skip too;
    * independent modules proceed. Cycle members arrive pre-failed so their dependents skip as
    * well. Returns whether every module in the round activated.
    */
@@ -465,7 +467,7 @@ export class ActivationScheduler {
   ): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       const failed = new Set<string>(preFailed);
-      const providersOf = (moduleId: string): string[] => ActivationGraph.hardProviderIds(graph, moduleId);
+      const providersOf = (moduleId: string): string[] => ActivationGraph.requiredProviderIds(graph, moduleId);
       let allSucceeded = true;
       for (const wave of waves) {
         yield* Effect.all(
@@ -514,9 +516,9 @@ export class ActivationScheduler {
    * Multi requires never gate (they resolve to whatever is currently contributed), but a
    * pulled provider that takes a one-shot snapshot of a multi capability (e.g. the process
    * manager's `Capabilities.LayerSpec` collection) needs its fellow multi providers activated
-   * in the *same* scoped round so the round's soft-edge ordering can land them first —
-   * otherwise a narrow pull (this provider alone) skips that ordering entirely and the
-   * snapshot can be taken before sibling providers have contributed.
+   * in the *same* scoped round so the round's ordering can land them first — otherwise a
+   * narrow pull (this provider alone) skips that ordering entirely and the snapshot can be
+   * taken before sibling providers have contributed.
    */
   #pullDependencyProviders(modules: Plugin.PluginModule[]): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {

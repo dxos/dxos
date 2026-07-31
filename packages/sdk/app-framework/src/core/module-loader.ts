@@ -234,7 +234,7 @@ export class ModuleLoader {
       performance.mark(`module:${module.id}:start`);
       yield* this.#ctx.publish({ event: parentEvent, state: 'activating', module: module.id });
       const pluginId = this.#ctx.getPluginIdForModule(module.id);
-      yield* this.#settleInflightMultiProviders(module);
+      yield* this.#awaitProvidersInFlight(module);
       const requiresContext = yield* this.#resolveRequires(module);
       const [duration, capabilities] = yield* module.activate().pipe(
         Effect.provide(requiresContext),
@@ -291,16 +291,17 @@ export class ModuleLoader {
   }
 
   /**
-   * Awaits providers of this module's multi requires whose load is already in flight in a
+   * Waits for providers of this module's multi requires whose load has already started in a
    * concurrent round, and ingests their contributions before this module's activate runs.
-   * Soft-edge ordering only covers providers inside one round — a provider mid-load in a
-   * concurrent round (the startup dependency graph while an event-triggered pull runs) is
-   * dropped from the pulled round's candidates entirely, so without this a one-shot snapshot
-   * read (e.g. the process manager's `Capabilities.LayerSpec` collection) races the provider's
-   * contribution. Bounded by the activation timeout so a multi-capability cycle (legal — multi
-   * requires never hard-gate) degrades to today's behaviour instead of deadlocking.
+   * Round-internal ordering only covers providers inside one round — a provider mid-load in a
+   * concurrent round (the startup dependency pass while an event-triggered pull runs) is
+   * dropped from the pulled round's candidates entirely, so without this a consumer that reads
+   * the collection once at startup (e.g. the process manager's `Capabilities.LayerSpec`
+   * collection) races the provider's contribution. Bounded by the activation timeout so a
+   * multi-capability require cycle (legal — multi requires never block) degrades to the old
+   * behaviour instead of deadlocking.
    */
-  #settleInflightMultiProviders(module: Plugin.PluginModule): Effect.Effect<void> {
+  #awaitProvidersInFlight(module: Plugin.PluginModule): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       const multiIdentifiers = new Set(
         module.activation.requires
