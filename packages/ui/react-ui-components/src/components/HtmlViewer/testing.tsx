@@ -9,6 +9,7 @@ import { trim } from '@dxos/util';
 
 import m1 from './fixtures/m1.html?raw';
 import m2 from './fixtures/m2.html?raw';
+import m3 from './fixtures/m3.html?raw';
 import { type ColorScheme } from './Html';
 
 //
@@ -152,6 +153,10 @@ export const EMAIL_SAMPLES: Record<string, Sample> = {
   m2: {
     html: m2,
     note: 'Captured: declares color-scheme light — the sender has no dark rendering.',
+  },
+  m3: {
+    html: m3,
+    note: 'Captured: declares light dark and ships its own dark rules — which sanitization strips.',
   },
 };
 

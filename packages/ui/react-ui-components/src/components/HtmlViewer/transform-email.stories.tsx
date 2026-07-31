@@ -78,8 +78,20 @@ export const CapturedUndeclared: Story = {
 };
 
 /**
- * Real mail declaring `color-scheme: light` — the sender stating it has no dark rendering. The dark pane
- * must show the light sheet, not a recolor: an explicit declaration outranks anything we would infer.
+ * Real mail declaring `color-scheme: light dark` with its own `@media (prefers-color-scheme: dark)`
+ * rules. This is the branch that adopts the sender's dark design — and the one that cannot work yet,
+ * because DOMPurify strips the `<style>` blocks carrying those rules before we see them (DESIGN.md
+ * Gap A). Until that is resolved the body falls back to its inline light styling.
+ */
+export const CapturedDarkCapable: Story = {
+  args: {
+    sample: 'm3',
+  },
+};
+
+/**
+ * Real mail declaring `color-scheme: light`. The declaration says the sender has no dark design of its
+ * own — not that ours is unwelcome — so this is recolored like anything else. Both panes must differ.
  */
 export const CapturedLightOnly: Story = {
   args: {

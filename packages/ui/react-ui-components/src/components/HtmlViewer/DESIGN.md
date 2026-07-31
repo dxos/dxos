@@ -82,11 +82,11 @@ the sender's near-black text. Now addressed by the paper sheet below.
 
 ### The sender's declaration is three-way, not two
 
-| Declaration                                                        | Fixture | Treatment                                                                                                     |
-| ------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `color-scheme: light dark` + `@media (prefers-color-scheme: dark)` | —       | Adopt the sender's own dark design: hoist the dark block's rules when the app is dark, delete them when light |
-| `color-scheme: light` only                                         | `m2`    | The sender states it has no dark rendering. Do not recolor — render on an explicit light paper sheet          |
-| Nothing                                                            | `m1`    | Recolor to the app theme, whatever the layout                                                                 |
+| Declaration                                                        | Fixture | Treatment                                                                                                        |
+| ------------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `color-scheme: light dark` + `@media (prefers-color-scheme: dark)` | `m3`    | Adopt the sender's dark design **if its rules actually survived** — otherwise recolor, so it never renders light |
+| `color-scheme: light` only                                         | `m2`    | Recolor. The declaration says the sender has no dark design, not that ours is unwelcome                          |
+| Nothing                                                            | `m1`    | Recolor to the app theme, whatever the layout                                                                    |
 
 The middle row is the finding: `content="light"` is an explicit instruction _not to try_, and today it
 is ignored twice over — `meta` is in `DEFAULT_FORBID_TAGS`, so the declaration is destroyed before
@@ -99,9 +99,12 @@ this.
 ### Decisions
 
 - Never `filter: invert()` — it destroys logos and photography (see §4).
-- Un-recolored bodies in dark mode get an explicit light paper sheet (`color-scheme: light`), so the body
-  is self-consistent rather than half-transparent over a dark surface. Only a sender's explicit
-  `color-scheme: light` reaches that branch now.
+- **Everything is recolored except a sender's dark design that is genuinely on screen (2026-07-31).**
+  `applyAuthoredDarkRules` now reports whether it found any dark block; a document that _declares_
+  dark support whose rules sanitization stripped (Gap A — `m3` is exactly this) falls through to the
+  recolor rather than rendering light inside a dark app. The `light`-only branch went the same way: a
+  white sheet in a dark app is not a dark mode. The `dx-email-paper` sheet had no remaining caller and
+  was removed.
 - **The table-layout exemption is gone (2026-07-31).** It existed to preserve bulk-mail design, but
   sanitization strips `<style>` (Gap A), so what it preserved was inline styles plus table structure —
   too little to justify leaving every marketing email glaring white in dark mode. Intentional colored

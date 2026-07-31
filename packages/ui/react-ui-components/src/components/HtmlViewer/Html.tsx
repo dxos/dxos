@@ -44,8 +44,13 @@ export const detectColorScheme = (html: string): ColorScheme | undefined => {
  * rules are rewritten instead: in dark mode each dark block is re-scoped to `@media all` so it always
  * matches; in light mode it is deleted, so an OS-dark browser can't dark-render inside a light app.
  * Owning the shadow root's stylesheet is what makes this possible.
+ *
+ * Returns whether any dark block was found. A document can *declare* dark support whose rules never
+ * reach us (sanitization strips `<style>`), and a caller needs to tell those apart to decide whether
+ * the sender's design is actually on screen or it needs its own fallback.
  */
-export const applyAuthoredDarkRules = (root: HTMLElement, mode: ColorScheme): void => {
+export const applyAuthoredDarkRules = (root: HTMLElement, mode: ColorScheme): boolean => {
+  let found = false;
   for (const style of root.querySelectorAll('style')) {
     const sheet = style.sheet;
     if (!sheet) {
@@ -62,12 +67,15 @@ export const applyAuthoredDarkRules = (root: HTMLElement, mode: ColorScheme): vo
       const inner = Array.from(rule.cssRules)
         .map((cssRule) => cssRule.cssText)
         .join('');
+      found = true;
       sheet.deleteRule(index);
       if (mode === 'dark' && inner) {
         sheet.insertRule(`@media all{${inner}}`, index);
       }
     }
   }
+
+  return found;
 };
 
 /** What the sandbox knows about the document, handed to every transform so a dialect stays pure. */

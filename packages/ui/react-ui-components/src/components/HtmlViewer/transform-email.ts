@@ -29,9 +29,6 @@ const EMAIL_CSS = [
   // Normalizes typography to the app font so themed mail reads natively. Gated on the class the theming
   // transform adds, so a body left as authored keeps its own type.
   '.dx-email-themed *:not(code):not(pre):not(code *):not(pre *){font-family:inherit!important;line-height:1.5!important;}',
-  // A body we deliberately do not recolor renders on its own light sheet rather than half-transparent
-  // over a dark app surface. `color-scheme` keeps UA-rendered widgets light to match.
-  '.dx-email-paper{background:#fff;color:#111;color-scheme:light;padding:8px;border-radius:4px;}',
 ].join('');
 
 // Wrappers email clients use for quoted reply/forward history (the content that follows "On … wrote:").
@@ -128,34 +125,26 @@ const readThemeParams = (container: Element): ThemeColorParams | undefined => {
 };
 
 /**
- * The light/dark policy, in three branches — because the sender's declaration is three-way and only one
- * of them is a guess:
- * 1. Ships dark rules → adopt them; never recolor over the sender's own dark design.
- * 2. Declares light only → the sender says it has no dark rendering; put it on a light sheet rather
- *    than recoloring against their wishes.
- * 3. Says nothing → recolor to the app theme, regardless of layout.
+ * The light/dark policy. Only one thing earns an exemption from recoloring: a sender's own dark design
+ * that is actually on screen. Everything else is recolored to the app theme, whatever it declared and
+ * whatever its layout — a body rendering as a white sheet inside a dark app is not a dark mode, and a
+ * `color-scheme: light` declaration says the sender has no dark design of their own, not that ours is
+ * unwelcome.
+ *
+ * Dropping the old table-layout exemption cost little: it was there to preserve bulk-mail *design*,
+ * but sanitization strips `<style>` (DESIGN.md §2), so it only ever preserved inline styles and table
+ * structure. Intentional colored backgrounds still survive either way — `stripContentBackgrounds`
+ * drops only *light* ones.
  */
 const themeBody: HtmlTransform = (root, { colorScheme, mode }) => {
-  // The sender ships its own dark rendering: adopt it rather than recoloring over their design.
-  if (colorScheme === 'dark') {
-    applyAuthoredDarkRules(root, mode);
+  // Rewrites the sender's `prefers-color-scheme` blocks so the app theme, not the OS, decides them.
+  // Reports whether any actually arrived: a document can declare dark support whose rules sanitization
+  // removed, and that body still needs recoloring or it renders light inside a dark app.
+  const adopted = colorScheme === 'dark' && applyAuthoredDarkRules(root, mode);
+  if (adopted && mode === 'dark') {
     return;
   }
 
-  // The sender explicitly declared light-only — an instruction not to try. Give it a light sheet in
-  // dark mode so it is self-consistent, and change nothing else.
-  if (colorScheme === 'light') {
-    if (mode === 'dark') {
-      root.classList.add('dx-email-paper');
-    }
-    return;
-  }
-
-  // Undeclared: recolor, whatever the layout. This deliberately no longer exempts table layouts.
-  // That exemption existed to preserve bulk-mail *design*, but sanitization strips `<style>` (see
-  // DESIGN.md §2), so what it actually preserved was inline styles and table structure — too little to
-  // justify leaving every marketing email glaring white in dark mode. Intentional colored backgrounds
-  // still survive: `stripContentBackgrounds` only drops *light* ones.
   root.classList.add('dx-email-themed');
   const params = readThemeParams(root);
   if (params) {
