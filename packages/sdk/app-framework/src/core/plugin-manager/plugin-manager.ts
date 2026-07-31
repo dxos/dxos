@@ -332,12 +332,17 @@ class ManagerImpl implements PluginManager {
     // get a tagged error rather than the wide `Error` produced by the underlying chain.
     //
     // Dedupe before mapping to `enable` — `core` and `enabled` may overlap (an
-    // app-supplied plugin can be in both), and concurrent `enable(id)` calls
-    // for the same id are not idempotent (each would re-run the lazy resolve
-    // and double-register modules). `new Set([...])` preserves first-seen
-    // order which matches the natural core-before-enabled precedence.
+    // app-supplied plugin can be in both); same-id work is coalesced at the leaf
+    // (lazy resolution) and module registration dedupes by id, but the dedupe
+    // avoids redundant walks. `new Set([...])` preserves first-seen order which
+    // matches the natural core-before-enabled precedence. Bounded concurrency:
+    // sequential enables serialize ~60 plugin-definition imports (~1.7 s of the
+    // boot critical path); unbounded would recreate the import contention plateau.
     const initialIds = [...new Set([...core, ...enabled])];
-    void Effect.all(initialIds.map((id) => this.enable(id)))
+    void Effect.all(
+      initialIds.map((id) => this.enable(id)),
+      { concurrency: 8 },
+    )
       .pipe(
         Effect.mapError((cause) => new PluginInitializationError({ cause })),
         Effect.tap(() => Deferred.succeed(this._state.initialized, undefined)),
@@ -515,7 +520,9 @@ class ManagerImpl implements PluginManager {
   }
 
   disable(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error> {
-    return this._catalog.disable(id, opts);
+    // Await the constructor's (concurrent) enable chain: a disable racing bootstrap
+    // would miss not-yet-enabled dependents and cascade incorrectly.
+    return Deferred.await(this._state.initialized).pipe(Effect.andThen(this._catalog.disable(id, opts)));
   }
 
   //
