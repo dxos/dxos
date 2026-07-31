@@ -172,7 +172,7 @@ export const ThemePane = ({ mode, children }: { mode: ColorScheme; children: Rea
   return (
     <div className={mode}>
       <ThemeProvider tx={tx} themeMode={mode}>
-        <div className='bg-baseSurface text-baseText p-2 overflow-auto'>
+        <div className='bg-baseSurface text-baseText p-2 overflow-auto border border-separator rounded'>
           <div className='pb-1 text-xs uppercase tracking-wide text-description'>{mode}</div>
           {children}
         </div>
@@ -186,7 +186,7 @@ export const ThemePane = ({ mode, children }: { mode: ColorScheme; children: Rea
  * is illegible in the other, which is only obvious with both on screen at once.
  */
 export const Compare = ({ render }: { render: () => ReactNode }) => (
-  <div className='grid grid-cols-2 gap-2 border border-separator rounded overflow-hidden'>
+  <div className='grid grid-cols-2 gap-2 overflow-hidden'>
     <ThemePane mode='light'>{render()}</ThemePane>
     <ThemePane mode='dark'>{render()}</ThemePane>
   </div>
@@ -194,7 +194,7 @@ export const Compare = ({ render }: { render: () => ReactNode }) => (
 
 /** Frame shared by both story suites: the sample's note above the rendered body (or comparison). */
 export const SampleFrame = ({ note, children }: { note: string; children: ReactNode }) => (
-  <div className='flex flex-col gap-1 p-2'>
+  <div className='w-full flex flex-col gap-1 p-2'>
     <div className='text-xs text-description'>{note}</div>
     {children}
   </div>

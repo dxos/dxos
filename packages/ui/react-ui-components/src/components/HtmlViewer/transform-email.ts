@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Domino } from '@dxos/ui';
+
 import { type HtmlDialect, type HtmlSrcResolver, type HtmlTransform, applyAuthoredDarkRules } from './Html';
 import { type ThemeColorParams, cssColorToOklch, processEmailColors } from './transform-colors';
 
@@ -13,7 +15,7 @@ const EMAIL_CSS = [
   // Button-style links (own background) are excluded so their design is preserved.
   'a:not([data-dx-email-btn]),a:not([data-dx-email-btn]) *{color:var(--color-accent-text,#3b82f6)!important;',
   'text-decoration-color:var(--color-accent-text,#3b82f6)!important;}',
-  // Quoted reply history is collapsed behind a "•••" toggle (see collapseQuotedReply).
+  // Quoted reply history is collapsed behind a toggle (see collapseQuotedReply).
   '.dx-email-quote{display:none;}',
   '.dx-email-quote.dx-email-quote-open{display:block;}',
   '.dx-email-quote-toggle{display:inline-flex;align-items:center;justify-content:center;gap:3px;',
@@ -21,6 +23,9 @@ const EMAIL_CSS = [
   'font:inherit;font-size:13px;line-height:1;letter-spacing:1px;color:inherit;',
   'background:color-mix(in oklab, currentColor 16%, transparent);}',
   '.dx-email-quote-toggle:hover{background:color-mix(in oklab, currentColor 28%, transparent);}',
+  // `Domino.svg` sizes the icon with Tailwind utilities, which do not cross the shadow boundary — the
+  // app's stylesheet is not in this root — so the sprite is sized here instead.
+  '.dx-email-quote-toggle svg{width:1em;height:1em;flex-shrink:0;fill:currentColor;}',
   // Normalizes typography to the app font so themed mail reads natively. Gated on the class the theming
   // transform adds, because the decision needs the parsed content (the table test).
   '.dx-email-themed *:not(code):not(pre):not(code *):not(pre *){font-family:inherit!important;line-height:1.5!important;}',
@@ -47,7 +52,7 @@ const getHost = (root: HTMLElement): HTMLElement | undefined => {
 };
 
 /**
- * Collapses quoted reply/forward history behind a "•••" toggle (like every email client): the first
+ * Collapses quoted reply/forward history behind an ellipsis toggle (like every email client): the first
  * quote wrapper and everything after it is hidden until the toggle is clicked. No-op when there's no
  * quote.
  *
@@ -63,29 +68,28 @@ const collapseQuotedReply: HtmlTransform = (root) => {
   }
 
   const host = getHost(root);
-  const region = document.createElement('div');
-  region.className = 'dx-email-quote';
+  const open = host?.dataset.dxEmailQuoteOpen === 'true';
+  const region = Domino.of('div').classNames(['dx-email-quote', open && 'dx-email-quote-open']).root;
+
+  // Inserted rather than mounted: the region takes the quote's place among its siblings.
   parent.insertBefore(region, quote);
   // Move the quote and any trailing siblings (further quoted history) into the collapsible region.
   for (let node = region.nextSibling; node; node = region.nextSibling) {
     region.appendChild(node);
   }
-  if (host?.dataset.dxEmailQuoteOpen === 'true') {
-    region.classList.add('dx-email-quote-open');
-  }
 
-  const toggle = document.createElement('button');
-  toggle.type = 'button';
-  toggle.className = 'dx-email-quote-toggle';
-  toggle.textContent = '•••';
-  toggle.setAttribute('aria-label', 'Show quoted text');
+  const toggle = Domino.of('button')
+    .classNames('dx-email-quote-toggle')
+    .attributes({ 'type': 'button', 'aria-label': 'Show quoted text' })
+    .append(Domino.svg('ph--dots-three--bold'))
+    .on('click', () => {
+      const expanded = region.classList.toggle('dx-email-quote-open');
+      if (host) {
+        host.dataset.dxEmailQuoteOpen = String(expanded);
+      }
+    }).root;
+
   parent.insertBefore(toggle, region);
-  toggle.addEventListener('click', () => {
-    const open = region.classList.toggle('dx-email-quote-open');
-    if (host) {
-      host.dataset.dxEmailQuoteOpen = String(open);
-    }
-  });
 };
 
 /** Opens links in a new tab; marks button-style links (own background) so the accent rule skips them. */
@@ -104,9 +108,7 @@ const markLinks: HtmlTransform = (root) => {
  * Read from the shadow's own render context so the tokens resolve to the correct light/dark values.
  */
 const readThemeParams = (container: Element): ThemeColorParams | undefined => {
-  const probe = document.createElement('span');
-  probe.style.display = 'none';
-  container.appendChild(probe);
+  const probe = Domino.of('span').style({ display: 'none' }).mount(container).root;
   const resolve = (variable: string) => {
     probe.style.color = `var(${variable})`;
     return cssColorToOklch(getComputedStyle(probe).color);
