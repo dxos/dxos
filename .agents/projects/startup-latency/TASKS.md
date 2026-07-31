@@ -90,12 +90,26 @@ definitions stay runtime-neutral; CLI/workerd unaffected), and handler loading b
 - [x] skillDefinition → `ActivationEvents.SkillsRequested` fired from chat-service resolution
       and the routine editor; headless routines covered: the handler-provider layer slice pulls
       skills + all handlers at materialization and exposes a live view (snapshot fix included)
-- [x] Validated: cold profilerTotal **13,613 → 7,735 ms (−43%)**, navToReady
-      **18,481 → 12,470 ms (−33%)**, transfer 38.1 → 32.7 MB; warm-cold profilerTotal −43%;
-      70 modules parked (27 handler + 25 create-object + 18 skill); e2e `create document`
-      exercises the demand-pull loop green. `reset device` e2e fails in-container on
-      unreachable signaling (network teardown timeout; no deferral signature in trace) —
-      re-verify on real hardware. First-interaction-latency probe on deferred paths still owed
+- [x] REWORKED per user direction (db867c8116 + a4aedc7f71): demand gates are the
+      **module-spec default** — the makers declare them (`operationHandler` on
+      `OwnOperationHandlersRequested` via `OWN_PLUGIN_SPECIFIER`, resolved against plugin meta
+      at `resolveModule`; `skillDefinition` on `SkillsRequested`; `createObject` on
+      `CreateObjectRequested`) and the `activationPolicy` host indirection is REMOVED. No core
+      exemption: boot-time operations pull their plugin's thin keyed barrel on first invocation.
+      Foreign-namespace handlers gate additionally on that namespace's event
+      (deck/simple-layout/spotlight → layout, markdown → collaboration, registry → settings) so
+      targeted pulls need no flood; the trigger-dispatcher layer slice uses a per-key resolver
+      (its earlier blanket pull re-loaded everything at boot — caught by the harness); toolkit
+      materialization fires SkillsRequested for headless routines; the CLI create-entry snapshot
+      fires the create event
+- [x] Validated (fixed spec-default build): cold profilerTotal **13,613 → 7,566 ms (−44%)**,
+      navToReady **18,481 → 12,951 ms (−30%)**; warm-cold profilerTotal −45%, navToReady −32%;
+      **83 modules gated** (34 handler + 27 create-object + 18 skill + 4 event-mode); boot pulls
+      exactly client/observability/deck handler barrels; e2e create identity/space/document all
+      green through the demand-pull loop. `reset device` e2e fails in-container on unreachable
+      signaling (no deferral signature) — re-verify on real hardware. Known benign: modules
+      declared via `inlineModule` instead of the makers (e.g. trip.SkillDefinition, value-only)
+      keep their own eager behavior. First-interaction-latency probe still owed
 
 ### Wave 2 — lightweight operation definitions ([DEFINITIONS-AUDIT.md](./DEFINITIONS-AUDIT.md))
 

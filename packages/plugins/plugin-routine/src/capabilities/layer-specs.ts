@@ -136,8 +136,6 @@ const OpaqueToolkitSpec = LayerSpec.make(
 
 const OperationsToRegistrySpec = LayerSpec.make(
   {
-    // OperationHandlerProvider stays in requires for ordering: its materialization runs the
-    // demand pull that activates policy-parked handler modules before definitions are read.
     affinity: 'space',
     requires: [Registry.Service, OperationHandlerSet.OperationHandlerProvider, Capability.Service],
     provides: [Registry.Service],
