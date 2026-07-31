@@ -64,6 +64,7 @@ export type UseAppOptions = {
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
   onPluginRemove?: PluginManager.ManagerOptions['onRemove'];
   pluginRegistryProvider?: PluginManager.ManagerOptions['pluginRegistryProvider'];
+  deferStartup?: PluginManager.ManagerOptions['deferStartup'];
   plugins?: Plugin.Plugin[];
   defaults?: string[];
   /**
@@ -104,6 +105,7 @@ export const useApp = ({
   pluginLoader: pluginLoaderProp,
   onPluginRemove,
   pluginRegistryProvider,
+  deferStartup,
   plugins: pluginsProp,
   defaults: defaultsProp,
   setupEvents: setupEventsProp,
@@ -154,10 +156,11 @@ export const useApp = ({
         enabled,
         onRemove: onPluginRemove,
         pluginRegistryProvider,
+        deferStartup,
       });
     log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
     return mgr;
-  }, [pluginManager, pluginLoader, plugins, enabled, onPluginRemove, pluginRegistryProvider]);
+  }, [pluginManager, pluginLoader, plugins, enabled, onPluginRemove, pluginRegistryProvider, deferStartup]);
 
   useEffect(() => {
     if (!cacheEnabled) {

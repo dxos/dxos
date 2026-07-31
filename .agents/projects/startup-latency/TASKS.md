@@ -307,10 +307,24 @@ Activation optimization (each lever measured individually via harness + TBT):
 - [ ] Lever 5 — SDK `_open()` split: 3.2 s of worker spawn + HALO identity + ECHO open
       (marks `client.initialize:*` now on the waterfall); needs intra-SDK attribution next
       (services host open vs identity load vs echo open).
-- [ ] Lever 6 — defer heavy spacesReady-gated modules (Repair, BeaconServiceModule,
-      TriggerRuntimeController, thread/calls AppGraphBuilder) to idle/demand.
+- [x] Lever 6/PoC — DeferredStartup coarse gate (2026-07-31, user-directed): dependency-mode
+      modules of non-critical plugins (`deferStartup` predicate in composer main.tsx; 14-plugin
+      keep set) park until a DeferredStartup wave fired at host idle post-ready. Plugins defer
+      ATOMICALLY — an eager ReactContext consuming a deferred sibling capability trips the
+      useCapability invariant (measured crash, fixed by atomic deferral). N=3 medians
+      (warm-cold): navToReady 14.6–15.4 s → **10.7 s**, first-interactive ~13.5 s → **8.1 s
+      (−42%)**, TBT ~4.0 s → **1.16 s (−69%)**, max long task 2.1 s → 0.45 s, spacesReady wave
+      2.7 s → 0.13 s, startup window 169 modules (was ~350). **client.initialize itself
+      3.3 s → 1.84 s** — the "Client monolith" long task was mostly eval contention from
+      concurrent module evaluation, not SDK work. Known PoC breakage: ProcessManager's
+      one-shot LayerSpec snapshot misses deferred specs (`generateHomeSuggestions` →
+      ServiceNotAvailable) — fix by re-snapshotting on the deferred wave or making the
+      collection reactive before this graduates from PoC.
 - [ ] Lever 7 — streaming start: begin round 1 as plugin definitions register instead of
       after the full enable set (Client could start ~1.4 s earlier).
+- [ ] Graduate the PoC: replace the coarse DeferredStartup gate with precise demand events
+      per module class; fix the LayerSpec snapshot coupling; audit post-idle UX (late
+      surfaces, remount behavior of deferred ReactRoot/ReactContext).
 
 Parked (harness): warm-cold document priming for `milestone:first-editor-interactive` —
 hand-rolled primer UI script was flaky (create-space/createObject races); reverted to the

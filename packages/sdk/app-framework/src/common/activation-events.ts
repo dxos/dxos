@@ -11,6 +11,13 @@ import { ActivationEvent as ActivationEvent$ } from '../core';
 export const Startup = ActivationEvent$.Startup;
 
 /**
+ * Fired at host idle after startup completes; the off-critical-path gate for modules
+ * deferred via the manager's `deferStartup` predicate.
+ * Defined in core; see {@link ActivationEvent$.DeferredStartup}.
+ */
+export const DeferredStartup = ActivationEvent$.DeferredStartup;
+
+/**
  * Demand signal for skill definitions: the assistant is in use (or a routine toolkit is
  * materializing), so parked skill modules should load. One unkeyed event — skills register into
  * a shared registry and are discovered dynamically, so per-plugin gating buys nothing.

@@ -101,3 +101,12 @@ export const getEvents = (events: Events) => ('type' in events ? events.events :
  *   `PluginManager.activate(Startup)` (it delegates to `start()`).
  */
 export const Startup = make('org.dxos.app-framework.event.startup');
+
+/**
+ * Fired at host idle after startup completes. Dependency-mode modules matched by the
+ * manager's `deferStartup` predicate sit out the startup pass and activate here instead —
+ * a coarse off-critical-path gate while modules migrate to precise demand events.
+ * Defined in core because the scheduler both fires it (post-start idle) and special-cases
+ * its wave to include the deferred dependency-mode modules.
+ */
+export const DeferredStartup = make('org.dxos.app-framework.event.deferredStartup');

@@ -1,0 +1,13 @@
+import { chromium } from '@playwright/test';
+const preview = (await import('node:child_process')).spawn('pnpm', ['vite', 'preview'], { cwd: process.cwd(), stdio: 'ignore', detached: false });
+await new Promise(r => setTimeout(r, 3000));
+const browser = await chromium.launch();
+const page = await browser.newPage();
+const errors = [];
+page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+page.on('pageerror', (e) => errors.push('PAGEERROR: ' + e.message));
+await page.goto('http://localhost:4173/?profiler=1');
+await page.waitForTimeout(20000);
+console.log(errors.slice(0, 12).join('\n---\n').slice(0, 4000));
+await browser.close();
+preview.kill();

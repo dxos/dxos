@@ -2876,6 +2876,50 @@ describe('PluginManager', () => {
       }),
     );
 
+    it.effect('deferStartup parks dependency-mode modules until the DeferredStartup wave', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'keep',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'keep' })]),
+            }),
+            Plugin.addModule({
+              id: 'deferred',
+              provides: [Number],
+              activate: () => Effect.succeed([Capability.contribute(Number, { number: 1 })]),
+            }),
+            // Kept consumer of a deferred provider: waits at startup, self-heals on the wave.
+            Plugin.addModule({
+              id: 'consumer',
+              requires: [Number],
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'consumer' })]),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key],
+          deferStartup: (module) => module.id.endsWith('deferred'),
+        });
+
+        yield* manager.activate(ActivationEvents.Startup);
+        assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'keep' }]);
+        // The deferred provider and its waiting consumer are absent at ready.
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), []);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
+
+        yield* manager.activate(ActivationEvent.DeferredStartup);
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 1 }]);
+        // The post-wave pass unlocks the consumer that was waiting on the deferred provider.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'consumer' }]);
+      }),
+    );
+
     it.effect('a plugin enabled after its demand event fired activates via pending reset', () =>
       Effect.gen(function* () {
         const Test = Plugin.make(
