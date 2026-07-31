@@ -110,6 +110,24 @@ where fixtures get captured. Three defects found while wiring that up.
 - [x] **Export only starred messages** — the feed download now filters to messages
       carrying the `starred` system tag, so starring in the Mailbox panel is how a
       fixture set is curated. Button shows the count and disables at zero.
+- [x] **Starred state no longer scans the feed per render** — `ArchiveModule` read
+      `getTagsForMessage` for every message on every render (including every selection
+      change). Now uses `TagIndex.taggedIdsAtom`, the tag index's reverse lookup.
+- [ ] **>1s from clicking a message to it displaying** — the scan above was one cause but
+      probably not all of it. Unmeasured candidates, in order of suspicion:
+  - `processEmailColors` calls `getComputedStyle` per element and again per text-node
+    ancestor walk (`transform-colors.ts` 123/144/164/172) — a forced style recalc per node,
+    synchronous, for every newly rendered body. Gated by `shouldTheme`, so it hits personal
+    mail and any non-table body.
+  - Each selection is a new thread query in `MessageArticle` (`threadId` changes the AST, so
+    `useQuery` resubscribes) plus per-expanded-message tag/extracted-object queries.
+  - Needs instrumenting before any fix — do not guess again.
+- [ ] **`StoryRole.Connector` always reports not connected** — NOT fixed; the empty state
+      now prints the mailbox count and every cursor's `spec.target` uri so the next run says
+      which half of `isCursorForTarget` fails. Leading hypothesis: two Mailbox objects (the
+      story seeds one at identity init; connecting without an `existingTarget` materializes
+      another) and every module takes `useQuery(...)[0]`, so panels may disagree on which
+      mailbox they mean.
 - [ ] **Exercise it against a real account** — connect, star, save. Nothing above is
       verified beyond build + lint; the story needs a live mailbox to render.
 - [ ] **Decide whether a starred-only archive should still be re-importable** — `Upload`
