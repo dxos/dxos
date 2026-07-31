@@ -260,12 +260,27 @@ numbers, lever comparisons, and CI thresholds key on warm-cold; its
 
 Activation optimization (each lever measured individually via harness + TBT):
 
-- [ ] Long-task chunking: yield between module activations — converts fan-out blocks into
-      <50 ms tasks (TBT/INP win + browser interleaves paint/fetch)
-- [ ] Rounds-as-barriers → readiness-driven starts (a module starts when its requires are
-      satisfiable; the measured ClientReady → 4 s stall)
+- [x] Lever 1 — long-task chunking: `ModuleLoader.yieldToHost()` between module activations.
+      Cold TBT median 4234 → 3134 (−26%), wall-clock flat. Committed.
+- [x] Lever 2 — scoped demand pulls (2026-07-31): dispatch-latency marks
+      (`milestone:dispatch:<key>:requested/:initialized`) proved registration wait ≈ 0 and
+      located the spaces-ready → wave-start dead zone inside `#pullDependencyProviders`:
+      follow-up rounds dropped their candidate scope, so the event fiber drained the whole
+      startup pool before its own wave. Fix: `runDependencyPass({scopedToCandidates})` for
+      pulls and event waves + `awaitSettled` join for providers already mid-load; post-wave
+      full pass still unlocks waiters. Regression test verified failing on unfixed scheduler.
+      Cold dispatch gap median 3538 → 643 ms (−82%); warm-cold gap 4358 → 1070 ms; cold TBT
+      flat; navToReady in-container noisy (contention-bound — the event chain simply starts
+      ~3 s earlier instead of queuing behind the drain).
 - [ ] Bounded activation concurrency (the 395-wide unbounded fan-out produced the 81× overlap
       contention plateau)
+- [ ] Client-init long-task monolith (~2 s single task inside Client module activation — the
+      dominant remaining TBT contributor; needs an intra-module split, yields can't help)
+
+Parked (harness): warm-cold document priming for `milestone:first-editor-interactive` —
+hand-rolled primer UI script was flaky (create-space/createObject races); reverted to the
+known-good identity-only primer. Redo via a robust page-object flow (AppManager parity:
+`waitForSpaceReady` + workspace-scoped locators) or seed the document programmatically.
 
 ### Later / standing
 
