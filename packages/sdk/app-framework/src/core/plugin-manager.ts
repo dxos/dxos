@@ -796,6 +796,9 @@ class ManagerImpl implements PluginManager {
       return yield* Effect.gen(this, function* () {
         log('resolving lazy plugin', { id });
         yield* PubSub.publish(this.activation, { event: '', state: 'activating', module: `lazy:${id}` });
+        // The plugin-definition chunk import is startup work that predates any module
+        // activation; measured so the profiler can attribute it per plugin.
+        performance.mark(`plugin-load:${id}:start`);
         const resolvedPlugin = yield* Plugin.resolveLazy(plugin).pipe(
           // Cap how long a remote import can hang. Without this the host can
           // sit on a pending dynamic `import()` indefinitely if the plugin's
@@ -810,6 +813,8 @@ class ManagerImpl implements PluginManager {
               }),
           }),
         );
+        performance.mark(`plugin-load:${id}:end`);
+        performance.measure(`plugin-load:${id}`, `plugin-load:${id}:start`, `plugin-load:${id}:end`);
         this._update(this._pluginsAtom, (plugins) =>
           plugins.map((p) => (p.meta.profile.key === id ? resolvedPlugin : p)),
         );

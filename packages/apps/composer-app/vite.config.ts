@@ -530,6 +530,58 @@ export default defineConfig((env) => ({
       },
     }),
 
+    // Byte attribution for the startup-latency map: which chunk carries which package's bytes,
+    // and which module facade owns the chunk. `scripts/analyze-startup.mjs` joins this against
+    // the harness report's fetched-resource list to attribute startup bytes per plugin.
+    isTrue(process.env.DX_CHUNK_STATS) && {
+      name: 'chunk-stats',
+      generateBundle(_options: unknown, bundle: Record<string, any>) {
+        const packageOf = (id: string): string => {
+          const nodeModules = id.lastIndexOf('node_modules/');
+          if (nodeModules !== -1) {
+            const rest = id.slice(nodeModules + 'node_modules/'.length);
+            const [scope, name] = rest.split('/');
+            return scope.startsWith('@') ? `${scope}/${name}` : scope;
+          }
+          const pkg = id.match(/packages\/[^/]+\/([^/]+)\/src\//);
+          if (pkg) {
+            return `@dxos/${pkg[1]}`;
+          }
+          return id.includes('composer-app') ? 'composer-app' : 'other';
+        };
+        const chunks = Object.values(bundle)
+          .filter((output: any) => output.type === 'chunk')
+          .map((chunk: any) => {
+            const byPackage: Record<string, number> = {};
+            for (const [id, mod] of Object.entries(chunk.modules ?? {})) {
+              const pkg = packageOf(id);
+              byPackage[pkg] = (byPackage[pkg] ?? 0) + ((mod as any).renderedLength ?? 0);
+            }
+            return {
+              fileName: chunk.fileName,
+              bytes: chunk.code?.length ?? 0,
+              isEntry: chunk.isEntry ?? false,
+              isDynamicEntry: chunk.isDynamicEntry ?? false,
+              facadeModuleId: chunk.facadeModuleId ?? null,
+              imports: chunk.imports ?? [],
+              dynamicImports: chunk.dynamicImports ?? [],
+              byPackage,
+            };
+          });
+        const assets = Object.values(bundle)
+          .filter((output: any) => output.type === 'asset')
+          .map((asset: any) => ({
+            fileName: asset.fileName,
+            bytes: typeof asset.source === 'string' ? Buffer.byteLength(asset.source) : (asset.source?.byteLength ?? 0),
+          }));
+        const outDir = path.join(dirname, 'out');
+        if (!existsSync(outDir)) {
+          mkdirSync(outDir);
+        }
+        writeFileSync(path.join(outDir, 'chunk-stats.json'), JSON.stringify({ chunks, assets }, null, 2));
+      },
+    },
+
     isTrue(process.env.DX_STATS) && [
       visualizer({
         emitFile: true,

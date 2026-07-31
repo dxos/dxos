@@ -5,6 +5,8 @@
 import { type Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as FiberRef from 'effect/FiberRef';
+import { globalValue } from 'effect/GlobalValue';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
@@ -28,6 +30,16 @@ export class Service extends Context.Tag('@dxos/app-framework/CapabilityManager'
   Service,
   CapabilityManager.CapabilityManager
 >() {}
+
+/**
+ * Module id of the activation currently executing — set by the loader around each module's
+ * `activate` so instrumentation inside module bodies (e.g. {@link lazyModule}'s chunk-import
+ * timing) can attribute itself to the module without threading the id through every body.
+ */
+export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = globalValue(
+  Symbol.for('@dxos/app-framework/Capability/CurrentModuleId'),
+  () => FiberRef.unsafeMake<string | undefined>(undefined),
+);
 
 /**
  * Get a single capability from the capability manager.
@@ -515,7 +527,17 @@ export const lazyModule = <
 ): Module<Options> => {
   const lazyFn = (options: Options): Effect.Effect<any, Error, any> =>
     Effect.gen(function* () {
+      // Chunk import measured separately from the body: on deferral the import moves to the
+      // interaction path wholesale, so its cost has its own axis in the startup profile.
+      const moduleId = (yield* FiberRef.get(CurrentModuleId)) ?? name;
+      performance.mark(`module-import:${moduleId}:start`);
       const { default: getModule } = yield* Effect.promise(() => loader());
+      performance.mark(`module-import:${moduleId}:end`);
+      performance.measure(
+        `module-import:${moduleId}`,
+        `module-import:${moduleId}:start`,
+        `module-import:${moduleId}:end`,
+      );
       // Correlation cast: when `spec.props` is absent, `Options` resolves to its `Props`
       // default, so `options` is a valid `Props` value.
       const props = spec.props ? spec.props(options) : (options as unknown as Props);

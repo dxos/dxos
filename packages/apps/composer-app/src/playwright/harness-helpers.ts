@@ -51,11 +51,44 @@ export type StartupReport = {
   /** Phase, event, and module timings sourced from `composer.profiler.snapshot()`. */
   profile: {
     phases: Array<{ name: string; duration: number; startTime: number }>;
+    events: Array<{ name: string; duration: number; startTime: number }>;
     eventCount: number;
     moduleCount: number;
     /** Top 10 slowest modules. */
     slowestModules: Array<{ name: string; duration: number }>;
+    /** Every module activation with the wait (scheduling) / run (activate) / import (chunk) split. */
+    modules: Array<{
+      name: string;
+      startTime: number;
+      duration: number;
+      wait: number | null;
+      run: number | null;
+      import: number | null;
+    }>;
+    /** Plugin-definition chunk imports (precede all module activation). */
+    pluginLoads: Array<{ name: string; duration: number; startTime: number }>;
   };
+  /**
+   * Static module inventory probed from `composer.manager.getModules()` — the classification
+   * axes (mode, event gate, requires/provides) for joining against the timing data.
+   */
+  inventory: Array<{
+    id: string;
+    mode: string;
+    activatesOn: string[] | null;
+    requires: string[];
+    provides: string[];
+  }> | null;
+  /** Per-URL resource timings (scripts/css/wasm fetched before the report was taken). */
+  resources: Array<{
+    name: string;
+    initiatorType: string;
+    startTime: number;
+    duration: number;
+    transferSize: number;
+    encodedBodySize: number;
+    decodedBodySize: number;
+  }>;
   /** Approximate transferred bytes from network responses (`response_received` events). */
   transferredBytes: number;
   /** Number of network responses received. */
@@ -109,8 +142,50 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
     const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
     const bootMark = performance.getEntriesByName('boot:html-parsed')[0];
     const firstInteractiveMark = performance.getEntriesByName('app-framework:first-interactive')[0];
+
+    // Static inventory — the classification axes for joining against the timing data. Guarded:
+    // the manager global appears only after React mounts, and its shape is framework-internal.
+    let inventory: unknown = null;
+    try {
+      const manager = (globalThis as any).composer?.manager;
+      const modules = manager?.getModules?.();
+      if (Array.isArray(modules)) {
+        const eventKeyOf = (event: any): string =>
+          `${String(event?.id ?? '?')}${event?.specifier ? `:${String(event.specifier)}` : ''}`;
+        inventory = modules.map((module: any) => {
+          const spec = module.activation ?? {};
+          const activatesOn = spec.activatesOn
+            ? 'type' in spec.activatesOn
+              ? spec.activatesOn.events.map(eventKeyOf)
+              : [eventKeyOf(spec.activatesOn)]
+            : null;
+          return {
+            id: String(module.id),
+            mode: String(spec.mode ?? 'unknown'),
+            activatesOn,
+            requires: (spec.requires ?? []).map((tag: any) => `${String(tag.identifier)}#${String(tag.arity)}`),
+            provides: (spec.provides ?? []).map((tag: any) => `${String(tag.identifier)}#${String(tag.arity)}`),
+          };
+        });
+      }
+    } catch {
+      // Best-effort — the report is still useful without the inventory.
+    }
+
+    const resources = (performance.getEntriesByType('resource') as PerformanceResourceTiming[]).map((entry) => ({
+      name: entry.name,
+      initiatorType: entry.initiatorType,
+      startTime: Math.round(entry.startTime),
+      duration: Math.round(entry.duration),
+      transferSize: entry.transferSize,
+      encodedBodySize: entry.encodedBodySize,
+      decodedBodySize: entry.decodedBodySize,
+    }));
+
     return {
       snapshot,
+      inventory,
+      resources,
       firstPaint: fp ? Math.round(fp.startTime) : 0,
       firstContentfulPaint: fcp ? Math.round(fcp.startTime) : 0,
       domContentLoaded: nav ? Math.round(nav.domContentLoadedEventEnd) : 0,
@@ -118,6 +193,21 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
       firstInteractive: firstInteractiveMark ? Math.round(firstInteractiveMark.startTime) : null,
     };
   });
+
+  // Join the wait/run/import sub-measures onto each module row by name.
+  const indexByName = (rows: Array<{ name: string; duration: number }> | undefined) =>
+    new Map((rows ?? []).map((row) => [row.name, row.duration]));
+  const waits = indexByName(data.snapshot?.moduleWaits);
+  const runs = indexByName(data.snapshot?.moduleRuns);
+  const imports = indexByName(data.snapshot?.moduleImports);
+  const modules = (data.snapshot?.modules ?? []).map((entry: any) => ({
+    name: entry.name,
+    startTime: entry.startTime,
+    duration: entry.duration,
+    wait: waits.get(entry.name) ?? null,
+    run: runs.get(entry.name) ?? null,
+    import: imports.get(entry.name) ?? null,
+  }));
 
   return {
     scenario,
@@ -131,13 +221,18 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
     navigationToReady: 0, // overwritten by caller
     profile: {
       phases: data.snapshot?.phases ?? [],
+      events: data.snapshot?.events ?? [],
       eventCount: data.snapshot?.events.length ?? 0,
       moduleCount: data.snapshot?.modules.length ?? 0,
       slowestModules: (data.snapshot?.modules ?? []).slice(0, 10).map((entry: any) => ({
         name: entry.name,
         duration: entry.duration,
       })),
+      modules,
+      pluginLoads: data.snapshot?.pluginLoads ?? [],
     },
+    inventory: data.inventory as StartupReport['inventory'],
+    resources: data.resources,
     transferredBytes: 0, // populated by caller
     responseCount: 0,
   };

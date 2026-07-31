@@ -236,10 +236,15 @@ export class ModuleLoader {
       const pluginId = this.#ctx.getPluginIdForModule(module.id);
       yield* this.#awaitProvidersInFlight(module);
       const requiresContext = yield* this.#resolveRequires(module);
+      // Wait/run split: `module:<id>` spans the whole pipeline, so scheduling delay (in-flight
+      // providers + requires resolution) is indistinguishable from work without these sub-measures.
+      performance.mark(`module:${module.id}:run`);
+      performance.measure(`module-wait:${module.id}`, `module:${module.id}:start`, `module:${module.id}:run`);
       const [duration, capabilities] = yield* module.activate().pipe(
         Effect.provide(requiresContext),
         Effect.provideService(Capability.Service, this.#ctx.capabilities),
         Effect.provideService(Plugin.Service, this.#ctx.pluginService()),
+        Effect.locally(Capability.CurrentModuleId, module.id),
         Scope.extend(scope),
         // Cap activation so a single misbehaving module can't hold the
         // event chain open. On timeout the failure is recorded against
@@ -260,6 +265,7 @@ export class ModuleLoader {
       const elapsed = Duration.toMillis(duration);
       performance.mark(`module:${module.id}:end`);
       performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
+      performance.measure(`module-run:${module.id}`, `module:${module.id}:run`, `module:${module.id}:end`);
       yield* this.#ctx.publish({ event: parentEvent, state: 'activated', module: module.id });
       log('loaded module', {
         module: module.id,

@@ -26,6 +26,14 @@ export type ProfilerSnapshot = {
   events: Array<{ name: string; duration: number; startTime: number }>;
   /** Module activation timings (`module:org.dxos.plugin.x.module.y`). */
   modules: Array<{ name: string; duration: number; startTime: number }>;
+  /** Scheduling delay per module (`module-wait:` — in-flight providers + requires resolution). */
+  moduleWaits: Array<{ name: string; duration: number; startTime: number }>;
+  /** Activate execution per module (`module-run:` — chunk import + body). */
+  moduleRuns: Array<{ name: string; duration: number; startTime: number }>;
+  /** Lazy chunk import per module (`module-import:` — fetch + parse of the module's chunk). */
+  moduleImports: Array<{ name: string; duration: number; startTime: number }>;
+  /** Plugin-definition chunk imports (`plugin-load:` — precede all module activation). */
+  pluginLoads: Array<{ name: string; duration: number; startTime: number }>;
 };
 
 export type Profiler = {
@@ -79,6 +87,22 @@ export const startupProfiler = (): Profiler => {
         .filter((entry) => entry.name.startsWith('module:'))
         .sort((first, second) => second.duration - first.duration)
         .map((entry) => toRow(entry, 'module:')),
+      moduleWaits: measures
+        .filter((entry) => entry.name.startsWith('module-wait:'))
+        .sort((first, second) => second.duration - first.duration)
+        .map((entry) => toRow(entry, 'module-wait:')),
+      moduleRuns: measures
+        .filter((entry) => entry.name.startsWith('module-run:'))
+        .sort((first, second) => second.duration - first.duration)
+        .map((entry) => toRow(entry, 'module-run:')),
+      moduleImports: measures
+        .filter((entry) => entry.name.startsWith('module-import:'))
+        .sort((first, second) => second.duration - first.duration)
+        .map((entry) => toRow(entry, 'module-import:')),
+      pluginLoads: measures
+        .filter((entry) => entry.name.startsWith('plugin-load:'))
+        .sort((first, second) => second.duration - first.duration)
+        .map((entry) => toRow(entry, 'plugin-load:')),
     };
   };
 
