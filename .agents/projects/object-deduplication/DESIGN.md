@@ -20,12 +20,12 @@ GitHub, Linear) accumulate duplicates. Give the system
 `.agents/projects/object-merging/` solves a different problem with a different mechanism, and the
 two must not be conflated:
 
-|                | `object-merging`                                          | this project                                                    |
-| -------------- | --------------------------------------------------------- | --------------------------------------------------------------- |
-| Cause          | Uncoordinated per-peer initialization of app state        | External data sources materialised repeatedly                   |
-| Identity       | `EntityMeta` key + version, declared by the creator        | Domain identity derived from content (emails, domains, handles) |
-| When           | Automatic, convergent, at the ECHO layer                   | User-reviewed, at the app layer                                 |
-| Correctness    | Must converge across peers without coordination            | A human confirms each merge                                     |
+|             | `object-merging`                                    | this project                                                    |
+| ----------- | --------------------------------------------------- | --------------------------------------------------------------- |
+| Cause       | Uncoordinated per-peer initialization of app state  | External data sources materialised repeatedly                   |
+| Identity    | `EntityMeta` key + version, declared by the creator | Domain identity derived from content (emails, domains, handles) |
+| When        | Automatic, convergent, at the ECHO layer            | User-reviewed, at the app layer                                 |
+| Correctness | Must converge across peers without coordination     | A human confirms each merge                                     |
 
 They converge later: once ECHO exposes a merge primitive with reference rewriting, this project's
 `applyMerge` becomes a caller of it. Until then this project owns its own (simpler, human-gated)
@@ -36,12 +36,12 @@ merge. **Do not couple the two designs; do coordinate on the survivor rule** (bo
 
 Four independent Person-creation paths, each with its own identity rule and its own cache.
 
-| # | Site | Rule | Failure |
-|---|------|------|---------|
-| F1 | [`buildContactFromActor`](../../../packages/core/compute/extractor-lib/src/contact.ts) via [`EmailStage.extractContacts`](../../../packages/core/compute/pipeline-email/src/stages/EmailStage.ts) | lowercased email, run-scoped `ContactLookup` | The `Set` is seeded per pipeline run. Two mailboxes syncing concurrently hold two sets; both miss, both create. |
-| F2 | [`upsertPerson`](../../../packages/plugins/plugin-inbox/src/operations/contacts/google/sync/handler.ts) | **Google `resourceName` foreign key only** | Never consults email. The Person mail-sync already created for `alice@x.com` is invisible → guaranteed second object. It then overwrites `person.emails` wholesale, destroying addresses learned from mail. |
-| F3 | [`getOrCreate`](../../../packages/core/compute/extractor/src/getOrCreate.ts) + [`Resolver.Live`](../../../packages/core/compute/extractor-lib/src/resolver.ts) | email match | The Person query is snapshotted once at **layer construction**; objects created later in the same run are unresolvable. |
-| F4 | [`extract-contact` op](../../../packages/plugins/plugin-inbox/src/operations/extractor/extract-contact.ts), `plugin-github/sync`, `assistant-toolkit/linear/sync-issues` | ad-hoc / semaphore / none | Divergent normalization: `buildContactFromActor` trims+lowercases, `mapGooglePerson` stores verbatim, `Resolver.Mock` compares raw. |
+| #   | Site                                                                                                                                                                                              | Rule                                         | Failure                                                                                                                                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1  | [`buildContactFromActor`](../../../packages/core/compute/extractor-lib/src/contact.ts) via [`EmailStage.extractContacts`](../../../packages/core/compute/pipeline-email/src/stages/EmailStage.ts) | lowercased email, run-scoped `ContactLookup` | The `Set` is seeded per pipeline run. Two mailboxes syncing concurrently hold two sets; both miss, both create.                                                                                             |
+| F2  | [`upsertPerson`](../../../packages/plugins/plugin-inbox/src/operations/contacts/google/sync/handler.ts)                                                                                           | **Google `resourceName` foreign key only**   | Never consults email. The Person mail-sync already created for `alice@x.com` is invisible → guaranteed second object. It then overwrites `person.emails` wholesale, destroying addresses learned from mail. |
+| F3  | [`getOrCreate`](../../../packages/core/compute/extractor/src/getOrCreate.ts) + [`Resolver.Live`](../../../packages/core/compute/extractor-lib/src/resolver.ts)                                    | email match                                  | The Person query is snapshotted once at **layer construction**; objects created later in the same run are unresolvable.                                                                                     |
+| F4  | [`extract-contact` op](../../../packages/plugins/plugin-inbox/src/operations/extractor/extract-contact.ts), `plugin-github/sync`, `assistant-toolkit/linear/sync-issues`                          | ad-hoc / semaphore / none                    | Divergent normalization: `buildContactFromActor` trims+lowercases, `mapGooglePerson` stores verbatim, `Resolver.Mock` compares raw.                                                                         |
 
 Compounding: `Database.flush({ indexes: true })` runs only at the **end** of a sync run
 ([`mail-sync.ts`](../../../packages/plugins/plugin-inbox/src/operations/mail/mail-sync.ts)), so
@@ -64,7 +64,7 @@ Three layers. Only the first is type-aware.
 ### 3.1 `IdentitySpec` — the single identity rule (`@dxos/extractor`)
 
 This is deliberately the same shape the extractor pattern already implies: an extractor decides
-*create vs merge*, which is exactly "does this object's identity key already exist?".
+_create vs merge_, which is exactly "does this object's identity key already exist?".
 
 ```ts
 export interface IdentitySpec<S extends Type.AnyObj> {
@@ -86,23 +86,23 @@ every type gets Google/Linear/GitHub identity for free and F2 is fixed without t
 
 **Person v1**: `email:<trim+lowercase>` per entry in `emails`, plus generic foreign keys. Name
 similarity is deliberately excluded — it produces false positives on shared inboxes
-(`no-reply@dxos.org` vs `testflight_no_reply@email.apple.com` are correctly *not* duplicates).
+(`no-reply@dxos.org` vs `testflight_no_reply@email.apple.com` are correctly _not_ duplicates).
 
 ### 3.2 `IdentityIndex` — replaces four caches
 
 A mutable `Map<key, object>` built once from a query and **updated as objects are created**:
 
 ```ts
-IdentityIndex.build(db, specs)     // query once, index every object by every key
-index.lookup(type, input)          // via spec.inputKeys — what Resolver does today
-index.register(object)             // mid-run creations are immediately resolvable  → fixes F3
+IdentityIndex.build(db, specs); // query once, index every object by every key
+index.lookup(type, input); // via spec.inputKeys — what Resolver does today
+index.register(object); // mid-run creations are immediately resolvable  → fixes F3
 ```
 
 `Resolver.Live` is reimplemented on top of it (same public API), and `ContactLookup` is deleted in
 favour of it. `buildContactFromActor` takes the index. One normalization rule → F4 gone.
 
 To fix F1 the index is cached **per database instance** in a module-level `WeakMap<Database,
-IdentityIndex>` so two concurrent syncs in the same process share it. Cross-*peer* races remain and
+IdentityIndex>` so two concurrent syncs in the same process share it. Cross-_peer_ races remain and
 are out of scope (that is `object-merging`); the Duplicates tab is the backstop.
 
 ### 3.3 Detection and merge (`@dxos/extractor`)
@@ -132,10 +132,10 @@ the next sync re-resolves the email to the survivor. Documented, not fixed in v1
 Definitions in `@dxos/extractor` (pure, serializable, no capability access); handlers in
 `plugin-space`, which is where the spec capability and the UI live.
 
-| Operation | Input | Output |
-|---|---|---|
-| `FindDuplicates` | `{ typename }` | `{ groups: { key, objectIds }[] }` |
-| `ApplyMerge` | `{ typename, objectIds, overrides? }` | `{ survivorId }` |
+| Operation        | Input                                 | Output                             |
+| ---------------- | ------------------------------------- | ---------------------------------- |
+| `FindDuplicates` | `{ typename }`                        | `{ groups: { key, objectIds }[] }` |
+| `ApplyMerge`     | `{ typename, objectIds, overrides? }` | `{ survivorId }`                   |
 
 Specs reach `plugin-space` through `SpaceCapabilities.IdentitySpec`, contributed by `plugin-crm`
 for Person/Organization — mirroring `InboxCapabilities.ObjectExtractor`. The Duplicates tab is
@@ -151,7 +151,7 @@ gains a third layout value alongside `masonry`/`table`.
 - **Content**: masonry of the current group's cards (the existing `TypeTile`), so the user sees
   every candidate at once.
 - **Selection**: clicking a card selects it; the existing **Selected** companion renders it.
-- **Merge**: builds an *uncommitted* draft (`planMerge`) and routes it to a **Merge preview**
+- **Merge**: builds an _uncommitted_ draft (`planMerge`) and routes it to a **Merge preview**
   companion showing a schema-driven `Form` over the draft with Confirm/Cancel. Confirm invokes
   `ApplyMerge` and advances to the next group. Nothing is written before Confirm.
 - **Skip**: advances without writing. Skips are session state in v1 (not persisted); a persisted
@@ -161,11 +161,11 @@ gains a third layout value alongside `masonry`/`table`.
 
 Prior art for showing multi-valued and compound fields in a grid, mapped to our three cases.
 
-| Case | Prior art | Mechanism |
-|---|---|---|
-| Array of scalars (`tags`, `identities`) | Airtable multi-select, Linear labels, GitHub issue labels | Inline **chips**, truncated to the cell width with a `+N` overflow chip; the overflow chip opens a popover listing all values. |
-| Array of compound values (`emails`, `phoneNumbers`, `urls`) | Apple Contacts, Salesforce compound fields, HubSpot | **Primary value + label badge** in the cell (first entry, or the one labelled `primary`), with a chevron affordance; the popover lists every entry as `label → value` and marks the primary. |
-| Non-array compound value (`address`) | Notion rollups, Retool JSON cells, Google Contacts | **Collapsed single-line summary** rendered by a schema-driven formatter (`street, locality region postalCode`), popover shows the structured sub-form. |
+| Case                                                        | Prior art                                                 | Mechanism                                                                                                                                                                                    |
+| ----------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Array of scalars (`tags`, `identities`)                     | Airtable multi-select, Linear labels, GitHub issue labels | Inline **chips**, truncated to the cell width with a `+N` overflow chip; the overflow chip opens a popover listing all values.                                                               |
+| Array of compound values (`emails`, `phoneNumbers`, `urls`) | Apple Contacts, Salesforce compound fields, HubSpot       | **Primary value + label badge** in the cell (first entry, or the one labelled `primary`), with a chevron affordance; the popover lists every entry as `label → value` and marks the primary. |
+| Non-array compound value (`address`)                        | Notion rollups, Retool JSON cells, Google Contacts        | **Collapsed single-line summary** rendered by a schema-driven formatter (`street, locality region postalCode`), popover shows the structured sub-form.                                       |
 
 Common rules: the cell itself is never a mini-form; editing happens in the popover, which hosts the
 `react-ui-form` sub-form for that field subtree; the summary is derived from the field's `Schema`
@@ -174,13 +174,13 @@ placeholder, never an empty chip row. Implementation is phase 5.
 
 ## 6. Phasing
 
-| Phase | Content | Test |
-|---|---|---|
-| 1 | `IdentitySpec`, `IdentityIndex`, `findDuplicates`, `planMerge` in `@dxos/extractor`; `personIdentitySpec` in `@dxos/extractor-lib` | Unit suite for Person (`duplicates.test.ts`) |
-| 2 | `FindDuplicates`/`ApplyMerge` definitions + `plugin-space` handlers + `SpaceCapabilities.IdentitySpec` + `plugin-crm` contribution | Handler unit tests |
-| 3 | Duplicates tab, toolbar, merge-preview companion | Storybook + play test |
-| 4 | Fix F1–F4 at source: `Resolver.Live` on `IdentityIndex`, `ContactLookup` deleted, Google `upsertPerson` falls back to the identity index and unions emails | Existing sync tests + new regression tests |
-| 5 | Compound-value table cells (§5) | Storybook |
+| Phase | Content                                                                                                                                                    | Test                                         |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| 1     | `IdentitySpec`, `IdentityIndex`, `findDuplicates`, `planMerge` in `@dxos/extractor`; `personIdentitySpec` in `@dxos/extractor-lib`                         | Unit suite for Person (`duplicates.test.ts`) |
+| 2     | `FindDuplicates`/`ApplyMerge` definitions + `plugin-space` handlers + `SpaceCapabilities.IdentitySpec` + `plugin-crm` contribution                         | Handler unit tests                           |
+| 3     | Duplicates tab, toolbar, merge-preview companion                                                                                                           | Storybook + play test                        |
+| 4     | Fix F1–F4 at source: `Resolver.Live` on `IdentityIndex`, `ContactLookup` deleted, Google `upsertPerson` falls back to the identity index and unions emails | Existing sync tests + new regression tests   |
+| 5     | Compound-value table cells (§5)                                                                                                                            | Storybook                                    |
 
 Persisted "not a duplicate" assertions, cross-peer convergence, and automatic (non-reviewed)
 merging are explicitly out of scope.

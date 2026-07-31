@@ -4,6 +4,8 @@
 
 export * from './ObjectExtractor';
 export * from './ExtractorRegistry';
+export * from './IdentitySpec';
+export * from './duplicates';
 export * from './ExtractionTemplate';
 export * from './Resolver';
 export * from './dispatch';
