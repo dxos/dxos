@@ -80,9 +80,10 @@ export const UnloadableImages: Story = {
 };
 
 /**
- * The document ships its own dark rules. `prefers-color-scheme` resolves against the OS and cannot be
- * overridden from the page, so the base rewrites those rules — the two panes must differ, and must
- * follow the app mode rather than whatever the OS is set to.
+ * The document ships its own dark rules. Sanitization strips `<style>`, so those rules never reach the
+ * shadow root and both panes currently render unstyled — the story exists to make that gap visible
+ * (DESIGN.md §2, Gap A). Once the authored CSS survives, the panes must differ and must follow the app
+ * mode rather than the OS setting.
  */
 export const AuthoredDarkRules: Story = { args: { sample: 'authoredDark', compare: true } };
 

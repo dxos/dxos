@@ -36,8 +36,8 @@ export const useCidResolver = (
 
     const byContentId = new Map(
       (attachments ?? [])
-        .filter((attachment) => attachment.contentId)
-        .map((attachment) => [attachment.contentId!, attachment]),
+        .filter((attachment): attachment is Message.Attachment & { contentId: string } => !!attachment.contentId)
+        .map((attachment) => [attachment.contentId, attachment]),
     );
 
     return async (src) => {
@@ -60,6 +60,8 @@ export const useCidResolver = (
             return urlOption.value;
           }
           const bytes = yield* Blob.read(blob);
+          // Revocation belongs to the consumer, not here: `Html` caches every resolved url and revokes
+          // the `blob:` ones when it unmounts, so a url minted per resolution is released with it.
           // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
           // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
           // the TS standard lib, not fixable by typing `bytes` differently.

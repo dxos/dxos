@@ -48,8 +48,33 @@ const reconstructMessage = (json: any): Message.Message =>
   });
 
 /**
+ * Appends serialized messages to the mailbox's existing feed. Returns the number imported.
+ *
+ * Import merges rather than replaces because an export is now a *curated* subset (the starred set), and
+ * replacing the feed with one would silently delete every unstarred message. Reset is the deliberate
+ * way to empty a mailbox.
+ */
+export const importMessages = async (
+  mailbox: Mailbox.Mailbox,
+  serialized: unknown[],
+  db: Database.Database,
+): Promise<number> => {
+  const feed = await mailbox.feed?.tryLoad();
+  if (!feed) {
+    return 0;
+  }
+
+  const messages = serialized.map(reconstructMessage);
+  await EffectEx.runPromise(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(db))));
+  await db.flush({ indexes: true });
+
+  return messages.length;
+};
+
+/**
  * Replaces the mailbox's backing feed with a fresh one seeded from serialized messages, then deletes
- * the previous feed. Returns the number of messages imported.
+ * the previous feed. Returns the number of messages imported. Destructive — see {@link importMessages}
+ * for the import path.
  */
 export const replaceFeed = async (
   mailbox: Mailbox.Mailbox,

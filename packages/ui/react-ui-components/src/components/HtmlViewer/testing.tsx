@@ -92,8 +92,9 @@ export const PERSONAL_EMAIL = trim`
 `;
 
 /**
- * A marketing email built from layout tables with intentional brand colors — left as authored so its
- * design (colored header, button) is preserved rather than recolored.
+ * A marketing email built from layout tables with intentional brand colors. Undeclared bodies are
+ * recolored regardless of layout now, so this shows how the brand's own colored header and button
+ * survive that pass — `stripContentBackgrounds` drops only *light* backgrounds.
  */
 export const MARKETING_EMAIL = trim`
   <table width="100%" style="background:#ffffff"><tr><td align="center">
@@ -164,7 +165,7 @@ export const EMAIL_SAMPLES: Record<string, Sample> = {
   },
   marketing: {
     html: MARKETING_EMAIL,
-    note: 'Layout tables — left as authored unless flagged personal.',
+    note: 'Layout tables — recolored; intentional colored backgrounds are kept.',
   },
   m1: {
     html: m1,

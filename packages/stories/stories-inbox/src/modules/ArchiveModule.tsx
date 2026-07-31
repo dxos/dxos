@@ -19,7 +19,7 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { exportFeedMessages, replaceFeed, resetMailbox } from '../testing';
+import { exportFeedMessages, importMessages, resetMailbox } from '../testing';
 
 /** Stable fallback so the starred-ids atom stays unconditional while the tag index resolves. */
 const NO_STARRED_IDS = Atom.make<readonly EntityId[]>(() => []);
@@ -135,7 +135,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
         if (!Array.isArray(serialized)) {
           throw new TypeError('Mailbox feed archive must contain an array.');
         }
-        const count = await replaceFeed(mailbox, serialized, space.db);
+        const count = await importMessages(mailbox, serialized, space.db);
         setStatus({ action: 'uploaded', count });
       } catch (error) {
         log.warn('feed upload failed', { error });
@@ -168,7 +168,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
         <Toolbar.Root>
           <SystemIconButton.Upload
             iconOnly
-            label='Upload feed'
+            label='Import messages (appends)'
             accept='application/json,.json'
             disabled={!mailbox || busy}
             onFileChange={handleUpload}

@@ -159,6 +159,28 @@ const isNetworkSrc = (src: string): boolean => /^(https?:)?\/\//i.test(src);
 const isInlineSrc = (src: string): boolean => /^(data|blob):/i.test(src);
 
 /**
+ * Strips remote `url(…)` references from an inline `style` attribute.
+ *
+ * DOMPurify does not parse CSS, so a `background-image` survives sanitization untouched and fetches on
+ * render — blocking only `<img>` would leave a tracking pixel one CSS property away. `<style>` blocks
+ * are dropped wholesale by sanitization, so inline attributes are the only remaining carrier.
+ */
+const stripRemoteCssUrls = (element: Element): void => {
+  const style = element.getAttribute('style');
+  if (!style || !/url\(/i.test(style)) {
+    return;
+  }
+
+  const stripped = style.replace(/url\(\s*['"]?([^'")]+)['"]?\s*\)/gi, (match, url: string) =>
+    isNetworkSrc(url) ? 'none' : match,
+  );
+  if (stripped !== style) {
+    element.setAttribute('style', stripped);
+    element.setAttribute('data-dx-blocked-css', '');
+  }
+};
+
+/**
  * Marks an image as not-to-be-rendered. `blockedSrc` preserves the original so a caller can offer to
  * load it later; the element stays in the DOM so enabling images can restore it in place.
  */
@@ -217,7 +239,7 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
   const sanitized = useMemo(
     () =>
       isMarkup(html)
-        ? DOMPurify.sanitize(html, { FORBID_TAGS: [...DEFAULT_FORBID_TAGS, ...(forbidTagsKey ? forbidTags! : [])] })
+        ? DOMPurify.sanitize(html, { FORBID_TAGS: [...DEFAULT_FORBID_TAGS, ...(forbidTags ?? [])] })
         : `<pre class="dx-plain">${escapeHtml(html)}</pre>`,
     // `forbidTagsKey` stands in for the array, which callers may rebuild inline.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -240,6 +262,14 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
     const content = document.createElement('div');
     content.className = 'dx-html-root';
     content.innerHTML = sanitized;
+
+    // CSS can fetch too: a remote `background-image` in an inline style would load even with every
+    // `<img>` blocked.
+    if (!loadRemoteImages) {
+      for (const element of content.querySelectorAll('[style]')) {
+        stripRemoteCssUrls(element);
+      }
+    }
 
     // Decide what each image may render. Remote fetches are blocked until the user opts in (privacy);
     // anything left with a src nobody can resolve is hidden rather than drawn broken.
@@ -292,14 +322,18 @@ const resolvePendingSrc = (content: HTMLElement, resolveSrc: HtmlSrcResolver, ca
       continue;
     }
 
-    void resolveSrc(src).then((url) => {
-      if (url) {
-        cache.set(src, url);
-        img.setAttribute('src', url);
-      } else {
-        // Nothing to show: hide rather than leave the unresolved src to render broken.
-        hideImage(img);
-      }
-    });
+    // Both outcomes hide: a rejected resolver (a failed lookup) must not leave an unhandled rejection,
+    // and must not leave the unresolved src to render broken either.
+    void resolveSrc(src).then(
+      (url) => {
+        if (url) {
+          cache.set(src, url);
+          img.setAttribute('src', url);
+        } else {
+          hideImage(img);
+        }
+      },
+      () => hideImage(img),
+    );
   }
 };

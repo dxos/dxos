@@ -165,9 +165,15 @@ tags.
 
 ## 5. Fixtures
 
-`fixtures/*.html` is real captured mail (saved from the MailboxSync story's Archive panel), rendered
-by `HtmlViewer.stories.tsx`'s `Captured` story as a light/dark pair — the failure mode is a body that
+`fixtures/*.html` is real captured mail (saved from the MailboxSync story's Archive panel), exposed as
+the `m1`/`m2`/`m3` entries of `EMAIL_SAMPLES` in `testing.tsx` and rendered by
+`transform-email.stories.tsx` as a light/dark pair via `Compare` — the failure mode is a body that
 reads fine in one mode and is illegible in the other, which is only obvious with both on screen.
+
+Captured mail is scrubbed before it lands: recipient addresses become `user@example.com` and
+per-recipient URL tokens (unsubscribe links, click/open trackers) are replaced with `REDACTED`. The
+layout, inline styling and `color-scheme` declarations — the properties these fixtures exist to
+exercise — are left intact. Scrub anything new the same way; these files are in a public repo.
 
 Both current fixtures are table layouts, so both exercise Gap B only; neither is dark-capable, so
 nothing here yet covers the CSSOM-hoist path. A dark-capable capture is still needed.

@@ -383,7 +383,21 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
           <h2
             className={mx('text-lg line-clamp-2 min-w-0', onExpandedChange && 'cursor-pointer')}
             data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
+            // Focusable and key-activated only when it actually toggles, so a single-message
+            // conversation doesn't put a dead tab stop in the reading order.
+            role={onExpandedChange && 'button'}
+            tabIndex={onExpandedChange && 0}
+            aria-expanded={onExpandedChange && isExpanded}
             onClick={onExpandedChange && (() => onExpandedChange(id, !isExpanded))}
+            onKeyDown={
+              onExpandedChange &&
+              ((event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onExpandedChange(id, !isExpanded);
+                }
+              })
+            }
           >
             {sender}
           </h2>

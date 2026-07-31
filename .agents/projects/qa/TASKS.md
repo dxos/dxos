@@ -1,6 +1,6 @@
 # QA — Tasks
 
-_Resume: fixture capture is wired in the MailboxSync story (Phase 5) but NOT yet exercised against a real account — connect one, star some mail, save the HTML. Uncommitted: none. Last: stories-inbox message panel + attention fixes._
+_Resume: PR #12418 open with the HTML sandbox, email dialect and dark-mode policy; fixtures m1–m3 captured and scrubbed. Next: Gap A (recover the sender's dark rules past sanitization), then Phase 4's live-app check. Uncommitted: none._
 
 User-reported defects and small UX corrections found while using Composer, tracked
 across whichever package owns the fix. Findings and rationale live in
@@ -20,10 +20,12 @@ across whichever package owns the fix. Findings and rationale live in
       `subject.threadId` changes. Drafts are skipped when picking "latest" so adding a
       reply draft doesn't fold the message it answers.
 
-## Phase 2: HtmlViewer dark mode
+## Phase 2: HTML rendering + dark mode — SUPERSEDED
 
-Email bodies render in a shadow root and are recolored only for personal/non-table
-mail. Two gaps, both detailed in DESIGN.md §1.
+Implemented and moved. The component, its dialect seam and the full design write-up now live in
+`packages/ui/react-ui-components/src/components/HtmlViewer/` — see its
+[DESIGN.md](../../../packages/ui/react-ui-components/src/components/HtmlViewer/DESIGN.md), which is
+the current record for everything below.
 
 - [x] **Capture real email fixtures to analyze against** — done in the MailboxSync
       story rather than the shipping app menu; see Phase 5. Still needs a real account
@@ -34,36 +36,28 @@ mail. Two gaps, both detailed in DESIGN.md §1.
   - Store under `src/testing/data/emails/`, loaded via `import.meta.glob` raw.
   - New `HtmlViewer.fixtures.stories.tsx` rendering every fixture as a light/dark
     pair — the analysis harness, and the regression net afterwards.
-- [ ] **Detect sender-authored dark mode**
-  - Scan the _raw_ html pre-sanitize for `prefers-color-scheme: dark` and
-    `<meta name="(supported-)?color-scheme">`; `<meta>` is stripped by DOMPurify
-    (`FORBID_TAGS`), so the signal must be read before sanitization.
-- [ ] **Honour the app theme instead of the OS for dark-capable email**
-  - `<style>` survives sanitization, so an email's own dark rules fire off the OS
-    preference — unfixable via `color-scheme`. Rewrite the CSSOM instead: hoist the
-    dark block's rules when `themeMode === 'dark'`, delete them when light.
-- [ ] **Give un-themed (marketing/table) email an explicit paper sheet in dark mode**
-  - Today those bodies keep authored dark text while unpainted regions show the dark
-    app surface. Render on `background:#fff; color:#111; color-scheme:light`. Never
-    `filter: invert()`.
-- [ ] **Improve the personal-mail inversion curve**
-  - `transform-colors.ts:69` (`l = min(1 - l, inkL)`) flattens the authored contrast
-    ladder onto the ink clamp; replace with a curve preserving relative lightness plus
-    a chroma clamp.
+- [x] **Detect sender-authored dark mode** — `detectColorScheme` reads the raw html pre-sanitize.
+- [x] **Recolor undeclared and light-declared bodies** — the table-layout exemption and `isPersonal`
+      are gone; only a sender's dark design that actually survived is exempt.
+- [ ] **Gap A: recover the sender's dark rules** — DOMPurify strips `<style>`, so
+      `applyAuthoredDarkRules` never fires. Extract the `@media (prefers-color-scheme: dark)` blocks
+      pre-sanitize and inject that subset. See DESIGN.md §2.
+- [ ] **Improve the recolor inversion curve** — `transform-colors.ts` (`l = min(1 - l, inkL)`) flattens
+      the authored contrast ladder onto the ink clamp; wants a curve preserving relative lightness plus
+      a chroma clamp.
 
-## Phase 3: Factor out `react-ui-html`
+## Phase 3: Factor out the sandbox — DONE (not as `react-ui-html`)
 
-Decision recorded in DESIGN.md §2 — factor in three layers, keep the email policy in
-plugin-inbox. Supersedes the inline TODOs at `HtmlViewer.tsx:19` and
-`transform-colors.ts:14`.
+A separate `react-ui-html` package was created and then dropped; everything lives in
+`react-ui-components` instead, per direction.
 
-- [ ] **Move color primitives to `react-ui-theme`** — sRGB↔OKLCH, CSS color parse,
-      contrast. No email content in any of it.
-- [ ] **New `react-ui-html`** — shadow-root host + DOMPurify + remote-image blocking +
-      theme adoption + async `src` resolution, exposed as
-      `<Html html transforms={…} resolveSrc={…} />`.
-- [ ] **Keep email policy in plugin-inbox** — quoted-reply collapse, `cid:` attachment
-      resolution, the `isPersonal`/table heuristic, the Gmail/Proton/Yahoo selectors.
+- [x] **`Html` owns the sandbox** — shadow root, sanitization, remote-image blocking, `src` resolution,
+      and the generic `color-scheme` handling.
+- [x] **Email policy is a dialect** — `emailDialect()` (a plain function, not a hook) supplies CSS,
+      transforms and the resolver; `cid:` resolution moved to plugin-inbox's `useCidResolver`, so the
+      shared package no longer depends on ECHO.
+- [ ] **Move color primitives to `react-ui-theme`** — sRGB↔OKLCH, CSS color parse, contrast. Still
+      in `transform-colors.ts`; the original TODO stands.
 
 ## Phase 4: Mailbox "Sync" routine shows no Operation
 
@@ -126,9 +120,9 @@ where fixtures get captured. Three defects found while wiring that up.
       mailbox they mean.
 - [ ] **Exercise it against a real account** — connect, star, save. Nothing above is
       verified beyond build + lint; the story needs a live mailbox to render.
-- [ ] **Decide whether a starred-only archive should still be re-importable** — `Upload`
-      calls `replaceFeed`, which swaps the whole feed for the file's contents, so
-      round-tripping a starred-only export now discards everything unstarred.
+- [x] **Starred-only archives are safe to re-import** — import now _appends_ via `importMessages`
+      rather than swapping the feed, so restoring a curated (starred) export cannot delete the
+      unstarred remainder. `replaceFeed` is kept for Reset, the deliberate way to empty a mailbox.
 
 ## Open questions for the user
 
@@ -141,6 +135,7 @@ where fixtures get captured. Three defects found while wiring that up.
 ## References
 
 - [DESIGN.md](DESIGN.md) — findings and rationale.
-- `packages/plugins/plugin-inbox/src/components/HtmlViewer/`
+- `packages/ui/react-ui-components/src/components/HtmlViewer/` — the HTML sandbox, email dialect and
+  its own DESIGN.md.
 - `packages/plugins/plugin-connector/src/util/sync-routine.ts`
 - `packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.tsx`
