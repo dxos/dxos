@@ -10,10 +10,10 @@ import { ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
+import { emailDialect } from './email';
 import m1 from './fixtures/m1.html?raw';
 import m2 from './fixtures/m2.html?raw';
 import { Html, type HtmlSrcResolver } from './Html';
-import { useEmailDialect } from './useEmailDialect';
 
 //
 // Samples
@@ -130,9 +130,9 @@ type EmailBodyProps = {
   resolveSrc?: HtmlSrcResolver;
 };
 
-/** What a caller writes: the sandbox plus the email dialect (see `useEmailDialect`). */
+/** What a caller writes: the sandbox plus the email dialect (see `emailDialect`). */
 const EmailBody = ({ html, isPersonal, loadRemoteImages, resolveSrc }: EmailBodyProps) => (
-  <Html html={html} loadRemoteImages={loadRemoteImages} dialect={useEmailDialect({ html, isPersonal, resolveSrc })} />
+  <Html html={html} loadRemoteImages={loadRemoteImages} dialect={emailDialect({ isPersonal, resolveSrc })} />
 );
 
 //

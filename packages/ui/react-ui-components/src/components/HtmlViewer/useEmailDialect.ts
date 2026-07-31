@@ -37,11 +37,11 @@ const EMAIL_CSS = [
 const QUOTE_SELECTORS = [
   '.gmail_quote_container',
   '.gmail_quote',
-  'blockquote[type="cite"]',
   '.protonmail_quote',
   '.yahoo_quoted',
   '#appendonsend',
   '#divRplyFwdMsg',
+  'blockquote[type="cite"]',
 ].join(',');
 
 /**
@@ -169,7 +169,14 @@ const readThemeParams = (container: Element): ThemeColorParams | undefined => {
   const panel = resolve('--color-base-surface');
   container.removeChild(probe);
 
-  return ink && panel ? { inkL: ink.l, inkC: ink.c, inkH: ink.h, panelL: panel.l } : undefined;
+  return ink && panel
+    ? {
+        inkL: ink.l,
+        inkC: ink.c,
+        inkH: ink.h,
+        panelL: panel.l,
+      }
+    : undefined;
 };
 
 export type UseEmailDialectProps = {

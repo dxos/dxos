@@ -3,7 +3,10 @@
 Why this component is shaped the way it is, and what is still open. The task ledger lives in
 [`.agents/projects/qa/TASKS.md`](../../../../../../.agents/projects/qa/TASKS.md).
 
-`Html.tsx` owns the sandbox: sanitized content in a Shadow DOM host, so the content's (often
+`Html.tsx` owns the sandbox and everything generic to an HTML document — including the color-scheme
+declaration (`ColorScheme`/`detectColorScheme`) and the authored-dark-rule rewrite, since
+`prefers-color-scheme` is not an email idea. It hands both to transforms via `HtmlTransformContext`, so
+a dialect never needs the raw markup or the theme context. Concretely: sanitized content in a Shadow DOM host, so the content's (often
 aggressive) CSS cannot reach the app while it still flows in the app layout — no iframe, no height
 measurement. Script safety is DOMPurify's, since a shadow root isolates style but does not sandbox
 execution. `useEmailDialect.ts` is the email configuration of that sandbox; `transform-colors.ts` is
@@ -13,7 +16,7 @@ except where marked open.
 ## 1. Core + dialects, not base + variant
 
 `Html` and the email layer are not a base and a subclass. Nothing in the email layer overrides,
-extends, or specializes `Html` — it _configures_ it. Every email-specific thing is a value passed through an
+extends, or specializes `Html` — it _configures_ it, with data. Every email-specific thing is a value passed through an
 existing seam: a CSS string, an ordered transform list, a `cid:` resolver, and a theming predicate.
 That is a dialect, not a subclass.
 
@@ -28,9 +31,19 @@ type HtmlDialect = {
 };
 ```
 
-A dialect holds React state (the quoted-reply expand ref, memoized resolvers), so it is produced by a
-hook — `useEmailDialect({ html, isPersonal, resolveSrc })` — not a constant. `HtmlViewer` is gone; a
-caller renders `<Html html dialect={useEmailDialect(…)} />`.
+A dialect is a **plain function**, not a hook: `emailDialect({ isPersonal, resolveSrc })`, built inline
+on every render. Two things in the base had to change to allow that, and both were flaws in the generic
+layer rather than anything email-specific:
+
+- **Identity-sensitivity.** `Html` keyed its rebuild on the `transforms` array identity, so an inline
+  dialect would re-sanitize and re-parse the document every render. It now keys on `HtmlDialect.key` —
+  a string the dialect uses to declare which of _its_ options change behaviour — and reads the
+  transforms from a ref at rebuild time.
+- **Transform state.** The quoted-reply expand flag needed to outlive a rebuild, which is what forced a
+  `useRef`. It now lives on the shadow _host_ element, which persists while the content is re-parsed.
+
+What remains a hook is `useCidResolver` in plugin-inbox, and only because it closes over a live
+database — data-layer plumbing, not dialect configuration.
 
 That also removed this package's ECHO coupling. The old component took `attachments` and `db` and
 reached into `Blob.url()`/`Blob.read()` to resolve `cid:` images, which dragged `@dxos/echo`/`@dxos/types`

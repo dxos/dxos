@@ -9,11 +9,85 @@ import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 /**
- * Mutates the attached content subtree. Runs after the content is in the shadow root, so a transform
- * may read layout/computed style. Called in order on every rebuild (content or theme change), so a
- * transform must be idempotent over a freshly-parsed subtree rather than accumulate state.
+ * What the document said about color schemes:
+ * - `dark` — ships its own dark rendering (a `prefers-color-scheme: dark` block, or a declaration
+ *   naming `dark`). Adopt it rather than recoloring.
+ * - `light` — explicitly states it has no dark rendering. An instruction not to try.
+ * - `unknown` — said nothing.
  */
-export type HtmlTransform = (root: HTMLElement) => void;
+export type ColorScheme = 'dark' | 'light' | 'unknown';
+
+const META_COLOR_SCHEME_RE = /<meta[^>]+name=["']?(?:supported-)?color-scheme["']?[^>]*>/gi;
+const CONTENT_RE = /content=["']([^"']*)["']/i;
+const DARK_MEDIA_RE = /prefers-color-scheme\s*:\s*dark/i;
+
+/**
+ * Reads the document's color-scheme declaration from the **raw** markup. This cannot run after
+ * sanitization: `meta` is a forbidden tag, so the declaration is gone by then. Not email-specific —
+ * `color-scheme` and `prefers-color-scheme` are how any HTML document states its intent.
+ */
+export const detectColorScheme = (html: string): ColorScheme => {
+  if (DARK_MEDIA_RE.test(html)) {
+    return 'dark';
+  }
+
+  const declared = Array.from(html.matchAll(META_COLOR_SCHEME_RE))
+    .map((match) => match[0].match(CONTENT_RE)?.[1]?.toLowerCase() ?? '')
+    .join(' ');
+  if (declared.includes('dark')) {
+    return 'dark';
+  }
+
+  return declared.includes('light') ? 'light' : 'unknown';
+};
+
+/**
+ * Makes the app theme — not the OS — decide whether the document's own dark rules apply.
+ * `prefers-color-scheme` resolves against the user agent and cannot be overridden from the page, so the
+ * rules are rewritten instead: in dark mode each dark block is re-scoped to `@media all` so it always
+ * matches; in light mode it is deleted, so an OS-dark browser can't dark-render inside a light app.
+ * Owning the shadow root's stylesheet is what makes this possible.
+ */
+export const applyAuthoredDarkRules = (root: HTMLElement, dark: boolean): void => {
+  for (const style of root.querySelectorAll('style')) {
+    const sheet = style.sheet;
+    if (!sheet) {
+      continue;
+    }
+
+    // Backwards: deleting/inserting shifts every later index.
+    for (let index = sheet.cssRules.length - 1; index >= 0; index--) {
+      const rule = sheet.cssRules[index];
+      if (!(rule instanceof CSSMediaRule) || !DARK_MEDIA_RE.test(rule.conditionText)) {
+        continue;
+      }
+
+      const inner = Array.from(rule.cssRules)
+        .map((cssRule) => cssRule.cssText)
+        .join('');
+      sheet.deleteRule(index);
+      if (dark && inner) {
+        sheet.insertRule(`@media all{${inner}}`, index);
+      }
+    }
+  }
+};
+
+/** What the sandbox knows about the document, handed to every transform so a dialect stays pure. */
+export type HtmlTransformContext = {
+  /** The document's own declaration, read before sanitization stripped it. */
+  colorScheme: ColorScheme;
+  /** Whether the app (not the OS) is rendering dark. */
+  dark: boolean;
+};
+
+/**
+ * Mutates the attached content subtree. Runs after the content is in the shadow root, so a transform
+ * may read layout/computed style. Called in order on every rebuild, so a transform must be idempotent
+ * over a freshly-parsed subtree; state that has to outlive a rebuild belongs on the host element
+ * (reachable via `root.getRootNode().host`), which persists.
+ */
+export type HtmlTransform = (root: HTMLElement, context: HtmlTransformContext) => void;
 
 /**
  * Resolves a non-http `src` (e.g. `cid:`) to a URL. Returning `undefined` leaves the element alone.
@@ -23,14 +97,20 @@ export type HtmlTransform = (root: HTMLElement) => void;
 export type HtmlSrcResolver = (src: string) => Promise<string | undefined>;
 
 /**
- * Everything a kind of content needs beyond the sandbox itself. `Html` is fixed; a dialect is how
- * email, RSS, a web clip, or agent-produced markup differ — so this is a value, not a subclass and not
- * a `variant` enum (which would put every dialect's knowledge back inside the shared component).
+ * Everything a kind of content needs beyond the sandbox itself — how email, RSS, a web clip, or
+ * agent-produced markup differ. A plain value, deliberately: not a subclass, and not a `variant` enum
+ * (which would put every dialect's knowledge back inside this component).
  *
- * A dialect usually holds React state (expand refs, memoized resolvers), so it is built by a hook —
- * see {@link useEmailDialect} — rather than declared as a constant.
+ * Callers may build one inline on every render. Rebuilds are keyed on {@link HtmlDialect.key}, not on
+ * the identity of these functions, so a dialect needs no memoization to avoid re-parsing the document.
  */
 export type HtmlDialect = {
+  /**
+   * Identifies this dialect *configuration*. Rebuild the content when it changes — so it must capture
+   * every option that changes what the transforms do (e.g. `email:personal`). Omit for a dialect whose
+   * behaviour never varies.
+   */
+  key?: string;
   /** Extra CSS injected into the shadow root, after the base rules. */
   css?: string;
   /** Content transforms, applied in order once the content is attached. */
@@ -78,17 +158,19 @@ const isMarkup = (text: string): boolean =>
  * safety comes from DOMPurify sanitization, since a shadow root isolates style but does not sandbox
  * execution; remote images are stripped unless enabled, so tracking pixels don't load.
  *
- * Content-specific behaviour is supplied by the caller: `transforms` mutate the attached subtree
- * (collapsing quoted replies, recoloring to the theme, …) and `resolveSrc` resolves non-http `src`
- * references. This component owns only the sandbox.
+ * Content-specific behaviour is supplied by the caller as a {@link HtmlDialect}: `transforms` mutate
+ * the attached subtree (collapsing quoted replies, recoloring to the theme, …) and `resolveSrc`
+ * resolves non-http `src` references. This component owns only the sandbox.
  */
 export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: HtmlProps) => {
-  const { css, transforms, resolveSrc, forbidTags } = dialect ?? {};
-  // Rebuilt on theme change so transforms that read theme tokens (via computed style) re-run.
   const { themeMode } = useThemeContext();
   const hostRef = useRef<HTMLDivElement>(null);
   // Resolved src cache, persisted across content rebuilds; blob: urls are revoked on unmount.
   const srcCacheRef = useRef<Map<string, string>>(new Map());
+  // Read at rebuild time rather than depended on, so an inline (unmemoized) dialect doesn't re-parse
+  // the document on every render. `key` is what declares a rebuild is actually needed.
+  const dialectRef = useRef(dialect);
+  dialectRef.current = dialect;
 
   useEffect(
     () => () => {
@@ -101,14 +183,23 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
     [],
   );
 
+  const forbidTags = dialect?.forbidTags;
+  const forbidTagsKey = forbidTags?.join(',') ?? '';
   const sanitized = useMemo(
     () =>
       isMarkup(html)
-        ? DOMPurify.sanitize(html, { FORBID_TAGS: [...DEFAULT_FORBID_TAGS, ...(forbidTags ?? [])] })
+        ? DOMPurify.sanitize(html, { FORBID_TAGS: [...DEFAULT_FORBID_TAGS, ...(forbidTagsKey ? forbidTags! : [])] })
         : `<pre class="dx-plain">${escapeHtml(html)}</pre>`,
-    [html, forbidTags],
+    // `forbidTagsKey` stands in for the array, which callers may rebuild inline.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [html, forbidTagsKey],
   );
 
+  // Read before sanitization strips the declaration.
+  const colorScheme = useMemo(() => detectColorScheme(html), [html]);
+
+  const css = dialect?.css;
+  const dialectKey = dialect?.key;
   useEffect(() => {
     const host = hostRef.current;
     if (!host) {
@@ -137,14 +228,16 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
     shadow.replaceChildren(style, content);
 
     // Attached first: transforms may read `getComputedStyle`, which needs the subtree in the document.
-    for (const transform of transforms ?? []) {
-      transform(content);
+    const context: HtmlTransformContext = { colorScheme, dark: themeMode === 'dark' };
+    for (const transform of dialectRef.current?.transforms ?? []) {
+      transform(content, context);
     }
 
+    const resolveSrc = dialectRef.current?.resolveSrc;
     if (resolveSrc) {
       resolvePendingSrc(content, resolveSrc, srcCacheRef.current);
     }
-  }, [sanitized, loadRemoteImages, css, transforms, resolveSrc, themeMode]);
+  }, [sanitized, loadRemoteImages, css, dialectKey, colorScheme, themeMode]);
 
   return <div ref={hostRef} className={mx('w-full', classNames)} />;
 };

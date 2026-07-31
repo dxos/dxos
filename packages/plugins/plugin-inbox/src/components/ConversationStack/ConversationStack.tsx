@@ -14,7 +14,7 @@ import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
 import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
-import { Html, useEmailDialect } from '@dxos/react-ui-components';
+import { Html, emailDialect } from '@dxos/react-ui-components';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { TagIndex } from '@dxos/schema';
@@ -561,16 +561,14 @@ const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
     return { html: htmlText, markdown: markdownBlock ?? (htmlText ? normalizeText(htmlText) : plainText) };
   }, [message.blocks]);
 
-  // Both hooks run unconditionally — the markdown fallback below is a conditional *return*, not a
-  // conditional call. The dialect reads the raw html because the sender's color-scheme declaration
-  // does not survive sanitization.
+  // Unconditional: the markdown fallback below is a conditional *return*, not a conditional hook call.
   const resolveSrc = useCidResolver(message.attachments, db);
-  const dialect = useEmailDialect({ html, isPersonal, resolveSrc });
 
   // The HTML view needs an html block; without one (e.g. a markdown-only body) fall through to the
-  // markdown renderer.
+  // markdown renderer. The dialect is built inline — `Html` keys rebuilds on `dialect.key`, so it
+  // needs no memoization.
   if (viewMode === 'html' && html) {
-    return <Html html={html} loadRemoteImages={loadRemoteImages} dialect={dialect} />;
+    return <Html html={html} loadRemoteImages={loadRemoteImages} dialect={emailDialect({ isPersonal, resolveSrc })} />;
   }
 
   return <MarkdownViewer content={markdown} markdown={viewMode !== 'plain'} loadRemoteImages={loadRemoteImages} />;
