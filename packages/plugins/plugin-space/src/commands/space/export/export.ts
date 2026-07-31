@@ -9,6 +9,7 @@ import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import {
@@ -28,14 +29,10 @@ import { SpaceNotReadyError } from '../../../errors';
 
 const SPACE_READY_TIMEOUT = Duration.seconds(30);
 
-export const FORMATS = ['binary', 'json'] as const;
+// TODO(wittjosiah): Upstream as SpaceArchive.Formats/SpaceArchive.Format, replacing the proto enum.
+export const Formats = ['binary', 'json'] as const;
 
-export type Format = (typeof FORMATS)[number];
-
-const ARCHIVE_FORMATS: Record<Format, SpaceArchive.Format> = {
-  binary: SpaceArchive.Format.BINARY,
-  json: SpaceArchive.Format.JSON,
-};
+export type Format = (typeof Formats)[number];
 
 export type ExportArgs = {
   spaceId: Option.Option<Key.SpaceId>;
@@ -59,7 +56,15 @@ export const handler = Effect.fn(function* ({ spaceId, output, format }: ExportA
     }),
   );
 
-  const archive = yield* Effect.tryPromise(() => space.internal.export({ format: ARCHIVE_FORMATS[format] }));
+  const archive = yield* Effect.tryPromise(() =>
+    space.internal.export({
+      format: Match.value(format).pipe(
+        Match.when('binary', () => SpaceArchive.Format.BINARY),
+        Match.when('json', () => SpaceArchive.Format.JSON),
+        Match.exhaustive,
+      ),
+    }),
+  );
   const outputPath = yield* resolveOutputPath(output, archive.filename);
   yield* fs.makeDirectory(path.dirname(outputPath), { recursive: true });
   yield* fs.writeFile(outputPath, archive.contents);
@@ -83,7 +88,7 @@ export const exportSpace = Command.make(
   'export',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    format: Options.choice('format', FORMATS).pipe(
+    format: Options.choice('format', Formats).pipe(
       Options.withDescription(
         'Archive format: binary is a direct dump of the underlying storage and includes document history; json contains current object state only.',
       ),
