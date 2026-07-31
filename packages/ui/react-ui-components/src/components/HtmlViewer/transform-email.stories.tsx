@@ -62,6 +62,17 @@ export const Reply: Story = {
   },
 };
 
+/**
+ * A call-to-action on a painted background must keep the label its author chose — the accent override
+ * would otherwise put the app blue on the button's own blue. The plain link beside it still takes the
+ * accent, since nothing is painted behind it.
+ */
+export const Button: Story = {
+  args: {
+    sample: 'button',
+  },
+};
+
 /** A table layout that declares nothing — recolored like any other undeclared body since the layout
  * exemption was dropped. Authored colored backgrounds (header, button) survive; only light ones go. */
 export const Marketing: Story = {
@@ -83,7 +94,7 @@ export const CapturedUndeclared: Story = {
  * because DOMPurify strips the `<style>` blocks carrying those rules before we see them (DESIGN.md
  * Gap A). Until that is resolved the body falls back to its inline light styling.
  */
-export const CapturedDarkCapable: Story = {
+export const Example1: Story = {
   args: {
     sample: 'm3',
   },
@@ -93,14 +104,8 @@ export const CapturedDarkCapable: Story = {
  * Real mail declaring `color-scheme: light`. The declaration says the sender has no dark design of its
  * own — not that ours is unwelcome — so this is recolored like anything else. Both panes must differ.
  */
-export const CapturedLightOnly: Story = {
+export const Example2: Story = {
   args: {
     sample: 'm2',
-  },
-};
-
-export const M3: Story = {
-  args: {
-    sample: 'm3',
   },
 };

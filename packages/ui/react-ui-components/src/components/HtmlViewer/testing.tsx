@@ -4,12 +4,11 @@
 
 import React, { type ReactNode } from 'react';
 
-import { ThemeProvider, useThemeContext } from '@dxos/react-ui';
+import { Panel, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { trim } from '@dxos/util';
 
 import m1 from './fixtures/m1.html?raw';
 import m2 from './fixtures/m2.html?raw';
-import m3 from './fixtures/m3.html?raw';
 import { type ColorScheme } from './Html';
 
 //
@@ -126,6 +125,22 @@ export const REPLY_EMAIL = trim`
   </div>
 `;
 
+/**
+ * The near-universal email call-to-action: a painted `<td>` wrapping a bare `<a>` whose only styling is
+ * a light label. The anchor carries no background of its own, so a check of its inline style alone
+ * misses it and the accent override rewrites the label — blue on blue.
+ */
+export const BUTTON_EMAIL = trim`
+  <table><tr>
+    <td bgcolor="#4a90d9" style="background:#4a90d9;border-radius:6px;padding:14px 28px">
+      <a href="https://example.com" style="color:#ffffff;text-decoration:none;font-family:Arial;font-size:18px">
+        Open Dashboard
+      </a>
+    </td>
+  </tr></table>
+  <p style="font-family:Arial">A plain link for contrast: <a href="https://example.com">unstyled</a>.</p>
+`;
+
 export type Sample = { html: string; note: string };
 
 /**
@@ -142,6 +157,10 @@ export const EMAIL_SAMPLES: Record<string, Sample> = {
     html: REPLY_EMAIL,
     note: 'Quoted history collapsed behind the "•••" toggle.',
   },
+  button: {
+    html: BUTTON_EMAIL,
+    note: 'A painted call-to-action keeps its authored label; the plain link still takes the accent.',
+  },
   marketing: {
     html: MARKETING_EMAIL,
     note: 'Layout tables — left as authored unless flagged personal.',
@@ -153,10 +172,6 @@ export const EMAIL_SAMPLES: Record<string, Sample> = {
   m2: {
     html: m2,
     note: 'Captured: declares color-scheme light — the sender has no dark rendering.',
-  },
-  m3: {
-    html: m3,
-    note: 'Captured: declares light dark and ships its own dark rules — which sanitization strips.',
   },
 };
 
@@ -224,10 +239,10 @@ export const Compare = ({ render }: { render: () => ReactNode }) => (
 
 /** Frame shared by both story suites: the sample's note above the rendered body (or comparison). */
 export const SampleFrame = ({ note, children }: { note: string; children: ReactNode }) => (
-  <div className='w-full flex flex-col gap-1 p-2'>
-    <div className='text-xs text-description'>{note}</div>
-    {children}
-  </div>
+  <Panel.Root>
+    <Panel.Toolbar className='flex items-center p-1 text-description'>{note}</Panel.Toolbar>
+    <Panel.Content className='overflow-auto'>{children}</Panel.Content>
+  </Panel.Root>
 );
 
 /** Finds the element hosting the shadow root the content is attached to. */

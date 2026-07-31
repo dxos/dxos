@@ -89,12 +89,45 @@ const collapseQuotedReply: HtmlTransform = (root) => {
   parent.insertBefore(toggle, region);
 };
 
-/** Opens links in a new tab; marks button-style links (own background) so the accent rule skips them. */
+/** Opens links in a new tab. */
 const markLinks: HtmlTransform = (root) => {
   for (const anchor of root.querySelectorAll('a')) {
     anchor.setAttribute('target', '_blank');
     anchor.setAttribute('rel', 'noopener noreferrer');
-    if (anchor.style.backgroundColor) {
+  }
+};
+
+/** Whether anything from `element` up to `root` paints an opaque background behind it. */
+const sitsOnPaintedBackground = (element: Element, root: Element): boolean => {
+  for (let node: Element | null = element; node && node !== root.parentElement; node = node.parentElement) {
+    const parsed = /rgba?\(([^)]+)\)/.exec(getComputedStyle(node).backgroundColor);
+    const alpha = parsed ? Number(parsed[1].split(/[,/]/)[3] ?? '1') : 0;
+    if (alpha > 0) {
+      return true;
+    }
+    if (node === root) {
+      break;
+    }
+  }
+
+  return false;
+};
+
+/**
+ * Exempts links sitting on a sender-painted background from the accent-color override, so a call to
+ * action keeps the contrast its author designed.
+ *
+ * Checking the anchor's own inline background is not enough: the near-universal email button is a
+ * painted `<td>`/`<div>` wrapping a bare `<a>`, which would otherwise have its white label rewritten
+ * to the app accent — blue on blue. This mirrors the recolor policy, which likewise leaves text alone
+ * once the sender painted something behind it.
+ *
+ * Runs after theming, so it sees the backgrounds that actually survived `stripContentBackgrounds` —
+ * a link whose light background was dropped is back on the app surface and does want the accent.
+ */
+const markButtonLinks: HtmlTransform = (root) => {
+  for (const anchor of root.querySelectorAll('a')) {
+    if (sitsOnPaintedBackground(anchor, root)) {
       anchor.setAttribute('data-dx-email-btn', '');
     }
   }
@@ -170,6 +203,6 @@ export const emailDialect = ({ resolveSrc }: EmailDialectOptions = {}): HtmlDial
   // which the base already tracks (`colorScheme`) and keys rebuilds on.
   key: 'email',
   css: EMAIL_CSS,
-  transforms: [markLinks, collapseQuotedReply, themeBody],
+  transforms: [markLinks, collapseQuotedReply, themeBody, markButtonLinks],
   resolveSrc,
 });
