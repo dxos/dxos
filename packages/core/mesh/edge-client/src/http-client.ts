@@ -12,6 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 
 import { log } from '@dxos/log';
+import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
 
 // TODO(burdon): Factor out.
 
@@ -68,10 +69,8 @@ export const withLogging = <A extends HttpClientResponse.HttpClientResponse, E, 
   );
 
 /**
- *
+ * Frame an encoded verifiable presentation as an `Authorization` header value.
+ * Kept as a named export for existing callers; the wire format itself lives in
+ * {@link EdgeCredentialsHeaderCodec} so the client and the Edge worker share one definition.
  */
-// TODO(burdon): Document.
-export const encodeAuthHeader = (challenge: Uint8Array) => {
-  const encodedChallenge = Buffer.from(challenge).toString('base64');
-  return `VerifiablePresentation pb;base64,${encodedChallenge}`;
-};
+export const encodeAuthHeader = (presentation: Uint8Array): string => EdgeCredentialsHeaderCodec.encode(presentation);

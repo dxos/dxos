@@ -552,6 +552,94 @@ export const EdgeHttpErrorCodec = Object.freeze({
   },
 });
 
+/** Authentication scheme naming a DXOS verifiable presentation. */
+export const VERIFIABLE_PRESENTATION_SCHEME = 'VerifiablePresentation';
+
+/** Marks the credential payload as a base64-encoded protobuf. */
+const VERIFIABLE_PRESENTATION_TOKEN_PREFIX = 'pb;base64,';
+
+/**
+ * Subprotocol prefix carrying credentials on the WebSocket upgrade, where there is no
+ * `Authorization` header to put them in.
+ */
+export const WS_AUTH_PROTOCOL_PREFIX = 'base64url.bearer.authorization.dxos.org';
+
+/**
+ * Codec for the credentials header — the single definition of how an encoded verifiable
+ * presentation is framed on the wire, in both places it travels:
+ *
+ * - `Authorization: VerifiablePresentation pb;base64,<base64>` for HTTP.
+ * - `base64url.bearer.authorization.dxos.org.<token>` as a WebSocket subprotocol, which admits a
+ *   narrower alphabet: `=` padding is stripped and `/` is substituted with `|`, neither being
+ *   legal in a subprotocol token.
+ *
+ * This lives in protocols because both ends own half of it — the client encodes, the Edge worker
+ * decodes — and the two had drifted into separate copies of the same string literals.
+ *
+ * Decoding is deliberately lenient where the RFCs are: the auth-scheme is matched
+ * case-insensitively (RFC 9110 §11.1) and anything unrecognised yields `undefined` rather than
+ * throwing, so a caller can fall through to another auth method instead of failing the request.
+ */
+export const EdgeCredentialsHeaderCodec = Object.freeze({
+  /** Encode a presentation as an `Authorization` header value. */
+  encode: (presentation: Uint8Array): string =>
+    `${VERIFIABLE_PRESENTATION_SCHEME} ${VERIFIABLE_PRESENTATION_TOKEN_PREFIX}${uint8ArrayToBase64(presentation)}`,
+
+  /** Decode an `Authorization` header value, or `undefined` if it carries no presentation. */
+  decode: (header: string | null | undefined): Uint8Array | undefined => {
+    if (!header) {
+      return undefined;
+    }
+    const separator = header.indexOf(' ');
+    if (separator === -1) {
+      return undefined;
+    }
+    if (header.slice(0, separator).toLowerCase() !== VERIFIABLE_PRESENTATION_SCHEME.toLowerCase()) {
+      return undefined;
+    }
+    const token = header.slice(separator + 1);
+    if (!token.startsWith(VERIFIABLE_PRESENTATION_TOKEN_PREFIX)) {
+      return undefined;
+    }
+    return base64ToUint8Array(token.slice(VERIFIABLE_PRESENTATION_TOKEN_PREFIX.length));
+  },
+
+  /** Encode a presentation as a WebSocket subprotocol token. */
+  encodeWebSocketProtocol: (presentation: Uint8Array): string => {
+    const token = uint8ArrayToBase64(presentation).replace(/=*$/, '').replaceAll('/', '|');
+    return `${WS_AUTH_PROTOCOL_PREFIX}.${token}`;
+  },
+
+  /** Decode a WebSocket subprotocol token, or `undefined` if it is not a credentials token. */
+  decodeWebSocketProtocol: (protocol: string | null | undefined): Uint8Array | undefined => {
+    if (!protocol?.startsWith(`${WS_AUTH_PROTOCOL_PREFIX}.`)) {
+      return undefined;
+    }
+    const token = protocol.slice(WS_AUTH_PROTOCOL_PREFIX.length + 1).replaceAll('|', '/');
+    return base64ToUint8Array(token);
+  },
+});
+
+// `Buffer` is unavailable in the browser bundle, so go through the platform base64 primitives.
+const uint8ArrayToBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+};
+
+const base64ToUint8Array = (value: string): Uint8Array => {
+  // `atob` rejects the stripped padding the WebSocket framing produces; restore it first.
+  const padded = value.padEnd(value.length + ((4 - (value.length % 4)) % 4), '=');
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+};
+
 //
 // Data management.
 //
