@@ -539,16 +539,7 @@ type MessageBodyProps = {
 const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
   const { viewMode, loadRemoteImages = false } = useAtomValue(options);
 
-  // Person-to-person mail carries a provider "personal" tag (e.g. Gmail's "Personal" category,
-  // persisted into the mailbox tag index during label sync); used to decide how aggressively the
-  // HTML view restyles the body.
   const db = Obj.getDatabase(mailbox ?? message);
-  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('personal')]))[0];
-  const isPersonal = useMemo(
-    () =>
-      !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),
-    [mailbox, message, personalTag],
-  );
 
   // Content blocks are typed by mimeType: `text/html` (raw email HTML), `text/markdown` (an authored
   // markdown rendering), `text/plain` or untyped (plaintext). The markdown view prefers an authored
@@ -568,7 +559,7 @@ const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
   // markdown renderer. The dialect is built inline — `Html` keys rebuilds on `dialect.key`, so it
   // needs no memoization.
   if (viewMode === 'html' && html) {
-    return <Html html={html} loadRemoteImages={loadRemoteImages} dialect={emailDialect({ isPersonal, resolveSrc })} />;
+    return <Html html={html} loadRemoteImages={loadRemoteImages} dialect={emailDialect({ resolveSrc })} />;
   }
 
   return <MarkdownViewer content={markdown} markdown={viewMode !== 'plain'} loadRemoteImages={loadRemoteImages} />;

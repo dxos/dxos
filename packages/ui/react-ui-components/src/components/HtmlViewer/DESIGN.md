@@ -86,7 +86,7 @@ the sender's near-black text. Now addressed by the paper sheet below.
 | ------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------- |
 | `color-scheme: light dark` + `@media (prefers-color-scheme: dark)` | —       | Adopt the sender's own dark design: hoist the dark block's rules when the app is dark, delete them when light |
 | `color-scheme: light` only                                         | `m2`    | The sender states it has no dark rendering. Do not recolor — render on an explicit light paper sheet          |
-| Nothing                                                            | `m1`    | The heuristic (`isPersonal` / table test)                                                                     |
+| Nothing                                                            | `m1`    | Recolor to the app theme, whatever the layout                                                                 |
 
 The middle row is the finding: `content="light"` is an explicit instruction _not to try_, and today it
 is ignored twice over — `meta` is in `DEFAULT_FORBID_TAGS`, so the declaration is destroyed before
@@ -99,8 +99,18 @@ this.
 ### Decisions
 
 - Never `filter: invert()` — it destroys logos and photography (see §4).
-- Un-themed bodies in dark mode get an explicit light paper sheet (`color-scheme: light`), so the body
-  is at least self-consistent rather than half-transparent over a dark surface.
+- Un-recolored bodies in dark mode get an explicit light paper sheet (`color-scheme: light`), so the body
+  is self-consistent rather than half-transparent over a dark surface. Only a sender's explicit
+  `color-scheme: light` reaches that branch now.
+- **The table-layout exemption is gone (2026-07-31).** It existed to preserve bulk-mail design, but
+  sanitization strips `<style>` (Gap A), so what it preserved was inline styles plus table structure —
+  too little to justify leaving every marketing email glaring white in dark mode. Intentional colored
+  backgrounds still survive, because `stripContentBackgrounds` only drops _light_ ones. Consequence:
+  `isPersonal` no longer changed anything and was removed from the dialect and from `MessageBody`
+  (which also drops a per-body `personal`-tag query). Reinstating the distinction means restoring the
+  option and one condition in `themeBody`.
+- Open risk: no fixture yet covers a visually-designed bulk email, so nothing would catch a regression
+  where recoloring mangles a real brand layout.
 - The personal-mail inversion (`transform-colors.ts:69`, `l = min(1 - l, inkL)`) clamps every dark tone
   onto the ink lightness, collapsing the authored contrast ladder. Wants a curve that preserves
   relative lightness, plus a chroma clamp so saturated text does not glow.

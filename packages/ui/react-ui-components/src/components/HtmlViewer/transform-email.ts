@@ -27,7 +27,7 @@ const EMAIL_CSS = [
   // app's stylesheet is not in this root — so the sprite is sized here instead.
   '.dx-email-quote-toggle svg{width:1em;height:1em;flex-shrink:0;fill:currentColor;}',
   // Normalizes typography to the app font so themed mail reads natively. Gated on the class the theming
-  // transform adds, because the decision needs the parsed content (the table test).
+  // transform adds, so a body left as authored keeps its own type.
   '.dx-email-themed *:not(code):not(pre):not(code *):not(pre *){font-family:inherit!important;line-height:1.5!important;}',
   // A body we deliberately do not recolor renders on its own light sheet rather than half-transparent
   // over a dark app surface. `color-scheme` keeps UA-rendered widgets light to match.
@@ -133,38 +133,37 @@ const readThemeParams = (container: Element): ThemeColorParams | undefined => {
  * 1. Ships dark rules → adopt them; never recolor over the sender's own dark design.
  * 2. Declares light only → the sender says it has no dark rendering; put it on a light sheet rather
  *    than recoloring against their wishes.
- * 3. Says nothing → the layout heuristic: recolor simple/personal bodies, leave table layouts as
- *    authored (on a light sheet in dark mode, so they aren't half-transparent over a dark surface).
+ * 3. Says nothing → recolor to the app theme, regardless of layout.
  */
-const themeBody =
-  (isPersonal: boolean): HtmlTransform =>
-  (root, { colorScheme, mode }) => {
-    if (colorScheme === 'dark') {
-      applyAuthoredDarkRules(root, mode);
-      return;
-    }
+const themeBody: HtmlTransform = (root, { colorScheme, mode }) => {
+  // The sender ships its own dark rendering: adopt it rather than recoloring over their design.
+  if (colorScheme === 'dark') {
+    applyAuthoredDarkRules(root, mode);
+    return;
+  }
 
-    const recolor = colorScheme !== 'light' && (isPersonal || root.querySelector('table') === null);
-    if (!recolor) {
-      if (mode === 'dark') {
-        root.classList.add('dx-email-paper');
-      }
-      return;
+  // The sender explicitly declared light-only — an instruction not to try. Give it a light sheet in
+  // dark mode so it is self-consistent, and change nothing else.
+  if (colorScheme === 'light') {
+    if (mode === 'dark') {
+      root.classList.add('dx-email-paper');
     }
+    return;
+  }
 
-    root.classList.add('dx-email-themed');
-    const params = readThemeParams(root);
-    if (params) {
-      processEmailColors(root, params);
-    }
-  };
+  // Undeclared: recolor, whatever the layout. This deliberately no longer exempts table layouts.
+  // That exemption existed to preserve bulk-mail *design*, but sanitization strips `<style>` (see
+  // DESIGN.md §2), so what it actually preserved was inline styles and table structure — too little to
+  // justify leaving every marketing email glaring white in dark mode. Intentional colored backgrounds
+  // still survive: `stripContentBackgrounds` only drops *light* ones.
+  root.classList.add('dx-email-themed');
+  const params = readThemeParams(root);
+  if (params) {
+    processEmailColors(root, params);
+  }
+};
 
 export type EmailDialectOptions = {
-  /**
-   * Person-to-person mail (vs bulk/marketing). Personal mail is recolored to the app theme regardless
-   * of layout; otherwise only simple (non-table) bodies are, so marketing layouts keep their design.
-   */
-  isPersonal?: boolean;
   /** Resolves `cid:` (RFC 2392) inline attachments. Supplied by the caller, which owns the data layer. */
   resolveSrc?: HtmlSrcResolver;
 };
@@ -177,9 +176,11 @@ export type EmailDialectOptions = {
  * and the color scheme arrives in the transform context, so a caller builds this inline on every
  * render; `Html` keys rebuilds on `key`, not on identity.
  */
-export const emailDialect = ({ isPersonal = false, resolveSrc }: EmailDialectOptions = {}): HtmlDialect => ({
-  key: isPersonal ? 'email:personal' : 'email:bulk',
+export const emailDialect = ({ resolveSrc }: EmailDialectOptions = {}): HtmlDialect => ({
+  // Constant: the dialect's behaviour no longer varies by option, only by what the document declares —
+  // which the base already tracks (`colorScheme`) and keys rebuilds on.
+  key: 'email',
   css: EMAIL_CSS,
-  transforms: [markLinks, collapseQuotedReply, themeBody(isPersonal)],
+  transforms: [markLinks, collapseQuotedReply, themeBody],
   resolveSrc,
 });

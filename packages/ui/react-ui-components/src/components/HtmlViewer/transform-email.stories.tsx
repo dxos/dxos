@@ -21,16 +21,14 @@ type SampleId = keyof typeof EMAIL_SAMPLES;
 
 type StoryProps = {
   sample: SampleId;
-  /** Forces the recolor path that table layouts otherwise skip — how bulk mail would look if themed. */
-  isPersonal?: boolean;
   loadRemoteImages?: boolean;
   /** Off for judging a single rendering in the storybook theme; on to see both at once. */
   compare?: boolean;
 };
 
-const DefaultStory = ({ sample, isPersonal, loadRemoteImages, compare }: StoryProps) => {
+const DefaultStory = ({ sample, loadRemoteImages, compare }: StoryProps) => {
   const { html, note } = EMAIL_SAMPLES[sample];
-  const body = () => <Html html={html} loadRemoteImages={loadRemoteImages} dialect={emailDialect({ isPersonal })} />;
+  const body = () => <Html html={html} loadRemoteImages={loadRemoteImages} dialect={emailDialect()} />;
   return <SampleFrame note={note}>{compare ? <Compare render={body} /> : body()}</SampleFrame>;
 };
 
@@ -54,7 +52,6 @@ type Story = StoryObj<typeof meta>;
 export const Personal: Story = {
   args: {
     sample: 'personal',
-    isPersonal: true,
   },
 };
 
@@ -62,7 +59,6 @@ export const Personal: Story = {
 export const Reply: Story = {
   args: {
     sample: 'reply',
-    isPersonal: true,
   },
 };
 
@@ -77,7 +73,6 @@ export const Marketing: Story = {
 export const MarketingThemed: Story = {
   args: {
     sample: 'marketing',
-    isPersonal: true,
   },
 };
 
