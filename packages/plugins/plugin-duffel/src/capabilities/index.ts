@@ -3,7 +3,7 @@
 //
 
 import { Capabilities } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { TripCapabilities } from '@dxos/plugin-trip/types';
 
 import { DuffelCapabilities } from '#types';

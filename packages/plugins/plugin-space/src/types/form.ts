@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { TypeOptions } from '@dxos/app-toolkit';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 
 export type TypeInputOptions = TypeOptions.TypeInputOptions;
 export const TypeInputOptionsAnnotation = TypeOptions.TypeInputOptionsAnnotation;

@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { GameCapabilities } from '@dxos/plugin-game/types';
 
 export const GameVariant = Capability.lazyModule(

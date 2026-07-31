@@ -8,7 +8,8 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { Capabilities, Capability, type PluginManager, makeOperationHandlerPull } from '@dxos/app-framework';
-import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import type * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';

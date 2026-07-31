@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Order, Query } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';

@@ -5,7 +5,8 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 const { mergeField, snapshotField } = ConnectorSync;
 import * as Operation from '@dxos/compute/Operation';

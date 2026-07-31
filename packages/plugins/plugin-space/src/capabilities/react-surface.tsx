@@ -8,7 +8,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { AppSurface, useActiveSpace, useHomeVisibility, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';

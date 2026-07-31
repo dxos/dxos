@@ -14,7 +14,7 @@ import {
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';

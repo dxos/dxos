@@ -3,7 +3,8 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { SpaceCapability } from '@dxos/plugin-space';
 
 import { CodeCapabilities } from '#types';

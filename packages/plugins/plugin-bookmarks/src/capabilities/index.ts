@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { CrxCapabilities } from '@dxos/plugin-crx/types';
 
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));

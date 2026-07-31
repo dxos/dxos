@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { getSpace } from '@dxos/client/echo';
 import { Feed, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { Message, Transcript } from '@dxos/types';

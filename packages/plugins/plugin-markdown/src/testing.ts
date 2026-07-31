@@ -6,7 +6,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, Database, Feed, Obj, Ref } from '@dxos/echo';

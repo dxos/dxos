@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, type AppCapabilities as AppCaps, GraphPath } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCaps from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Database, Entity } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';

@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { InboxCapabilities } from '@dxos/plugin-inbox/types';
 import { ProjectCapabilities } from '@dxos/plugin-projects/types';
 

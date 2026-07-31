@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
-import { NativePasskey } from '@dxos/app-toolkit';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';

@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type LayoutOperation } from '@dxos/app-toolkit';
+import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Button, Toast as NaturalToast, type ToastRootProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

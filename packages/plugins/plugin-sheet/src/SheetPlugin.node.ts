@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { CommentConfig, CreateObject, OperationHandler, SkillDefinition, UndoMappings } from '#capabilities';
 import { meta } from '#meta';

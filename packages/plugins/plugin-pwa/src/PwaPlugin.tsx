@@ -11,7 +11,9 @@ import * as Schedule from 'effect/Schedule';
 import { registerSW } from 'virtual:pwa-register';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppCapabilities, AppCapability, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';

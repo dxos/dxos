@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';

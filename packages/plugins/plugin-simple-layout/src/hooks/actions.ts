@@ -5,7 +5,7 @@
 import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Node } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';

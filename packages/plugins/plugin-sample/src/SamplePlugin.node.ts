@@ -8,7 +8,7 @@
 // No surfaces, graph builders, settings, or translations are needed.
 
 import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';

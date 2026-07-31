@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { ActivationEvents, Capabilities, Capability, Plugin, makeOperationHandlerPull } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ClientService } from '@dxos/client';
 import {
   FeedTraceSink,

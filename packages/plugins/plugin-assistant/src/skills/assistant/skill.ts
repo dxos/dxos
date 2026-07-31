@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { templates } from '@dxos/assistant';
 import * as Skill from '@dxos/compute/Skill';
 

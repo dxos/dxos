@@ -11,7 +11,7 @@ import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } fr
 
 import { Capabilities } from '@dxos/app-framework';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Process from '@dxos/compute/Process';
 import { EID } from '@dxos/keys';

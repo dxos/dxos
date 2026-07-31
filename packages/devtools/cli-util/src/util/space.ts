@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Database, type Key } from '@dxos/echo';

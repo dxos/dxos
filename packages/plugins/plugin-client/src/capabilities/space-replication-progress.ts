@@ -9,7 +9,7 @@ import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database } from '@dxos/echo';

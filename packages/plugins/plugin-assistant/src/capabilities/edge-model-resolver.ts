@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Header from '@dxos/compute/Header';
 import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';

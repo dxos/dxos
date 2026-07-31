@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { meta } from '#meta';
 

@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientEvents } from '@dxos/plugin-client';
 
 import { BeaconCapabilities } from './beacon-service';

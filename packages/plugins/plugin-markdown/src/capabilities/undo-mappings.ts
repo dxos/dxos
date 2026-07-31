@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
-import { CollaborationOperation } from '@dxos/app-toolkit';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 
 // Accept/Reject return the splice (`undo`) that reverses them; the inverse RestoreText re-applies it
 // — on the base for accept, on the author's branch for reject.

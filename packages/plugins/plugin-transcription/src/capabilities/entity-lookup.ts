@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type EntityLookup, makeDatabaseLookup } from '@dxos/pipeline-transcription';
 import { ClientCapabilities } from '@dxos/plugin-client';
 

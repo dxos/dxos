@@ -5,7 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Trigger } from '@dxos/async';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { useClient } from '@dxos/react-client';

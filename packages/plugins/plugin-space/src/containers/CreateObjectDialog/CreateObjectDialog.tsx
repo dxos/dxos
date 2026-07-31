@@ -9,7 +9,9 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppSpace, LayoutOperation, TypeOptions } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';

@@ -6,7 +6,7 @@ import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { type LayoutOperation } from '@dxos/app-toolkit';
+import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
   AlertDialog,

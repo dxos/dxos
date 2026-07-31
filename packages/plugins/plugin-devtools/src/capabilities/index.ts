@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AppCapabilities.AppGraph],

@@ -3,7 +3,7 @@
 //
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useLayout } from '@dxos/app-toolkit/ui';
 
 import { type FilesystemWorkspace, NativeFilesystemCapabilities } from '#types';

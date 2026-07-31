@@ -6,7 +6,7 @@ import { useAtom, useAtomSet } from '@effect-atom/atom-react';
 import React, { type FormEvent, useCallback, useState } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
 import { Button, Icon, IconButton, Input, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';

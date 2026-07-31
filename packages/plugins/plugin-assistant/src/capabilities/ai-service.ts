@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiModelResolver, AiService, Provider } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 

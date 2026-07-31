@@ -7,7 +7,8 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import {

@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, NotFound } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { Context } from '@dxos/context';
 import { Database, EID } from '@dxos/echo';
 import { EntityId, SpaceId } from '@dxos/keys';

@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 import { PluginDetail } from '#components';
 import { getPluginPath } from '#meta';

@@ -14,7 +14,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { Carousel, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';

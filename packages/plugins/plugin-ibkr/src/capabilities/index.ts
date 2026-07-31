@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 import { SpaceCapability } from '@dxos/plugin-space';

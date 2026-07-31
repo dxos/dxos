@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
-import { CollaborationOperation } from '@dxos/app-toolkit';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { getRangeFromCursor } from '@dxos/echo-client';

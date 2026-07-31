@@ -4,7 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppNode, LayoutOperation, Translations } from '@dxos/app-toolkit';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Translations from '@dxos/app-toolkit/Translations';
 
 import { meta } from '#meta';
 

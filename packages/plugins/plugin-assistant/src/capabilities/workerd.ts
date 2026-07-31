@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { RoutineCapabilities } from '@dxos/plugin-routine';
 
 // Server-safe `#capabilities` barrel: the subset of modules the workerd entry activates,

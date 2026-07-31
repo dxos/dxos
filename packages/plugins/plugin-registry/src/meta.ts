@@ -3,7 +3,7 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { DXN } from '@dxos/keys';
 
 import config from '../dx.config';

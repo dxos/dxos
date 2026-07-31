@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 // The capabilities `ChessPlugin.node` activates, and only those. A lazy module defers its import at
 // runtime but a bundler still walks it, so listing the React surfaces here — including `GameVariant`,

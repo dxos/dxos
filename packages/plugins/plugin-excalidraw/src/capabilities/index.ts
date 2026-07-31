@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { IllustratorCapabilities } from '@dxos/plugin-illustrator/types';
 
 import { ExcalidrawCapabilities } from '#types';

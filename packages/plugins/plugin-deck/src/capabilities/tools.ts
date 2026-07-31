@@ -15,7 +15,7 @@ import {
   type PromiseIntentDispatcher,
   createIntent,
 } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { invariant } from '@dxos/invariant';
 import { type OperationInvoker } from '@dxos/operation';
 import { trim } from '@dxos/util';

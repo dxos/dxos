@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations as boardTranslations } from '@dxos/react-ui-board/translations';
 
 import { CreateObject, ReactSurface } from '#capabilities';

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Translations } from '@dxos/app-toolkit';
+import * as Translations from '@dxos/app-toolkit/Translations';
 
 import { meta } from '#meta';
 

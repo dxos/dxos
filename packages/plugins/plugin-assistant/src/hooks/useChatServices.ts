@@ -4,7 +4,7 @@
 
 import { ActivationEvents, Capabilities } from '@dxos/app-framework';
 import { useActivationSignal, useCapability } from '@dxos/app-framework/ui';
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Key } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 

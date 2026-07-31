@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { SpaceCapability } from '@dxos/plugin-space';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));

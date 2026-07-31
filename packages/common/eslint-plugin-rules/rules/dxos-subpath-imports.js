@@ -9,7 +9,7 @@ import { createRequire } from 'node:module';
  * package once its exports map carries an entry per namespace segment — the fix keeps names the
  * exports map cannot resolve (flat re-exports such as errors) on the barrel import.
  */
-const DXOS_SUBPATH_PACKAGES = new Set(['@dxos/compute']);
+const DXOS_SUBPATH_PACKAGES = new Set(['@dxos/app-toolkit', '@dxos/compute']);
 
 /**
  * ESLint rule to transform barrel imports of designated @dxos packages into subpath imports,

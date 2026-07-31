@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { CollaborationOperation } from '@dxos/app-toolkit';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { MarkdownOperation } from '../types';

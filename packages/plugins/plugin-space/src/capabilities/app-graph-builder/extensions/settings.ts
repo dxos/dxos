@@ -4,7 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AppNode, AppNodeMatcher, AppSpace } from '@dxos/app-toolkit';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 

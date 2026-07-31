@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { sleep } from '@dxos/async';
 import { type Tour } from '@dxos/plugin-support';
 

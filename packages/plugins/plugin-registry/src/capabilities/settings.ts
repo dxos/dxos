@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, PLUGIN_DEV_SERVER_PORT } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';

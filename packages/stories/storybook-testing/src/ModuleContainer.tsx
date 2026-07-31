@@ -7,7 +7,9 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { Capabilities, type Role } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { AppSpace, GraphPath, NotFound } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { StorybookCapabilities } from '@dxos/plugin-testing';

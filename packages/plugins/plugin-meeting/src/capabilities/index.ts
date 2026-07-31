@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 
 import { MeetingCapabilities } from '#types';

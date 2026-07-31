@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { BaseError } from '@dxos/errors';
 

@@ -7,7 +7,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { CollaborationOperation } from '@dxos/app-toolkit';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import { Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';

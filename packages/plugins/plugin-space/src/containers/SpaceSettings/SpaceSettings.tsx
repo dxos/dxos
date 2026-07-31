@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';

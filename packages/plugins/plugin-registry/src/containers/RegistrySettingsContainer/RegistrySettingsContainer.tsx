@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppCapabilities } from '@dxos/app-toolkit';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { EffectEx } from '@dxos/effect';
 
 import { RegistrySettings } from '../../components';

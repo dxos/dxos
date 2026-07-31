@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { CollaborationOperation } from '@dxos/app-toolkit';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Feed, Ref } from '@dxos/echo';

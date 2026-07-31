@@ -10,7 +10,7 @@
 // `Plugin.make` finalizes the plugin (must be the last call in the chain).
 
 import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings } from '#capabilities';
 import { meta } from '#meta';

@@ -7,7 +7,7 @@
 // module's code loads) with the deferred loader, enabling code-splitting; plugin-local
 // capabilities that have no maker use `Capability.lazyModule()` directly.
 
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { SpaceCapability } from '@dxos/plugin-space';
 
 import { SampleCapabilities } from '#types';

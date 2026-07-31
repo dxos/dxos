@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Script from '@dxos/compute/Script';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, SkillDefinition } from '#capabilities';

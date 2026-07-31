@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, NativePasskey } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { EffectEx } from '@dxos/effect';
 import { isTauri } from '@dxos/util';
 

@@ -11,7 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { type Capability, Plugin } from '@dxos/app-framework';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';

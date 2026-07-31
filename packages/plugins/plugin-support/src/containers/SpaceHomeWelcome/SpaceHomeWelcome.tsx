@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Annotation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SettingsOperation } from '@dxos/app-toolkit';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 export const SettingsOperationHandlerSet = OperationHandlerSet.keyed([

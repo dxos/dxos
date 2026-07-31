@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { RoutineCapabilities } from '#types';

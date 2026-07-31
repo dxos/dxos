@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 export const TestingOperationHandlerSet = OperationHandlerSet.keyed([

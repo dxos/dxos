@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppCapabilities } from '@dxos/app-toolkit';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Form } from '@dxos/react-ui-form';
 
 export type DefaultSettingsProps = {

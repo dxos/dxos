@@ -7,7 +7,8 @@ import * as Record from 'effect/Record';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
-import { AppCapabilities, UrlPath } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';

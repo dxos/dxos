@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Provider } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Event } from '@dxos/async';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';

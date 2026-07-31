@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { SpaceCapability } from '@dxos/plugin-space';
 
 import { SpacetimeCapabilities } from '#types';

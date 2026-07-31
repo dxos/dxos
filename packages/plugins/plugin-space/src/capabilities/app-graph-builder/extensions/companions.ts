@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { AppNode } from '@dxos/app-toolkit';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj, Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import type { EchoViewRefPath } from '@dxos/schema';

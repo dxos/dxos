@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { SpaceCapability } from '@dxos/plugin-space';
 
 // The capabilities `KanbanPlugin.node` activates, and only those. A lazy module defers its import at

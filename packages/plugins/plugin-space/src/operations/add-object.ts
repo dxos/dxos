@@ -3,7 +3,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { AppNode, CollectionModel, GraphPath } from '@dxos/app-toolkit';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

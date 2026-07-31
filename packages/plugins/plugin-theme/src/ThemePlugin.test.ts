@@ -7,7 +7,7 @@ import { beforeEach, describe, test, vi } from 'vitest';
 
 import { Capabilities, Capability, ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { ThemePlugin } from '#plugin';
 
