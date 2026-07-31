@@ -1,11 +1,36 @@
 # Tasks — startup latency (demand-driven activation)
 
-_Resume: wave 2 batch 2 — the rule-2 offender list (19 definitions, three offense groups in
-the Wave 2 section): start with plugin-connector `/types` (pays off 5×) and the app-toolkit
-light subpath, then rule 4 (compute barrel Header decouple) and the audit-opdefs CI budget
-check; after that, re-run the eager-handler-sets ablation (exit criterion). Uncommitted:
-none. Last: wave-2 batch 1 landed (6017b2ce78) — boot fetch 31.1 → 28.8 MB, −40 requests,
-definition floor 576 → 445 files; timing flat within the container contention plateau._
+_Resume: navToReady critical path fully attributed (see "Critical path" below). Levers 1–4
+landed (yields, scoped pulls, concurrent enables, bounded waves). Next: (a) SDK `_open()`
+split — the 3.2 s worker/HALO/ECHO block; (b) defer heavy spacesReady-gated modules
+(Repair, BeaconServiceModule, TriggerRuntimeController, thread/calls AppGraphBuilder) to
+idle; (c) streaming start (begin round 1 before the full enable set registers). Uncommitted:
+none. Last: client.initialize marks landed; warm-cold primer document priming parked._
+
+## Critical path of navToReady (warm-cold, in-container; attributed 2026-07-31)
+
+All ~250 chunks are modulepreloaded at ~32 ms — network is NOT on the path; the path is
+main-thread evaluation + Client init. Sequence (representative run):
+
+1. **0 → ~2.6 s** — HTML + main-bundle fetch/parse to `main:start` (FCP ~370 ms). Lever:
+   main-closure bytes (wave-3 sweep, ResetDialog lazy).
+2. **~2.6 → ~4.3 s** — bootstrap + plugin-definition enables. Was 1.75 s sequential; now
+   ~1.4 s at concurrency 8 (lever 3 landed). Residual lever: streaming start.
+3. **~4.4 → ~8.5 s** — round-1 fan-out (~300 modules, pure evaluation) + **`Client.initialize`
+   = the long pole**: imports 0.3 s, `createClientServices` ~0, **`_open()` 3.2 s** (worker
+   spawn + HALO identity + ECHO open, contending with module evaluation). Ends exactly at
+   `spaces-ready`. Levers: SDK `_open` split/pipelining; fewer startup evaluations.
+4. **~8.6 → ~9.5 s** — dispatch residual (~0.9 s, was 3.4–4.4 s before lever 2): the
+   identityCreated wave + ProcessManager pull gate the spacesReady wave start.
+5. **~9.5 → ~12.4 s** — spacesReady wave (~2.9 s): evaluation of heavy chunk graphs
+   (space.Repair, BeaconServiceModule, TriggerRuntimeController, SpaceReplicationProgress,
+   thread/calls AppGraphBuilder — each ~2.6 s under contention). Lever: defer non-critical
+   members to idle; shrink closures.
+6. **~12.4 → ~13.5 s** — ClientReady wave + React render to `first-interactive`.
+
+navToReady ≈ first-interactive + harness overhead; in-container wall clock is
+contention-bound (±1 s noise), so segment boundaries — not totals — are the signal here.
+Real-hardware runs still owed before claiming user-facing numbers._
 
 Spec + phase definitions: [DESIGN.md](./DESIGN.md). Successor to the
 app-framework-capability-activation deferral follow-up; implementation starts after that branch's
@@ -272,10 +297,20 @@ Activation optimization (each lever measured individually via harness + TBT):
       Cold dispatch gap median 3538 → 643 ms (−82%); warm-cold gap 4358 → 1070 ms; cold TBT
       flat; navToReady in-container noisy (contention-bound — the event chain simply starts
       ~3 s earlier instead of queuing behind the drain).
-- [ ] Bounded activation concurrency (the 395-wide unbounded fan-out produced the 81× overlap
-      contention plateau)
-- [ ] Client-init long-task monolith (~2 s single task inside Client module activation — the
-      dominant remaining TBT contributor; needs an intra-module split, yields can't help)
+- [x] Lever 3 — concurrent plugin enables (2026-07-31): the constructor's enable chain ran
+      ~60 lazy plugin-definition imports sequentially (~1.75 s); bounded concurrency 8 cuts
+      the window to ~1.4 s and shifts every later milestone earlier; `disable()` now awaits
+      `initialized` (bootstrap is no longer synchronous for non-lazy sets).
+- [x] Lever 4 — bounded wave concurrency + singleton-providers-first (2026-07-31): cap 16.
+      Client's chunk import 2050 → 184 ms (uncontended slot); wall clock neutral in-container
+      (Client `_open` absorbs the slack) but avoids import/parse oversubscription.
+- [ ] Lever 5 — SDK `_open()` split: 3.2 s of worker spawn + HALO identity + ECHO open
+      (marks `client.initialize:*` now on the waterfall); needs intra-SDK attribution next
+      (services host open vs identity load vs echo open).
+- [ ] Lever 6 — defer heavy spacesReady-gated modules (Repair, BeaconServiceModule,
+      TriggerRuntimeController, thread/calls AppGraphBuilder) to idle/demand.
+- [ ] Lever 7 — streaming start: begin round 1 as plugin definitions register instead of
+      after the full enable set (Client could start ~1.4 s earlier).
 
 Parked (harness): warm-cold document priming for `milestone:first-editor-interactive` —
 hand-rolled primer UI script was flaky (create-space/createObject races); reverted to the

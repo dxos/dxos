@@ -373,6 +373,7 @@ export class Client {
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
     const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
+    performance.mark('client.initialize:imports-loaded');
     log('client.initialize: imports loaded');
 
     this._ctx = new Context();
@@ -413,6 +414,7 @@ export class Client {
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
+    performance.mark('client.initialize:services-created');
     log('client.initialize: services provider created');
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
@@ -420,6 +422,7 @@ export class Client {
     this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager) : undefined;
     log('client.initialize: opening client');
     await this._open(this._ctx);
+    performance.mark('client.initialize:opened');
     log('client.initialize: client opened');
     invariant(this._runtime, 'Client runtime initialization failed.');
 

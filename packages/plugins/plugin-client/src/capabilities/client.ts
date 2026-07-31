@@ -28,7 +28,11 @@ export default Capability.makeModule(
     log('creating client');
     const client = new Client(options);
     log('initializing client (calling client.initialize())...');
+    // Boot-waterfall milestones: split the Client module's activation (the boot critical
+    // path's longest block) into SDK initialize vs the app-supplied callback.
+    performance.mark('milestone:client-initialize:start');
     yield* Effect.tryPromise(() => client.initialize());
+    performance.mark('milestone:client-initialize:end');
     log('client.initialize() returned successfully');
     if (onClientInitialized) {
       yield* onClientInitialized({ client }).pipe(
@@ -36,6 +40,7 @@ export default Capability.makeModule(
         Effect.provideService(Plugin.Service, pluginManager),
       );
     }
+    performance.mark('milestone:client-initialized-callback:end');
     log('called client initialized callback');
 
     // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.

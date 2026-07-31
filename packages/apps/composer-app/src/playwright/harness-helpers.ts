@@ -215,7 +215,11 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
     const mainStartMark =
       performance.getEntriesByName('main:start')[0] ?? performance.getEntriesByName('startup:main:start')[0];
     const eventMeasures = performance.getEntriesByType('measure').filter((entry) => entry.name.startsWith('event:'));
-    const milestoneMarks = performance.getEntriesByType('mark').filter((entry) => entry.name.startsWith('milestone:'));
+    // `client.initialize:*` marks come from the @dxos/client SDK — the longest single block
+    // on the boot critical path; picked up alongside the app-level milestones.
+    const milestoneMarks = performance
+      .getEntriesByType('mark')
+      .filter((entry) => entry.name.startsWith('milestone:') || entry.name.startsWith('client.initialize:'));
 
     const waterfall: Array<{ name: string; start: number; end?: number }> = [{ name: 'navigationStart', start: 0 }];
     if (nav) {
