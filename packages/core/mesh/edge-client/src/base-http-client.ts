@@ -8,12 +8,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
 
-import {
-  type EdgeIdentity,
-  authenticateViaChallengeEndpoint,
-  handleAuthChallenge,
-  parseChallengeHeader,
-} from './edge-identity';
+import { authenticateViaChallengeEndpoint, handleAuthChallenge, parseChallengeHeader } from './auth-challenge';
+import { type EdgeIdentity } from './edge-identity';
 import { encodeAuthHeader } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
 

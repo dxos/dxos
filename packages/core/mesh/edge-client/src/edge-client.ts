@@ -18,13 +18,9 @@ import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 
+import { authenticateViaChallengeEndpoint, presentCredentialsForChallenge, readAuthChallenge } from './auth-challenge';
 import { protocol } from './defs';
-import {
-  type EdgeIdentity,
-  authenticateViaChallengeEndpoint,
-  presentCredentialsForChallenge,
-  readAuthChallenge,
-} from './edge-identity';
+import { type EdgeIdentity } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
 import { type Protocol } from './protocol';

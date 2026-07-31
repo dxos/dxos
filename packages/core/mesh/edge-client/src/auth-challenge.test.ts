@@ -7,12 +7,12 @@ import { afterEach, describe, test, vi } from 'vitest';
 import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import {
-  type EdgeIdentity,
   authenticateViaChallengeEndpoint,
   fetchAuthChallenge,
   parseChallengeHeader,
   readAuthChallenge,
-} from './edge-identity';
+} from './auth-challenge';
+import { type EdgeIdentity } from './edge-identity';
 
 const CHALLENGE = 'AQAAAZlqjGgAq83vEjRWeJCrze8SNFZ4kA==';
 
