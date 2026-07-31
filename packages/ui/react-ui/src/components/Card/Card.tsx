@@ -510,9 +510,16 @@ CardPoster.displayName = CARD_POSTER_NAME;
 
 const CARD_ACTION_NAME = 'Card.Action';
 
-type CardActionProps = { icon?: string; label: string; actionIcon?: string; onClick?: () => void };
+type CardActionProps = {
+  icon?: string;
+  label: string;
+  /** Short trailing text (e.g. an age); kept at full width while the label truncates around it. */
+  annotation?: string;
+  actionIcon?: string;
+  onClick?: () => void;
+};
 
-function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) {
+function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, annotation, onClick }: CardActionProps) {
   const { tx } = useThemeContext();
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
@@ -521,7 +528,10 @@ function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, onCl
           <Icon icon={icon} size={4} />
         </CardBlock>
       )}
-      <span className={tx('card.action-label', {})}>{label}</span>
+      <span className={tx('card.action-content', {})}>
+        <span className={tx('card.action-label', {})}>{label}</span>
+        {annotation && <span className={tx('card.action-annotation', {})}>{annotation}</span>}
+      </span>
       {actionIcon && (
         <CardBlock end>
           <Icon icon={actionIcon} size={4} />

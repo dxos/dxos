@@ -29,6 +29,7 @@ import {
   AppGraphBuilder,
   CreateObject,
   IdentityCreated,
+  IdentitySpecs,
   NavigationHandler,
   NavigationTargetResolver,
   OperationHandler,
@@ -137,6 +138,11 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activatesOn: ClientEvents.IdentityCreated,
     firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
+  }),
+  Plugin.addModule({
+    id: `${meta.profile.key}/module/identity-specs`,
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: IdentitySpecs,
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(

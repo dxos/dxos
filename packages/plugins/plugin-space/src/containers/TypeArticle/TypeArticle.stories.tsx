@@ -170,8 +170,7 @@ const meta = {
         // and the state atom the space plugin would normally contribute.
         Capability.contributes(Capabilities.OperationHandler, SpaceOperationHandlerSet),
         Capability.contributes(SpaceCapabilities.EphemeralState, ephemeralState()),
-        // Without a registered identity rule the Duplicates tab is hidden — this is what plugin-crm
-        // contributes in the app.
+        // The plugin contributes these itself in the app; the story has no plugin-space modules.
         Capability.contributes(SpaceCapabilities.IdentitySpec, personIdentitySpec),
         Capability.contributes(SpaceCapabilities.IdentitySpec, organizationIdentitySpec),
       ],
