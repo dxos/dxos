@@ -93,71 +93,85 @@ describe('ActivationGraph', () => {
     }),
   );
 
-  it.effect('buildRoundEdges separates hard singleton edges from soft multi edges', () =>
+  it.effect('buildRoundGraph separates hard singleton edges from soft multi edges', () =>
     Effect.gen(function* () {
       const [singleProvider, multiProvider, consumer] = modulesOf(
         { id: 'singleProvider', provides: [Single], activate: () => Effect.succeed([]) },
         { id: 'multiProvider', provides: [Multi], activate: () => Effect.succeed([]) },
         { id: 'consumer', requires: [Single, Multi], provides: [], activate: () => Effect.succeed([]) },
       );
-      const modules = [singleProvider, multiProvider, consumer];
-      const { hard, soft } = ActivationGraph.buildRoundEdges(modules, {
+      const graph = ActivationGraph.buildRoundGraph([singleProvider, multiProvider, consumer], {
         isSatisfied: () => false,
         providerOf: (identifier) => (identifier === Single.identifier ? singleProvider.id : undefined),
-        runnableIds: new Set(modules.map((module) => module.id)),
       });
-      assert.deepStrictEqual([...(hard.get(singleProvider.id) ?? [])], [[consumer.id, Single.identifier]]);
-      assert.deepStrictEqual([...(soft.get(multiProvider.id) ?? [])], [[consumer.id, Multi.identifier]]);
+      assert.deepStrictEqual(
+        graph.filterEdges({ type: 'hard' }).map((edge) => [edge.source, edge.target, edge.data.capability]),
+        [[singleProvider.id, consumer.id, Single.identifier]],
+      );
+      assert.deepStrictEqual(
+        graph.filterEdges({ type: 'soft' }).map((edge) => [edge.source, edge.target, edge.data.capability]),
+        [[multiProvider.id, consumer.id, Multi.identifier]],
+      );
+      assert.deepStrictEqual(ActivationGraph.hardProviderIds(graph, consumer.id), [singleProvider.id]);
+      assert.isTrue(ActivationGraph.hasSoftEdges(graph));
     }),
   );
 
-  it.effect('computeActivationWaves orders a diamond and reports a cycle as undefined', () =>
+  it.effect('computeActivationWaves orders by hard edges and layers soft ordering on request', () =>
     Effect.gen(function* () {
-      const modules = modulesOf(
-        { id: 'root', provides: [Multi], activate: () => Effect.succeed([]) },
-        { id: 'left', provides: [], activate: () => Effect.succeed([]) },
-        { id: 'right', provides: [], activate: () => Effect.succeed([]) },
-        { id: 'sink', provides: [], activate: () => Effect.succeed([]) },
+      const [singleProvider, multiProvider, consumer] = modulesOf(
+        { id: 'singleProvider', provides: [Single], activate: () => Effect.succeed([]) },
+        { id: 'multiProvider', provides: [Multi], activate: () => Effect.succeed([]) },
+        { id: 'consumer', requires: [Single, Multi], provides: [], activate: () => Effect.succeed([]) },
       );
-      const edges: ActivationGraph.EdgeMap = new Map();
-      ActivationGraph.addEdge(edges, id('root'), id('left'), 'x');
-      ActivationGraph.addEdge(edges, id('root'), id('right'), 'x');
-      ActivationGraph.addEdge(edges, id('left'), id('sink'), 'x');
-      ActivationGraph.addEdge(edges, id('right'), id('sink'), 'x');
+      const graph = ActivationGraph.buildRoundGraph([consumer, singleProvider, multiProvider], {
+        isSatisfied: () => false,
+        providerOf: (identifier) => (identifier === Single.identifier ? singleProvider.id : undefined),
+      });
 
-      const waves = ActivationGraph.computeActivationWaves(modules, edges);
-      invariant(waves);
+      // Hard-only: the multi provider is unordered relative to the consumer.
+      const hardWaves = ActivationGraph.computeActivationWaves(graph, ['hard']);
+      invariant(hardWaves);
       assert.deepStrictEqual(
-        waves.map((wave) => wave.map((module) => module.id)),
-        [[id('root')], [id('left'), id('right')], [id('sink')]],
+        hardWaves.map((wave) => wave.map((module) => module.id).toSorted()),
+        [[multiProvider.id, singleProvider.id].toSorted(), [consumer.id]],
       );
 
-      ActivationGraph.addEdge(edges, id('sink'), id('root'), 'x');
-      assert.isUndefined(ActivationGraph.computeActivationWaves(modules, edges));
-      const cycle = ActivationGraph.findCyclePath(modules, edges);
-      assert.deepStrictEqual(new Set(cycle.map((entry) => entry.module)).size, cycle.length);
-      assert.isAbove(cycle.length, 2);
+      // Hard+soft: both providers precede the consumer.
+      const combined = ActivationGraph.computeActivationWaves(graph, ['hard', 'soft']);
+      invariant(combined);
+      assert.deepStrictEqual(
+        combined.at(-1)?.map((module) => module.id),
+        [consumer.id],
+      );
     }),
   );
 
-  it.effect('mergeEdges layers soft ordering over hard edges', () =>
+  it.effect('cycle excision: removeNodes drops incident edges and findCyclePath names the loop', () =>
     Effect.gen(function* () {
-      const hard: ActivationGraph.EdgeMap = new Map();
-      const soft: ActivationGraph.EdgeMap = new Map();
-      ActivationGraph.addEdge(hard, 'a', 'b', 'x');
-      ActivationGraph.addEdge(soft, 'a', 'c', 'y');
-      ActivationGraph.addEdge(soft, 'd', 'b', 'z');
-      const combined = ActivationGraph.mergeEdges(hard, soft);
-      assert.deepStrictEqual(
-        [...(combined.get('a') ?? [])],
-        [
-          ['b', 'x'],
-          ['c', 'y'],
-        ],
+      // a -> b -> c -> a via singleton requires (a legal declaration error, diagnosed at runtime).
+      const [a, b, c] = modulesOf(
+        { id: 'a', requires: [Single2], provides: [Single], activate: () => Effect.succeed([]) },
+        { id: 'b', requires: [Single], provides: [Multi], activate: () => Effect.succeed([]) },
+        { id: 'c', requires: [Multi], provides: [Single2], activate: () => Effect.succeed([]) },
       );
-      assert.deepStrictEqual([...(combined.get('d') ?? [])], [['b', 'z']]);
-      // Inputs are not mutated.
-      assert.strictEqual(hard.get('a')?.size, 1);
+      const graph = ActivationGraph.buildSingletonGraph([a, b, c]);
+      // Singleton graph: a -> b (Single), c -> a (Single2); multi require b<-c is skipped.
+      assert.isDefined(ActivationGraph.computeActivationWaves(graph, ['hard']));
+
+      const cyclic = ActivationGraph.buildSingletonGraph([
+        ...modulesOf(
+          { id: 'x', requires: [Single2], provides: [Single], activate: () => Effect.succeed([]) },
+          { id: 'y', requires: [Single], provides: [Single2], activate: () => Effect.succeed([]) },
+        ),
+      ]);
+      assert.isUndefined(ActivationGraph.computeActivationWaves(cyclic, ['hard']));
+      const path = ActivationGraph.findCyclePath(cyclic, ['hard']);
+      assert.deepStrictEqual(new Set(path.map((entry) => entry.module)), new Set([id('x'), id('y')]));
+
+      cyclic.removeNodes([id('x')]);
+      assert.isDefined(ActivationGraph.computeActivationWaves(cyclic, ['hard']));
+      assert.strictEqual(cyclic.edges.length, 0);
     }),
   );
 });

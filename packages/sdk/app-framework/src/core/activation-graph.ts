@@ -2,38 +2,49 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Graph, GraphModel } from '@dxos/graph';
+
 import type * as Capability from './capability';
 import type * as Plugin from './plugin';
 
 //
-// Pure graph math for the dependency scheduler (`plugin-manager.ts`). Everything here is
-// side-effect free and operates on explicit inputs so the scheduler's decisions can be read —
-// and tested — independently of manager state. Edges are provider -> consumer maps labelled
-// with the capability identifier that induced them.
+// Pure ordering logic for the dependency scheduler (`plugin-manager.ts`), built on the shared
+// `@dxos/graph` model. Everything here is side-effect free and operates on explicit inputs so
+// the scheduler's decisions can be read — and tested — independently of manager state.
+//
+// A round is one graph: nodes carry the modules, edges point provider -> consumer and carry the
+// capability identifier that induced them. Edge kind distinguishes ordering strength:
+// - `hard`: an unsatisfied singleton require; violating it breaks activation.
+// - `soft`: a multi require; best-effort ordering so same-round contributions are visible to
+//   one-shot snapshot reads (multi never hard-gates).
 //
 
-export type EdgeMap = Map<string, Map<string, string>>;
+export type EdgeKind = 'hard' | 'soft';
 
-/** Adds a labelled provider -> consumer edge. */
-export const addEdge = (edges: EdgeMap, from: string, to: string, capability: string): void => {
-  const targets = edges.get(from) ?? new Map<string, string>();
-  targets.set(to, capability);
-  edges.set(from, targets);
+export type ActivationNode = Graph.Node.Node<Plugin.PluginModule>;
+export type ActivationEdge = Graph.Edge.Edge<{ capability: string }>;
+export type ActivationGraphModel = GraphModel.GraphModel<ActivationNode, ActivationEdge>;
+
+export type CycleEntry = { module: string; capability: string };
+
+const makeModel = (modules: readonly Plugin.PluginModule[]): ActivationGraphModel => {
+  const model = new GraphModel.GraphModel<ActivationNode, ActivationEdge>();
+  modules.forEach((module) => model.addNode({ id: module.id, data: module }));
+  return model;
 };
 
-/** Indexes multi-capability providers among a round's modules: capability identifier -> module ids. */
-export const indexMultiProviders = (modules: readonly Plugin.PluginModule[]): Map<string, string[]> => {
-  const providers = new Map<string, string[]>();
-  for (const module of modules) {
-    for (const capability of module.activation.provides) {
-      if (capability.arity === 'multi') {
-        const list = providers.get(capability.identifier) ?? [];
-        list.push(module.id);
-        providers.set(capability.identifier, list);
-      }
-    }
-  }
-  return providers;
+/** Parallel edges (same pair, different capability) need distinct ids. */
+const edgeId = (kind: EdgeKind, source: string, target: string, capability: string): string =>
+  `${kind}|${source}|${capability}|${target}`;
+
+const addEdge = (
+  model: ActivationGraphModel,
+  kind: EdgeKind,
+  source: string,
+  target: string,
+  capability: string,
+): void => {
+  model.addEdge({ id: edgeId(kind, source, target, capability), type: kind, source, target, data: { capability } });
 };
 
 export type FixpointInputs = {
@@ -106,39 +117,37 @@ export const computeRunnableFixpoint = ({
   return { runnable: [...runnable.values()], missing, pended };
 };
 
-export type RoundEdges = {
-  /** Singleton require -> provider edges; violating one breaks activation. */
-  hard: EdgeMap;
-  /** Multi require -> provider edges; best-effort ordering for one-shot snapshot reads. */
-  soft: EdgeMap;
-};
-
 /**
- * Builds the round's ordering edges. Hard edges gate a consumer on its unsatisfied singleton
- * providers within the round; soft edges order a consumer after the round's multi providers so
- * same-round contributions are visible to one-shot snapshot reads (multi never hard-gates).
+ * Builds a round's ordering graph. Hard edges gate a consumer on its unsatisfied singleton
+ * providers within the round; soft edges order a consumer after the round's multi providers.
  */
-export const buildRoundEdges = (
+export const buildRoundGraph = (
   modules: readonly Plugin.PluginModule[],
   {
     isSatisfied,
     providerOf,
-    runnableIds,
   }: {
     isSatisfied: (capability: Capability.AnyTag) => boolean;
     providerOf: (identifier: string) => string | undefined;
-    runnableIds: ReadonlySet<string>;
   },
-): RoundEdges => {
-  const multiProviders = indexMultiProviders(modules);
-  const hard: EdgeMap = new Map();
-  const soft: EdgeMap = new Map();
+): ActivationGraphModel => {
+  const model = makeModel(modules);
+  const multiProviders = new Map<string, string[]>();
+  for (const module of modules) {
+    for (const capability of module.activation.provides) {
+      if (capability.arity === 'multi') {
+        const providers = multiProviders.get(capability.identifier) ?? [];
+        providers.push(module.id);
+        multiProviders.set(capability.identifier, providers);
+      }
+    }
+  }
   for (const module of modules) {
     for (const capability of module.activation.requires) {
       if (capability.arity === 'multi') {
         for (const provider of multiProviders.get(capability.identifier) ?? []) {
           if (provider !== module.id) {
-            addEdge(soft, provider, module.id, capability.identifier);
+            addEdge(model, 'soft', provider, module.id, capability.identifier);
           }
         }
         continue;
@@ -147,98 +156,127 @@ export const buildRoundEdges = (
         continue;
       }
       const provider = providerOf(capability.identifier);
-      if (provider !== undefined && runnableIds.has(provider)) {
-        addEdge(hard, provider, module.id, capability.identifier);
+      if (provider !== undefined && model.findNode(provider) !== undefined) {
+        addEdge(model, 'hard', provider, module.id, capability.identifier);
       }
     }
   }
-  return { hard, soft };
-};
-
-/** Merges soft edges over hard edges into a combined ordering graph. */
-export const mergeEdges = (hard: EdgeMap, soft: EdgeMap): EdgeMap => {
-  const combined: EdgeMap = new Map(hard);
-  for (const [from, targets] of soft) {
-    const merged = new Map(combined.get(from) ?? []);
-    targets.forEach((capability, to) => merged.set(to, capability));
-    combined.set(from, merged);
-  }
-  return combined;
+  return model;
 };
 
 /**
- * Kahn's algorithm over the capability graph, returning topological activation waves
- * (modules in the same wave have no edges among them and activate concurrently).
- * Returns `undefined` when the graph is cyclic.
+ * Builds the singleton require -> provider graph across the given modules regardless of event
+ * gating or satisfaction — used to surface capability cycles that span activation events (two
+ * modules on different events requiring each other's provides would otherwise pend forever).
  */
-export const computeActivationWaves = (
-  modules: readonly Plugin.PluginModule[],
-  edges: ReadonlyMap<string, ReadonlyMap<string, string>>,
-): Plugin.PluginModule[][] | undefined => {
-  const byId = new Map(modules.map((module) => [module.id, module]));
-  const inDegree = new Map(modules.map((module) => [module.id, 0]));
-  for (const [from, targets] of edges) {
-    if (!byId.has(from)) {
+export const buildSingletonGraph = (modules: readonly Plugin.PluginModule[]): ActivationGraphModel => {
+  const model = makeModel(modules);
+  const providersByCapability = new Map<string, string[]>();
+  for (const module of modules) {
+    for (const capability of module.activation.provides) {
+      if (capability.arity !== 'single') {
+        continue;
+      }
+      const providers = providersByCapability.get(capability.identifier) ?? [];
+      providers.push(module.id);
+      providersByCapability.set(capability.identifier, providers);
+    }
+  }
+  for (const module of modules) {
+    for (const capability of module.activation.requires) {
+      if (capability.arity === 'multi') {
+        continue;
+      }
+      for (const provider of providersByCapability.get(capability.identifier) ?? []) {
+        if (provider !== module.id) {
+          addEdge(model, 'hard', provider, module.id, capability.identifier);
+        }
+      }
+    }
+  }
+  return model;
+};
+
+/** Outgoing adjacency (provider -> consumers) restricted to the given edge kinds. */
+const adjacency = (
+  model: ActivationGraphModel,
+  kinds: readonly EdgeKind[],
+): Map<string, Array<{ target: string; capability: string }>> => {
+  const out = new Map<string, Array<{ target: string; capability: string }>>();
+  for (const edge of model.edges) {
+    if (!kinds.includes(edge.type as EdgeKind)) {
       continue;
     }
-    for (const to of targets.keys()) {
-      if (inDegree.has(to)) {
-        inDegree.set(to, (inDegree.get(to) ?? 0) + 1);
-      }
+    const targets = out.get(edge.source) ?? [];
+    targets.push({ target: edge.target, capability: edge.data.capability });
+    out.set(edge.source, targets);
+  }
+  return out;
+};
+
+/**
+ * Kahn's algorithm over the graph restricted to the given edge kinds, returning topological
+ * activation waves (modules in the same wave have no edges among them and activate
+ * concurrently). Returns `undefined` when the restricted graph is cyclic.
+ */
+export const computeActivationWaves = (
+  model: ActivationGraphModel,
+  kinds: readonly EdgeKind[],
+): Plugin.PluginModule[][] | undefined => {
+  const edges = adjacency(model, kinds);
+  const inDegree = new Map(model.nodes.map((node) => [node.id, 0]));
+  for (const [, targets] of edges) {
+    for (const { target } of targets) {
+      inDegree.set(target, (inDegree.get(target) ?? 0) + 1);
     }
   }
 
   const waves: Plugin.PluginModule[][] = [];
   let visited = 0;
-  let frontier = modules.filter((module) => (inDegree.get(module.id) ?? 0) === 0);
+  let frontier = model.nodes.filter((node) => (inDegree.get(node.id) ?? 0) === 0);
   while (frontier.length > 0) {
-    waves.push([...frontier]);
+    waves.push(frontier.map((node) => node.data));
     visited += frontier.length;
-    const next: Plugin.PluginModule[] = [];
-    for (const module of frontier) {
-      for (const to of edges.get(module.id)?.keys() ?? []) {
-        if (!inDegree.has(to)) {
-          continue;
-        }
-        const remaining = (inDegree.get(to) ?? 0) - 1;
-        inDegree.set(to, remaining);
+    const next: ActivationNode[] = [];
+    for (const node of frontier) {
+      for (const { target } of edges.get(node.id) ?? []) {
+        const remaining = (inDegree.get(target) ?? 0) - 1;
+        inDegree.set(target, remaining);
         if (remaining === 0) {
-          const target = byId.get(to);
-          if (target) {
-            next.push(target);
+          const targetNode = model.findNode(target);
+          if (targetNode) {
+            next.push(targetNode);
           }
         }
       }
     }
     frontier = next;
   }
-  return visited === modules.length ? waves : undefined;
+  return visited === model.nodes.length ? waves : undefined;
 };
 
 /**
- * Finds one cycle in the capability graph for diagnostics: each entry is a module and the
- * capability identifier on its outgoing edge within the cycle.
+ * Finds one cycle in the graph (restricted to the given edge kinds) for diagnostics: each entry
+ * is a module and the capability identifier on its outgoing edge within the cycle.
  */
-export const findCyclePath = (
-  modules: readonly Plugin.PluginModule[],
-  edges: ReadonlyMap<string, ReadonlyMap<string, string>>,
-): Array<{ module: string; capability: string }> => {
+export const findCyclePath = (model: ActivationGraphModel, kinds: readonly EdgeKind[]): CycleEntry[] => {
+  const edges = adjacency(model, kinds);
   const state = new Map<string, 'visiting' | 'done'>();
-  let cycle: Array<{ module: string; capability: string }> = [];
+  let cycle: CycleEntry[] = [];
 
-  const visit = (id: string, stack: Array<{ module: string; capability: string }>): boolean => {
+  const visit = (id: string, stack: CycleEntry[]): boolean => {
     state.set(id, 'visiting');
-    for (const [to, capability] of edges.get(id) ?? []) {
-      if (state.get(to) === 'done') {
+    for (const { target, capability } of edges.get(id) ?? []) {
+      if (state.get(target) === 'done') {
         continue;
       }
       const entry = { module: id, capability };
-      if (state.get(to) === 'visiting') {
-        const start = stack.findIndex((frame) => frame.module === to);
+      if (state.get(target) === 'visiting') {
+        const start = stack.findIndex((frame) => frame.module === target);
         cycle = [...stack.slice(start === -1 ? 0 : start), entry];
         return true;
       }
-      if (visit(to, [...stack, entry])) {
+      if (visit(target, [...stack, entry])) {
         return true;
       }
     }
@@ -246,10 +284,17 @@ export const findCyclePath = (
     return false;
   };
 
-  for (const module of modules) {
-    if (!state.has(module.id) && visit(module.id, [])) {
+  for (const node of model.nodes) {
+    if (!state.has(node.id) && visit(node.id, [])) {
       break;
     }
   }
   return cycle;
 };
+
+/** Ids of the module's hard-edge providers within the graph (its incoming hard edges). */
+export const hardProviderIds = (model: ActivationGraphModel, moduleId: string): string[] =>
+  model.filterEdges({ target: moduleId, type: 'hard' }).map((edge) => edge.source);
+
+/** Whether the graph carries any soft (multi-capability) ordering edges. */
+export const hasSoftEdges = (model: ActivationGraphModel): boolean => model.edges.some((edge) => edge.type === 'soft');

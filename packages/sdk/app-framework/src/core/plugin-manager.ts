@@ -1835,14 +1835,12 @@ class ManagerImpl implements PluginManager {
       }
       runnable.forEach((module) => this._pendingReactivate.delete(module.id));
 
-      const runnableIds = new Set(runnable.map((module) => module.id));
-      const { hard: hardEdges, soft: softEdges } = ActivationGraph.buildRoundEdges(runnable, {
+      const graph = ActivationGraph.buildRoundGraph(runnable, {
         isSatisfied: (capability) => this.capabilities.getAll(capability).length > 0,
         providerOf: (identifier) => providerIndex.get(identifier),
-        runnableIds,
       });
 
-      const ordered = yield* this._orderRoundBreakingCycles(runnable, hardEdges, softEdges);
+      const ordered = yield* this._orderRoundBreakingCycles(graph);
       if (ordered === undefined) {
         return undefined;
       }
@@ -1851,48 +1849,44 @@ class ManagerImpl implements PluginManager {
         waves: waves.map((wave) => wave.map((module) => module.id)),
       });
 
-      return yield* this._executeWaves(waves, hardEdges, cycleFailed, key);
+      return yield* this._executeWaves(waves, graph, cycleFailed, key);
     });
   }
 
   /**
-   * Orders a round's modules into activation waves, repeatedly excising hard-edge cycles
+   * Orders a round's graph into activation waves, repeatedly excising hard-edge cycles
    * (recorded as an error state on the involved plugins; their dependents skip via the failed
-   * set) until the remaining graph is acyclic. Soft edges are then merged best-effort: if they
+   * set) until the remaining graph is acyclic. Soft edges are then layered best-effort: if they
    * cycle, the round falls back to hard-edge order wholesale. Returns `undefined` when nothing
    * survives cycle excision.
    */
   private _orderRoundBreakingCycles(
-    roundModules: Plugin.PluginModule[],
-    hardEdges: ActivationGraph.EdgeMap,
-    softEdges: ActivationGraph.EdgeMap,
+    graph: ActivationGraph.ActivationGraphModel,
   ): Effect.Effect<{ waves: Plugin.PluginModule[][]; cycleFailed: Set<string> } | undefined, Error> {
     return Effect.gen(this, function* () {
       const cycleFailed = new Set<string>();
-      let runnableModules = roundModules;
-      let hardWaves = ActivationGraph.computeActivationWaves(runnableModules, hardEdges);
+      let hardWaves = ActivationGraph.computeActivationWaves(graph, ['hard']);
       while (hardWaves === undefined) {
-        const path = ActivationGraph.findCyclePath(runnableModules, hardEdges);
+        const path = ActivationGraph.findCyclePath(graph, ['hard']);
         yield* this._reportStructuralError(
           path.map((entry) => entry.module),
           new DependencyCycleError({ path }),
         );
-        const members = new Set(path.map((entry) => entry.module));
+        const members = path.map((entry) => entry.module);
         members.forEach((member) => {
           cycleFailed.add(member);
           this._structurallyFailed.add(member);
         });
-        runnableModules = runnableModules.filter((module) => !members.has(module.id));
-        if (runnableModules.length === 0) {
+        graph.removeNodes(members);
+        if (graph.nodes.length === 0) {
           return undefined;
         }
-        hardWaves = ActivationGraph.computeActivationWaves(runnableModules, hardEdges);
+        hardWaves = ActivationGraph.computeActivationWaves(graph, ['hard']);
       }
 
-      const combinedEdges = ActivationGraph.mergeEdges(hardEdges, softEdges);
-      const combinedWaves = ActivationGraph.computeActivationWaves(runnableModules, combinedEdges);
-      if (combinedWaves === undefined && softEdges.size > 0) {
-        log('multi-capability soft ordering dropped (cycle)', { modules: runnableModules.map((module) => module.id) });
+      const combinedWaves = ActivationGraph.computeActivationWaves(graph, ['hard', 'soft']);
+      if (combinedWaves === undefined && ActivationGraph.hasSoftEdges(graph)) {
+        log('multi-capability soft ordering dropped (cycle)', { modules: graph.nodes.map((node) => node.id) });
       }
       return { waves: combinedWaves ?? hardWaves, cycleFailed };
     });
@@ -1906,21 +1900,13 @@ class ManagerImpl implements PluginManager {
    */
   private _executeWaves(
     waves: Plugin.PluginModule[][],
-    hardEdges: ActivationGraph.EdgeMap,
+    graph: ActivationGraph.ActivationGraphModel,
     preFailed: Set<string>,
     key: string,
   ): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       const failed = new Set<string>(preFailed);
-      const providersOf = (moduleId: string): string[] => {
-        const providers: string[] = [];
-        for (const [from, targets] of hardEdges) {
-          if (targets.has(moduleId)) {
-            providers.push(from);
-          }
-        }
-        return providers;
-      };
+      const providersOf = (moduleId: string): string[] => ActivationGraph.hardProviderIds(graph, moduleId);
       let allSucceeded = true;
       for (const wave of waves) {
         yield* Effect.all(
@@ -1951,37 +1937,10 @@ class ManagerImpl implements PluginManager {
    * Two modules on different activation events that require each other's provides would
    * otherwise pend forever (neither chain can start); this surfaces the lock at startup.
    */
-  private _findGlobalCapabilityCycle(): Array<{ module: string; capability: string }> | undefined {
-    const modules = this._get(this._modulesAtom);
-    const providersByCapability = new Map<string, string[]>();
-    for (const module of modules) {
-      for (const capability of module.activation.provides) {
-        if (capability.arity !== 'single') {
-          continue;
-        }
-        const providers = providersByCapability.get(capability.identifier) ?? [];
-        providers.push(module.id);
-        providersByCapability.set(capability.identifier, providers);
-      }
-    }
-    const edges = new Map<string, Map<string, string>>();
-    for (const module of modules) {
-      for (const capability of module.activation.requires) {
-        if (capability.arity === 'multi') {
-          continue;
-        }
-        for (const provider of providersByCapability.get(capability.identifier) ?? []) {
-          if (provider === module.id) {
-            continue;
-          }
-          const targets = edges.get(provider) ?? new Map<string, string>();
-          targets.set(module.id, capability.identifier);
-          edges.set(provider, targets);
-        }
-      }
-    }
-    return ActivationGraph.computeActivationWaves(modules, edges) === undefined
-      ? ActivationGraph.findCyclePath(modules, edges)
+  private _findGlobalCapabilityCycle(): ActivationGraph.CycleEntry[] | undefined {
+    const graph = ActivationGraph.buildSingletonGraph(this._get(this._modulesAtom));
+    return ActivationGraph.computeActivationWaves(graph, ['hard']) === undefined
+      ? ActivationGraph.findCyclePath(graph, ['hard'])
       : undefined;
   }
 

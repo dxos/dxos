@@ -26,6 +26,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
