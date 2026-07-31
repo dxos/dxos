@@ -15,6 +15,7 @@ import {
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
+import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -376,8 +377,5 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private _isActive = (connection: EdgeWsConnection) => connection === this._currentConnection;
 }
 
-const encodePresentationWsAuthHeader = (encodedPresentation: Uint8Array): string => {
-  // '=' and '/' characters are not allowed in the WebSocket subprotocol header.
-  const encodedToken = Buffer.from(encodedPresentation).toString('base64').replace(/=*$/, '').replaceAll('/', '|');
-  return `base64url.bearer.authorization.dxos.org.${encodedToken}`;
-};
+const encodePresentationWsAuthHeader = (encodedPresentation: Uint8Array): string =>
+  EdgeCredentialsHeaderCodec.encodeWebSocketProtocol(encodedPresentation);
