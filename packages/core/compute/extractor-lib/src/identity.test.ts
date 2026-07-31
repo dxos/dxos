@@ -233,8 +233,8 @@ describe('applyMerge', () => {
     const overrides = Person.make({ fullName: 'Alice Smith', jobTitle: 'Engineer' });
     await EffectEx.runPromise(applyMerge(db, personIdentitySpec, plan, overrides));
 
-    // `fullName` was already set on the survivor, so the override cannot clobber it; `jobTitle` was a gap.
-    expect(survivor.fullName).toBe('Alice');
+    // The confirmed draft is the user's decision, so it wins even where the survivor had a value.
+    expect(survivor.fullName).toBe('Alice Smith');
     expect(survivor.jobTitle).toBe('Engineer');
   });
 

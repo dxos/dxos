@@ -143,7 +143,16 @@ export const useMasonryLayout = ({
           if (element) {
             nodes.current.set(id, element);
             elementIds.current.set(element, id);
-            observer?.observe(element);
+            if (observer) {
+              observer.observe(element);
+            } else {
+              // Without a ResizeObserver nothing would ever report a height, leaving every tile
+              // hidden behind the estimate gate. One measurement at mount is worse than live
+              // tracking, but it is a layout rather than a blank grid.
+              heights.current.set(id, element.offsetHeight);
+              rememberHeight(id, widthRef.current, element.offsetHeight);
+              setVersion((value) => value + 1);
+            }
           } else {
             nodes.current.delete(id);
           }
