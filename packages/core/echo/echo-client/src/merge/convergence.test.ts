@@ -49,6 +49,17 @@ describe('merge convergence', () => {
       timeout: 5_000,
     });
 
+  // The worker merges asynchronously off the indexing stream, so convergence is awaited: exactly
+  // one live task, and it is the expected winner.
+  const waitForLiveWinner = (db: any, winner: string) =>
+    waitForCondition({
+      condition: async () => {
+        const live = await liveTasks(db);
+        return live.length === 1 && live[0].id === winner;
+      },
+      timeout: 10_000,
+    });
+
   test('two peers seeding the same state converge on one object', async ({ expect }) => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
@@ -66,23 +77,15 @@ describe('merge convergence', () => {
     await db2.flush();
 
     // Both duplicates have reached peer 1 — visible only through the tombstone-inclusive view,
-    // since a live query would already have collapsed them.
+    // since the worker merges them as they index.
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
     await waitForAllTasks(db1, 2);
 
-    // No explicit merge: querying is what collapses them, and the winner is a pure function of the
-    // id set, so it does not matter which peer queries first.
+    // No merge call anywhere: each peer's worker notices the collision while indexing the
+    // replicated write, and the winner is a pure function of the id set.
     const winner = first.id < second.id ? first.id : second.id;
-    const survivors = await liveTasks(db1);
-    expect(survivors).toHaveLength(1);
-    expect(survivors[0].id).toBe(winner);
-    await db1.flush();
-
-    // Peer 2 sees the same single object once the merge replicates.
-    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
-    const survivorsOnPeer2 = await liveTasks(db2);
-    expect(survivorsOnPeer2).toHaveLength(1);
-    expect(survivorsOnPeer2[0].id).toBe(winner);
+    await waitForLiveWinner(db1, winner);
+    await waitForLiveWinner(db2, winner);
   });
 
   test('both peers merging independently agree on the same winner', async ({ expect }) => {
@@ -101,20 +104,14 @@ describe('merge convergence', () => {
     const second = seed(db2, 'from peer 2');
     await db2.flush();
 
-    // Both peers see both duplicates, then both query — the redundant merging that the
-    // run-on-every-client decision accepts as safe because the result is deterministic.
+    // Both workers merge independently — the redundant execution the design accepts as safe
+    // because the result is deterministic, so they converge instead of fighting.
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
-    await waitForAllTasks(db1, 2);
-    await waitForAllTasks(db2, 2);
 
     const winner = first.id < second.id ? first.id : second.id;
-    for (const db of [db1, db2]) {
-      const survivors = await liveTasks(db);
-      expect(survivors).toHaveLength(1);
-      expect(survivors[0].id).toBe(winner);
-      await db.flush();
-    }
+    await waitForLiveWinner(db1, winner);
+    await waitForLiveWinner(db2, winner);
   });
 
   test('edits made to a loser after the merge are folded into the winner', async ({ expect }) => {
@@ -135,10 +132,10 @@ describe('merge convergence', () => {
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
     await waitForAllTasks(db1, 2);
 
-    // Peer 1's query merges; peer 2 is a straggler that has not seen the merge and keeps editing
+    // Peer 1's worker merges; peer 2 is a straggler that has not seen the merge and keeps editing
     // its own copy, which is about to become the loser.
     const winner = first.id < second.id ? first.id : second.id;
-    expect(await liveTasks(db1)).toHaveLength(1);
+    await waitForLiveWinner(db1, winner);
     await db1.flush();
 
     const loserId = winner === first.id ? second.id : first.id;
@@ -188,36 +185,27 @@ describe('merge convergence', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
 
-    // Peer 2 adds two more duplicates but merges only the pair it created — a peer acting on a
-    // strict subset of the duplicates, which is what produces redirect chains rather than one hop.
+    // Peer 2 adds two more duplicates and merges only the pair it created, in the same tick — a
+    // peer acting on a strict subset of the duplicates, which is what produces redirect chains
+    // rather than one hop.
     const second = seed(db2, 'second');
     const third = seed(db2, 'third');
-    await db2.flush();
-
-    await waitForAllTasks(db2, 3);
-    // A peer acting on a strict subset of the duplicates, which is what produces redirect chains
-    // rather than a single hop.
-    const partialView = (await allTasks(db2)).filter((task: any) => task.id === second.id || task.id === third.id);
-    const partial = mergeDuplicates(partialView);
-    await db2.flush();
+    const partial = mergeDuplicates([second, third]);
     expect(partial.merged).toHaveLength(1);
+    await db2.flush();
 
-    // Now a peer with the full view queries, which collapses what remains.
-    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    // The workers see the full view and collapse what remains.
     const globalMinimum = [first.id, second.id, third.id].sort()[0];
-    expect(await liveTasks(db1)).toHaveLength(1);
-    await db1.flush();
+    await waitForLiveWinner(db1, globalMinimum);
+    await waitForLiveWinner(db2, globalMinimum);
 
     // Every id — including the one merged away twice — reaches the global minimum by following
     // redirects transitively.
-    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
-    const all = await allTasks(db1);
-    for (const id of [first.id, second.id, third.id]) {
-      expect(resolveMerged(id, all)).toBe(globalMinimum);
+    for (const db of [db1, db2]) {
+      const all = await allTasks(db);
+      for (const id of [first.id, second.id, third.id]) {
+        expect(resolveMerged(id, all)).toBe(globalMinimum);
+      }
     }
-
-    const survivors = await liveTasks(db1);
-    expect(survivors).toHaveLength(1);
-    expect(survivors[0].id).toBe(globalMinimum);
   });
 });

@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: merge-on-query is live; next is the load-path hook (§4.7) with the `meta.naturalKey` index, for entities reached by id/ref where no result set exposes the duplicate. Uncommitted: none. Last: `db.mergeDuplicates()`, the straggler fold, and the derived `SCALAR_META_FIELDS` fix; 4 convergence + 10 executor tests green over 3 clean repeats._
+_Resume: worker-side merging is live (§4.8); next per TASKS backlog — doctor diagnostic, property-based determinism, relation endpoints, collaborative-text policy. Uncommitted: none. Last: worker-side merge (index column, IndexingResult.naturalKeys trigger, raw-doc executor), client hook demoted to read-only; all 4 suites green._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -72,11 +72,13 @@ than by a spike.
 - [x] Straggler fold (`foldLateEdits`) — asks automerge which data fields moved since
       `mergedAtHeads` and carries exactly those to the winner, then advances the
       watermark so the same edit is never folded twice.
-- [x] **Collapse duplicates during query evaluation** (DESIGN.md §4.8) — a caller
-      never sees two. No index needed; covers every §2 failure. Landed in the client's
-      `_presentResults`, not as a `QueryPlan` step: the plan runs host-side over raw
-      documents, while merging needs live entities.
-- [ ] **Merge on entity load** (DESIGN.md §4.7) — for entities reached by id/ref.
+- [x] **Merge in the worker, off the indexing stream** (DESIGN.md §4.8, option A of
+      the 2026-07-31 review; supersedes the one-day query-evaluation implementation).
+      `IndexingResult.naturalKeys` trigger set → `objectMeta.naturalKey` point lookup
+      → raw-document merge in `echo-host/db-host/natural-key-merge.ts`. Client query
+      path keeps a read-only filter dropping already-redirected losers. Covers
+      entities reached by id/ref too — detection is write-driven, not result-set
+      driven — which retires the separate merge-on-load item.
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
 - [ ] **Decide the collaborative-text policy before adoption widens** (§4.6 risk).
@@ -89,13 +91,16 @@ than by a spike.
 
 ## Phase 3: Indexing & automation
 
-- [ ] **`meta.naturalKey` index column + `Filter.naturalKey` equality pushdown** —
-      for the load path only; the query pipeline needs no index. Point lookup.
+- [x] **`meta.naturalKey` index column** — `objectMeta.naturalKey` + migration +
+      `(spaceId, naturalKey)` index + `queryByNaturalKeys` point lookup; populated
+      from `@meta` on index update (`objectStructureToJson` now emits the meta
+      section, which it previously omitted entirely).
+- [ ] `Filter.naturalKey` equality pushdown for app-level lookups (optional; the
+      merge itself no longer needs it).
+- [x] Indexer key-collisions trigger the merge automatically — this is the shipped
+      §4.8 mechanism, which also serves as the §4.9 proactive worker pass (event
+      driven rather than a sweep).
 - [ ] Meta-key columns + planner pushdown for `Filter.key` / `Filter.foreignKeys`.
-- [ ] Indexer key-collision events trigger the merge automatically.
-- [ ] Optional: a background/worker merge pass (§4.9). Composes with the lazy path —
-      the merge is idempotent, so a worker racing a querying client converges. Buys a
-      smaller divergence window, not throughput.
 
 ## Phase 3b: Relations and types as merge subjects
 

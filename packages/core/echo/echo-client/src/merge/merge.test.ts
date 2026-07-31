@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { waitForCondition } from '@dxos/async';
 import { Database, Filter, Merge, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -104,8 +105,9 @@ describe('Merge', () => {
       const second = Obj.make(TestSchema.Task, { title: 'from the second writer', description: 'only here' });
       Merge.setNaturalKey(second, 'org.example.seed');
       yield* Database.add(second);
-      yield* Database.flush();
 
+      // Same tick as the adds, before the worker can see the documents; either engine computes
+      // the identical result, this just keeps the assertion on `merged` deterministic.
       const result = mergeDuplicates([first, second]);
       expect(result.merged).toHaveLength(1);
       expect(result.merged[0].winner).toBe(first.id);
@@ -125,19 +127,22 @@ describe('Merge', () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });
     const db = await peer.createDatabase();
 
-    await Effect.gen(function* () {
-      for (const title of ['first', 'second', 'third']) {
-        const task = Obj.make(TestSchema.Task, { title });
-        Merge.setNaturalKey(task, 'org.example.seed');
-        yield* Database.add(task);
-      }
-      yield* Database.flush();
+    const tasks = ['first', 'second', 'third'].map((title) => {
+      const task = db.add(Obj.make(TestSchema.Task, { title }));
+      Merge.setNaturalKey(task, 'org.example.seed');
+      return task;
+    });
+    await db.flush();
 
-      // The query collapses them on sight; a second pass over the survivors finds nothing.
-      const after = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(after).toHaveLength(1);
-      expect(mergeDuplicates(after).merged).toHaveLength(0);
-    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+    // The worker merges off the indexing stream; wait for it to converge, then an explicit pass
+    // over the survivors finds nothing left to do.
+    await waitForCondition({
+      condition: async () => (await db.query(Filter.type(TestSchema.Task)).run()).length === 1,
+      timeout: 10_000,
+    });
+    const after = await db.query(Filter.type(TestSchema.Task)).run();
+    expect(mergeDuplicates(after).merged).toHaveLength(0);
+    expect(after[0].id).toBe(tasks.map(({ id }) => id).sort()[0]);
   });
 
   test('a merged-away object redirects to the winner instead of vanishing', async ({ expect }) => {
@@ -151,8 +156,6 @@ describe('Merge', () => {
         Merge.setNaturalKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
-      yield* Database.flush();
-
       mergeDuplicates([first, second]);
       yield* Database.flush();
 
@@ -179,8 +182,7 @@ describe('Merge', () => {
       // at the object that is about to lose the merge.
       const referrer = Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) });
       yield* Database.add(referrer);
-      yield* Database.flush();
-
+      // Same tick as the adds, so the redirect exists regardless of whether the worker races.
       mergeDuplicates([first, second]);
       yield* Database.flush();
 
@@ -207,9 +209,10 @@ describe('Merge', () => {
     const referrer = db.add(Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) }));
     await db.flush();
 
-    const result = await db.mergeDuplicates();
-    expect(result.merged).toHaveLength(1);
-    expect(result.merged[0].winner).toBe(first.id);
+    // The worker may or may not have merged already (its trigger raced the flush); either way
+    // this pass leaves exactly one survivor and repoints the reference — so assert the outcome,
+    // not who did the merging.
+    await db.mergeDuplicates();
 
     const survivors = await db.query(Filter.type(TestSchema.Task)).run();
     expect(survivors.map((task) => task.id).sort()).toEqual([first.id, referrer.id].sort());
@@ -241,12 +244,14 @@ describe('Merge', () => {
       Merge.setNaturalKey(task, 'org.example.seed');
       return task;
     });
-    await db.flush();
 
     const [winner, ...losers] = [...tasks].sort((a, b) => (a.id < b.id ? -1 : 1));
     expect(getMergedFrom(winner)).toEqual([]);
 
-    await db.mergeDuplicates();
+    // Same tick as the adds, so this pass runs before the worker can see the documents; the
+    // outcome is identical either way, since both engines compute the same pure function.
+    mergeDuplicates(tasks);
+    await db.flush();
     expect(getMergedFrom(winner)).toEqual(losers.map(({ id }) => id).sort());
 
     // Each loser still resolves, so the recorded ids are usable rather than dangling.
@@ -255,7 +260,7 @@ describe('Merge', () => {
       expect(all.some((task) => task.id === id)).toBe(true);
     }
 
-    // Idempotent: a second pass adds nothing.
+    // Idempotent: a second pass — client or worker — adds nothing.
     await db.mergeDuplicates();
     expect(getMergedFrom(winner)).toEqual(losers.map(({ id }) => id).sort());
   });
@@ -269,23 +274,35 @@ describe('Merge', () => {
       Merge.setNaturalKey(task, 'org.example.seed');
       return task;
     });
-    await db.flush();
     const [smallest, middle, largest] = [...tasks].sort((a, b) => (a.id < b.id ? -1 : 1));
 
-    // Merge only the two larger ones first, as a peer with a partial view would.
+    // Merge only the two larger ones first, as a peer with a partial view would — staged in the
+    // same tick as the adds, before the worker sees the documents.
     mergeDuplicates([middle, largest]);
-    await db.flush();
     expect(getMergedFrom(middle)).toEqual([largest.id]);
+    await db.flush();
 
-    // Collapsing the chain must not lose the id `middle` had already absorbed.
-    await db.mergeDuplicates();
+    // The worker collapses the remaining pair; the chain must not lose the id `middle` had
+    // already absorbed.
+    await waitForCondition({
+      condition: async () => getMergedFrom(smallest).length === 2,
+      timeout: 10_000,
+    });
     expect(getMergedFrom(smallest)).toEqual([middle.id, largest.id].sort());
   });
 
   // The §2 failure shape: callers that read `results.length` or assert a singleton break on a
   // duplicate they did not create. The query must never hand them two.
-  describe('collapsing during query evaluation', () => {
-    test('a query never returns duplicates, without anyone calling the merge', async ({ expect }) => {
+  describe('worker-driven merging', () => {
+    // Merging is triggered by the worker's indexing stream, so convergence is awaited rather than
+    // synchronous with any one query.
+    const waitForLiveCount = async (db: any, count: number) =>
+      waitForCondition({
+        condition: async () => (await db.query(Filter.type(TestSchema.Task)).run()).length === count,
+        timeout: 10_000,
+      });
+
+    test('duplicates converge without anyone calling the merge', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
 
@@ -297,14 +314,14 @@ describe('Merge', () => {
       await db.flush();
       const winner = tasks[0].id < tasks[1].id ? tasks[0] : tasks[1];
 
-      // No explicit mergeDuplicates call — the query itself collapses them.
+      // No merge call anywhere — the worker notices the collision while indexing the writes.
+      await waitForLiveCount(db, 1);
       const results = await db.query(Filter.type(TestSchema.Task)).run();
-      expect(results).toHaveLength(1);
       expect(results[0].id).toBe(winner.id);
       expect(getMergedFrom(winner)).toHaveLength(1);
     });
 
-    test('the collapse is durable, not just filtered out of one result', async ({ expect }) => {
+    test('the merge is durable, not filtered out of one result', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
 
@@ -313,9 +330,7 @@ describe('Merge', () => {
         Merge.setNaturalKey(task, 'org.example.seed');
       }
       await db.flush();
-
-      expect(await db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(1);
-      await db.flush();
+      await waitForLiveCount(db, 1);
 
       // A fresh query sees one because the losers are tombstoned, not because it re-filtered.
       const live = await db.query(Filter.type(TestSchema.Task)).run();
@@ -333,10 +348,12 @@ describe('Merge', () => {
         Merge.setNaturalKey(task, 'org.example.seed');
       }
       await db.flush();
+      await waitForLiveCount(db, 1);
 
-      // The merge writes, which invalidates the query. Idempotence is what stops that recurring.
+      // The merge writes re-enter the indexing stream; idempotence is what stops that recurring.
       const winner = (await db.query(Filter.type(TestSchema.Task)).run())[0];
       const absorbed = getMergedFrom(winner);
+      expect(absorbed).toHaveLength(1);
       for (let attempt = 0; attempt < 3; attempt++) {
         const results = await db.query(Filter.type(TestSchema.Task)).run();
         expect(results).toHaveLength(1);

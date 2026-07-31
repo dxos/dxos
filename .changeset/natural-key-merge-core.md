@@ -1,6 +1,8 @@
 ---
 '@dxos/echo-protocol': minor
 '@dxos/echo-client': minor
+'@dxos/index-core': minor
+'@dxos/echo-host': minor
 '@dxos/echo': minor
 ---
 
@@ -12,4 +14,4 @@ The winner records `system.mergedFrom`, the ids of everything folded into it —
 
 `db.mergeDuplicates()` applies all of this against a space: it merges each group of duplicates, writing per field rather than replacing the object (a replace would rewrite every field, so a concurrent edit to a property the merge never touched would lose the last-write-wins race), records `system.mergedInto` and the loser's heads, tombstones the loser, and repoints references at the survivor. Losers keep replicating rather than being erased, so a reference that was never rewritten still reaches the winner. `foldLateEdits` handles the peer that was offline during the merge and kept editing its own copy: it asks automerge which data fields moved since the recorded heads and carries exactly those across, then advances the watermark.
 
-Merging is not yet automatic — `db.mergeDuplicates()` is an explicit call. Running it on space open was tried and reverted: detection has no way to ask which entities declare a natural key, so it scans, hydrating the whole space into the working set on every open. The trigger will instead be a step inside query evaluation, which collapses duplicates in the already-materialized working set before results are returned, so a caller never observes two.
+Merging is automatic, and it runs in the worker: every indexing batch reports the natural keys it saw, a point lookup on the new `objectMeta.naturalKey` column finds collisions, and the merge executes against the raw automerge documents — once per device, at the moment a duplicate replicates in, with no client, query, or scan involved. The merge's own writes re-index the tombstones, which removes losers from query results everywhere; the client query path additionally drops entities already carrying a redirect, read-only, to cover the moment between the redirect replicating and the local index catching up. The guarantee is eventual (about one indexing cycle): a query racing the merge can briefly return both copies before settling. `db.mergeDuplicates()` remains as an explicit call that also repoints references.

@@ -50,13 +50,20 @@
   never touch. Merging when an entity is hydrated instead makes the cost proportional
   to use, and reduces detection to a **point lookup** (`naturalKey = X`, normally one
   row) rather than a scan. See §4.7.
-- **2026-07-30 (Josiah)** — **Merge inside query evaluation**, so a caller never sees
-  two entities where there should be one: duplicates in the working set collapse
-  before results are returned. Needs no index (the working set is already hydrated)
-  and covers every failure in §2, which are all query-shaped — so the index and the
-  load-path hook become completeness work rather than blockers. Implemented in the
-  client's result presentation rather than as a query-plan step, because the plan
-  executes host-side over raw documents. See §4.8. **IMPLEMENTED.**
+- **2026-07-30 (Josiah)** — ~~Merge inside query evaluation~~ — implemented in the
+  client's result presentation, then **superseded the next day** (below): writes
+  during query evaluation, per-query-instance work, and blindness to id/ref loads
+  made it the wrong home.
+- **2026-07-31 (Josiah)** — **Merge in the worker, triggered by the indexing
+  stream** (option A of the review; §4.8 rewritten). `EchoHost._runUpdateIndexes`
+  processes every document change — local writes and replication arrivals, and
+  replication is the moment duplicates come into existence on a device. Each batch
+  reports the natural keys it saw (almost always none); a point lookup on the new
+  `objectMeta.naturalKey` column finds collisions; the merge runs on the raw
+  automerge documents via the storage-independent core. The client query path keeps
+  only a **read-only** filter dropping already-redirected losers. Accepted trade-off:
+  the never-see-two guarantee is eventual (~one indexing cycle) rather than
+  synchronous — a query racing the merge can briefly see the un-merged pair.
 
 ---
 
@@ -394,56 +401,60 @@ Consequences to design for:
 - **Convergence is unaffected.** The merge function is deterministic and idempotent,
   so _when_ it runs does not change what it computes — only how soon peers converge.
 
-### 4.8 The merge belongs in the query pipeline
+### 4.8 The merge runs in the worker, off the indexing stream
 
-A query's result set is materialized before it is returned, so a query spanning both
-duplicates would hand back two entities and settle to one only as the merge landed.
-Rather than accept that transient, **merge during query evaluation**, grouping the
-working set by natural key, merging any group of more than one, and dropping the
-losers before results are returned. A caller then never observes two.
+**Decided 2026-07-31, superseding both "on space open" (§4.7's revision target) and
+"inside query evaluation" (implemented for a day, then moved).**
 
-**Not a `QueryPlan` step, as first sketched.** The plan executes host-side over raw
-`EntityStructure` documents — potentially in another worker — while merging needs live
-client entities and `Obj.update`. The hook is therefore in the client's result
-presentation (`echo-client/src/query/query-result.ts`, `_presentResults`), which both
-`run()` and the reactive recompute funnel through. That it works at all depends on the
-merge being **synchronous**: only persistence is async, so the collapse fits inside a
-synchronous getter like `results`.
+`EchoHost._runUpdateIndexes` — in the worker — processes every document change:
+local writes and remote replication arrivals. Replication is the moment a duplicate
+comes into existence on a device, so this is the earliest possible trigger, and it
+fires exactly once per device regardless of how many tabs or clients are open.
 
-**This needs no index.** The working set is already hydrated by the time a step runs,
-so grouping it by natural key is one in-memory pass over objects already in hand —
-nothing extra to load, nothing to look up. The cost is nil for result sets that
-declare no natural keys, and real only where a duplicate group actually exists.
+Mechanism:
 
-It is also sufficient for every failure in §2, all of which are query-shaped:
-`space.properties` (`results.length === 1`), `CollectionModel`'s
-duplicate-`SpaceProperties` invariant, `useTraceMessages` querying across trace feeds,
-the `SHARED` expando check-then-create, and `db.addType`.
+1. Each indexing batch reports the natural keys it saw (`IndexingResult.naturalKeys`,
+   extracted from `@meta` during accumulation — almost always empty).
+2. A point lookup on the `objectMeta.naturalKey` column (new, indexed on
+   `(spaceId, naturalKey)`) returns the live rows sharing those keys; a key with more
+   than one row is a duplicate group. Cost is proportional to writes that carry a
+   natural key — nil for everything else.
+3. The merge runs on the **raw automerge documents** (`db-host/natural-key-merge.ts`)
+   via the storage-independent `Merge` core — no live proxies exist host-side. Each
+   group member is re-verified against its document first, since index rows are
+   derived state.
+4. The merge's own writes fire `documentsSaved`, which re-indexes the tombstones and
+   invalidates queries — the indexer is already the sole query-invalidation source,
+   so losers leave query results everywhere with no new plumbing.
 
-That demotes the index and the load-path hook from blocker to completeness: an entity
-reached by id or by reference has no siblings in a result set to compare against, but
-`resolveRedirect` already covers it once merged, and any query that surfaces it
-performs the merge.
+The client keeps a **read-only** presentation filter (`query-result.ts`) that drops
+entities already carrying a redirect — covering the gap between a redirect
+replicating and the local index catching up. No write happens on any read path.
+
+Trade-off accepted with the decision: the never-see-two guarantee is **eventual**
+(~one indexing cycle) rather than synchronous. A query racing the merge can briefly
+return the un-merged pair; reactive queries re-emit and settle, one-shot callers see
+the same state a slightly earlier call would have.
 
 Rules the implementation had to learn (each one a bug first):
 
+- **`objectStructureToJson` omitted `@meta` entirely**, so the indexer could never
+  see a natural key — the whole trigger was silently inert. It now includes the meta
+  section, matching the feed path, whose blocks always carried it.
 - **Query results are not unique** — the same entity can appear twice before
-  presentation dedupes (there is a standing TODO to that effect). Merging a repeat
-  treated it as a duplicate of itself and tombstoned the winner, so `Merge.merge` now
-  deduplicates by id.
-- **A query asking for tombstones must not collapse.** `deleted: 'include'` exists to
-  show what was merged away; the option can sit at any depth in the AST because
-  scoping wraps it.
-- **Drop everything that redirects, not only what this pass merged.** The tombstone
-  reaches the index after the redirect is written, so an earlier loser can still be in
-  the results.
-- **Objects only, and only automerge-backed ones.** Reading meta off a relation or a
-  persisted type throws, which took out the schema preload on database open; feed
-  entities have no core at all (already out of scope, §4.6).
-
-Risk to weigh in review: this **writes during query evaluation**. The write is bounded
-and idempotent (a second pass finds nothing), but it invalidates queries, so the
-reactive path must not loop.
+  presentation dedupes. Merging a repeat treated it as a duplicate of itself and
+  tombstoned the winner; `Merge.merge` now deduplicates by id.
+- **A query asking for tombstones must not filter.** `deleted: 'include'` exists to
+  show what was merged away; the option can sit at any AST depth because scoping
+  wraps it.
+- **Objects only, and only automerge-backed ones** — reading meta off a relation or
+  persisted type throws, and feed entities have no document to merge (out of scope,
+  §4.6).
+- **Tests that stage a partial-view merge must do it in the same tick as the adds**
+  — once the documents save, the worker sees them, and any client-staged
+  intermediate state races it. Both engines compute the same pure function, so
+  final-state assertions are engine-agnostic; only order-dependent intermediate
+  assertions need the same-tick staging.
 
 ### 4.9 Proactive merging composes with the lazy path
 
