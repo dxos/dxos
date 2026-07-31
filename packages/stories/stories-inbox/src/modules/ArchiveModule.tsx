@@ -61,6 +61,7 @@ export const ArchiveModule = () => {
   if (!space) {
     return null;
   }
+
   return <ArchiveModuleContainer space={space} />;
 };
 
@@ -165,6 +166,13 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
+          <SystemIconButton.Upload
+            iconOnly
+            label='Upload feed'
+            accept='application/json,.json'
+            disabled={!mailbox || busy}
+            onFileChange={handleUpload}
+          />
           <SystemIconButton.Download
             iconOnly
             label={`Download starred (${starredIds.length})`}
@@ -178,13 +186,6 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             label={selected ? `Save message (${selectedHtml ? 'html' : 'json'})` : 'Save message — select one first'}
             disabled={!selected || busy}
             onClick={handleDownloadMessage}
-          />
-          <SystemIconButton.Upload
-            iconOnly
-            label='Upload feed'
-            accept='application/json,.json'
-            disabled={!mailbox || busy}
-            onFileChange={handleUpload}
           />
           <Toolbar.Separator />
           <IconButton

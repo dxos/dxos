@@ -745,6 +745,9 @@
       "path": "packages/ui/react-ui-grid/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-html/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-introspect/tsconfig.json"
     },
     {
