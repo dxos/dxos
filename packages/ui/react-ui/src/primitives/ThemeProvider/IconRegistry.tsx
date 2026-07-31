@@ -249,6 +249,10 @@ const acquireRegistry = (): { registry: IconRegistry; release: () => void } => {
   };
 };
 
+/**
+ * Provides the shared icon registry to descendants (consumed by `useIconHref`), acquiring
+ * the refcounted document-level singleton on mount and releasing it on unmount.
+ */
 export const IconRegistryProvider = ({ children }: PropsWithChildren) => {
   const [registry, setRegistry] = useState<IconRegistry>(NoopRegistry);
 
