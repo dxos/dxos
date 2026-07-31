@@ -81,7 +81,7 @@ export const organizationIdentitySpec: IdentitySpec<typeof Organization.Organiza
   type: Organization.Organization,
 
   keys: (organization) => {
-    const domain = organizationDomain(organization.website);
+    const domain = normalizeDomain(organization.website);
     return domain ? [`domain:${domain}`] : [];
   },
 
@@ -89,8 +89,8 @@ export const organizationIdentitySpec: IdentitySpec<typeof Organization.Organiza
     const source = typeof input === 'string' ? input : (input as { email?: string; domain?: string });
     const domain =
       typeof source === 'string'
-        ? organizationDomain(source)
-        : (source?.domain?.toLowerCase() ?? (source?.email ? extractDomain(source.email) : undefined));
+        ? normalizeDomain(source)
+        : normalizeDomain(source?.domain ?? (source?.email ? extractDomain(source.email) : undefined));
     return domain ? [`domain:${domain}`] : [];
   },
 
@@ -116,13 +116,21 @@ const addressKey = (value: unknown): string => {
   return JSON.stringify(fields);
 };
 
-/** Hostname of a website (bare domains and full URLs both accepted), or `undefined` when unparseable. */
-const organizationDomain = (website: string | undefined): string | undefined => {
-  if (!website) {
+/**
+ * Canonical domain for a website, a bare domain, or an email's domain part — the one normalization
+ * both sides of the Organization lookup must share.
+ *
+ * `www.` is dropped because it is a host alias, not a different organization: keying a website as
+ * `www.dxos.org` while a sender at `alice@dxos.org` looked up `dxos.org` meant the two never linked.
+ */
+export const normalizeDomain = (value: string | undefined): string | undefined => {
+  const trimmed = value?.trim();
+  if (!trimmed) {
     return undefined;
   }
   try {
-    return new URL(website.startsWith('http') ? website : `https://${website}`).hostname.toLowerCase();
+    const host = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`).hostname.toLowerCase();
+    return host.replace(/^www\./, '') || undefined;
   } catch {
     return undefined;
   }

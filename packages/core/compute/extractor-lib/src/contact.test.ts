@@ -2,15 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { overlayIdentityIndex } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
 
 import { buildContactFromActor } from './contact';
+import { identitySpecs } from './identity';
+import { getIdentityIndex } from './resolver';
 
 describe('buildContactFromActor', () => {
   let builder: EchoTestBuilder;
@@ -50,21 +54,24 @@ describe('buildContactFromActor', () => {
   });
 
   test('a repeat sender within a run does not build a second contact', async ({ expect }) => {
-    const first = await EffectEx.runPromise(buildContactFromActor({ email: 'alice@dxos.org' }, db));
-    // Deliberately NOT committed: an uncommitted contact is invisible to a query, which is what made
-    // the second message from a sender fork a duplicate.
-    const second = await EffectEx.runPromise(buildContactFromActor({ email: 'ALICE@dxos.org' }, db));
+    // In-run dedup is the overlay's job: an uncommitted contact is invisible to a query, which is
+    // what made the second message from a sender fork a duplicate.
+    const index = await EffectEx.runPromise(
+      Effect.map(getIdentityIndex(db), (shared) => overlayIdentityIndex(identitySpecs, shared)),
+    );
+    const first = await EffectEx.runPromise(buildContactFromActor({ email: 'alice@dxos.org' }, db, { index }));
+    const second = await EffectEx.runPromise(buildContactFromActor({ email: 'ALICE@dxos.org' }, db, { index }));
     expect(first).toBeDefined();
     expect(second).toBeUndefined();
   });
 
-  test('concurrent runs over one database share an index, so only one contact is built', async ({ expect }) => {
-    // F1: each sync used to hold its own snapshot, so two mailboxes seeing the same sender at once
-    // both missed and both created.
-    const [first, second] = await Promise.all([
-      EffectEx.runPromise(buildContactFromActor({ email: 'alice@dxos.org' }, db)),
-      EffectEx.runPromise(buildContactFromActor({ email: 'alice@dxos.org' }, db)),
-    ]);
-    expect([first, second].filter(Boolean)).toHaveLength(1);
+  test('an uncommitted contact never enters the space-wide index', async ({ expect }) => {
+    // A run that dies before committing must not leave the shared index claiming a contact the
+    // space never received — the next run would then never create one for that sender.
+    const built = await EffectEx.runPromise(buildContactFromActor({ email: 'alice@dxos.org' }, db));
+    expect(built).toBeDefined();
+
+    const shared = await EffectEx.runPromise(getIdentityIndex(db));
+    expect(shared.lookup(Person.Person, { email: 'alice@dxos.org' })).toBeUndefined();
   });
 });

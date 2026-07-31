@@ -48,6 +48,9 @@ export const buildContactFromActor = (
       return undefined;
     }
 
+    // The shared index is read-only here: registering an uncommitted contact into it would make
+    // every later lookup resolve to an object the space may never receive (see `overlayIdentityIndex`).
+    // A caller that wants in-run dedup passes its own overlay.
     const index = provided ?? (yield* getIdentityIndex(db));
     if (index.lookup(Person.Person, { email })) {
       return undefined;
@@ -66,9 +69,10 @@ export const buildContactFromActor = (
       });
     }
 
-    // Register before the caller commits: an uncommitted contact is invisible to a query, and the
-    // next message from the same sender would otherwise build a second one.
-    index.register(contact);
+    // Only into a caller-owned overlay: the next message from the same sender must not build a
+    // second contact, but a run that dies before committing must not leave the space's shared index
+    // claiming one either.
+    provided?.register(contact);
 
     const organization = index.lookup(Organization.Organization, { email });
     if (organization) {

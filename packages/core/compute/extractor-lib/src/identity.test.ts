@@ -11,7 +11,13 @@ import { EffectEx } from '@dxos/effect';
 import { applyMerge, buildIdentityIndex, findDuplicates, identityKeys, planMerge } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
 
-import { identitySpecs, normalizePhone, organizationIdentitySpec, personIdentitySpec } from './identity';
+import {
+  identitySpecs,
+  normalizeDomain,
+  normalizePhone,
+  organizationIdentitySpec,
+  personIdentitySpec,
+} from './identity';
 
 const GOOGLE = 'google.com/contacts';
 
@@ -378,5 +384,24 @@ describe('merge data safety', () => {
 
     const [group] = findDuplicates(personIdentitySpec, objects);
     expect(planMerge(personIdentitySpec, group).preview.addresses).toHaveLength(1);
+  });
+});
+
+describe('domain normalization', () => {
+  test('a website and a sender address at the same organization produce the same key', ({ expect }) => {
+    // `www.` is a host alias: keying the site as `www.dxos.org` while the sender looked up
+    // `dxos.org` meant a contact never linked to its organization.
+    const organization = Organization.make({ name: 'DXOS', website: 'https://www.dxos.org' });
+    expect(organizationIdentitySpec.keys(organization)).toEqual(
+      organizationIdentitySpec.inputKeys({ email: 'alice@dxos.org' }),
+    );
+  });
+
+  test('bare, prefixed and full-URL forms agree', ({ expect }) => {
+    expect(normalizeDomain('dxos.org')).toBe('dxos.org');
+    expect(normalizeDomain('www.dxos.org')).toBe('dxos.org');
+    expect(normalizeDomain('https://www.dxos.org/about')).toBe('dxos.org');
+    expect(normalizeDomain('  DXOS.org ')).toBe('dxos.org');
+    expect(normalizeDomain(undefined)).toBeUndefined();
   });
 });
