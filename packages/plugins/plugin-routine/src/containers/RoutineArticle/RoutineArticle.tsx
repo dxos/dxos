@@ -3,16 +3,14 @@
 //
 
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
-import * as Effect from 'effect/Effect';
-import React, { useCallback, useContext, useEffect, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useActivationSignal, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Routine from '@dxos/compute/Routine';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -32,22 +30,9 @@ export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>
  */
 export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticleProps) => {
   const { invokePromise } = useOperationInvoker();
-  const manager = usePluginManager();
-  // Editing a routine needs the full operation/skill surface in the registry (the form's pickers
-  // list registry-synced operations), so pull everything an activation policy parked.
+  // The form's pickers list registry-synced skills, so pull the gated skill modules; operation
+  // definitions are complete at boot (handler sets register eagerly, bodies stay keyed).
   useActivationSignal(ActivationEvents.SkillsRequested);
-  useEffect(() => {
-    void EffectEx.runAndForwardErrors(
-      Effect.all(
-        manager
-          .getPlugins()
-          .map((plugin) =>
-            manager.activate(ActivationEvents.OperationHandlersRequested(plugin.meta.profile.key)).pipe(Effect.ignore),
-          ),
-        { concurrency: 'unbounded', discard: true },
-      ),
-    );
-  }, [manager]);
   const registry = useContext(RegistryContext);
   // Subscribe so the run affordance tracks the routine's action (`spec`).
   const [routine] = useObject(subject);

@@ -96,44 +96,6 @@ describe('OperationHandlerSet.reactive', () => {
   });
 });
 
-describe('OperationHandlerSet.withResolver', () => {
-  test('a miss consults the resolver once and retries the lookup', async ({ expect }) => {
-    let handlers: Operation.WithHandler<Operation.Definition.Any>[] = [];
-    let resolutions = 0;
-    // `async` caches its first read; model the reactive set with a fresh view per read.
-    const live: OperationHandlerSet.OperationHandlerSet = {
-      [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
-      getHandlers: () => Promise.resolve(handlers),
-      handlers: Effect.suspend(() => Effect.succeed(handlers)),
-    };
-    const set = OperationHandlerSet.withResolver(live, async () => {
-      resolutions++;
-      handlers = [makeHandler(KEY_A, 'A')];
-      return true;
-    });
-
-    const found = await Effect.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_A));
-    expect(found.meta.key).toEqual(KEY_A);
-    expect(resolutions).toEqual(1);
-
-    // Present handlers resolve without consulting the resolver again.
-    await Effect.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_A));
-    expect(resolutions).toEqual(1);
-  });
-
-  test('a failed resolution is not repeated per key and the lookup fails', async ({ expect }) => {
-    let resolutions = 0;
-    const set = OperationHandlerSet.withResolver(OperationHandlerSet.empty, async () => {
-      resolutions++;
-      return true;
-    });
-
-    await expect(Effect.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_B))).rejects.toThrow();
-    await expect(Effect.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_B))).rejects.toThrow();
-    expect(resolutions).toEqual(1);
-  });
-});
-
 describe('OperationHandlerSet.keyed', () => {
   test('definitions enumerate without loading any handler body', async ({ expect }) => {
     let loads = 0;

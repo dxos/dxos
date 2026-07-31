@@ -60,15 +60,14 @@ export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Ca
 );
 
 /**
- * Module maker contributing operation handlers. Gated by default on the plugin's own
- * handlers-requested event — the handler-set resolver fires it when an operation of this plugin
- * is first invoked, so handlers load per demand, not at startup; declare `activatesOn` to
- * override.
+ * Module maker contributing operation handlers. Handler sets register eagerly at startup: a
+ * keyed set is a definition→loader map with a thin closure (definitions carry no
+ * implementations), so the operation registry is complete at boot while each handler's BODY
+ * still loads per invocation. The deferral axis is the operation, not the module.
  */
 export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
-  { activatesOn: ActivationEvents.OwnOperationHandlersRequested },
 );
 
 /** Module maker contributing undo operation mappings. */

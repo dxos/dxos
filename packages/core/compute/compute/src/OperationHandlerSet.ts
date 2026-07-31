@@ -41,14 +41,6 @@ export interface OperationHandlerSet {
    * {@link getHandler}/{@link getHandlerByKey} prefer this path when present.
    */
   getHandlerFor?(key: string): Promise<Operation.WithHandler<Operation.Definition.Any> | undefined>;
-
-  /**
-   * Optional demand hook consulted by {@link getHandler}/{@link getHandlerByKey} when a lookup
-   * misses: given the operation key, attempt to make the handler available (e.g. activate the
-   * plugin module that would contribute it) and resolve `true` if the set may have changed.
-   * The lookup then re-reads the set once before failing. See {@link withResolver}.
-   */
-  resolveMissing?(key: string): Promise<boolean>;
 }
 
 /**
@@ -137,35 +129,6 @@ export const reactive = (
     // Per-operation resolution over the CURRENT contributed sets: keyed contributions load only
     // the matched operation's module; the load-everything paths above stay for enumerators.
     getHandlerFor: (key) => resolveFromSets(registry.get(atom), key),
-  };
-};
-
-/**
- * Attaches a demand resolver to a set: on a lookup miss the resolver runs once (deduplicated per
- * key) before the lookup fails, so handlers whose modules are deferred by an activation policy
- * load exactly when their operation is first invoked.
- */
-export const withResolver = (
-  set: OperationHandlerSet,
-  resolveMissing: (key: string) => Promise<boolean>,
-): OperationHandlerSet => {
-  // One in-flight resolution per key: concurrent misses await the same attempt, and a completed
-  // attempt is not repeated (a key that failed to resolve once fails fast afterwards).
-  const attempts = new Map<string, Promise<boolean>>();
-  return {
-    [TypeId]: TypeId,
-    getHandlers: () => set.getHandlers(),
-    handlers: set.handlers,
-    ...(set.definitions ? { definitions: () => set.definitions!() } : {}),
-    ...(set.getHandlerFor ? { getHandlerFor: (key: string) => set.getHandlerFor!(key) } : {}),
-    resolveMissing: (key: string) => {
-      let attempt = attempts.get(key);
-      if (!attempt) {
-        attempt = resolveMissing(key);
-        attempts.set(key, attempt);
-      }
-      return attempt;
-    },
   };
 };
 
@@ -281,8 +244,6 @@ const resolveFromSets = async (
 /**
  * Finds a handler in the set. Sets implementing {@link OperationHandlerSet.getHandlerFor}
  * resolve per-operation (only the matched handler's module loads); others force the full list.
- * On a miss, the set's optional {@link OperationHandlerSet.resolveMissing} demand hook runs once
- * and the lookup retries before giving up.
  */
 const lookup = (
   set: OperationHandlerSet,
@@ -296,12 +257,6 @@ const lookup = (
     const handler = yield* attempt;
     if (handler) {
       return handler;
-    }
-    if (set.resolveMissing && (yield* Effect.promise(() => set.resolveMissing!(key)))) {
-      const late = yield* attempt;
-      if (late) {
-        return late;
-      }
     }
     return yield* Effect.fail(new NoHandlerError(key));
   });

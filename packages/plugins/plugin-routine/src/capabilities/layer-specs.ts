@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
-import { makeOperationHandlerPull } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -54,16 +53,16 @@ import { invariant } from '@dxos/invariant';
 const OperationHandlerProviderSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [Capability.Service, Plugin.Service],
+    requires: [Capability.Service],
     provides: [OperationHandlerSet.OperationHandlerProvider],
   },
   () =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
         const capabilities = yield* Capability.Service;
-        const pluginManager = yield* Plugin.Service;
         // Live view (not a one-shot snapshot): handlers contributed after materialization —
-        // e.g. by a plugin enabled later — still reach subsequent reads.
+        // e.g. by a plugin enabled later — still reach subsequent reads. Handler sets register
+        // eagerly at startup; keyed contributions load only the matched operation's body.
         const currentSet = () => {
           const sets = capabilities.getAll(Capabilities.OperationHandler);
           return sets.length === 0 ? OperationHandlerSet.empty : OperationHandlerSet.merge(...sets);
@@ -72,25 +71,12 @@ const OperationHandlerProviderSpec = LayerSpec.make(
           [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
           getHandlers: () => currentSet().getHandlers(),
           handlers: Effect.suspend(() => currentSet().handlers),
-          // Per-operation resolution: keyed contributions load only the matched operation.
           getHandlerFor: async (key) => {
             const set = currentSet();
             return set.getHandlerFor ? set.getHandlerFor(key) : undefined;
           },
         };
-        // Per-key demand pull (NOT a blanket activation): this slice materializes as soon as the
-        // trigger dispatcher starts — on every boot — so pulling everything here would defeat the
-        // default demand gates. A routine executing an operation of a gated module pulls exactly
-        // that plugin's handlers; skills ride the same event via RegistrySync's reactive mirror.
-        return OperationHandlerSet.provide(
-          OperationHandlerSet.withResolver(
-            liveSet,
-            makeOperationHandlerPull(pluginManager, async (key) => {
-              const nsid = key.replace(/^dxn:/, '');
-              return (await liveSet.getHandlers()).some((handler) => handler.meta.key.replace(/^dxn:/, '') === nsid);
-            }),
-          ),
-        );
+        return OperationHandlerSet.provide(liveSet);
       }),
     ),
 );

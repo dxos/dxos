@@ -7,7 +7,6 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { makeOperationHandlerPull } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
@@ -60,22 +59,9 @@ export default Capability.makeModule(
     const runInvocation = (action: Operation.SerializedInvocation) =>
       void EffectEx.runPromise(
         Effect.gen(function* () {
-          const merged = () => OperationHandlerSet.merge(...operationHandlers.get());
-          // Live view over the reactive contributions (a one-shot merge would miss handlers
-          // contributed by the pull below), plus the demand-pull: the handler's module may be
-          // parked by the activation policy, and the toast action is precisely its demand signal.
-          const live: OperationHandlerSet.OperationHandlerSet = {
-            [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
-            getHandlers: () => merged().getHandlers(),
-            handlers: Effect.suspend(() => merged().handlers),
-          };
-          const handlers = OperationHandlerSet.withResolver(
-            live,
-            makeOperationHandlerPull(manager, async (key) => {
-              const nsid = key.replace(/^dxn:/, '');
-              return (await merged().getHandlers()).some((handler) => handler.meta.key.replace(/^dxn:/, '') === nsid);
-            }),
-          );
+          // Handler sets register eagerly at startup, so the merged contributions are complete;
+          // only the matched handler's body loads here (keyed sets resolve per operation).
+          const handlers = OperationHandlerSet.merge(...operationHandlers.get());
           const operation = yield* OperationHandlerSet.getHandlerByKey(handlers, action.operation);
           yield* invoker.invoke(operation, action.input);
         }),
