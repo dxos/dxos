@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 // @import-as-namespace
@@ -7,8 +7,6 @@
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
 import { meta } from '#meta';
-
-export const SetupCompiler = ActivationEvent.make(`${meta.profile.key}.event.setupCompiler`);
 
 /**
  * The feature's start event: the plugin's start-gated modules (and cross-plugin

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { SpaceCapability } from '@dxos/plugin-space';
@@ -10,7 +9,7 @@ import { SpaceCapability } from '@dxos/plugin-space';
 import { ScriptCapabilities, ScriptEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: ScriptEvents.Start,
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
@@ -24,12 +23,12 @@ export const Compiler = Capability.lazyModule(
   () => import('./compiler'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: ScriptEvents.Start,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: ScriptEvents.Start,
 });
 export const ScriptSettings = AppCapability.settings(() => import('./settings'), {
   provides: [ScriptCapabilities.Settings],
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: ScriptEvents.Start,
 });

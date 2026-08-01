@@ -9,3 +9,4 @@ export * as Settings from './Settings';
 export * as CommentCapabilities from './CommentCapabilities';
 export * from './ReviewCapabilities';
 export * as CommentOperation from './CommentOperation';
+export * as ReviewEvents from './ReviewEvents';

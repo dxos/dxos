@@ -7,6 +7,7 @@
 // namespace serves as both the type and the schema value. This is the standard DXOS pattern.
 
 export * as SampleCapabilities from './SampleCapabilities';
+export * as SampleEvents from './SampleEvents';
 export * as SampleItem from './SampleItem';
 export * as SampleOperation from './SampleOperation';
 export * as Settings from './Settings';

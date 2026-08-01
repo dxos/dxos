@@ -8,4 +8,5 @@ export * from './util';
 
 export * as Sheet from './Sheet';
 export * as SheetCapabilities from './SheetCapabilities';
+export * as SheetEvents from './SheetEvents';
 export * as SheetOperation from './SheetOperation';

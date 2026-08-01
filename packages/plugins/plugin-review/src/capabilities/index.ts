@@ -4,13 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
 
 import type { ReviewPluginOptions } from '#plugin';
-import { AgentIdentity, CommentCapabilities, DEFAULT_AGENT_IDENTITY, ReviewCapabilities } from '#types';
+import { AgentIdentity, CommentCapabilities, DEFAULT_AGENT_IDENTITY, ReviewCapabilities, ReviewEvents } from '#types';
 
 export const AgentIdentityModule = Capability.inlineModule(
   'agent-identity',
@@ -22,15 +21,15 @@ export const AgentIdentityModule = Capability.inlineModule(
 );
 export const AgentRunner = Capability.lazyModule(
   'AgentRunner',
-  { provides: [CommentCapabilities.AgentRunner], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [CommentCapabilities.AgentRunner], activatesOn: ReviewEvents.Start },
   () => import('./agent-runner'),
 );
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: ReviewEvents.Start,
 });
 export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph'), {
   name: 'HistoryGraph',
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: ReviewEvents.Start,
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const Markdown = Capability.lazyModule(
@@ -40,7 +39,7 @@ export const Markdown = Capability.lazyModule(
   // activation time, so they aren't declared here.
   {
     provides: [MarkdownCapabilities.ExtensionProvider, MarkdownCapabilities.ViewModeExtension],
-    activatesOn: ActivationEvents.DeferredStartup,
+    activatesOn: MarkdownEvents.Start,
   },
   () => import('./markdown-extension'),
 );
@@ -50,12 +49,12 @@ export const MarkdownBinding = Capability.lazyModule(
   'MarkdownBinding',
   {
     provides: [MarkdownCapabilities.EditorBindingHook, ReviewCapabilities.HistoryProvider],
-    activatesOn: ActivationEvents.DeferredStartup,
+    activatesOn: MarkdownEvents.Start,
   },
   () => import('./markdown-binding'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: ReviewEvents.Start,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
@@ -66,18 +65,18 @@ export const HistorySurface = AppCapability.surface(() => import('./history-surf
 });
 export const CommentsSettings = AppCapability.settings(() => import('./settings'), {
   provides: [CommentCapabilities.Settings],
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: ReviewEvents.Start,
 });
 export const CommentState = Capability.lazyModule(
   'CommentState',
-  { provides: [CommentCapabilities.State], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [CommentCapabilities.State], activatesOn: ReviewEvents.Start },
   () => import('./state'),
 );
 export const ReviewState = Capability.lazyModule(
   'ReviewState',
-  { provides: [ReviewCapabilities.ReviewRenderPolicy], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [ReviewCapabilities.ReviewRenderPolicy], activatesOn: ReviewEvents.Start },
   () => import('./review-state'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: ReviewEvents.Start,
 });
