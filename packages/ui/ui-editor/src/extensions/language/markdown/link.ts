@@ -87,7 +87,9 @@ export const syncLinkLabels = (view: EditorView, resolve: (url: string) => strin
 
       const [from, to] = [marks[0].to, marks[1].from];
       const escaped = escapeLinkLabel(label);
-      if (state.sliceDoc(from, to) !== escaped) {
+      // An empty label leaves `[](url)`, which no longer parses as a Link — the node would then be
+      // invisible to this pass, so a later rename could never repair it.
+      if (escaped.length > 0 && state.sliceDoc(from, to) !== escaped) {
         changes.push({ from, to, insert: escaped });
       }
     },

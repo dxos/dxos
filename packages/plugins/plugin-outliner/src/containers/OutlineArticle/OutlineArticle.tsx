@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
@@ -27,8 +27,14 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
 
   // Link the user navigated into; the back button clears it to return to the outline.
   const [selected, setSelected] = useState<URI.URI>();
-  const ref = useMemo(() => (selected && space ? space.db.makeRef<Task.Task>(selected) : undefined), [selected, space]);
-  const task = useResolveRef(ref);
+  const ref = useMemo(
+    () => (selected && space ? space.db.makeRef<Obj.Unknown>(selected) : undefined),
+    [selected, space],
+  );
+  // The document is editable markdown and every object link renders as a chip, so the target is
+  // whatever the user linked — only render the task form once it really is a task.
+  const target = useResolveRef(ref);
+  const task = target && Obj.instanceOf(Task.Task, target) ? target : undefined;
 
   const handleConvertToTask = useCallback(
     async (text: string) => {
@@ -49,8 +55,13 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
   // Task titles are edited independently of the document, so the link text is reconciled from the
-  // live objects rather than trusted as written.
-  const tasks = useQuery(space?.db, Filter.type(Task.Task));
+  // live objects rather than trusted as written. Scoped to the outline's own project so unrelated
+  // tasks in the space neither load nor retrigger the sync.
+  const project = outline.project?.target;
+  const tasks = useQuery(
+    space?.db,
+    project ? Filter.type(Task.Task, { project: Ref.make(project) }) : Filter.nothing(),
+  );
   const resolveLinkLabel = useMemo(() => {
     const labels = new Map(tasks.map((task) => [Obj.getURI(task).toString(), task.title]));
     return (url: string) => labels.get(url);
@@ -109,8 +120,8 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
           <Panel.Toolbar>
             <Menu.Toolbar classNames='dx-document' />
           </Panel.Toolbar>
-          <Panel.Content asChild>
-            <Outline.Content classNames='dx-document border' />
+          <Panel.Content>
+            <Outline.Content classNames='dx-document' />
           </Panel.Content>
         </Panel.Root>
       </Menu.Root>

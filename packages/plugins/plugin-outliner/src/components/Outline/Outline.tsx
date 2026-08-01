@@ -62,7 +62,9 @@ const convertItemToTask = async (
 ): Promise<void> => {
   const text = getItemText(view.state);
   const link = text?.trim() ? await onConvertToTask(text) : undefined;
-  if (link) {
+  // The action scope is re-resolved on replace, so a caret move or edit during the await would
+  // otherwise overwrite whichever item the scope now points at.
+  if (link && getItemText(view.state) === text) {
     replaceItemWithLink(view, link);
   }
 

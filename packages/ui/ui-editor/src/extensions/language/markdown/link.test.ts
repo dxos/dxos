@@ -9,16 +9,6 @@ import { describe, test } from 'vitest';
 import { createMarkdownExtensions } from './bundle';
 import { syncLinkLabels } from './link';
 
-const run = (doc: string, resolve: (url: string) => string | undefined): { doc: string; changed: boolean } => {
-  const view = new EditorView({ state: EditorState.create({ doc, extensions: [createMarkdownExtensions()] }) });
-  try {
-    const changed = syncLinkLabels(view, resolve);
-    return { doc: view.state.doc.toString(), changed };
-  } finally {
-    view.destroy();
-  }
-};
-
 describe('syncLinkLabels', () => {
   test('rewrites a label that has drifted from its target', ({ expect }) => {
     const { doc, changed } = run('- [Old title](dxn:echo:@:01ABC)', () => 'New title');
@@ -48,4 +38,21 @@ describe('syncLinkLabels', () => {
     const { doc } = run('- [a](dxn:echo:@:01A)', () => 'a [b]\n c');
     expect(doc).to.eq('- [a b c](dxn:echo:@:01A)');
   });
+
+  test('keeps the existing label when the resolved one is empty', ({ expect }) => {
+    // `[](url)` no longer parses as a Link, so the node would become invisible to later passes.
+    const { doc, changed } = run('- [Old title](dxn:echo:@:01ABC)', () => '   ');
+    expect(changed).to.be.false;
+    expect(doc).to.eq('- [Old title](dxn:echo:@:01ABC)');
+  });
 });
+
+const run = (doc: string, resolve: (url: string) => string | undefined): { doc: string; changed: boolean } => {
+  const view = new EditorView({ state: EditorState.create({ doc, extensions: [createMarkdownExtensions()] }) });
+  try {
+    const changed = syncLinkLabels(view, resolve);
+    return { doc: view.state.doc.toString(), changed };
+  } finally {
+    view.destroy();
+  }
+};

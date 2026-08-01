@@ -33,14 +33,17 @@ export const DEFAULT_PROJECT_NAME = 'Untitled project';
 
 /**
  * Get the outline's project, creating and linking one on first use.
+ *
+ * The create path runs to completion synchronously — awaiting before the assignment would let two
+ * concurrent conversions each observe an unset ref and link a project of their own.
  */
 export const getOrCreateProject = async (
   outline: Outline,
   db: Database.Database,
 ): Promise<ExternalProject.ExternalProject> => {
-  const existing = await outline.project?.load();
+  const existing = outline.project;
   if (existing) {
-    return existing;
+    return existing.load();
   }
 
   const project = db.add(ExternalProject.make({ name: outline.name ?? DEFAULT_PROJECT_NAME }));

@@ -56,7 +56,6 @@ export const translations = [
         'convert-to-task.menu': 'Convert to task',
 
         'back.label': 'Back to outline',
-        'task.label': 'Task',
       },
     },
   },

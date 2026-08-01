@@ -47,6 +47,19 @@ describe('Outline', () => {
       expect(project.name).to.eq(Outline.DEFAULT_PROJECT_NAME);
     });
 
+    test('links a single project when conversions race', async ({ expect }) => {
+      const outline = db.add(Outline.make({ name: 'Roadmap' }));
+      await db.flush();
+
+      const projects = await Promise.all([
+        Outline.getOrCreateProject(outline, db),
+        Outline.getOrCreateProject(outline, db),
+      ]);
+
+      expect(projects[1].id).to.eq(projects[0].id);
+      expect(outline.project?.target?.id).to.eq(projects[0].id);
+    });
+
     test('reuses the linked project', async ({ expect }) => {
       const outline = db.add(Outline.make({ name: 'Roadmap' }));
       await db.flush();
