@@ -251,3 +251,153 @@ A green build is not a tested deck: the geometry lives in layout effects reading
 anything touching §3 or §7 wants a browser. Frame-level assertions (sampling `getComputedStyle` and
 rects across `requestAnimationFrame`) are what caught the exposé's scroll clamping, the fold crossfade
 and the FLIP ordering — none of which typecheck differently when broken.
+
+---
+
+## 12. PROPOSED — plugin-declared decks
+
+**Status: proposal, not built.** Supersedes the "deck as a global mode" model in §2/§6. Nothing below
+has been implemented; the phasing is in [TASKS.md](./TASKS.md).
+
+### The problem
+
+A deck is currently one global thing. `DeckState.active` is a flat list of plank ids, its presentation
+derives only from that list's length, and every plugin opens into the same deck through the same
+`LayoutOperation.Open`. Three consequences:
+
+1. Selecting a Collection in the navtree does not give you the collection — attention stays on whatever
+   document was current, because nothing maps "this node was selected" to "the deck is now _this_".
+2. A plugin cannot say what shape its own deck should take. The mailbox wants
+   `mailbox → message → attachment`: opening a message replaces the message plank, and opening an
+   attachment stacks a third. Today `plugin-inbox` gets the middle level only by hand-passing
+   `name: '<mailbox>/message'` to `Open` (§5) — the mechanism exists but the _shape_ is hard-coded at
+   the call site, and nothing prunes a stale attachment plank.
+3. A plugin cannot influence initial sizing. A new message plank takes `DEFAULT_PLANK_SIZE` (50rem)
+   regardless; the mailbox wants its first two planks to fill the viewport.
+
+### The key observation
+
+**Most of this already exists.** `StoredDeckState` is already a _map_ of decks:
+
+```ts
+{
+  activeDeck: string;
+  previousDeck: string;
+  decks: Record<string, DeckState>;
+}
+```
+
+`LayoutOperation.SwitchWorkspace` already lazily creates `decks[id] = defaultDeck` and switches
+`activeDeck` to it, and every mutation already routes through `updateActiveDeck`. Only _workspaces_
+currently key a deck. So "a deck per collection" is not new plumbing — it is letting something other
+than a workspace be a deck root, and giving that root a spec.
+
+That reframes the work: the deck does not need a new state model, it needs (a) a spec attached to graph
+nodes, (b) levels, and (c) a sizing intent.
+
+### The model
+
+A graph node may declare a **deck spec**. When that node becomes the deck root, the deck adopts it.
+Declared on the node, because the app-graph is already how a plugin says what a node _is_ (`label`,
+`icon`, actions) and is already plugin-owned — which is the control point asked for.
+
+```ts
+type DeckSpec = {
+  /**
+   * Ordered levels. A plank opened at level `i` reuses that level's plank (via the existing plank
+   * name, §5) and closes every level deeper than `i`.
+   */
+  levels?: DeckLevel[];
+  /** What to open when the deck is adopted. `'children'` = the node's graph children. */
+  initial?: 'children' | 'none' | ((node: Node) => string[]);
+};
+
+type DeckLevel = {
+  /** Level key; becomes the plank name as `<rootId>/<key>`, so §5 does the reuse. */
+  key: string;
+  /** Initial width only. A user drag writes `plankSizing` and wins from then on. */
+  size?: number | 'fill';
+};
+```
+
+Worked examples:
+
+```ts
+// Collection — its documents, side by side.
+{ initial: 'children' }
+
+// Mailbox — three levels, the first two sharing the viewport.
+{
+  levels: [
+    { key: 'mailbox', size: 'fill' },
+    { key: 'message', size: 'fill' },
+    { key: 'attachment' },
+  ],
+}
+```
+
+### Adoption
+
+Selecting a node that carries a spec switches the deck to it, reusing the existing machinery: key
+`decks[]` by the node id and set `activeDeck`. Per-collection plank sets and widths then persist
+independently and for free, and `previousDeck` already gives a back affordance.
+
+This is what fixes (1): selecting a Collection currently leaves attention alone because the selection
+does not change the deck at all. Once the collection _is_ the deck, adopting it opens its children and
+attends the first.
+
+Open question: which nodes are deck roots. A spec on the node is the trigger, but a Collection nested
+in a Collection should probably not switch decks on every click — likely `initial: 'children'` only
+applies when the node is opened `'solo'`, not `'auto'` (§8's dispositions already carry that
+intent).
+
+### Levels
+
+Levels are the generalization of the named planks that already ship. Opening at level `key` is:
+
+```ts
+Open({ subject, name: `${rootId}/${key}` });
+```
+
+which is exactly what `plugin-inbox` does by hand today — so the mailbox's existing behaviour becomes
+the degenerate case rather than a special case. Two additions are needed:
+
+- **Pruning.** Opening at level `i` must close planks at levels `> i`, or switching messages leaves the
+  previous message's attachment open. `layout.ts` owns this next to `addSubjectsToActiveDeck`.
+- **Level → plank mapping.** `DeckState` needs to know which plank sits at which level. A
+  `plankLevels: Record<string, string>` (plank id → level key) mirrors `plankNames`, or is derived
+  from it by parsing the name — deriving is cheaper and has one source of truth.
+
+### Sizing
+
+`size` is an _intent_, consumed only when a plank has no stored width:
+
+```ts
+const stored = plankSizing[id] ?? resolveInitialSize(level, viewportWidthPx);
+```
+
+`'fill'` means "share the space the two piles leave", which `useMaxPlankWidth` already computes
+(§3) — divided among the `'fill'` levels currently open. Because it only applies in the absence of a
+stored value, the first drag pins the width and the intent never fights the user afterwards.
+
+### Container hooks
+
+Containers should not hand-build plank names. A hook resolves the current deck's spec and does it:
+
+```ts
+const deck = useDeckLevels();
+deck.open(message, { level: 'message' }); // reuses the message plank, prunes deeper
+deck.close({ level: 'attachment' });
+```
+
+It belongs in `app-toolkit` rather than `plugin-deck`, so a plugin can push onto the deck without
+depending on the deck plugin — the same reason `LayoutOperation` lives there.
+
+### What this does not settle
+
+- **Companion vs level.** A companion is arguably level 2 of exactly such a chain, and having both
+  mechanisms is a redundancy worth resolving before this spreads.
+- **URL.** The pair-chain grammar serializes `deck.active`; a per-collection deck adds a dimension the
+  URL has no slot for. Needs agreement with the url-deck owner.
+- **Deck lifetime.** `decks` is persisted and currently bounded by workspace count. Keyed by collection
+  it grows without bound and wants eviction.

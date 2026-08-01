@@ -8,16 +8,43 @@ The deck's own ledger. Split out of the `qa` project on 2026-08-01 — the deck 
 small UX corrections and became a work-stream of its own. Findings and the _why_ behind each mechanism
 belong in [DESIGN.md](./DESIGN.md); this file is the list.
 
-## Direction
+## Direction — plugin-declared decks
 
-- [ ] **Deck displays collections, not a global mode** — rather than the deck being one global layout
-      the whole app shares, a deck should be scoped to a collection, and a plugin should be able to
-      constrain the shape of its own deck. The motivating case is a 3-level chain:
-      `inbox / message / attachment`. Today `DeckState.active` is a flat list of plank ids with a single
-      presentation derived from its length, and every plugin opens into the same deck; there is no notion
-      of a deck belonging to a collection, nor of a plugin declaring "my deck is these levels". This
-      subsumes several items below (the companion is arguably level 2 of exactly such a chain) and wants
-      a design pass in DESIGN.md before any of it is built.
+Design: [DESIGN.md §12](./DESIGN.md#12-proposed--plugin-declared-decks). The deck stops being one
+global mode; a graph node may declare a deck spec, and the deck adopts it when that node is the root.
+
+The key finding from the design pass: **most of the state plumbing already exists.** `StoredDeckState`
+is already `decks: Record<string, DeckState>` with `activeDeck`/`previousDeck`, and `SwitchWorkspace`
+already lazily creates and switches decks — only workspaces currently key one. Levels are the
+generalization of the named planks that shipped in #12424, whose only production caller (the mailbox
+passing `<mailbox>/message`) becomes the degenerate case. So this is mostly wiring, not new machinery.
+
+Phased so each step is independently landable and verifiable:
+
+- [ ] **P1 — spec on the node.** `DeckSpec` type + an `AppNode` annotation so a plugin can attach one;
+      resolve it from the graph in the deck. No behaviour change yet. Unit-testable in isolation.
+- [ ] **P2 — adoption.** Opening a spec-carrying node `'solo'` keys `decks[]` by its id and switches
+      `activeDeck` (reusing `SwitchWorkspace`'s lazy-create path). Collection declares
+      `initial: 'children'`. This alone fixes "selecting a Collection leaves attention on the current
+      document" — the selection now changes the deck.
+- [ ] **P3 — levels + pruning.** Opening at level `i` reuses that level's plank (existing `name`
+      mechanism) and closes levels `> i`. Pure function beside `addSubjectsToActiveDeck`, so it gets
+      unit tests. Mailbox declares `mailbox / message / attachment` and drops its hand-built name.
+- [ ] **P4 — sizing intent.** `size?: number | 'fill'` consumed only when `plankSizing[id]` is absent,
+      so the first user drag pins the width and the intent never fights them afterwards. `'fill'`
+      divides the span `useMaxPlankWidth` already computes among the open `'fill'` levels.
+- [ ] **P5 — container hooks.** `useDeckLevels().open(obj, { level })` / `.close({ level })` in
+      `app-toolkit` (not `plugin-deck`, so pushing onto the deck does not require depending on the deck
+      plugin — the same reason `LayoutOperation` lives there). Migrate `MailboxArticle` onto it.
+
+Blocking questions, all in DESIGN.md §12 "What this does not settle":
+
+- [ ] **Companion vs level** — a companion is arguably level 2 of exactly such a chain; two mechanisms
+      for one idea should be resolved before this spreads.
+- [ ] **URL** — the pair-chain grammar serializes `deck.active` and has no slot for _which_ deck. Needs
+      agreement with the url-deck owner (josiah).
+- [ ] **Deck lifetime** — `decks` is persisted and today bounded by workspace count; keyed by collection
+      it grows without bound and wants eviction.
 
 ## Defects
 
@@ -32,6 +59,10 @@ belong in [DESIGN.md](./DESIGN.md); this file is the list.
       tile after it. While the drag is in flight the trailing spines drift instead of staying against the
       right edge. `useMaxPlankWidth` caps a plank to exactly the gap the two piles leave it, so the end
       state is correct — this is the during-drag behaviour.
+- [ ] **Disable pointer events on planks while in the exposé** — the miniatures are live planks, so
+      hovering and clicking still reaches their content. The tile hit-target covers each plank
+      (`pointer-events-none` on the content), but the gutter, the toolbar and anything portalled out
+      are not covered; audit and make the whole exposé inert apart from the tile targets.
 - [ ] **Toolbar button to toggle collapsing a plank** — folding is currently only reachable by scrolling
       a plank into a pile; it should be an explicit control.
 
