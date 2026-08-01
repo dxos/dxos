@@ -151,6 +151,33 @@ where fixtures get captured. Three defects found while wiring that up.
       right edge. Note `useMaxPlankWidth` caps a plank to exactly the gap the two piles leave it, so the
       end state is correct — this is the during-drag behaviour.
 
+## Phase 7: Deck layout experiments
+
+Shapes being tried behind flags rather than committed to; see `Settings` in plugin-deck.
+
+- [x] **`overscroll`** — trailing runway so the last plank can be brought fully forward.
+- [x] **`expand`** — plank toolbar toggle filling the space between the two spine piles.
+- [x] **Exposé (`meta+;`)** — every plank at once, shrunk to fit; click one to return focused on it. Not a
+      second copy of the deck: the mounted `Mosaic.Stack` is scaled in place (`--deck-expose-scale`), so no
+      plank remounts and no editor is instantiated twice. Escape or a background click exits. Four traps,
+      all measured rather than guessed:
+  - Scaling does **not** shrink scrollable overflow, so the scroll has to be zeroed on the way in and
+    restored on the way out (`useExposeScroll`) — otherwise the shrunken row sits off the leading edge.
+  - Sticky is dropped for `relative` while exposed; it resolves against the scrollport in the scaled
+    coordinate space and would re-pile the tiles the exposé means to lay out flat.
+  - The fold is a 200ms crossfade, so refolding the whole deck at once paints the planks over the spines
+    replacing them. `data-fold-instant` suppresses the transition for that one frame.
+  - `useExposeScroll` must run *before* `useFoldedPlanks` (hooks run in declaration order), and neither the
+    hysteresis nor the collapse may fire across the crossing — every trailing plank reads as off-screen at
+    the zeroed scroll, which walks attention onto whatever sits near the start.
+- [ ] **Drag planks in the exposé to reorder** — the exposé is where the whole deck is visible, so it is
+      the natural place to reorder. The plumbing exists (`incrementPlank` in layout.ts, the
+      `increment-start`/`increment-end` adjustments) and `PlankControls` still has those buttons
+      commented out pending exactly this UX; the exposé tiles would drive it instead.
+- [ ] **Plank snapping** — mobile already snaps (`snap-x snap-mandatory` + `snap-start`); desktop wants
+      the snap points to be the pile positions (`index * SPINE_PX`) so planks land where the fold
+      geometry expects them.
+
 ## Open questions for the user
 
 - [ ] **Should `ModuleContainer` support a runtime attendable id for role cells?** — the

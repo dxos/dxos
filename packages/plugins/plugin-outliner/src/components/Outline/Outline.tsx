@@ -115,7 +115,7 @@ const OUTLINE_CONTENT_NAME = 'Outline.Content';
 
 type OutlineContentProps = {};
 
-const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ children, ...props }, forwardedRef) => {
+const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, forwardedRef) => {
   const { id, text, scrollable, showSelected, autoFocus, viewRef } = useOutlineContext(OUTLINE_CONTENT_NAME);
   const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
@@ -173,13 +173,12 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
       return item.onSelect({ view, head: view.state.selection.main.head });
     }
   }, []);
+
   const getView = useCallback(() => view ?? null, [view]);
 
   return (
     <EditorMenuProvider getView={getView} groups={commandGroups} onSelect={handleSelect}>
-      <div {...composableProps(props, focusAttributes)} ref={composeRefs(parentRef, forwardedRef)}>
-        {children}
-      </div>
+      <div {...composableProps(props, focusAttributes)} ref={composeRefs(parentRef, forwardedRef)} />
     </EditorMenuProvider>
   );
 });

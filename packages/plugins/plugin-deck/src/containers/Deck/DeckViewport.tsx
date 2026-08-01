@@ -4,6 +4,7 @@
 
 import React, {
   type CSSProperties,
+  type MouseEvent,
   type PropsWithChildren,
   type RefObject,
   createContext,
@@ -66,6 +67,23 @@ const MIN_PLANK_SIZE = 20;
 const MAX_PLANK_SIZE = 120;
 
 const REM_PX = 16;
+
+/** Breathing room between the exposé's tiles and the viewport edges, on every side. */
+const EXPOSE_INSET_PX = 24;
+
+/**
+ * Gutter inset *within* each exposé tile, so a miniature reads as its own card rather than butting against
+ * its neighbours — the deck's own `--main-spacing` gap is scaled down with everything else and all but
+ * disappears. Padding rather than margin, so with `border-box` the tile's width (and hence the scale the
+ * row is fitted at) is untouched.
+ */
+const EXPOSE_GUTTER_PX = 32;
+
+/** Duration of the zoom into and out of the exposé; must match the `duration-300` on the stack. */
+const EXPOSE_ZOOM_MS = 300;
+
+/** Slack after the zoom before the deck's geometry is re-read, covering the transition's own jitter. */
+const EXPOSE_SETTLE_MARGIN_MS = 60;
 
 // Gap/padding that encapsulates each plank in its own container (the `--main-spacing` CSS var); tweak
 // here to change the deck's plank spacing.
@@ -383,7 +401,7 @@ const CompanionSplit = ({
 // Fades a tile's content out while folded (crossfading with the spine) so a wide plank never occludes the
 // plank in view. The `dx-fold-content` hook lets stories retime/restyle the transition.
 const FOLD_CONTENT_CLASSNAMES =
-  'dx-fold-content size-full transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-none group-data-[folded]/tile:opacity-0';
+  'dx-fold-content size-full transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-none group-data-[folded]/tile:opacity-0 group-data-[fold-instant]/tile:transition-none';
 
 /**
  * Tile wrapping a {@link DeckPlank}, parameterized by the derived presentation: fullbleed renders an
@@ -406,6 +424,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const companion = id === companionAnchorId ? companionId : undefined;
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
+  const exposed = !!state.expose;
   // Stacking (experiment): each plank is `position: sticky` on both edges (see the style below) so the
   // browser pins scrolled-past planks into the left pile and not-yet-reached planks into the right pile
   // natively — no per-frame JS repin, so the spines stay stable and opaque. The folded spine's sigil
@@ -441,6 +460,12 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
     [invokePromise, id, companionSize, state.expanded],
   );
 
+  // Picking a plank in the exposé is a navigation: leave the overview and bring the chosen plank forward.
+  const handleExposeSelect = useCallback(() => {
+    void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+    void invokePromise(LayoutOperation.ScrollIntoView, { subject: id });
+  }, [invokePromise, id]);
+
   if (presentation === 'fullbleed') {
     return (
       <Mosaic.Tile {...props} classNames='relative h-full w-full'>
@@ -463,7 +488,10 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
       {...props}
       // Faint leading-edge shadow so a plank reads as sitting on top of the one behind it as they slide
       // over each other (planks stack by z-index; each one's left edge overlaps its left neighbor).
-      classNames='group/tile relative h-full shadow-[-6px_0_16px_-8px_rgba(0,0,0,0.45)]'
+      classNames={mx(
+        'group/tile relative h-full shadow-[-6px_0_16px_-8px_rgba(0,0,0,0.45)]',
+        exposed && 'p-(--deck-expose-gutter)',
+      )}
       size={tileSize}
       minSize={companion ? MIN_PAIR_SIZE : MIN_PLANK_SIZE}
       maxSize={maxSize}
@@ -472,12 +500,19 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
       // builds the left pile; a *negative* end inset lets the plank slide fully off the right edge and
       // pin only once a spine's worth remains, building the right pile — both handled by the browser, so
       // the spines never flicker. z-order stacks later planks above earlier so right spines read on top.
-      style={{
-        position: 'sticky',
-        insetInlineStart: `${index * SPINE_PX}px`,
-        insetInlineEnd: `${(rendered.length - index) * SPINE_PX - tileWidthPx}px`,
-        zIndex: index + 1,
-      }}
+      //
+      // The exposé drops the pinning entirely: sticky resolves against the scrollport in the scaled
+      // coordinate space, so leaving it on would pile planks that the exposé means to lay out flat.
+      style={
+        exposed
+          ? { position: 'relative', zIndex: index + 1 }
+          : {
+              position: 'sticky',
+              insetInlineStart: `${index * SPINE_PX}px`,
+              insetInlineEnd: `${(rendered.length - index) * SPINE_PX - tileWidthPx}px`,
+              zIndex: index + 1,
+            }
+      }
     >
       {/* Fades out while folded (crossfading with the spine) so a wide plank never occludes the plank in
           view. The `dx-fold-content` hook lets stories retime/restyle the transition. */}
@@ -488,10 +523,25 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           active={deck.active}
           companionSize={companionSize}
           total={tileSize}
-          classNames={FOLD_CONTENT_CLASSNAMES}
+          classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && 'pointer-events-none')}
         />
       ) : (
-        <DeckPlank id={id} part='main' active={deck.active} classNames={FOLD_CONTENT_CLASSNAMES} />
+        <DeckPlank
+          id={id}
+          part='main'
+          active={deck.active}
+          classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && 'pointer-events-none')}
+        />
+      )}
+      {/* The exposé's hit target, covering the plank so a click picks the tile rather than landing in a
+          miniature editor. Also its frame: at exposé scale a plank is dark content on the equally dark
+          deck surface, and the outline is what makes it read as a tile at all. */}
+      {exposed && (
+        <button
+          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors hover:outline-accentSurface'
+          aria-label={spineLabel}
+          onClick={handleExposeSelect}
+        />
       )}
       {/* Returning the plank to view is the same one-shot as a navigation scroll, so it goes through the
           operation rather than a second scroll path — which also attends it, since the plank focuses
@@ -542,14 +592,11 @@ const useMaxPlankWidth = ({
   stackRef,
   isSliding,
   plankCount,
-  mountKey,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
   isSliding: boolean;
   plankCount: number;
-  /** Changes whenever the stack is torn down and rebuilt (the exposé), so the observers re-attach. */
-  mountKey: unknown;
 }): { maxPlankWidthPx: number; viewportWidthPx: number } => {
   const [measured, setMeasured] = useState({
     maxPlankWidthPx: Number.POSITIVE_INFINITY,
@@ -580,7 +627,7 @@ const useMaxPlankWidth = ({
     const observer = new ResizeObserver(measure);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [isSliding, plankCount, viewportRef, stackRef, mountKey]);
+  }, [isSliding, plankCount, viewportRef, stackRef]);
 
   return measured;
 };
@@ -634,31 +681,71 @@ const useFoldedPlanks = ({
   viewportRef,
   getPlankTiles,
   isSliding,
+  expose,
   plankCount,
   maxPlankWidthPx,
   scrollIntentRef,
   handoffRef,
-  mountKey,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
   isSliding: boolean;
+  expose: boolean;
   plankCount: number;
   maxPlankWidthPx: number;
-  /** See `useMaxPlankWidth`: the fold state has to be recomputed against the rebuilt tiles. */
-  mountKey: unknown;
   scrollIntentRef: RefObject<string | undefined>;
   /** Set to the plank this hook hands attention to, so the collapse can tell it apart from a real choice. */
   handoffRef: RefObject<string | undefined>;
 }) => {
   const { attention } = useAttentionContext(DECK_VIEWPORT_NAME);
+  const wasExposedRef = useRef(expose);
 
-  useEffect(() => {
+  // A layout effect: the first `update()` has to stamp `data-folded` before paint. As a passive effect
+  // the browser painted the planks unfolded first, so returning from the exposé flashed their full
+  // backgrounds before the spines took over.
+  useLayoutEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport || !isSliding) {
       return;
     }
+
+    // Crossing the exposé boundary refolds every plank at once, and the fold is a 200ms crossfade — long
+    // enough that the planks are painted over the spines replacing them. Flagging the tiles in the same
+    // task as the fold stamp means the browser resolves both together and skips the transition; the flag
+    // comes off two frames later, once the new opacity has been painted, so the ordinary fold still
+    // animates. Anything else here (a scroll, a resize) keeps its crossfade.
+    const exposeTiles = getPlankTiles();
+    const crossedExpose = wasExposedRef.current !== expose;
+    if (crossedExpose) {
+      wasExposedRef.current = expose;
+      exposeTiles.forEach((tile) => tile.toggleAttribute('data-fold-instant', true));
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => exposeTiles.forEach((tile) => tile.removeAttribute('data-fold-instant'))),
+      );
+    }
+
+    // Nothing is folded in the exposé — every plank is visible at once — and the rects are scaled, so
+    // measuring would stamp nonsense. Clearing the attribute unfolds them; the restamp on the way out is
+    // this same effect re-running as `expose` flips back, still before paint.
+    if (expose) {
+      exposeTiles.forEach((tile) => tile.removeAttribute('data-folded'));
+      return;
+    }
+
+    // Leaving the exposé restores a deck the user never navigated, so the plank they were attending is
+    // still the right one — the hysteresis only exists to rescue attention from a plank that scrolled out
+    // of view, which is not what happened here.
+    let keepAttention = crossedExpose;
+    // ...and it must hold for the whole zoom, not just this pass. The scroll restore fires its event a
+    // task later, and every frame of the zoom reports scaled rects, so an unguarded `update()` would read
+    // the attended plank as folded and hand attention to whichever plank happens to be near the middle.
+    // Nothing measures until the deck has settled, at which point one final pass takes the true geometry.
+    let settling = false;
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
     const update = () => {
+      if (settling) {
+        return;
+      }
       const tiles = getPlankTiles();
       const vpRect = viewport.getBoundingClientRect();
       const rects = tiles.map((tile) => tile.getBoundingClientRect());
@@ -690,6 +777,10 @@ const useFoldedPlanks = ({
           return;
         }
         scrollIntentRef.current = undefined;
+      }
+
+      if (keepAttention) {
+        return;
       }
 
       // Attention hysteresis: attention must always point at a plank the user can see. It moves only
@@ -727,10 +818,26 @@ const useFoldedPlanks = ({
         }
       }
     };
+    // Runs before the zoom starts, so these rects are the deck's real geometry and the spines are correct
+    // from the first painted frame.
     update();
+    if (crossedExpose) {
+      settling = true;
+      settleTimer = setTimeout(() => {
+        settling = false;
+        update();
+        // Only now does the hysteresis resume: the settled pass has to leave attention alone too, or it
+        // enforces "attention must be on a visible plank" against a deck the user never scrolled and
+        // walks attention off a plank that was folded before the exposé opened.
+        keepAttention = false;
+      }, EXPOSE_ZOOM_MS + EXPOSE_SETTLE_MARGIN_MS);
+    } else {
+      keepAttention = false;
+    }
     const offScroll = addEventListener(viewport, 'scroll', update);
     const offResize = addEventListener(window, 'resize', update);
     return () => {
+      clearTimeout(settleTimer);
       offScroll();
       offResize();
     };
@@ -738,6 +845,7 @@ const useFoldedPlanks = ({
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
   }, [
     isSliding,
+    expose,
     plankCount,
     maxPlankWidthPx,
     getPlankTiles,
@@ -745,7 +853,6 @@ const useFoldedPlanks = ({
     viewportRef,
     scrollIntentRef,
     handoffRef,
-    mountKey,
   ]);
 };
 
@@ -825,6 +932,7 @@ const useCollapseAfterAttended = ({
   stackRef,
   getPlankTiles,
   isSliding,
+  expose,
   attendedPlankId,
   companionId,
   scrollIntentRef,
@@ -834,17 +942,30 @@ const useCollapseAfterAttended = ({
   stackRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
   isSliding: boolean;
+  /** The exposé shows the whole deck at once, so bringing a plank to the front there is meaningless. */
+  expose: boolean;
   attendedPlankId: string | undefined;
   /** Re-runs the collapse when the pair lands; see the comment on the effect. */
   companionId: string | undefined;
   scrollIntentRef: RefObject<string | undefined>;
   handoffRef: RefObject<string | undefined>;
 }) => {
+  const wasExposedRef = useRef(expose);
+
   // A layout effect, so a correction lands before paint instead of as a visible slide.
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
     const stack = stackRef.current;
-    if (!isSliding || !attendedPlankId || !viewport || !stack) {
+    const wasExposed = wasExposedRef.current;
+    wasExposedRef.current = expose;
+    if (!isSliding || expose || !attendedPlankId || !viewport || !stack) {
+      return;
+    }
+
+    // Closing the exposé is not the user choosing a plank — attention never moved — so the deck belongs
+    // exactly where `useExposeScroll` just put it back. Collapsing here would instead scroll the attended
+    // plank to the pile and return the user to a deck they did not leave.
+    if (wasExposed) {
       return;
     }
 
@@ -873,87 +994,118 @@ const useCollapseAfterAttended = ({
     // that summoned it — `useCompanions` reads the graph in a commit-phase effect — so the first pass
     // measures the deck before the pair widened. Without re-running here the scroll stays short by the
     // companion's width, leaving the attended plank pinned and its neighbour riding over the companion.
-  }, [isSliding, attendedPlankId, companionId, getPlankTiles, viewportRef, stackRef, scrollIntentRef, handoffRef]);
+  }, [
+    isSliding,
+    expose,
+    attendedPlankId,
+    companionId,
+    getPlankTiles,
+    viewportRef,
+    stackRef,
+    scrollIntentRef,
+    handoffRef,
+  ]);
 };
 
 /**
- * Every plank at once, shrunk to fit the viewport's width — the deck's exposé. The whole row is scaled by
- * a single transform rather than each plank being re-laid out at a smaller size, so a tile is a true
- * miniature of the plank: same widths, same content reflow, just smaller. Clicking one returns to the
- * deck focused on it.
+ * The exposé's scale: the factor that fits the deck's natural width into the viewport, or 1 while it is
+ * closed. The deck is scaled where it stands rather than re-laid out or copied into a second row, so the
+ * exposé is the very same mounted planks seen from further away — nothing remounts on the way in or out,
+ * and a tile is a true miniature, down to its content reflow.
  */
-const ExposeDeck = ({
-  planks,
-  active,
-  plankSizing,
-  onSelect,
+const useExposeScale = ({
+  viewportRef,
+  stackRef,
+  expose,
 }: {
-  planks: string[];
-  active: string[];
-  plankSizing: Record<string, number>;
-  onSelect: (id: string) => void;
-}) => {
-  // Measured here rather than taken from the sliding deck's measurement, which is only taken while
-  // sliding — the exposé also renders over a fullbleed deck, where that would be zero.
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidthPx, setContainerWidthPx] = useState(0);
+  viewportRef: RefObject<HTMLDivElement | null>;
+  stackRef: RefObject<HTMLDivElement | null>;
+  expose: boolean;
+}): number => {
+  const [scale, setScale] = useState(1);
+
   useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container) {
+    const viewport = viewportRef.current;
+    const stack = stackRef.current;
+    if (!viewport || !stack || !expose) {
+      setScale(1);
       return;
     }
-    // `getBoundingClientRect` rather than `clientWidth`, and a frame later as well as now: the exposé
-    // mounts into a container that has only just been laid out, and an unmeasured width would leave the
-    // row unscaled and running off the viewport.
-    const measure = () => setContainerWidthPx(container.getBoundingClientRect().width);
-    measure();
-    const frame = requestAnimationFrame(measure);
-    const observer = new ResizeObserver(measure);
-    observer.observe(container);
-    return () => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
+    // Layout widths, never rects: a rect already carries the scale this computes, so measuring one would
+    // feed the transform back into itself and converge on nothing.
+    const measure = () => {
+      const naturalWidth = stack.scrollWidth;
+      if (naturalWidth <= 0) {
+        setScale(1);
+        return;
+      }
+      const width = Math.max(0, viewport.clientWidth - EXPOSE_INSET_PX * 2);
+      // The row is vertically centred by the transform origin, so the height only needs a cap to keep the
+      // tiles off the viewport's own edges; the leading inset is applied as a translate (see the stack).
+      const height = viewport.clientHeight;
+      const heightLimit = height > 0 ? Math.max(0, height - EXPOSE_INSET_PX * 2) / height : 1;
+      // Only ever shrinks — a deck narrower than the viewport keeps its planks at true size rather than
+      // being blown up into a wall of oversized text.
+      setScale(Math.min(1, width / naturalWidth, heightLimit));
     };
-  }, []);
+    measure();
+    // Observes layout boxes, which a transform does not touch, so scaling never retriggers this.
+    const observer = new ResizeObserver(measure);
+    observer.observe(viewport);
+    observer.observe(stack);
+    return () => observer.disconnect();
+  }, [expose, viewportRef, stackRef]);
 
-  const gapPx = PLANK_SPACING_REM * REM_PX;
-  const widths = planks.map((id) => (plankSizing[id] ?? DEFAULT_PLANK_SIZE) * REM_PX);
-  const naturalWidthPx = widths.reduce((total, width) => total + width, 0) + Math.max(0, planks.length - 1) * gapPx;
-  // Only ever shrinks: a deck narrower than the viewport keeps its planks at true size rather than being
-  // blown up into a wall of oversized text. Unmeasured reads as 1, so the first paint is not scaled to
-  // nothing.
-  const scale = naturalWidthPx > 0 && containerWidthPx > 0 ? Math.min(1, containerWidthPx / naturalWidthPx) : 1;
+  return expose ? scale : 1;
+};
 
-  return (
-    <div
-      ref={containerRef}
-      className='absolute inset-0 grid place-items-center overflow-hidden'
-      data-testid='deck.expose'
-    >
-      {/* The row is sized to the deck's natural width and scaled as a whole, so a tile keeps the plank's
-          real proportions and text reflow. Its height is the planks' own content height, which is why the
-          row is centred rather than stretched. */}
-      <div
-        // `min-h-0`, or the flex item's automatic minimum lets the planks' content push the row past the
-        // viewport height, and centring an overflowing item pushes it off the bottom.
-        className='flex gap-(--main-spacing) h-full min-h-0 shrink-0'
-        style={{ inlineSize: `${naturalWidthPx}px`, transform: `scale(${scale})`, transformOrigin: 'left center' }}
-      >
-        {planks.map((id, index) => (
-          <button
-            key={id}
-            // Framed, because at exposé scale a plank is dark content on the equally dark deck surface
-            // with unreadable text — the frame is what makes it read as a tile at all.
-            className='relative block h-full text-start cursor-pointer overflow-hidden rounded-sm border border-separator bg-baseSurface shadow-lg transition-shadow hover:border-accentSurface'
-            style={{ inlineSize: `${widths[index]}px` }}
-            onClick={() => onSelect(id)}
-          >
-            <DeckPlank id={id} part='main' active={active} classNames='size-full pointer-events-none' />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+/**
+ * Parks the deck's scroll at the start for the exposé and puts it back on the way out. A transform does
+ * not change layout, so scaling the stack leaves the scrollable width untouched: whatever the deck was
+ * scrolled past stays scrolled past, and the shrunken row would sit off the leading edge with most of the
+ * planks out of view. Zeroing brings the whole row into frame; restoring returns the deck to where the
+ * user left it, still folded, rather than to an unscrolled deck with every plank painted full-width.
+ */
+const useExposeScroll = ({
+  viewportRef,
+  expose,
+}: {
+  viewportRef: RefObject<HTMLDivElement | null>;
+  expose: boolean;
+}) => {
+  const scrollLeftRef = useRef(0);
+  const exposeRef = useRef(expose);
+  exposeRef.current = expose;
+  const wasExposedRef = useRef(expose);
+
+  // Recorded off the scroll event, so the value predates the commit that opens the exposé — and is not
+  // overwritten by the zeroing below, which fires a scroll event of its own.
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+    return addEventListener(viewport, 'scroll', () => {
+      if (!exposeRef.current) {
+        scrollLeftRef.current = viewport.scrollLeft;
+      }
+    });
+  }, [viewportRef]);
+
+  // A layout effect, so neither the jump nor the return is ever painted mid-flight.
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    const wasExposed = wasExposedRef.current;
+    wasExposedRef.current = expose;
+    if (!viewport) {
+      return;
+    }
+    if (expose) {
+      viewport.scrollLeft = 0;
+    } else if (wasExposed) {
+      viewport.scrollLeft = scrollLeftRef.current;
+    }
+  }, [expose, viewportRef]);
 };
 
 /** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
@@ -1009,6 +1161,8 @@ export const DeckPlanks = () => {
   const fullscreen = !!fullscreenId;
   const topbar = layoutAppliesTopbar(breakpoint, fullscreen);
   const isSliding = presentation === 'sliding';
+  // Gated on the sliding deck: a fullbleed singleton has nothing to expose, and no stack to scale.
+  const expose = !!state.expose && isSliding;
   const viewportRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
 
@@ -1027,18 +1181,21 @@ export const DeckPlanks = () => {
     stackRef,
     isSliding,
     plankCount: planks.length,
-    mountKey: state.expose,
   });
   usePreservedScroll({ viewportRef, isSliding });
+  // Ahead of the fold pass, whose layout effect must measure the restored scroll position: hooks run in
+  // declaration order, and measuring at the exposé's zeroed scroll reads every trailing plank as
+  // off-screen — enough for the attention hysteresis to hand attention to whatever sits near the start.
+  useExposeScroll({ viewportRef, expose });
   useFoldedPlanks({
     viewportRef,
     getPlankTiles,
     isSliding,
+    expose,
     plankCount: planks.length,
     maxPlankWidthPx,
     scrollIntentRef,
     handoffRef,
-    mountKey: state.expose,
   });
   useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView, scrollIntentRef });
   useCollapseAfterAttended({
@@ -1046,13 +1203,19 @@ export const DeckPlanks = () => {
     stackRef,
     getPlankTiles,
     isSliding,
+    expose,
     attendedPlankId,
     companionId,
     scrollIntentRef,
     handoffRef,
   });
+  const exposeScale = useExposeScale({ viewportRef, stackRef, expose });
   const toggleFullscreen = useFullscreen(fullscreenId);
   const { invokePromise } = useOperationInvoker();
+
+  // Read from a ref so the key handler is bound once rather than rebound whenever the exposé toggles.
+  const exposeRef = useRef(state.expose);
+  exposeRef.current = state.expose;
 
   // Bound here rather than as a graph action so the shortcut works wherever the deck has focus; see the
   // note in DESIGN about promoting it once its binding is settled.
@@ -1061,6 +1224,13 @@ export const DeckPlanks = () => {
       if (event.key === ';' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         void invokePromise(DeckOperation.ToggleExpose, {});
+        return;
+      }
+
+      // Escape is the way out of any overlay; the fullscreen handler already claims it for its own.
+      if (event.key === 'Escape' && exposeRef.current) {
+        event.preventDefault();
+        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
       }
     };
 
@@ -1068,13 +1238,15 @@ export const DeckPlanks = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [invokePromise]);
 
-  // Picking a plank in the exposé is a navigation: leave the overview and attend what was chosen.
-  const handleExposeSelect = useCallback(
-    (id: string) => {
-      void invokePromise(DeckOperation.ToggleExpose, { expose: false });
-      void invokePromise(LayoutOperation.ScrollIntoView, { subject: id });
+  // Clicking past the tiles leaves the exposé, the pointer equivalent of Escape. The tiles carry their own
+  // hit target (see `DeckPlankTile`), so anything outside one is background.
+  const handleBackgroundClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (expose && event.target instanceof Element && !event.target.closest('[role="listitem"]')) {
+        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+      }
     },
-    [invokePromise],
+    [invokePromise, expose],
   );
 
   const plankContext = useMemo<PlankContextValue>(
@@ -1087,7 +1259,9 @@ export const DeckPlanks = () => {
   // resting position, so the deck never scrolls further than the last plank being fully forward.
   const overscrollPx = useMemo(() => {
     const lastId = planks[planks.length - 1];
-    if (!overscroll || !isSliding || !lastId || !viewportWidthPx) {
+    // Suppressed in the exposé: the runway is trailing padding, so it would count towards the natural
+    // width the scale has to fit and shrink every plank to buy back space nothing occupies.
+    if (!overscroll || !isSliding || expose || !lastId || !viewportWidthPx) {
       return 0;
     }
     const paired = companionAnchorId === lastId && !!companionId;
@@ -1101,6 +1275,7 @@ export const DeckPlanks = () => {
   }, [
     overscroll,
     isSliding,
+    expose,
     planks,
     companionAnchorId,
     companionId,
@@ -1118,12 +1293,21 @@ export const DeckPlanks = () => {
 
   return (
     <PlankContext.Provider value={plankContext}>
-      {/* The overscroll runway rides a CSS var because `Mosaic.Stack` takes classNames but no style. */}
+      {/* The overscroll runway and the exposé scale ride CSS vars because `Mosaic.Stack` takes classNames
+          but no style. */}
       <div
         className='relative bg-deck-surface overflow-hidden'
         style={
-          overscrollPx > 0 ? ({ '--deck-overscroll': `${Math.round(overscrollPx)}px` } as CSSProperties) : undefined
+          {
+            ...(overscrollPx > 0 && { '--deck-overscroll': `${Math.round(overscrollPx)}px` }),
+            ...(expose && {
+              '--deck-expose-scale': exposeScale,
+              '--deck-expose-inset': `${EXPOSE_INSET_PX}px`,
+              '--deck-expose-gutter': `${EXPOSE_GUTTER_PX}px`,
+            }),
+          } as CSSProperties
         }
+        onClick={handleBackgroundClick}
       >
         <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
         {fullscreen && fullscreenId ? (
@@ -1136,13 +1320,6 @@ export const DeckPlanks = () => {
               classNames={mx('absolute inset-0', mainIntrinsicSize)}
             />
           </>
-        ) : state.expose && planks.length > 0 ? (
-          <ExposeDeck
-            planks={planks}
-            active={deck.active}
-            plankSizing={deck.plankSizing}
-            onSelect={handleExposeSelect}
-          />
         ) : presentation === 'fullbleed' && companionAnchorId && companionId ? (
           // A lone plank with its companion: the pair fills the viewport across the same seam it has as a
           // sliding tile, so opening a second plank never moves it.
@@ -1181,7 +1358,19 @@ export const DeckPlanks = () => {
                     breakpoint === 'mobile'
                       ? 'h-full w-full'
                       : isSliding
-                        ? mx('h-full gap-(--main-spacing)', overscrollPx > 0 && 'pe-(--deck-overscroll)')
+                        ? mx(
+                            'h-full gap-(--main-spacing)',
+                            // Unconditional, so the zoom animates *out* of the exposé too — a transition
+                            // added in the same commit that removes the transform has nothing to animate
+                            // from. Keep `duration-300` and `EXPOSE_ZOOM_MS` in step.
+                            'transition-transform duration-300 ease-out',
+                            overscrollPx > 0 && 'pe-(--deck-overscroll)',
+                            // Anchored left so the row starts where the deck does, and centred vertically
+                            // because a uniform scale shrinks the height too. `translate` composes before
+                            // `scale`, so the inset stays a true edge margin rather than being shrunk
+                            // along with the row.
+                            expose && 'origin-left translate-x-(--deck-expose-inset) scale-(--deck-expose-scale)',
+                          )
                         : 'h-full'
                   }
                   getId={getPlankId}
