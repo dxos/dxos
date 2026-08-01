@@ -36,7 +36,7 @@ import { inboxResearch } from '../templates';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const sectionExtensions = yield* TypeSection.createTypeSectionExtension(Project.Project, {
-      urlKey: 'topic',
+      urlKey: 'project',
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
       createObject: (space) =>
