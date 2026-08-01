@@ -132,7 +132,7 @@ if (attach.result?.isError) fail('attach', JSON.stringify(attach.result.structur
 
 // 3. Browser: assert the document shows up in Composer.
 step('browser assert');
-const { chromium } = await import('playwright');
+const { chromium } = await import('@playwright/test');
 const browser = await chromium.launch({ headless: args.headless });
 try {
   const page = await browser.newPage();
