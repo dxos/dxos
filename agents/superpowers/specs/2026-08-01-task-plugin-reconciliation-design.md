@@ -20,23 +20,38 @@ native projects (rename tracked in `mcp` TASKS).
 
 ## Proposal (for review — not implemented)
 
-### A new `plugin-tasks`
+### Unified ontology (user direction 2026-08-01)
 
-- Owns `Task` (and the renamed project container — see Naming) end-to-end: creation UX, a
-  TaskList container (ordered, grouped by status/project), cards, app-graph nodes.
-- The outliner keeps its document-first flow and **feeds** plugin-tasks: convert-to-task keeps
-  creating `Task`s; plugin-tasks renders/manages them. No outliner behavior change.
-- plugin-projects is orthogonal (process/agent container) and untouched; a `Project` MAY reference
-  a task list, but `Task.project` continues to point at the lightweight container type.
+`ExternalProject` becomes **`TaskList`** — a pure container; "external" was never a kind of
+project, it is a _sync capability_ of a task list:
 
-### Naming
+- **`Task`** — unchanged fields; `Task.project: Ref<ExternalProject>` → `Task.taskList:
+Ref<TaskList>` (breaking; migration required).
+- **`TaskList`** — `{ name?, tasks: Ref<Task>[] }`. Owns ordering (the array), the thing neither
+  backrefs nor queries express. Carries optional **sync bindings** for external systems
+  (Linear, GitHub): source identifier + cursor on the TaskList, per-task foreign keys in
+  `@meta.keys` — the same shape plugin-connector/plugin-linear already use, so an external
+  list is a TaskList with a binding, not a distinct type.
+- **`Outline`** — `{ content: Ref<Text>, taskList: Ref<TaskList> }` (today's `project` ref
+  renamed/retyped). The markdown checklist is the _ad hoc_ task ledger; convert-to-task promotes
+  a text line into a `Task` appended to `outline.taskList`. Unconverted lines exist only as text.
+- **`Project`** (plugin-projects, unchanged character: process/agent container) — gains an
+  optional `outline: Ref<Outline>`, giving every Project a task ledger + promotable task list
+  transitively. (Open: reference the Outline, the TaskList directly, or both.)
 
-`ExternalProject` → `Project` collides with plugin-projects' `Project`. Options, in preference
-order: (1) rename plugin-projects' type to `Workspace`/`Studio` and free `Project` for the task
-container; (2) rename `ExternalProject` → `TaskProject`; (3) leave names, document the split.
-Decision needed from the user; the rename is tracked separately.
+Ownership: `plugin-tasks` owns `Task` + `TaskList` (types move out of @dxos/types or stay with
+new names — migration either way); plugin-outliner keeps `Outline` and the promotion flow;
+plugin-projects consumes via the `outline` ref. Sync engines (Linear/GitHub) plug in against
+`TaskList` only.
 
 ### Dedicated MCP verbs vs generic object verbs
+
+> **Superseding input (2026-08-01):** the user is producing an updated spec on another branch
+> (`claude/competent-curie-20057f`) introducing `TaskOperation` in a `plugin-tasks`. The MCP task
+> verbs below must **match those operations** (thin projections over the same operation keys —
+> the object-toolkit pattern), and `plugin-tasks` gets registered in the edge operation-service.
+> Constraint from the outliner registration attempt: the worker resolves all lazy operation
+> handlers, so plugin-tasks handler chunks must stay UI-free or only its schema can register.
 
 Recommendation: **keep the generic object verbs as the substrate; add a thin task verb set** —
 not because the generic verbs can't express tasks, but because model ergonomics and safety differ:
