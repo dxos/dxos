@@ -120,7 +120,7 @@ Package split:
   runner does (lazily, optionally).
 - **React hooks** — `useLens`, on the package's own `./react` subpath for now (so the whole lens
   surface stays in one package), destined for a react sibling once the API is internalized.
-- **Coded lenses ship with their dependencies** — the rich-text lens owns remark.
+- **Coded lenses ship with their dependencies** — the rich-text lens owns its markdown parser.
 
 **Promotion into `@dxos/echo`** stays the long-term intent once the model is proven: move the
 `Lens` module beside `Type`/`View`/`Annotation`, add `Obj.lens` as the entry point — an import-path
@@ -242,9 +242,10 @@ Both register in the same registry and are exercised by the same law harness; no
 which kind it holds. Pretending a markdown parser is a schema diff would bend the design out of
 shape for no gain.
 
-Still to verify (the law-check surface is not yet exercised by `echo-panproto`):
-`LensHandle.checkLaws` / `checkGetPut` / `checkPutGet`, and whether `get()` returns a usable
-`GetResult { view, complement }` for round-tripping. That is the remaining Phase 0 engine spike.
+**Resolved by shipping it:** the engine's law surface (`checkLaws` / `checkGetPut` / `checkPutGet`)
+is still unexercised, because `Lens.checkLaws` turned out not to need it — GetPut is checkable
+host-side over the object's own values, with no engine call and no mutation. The object lens
+therefore has no wasm dependency at all; it shares a package with the wire lens, which does.
 
 ## 5. The two lenses
 
@@ -274,10 +275,11 @@ and keeps the document's own properties out of it.
 
 - **Target** — a block tree: `{ blocks: [{ type: 'heading', level, children }, { type:
 'paragraph', children: [{ type: 'text', value }] }, …] }`.
-- **`get`** — parse `content` with remark → mdast → normalized block tree. `remark`, `remark-gfm`,
-  and `mdast-util-to-hast` are already in the workspace catalog, used by `@dxos/react-ui-markdown`.
-- **`put`** — the key mechanism: **mdast nodes carry `position.start.offset` /
-  `position.end.offset`**, the exact character range of that node in the source. So a block edit
+- **`get`** — parse `content` into a normalized block tree. **Shipped with `@lezer/markdown`**, not
+  remark/mdast: it is already a catalog dependency via `@dxos/react-ui-markdown`, and its nodes carry
+  `from`/`to` offsets directly, so no new catalog entries were needed.
+- **`put`** — the key mechanism: **every parsed node carries its exact character range in the
+  source**. So a block edit
   serializes just that block and applies it as `Text.splice(text, ['content'], start, end - start,
 newMarkdown)`. Everything outside the range is untouched, which is what makes concurrent editing
   with a canonical CodeMirror peer merge instead of clobber.
@@ -286,10 +288,11 @@ newMarkdown)`. Everything outside the range is untouched, which is what makes co
   destroys every comment anchor in it. Holding the original slice makes untouched blocks
   byte-identical by construction.
 
-**Scope guard:** the lensed UI is a **structured block list** — a typed row per block (heading with
-a level control, paragraph with a text input, list with items) — not a WYSIWYG. It proves lensed
-interaction without dragging in ProseMirror. A real rich-text editing surface is a separate
-question, deliberately unanswered here.
+**Scope guard, revised in the build.** This planned a structured block list rather than a WYSIWYG,
+to avoid pulling in ProseMirror. What shipped instead is a small ProseMirror editor over the block
+tree, at the user's request — it renders real marks and toggles them with Mod-b/i/e, and it is still
+only a demo surface. The block-list pane survives as the third pane, showing each block with the
+source range it splices.
 
 **Scoped out of v1:** stable block identity across re-parses. Offsets shift under a concurrent
 peer's edits, so block ids are ephemeral render keys, not persistent identifiers. The durable fix
@@ -392,7 +395,9 @@ stay on the base type; a lens applies post-query.
 
 ## 7. Stories — the deliverable
 
-Two per lens, in `packages/stories/stories-lens`, all with `play` functions so CI enforces them.
+Three per lens, in `packages/stories/stories-lens`: `Default` renders only, `Spec` carries the
+assertions CI enforces, and `Collaboration` renders the two-peer case (it smoke-tests the mount; the
+single-peer `Spec` owns the assertions).
 
 ### 7.1 Lensed UI + proof of persistence (single peer)
 
@@ -452,14 +457,16 @@ Demonstrated in both directions:
 - `packages/core/echo/echo-panproto` — existing package (PR #12395); the object lens lands beside
   the wire lens as a new `Lens` namespace export, staging ground for what eventually becomes
   `@dxos/echo`'s `Lens` module (§2.1).
-  - Existing: `Panproto.ts`/`lens.ts` (wire lens schema), `runner.ts` (encode/decode + named
-    codecs), `wasm.ts` (engine).
-  - New: `Lens.ts` (interface + ECHO entity), `mapping.ts` (resolution + shorthands),
-    `coverage.ts`, `codec.ts` (T1), `live.ts` (T2 proxy), `overlay.ts`, `registry.ts`, `laws.ts`,
-    `lenses/task-gtd.ts`.
+  - Existing: `Panproto.ts` + `wire-lens.ts` (the wire lens schema, renamed from `lens.ts` so the
+    two lenses read apart), `runner.ts` (encode/decode + named codecs), `wasm.ts` (engine).
+  - As built: `Lens.ts` (namespace) plus `lens/`: `types`, `mapping`, `codec`, `codecs`, `live`,
+    `overlay`, `registry`, `laws`, `entity`, `write`. Coverage lives in `mapping.ts` rather than its
+    own module, and the example lens is NOT here — `core/echo` must not depend on `sdk/types`, so it
+    ships with the types it binds (Phase 0 correction).
 - React hooks — `useLens` on the `./react` subpath of the same package (see §2.1).
-- Rich-text lens package — the coded lens, owning the remark dependency.
-- `packages/stories/stories-lens` — four stories, two custom UIs, shared raw inspector.
+- `packages/stories/stories-lens` — six stories across two demos, the `Task`→`GtdTask` lens, and the
+  coded rich-text lens. No separate rich-text package was needed: the lens ships beside the stories
+  that exercise it, owning its markdown parser there.
 - No plugin until the stories prove the UI story is worth shipping.
 
 ## 10. Migration
