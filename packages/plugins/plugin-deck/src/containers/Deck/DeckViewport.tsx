@@ -125,12 +125,12 @@ const usePlankContext = () => useContext(PlankContext);
 // DeckViewport
 //
 
-export type DeckViewportProps = PropsWithChildren;
+export type DeckViewportProps = ThemedClassName<PropsWithChildren>;
 
 /**
  * Deck viewport that renders the main content area and sets CSS variables for sidebar widths.
  */
-export const DeckViewport = ({ children }: DeckViewportProps) => {
+export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
   const {
     state: { sidebarState, complementarySidebarState, fullscreen },
   } = useDeckContext(DECK_VIEWPORT_NAME);
@@ -145,6 +145,7 @@ export const DeckViewport = ({ children }: DeckViewportProps) => {
       classNames={[
         'grid top-[env(safe-area-inset-top)]!',
         topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]!',
+        classNames,
       ]}
       style={
         {
@@ -552,9 +553,16 @@ const usePlankTiles = (stackRef: RefObject<HTMLDivElement | null>) =>
   );
 
 /**
- * Caps a sliding plank's width to the viewport, reserving a spine plus gap for every other plank (and
- * the stack's own padding), so the current plank's trailing controls stay clear of the piled spines. A
- * layout effect, so the cap lands before first paint — no flash of full-width planks on load.
+ * Caps a sliding plank's width to exactly the gap the two piles leave it: the viewport, less one spine
+ * for every other plank (the pile insets are one spine apart, gapless, whichever side they pin to), less
+ * the single gap between this plank and its neighbour, less the stack's own padding.
+ *
+ * The exactness matters. Reserving any more leaves the plank after the current one short of its own pin
+ * position — sticky pins, it never pushes — so instead of folding to a spine it wedges a part-drawn
+ * header against the current plank (and over its companion, since later planks stack above). A plank at
+ * the front therefore spans precisely up to where the trailing pile begins.
+ *
+ * A layout effect, so the cap lands before first paint — no flash of full-width planks on load.
  */
 const useMaxPlankWidth = ({
   viewportRef,
@@ -583,7 +591,7 @@ const useMaxPlankWidth = ({
         ? (parseFloat(styles.paddingInlineStart) || 0) + (parseFloat(styles.paddingInlineEnd) || 0)
         : 0;
       const others = Math.max(0, plankCount - 1);
-      const max = viewport.clientWidth - padding - others * (SPINE_PX + gap);
+      const max = viewport.clientWidth - padding - others * SPINE_PX - (others > 0 ? gap : 0);
       setMaxPlankWidthPx(max > 0 ? max : Number.POSITIVE_INFINITY);
     };
     measure();
@@ -983,14 +991,10 @@ export const DeckPlanks = () => {
                   // Mobile pins the stack to the viewport width (`w-full`) so each plank's `w-full`
                   // resolves to one screen — the planks overflow the scroll viewport and snap one-to-next
                   // rather than the stack shrink-wrapping to their intrinsic width. The `--main-spacing`
-                  // gap/padding (which encapsulates each plank in its own container) only applies to the
-                  // desktop sliding deck, matching today's multi-mode look.
+                  // gap (which encapsulates each plank in its own container) only applies to the desktop
+                  // sliding deck; it is a gap only, so the deck runs flush to both ends of the viewport.
                   classNames={
-                    breakpoint === 'mobile'
-                      ? 'h-full w-full'
-                      : isSliding
-                        ? 'h-full gap-(--main-spacing) px-(--main-spacing)'
-                        : 'h-full'
+                    breakpoint === 'mobile' ? 'h-full w-full' : isSliding ? 'h-full gap-(--main-spacing)' : 'h-full'
                   }
                   getId={getPlankId}
                   items={planks}

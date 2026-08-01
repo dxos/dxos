@@ -18,7 +18,7 @@ import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-import { Position } from '@dxos/util';
+import { Position, trim } from '@dxos/util';
 
 import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
@@ -223,13 +223,14 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 const FOLD_ANIMATIONS = ['slide', 'crossfade'] as const;
 type FoldAnimation = (typeof FOLD_ANIMATIONS)[number];
 
-const FOLD_ANIMATION_CSS = `
-[data-fold-anim='slide'] .dx-fold-spine {
-  transition: opacity 200ms ease-out, transform 220ms ease-out;
-}
-[data-fold-anim='slide'] [data-fold-side='start'] .dx-fold-spine { transform: translateX(10px); }
-[data-fold-anim='slide'] [data-fold-side='end'] .dx-fold-spine { transform: translateX(-10px); }
-[data-fold-anim='slide'] [data-folded] .dx-fold-spine { transform: translateX(0); }
+// TODO(burdon): Why in story?
+const FOLD_ANIMATION_CSS = trim`
+  [data-fold-anim='slide'] .dx-fold-spine {
+    transition: opacity 200ms ease-out, transform 220ms ease-out;
+  }
+  [data-fold-anim='slide'] [data-fold-side='start'] .dx-fold-spine { transform: translateX(10px); }
+  [data-fold-anim='slide'] [data-fold-side='end'] .dx-fold-spine { transform: translateX(-10px); }
+  [data-fold-anim='slide'] [data-folded] .dx-fold-spine { transform: translateX(0); }
 `;
 
 type DefaultStoryProps = {
@@ -288,7 +289,11 @@ const DefaultStory = ({
       <style>{FOLD_ANIMATION_CSS}</style>
       <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
         <Deck.Content>
-          <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
+          {/* Outlines the viewport the planks run flush to, so the deck's own edges are visible in
+              isolation (the app frames it with sidebars). */}
+          <Deck.Viewport classNames='border'>
+            {deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}
+          </Deck.Viewport>
         </Deck.Content>
       </Deck.Root>
     </div>
@@ -321,17 +326,35 @@ type Story = StoryObj<typeof meta>;
 export const Empty: Story = {};
 
 // A singleton `active` list renders fullbleed.
-export const OnePlank: Story = { args: { count: 1 } };
+export const OnePlank: Story = {
+  args: {
+    count: 1,
+  },
+};
 
 // Two planks tile, splitting the width evenly with no horizontal overflow.
-export const TwoPlanks: Story = { args: { count: 2 } };
+export const TwoPlanks: Story = {
+  args: {
+    count: 2,
+  },
+};
 
 // Six planks exceed the tiling threshold and render as a sliding, horizontally-scrolling deck.
 // Use the `foldAnimation` control to compare fold transitions.
-export const ManyPlanks: Story = { args: { count: 6, foldAnimation: 'slide' } };
+export const ManyPlanks: Story = {
+  args: {
+    count: 6,
+    foldAnimation: 'slide',
+  },
+};
 
 // One plank plus its companion is two panes, so the pair tiles across the whole viewport.
-export const OnePlankWithCompanion: Story = { args: { count: 1, companionOpen: true } };
+export const OnePlankWithCompanion: Story = {
+  args: {
+    count: 1,
+    companionOpen: true,
+  },
+};
 
 // The companion shares a container with the attended plank, splitting that plank's tile rather than
 // trailing the deck.
@@ -341,7 +364,12 @@ export const OnePlankWithCompanion: Story = { args: { count: 1, companionOpen: t
 // 2. Click the third plank; confirm the companion moves to sit beside it and leaves the first plank.
 // 3. Drag the seam between the plank and its companion; confirm only those two panes resize.
 // 4. Switch the companion tab (Alpha/Beta); confirm the pane keeps its width and stays on the same plank.
-export const ManyPlanksWithCompanion: Story = { args: { count: 4, companionOpen: true } };
+export const ManyPlanksWithCompanion: Story = {
+  args: {
+    count: 4,
+    companionOpen: true,
+  },
+};
 
 // A `closed` sidebar persisted from below `lg` (dismissing the drawer) must present as the L0 rail at
 // `lg`+, where `closed` would otherwise render L0 off-screen and inert with every control that could
