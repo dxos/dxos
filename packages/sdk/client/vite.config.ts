@@ -15,6 +15,7 @@ export default defineConfig({
     'mesh': 'src/mesh/index.ts',
     'testing': 'src/testing/index.ts',
     'services/dedicated/dedicated-worker-entrypoint': 'src/services/dedicated/dedicated-worker-entrypoint.ts',
+    'services/dedicated/dedicated-worker': 'src/services/dedicated/dedicated-worker.ts',
     'services/dedicated/coordinator-worker-entrypoint': 'src/services/dedicated/coordinator-worker-entrypoint.ts',
     'worker/opfs-worker': 'src/worker/opfs-worker.ts',
   },

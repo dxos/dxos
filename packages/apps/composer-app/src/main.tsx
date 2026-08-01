@@ -11,7 +11,7 @@ import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
-import React, { StrictMode, useCallback } from 'react';
+import React, { StrictMode, Suspense, lazy, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -31,7 +31,6 @@ import { defaultTx } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
-import { ResetDialog } from './components';
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
 import {
   APP_KEY,
@@ -52,6 +51,10 @@ import {
   startupProfiler,
   translations,
 } from './util';
+
+// Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
+// (react-ui-form, editor, pickers) which must stay out of the static boot graph.
+const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
@@ -494,14 +497,18 @@ const main = async () => {
       >
         <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
           <Tooltip.Provider>
-            <ResetDialog
-              error={error}
-              logStore={logStore}
-              observability={observability}
-              needRefresh={needRefresh}
-              onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-              onReset={import.meta.env.DEV ? handleReset : undefined}
-            />
+            {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
+                fatal-dialog boundary above, which shows the original error via ErrorFallback. */}
+            <Suspense fallback={null}>
+              <ResetDialog
+                error={error}
+                logStore={logStore}
+                observability={observability}
+                needRefresh={needRefresh}
+                onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+                onReset={import.meta.env.DEV ? handleReset : undefined}
+              />
+            </Suspense>
           </Tooltip.Provider>
         </ThemeProvider>
       </ErrorBoundary>

@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
-import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
+import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula/types';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation } from '@dxos/schema';

@@ -9,7 +9,7 @@ import {
   addressFromA1Notation,
   addressToA1Notation,
   isFormula,
-} from '@dxos/compute-hyperformula';
+} from '@dxos/compute-hyperformula/types';
 import { randomBytes } from '@dxos/crypto';
 import { type Obj } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';

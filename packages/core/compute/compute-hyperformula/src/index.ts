@@ -7,3 +7,4 @@ export * from './compute-graph-registry';
 export * from './compute-node';
 export * from './functions';
 export * from './types';
+export * from './types/hyperformula';
