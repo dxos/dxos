@@ -4,7 +4,8 @@ Interact with an ECHO object through a **lens** — a declared, bidirectional vi
 shape — instead of through its base type. Fields the lens exposes that have no counterpart
 in the base type persist in the object's ECHO annotation dictionary.
 
-Status: **design only**, nothing implemented. No PR.
+Status: **implemented** — `@dxos/echo-panproto`'s `Lens` namespace plus the `@dxos/stories-lens`
+demos (PR #12420). Phases 0-4 shipped; §10 (migration) and §11 (cross-object) remain design only.
 
 Two goals, both load-bearing:
 
@@ -298,7 +299,7 @@ is Automerge cursors — the anchoring `@dxos/react-ui-editor` already uses for 
 
 ### 6.1 The lens entity
 
-```
+```ts
 Lens = { source: TypeDXN, target: TypeDXN, mapping: Mapping }
 get : Source              -> { view: Target, complement: Complement }
 put : Target, Complement  -> Source

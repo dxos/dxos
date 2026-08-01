@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { type Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { Text } from '@dxos/schema';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -25,11 +25,11 @@ import {
 // a whole-document rewrite from the other editor would fight it and destroy this one's cursor.
 //
 
-export const MarkdownEditor = ({ text }: { text: Obj.Unknown }) => {
+export const MarkdownEditor = ({ text }: { text: Text.Text }) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(
     () => ({
-      initialValue: (text as { content?: string }).content ?? '',
+      initialValue: text.content ?? '',
       extensions: [
         createBasicExtensions({ placeholder: 'Markdown…', search: true }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: { scroller: { className: 'p-2' } } }),

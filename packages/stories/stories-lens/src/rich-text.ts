@@ -227,8 +227,25 @@ export const diffBlocks = (previous: readonly Block[], next: readonly Block[]): 
   const writes: Lens.Write[] = [];
   const shared = Math.min(previous.length, next.length);
 
-  // Later ranges shift when an earlier block changes length, so walk backwards: every splice below is
-  // expressed in the ORIGINAL coordinates the blocks were parsed with.
+  // Every splice below is expressed in the ORIGINAL coordinates the blocks were parsed with, so they
+  // must be emitted in DECREASING position: applying a later one first leaves every earlier offset
+  // valid. The tail append/remove sits at or beyond the last shared block, so it goes first — emitting
+  // it after the loop would compute its offset from a block the loop had already resized.
+  if (next.length > previous.length) {
+    // Appended blocks: one insert at the end of the last shared block.
+    const at = previous.length > 0 ? previous[previous.length - 1].range[1] : 0;
+    const added = next
+      .slice(previous.length)
+      .map((block) => renderBlock(block))
+      .join('\n\n');
+    writes.push({ kind: 'splice', path: ['content'], start: at, deleteCount: 0, insert: `\n\n${added}` });
+  } else if (next.length < previous.length) {
+    // Removed blocks: delete from the first dropped block to the end of the last.
+    const from = previous[next.length].range[0];
+    const to = previous[previous.length - 1].range[1];
+    writes.push({ kind: 'splice', path: ['content'], start: from, deleteCount: to - from, insert: '' });
+  }
+
   for (let index = shared - 1; index >= 0; index--) {
     const before = previous[index];
     const after = next[index];
@@ -243,21 +260,6 @@ export const diffBlocks = (previous: readonly Block[], next: readonly Block[]): 
       deleteCount: before.range[1] - before.range[0],
       insert: rendered,
     });
-  }
-
-  if (next.length > previous.length) {
-    // Appended blocks: one insert at the end of the last shared block.
-    const at = previous.length > 0 ? previous[previous.length - 1].range[1] : 0;
-    const added = next
-      .slice(previous.length)
-      .map((block) => renderBlock(block))
-      .join('\n\n');
-    writes.push({ kind: 'splice', path: ['content'], start: at, deleteCount: 0, insert: `\n\n${added}` });
-  } else if (next.length < previous.length) {
-    // Removed blocks: delete from the first dropped block to the end of the last.
-    const from = previous[next.length].range[0];
-    const to = previous[previous.length - 1].range[1];
-    writes.push({ kind: 'splice', path: ['content'], start: from, deleteCount: to - from, insert: '' });
   }
 
   return writes;

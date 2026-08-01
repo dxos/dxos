@@ -1,5 +1,5 @@
 ---
-'@dxos/echo-panproto': minor
+'@dxos/echo': minor
 ---
 
 New `Lens` namespace: an **object lens** that views one live ECHO object through a second declared type. Sibling of the existing `Panproto` wire lens, which crosses the serialization boundary to a foreign record — an object lens never creates a second object, so reads project the base object and writes invert onto it.

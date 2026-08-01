@@ -23,13 +23,12 @@ export const control = <T extends HTMLElement>(root: HTMLElement, label: string)
     throw new Error(`No field labelled "${label}".`);
   }
 
-  for (let node = labelNode.parentElement; node; node = node.parentElement) {
+  // Test the boundary BEFORE querying: querying `root` itself searches the whole panel and returns
+  // the first control in document order, which usually belongs to a different field.
+  for (let node = labelNode.parentElement; node && node !== root; node = node.parentElement) {
     const found = node.querySelector<T>(CONTROL);
     if (found) {
       return found;
-    }
-    if (node === root) {
-      break;
     }
   }
 

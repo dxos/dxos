@@ -40,6 +40,13 @@ export const scale = (factor: number): Codec<number, number> => ({
 
 /** Map between two closed value sets (enum to enum). Unknown inputs pass through unchanged. */
 export const lookup = <A extends string | number, B extends string | number>(forward: Record<A, B>): Codec<A, B> => {
+  // Two keys mapping to one value make `backward` lossy, which breaks the codec's own round trip —
+  // caught here at the definition site rather than later as a checkLaws violation.
+  const values = Object.values(forward);
+  if (new Set(values).size !== values.length) {
+    throw new TypeError('Lens: a lookup codec must be injective; two keys map to the same value.');
+  }
+
   const backward = Object.fromEntries(Object.entries(forward).map(([key, value]) => [value, key])) as Record<B, A>;
   return {
     decode: (value) => forward[value] ?? (value as unknown as B),

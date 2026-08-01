@@ -53,8 +53,19 @@ export class Lens extends Type.makeObject<Lens>(DXN.make('org.dxos.type.lens', '
  * store a lens that quietly loses a property — so this throws and names the offender.
  */
 export const toObject = (lens: AnyLens, options: { name?: string } = {}): Lens => {
+  // A coded lens has no per-property plan, so `?? []` would silently persist it as an EMPTY
+  // declarative mapping that rehydrates projecting nothing.
+  if (!lens.plan) {
+    throw new TypeError(`Lens: "${lens.id}" is coded and has no declarative mapping to persist.`);
+  }
+
+  const target = lens.target as Type.AnyEntity;
+  if (!Type.isType(target)) {
+    throw new TypeError('Lens: a plain-schema target cannot be persisted; declare an ECHO type.');
+  }
+
   const entries: Entry[] = [];
-  for (const entry of lens.plan?.entries ?? []) {
+  for (const entry of lens.plan.entries) {
     if (entry.origin === 'automatic') {
       // Re-derived on load from the same name/type match, so it is not stored.
       continue;
@@ -75,11 +86,7 @@ export const toObject = (lens: AnyLens, options: { name?: string } = {}): Lens =
     name: options.name,
     lens: lens.id,
     source: Type.getURI(lens.source),
-    target: Type.isType(lens.target as Type.AnyEntity)
-      ? Type.getURI(lens.target as Type.AnyEntity)
-      : (() => {
-          throw new TypeError('Lens: a plain-schema target cannot be persisted; declare an ECHO type.');
-        })(),
+    target: Type.getURI(target),
     entries,
   });
 };
@@ -92,6 +99,14 @@ export const toObject = (lens: AnyLens, options: { name?: string } = {}): Lens =
  * stored lens picks up a source property added since it was written.
  */
 export const fromObject = (stored: Lens, source: Type.AnyObj, target: Type.AnyObj): AnyLens => {
+  // The caller supplies the types, so a mismatch would read the stored overlay values under mappings
+  // that do not belong to them.
+  if (Type.getURI(source) !== stored.source || Type.getURI(target) !== stored.target) {
+    throw new TypeError(
+      `Lens: stored lens "${stored.lens}" declares ${stored.source} -> ${stored.target}; the supplied types do not match.`,
+    );
+  }
+
   const mapping: Record<string, unknown> = {};
   for (const entry of stored.entries) {
     switch (entry.kind) {

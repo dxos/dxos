@@ -10,6 +10,7 @@ import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { Lens } from '@dxos/echo-panproto';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { Task } from '@dxos/types';
 
@@ -167,7 +168,9 @@ describe('object lens over a database-backed object', () => {
     const task1 = db1.add(makeTask());
     await db1.flush();
 
-    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl, 'root url');
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
     await db2.updateIndexes();
 

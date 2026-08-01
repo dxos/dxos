@@ -50,7 +50,10 @@ export const of = <S, T extends Record<string, any>>(obj: Obj.Unknown, lens: Len
   const change = (callback: (draft: any) => void): void => {
     const recorded: Record<string, unknown> = {};
     const draft = new Proxy(Object.create(null), {
-      get: (_target, property) => (typeof property === 'string' ? view(property) : undefined),
+      // A read must observe a write recorded earlier in the same callback; `view` reads the base
+      // object, which has not been written yet.
+      get: (_target, property) =>
+        typeof property !== 'string' ? undefined : property in recorded ? recorded[property] : view(property),
       set: (_target, property, value) => {
         if (typeof property !== 'string') {
           return false;
@@ -67,7 +70,14 @@ export const of = <S, T extends Record<string, any>>(obj: Obj.Unknown, lens: Len
       },
       has: (_target, property) => typeof property === 'string' && (mapped.has(property) || overlays.has(property)),
       ownKeys: () => [...mapped, ...overlays],
-      getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }),
+      getOwnPropertyDescriptor: (_target, property) => ({
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        // Without a value the descriptor completes to `undefined`, so spreading the draft would erase
+        // every property it copies.
+        value: typeof property !== 'string' ? undefined : property in recorded ? recorded[property] : view(property),
+      }),
     });
 
     callback(draft);

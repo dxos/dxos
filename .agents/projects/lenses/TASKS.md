@@ -104,18 +104,20 @@ No UI. Tests are the consumer. Shaped as a namespace module from day one so prom
       both directions; the reverse pass is what surfaces `put`-totality gaps. — GetPut only; see API.md §9.
 - [x] **Registry** — resolve static and space-stored lenses by source typename.
 
-## Phase 2: Task → GTD lens
+## Phase 2: Task → GTD lens — DONE
 
-### Tasks — `register`/`resolve`/`lensesFor`/`sourcesFor`.
+### Tasks
 
-- [ ] **`GtdTask` ECHO type**, written out — the target the lensed UI is built against.
-- [ ] **`lenses/task-gtd.ts`** per the mapping table in DESIGN.md §5.A (status split, priority
-      convert, estimate unit convert; `title`/`description` automatic; `context`/`waitingOn`
-      overlay).
-- [ ] **Unit tests** — round-trip, laws, overlay persistence, and an explicit test that a lensed
+- [x] **`GtdTask` ECHO type**, written out — the target the lensed UI is built against.
+- [x] **The `Task`→`GtdTask` lens** per the mapping table in DESIGN.md §5.A (status split, priority
+      convert; `title`/`description` automatic; `context`/`waitingOn` overlay). — lives in
+      `stories-lens/src/gtd.ts`, not `echo-panproto`, per the Phase 0 layering correction.
+- [x] **Unit tests** — round-trip, laws, overlay persistence, and an explicit test that a lensed
       write touches _only_ the changed properties.
-- [ ] **Lensed UI** — a `Form` rendered from `GtdTask`, importing no `DataType.Task`.
-- [ ] **Reactive read path** — composed `Obj.atom` + `Annotation.atom`, no over-firing.
+- [x] **Lensed UI** — a `Form` rendered from `GtdTask`, importing no `Task`. The canonical panel is
+      the _same_ `Form` given `Task` instead, which is the demonstration.
+- [x] **Reactive read path** — no over-firing. Landed as a per-render projection over
+      `Obj.subscribe` rather than a composed atom; see the staleness note under Phase 4.
 
 ## Phase 3: Text → rich text lens — DONE
 
@@ -151,7 +153,6 @@ dependency — the same reason the GTD lens lives there.
 
 ### Known limits of the demo lens
 
-- Blocks carry plain text: no inline marks (bold/italic), so the ProseMirror editor is structural only.
 - Blocks are matched by position, so a reorder rewrites the affected span rather than moving it.
 - Block identity is per-parse, so ranges shift under a concurrent peer's edit to an _earlier_ block.
   The durable fix is Automerge cursors (Phase 6), which is also what comment anchors would need.
@@ -543,7 +544,7 @@ const draft = Lens.generate(LinearIssue, Task.Task);
 console.log(Lens.printMapping(draft));
 ```
 
-```
+```ts
 // 1 automatic · 1 proposed · 2 holes · 1 dropped
 Lens.make('org.dxos.lens.linear-issue-as-task', LinearIssue, Task.Task, {
   // title — automatic (String → String, same name). Omitted on purpose.
@@ -557,7 +558,7 @@ Lens.make('org.dxos.lens.linear-issue-as-task', LinearIssue, Task.Task, {
 
   // HOLE · `estimateMinutes` and `estimate` are both plain numbers. Neither declares a unit.
   estimate: Lens.hole('estimateMinutes'),
-})
+});
 // Dropped from the source: assigneeEmail — Task.assigned is Ref(Person), not a string.
 ```
 

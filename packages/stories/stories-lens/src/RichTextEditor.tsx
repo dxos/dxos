@@ -9,21 +9,13 @@ import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { type Obj } from '@dxos/echo';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
+import { Text } from '@dxos/schema';
 
-import {
-  type Block,
-  type Inline,
-  type Mark,
-  RICH_TEXT_LENS_ID,
-  type RichText,
-  RichTextLens,
-  blockText,
-} from './rich-text';
+import { type Block, type Inline, type Mark, RICH_TEXT_LENS_ID, RichTextLens, blockText } from './rich-text';
 
 //
 // A basic ProseMirror editor driven entirely by the lens. It never sees markdown: it reads a block
@@ -185,15 +177,19 @@ const signatureOf = (blocks: readonly Block[]): string =>
 /** Marks a transaction as coming from the lens, so writing it back is skipped. */
 const REMOTE = 'lens-remote';
 
-export const RichTextEditor = ({ text }: { text: Obj.Unknown }) => {
+export const RichTextEditor = ({ text }: { text: Text.Text }) => {
   const parentRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | undefined>(undefined);
-  const [view] = useLens(text, RichTextLens as Lens.Lens<any, RichText>);
+  const [view] = useLens(text, RichTextLens);
   const blocks = view?.blocks ?? [];
 
   // The blur handler and the reconcile effect both need the latest projection without re-mounting.
   const blocksRef = useRef<readonly Block[]>(blocks);
-  blocksRef.current = blocks;
+  // Assigned in an effect, not during render: an abandoned concurrent render must not leave a
+  // projection behind for the blur handler to apply.
+  useEffect(() => {
+    blocksRef.current = blocks;
+  }, [blocks]);
 
   /**
    * Replace the document with what the lens projects, as a transaction rather than a fresh state: it
@@ -228,7 +224,7 @@ export const RichTextEditor = ({ text }: { text: Obj.Unknown }) => {
         }
         // Write the block tree back through the lens. `put` diffs it against the tree the lens
         // currently projects and emits one splice per changed block.
-        Lens.put(text, RichTextLens as Lens.Lens<any, RichText>, { blocks: fromDoc(editor.state.doc) });
+        Lens.put(text, RichTextLens, { blocks: fromDoc(editor.state.doc) });
       },
       handleDOMEvents: {
         // A change that arrived while this editor had focus was deliberately skipped; apply it now the
@@ -267,8 +263,8 @@ export const RichTextEditor = ({ text }: { text: Obj.Unknown }) => {
  * The raw string matters to the demo now that both editors render marks rather than syntax: it is the
  * only pane that shows the markdown a splice actually rewrote.
  */
-export const BlockList = ({ text }: { text: Obj.Unknown }) => {
-  const [view] = useLens(text, RichTextLens as Lens.Lens<any, RichText>);
+export const BlockList = ({ text }: { text: Text.Text }) => {
+  const [view] = useLens(text, RichTextLens);
   const [snapshot] = useObject(text);
 
   return (
@@ -276,7 +272,7 @@ export const BlockList = ({ text }: { text: Obj.Unknown }) => {
       <Card.Section title='stored markdown'>
         <Card.Row fullWidth>
           <Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='raw-content'>
-            {(snapshot as { content?: string } | undefined)?.content ?? ''}
+            {snapshot?.content ?? ''}
           </Card.Text>
         </Card.Row>
       </Card.Section>

@@ -133,6 +133,41 @@ describe('diffBlocks', () => {
     expect(updated).to.contain('- Each block remembers its `source range`');
   });
 
+  test('a tail append survives an edit to the last shared block', ({ expect }) => {
+    // The ordering case: the last shared block is rewritten to a DIFFERENT length in the same diff as
+    // an append. With the tail write emitted last it would splice at an offset the rewrite had already
+    // moved, corrupting the document.
+    const blocks = parseBlocks(DEMO_MARKDOWN);
+    const next = [
+      ...blocks.slice(0, -1),
+      { ...blocks[blocks.length - 1], content: plain('A much, much longer final bullet than before') },
+      { type: 'paragraph' as const, content: plain('Appended after the rewrite.'), range: [0, 0] as [number, number] },
+    ];
+
+    const updated = applyToString(DEMO_MARKDOWN, diffBlocks(blocks, next));
+    expect(updated).to.contain('- A much, much longer final bullet than before');
+    expect(updated).to.contain('Appended after the rewrite.');
+    // The untouched region is verbatim — the property the whole lens is built around.
+    expect(updated).to.contain('# One object, two editors');
+    expect(updated).to.contain('## Why it merges');
+    expect(updated).to.contain('- Each block remembers its `source range`');
+    expect(updated).not.to.contain('So an edit splices that range alone');
+  });
+
+  test('a tail removal survives an edit to the last surviving block', ({ expect }) => {
+    const blocks = parseBlocks(DEMO_MARKDOWN);
+    const next = [
+      ...blocks.slice(0, -2),
+      { ...blocks[blocks.length - 2], content: plain('Rewritten to a very different length entirely') },
+    ];
+
+    const updated = applyToString(DEMO_MARKDOWN, diffBlocks(blocks, next));
+    expect(updated).to.contain('- Rewritten to a very different length entirely');
+    expect(updated).not.to.contain('So an edit splices that range alone');
+    expect(updated).to.contain('# One object, two editors');
+    expect(updated).to.contain('## Why it merges');
+  });
+
   test('an appended block inserts without touching the rest', ({ expect }) => {
     const blocks = parseBlocks(DEMO_MARKDOWN);
     const next = [

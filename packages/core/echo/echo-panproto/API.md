@@ -309,10 +309,14 @@ declared type (§1), so this path is less lossy than the stored-schema analogue.
 export const checkLaws: (lens: Lens.Any, options?: { instances?: number }) => LawCheckResult;
 ```
 
-Property-based, over instances built from the source type's `GeneratorAnnotation`s (`createProps`,
-`@dxos/schema/testing`) — `DataType.Task` already annotates every property, so zero fixtures. Also
-run in reverse over generated _target_ instances, which is what surfaces the `put`-totality gaps
-described in §4.1.
+**GetPut only, over the object's own current values** — pure, no mutation, no engine call, so it is
+cheap enough to run beside an assertion. It found two real defects while being written.
+
+PutGet is _not_ implemented: putting a generated target instance and reading it back needs a clone or
+a sample generator, and generators (`createProps`, `@dxos/schema/testing`) live outside `core/echo`.
+The property-based form — instances from the source type's `GeneratorAnnotation`s, plus the reverse
+pass that would surface the `put`-totality gaps in §4.1 — belongs in a consumer package; §9 tracks
+it.
 
 ## 9. Gaps in the proof of concept
 

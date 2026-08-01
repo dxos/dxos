@@ -45,6 +45,14 @@ const equal = (a: unknown, b: unknown): boolean => {
   if (Array.isArray(a) && Array.isArray(b)) {
     return a.length === b.length && a.every((value, index) => equal(value, b[index]));
   }
+  // A derived `put` that rebuilds a struct returns a new object every time, so reference equality
+  // would report a GetPut violation for values that match.
+  if (typeof a === 'object' && typeof b === 'object' && a !== null && b !== null) {
+    const left = a as Record<string, unknown>;
+    const right = b as Record<string, unknown>;
+    const keys = Object.keys(left);
+    return keys.length === Object.keys(right).length && keys.every((key) => equal(left[key], right[key]));
+  }
   return a === b;
 };
 
