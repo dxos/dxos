@@ -4,7 +4,7 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { FileCapabilities } from '@dxos/plugin-file/types';
+import { FileCapabilities, FileEvents } from '@dxos/plugin-file/types';
 
 import { WnfsCapabilities, WnfsEvents } from '#types';
 
@@ -13,7 +13,7 @@ export const BlobBackend = Capability.lazyModule(
   {
     requires: [ClientCapabilities.Client, WnfsCapabilities.Blockstore, WnfsCapabilities.Instances],
     provides: [FileCapabilities.Backend],
-    activatesOn: WnfsEvents.Start,
+    activatesOn: FileEvents.Start,
   },
   () => import('./blob-backend'),
 );

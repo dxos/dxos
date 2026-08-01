@@ -4,9 +4,7 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Connector as ConnectorCapability, ConnectorEvents } from '@dxos/plugin-connector';
-import { StudioCapabilities } from '@dxos/plugin-studio/types';
-
-import { IdeogramEvents } from '../events';
+import { StudioCapabilities, StudioEvents } from '@dxos/plugin-studio/types';
 
 export const Connector = Capability.lazyModule(
   'Connector',
@@ -15,6 +13,6 @@ export const Connector = Capability.lazyModule(
 );
 export const GenerationService = Capability.lazyModule(
   'GenerationService',
-  { provides: [StudioCapabilities.GenerationService], activatesOn: IdeogramEvents.Start },
+  { provides: [StudioCapabilities.GenerationService], activatesOn: StudioEvents.Start },
   () => import('./generation-service'),
 );
