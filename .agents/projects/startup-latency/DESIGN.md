@@ -223,3 +223,22 @@ saturation). Feature events load only what the session's data and actions actual
 a fresh document-editing session loads markdown and nothing else; the burst disappears
 entirely, replaced by small per-feature waves at interaction time (budgeted per the map's
 interaction-latency column).
+
+## Suspenseful client (2026-08-01, user-directed)
+
+Client init leaves the startup critical path: the Client module contributes the uninitialized
+client and forks `initialize()`; Startup completes and the shell renders; client-dependent
+hooks suspend (per-Surface Suspense boundaries already exist).
+
+- `@dxos/client`: `waitUntilInitialized()` — stable promise resolving on initialize.
+- `@dxos/react-client`: `useClient` suspends while `!client.initialized`; `ClientProvider`
+  gains a `suspend` prop — provides context immediately instead of rendering the fallback
+  subtree-wide (legacy blocking behavior unchanged for other apps).
+- `@dxos/halo-adapter-client`: adapters become construction-safe pre-init — streams open after
+  init; `getSnapshot` pre-init is "unknown", NOT "no identity" (a none reading pre-init would
+  flash onboarding on reload — identity gates must suspend or wait for the first emission).
+- plugin-client: fork init with milestones + post-init continuation (callback, reload/reconnect
+  wiring, SpacesReady subscription); failure surfaces via log.error + plugin failure record.
+- Audit: startup-pass module bodies that call initialized-only client APIs; headless paths
+  (harness initializeIdentity, operations) explicitly await init.
+- Metrics shift: profilerTotal stops covering client init; navToReady/first-editor keep it.
