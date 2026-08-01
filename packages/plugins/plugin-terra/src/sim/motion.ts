@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TerraConfigValues, type Vec3, add, makeSampler, normalize, radiusAt, scale, seaRadius } from '../engine';
+import { type TerraConfigValues, type Vec3, makeSampler, radiusAt, seaRadius } from '../engine';
 import { type TerraObject } from '../types';
-import { angleBetween, bearingOfTangent, bearingTo, geodesicTangent, toUnit } from './geo';
+import { angleBetween, bearingOfTangent, bearingTo, geodesicTangent, slerp, toUnit } from './geo';
 
 /** Flight stage of a rocket, derived from flight fraction — never stored across calls. */
 export type RocketPhase = 'boost' | 'cruise' | 'descent';
@@ -53,18 +53,6 @@ const DEG = Math.PI / 180;
 const FALLBACK_UNIT: Vec3 = [0, 1, 0];
 
 const clampNonNegative = (value: number): number => Math.max(0, value);
-
-/** Interpolates along the great circle between two unit vectors. */
-const slerp = (from: Vec3, to: Vec3, fraction: number): Vec3 => {
-  const angle = angleBetween(from, to);
-  if (angle < 1e-12) {
-    return from;
-  }
-  const sin = Math.sin(angle);
-  const left = Math.sin((1 - fraction) * angle) / sin;
-  const right = Math.sin(fraction * angle) / sin;
-  return normalize(add(scale(from, left), scale(to, right)));
-};
 
 /**
  * Bearing at the end of the last non-degenerate segment in a route (the course an object arrives

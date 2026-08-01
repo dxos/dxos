@@ -4,3 +4,4 @@
 
 export * from './TelemetryPanel';
 export * from './TerraForm';
+export * from './TerraMap';
