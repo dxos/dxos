@@ -320,11 +320,33 @@ Activation optimization (each lever measured individually via harness + TBT):
       one-shot LayerSpec snapshot misses deferred specs (`generateHomeSuggestions` →
       ServiceNotAvailable) — fix by re-snapshotting on the deferred wave or making the
       collection reactive before this graduates from PoC.
+- [x] Eval-floor sweep round 1 (2026-08-01): boot eval floor (entry static-import closure)
+      measured at 9.4 MB of 67.6 MB dist; per-plugin defs are ~0.3 MB of it (disabled plugins
+      ~0.2 MB — **meta-only loading is already effectively true**; the floor is shared/vendor
+      code). Fixes: AppCapability.schema loader form (plugin-assistant exemplar),
+      @dxos/assistant/ExecutionGraph subpath (react-ui-components hook rode the barrel →
+      @effect/ai → fast-check/zod/ajv on the boot path), plugin-progress lazyModule
+      conversion. Floor 9.40 → 8.78 MB; fast-check/ajv/@effect-ai gone from boot reach.
+      Remaining floor members to chase: profile-state-machine (257 kB), crypto (196 kB),
+      compression (115 kB), react (773 kB — irreducible).
+- [x] Handler-gating regression fix (2026-08-01): toolkit operation handler sets
+      (runInstructions et al.) were contributed by the SkillsRequested-gated skill-definition
+      module → headless invocation hit NoHandlerError (pre-existing on branch, surfaced by
+      plugin-assistant tests). Sets moved to the eager OperationHandler module (lazy-bodied,
+      cheap); skills stay gated; tests updated to the demand-gate design.
 - [ ] Lever 7 — streaming start: begin round 1 as plugin definitions register instead of
-      after the full enable set (Client could start ~1.4 s earlier).
+      after the full enable set (Client could start ~1.4 s earlier — now the largest
+      module-side block on the critical path).
 - [ ] Graduate the PoC: replace the coarse DeferredStartup gate with precise demand events
-      per module class; fix the LayerSpec snapshot coupling; audit post-idle UX (late
-      surfaces, remount behavior of deferred ReactRoot/ReactContext).
+      per module class; fix the LayerSpec snapshot coupling (generateHomeSuggestions
+      ServiceNotAvailable); audit post-idle UX (late surfaces, remount behavior of deferred
+      ReactRoot/ReactContext); tune the 14-plugin keep set.
+
+**State after this round (warm-cold single run, in-container):** navToReady 10.0 s,
+first-interactive 7.6 s, TBT 1.05 s, client.initialize 1.74 s. Module-side share of
+main:start → spaces-ready is ~1.9 s (enable window ~1.4 s + residual fan-out) vs
+client-init 1.74 s — module work is now at parity with client init, down from 3–4× larger;
+post-spaces-ready module waves ~1.4 s to first-interactive.
 
 Parked (harness): warm-cold document priming for `milestone:first-editor-interactive` —
 hand-rolled primer UI script was flaky (create-space/createObject races); reverted to the
