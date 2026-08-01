@@ -12,7 +12,7 @@ integration is explicitly out of scope for this milestone.
 
 ## Topology
 
-```
+```text
 Claude (dx CLI / smoke)──┐
 Claude Desktop ── cloudflared https ──► mcp-space-service :8791
                                           │ service bindings (local dev registry)
@@ -62,8 +62,9 @@ process; restart + re-record on drop.
 
 ## Risks / fallbacks
 
-- mcp-space-service local bindings resolving to the _local_ `edge`/`operation-service` workers is
-  designed-for but unproven — verify first; fix on an edge branch if broken.
+- ~~mcp-space-service local bindings resolving to the _local_ `edge`/`operation-service` workers is
+  designed-for but unproven~~ — RESOLVED 2026-07-31: all bindings report `local [connected]` and the
+  document round-trip ran against the local plane end to end.
 - `updateDocument` → Composer liveness depends on local edge replication; if stale, document with
   evidence and check `runtime.client.edgeFeatures` flags.
 - Wrangler + vite + playwright on one machine is heavy; fallback `composer-app:serve-min`.
