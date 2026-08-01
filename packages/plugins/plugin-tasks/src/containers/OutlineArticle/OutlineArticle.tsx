@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
@@ -54,21 +54,19 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
   // Task titles are edited independently of the document, so the link text is reconciled from the
-  // live objects rather than trusted as written. Scoped to the outline's own task set (children of
-  // the parent edge) so unrelated tasks in the space neither load nor retrigger the sync.
+  // live objects rather than trusted as written. A type query re-emits on task edits (a
+  // `children()` query does not re-emit on a child's property change); membership is then the
+  // parent edge, so unrelated tasks in the space are dropped before the map is built.
   const taskSet = outline.taskSet?.target;
-  const children = useQuery(
-    space?.db,
-    taskSet ? Query.select(Filter.id(taskSet.id)).children() : Query.select(Filter.nothing()),
-  );
+  const tasks = useQuery(space?.db, taskSet ? Filter.type(Task.Task) : Filter.nothing());
   const resolveLinkLabel = useMemo(() => {
     const labels = new Map(
-      children
-        .filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child))
+      tasks
+        .filter((task) => Obj.getParent(task)?.id === taskSet?.id)
         .map((task) => [Obj.getURI(task).toString(), task.title]),
     );
     return (url: string) => labels.get(url);
-  }, [children]);
+  }, [tasks, taskSet]);
 
   const taskActions = useMenuBuilder(
     (): ActionGraphProps =>
