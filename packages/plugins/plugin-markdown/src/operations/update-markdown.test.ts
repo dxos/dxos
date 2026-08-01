@@ -4,18 +4,48 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { SpaceProperties } from '@dxos/client-protocol';
+import { Operation, Skill } from '@dxos/compute';
+import { Collection, Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
+import { Text } from '@dxos/schema';
+import { HasSubject } from '@dxos/types';
 
+import { MarkdownOperationHandlerSet } from '#operations';
 import { OperationTestLayer, WithProperties } from '#testing';
 
 import { MarkdownOperation } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
+
+/** Outline-shaped text-bearing type (mirrors `org.dxos.type.outline`): not a `Markdown.Document`. */
+class TestOutline extends Type.makeObject<TestOutline>(DXN.make('com.example.type.testOutline', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    content: Ref.Ref(Text.Text),
+  }),
+) {}
+
+/** `OperationTestLayer` plus the outline-shaped type. */
+const OutlineTestLayer = AssistantTestLayer({
+  operationHandlers: MarkdownOperationHandlerSet,
+  types: [
+    SpaceProperties,
+    Collection.Collection,
+    Skill.Skill,
+    Markdown.Document,
+    HasSubject.HasSubject,
+    Feed.Feed,
+    TestOutline,
+    Text.Text,
+  ],
+  disableLlmMemoization: true,
+});
 
 describe('Update', () => {
   it.effect(
@@ -90,6 +120,33 @@ describe('Update', () => {
       },
       WithProperties,
       Effect.provide(OperationTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'edits any text-bearing document, not only Markdown.Document',
+    Effect.fnUntraced(
+      function* (_) {
+        // The MCP document tools route outline edits through this operation; a typed resolve
+        // used to reject anything that was not a Markdown.Document.
+        const outline = Obj.make(TestOutline, {
+          name: 'MCP Tasks',
+          content: Ref.make(Text.make({ content: '- [ ] Update tasks via MCP' })),
+        });
+        yield* Database.add(outline);
+
+        const { newContent } = yield* Operation.invoke(MarkdownOperation.Update, {
+          doc: Ref.make(outline),
+          edits: [{ newString: '\n- [ ] Added from the operation' }],
+        });
+
+        expect(newContent).toBe('- [ ] Update tasks via MCP\n- [ ] Added from the operation');
+        const text = yield* Database.load(outline.content);
+        expect(text.content).toBe('- [ ] Update tasks via MCP\n- [ ] Added from the operation');
+      },
+      WithProperties,
+      Effect.provide(OutlineTestLayer),
       TestHelpers.provideTestContext,
     ),
   );

@@ -53,6 +53,9 @@ export const translations = [
         'quick-entry-save-and-continue.label': 'Save & Add Another',
 
         'delete-row.menu': 'Delete row',
+        'convert-to-task.menu': 'Convert to task',
+
+        'back.label': 'Back to outline',
       },
     },
   },
