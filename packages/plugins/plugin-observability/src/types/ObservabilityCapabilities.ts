@@ -7,6 +7,7 @@
 import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Client } from '@dxos/client';
 import { type Observability as ObservabilityNs } from '@dxos/observability';
@@ -44,3 +45,8 @@ export const LogDownloader = Capability.makeSingleton<LogDownloader>()(`${meta.p
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.
 // TODO(burdon): Figure out how to share defs.
 export const ClientCapability = Capability.makeSingleton<Client>()('org.dxos.plugin.client.capability.client');
+
+// Cloned from the client plugin for the same reason: fired once its forked initialize()
+// completes; modules reading initialized-only client APIs (`services`, `halo`, `spaces`)
+// at activation ride this instead of the startup pass.
+export const ClientInitialized = ActivationEvent.make('org.dxos.plugin.client.event.initialized');

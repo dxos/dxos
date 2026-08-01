@@ -21,6 +21,9 @@ export const ClientReady = Capability.lazyModule(
       ObservabilityCapabilities.State,
     ],
     provides: [],
+    // Reads `client.services` (initialized-only) to wire metrics providers, so it needs the
+    // forked client initialization to have completed.
+    activatesOn: ObservabilityCapabilities.ClientInitialized,
   },
   () => import('./client-ready'),
 );
