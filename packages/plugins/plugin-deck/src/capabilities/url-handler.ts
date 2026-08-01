@@ -18,7 +18,13 @@ import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities, DEFAULT_DECK_ID, type StoredDeckState, defaultDeck } from '#types';
 
-import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, resolveCompanionAnchor, serializeDeckToUrl } from '../util';
+import {
+  COMPANION_VIEW_STATE_CONTEXT,
+  companionAspect,
+  getRenderedPlanks,
+  resolveCompanionAnchor,
+  serializeDeckToUrl,
+} from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /** Bounded retry for URL resolution while a cold restore's container chain finishes loading. */
@@ -300,7 +306,10 @@ export default Capability.makeModule(
       // it is read here only to place the companion, and a bare attention change does not resync the URL.
       let companion: { plankId: string; node: PathResolution.RepresentedNode } | undefined;
       if (deck.companionOpen && deck.active.length > 0) {
-        const plankId = resolveCompanionAnchor(deck.active, attention.getCurrent());
+        // Resolved against the rendered planks, not `deck.active`: under `flatten` only the current plank
+        // is laid out, so anchoring to an earlier one would serialize a companion the deck cannot render.
+        const rendered = getRenderedPlanks(deck.active, registry.get(settingsAtom)?.flatten);
+        const plankId = resolveCompanionAnchor(rendered, attention.getCurrent());
         const selection = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
         if (plankId && selection.variant) {
           const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;

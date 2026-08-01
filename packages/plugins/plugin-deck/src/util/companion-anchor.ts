@@ -3,6 +3,21 @@
 //
 
 /**
+ * The planks the deck actually lays out: `flatten` collapses the stack to the current (last) plank,
+ * surfacing the rest as breadcrumbs. The companion anchors within this set, never within `deck.active`
+ * — anchoring it to a plank that is not rendered would place it outside every tile (and serialize a URL
+ * that restores that way).
+ */
+export const getRenderedPlanks = (active: readonly string[], flatten: boolean | undefined): string[] => {
+  if (!flatten) {
+    return [...active];
+  }
+
+  const current = active[active.length - 1];
+  return current ? [current] : [];
+};
+
+/**
  * The open plank attention currently points into, or undefined when it points nowhere in the deck.
  * Attention can rest on something nested inside a plank (a child attendable, or the companion pane
  * itself, which shares its context plank's `attendableId`), so ids are matched by path prefix.

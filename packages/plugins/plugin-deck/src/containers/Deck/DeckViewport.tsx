@@ -49,7 +49,7 @@ import {
 import { meta } from '#meta';
 import { DeckOperation, Keyshortcuts } from '#types';
 
-import { findAttendedPlank, layoutAppliesTopbar } from '../../util';
+import { findAttendedPlank, getRenderedPlanks, layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
@@ -220,11 +220,7 @@ const useRenderedPlanks = (): RenderedPlanks => {
   const { deck } = useDeckContext('useRenderedPlanks');
   const { flatten } = useDeckSettings();
   const attended = useAttended();
-  const lastPlank = deck.active[deck.active.length - 1];
-  const planks = useMemo(
-    () => (flatten ? (lastPlank ? [lastPlank] : []) : [...deck.active]),
-    [flatten, lastPlank, deck.active],
-  );
+  const planks = useMemo(() => getRenderedPlanks(deck.active, flatten), [flatten, deck.active]);
   // The attended plank is both what the companion attaches to and what the deck collapses around, so it
   // is resolved once here. Only the companion takes the last-plank fallback: collapsing the deck around a
   // plank nobody attended would scroll it out from under the user.
@@ -265,8 +261,19 @@ const useSplitSize = (size: number | undefined, persist: (size: number) => void)
   const [liveSize, setLiveSize] = useState(size);
   useEffect(() => setLiveSize(size), [size]);
 
+  // Cancel before flushing, or the already-scheduled timer fires after unmount and dispatches the same
+  // size a second time.
   const pending = useRef<{ timer: ReturnType<typeof setTimeout>; flush: () => void } | undefined>(undefined);
-  useEffect(() => () => pending.current?.flush(), []);
+  useEffect(
+    () => () => {
+      const scheduled = pending.current;
+      if (scheduled) {
+        clearTimeout(scheduled.timer);
+        scheduled.flush();
+      }
+    },
+    [],
+  );
 
   // Held in a ref so a caller whose closure changes per render (it closes over the current sizes) never
   // restarts the debounce mid-drag.
@@ -770,7 +777,8 @@ const scrollPlankToPile = ({
 }) => {
   const styles = getComputedStyle(stack);
   const gap = parseFloat(styles.columnGap) || 0;
-  let naturalLeft = parseFloat(styles.paddingLeft) || 0;
+  // The logical property, so this and `useMaxPlankWidth` read the same inset.
+  let naturalLeft = parseFloat(styles.paddingInlineStart) || 0;
   for (let plank = 0; plank < index; plank++) {
     naturalLeft += tiles[plank].offsetWidth + gap;
   }
