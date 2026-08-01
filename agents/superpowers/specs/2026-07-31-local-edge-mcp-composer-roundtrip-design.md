@@ -62,7 +62,7 @@ process; restart + re-record on drop.
 
 ## Risks / fallbacks
 
-- mcp-space-service local bindings resolving to the *local* `edge`/`operation-service` workers is
+- mcp-space-service local bindings resolving to the _local_ `edge`/`operation-service` workers is
   designed-for but unproven — verify first; fix on an edge branch if broken.
 - `updateDocument` → Composer liveness depends on local edge replication; if stale, document with
   evidence and check `runtime.client.edgeFeatures` flags.
