@@ -28,21 +28,31 @@ export const addSubjectsToActiveDeck = (
   const next = [...active];
   const pivotIndex = pivotId ? next.indexOf(pivotId) : -1;
   let insertAt = pivotIndex !== -1 ? pivotIndex + 1 : next.length;
-  // Only the first subject takes over the name; the rest insert after it, as an unnamed open would.
-  let replaceIndex = replaceId ? next.indexOf(replaceId) : -1;
-  for (const entryId of subject) {
-    if (next.includes(entryId)) {
-      continue;
+  // Only the first subject may take over the name, because that is the one the name is bound to (see
+  // the Open handler). Letting a later subject take it instead would leave the name pointing at a
+  // different plank than the one that replaced the old occupant.
+  const replaceIndex = replaceId ? next.indexOf(replaceId) : -1;
+  subject.forEach((entryId, index) => {
+    const openIndex = next.indexOf(entryId);
+    if (index === 0 && replaceIndex !== -1) {
+      if (openIndex !== -1) {
+        // Already open, so it keeps its own place and takes the name with it; the plank that held the
+        // name stays open as an ordinary one rather than being replaced by something else.
+        insertAt = openIndex + 1;
+      } else {
+        next[replaceIndex] = entryId;
+        insertAt = replaceIndex + 1;
+      }
+      return;
     }
-    if (replaceIndex !== -1) {
-      next[replaceIndex] = entryId;
-      insertAt = replaceIndex + 1;
-      replaceIndex = -1;
-      continue;
+
+    if (openIndex !== -1) {
+      return;
     }
+
     next.splice(insertAt, 0, entryId);
     insertAt += 1;
-  }
+  });
   return next;
 };
 
