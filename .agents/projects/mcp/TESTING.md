@@ -83,4 +83,5 @@ DX_SOURCE=1 ./bin/dx -p mcp-local halo share --open --host http://localhost:5173
 
 - Auth-code invitations expire; regenerate rather than debugging stale codes.
 - `whoami` reports `haloSpaceId` for the session — don't confuse it with the data space id.
-- `listSpaces` / `querySpace` are marked BROKEN in the MCP server README.
+- `querySpace` WORKS despite the README's BROKEN label (verified: returns objects by typename with documentJson); `listSpaces` untested.
+- `readDocument` works on any object with a `content` Text ref (verified on an Outline); `updateDocument` is type-gated to `Markdown.Document` (`MarkdownOperation.Update` input schema) and rejects outlines with an isInstanceOf invariant.

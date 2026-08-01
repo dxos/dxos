@@ -21,6 +21,8 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 ## Milestone 2 — task-planning ⇄ Composer documents (next)
 
 - [ ] Prototype: task-planning skill reads/writes DESIGN.md/TASKS.md as Composer documents via MCP
+- [ ] BLOCKER for outlines: MCP updateDocument fails on Outline objects — MarkdownOperation.Update pins `doc: Ref.Ref(Markdown.Document)` (isInstanceOf invariant, Database.ts:408) while Open duck-types on the content ref, so readDocument works on outlines but updateDocument does not. Fix: widen Update (and listDocuments?) to any text-bearing document, or add an outline operation; note the fix only reaches the MCP stack after edge bumps its @dxos pin (operation-service bundles plugin-markdown)
+- [ ] querySpace is NOT broken (README stale): returned the Outline by typename with full documentJson — fix the README claim; listSpaces still untested
 - [ ] Reference: edge PR #781 (mcp-space-service README: commands, deploy, dx CLI round-trip)
 
 ## Backlog
