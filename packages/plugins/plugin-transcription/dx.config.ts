@@ -36,7 +36,7 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-transcription',
     icon: { key: 'ph--microphone--regular', hue: 'sky' },
     spec: 'PLUGIN.mdl',
-    tags: ['labs'],
+    tags: ['alpha'],
     screenshots: [],
   },
 });

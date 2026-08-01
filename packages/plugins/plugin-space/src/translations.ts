@@ -212,6 +212,8 @@ export const translations = [
         'saving-locally.label': 'Writing to disk',
         'downloading.label': 'Replicating from peers',
         'uploading.label': 'Replicating to peers',
+        'stalled.label': 'Replication stalled',
+        'disconnected.label': 'Not connected (changes not replicated)',
         'offline-persisted.label': 'Saved to disk (offline)',
         'remote-synced.label': 'Synced with peers',
         'syncing.label': 'Space syncing',

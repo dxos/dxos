@@ -75,6 +75,8 @@ export interface MarkdownStreamController extends XmlWidgetStateManager {
   navigateNext: () => void;
   navigatePrevious: () => void;
   setContext: (context: any) => void;
+  /** Re-applies the last context set. Idempotent; a no-op when none was set or the view is absent. */
+  flushContext: () => void;
   setContent: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
 }
@@ -159,6 +161,9 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     // DOM node for the footer block widget — populated when its decoration mounts.
     const [footerRoot, setFooterRoot] = useState<HTMLElement | null>(null);
 
+    // Survives a context set before the view exists; flushed once it does (see `flushContext`).
+    const pendingContextRef = useRef<{ value: any } | undefined>(undefined);
+
     // Codemirror editor.
     const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
       slots,
@@ -186,9 +191,11 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           return;
         }
 
-        // Set content and scroll to bottom.
+        // Set content and scroll to bottom. Re-assert the host context rather than clearing it: it
+        // belongs to the host, not the document, so nulling it here would strand every widget in the
+        // replacement document with `context: undefined`.
         viewRef.current.dispatch({
-          effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
+          effects: [xmlTagContextEffect.of(pendingContextRef.current?.value ?? null), xmlTagResetEffect.of(null)],
           changes: [{ from: 0, to: viewRef.current.state.doc.length, insert: text }],
           annotations: typewriterBypass.of(true),
           selection: EditorSelection.cursor(text.length),
@@ -197,15 +204,24 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // New queue.
         setQueue(Effect.runSync(Queue.unbounded<string>()));
       },
-      [contentRef, viewRef, setQueue],
+      [contentRef, viewRef, setQueue, pendingContextRef],
     );
 
     // Controller API.
     useImperativeHandle(
       forwardedRef,
-      () => createMarkdownStreamController({ contentRef, viewRef, queueRef, onReset }),
+      () => createMarkdownStreamController({ contentRef, viewRef, queueRef, onReset, pendingContextRef }),
       [onReset],
     );
+
+    // Apply a context that was set before the view existed — the dispatch in `setContext` is a no-op
+    // until then, and a host mounting the controller has no way to know.
+    useEffect(() => {
+      const pending = pendingContextRef.current;
+      if (view && pending) {
+        view.dispatch({ effects: xmlTagContextEffect.of(pending.value) });
+      }
+    }, [view]);
 
     // Widget events.
     useEffect(() => {
@@ -317,6 +333,7 @@ const useMarkdownStreamTextEditor = (
               hideTags: true,
             }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            // TODO(burdon): Folding gets progressively off due to some widgets?
             turnFolding({ source: turnSource }),
             scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&
@@ -397,16 +414,25 @@ type MarkdownStreamControllerDeps = {
   viewRef: RefObject<EditorView | null>;
   queueRef: RefObject<Queue.Queue<string>>;
   onReset: (text: string) => Promise<void>;
+  /**
+   * Holds a context set before the view existed, for {@link flushContext} to apply once it does.
+   * Also re-applied after a document reset, which rebuilds decorations from a state without it.
+   */
+  pendingContextRef: RefObject<{ value: any } | undefined>;
 };
 
 /**
  * External controller API.
+ *
+ * @internal Exported for tests via `@dxos/react-ui-markdown/testing`; hosts get this through the
+ * component's ref.
  */
-const createMarkdownStreamController = ({
+export const createMarkdownStreamController = ({
   contentRef,
   viewRef,
   queueRef,
   onReset,
+  pendingContextRef,
 }: MarkdownStreamControllerDeps): MarkdownStreamController => {
   return {
     get length() {
@@ -466,11 +492,28 @@ const createMarkdownStreamController = ({
       });
     },
 
-    /** Set the context for widgets (XML tags). */
+    /**
+     * Set the context for widgets (XML tags).
+     *
+     * Remembered as well as dispatched: a host has no signal for when the view exists, and the
+     * dispatch is a no-op before it does — so without this a context set on mount is silently lost and
+     * every widget callback through it dies on an optional call. {@link flushContext} re-applies it.
+     */
     setContext: (context: any) => {
+      pendingContextRef.current = { value: context };
       viewRef.current?.dispatch({
         effects: xmlTagContextEffect.of(context),
       });
+    },
+
+    /** Re-applies the last context set, if any. Called once the view exists and after a reset. */
+    flushContext: () => {
+      const pending = pendingContextRef.current;
+      if (pending && viewRef.current) {
+        viewRef.current.dispatch({
+          effects: xmlTagContextEffect.of(pending.value),
+        });
+      }
     },
 
     /** Reset document. */
