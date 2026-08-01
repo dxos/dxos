@@ -3,9 +3,7 @@
 //
 
 import { type Decorator, type StoryContext } from '@storybook/react';
-import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import React, { useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
@@ -111,7 +109,9 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
       return () => {
         pluginManager.capabilities.remove(capability.interface, capability.implementation);
-        void EffectEx.runAndForwardErrors(pluginManager.shutdown());
+        // A story switch tears down while the start-event trickle is still activating, which
+        // interrupts the shutdown fiber — expected; real failures still surface.
+        EffectEx.runDetached(pluginManager.shutdown());
       };
     }, [storyId, init]);
 
@@ -136,13 +136,9 @@ const WithPluginManagerApp = ({
     await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
     // Mirror the host contract (composer fires every plugin's start event at idle): stories
     // see the module set the app converges to, so start-gated modules are present. A story
-    // switch shuts the manager down mid-trickle, interrupting the whole activation fiber —
-    // inspect the exit so that expected teardown interruption does not surface as an
-    // unhandled rejection, while real failures still throw.
-    const exit = await Effect.runPromiseExit(ActivationEvents.activateAllPluginStartEvents(pluginManager));
-    if (Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause)) {
-      EffectEx.unwrapExit(exit);
-    }
+    // switch shuts the manager down mid-trickle, interrupting the activation fiber —
+    // expected; real failures still surface.
+    EffectEx.runDetached(ActivationEvents.activateAllPluginStartEvents(pluginManager));
   }, [fireEvents, pluginManager, storyId]);
 
   // Default to a fallback that offers "Download logs" so a crashed story is still debuggable;

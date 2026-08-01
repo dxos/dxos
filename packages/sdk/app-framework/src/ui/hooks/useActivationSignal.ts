@@ -21,6 +21,6 @@ export const useActivationSignal = (event: ActivationEvent.ActivationEvent): voi
     if (!manager) {
       return;
     }
-    void EffectEx.runAndForwardErrors(manager.activate(event));
+    EffectEx.runDetached(manager.activate(event));
   }, [manager, event]);
 };

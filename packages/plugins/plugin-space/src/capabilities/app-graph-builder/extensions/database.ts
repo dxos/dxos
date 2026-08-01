@@ -55,7 +55,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       return;
     }
     createEntriesRequested = true;
-    void EffectEx.runAndForwardErrors(pluginManager.activate(SpaceEvents.CreateObjectRequested));
+    EffectEx.runDetached(pluginManager.activate(SpaceEvents.CreateObjectRequested));
   };
 
   return yield* Effect.all([

@@ -57,7 +57,7 @@ const requestSurfaces = (manager: PluginManager.PluginManager | undefined, role:
     return;
   }
   requested.add(role);
-  void EffectEx.runAndForwardErrors(manager.activate(ActivationEvents.SurfacesRequested(role)));
+  EffectEx.runDetached(manager.activate(ActivationEvents.SurfacesRequested(role)));
 };
 
 /**
