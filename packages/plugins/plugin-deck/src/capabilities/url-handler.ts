@@ -346,7 +346,12 @@ export default Capability.makeModule(
     yield* Effect.gen(function* () {
       yield* Effect.scoped(
         Effect.gen(function* () {
+          // Subscribe before consulting the fired-set: a publish between the check and the
+          // subscription would otherwise be missed and hang the restore forever.
           const subscription = yield* PubSub.subscribe(manager.activation);
+          if (manager.getEventsFired().includes(ActivationEvents.Startup.id)) {
+            return;
+          }
           for (;;) {
             const message = yield* Queue.take(subscription);
             if (message.event === ActivationEvents.Startup.id && message.state === 'activated' && !message.module) {

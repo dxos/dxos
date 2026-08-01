@@ -71,7 +71,17 @@ export const empty: OperationHandlerSet = {
  * ```
  */
 export const make = (...handlers: Operation.WithHandler<Operation.Definition.Any>[]): OperationHandlerSet => {
-  return async(() => Promise.resolve(handlers));
+  // Handlers are already materialized, so this set can answer per-key lookups directly. Without
+  // this, `resolveFromSets` consults keyed sets first and a later keyed contribution shadows an
+  // earlier `make` override — resolution must honor contribution order across both kinds.
+  return {
+    ...async(() => Promise.resolve(handlers)),
+    definitions: () => handlers,
+    getHandlerFor: (key) => {
+      const normalized = normalizeKey(key);
+      return Promise.resolve(handlers.find((handler) => normalizeKey(handler.meta.key) === normalized));
+    },
+  };
 };
 
 export const async = (

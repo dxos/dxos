@@ -132,6 +132,9 @@ const WithPluginManagerApp = ({
   // Fire deprecated events only after the effect-owned manager for this story exists.
   useAsyncEffect(async () => {
     await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
+    // Mirror the host contract (composer fires the after-startup gate at idle): stories see
+    // the module set the app converges to, so DeferredStartup-gated modules are present.
+    await EffectEx.runAndForwardErrors(pluginManager.activate(ActivationEvents.DeferredStartup));
   }, [fireEvents, pluginManager, storyId]);
 
   // Default to a fallback that offers "Download logs" so a crashed story is still debuggable;

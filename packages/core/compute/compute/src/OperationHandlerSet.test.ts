@@ -149,4 +149,22 @@ describe('OperationHandlerSet.keyed', () => {
     expect(fromUnkeyed.meta.key).toEqual(KEY_B);
     expect(forced).toBeGreaterThan(0);
   });
+
+  test('an earlier make-set override wins over a later keyed set for the same key', async ({ expect }) => {
+    // A materialized `make` set answers per-key lookups directly, so resolution honors
+    // contribution order — a later keyed contribution must not shadow an earlier override
+    // (e.g. a story or test stubbing an operation a plugin also handles).
+    const overrideHandler = makeHandler(KEY_A, 'override');
+    const override = OperationHandlerSet.make(overrideHandler);
+    const keyed = OperationHandlerSet.keyed([
+      [
+        Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }),
+        () => Promise.resolve({ default: makeHandler(KEY_A, 'plugin') }),
+      ],
+    ]);
+    const merged = OperationHandlerSet.merge(override, keyed);
+
+    const found = await Effect.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
+    expect(found).toBe(overrideHandler);
+  });
 });
