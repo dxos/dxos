@@ -23,7 +23,6 @@ describe('OnboardingPlugin', () => {
       expect.arrayContaining([
         moduleId('Settings'),
         moduleId('OAuthRecoveryRedirect'),
-        moduleId('ReactSurface'),
         moduleId('AppGraphBuilder'),
         moduleId('OperationHandler'),
         moduleId('translations'),

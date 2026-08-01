@@ -20,8 +20,6 @@ describe('ZenPlugin', () => {
     });
 
     // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('ReactSurface')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
   });
 });

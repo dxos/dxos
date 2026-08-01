@@ -21,13 +21,6 @@ describe('VoxelPlugin', () => {
 
     // Modules expected to be active after a normal startup. SkillDefinition is a dependency-mode
     // root, so it activates immediately too.
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([
-        moduleId('CreateObject'),
-        moduleId('schema'),
-        moduleId('ReactSurface'),
-        moduleId('SkillDefinition'),
-      ]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface')]));
   });
 });

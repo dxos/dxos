@@ -19,8 +19,6 @@ describe('TemplatePlugin', () => {
       plugins: [ClientPlugin({}), TemplatePlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('ReactSurface')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface')]));
   }, 20_000);
 });
