@@ -6,9 +6,30 @@ import React, { type PropsWithChildren, createContext, useContext, useEffect, us
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SPRITE_URL = '/icons.svg';
-const PHOSPHOR_BASE = '/phosphor';
 
-const SYMBOL_PATTERN = /^([a-z0-9]+)--([a-z0-9-]+)--(bold|duotone|fill|light|regular|thin)$/;
+const SYMBOL_PATTERN = /^([a-z0-9]+)--([a-z0-9-]+)--([a-z]+)$/;
+
+/**
+ * Locates the standalone SVG for one icon set, so glyphs missing from the static sprite can be
+ * fetched at runtime. The route must be served by the host (see the `assets` option of
+ * `@dxos/vite-plugin-icons`); sets without a source stay sprite-only.
+ */
+export type IconSource = {
+  /** Symbol-name prefix, e.g. `ph` for `ph--house--regular`. */
+  iconSet: string;
+  /** Resolves a parsed symbol name to a URL. */
+  url: (name: string, variant: string) => string;
+};
+
+/**
+ * Phosphor's published layout: `{variant}/{name}[-{variant}].svg`, regular being unsuffixed.
+ */
+export const phosphorIconSource = (route = '/phosphor'): IconSource => ({
+  iconSet: 'ph',
+  url: (name, variant) => `${route}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+});
+
+const defaultSources: IconSource[] = [phosphorIconSource()];
 
 export type IconRegistry = {
   hasIcon(name: string): boolean;
@@ -75,16 +96,12 @@ const parseSymbolName = (name: string) => {
   return { iconSet: match[1], iconName: match[2], variant: match[3] };
 };
 
-const buildPhosphorUrl = (iconName: string, variant: string): string => {
-  const suffix = variant === 'regular' ? '' : `-${variant}`;
-  return `${PHOSPHOR_BASE}/${variant}/${iconName}${suffix}.svg`;
-};
-
 type RegistryState = {
   defs: SVGSVGElement;
+  sources: IconSource[];
   loaded: Set<string>;
   inflight: Map<string, Promise<void>>;
-  // Permanent misses (unsupported prefix, 404, malformed source) — never re-fetched, so a
+  // Permanent misses (no source for the set, 404, malformed source) — never re-fetched, so a
   // component that re-renders with a bad icon name doesn't produce repeated network churn.
   failed: Set<string>;
 };
@@ -99,7 +116,7 @@ const ingestSvgChildrenAsSymbol = (sourceSvg: Element, id: string): SVGSymbolEle
   if (viewBox) {
     symbol.setAttribute('viewBox', viewBox);
   }
-  // Phosphor sources don't set fill; the sprite convention is fill="currentColor" on each symbol.
+  // Standalone sources don't set fill; the sprite convention is fill="currentColor" on each symbol.
   symbol.setAttribute('fill', 'currentColor');
   for (const child of Array.from(sourceSvg.children)) {
     symbol.appendChild(child.cloneNode(true));
@@ -139,15 +156,15 @@ const resolveDynamic = async (state: RegistryState, staticReady: Promise<void>, 
     return;
   }
   const parsed = parseSymbolName(name);
-  if (!parsed || parsed.iconSet !== 'ph') {
-    // For now, only auto-resolve Phosphor icons via the public /phosphor/ tree.
-    // Custom prefixes (dx--, plugin namespaces) must be in the static sprite.
+  const source = parsed && state.sources.find(({ iconSet }) => iconSet === parsed.iconSet);
+  if (!parsed || !source) {
+    // Sets without a configured source (custom brand glyphs, plugin namespaces) are sprite-only.
     state.failed.add(name);
     return;
   }
   let svgText: string;
   try {
-    const response = await fetch(buildPhosphorUrl(parsed.iconName, parsed.variant));
+    const response = await fetch(source.url(parsed.iconName, parsed.variant));
     if (!response.ok) {
       if (response.status === 404) {
         state.failed.add(name);
@@ -169,7 +186,7 @@ const resolveDynamic = async (state: RegistryState, staticReady: Promise<void>, 
   state.loaded.add(name);
 };
 
-const createRegistry = (): RegistryHandle => {
+const createRegistry = (sources: IconSource[]): RegistryHandle => {
   const defs = createDefsContainer();
   const listeners = new Set<() => void>();
   const notify = () => {
@@ -179,6 +196,7 @@ const createRegistry = (): RegistryHandle => {
   };
   const state: RegistryState = {
     defs,
+    sources,
     loaded: new Set<string>(),
     inflight: new Map<string, Promise<void>>(),
     failed: new Set<string>(),
@@ -222,9 +240,9 @@ type SharedRegistry = RegistryHandle & { refCount: number };
 
 let sharedRegistry: SharedRegistry | undefined;
 
-const acquireRegistry = (): { registry: IconRegistry; release: () => void } => {
+const acquireRegistry = (sources: IconSource[]): { registry: IconRegistry; release: () => void } => {
   if (!sharedRegistry) {
-    sharedRegistry = { ...createRegistry(), refCount: 0 };
+    sharedRegistry = { ...createRegistry(sources), refCount: 0 };
     setActiveRegistry(sharedRegistry.registry);
   }
   const handle = sharedRegistry;
@@ -249,20 +267,29 @@ const acquireRegistry = (): { registry: IconRegistry; release: () => void } => {
   };
 };
 
+export type IconRegistryProviderProps = PropsWithChildren<{
+  /**
+   * Icon sets resolvable at runtime; defaults to Phosphor at `/phosphor`. Only the first
+   * mounted provider's sources apply, since the registry is shared across a document.
+   */
+  sources?: IconSource[];
+}>;
+
 /**
  * Provides the shared icon registry to descendants (consumed by `useIconHref`), acquiring
  * the refcounted document-level singleton on mount and releasing it on unmount.
  */
-export const IconRegistryProvider = ({ children }: PropsWithChildren) => {
+export const IconRegistryProvider = ({ children, sources = defaultSources }: IconRegistryProviderProps) => {
   const [registry, setRegistry] = useState<IconRegistry>(NoopRegistry);
 
   useEffect(() => {
     if (typeof document === 'undefined') {
       return;
     }
-    const { registry, release } = acquireRegistry();
+    const { registry, release } = acquireRegistry(sources);
     setRegistry(registry);
     return release;
+    // Sources are read once when the shared registry is created; later changes are ignored by design.
   }, []);
 
   return <IconRegistryContext.Provider value={registry}>{children}</IconRegistryContext.Provider>;

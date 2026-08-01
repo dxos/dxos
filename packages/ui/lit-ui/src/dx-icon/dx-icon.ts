@@ -29,10 +29,6 @@ export class DxIcon extends LitElement {
   @property({ type: String })
   icon: string = 'ph--circle-dashed--regular';
 
-  // Retained for backwards compatibility with consumers that set it; no longer used.
-  @property({ type: Boolean })
-  noCache: boolean = true;
-
   #unsubscribe?: () => void;
 
   override disconnectedCallback(): void {

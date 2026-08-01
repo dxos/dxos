@@ -12,7 +12,7 @@ import { join, resolve } from 'path';
 import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
-import { type IconAssets, iconAssetsPlugin } from './icon-assets';
+import { type IconAssets, iconAssetsPlugin } from './icon-assets.ts';
 
 export type { IconAssets };
 
