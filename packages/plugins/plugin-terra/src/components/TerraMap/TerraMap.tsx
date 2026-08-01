@@ -23,7 +23,7 @@ const OBJECT_COLOR: Record<TerraObject.Kind, string> = {
   satellite: '#f5b731',
 };
 
-/** Degrees between graticule lines; every second one is drawn heavier, so the equator and prime meridian stand out. */
+/** Degrees between graticule lines; the equator and the prime meridian are drawn heavier so they stand out. */
 const GRATICULE_STEP = 30;
 
 const graticule = (): { meridians: number[]; parallels: number[] } => ({

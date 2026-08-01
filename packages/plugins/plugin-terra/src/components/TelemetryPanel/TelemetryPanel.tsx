@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { type KeyboardEvent } from 'react';
 
 import { ScrollArea } from '@dxos/react-ui';
 
@@ -73,6 +73,19 @@ export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelPro
                       ? 'border-t border-separator cursor-pointer'
                       : 'border-t border-separator'
                 }
+                // Selectable rows are reachable by keyboard, not the pointer alone. `aria-selected`
+                // rather than `role='option'`: the row stays a row, which is what the table it
+                // belongs to needs it to be.
+                {...(onSelect && {
+                  'tabIndex': 0,
+                  'aria-selected': row.id === selectedId,
+                  'onKeyDown': (event: KeyboardEvent<HTMLTableRowElement>) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      onSelect(row.id);
+                    }
+                  },
+                })}
                 onClick={() => onSelect?.(row.id)}
               >
                 <td className='px-3 py-1 max-w-24 truncate'>{row.name}</td>

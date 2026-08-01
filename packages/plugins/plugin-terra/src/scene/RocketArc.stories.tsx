@@ -168,7 +168,7 @@ type Story = StoryObj<typeof meta>;
  * really does.
  *
  * Test:
- * 1. The rocket lifts off, arcs over, and comes down, on a loop.
+ * 1. The rocket lifts off, arcs over, and comes down — once per launch.
  * 2. Its nose stays along the flight path the whole way: up through the climb, level at apex, down
  *    into the descent. It never points somewhere it is not going.
  * 3. The orange exhaust trails from the tail, below and behind it, and stops at apex.

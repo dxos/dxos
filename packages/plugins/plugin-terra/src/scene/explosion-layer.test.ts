@@ -44,28 +44,6 @@ describe('ExplosionLayer', () => {
     engine.dispose();
   });
 
-  /**
-   * One layer's shells after a single `update`. Each case builds its own layer because Babylon only
-   * rebuilds the world matrices a mesh reports inside `thinInstanceSetBuffer` — a second update at
-   * the same instance count writes the buffer in place, which the GPU sees but a reader here would
-   * not.
-   */
-  const drawOnce = (object: SimObject) => {
-    const layer = new ExplosionLayer({ scene });
-    layer.update([object]);
-    // `scene.meshes` is typed as abstract; the thin-instance API this reads lives on `Mesh`.
-    const meshes = scene.meshes.filter(
-      (mesh): mesh is Mesh => mesh instanceof Mesh && mesh.name.startsWith('explosionShell'),
-    );
-    return {
-      visible: meshes.map((mesh) => mesh.isVisible),
-      instances: meshes.map((mesh) => mesh.thinInstanceCount),
-      radii: meshes.map((mesh) => mesh.thinInstanceGetWorldMatrices()[0]?.getRow(0)?.length() ?? 0),
-      alphas: meshes.map((mesh) => mesh.material?.alpha ?? 0),
-      dispose: () => layer.dispose(),
-    };
-  };
-
   test('draws nothing while the rocket is still flying', ({ expect }) => {
     const drawn = drawOnce(at(IMPACT_SECONDS - 10));
     expect(drawn.visible).toEqual([false, false, false]);
@@ -97,4 +75,26 @@ describe('ExplosionLayer', () => {
     expect(drawn.visible).toEqual([false, false, false]);
     drawn.dispose();
   });
+
+  /**
+   * One layer's shells after a single `update`. Each case builds its own layer because Babylon only
+   * rebuilds the world matrices a mesh reports inside `thinInstanceSetBuffer` — a second update at
+   * the same instance count writes the buffer in place, which the GPU sees but a reader here would
+   * not.
+   */
+  const drawOnce = (object: SimObject) => {
+    const layer = new ExplosionLayer({ scene });
+    layer.update([object]);
+    // `scene.meshes` is typed as abstract; the thin-instance API this reads lives on `Mesh`.
+    const meshes = scene.meshes.filter(
+      (mesh): mesh is Mesh => mesh instanceof Mesh && mesh.name.startsWith('explosionShell'),
+    );
+    return {
+      visible: meshes.map((mesh) => mesh.isVisible),
+      instances: meshes.map((mesh) => mesh.thinInstanceCount),
+      radii: meshes.map((mesh) => mesh.thinInstanceGetWorldMatrices()[0]?.getRow(0)?.length() ?? 0),
+      alphas: meshes.map((mesh) => mesh.material?.alpha ?? 0),
+      dispose: () => layer.dispose(),
+    };
+  };
 });

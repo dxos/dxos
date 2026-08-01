@@ -13,8 +13,18 @@ import { type Planet, type TerraConfigValues, generatePlanet } from './generate-
  */
 const DEFAULT_MAX_BYTES = 256 * 1024 * 1024;
 
+/**
+ * Retained size of one scatter placement: two three-number arrays plus four scalars, each a boxed
+ * 64-bit value with array and object overhead. An estimate — the point is that scatter counts
+ * against the budget at all, not that it is counted to the byte.
+ */
+const SCATTER_ENTRY_BYTES = 200;
+
 const planetBytes = (planet: Planet): number =>
-  planet.mesh.positions.byteLength + planet.mesh.normals.byteLength + planet.mesh.colors.byteLength;
+  planet.mesh.positions.byteLength +
+  planet.mesh.normals.byteLength +
+  planet.mesh.colors.byteLength +
+  planet.scatter.length * SCATTER_ENTRY_BYTES;
 
 /**
  * A stable key over all config values. `generatePlanet` is deterministic in exactly these values,

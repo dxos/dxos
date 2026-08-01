@@ -20,6 +20,11 @@ const SAMPLES_PER_DEGREE = 1;
  * unavailable (a non-browser test environment), letting the map fall back to a plain grid.
  */
 export const renderTerrain = (config: TerraConfigValues): string | undefined => {
+  // Checked before `createElement`, not after: without a DOM there is nothing to ask for a context.
+  if (typeof document === 'undefined') {
+    return undefined;
+  }
+
   const width = MAP_WIDTH * SAMPLES_PER_DEGREE;
   const height = MAP_HEIGHT * SAMPLES_PER_DEGREE;
   const canvas = document.createElement('canvas');
