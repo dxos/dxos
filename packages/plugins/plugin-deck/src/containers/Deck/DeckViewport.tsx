@@ -71,14 +71,20 @@ const REM_PX = 16;
 const PLANK_SPACING_REM = 0.75;
 const PLANK_SPACING = `${PLANK_SPACING_REM}rem`;
 
-// The companion persists a single shared width (keyed variant-independently) so switching companion tabs
-// does not resize the pane. Not a valid node id, so it never collides with a plank.
+// A plank paired with the companion is sized entirely by these two deck-wide `plankSizing` entries — the
+// pair's overall width and the companion's share of it — rather than by the plank's own width. That is
+// what makes the pair's geometry survive the companion moving between planks (and switching variants),
+// and leaves each plank's own width untouched for when the companion is not attached to it. Neither is a
+// valid node id, so they never collide with a plank.
 const COMPANION_SIZE_KEY = 'companion';
+const PAIR_SIZE_KEY = 'companion-pair';
 
 // Companion extents (rem). Narrower than a plank: it is a side panel beside the plank it belongs to, and
 // the pair has to fit the viewport alongside the rest of the deck.
 const DEFAULT_COMPANION_SIZE = 30;
 const MIN_COMPANION_SIZE = 15;
+const DEFAULT_PAIR_SIZE = DEFAULT_PLANK_SIZE + DEFAULT_COMPANION_SIZE;
+const MIN_PAIR_SIZE = MIN_PLANK_SIZE + MIN_COMPANION_SIZE;
 
 // EXPERIMENT (stacked notes): while sliding, planks are sticky and pile on the left as you scroll.
 // Each pinned plank reveals a `SPINE_PX`-wide sliver (owned by `FoldSpine`, which draws it); once a
@@ -282,61 +288,58 @@ const useSplitSize = (size: number | undefined, persist: (size: number) => void)
 };
 
 /**
- * Widths (rem) of a sliding tile's panes: a plain tile is just its plank, while the tile hosting the
- * companion is the pair sharing one container. The viewport-derived cap applies to the tile as a whole,
- * and the companion absorbs it — the plank is the content the cap exists to keep reachable, so squeezing
- * the side panel first is what a narrowing viewport should do.
+ * Widths (rem) of a sliding tile: a plain tile is its plank's own width, while the tile hosting the
+ * companion is the deck-wide pair width, of which the companion takes its own deck-wide share and the
+ * plank fills the rest. The viewport-derived cap applies to the tile as a whole, and the companion
+ * absorbs it — the plank is the content the cap exists to keep reachable, so squeezing the side panel
+ * first is what a narrowing viewport should do.
  */
 const resolveTileSizes = (
   plankSizing: Record<string, number>,
   id: string,
   hasCompanion: boolean,
   maxSize: number,
-): { plankSize: number; companionSize: number; tileSize: number } => {
-  const stored = plankSizing[id] ?? DEFAULT_PLANK_SIZE;
+): { companionSize: number; tileSize: number } => {
   if (!hasCompanion) {
-    const plankSize = Math.min(stored, maxSize);
-    return { plankSize, companionSize: 0, tileSize: plankSize };
+    return { companionSize: 0, tileSize: Math.min(plankSizing[id] ?? DEFAULT_PLANK_SIZE, maxSize) };
   }
 
-  const plankSize = Math.min(stored, Math.max(MIN_PLANK_SIZE, maxSize - MIN_COMPANION_SIZE));
-  const companionSize = Math.max(
-    MIN_COMPANION_SIZE,
-    Math.min(plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE, maxSize - plankSize),
-  );
-  return { plankSize, companionSize, tileSize: plankSize + companionSize };
+  const tileSize = Math.min(plankSizing[PAIR_SIZE_KEY] ?? DEFAULT_PAIR_SIZE, Math.max(MIN_PAIR_SIZE, maxSize));
+  return { companionSize: resolveCompanionSize(plankSizing, tileSize), tileSize };
 };
+
+/** The companion's share of a pair `total` rem wide, always leaving the plank its minimum. */
+const resolveCompanionSize = (plankSizing: Record<string, number>, total: number): number =>
+  Math.max(
+    MIN_COMPANION_SIZE,
+    Math.min(plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE, total - MIN_PLANK_SIZE),
+  );
 
 /**
  * A plank and its companion sharing a single container. The one splitter geometry every such pair uses,
  * in every presentation: anchored to the companion, sized by the deck-wide {@link COMPANION_SIZE_KEY}
  * width, so the seam sits in the same place whichever plank the companion is attached to and whether the
- * pair fills the viewport (tiling) or a tile within the sliding deck.
- *
- * `total` is the pair's fixed overall width, present only when the pair is a sliding tile: committing
- * then also rewrites the plank so the tile's width — which the deck's sticky stacking geometry is
- * measured against — holds steady while the seam moves. Tiling pairs flex to the viewport and have none.
+ * pair fills the viewport (tiling) or a tile within the sliding deck. Dragging the seam trades width
+ * between the two panes and commits that one number, so the pair's overall width never moves under the
+ * drag — and the plank's own width, which it keeps for when the companion is elsewhere, is not touched.
  */
 const CompanionSplit = ({
   id,
   companionId,
   active,
   companionSize,
-  total,
   classNames,
 }: ThemedClassName<{
   id: string;
   companionId: string;
   active: string[];
   companionSize: number;
-  total?: number;
 }>) => {
   const { invokePromise } = useOperationInvoker();
   const [liveSize, onSizeChange] = useSplitSize(companionSize, (next) => {
-    void invokePromise(DeckOperation.UpdatePlankSize, { id: COMPANION_SIZE_KEY, size: Math.round(next) });
-    if (total !== undefined) {
-      void invokePromise(DeckOperation.UpdatePlankSize, { id, size: Math.round(total - next) });
-    }
+    // Committed unrounded: the seam is controlled from `liveSize`, so a value that did not round-trip
+    // exactly would snap the panes when the persisted size reseeds it.
+    void invokePromise(DeckOperation.UpdatePlankSize, { id: COMPANION_SIZE_KEY, size: next });
   });
 
   return (
@@ -402,19 +405,23 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
-  const maxSize = Math.max(MIN_PLANK_SIZE, Math.min(MAX_PLANK_SIZE, maxPlankWidthPx / REM_PX));
+  const maxSize = Math.max(
+    companion ? MIN_PAIR_SIZE : MIN_PLANK_SIZE,
+    Math.min(MAX_PLANK_SIZE, maxPlankWidthPx / REM_PX),
+  );
   const { companionSize, tileSize } = resolveTileSizes(deck.plankSizing, id, !!companion, maxSize);
   const tileWidthPx = tileSize * REM_PX;
 
-  // The outer handle resizes the tile; with a companion attached only the plank pane absorbs the delta,
-  // so the companion keeps the width the user gave it.
+  // The outer handle resizes the tile as a whole: for a pair that is the deck-wide pair width (the inner
+  // seam keeps its share of it), for a plain tile the plank's own width.
+  const sizingKey = companion ? PAIR_SIZE_KEY : id;
   const handleSizeChange = useCallback<NonNullable<MosaicTileProps['onSizeChange']>>(
     (size) => {
       if (typeof size === 'number') {
-        void invokePromise(DeckOperation.UpdatePlankSize, { id, size: Math.round(size - companionSize) });
+        void invokePromise(DeckOperation.UpdatePlankSize, { id: sizingKey, size });
       }
     },
-    [invokePromise, id, companionSize],
+    [invokePromise, sizingKey],
   );
 
   if (presentation === 'fullbleed') {
@@ -441,7 +448,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
       // over each other (planks stack by z-index; each one's left edge overlaps its left neighbor).
       classNames='group/tile relative h-full shadow-[-6px_0_16px_-8px_rgba(0,0,0,0.45)]'
       size={tileSize}
-      minSize={MIN_PLANK_SIZE + companionSize}
+      minSize={companion ? MIN_PAIR_SIZE : MIN_PLANK_SIZE}
       maxSize={maxSize}
       onSizeChange={handleSizeChange}
       // Native two-edge sticky (the notes.andymatuschak.org pattern): a positive per-index start inset
@@ -463,7 +470,6 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           companionId={companion}
           active={deck.active}
           companionSize={companionSize}
-          total={tileSize}
           classNames={FOLD_CONTENT_CLASSNAMES}
         />
       ) : (
@@ -922,8 +928,8 @@ export const DeckPlanks = () => {
     [rendered, maxPlankWidthPx],
   );
 
-  // The companion's own persisted width, clamped to leave the plank its minimum; a tiling pair flexes to
-  // the viewport, so unlike a sliding tile there is no cap to spend first.
+  // A tiling pair flexes to the viewport rather than taking the stored pair width, so only the lower
+  // bound applies here — the Splitter's own clamp keeps the plank pane on screen.
   const tilingCompanionSize = Math.max(
     MIN_COMPANION_SIZE,
     deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE,
