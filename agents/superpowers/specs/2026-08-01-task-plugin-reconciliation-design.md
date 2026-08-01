@@ -23,17 +23,17 @@ native projects (rename tracked in `mcp` TASKS).
 ### Unified ontology (user direction 2026-08-01)
 
 `ExternalProject` becomes **`TaskList`** — a pure container; "external" was never a kind of
-project, it is a *sync capability* of a task list:
+project, it is a _sync capability_ of a task list:
 
 - **`Task`** — unchanged fields; `Task.project: Ref<ExternalProject>` → `Task.taskList:
-  Ref<TaskList>` (breaking; migration required).
+Ref<TaskList>` (breaking; migration required).
 - **`TaskList`** — `{ name?, tasks: Ref<Task>[] }`. Owns ordering (the array), the thing neither
   backrefs nor queries express. Carries optional **sync bindings** for external systems
   (Linear, GitHub): source identifier + cursor on the TaskList, per-task foreign keys in
   `@meta.keys` — the same shape plugin-connector/plugin-linear already use, so an external
   list is a TaskList with a binding, not a distinct type.
 - **`Outline`** — `{ content: Ref<Text>, taskList: Ref<TaskList> }` (today's `project` ref
-  renamed/retyped). The markdown checklist is the *ad hoc* task ledger; convert-to-task promotes
+  renamed/retyped). The markdown checklist is the _ad hoc_ task ledger; convert-to-task promotes
   a text line into a `Task` appended to `outline.taskList`. Unconverted lines exist only as text.
 - **`Project`** (plugin-projects, unchanged character: process/agent container) — gains an
   optional `outline: Ref<Outline>`, giving every Project a task ledger + promotable task list
