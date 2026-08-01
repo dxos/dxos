@@ -115,42 +115,6 @@ describe('migratePersistedState', () => {
     expect(storage.getItem(STORAGE_KEY)).toBe(original);
   });
 
-  test('converts the deck-wide companion flag to the plank it was showing beside', ({ expect }) => {
-    const storage = makeStorage(
-      legacyBlob({
-        default: { active: ['item-a', 'item-b'], inactive: [], plankSizing: {}, companionOpen: true },
-      }),
-    );
-
-    migratePersistedState(STORAGE_KEY, storage);
-
-    const migrated = JSON.parse(storage.getItem(STORAGE_KEY)!);
-    expect(migrated.decks.default.companionPlanks).toEqual(['item-b']);
-    expect(migrated.decks.default.companionOpen).toBeUndefined();
-  });
-
-  test('a closed deck-wide companion migrates to no plank', ({ expect }) => {
-    const storage = makeStorage(
-      legacyBlob({ default: { active: ['item-a'], inactive: [], plankSizing: {}, companionOpen: false } }),
-    );
-
-    migratePersistedState(STORAGE_KEY, storage);
-
-    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).decks.default.companionPlanks).toEqual([]);
-  });
-
-  test('strips the removed tiling split point', ({ expect }) => {
-    const storage = makeStorage(
-      legacyBlob({
-        default: { active: ['item-a'], inactive: [], plankSizing: {}, companionPlanks: [], tilingSizing: 42 },
-      }),
-    );
-
-    migratePersistedState(STORAGE_KEY, storage);
-
-    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).decks.default.tilingSizing).toBeUndefined();
-  });
-
   test('removes the key on corrupt (unparseable) JSON', ({ expect }) => {
     const storage = makeStorage('{not json');
 

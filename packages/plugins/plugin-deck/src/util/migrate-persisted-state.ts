@@ -10,10 +10,11 @@ import { log } from '@dxos/log';
 import { PlankSizing } from '#types';
 
 /**
- * Superset of the current on-disk deck shape that additionally accepts fields absent from the current
- * deck schema (`solo`, `initialized`, `fullscreen`, `companionOrientation`, `companionFrameSizing`,
- * `companionOpen`, `tilingSizing`), so a pre-migration blob decodes without error and its legacy fields
- * can be detected, converted where they carry meaning, and stripped.
+ * Superset of the current on-disk deck shape that additionally tolerates fields absent from the current
+ * deck schema, so a pre-migration blob decodes without error and its legacy fields can be detected and
+ * stripped. Tolerating is not migrating: only the fields listed in `hasLegacyFields` trigger a rewrite.
+ * A blob whose deck shape simply predates the current one is left alone and dropped by the KVS decode,
+ * which falls back to the default deck.
  */
 const LegacyDeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
@@ -51,30 +52,23 @@ const hasLegacyFields = (state: LegacyStoredDeckState): boolean =>
       deck.solo !== undefined ||
       deck.initialized !== undefined ||
       deck.fullscreen !== undefined ||
-      deck.companionOrientation !== undefined ||
-      deck.companionOpen !== undefined ||
-      deck.tilingSizing !== undefined,
+      deck.companionOrientation !== undefined,
   );
 
 /** Strips fields absent from the current deck schema from a legacy deck, promoting a solo plank to the front of `active`. */
 const migrateDeck = ({
   solo,
-  companionOpen,
   initialized: _initialized,
   fullscreen: _fullscreen,
   companionOrientation: _companionOrientation,
   companionFrameSizing: _companionFrameSizing,
+  companionOpen: _companionOpen,
   tilingSizing: _tilingSizing,
   ...deck
-}: LegacyDeckState) => {
-  const active = solo ? [solo, ...deck.active.filter((id) => id !== solo)] : deck.active;
-  return {
-    ...deck,
-    active,
-    // The deck-wide flag meant "showing beside the last plank", which is the plank it now belongs to.
-    companionPlanks: deck.companionPlanks ?? (companionOpen && active.length > 0 ? [active[active.length - 1]] : []),
-  };
-};
+}: LegacyDeckState) => ({
+  ...deck,
+  active: solo ? [solo, ...deck.active.filter((id) => id !== solo)] : deck.active,
+});
 
 /** The subset of the `Storage` interface the migration needs, so tests can inject a fake. */
 export type PersistedStateStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
