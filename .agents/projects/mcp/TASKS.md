@@ -23,7 +23,8 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 
 ## Backlog
 
-- [ ] Composer: deviceInvitationCode with an existing identity fails silently — navigation-handler invokes ClientOperation.JoinIdentity (opens JOIN_DIALOG accept-halo-invitation) but nothing surfaces; dev mode should show a reset-and-accept dialog (path: plugin-client navigation-handler.ts → join-identity.ts → shell JoinDialog)
+- [ ] Composer: deviceInvitationCode RACE — navigation-handler strips the param + opens JOIN_DIALOG while onboarding-manager (skipAuth=no hub) auto-creates an identity underneath, so device-join hangs on "Connecting…" forever even on a fresh profile; with an existing identity it dies silently (Effect.orDie). Root cause of the failed CLI→browser pairing; task chip filed. (plugin-client navigation-handler.ts ~L26/L44 vs plugin-onboarding onboarding-manager.ts ~L156/L170)
+- [ ] CLI under node: tsx chokes on `.tpl` imports from @dxos/assistant (bun-only text loader) — blocks testing invitations outside bun
 - [ ] CLI: `halo share --open` swallows browser-launch failures AND suppresses printing the invitation code — print the URL always; surface open errors
 - [ ] CLI: decide where the halo create/share re-registration lands (currently uncommitted in worktree: plugin-client/src/commands/halo/index.ts; needs DX_SOURCE=1 to run from source)
 
