@@ -12,39 +12,6 @@ import { ClientOperation } from '@dxos/plugin-client';
 
 import { OnboardingManager } from './onboarding-manager';
 
-const createClient = async () => {
-  const builder = new TestBuilder();
-  const client = new Client({ services: builder.createLocalClientServices() });
-  await client.initialize();
-  onTestFinished(async () => {
-    await client.destroy();
-    await builder.destroy();
-  });
-  return client;
-};
-
-const createInvoker = () => {
-  const calls: { key: string; input: unknown }[] = [];
-  const invokePromise: Capabilities.OperationInvoker['invokePromise'] = async (operation, ...args) => {
-    calls.push({ key: String(operation.meta.key), input: args[0] });
-    return {};
-  };
-  const getCalls = (operation: Operation.Definition.Any) =>
-    calls.filter((call) => call.key === String(operation.meta.key));
-  return { invokePromise, getCalls };
-};
-
-const createManager = async (options: { identity?: boolean; deviceInvitationCode?: string }) => {
-  const client = await createClient();
-  if (options.identity) {
-    await client.halo.createIdentity();
-  }
-  const { invokePromise, getCalls } = createInvoker();
-  const manager = new OnboardingManager({ invokePromise, client, deviceInvitationCode: options.deviceInvitationCode });
-  onTestFinished(() => manager.destroy());
-  return { manager, getCalls };
-};
-
 // No hubUrl is passed, so auth is skipped — the local/dev Composer configuration.
 describe('OnboardingManager', () => {
   test('device invitation opens the join flow without auto-creating an identity', async ({ expect }) => {
@@ -65,14 +32,50 @@ describe('OnboardingManager', () => {
     expect(getCalls(ClientOperation.JoinIdentity)).toHaveLength(0);
   });
 
-  test('device invitation with an existing identity opens the reset dialog', async ({ expect }) => {
-    const { manager, getCalls } = await createManager({ identity: true, deviceInvitationCode: 'test-code' });
+  test('device invitation with an existing identity opens the reset dialog and stops', async ({ expect }) => {
+    const { manager, calls } = await createManager({ identity: true, deviceInvitationCode: 'test-code' });
     await manager.initialize();
 
-    expect(getCalls(ClientOperation.ResetStorage)).toEqual([
-      expect.objectContaining({ input: { mode: 'join-new-identity' } }),
+    // The reset confirmation must be the only operation — no recovery/agent provisioning
+    // for an identity the user may be about to abandon.
+    expect(calls).toEqual([
+      expect.objectContaining({
+        key: String(ClientOperation.ResetStorage.meta.key),
+        input: { mode: 'join-new-identity' },
+      }),
     ]);
-    expect(getCalls(ClientOperation.JoinIdentity)).toHaveLength(0);
-    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
   });
 });
+
+const createClient = async () => {
+  const builder = new TestBuilder();
+  const client = new Client({ services: builder.createLocalClientServices() });
+  await client.initialize();
+  onTestFinished(async () => {
+    await client.destroy();
+    await builder.destroy();
+  });
+  return client;
+};
+
+const createInvoker = () => {
+  const calls: { key: string; input: unknown }[] = [];
+  const invokePromise: Capabilities.OperationInvoker['invokePromise'] = async (operation, ...args) => {
+    calls.push({ key: String(operation.meta.key), input: args[0] });
+    return {};
+  };
+  const getCalls = (operation: Operation.Definition.Any) =>
+    calls.filter((call) => call.key === String(operation.meta.key));
+  return { invokePromise, getCalls, calls };
+};
+
+const createManager = async (options: { identity?: boolean; deviceInvitationCode?: string }) => {
+  const client = await createClient();
+  if (options.identity) {
+    await client.halo.createIdentity();
+  }
+  const { invokePromise, getCalls, calls } = createInvoker();
+  const manager = new OnboardingManager({ invokePromise, client, deviceInvitationCode: options.deviceInvitationCode });
+  onTestFinished(() => manager.destroy());
+  return { manager, getCalls, calls };
+};
