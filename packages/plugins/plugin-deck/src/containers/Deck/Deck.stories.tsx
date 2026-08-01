@@ -11,13 +11,14 @@ import { expect, waitFor, within } from 'storybook/test';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import { Position } from '@dxos/util';
 
 import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
@@ -131,7 +132,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
             id: 'storyArticle',
-            filter: Surface.makeFilter(AppSurface.Article),
+            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
             component: ({ data }) => {
               const subject = data.subject as StoryItem | undefined;
               const title = subject?.title ?? data.attendableId;
@@ -146,28 +147,68 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
               );
             },
           }),
+          Surface.create({
+            id: 'storyArticleCompanion',
+            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
+            component: ({ data }) => {
+              const companionTo = data.companionTo as StoryItem | undefined;
+              return (
+                <div className='grid content-start gap-2 p-4'>
+                  <p className='text-sm text-description'>Story companion surface</p>
+                  <p>
+                    Companion <span className='font-mono text-xs'>{String(data.variant)}</span> of{' '}
+                    <span className='font-medium'>{companionTo?.title ?? data.attendableId}</span>.
+                  </p>
+                </div>
+              );
+            },
+          }),
         ]),
       ),
   }),
   AppPlugin.addAppGraphModule({
     id: 'story-graph',
     activate: Effect.fnUntraced(function* () {
-      const extensions = yield* GraphBuilder.createExtension({
-        id: 'storyItems',
-        match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed(
-            STORY_ITEMS.map((item) =>
-              Node.make({
-                id: item.id,
-                type: 'story-item',
-                data: item,
-                properties: { label: item.title, icon: item.icon },
-              }),
+      const extensions = yield* Effect.all([
+        GraphBuilder.createExtension({
+          id: 'storyItems',
+          match: NodeMatcher.whenRoot,
+          connector: () =>
+            Effect.succeed(
+              STORY_ITEMS.map((item) =>
+                Node.make({
+                  id: item.id,
+                  type: 'story-item',
+                  data: item,
+                  properties: { label: item.title, icon: item.icon },
+                }),
+              ),
             ),
-          ),
-      });
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+        }),
+        // Every story plank carries the same two companions, so the companion can be watched moving from
+        // plank to plank as attention changes.
+        GraphBuilder.createExtension({
+          id: 'storyItemCompanions',
+          match: NodeMatcher.whenNodeType('story-item'),
+          connector: (node) =>
+            Effect.succeed([
+              AppNode.makeCompanion({
+                variant: 'alpha',
+                label: 'Companion Alpha',
+                icon: 'ph--sidebar--regular',
+                data: { variant: 'alpha', parentId: node.id },
+                position: Position.first,
+              }),
+              AppNode.makeCompanion({
+                variant: 'beta',
+                label: 'Companion Beta',
+                icon: 'ph--chat-circle--regular',
+                data: { variant: 'beta', parentId: node.id },
+              }),
+            ]),
+        }),
+      ]);
+      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
     }),
   }),
   Plugin.make,
@@ -198,9 +239,16 @@ type DefaultStoryProps = {
   foldAnimation?: FoldAnimation;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
   sidebarState?: StoredDeckState['sidebarState'];
+  /** Open the deck companion, which shares a container with whichever plank is attended. */
+  companionOpen?: boolean;
 };
 
-const DefaultStory = ({ count = 0, foldAnimation = 'slide', sidebarState = 'closed' }: DefaultStoryProps) => {
+const DefaultStory = ({
+  count = 0,
+  foldAnimation = 'slide',
+  sidebarState = 'closed',
+  companionOpen = false,
+}: DefaultStoryProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
   const pluginManager = usePluginManager();
   const { graph } = useAppGraph();
@@ -228,10 +276,10 @@ const DefaultStory = ({ count = 0, foldAnimation = 'slide', sidebarState = 'clos
       sidebarState,
       decks: {
         ...current.decks,
-        [current.activeDeck]: { ...current.decks[current.activeDeck], active },
+        [current.activeDeck]: { ...current.decks[current.activeDeck], active, companionOpen },
       },
     }));
-  }, [items, count, sidebarState, updateState]);
+  }, [items, count, sidebarState, companionOpen, updateState]);
 
   // `display: contents` so the wrapper carries `data-fold-anim` for the scoped CSS without affecting the
   // fullscreen layout of the deck beneath it.
@@ -281,6 +329,19 @@ export const TwoPlanks: Story = { args: { count: 2 } };
 // Six planks exceed the tiling threshold and render as a sliding, horizontally-scrolling deck.
 // Use the `foldAnimation` control to compare fold transitions.
 export const ManyPlanks: Story = { args: { count: 6, foldAnimation: 'slide' } };
+
+// One plank plus its companion is two panes, so the pair tiles across the whole viewport.
+export const OnePlankWithCompanion: Story = { args: { count: 1, companionOpen: true } };
+
+// The companion shares a container with the attended plank, splitting that plank's tile rather than
+// trailing the deck.
+//
+// Test:
+// 1. Confirm the companion sits immediately to the right of the first plank, inside its container.
+// 2. Click the third plank; confirm the companion moves to sit beside it and leaves the first plank.
+// 3. Drag the seam between the plank and its companion; confirm only those two panes resize.
+// 4. Switch the companion tab (Alpha/Beta); confirm the pane keeps its width and stays on the same plank.
+export const ManyPlanksWithCompanion: Story = { args: { count: 4, companionOpen: true } };
 
 // A `closed` sidebar persisted from below `lg` (dismissing the drawer) must present as the L0 rail at
 // `lg`+, where `closed` would otherwise render L0 off-screen and inert with every control that could

@@ -24,7 +24,7 @@ export type PlankCapabilities = {
   fullscreenToggle?: boolean;
   incrementStart?: boolean;
   incrementEnd?: boolean;
-  /** Eligible to open the deck companion (offered on the last plank when the companion is off). */
+  /** Eligible to open the deck companion (offered on any plank that has one, when the companion is off). */
   companion?: boolean;
 };
 
@@ -72,18 +72,17 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   const isOrdered = !!active && index >= 0;
   const canIncrementStart = isOrdered && index > 0;
   const canIncrementEnd = isOrdered && index < (active?.length ?? 1) - 1;
-  const isLastPlank = !active || index === active.length - 1;
 
   const capabilities = useMemo<PlankCapabilities>(
     () => ({
       fullscreenToggle: breakpoint !== 'mobile' && part === 'main',
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
-      // The deck companion is a whole-deck toggle attached to the last plank: offer it on the last
-      // plank when a companion exists there and the companion is not already open.
-      companion: companions.length > 0 && !deck.companionOpen && isLastPlank,
+      // The deck companion is a whole-deck toggle that renders beside whichever plank is attended, so
+      // offer it on any plank that has one while the companion is off.
+      companion: companions.length > 0 && !deck.companionOpen,
     }),
-    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionOpen, isLastPlank],
+    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionOpen],
   );
 
   // Load the node's child actions so the sigil menu is populated.

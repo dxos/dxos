@@ -75,9 +75,10 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
               updateActiveDeck(state, { companionOpen: true }),
             );
-            // The companion renders as the trailing plank; scroll it into view like any newly opened
-            // plank (otherwise it appears off-screen to the right of the last plank).
-            yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: companion.id });
+            // The companion renders inside this plank's container, and follows attention thereafter, so
+            // scroll (and thereby attend) the plank itself — the pair is wider than the plank alone and
+            // would otherwise open partly off-screen.
+            yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
           }
         }
       }

@@ -18,7 +18,7 @@ import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities, DEFAULT_DECK_ID, type StoredDeckState, defaultDeck } from '#types';
 
-import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, serializeDeckToUrl } from '../util';
+import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, resolveCompanionAnchor, serializeDeckToUrl } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /** Bounded retry for URL resolution while a cold restore's container chain finishes loading. */
@@ -48,6 +48,7 @@ export default Capability.makeModule(
     const stateAtom = yield* Capability.get(DeckCapabilities.State);
     const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
     const provideServices = <A, E>(effect: Effect.Effect<A, E, Capability.Service | Operation.Service>) =>
       effect.pipe(
@@ -170,11 +171,13 @@ export default Capability.makeModule(
       // not a stored plank, so it drives companionOpen + variant rather than being added to `plankIds`.
       const plankIds: string[] = [];
       let companionNodeId: string | null = null;
+      let companionAnchorId: string | undefined;
       pairs.forEach((pair, index) => {
         const nodeId = resolved[index]?.nodeId;
         if (pair.key === UrlPath.COMPANION_KEY) {
           if (nodeId) {
             companionNodeId = nodeId;
+            companionAnchorId = plankIds[plankIds.length - 1];
           }
         } else {
           plankIds.push(nodeId ?? NotFound.NOT_FOUND_PATH);
@@ -185,10 +188,12 @@ export default Capability.makeModule(
       // restore, for one plank or many, with no separate disposition to invent.
       yield* Operation.invoke(LayoutOperation.Set, { subject: plankIds });
 
-      const lastPlankId = plankIds[plankIds.length - 1];
-      if (lastPlankId) {
-        // Attention is never serialized; on load it always defaults to the last plank in the chain.
-        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: lastPlankId });
+      // Attention is never serialized; on load it defaults to the last plank in the chain — except when
+      // the chain carries a companion, whose position *is* serialized and which only renders beside the
+      // plank it is anchored to, so attention has to land there for the URL to restore faithfully.
+      const attendId = companionAnchorId ?? plankIds[plankIds.length - 1];
+      if (attendId) {
+        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: attendId });
       }
 
       // The companion is part of the URL-derived deck state too: explicitly close it when the chain
@@ -290,11 +295,12 @@ export default Capability.makeModule(
         }
       }
 
-      // The companion is the deck's trailing plank, always attached to the last plank (not the attended
-      // one), and serialized as `companion/<variant>` after it.
+      // The companion shares a container with the attended plank, and is serialized as
+      // `companion/<variant>` after that plank's own pair. Attention itself is still never serialized —
+      // it is read here only to place the companion, and a bare attention change does not resync the URL.
       let companion: { plankId: string; node: PathResolution.RepresentedNode } | undefined;
       if (deck.companionOpen && deck.active.length > 0) {
-        const plankId = deck.active[deck.active.length - 1];
+        const plankId = resolveCompanionAnchor(deck.active, attention.getCurrent());
         const selection = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
         if (plankId && selection.variant) {
           const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;
