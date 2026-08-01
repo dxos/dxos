@@ -17,7 +17,7 @@ export const DeckOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./update-complementary'),
   () => import('./update-dialog'),
   () => import('./update-plank-size'),
-  () => import('./update-tiling-size'),
+  () => import('./update-plank-sizes'),
   () => import('./update-popover'),
   () => import('./update-sidebar'),
 );

@@ -124,6 +124,15 @@ where fixtures get captured. Three defects found while wiring that up.
       rather than swapping the feed, so restoring a curated (starred) export cannot delete the
       unstarred remainder. `replaceFeed` is kept for Reset, the deliberate way to empty a mailbox.
 
+## Phase 6: Deck plank reuse
+
+- [ ] **Opening a message from the mailbox should reuse the message plank** — treat planks like
+      optionally named tabs: opening a second message replaces the one already showing rather than
+      appending another plank. Today each open appends, so reading down a mailbox grows the deck
+      one plank per message. `LayoutOperation.Open` already has the mechanism — `addSubjectsToActiveDeck`'s
+      `key` option replaces an existing plank whose id shares that key prefix — so this is likely a
+      matter of the inbox passing a key rather than new deck machinery.
+
 ## Open questions for the user
 
 - [ ] **Should `ModuleContainer` support a runtime attendable id for role cells?** — the

@@ -54,17 +54,19 @@ export const UpdatePlankSize = Operation.make({
   output: Schema.Void,
 });
 
-export const UpdateTilingSize = Operation.make({
+export const UpdatePlankSizes = Operation.make({
   meta: {
-    key: makeKey('updateTilingSize'),
-    name: 'Update Tiling Size',
-    description: 'Update the split point of the tiling deck.',
-    icon: 'ph--columns--regular',
+    key: makeKey('updatePlankSizes'),
+    name: 'Update Plank Sizes',
+    description: 'Update the sizes of several planks at once.',
+    icon: 'ph--arrows-out--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    size: Schema.Number.annotations({
-      description: 'Width of the tiling deck start pane in rem.',
+    // Applied in one update, so a split whose panes trade width never renders a frame with one pane
+    // resized and the other not.
+    sizes: Schema.Record({ key: Schema.String, value: Schema.Number }).annotations({
+      description: 'New sizes, keyed by plank id.',
     }),
   }),
   output: Schema.Void,

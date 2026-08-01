@@ -10,11 +10,16 @@ import { Operation } from '@dxos/compute';
 import { DeckCapabilities, DeckOperation } from '../types';
 import { updateActiveDeck } from './helpers';
 
-const handler: Operation.WithHandler<typeof DeckOperation.UpdateTilingSize> = DeckOperation.UpdateTilingSize.pipe(
+const handler: Operation.WithHandler<typeof DeckOperation.UpdatePlankSizes> = DeckOperation.UpdatePlankSizes.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-        updateActiveDeck(state, { tilingSizing: input.size }),
+        updateActiveDeck(state, {
+          plankSizing: {
+            ...state.decks[state.activeDeck]?.plankSizing,
+            ...input.sizes,
+          },
+        }),
       );
     }),
   ),
