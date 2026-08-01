@@ -82,6 +82,8 @@ definitions. Plan written and committed; execution begins after Phase 1 closes.
   3. `SimEngine.respawn(id)` re-derives one object from its changed definition; the story used to rebuild the whole engine, which restarts every other object's leg sequence from spawn (and snaps any object more than `MAX_CATCHUP_LEGS` in). Covered by an engine test asserting the other objects' states are untouched.
   4. `TerraArticle` gained 3D / 2D / Camera tabs (`@dxos/react-ui-tabs`, inside the menu toolbar) replacing the old camera-toggle action. The canvas stays mounted and merely `invisible` under the map, since the render loop is what advances the simulation the map draws. Camera view adds a `Select` of the objects; the choice is the same `selectedId` the map and telemetry select, so picking on the map then switching to Camera rides that object.
 
+- [x] **Object behaviors, and planes that climb over terrain** (user directive, 2026-07-31) — new `sim/behaviors.ts`: one behavior per kind returning an attitude (radius + nose pitch), replacing the kind switches inside the motion controllers; `ObjectState.pitch` now drives `objectFrame` for every kind (the rocket's pitch moved out of `scene/orientation.ts` into its behavior). The plane's behavior follows terrain — see DESIGN.md for the climb-limited altitude envelope and why the pitch is read across a baseline rather than at a point (a pointwise slope over discrete samples read terrain roughness as course changes and flipped the nose between its limits several times a second). `walkRoute` and friends moved to `sim/path.ts`, which also gained `walkRouteSeries` (one polyline pass for a whole window) — without it the lookahead cost 1.83ms/frame for four planes at the trail sampler's rate, with it 0.97ms. Verified live: a plane climbs 6% → 10.5% over a range and settles back to 6%, nose up on the way.
+
 ### References
 
 - Determinism contract and passability rules: [DESIGN.md](./DESIGN.md#phase-2--objects--simulation).
@@ -93,6 +95,10 @@ definitions. Plan written and committed; execution begins after Phase 1 closes.
 
 ## Backlog (Phase 3+)
 
+- **Common layout for canvas views and canvas dialogs, shared with `react-ui-geo`**
+  (tracked 2026-07-31) — `TerraArticle` (3D canvas, 2D map, overlay panels) and
+  `react-ui-geo`'s globe/map surfaces each roll their own canvas + floating-panel
+  arrangement; factor out one layout both use, including the dialog form.
 - **Collision avoidance strategy for objects** (tracked 2026-07-27) — objects
   currently route independently and can pass through each other; needs a
   separation/avoidance model that stays deterministic across peers.

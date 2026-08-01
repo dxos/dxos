@@ -7,8 +7,9 @@ import seedrandom from 'seedrandom';
 import { type TerraConfigValues, type Vec3 } from '../engine';
 import { TerraObject } from '../types';
 import { toUnit } from './geo';
-import { type MotionContext, type ObjectState, evaluate, initialState, routeLength } from './motion';
+import { type MotionContext, type ObjectState, evaluate, initialState } from './motion';
 import { type NavGrid } from './nav-grid';
+import { routeLength } from './path';
 import { pickReachableTarget } from './reachable';
 import { planRoute } from './route';
 

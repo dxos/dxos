@@ -126,6 +126,35 @@ permutation tables and is now memoized in `engine/noise.ts`. Keep per-call
 allocation out of `evaluate` and its callees; measure with a frame-loop probe
 rather than by reasoning about it, since the trail multiplier is easy to forget.
 
+### Behaviors
+
+`sim/motion.ts` answers _where_ an object is — the route walk, the orbit, the
+ballistic arc. `sim/behaviors.ts` answers _how it flies there_: one behavior per
+kind, each returning the object's attitude (its distance from the planet's centre
+and its nose pitch) for an instant. A new kind is an entry in that table rather
+than another arm of a switch inside the motion controllers, and `ObjectState.pitch`
+is what the renderer orients by — for every kind, not just rockets.
+
+The plane's behavior is terrain-following. It samples the terrain across a window
+that runs both ahead of and behind it, and treats a peak `gap` away as demanding
+`clearance - maxClimb * gap` rather than its full clearance immediately: the plane
+has that much arc left in which to climb. The highest such demand across the window
+is the altitude, which therefore rises into a mountain at the climb limit, tops out
+over it, and settles back to cruise at that same limit once it is behind — no dive
+at a ridge, no fall out of the sky past one. The pitch is that profile's own slope,
+measured across a baseline either side rather than at a point, so the nose eases
+through a summit instead of flipping from climb to descent in one frame.
+
+Two things this deliberately does not do: it does not re-route around terrain (the
+nav grid still lets air routes cross anything — see the backlog), and it cannot
+answer terrain steeper than a full-rate climb over the lookahead can reach.
+
+Cost: the behavior is the plane's whole per-evaluation expense, and `evaluate` runs
+hundreds of times a frame under the trail sampler. The window is therefore walked
+with `walkRouteSeries` (one pass over the polyline for all the samples, rather than
+`walkRoute` rescanning it per sample), which took the demo world from 3.05ms to
+1.90ms per frame at that rate.
+
 ### Views
 
 `TerraArticle` shows one of three views, chosen by tabs: the orbiting 3D planet,

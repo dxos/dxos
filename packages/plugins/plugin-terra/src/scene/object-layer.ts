@@ -24,7 +24,7 @@ const KINDS: readonly TerraObject.Kind[] = ['boat', 'plane', 'satellite', 'tank'
  */
 const matrixFor = ({ state, definition }: SimObject, heading: number): Matrix => {
   const position = scale(state.unit, state.radius);
-  const { right, up, forward } = objectFrame(state, definition.kind, heading);
+  const { right, up, forward } = objectFrame(state, heading);
   // Build the rotation from an explicit left-handed basis rather than `FromLookDirectionLH`, which
   // returns a view-style rotation that lands the mesh's local +Z on -forward — i.e. every object
   // flies tail-first. Mapping local X/Y/Z onto right/up/forward is unambiguous.
