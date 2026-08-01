@@ -4,4 +4,5 @@
 
 export * from './channel-backend';
 export * as ThreadCapabilities from './ThreadCapabilities';
+export * as ThreadEvents from './ThreadEvents';
 export * as ThreadOperation from './ThreadOperation';

@@ -4,4 +4,5 @@
 
 export * as Settings from './Settings';
 export * as TranscriptionCapabilities from './TranscriptionCapabilities';
+export * as TranscriptionEvents from './TranscriptionEvents';
 export * as TranscriptOperation from './TranscriptOperation';

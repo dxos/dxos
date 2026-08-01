@@ -7,5 +7,6 @@ export * as Generation from './Generation';
 export * as GenerationService from './GenerationService';
 export * as Lightbox from './Lightbox';
 export * as StudioCapabilities from './StudioCapabilities';
+export * as StudioEvents from './StudioEvents';
 export * as StudioOperation from './StudioOperation';
 export * as Variant from './Variant';

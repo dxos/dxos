@@ -6,3 +6,4 @@ export * from './types';
 
 export * as Tldraw from './Tldraw';
 export * as TldrawCapabilities from './TldrawCapabilities';
+export * as TldrawEvents from './TldrawEvents';
