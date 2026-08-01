@@ -2,17 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { SpaceCapability } from '@dxos/plugin-space';
 
+import { CommerceEvents } from '../types';
+
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AttentionCapabilities.Attention],
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: CommerceEvents.Start,
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: CommerceEvents.Start,
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));

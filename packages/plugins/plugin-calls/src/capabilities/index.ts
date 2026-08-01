@@ -2,17 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { CallsCapabilities } from '#types';
+import { CallsCapabilities, CallsEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [CallsCapabilities.Manager],
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: CallsEvents.Start,
 });
 // CallManager/CallTransport stay eager with the ReactRoot: its components read the manager
 // via strict useCapability, so deferring either trips the missing-capability invariant.
