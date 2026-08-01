@@ -820,6 +820,9 @@
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-lens/tsconfig.json"
+    },
+    {
       "path": "packages/stories/stories-projects/tsconfig.json"
     },
     {
