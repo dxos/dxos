@@ -130,12 +130,20 @@ where fixtures get captured. Three defects found while wiring that up.
       `LayoutOperation.Open` takes an optional `name`, and opening under a name already taken replaces
       its occupant in place, the way a browser tab is reused. The mailbox passes `<mailbox>/message`, so
       reading down it no longer grows the deck one plank per message. Backed by `DeckState.plankNames`;
-      replaced the old `key` option, which matched on an id prefix and had no callers.
+      replaced the old `key` option, which matched on an id prefix (`id.split('+')[0]`). Its one call
+      site, the navtree, passed `node.properties.key` — which nothing in the repo ever sets, so it was
+      always `undefined` and the branch never ran.
 - [ ] **Fullscreen: the back button is obscured by the plank's toolbar** — `ExitFullscreenButton` is
       `fixed top-2 right-2 z-[1]` (`DeckViewport.tsx`), which puts it in the same corner as the plank's
       own trailing toolbar controls and only one stacking level up. Either raise it above the plank
       chrome or move it out of that corner; note the plank is supposed to render `headless` in
       fullscreen, so check why its toolbar is showing there at all.
+- [ ] **Decide the fate of the story's fold-animation harness** — `Deck.stories.tsx` injects
+      `FOLD_ANIMATION_CSS` scoped by a `data-fold-anim` ancestor to A/B two fold transitions, selected by
+      the `foldAnimation` arg (it carries a `TODO(burdon): Why in story?`). `crossfade` is the deck's
+      shipped behaviour and adds no CSS at all; `slide` additionally translates the spine 10px along the
+      plank's direction of travel. Either promote `slide` into `FoldSpine` and delete the harness, or move
+      it behind a `Settings` flag beside `overscroll` — but it should not stay as story-only CSS.
 - [ ] **Resizing a plank should leave the trailing spines pinned to the viewport edge** — the right-hand
       pile only holds position because each tile's sticky `insetInlineEnd` is derived from its own width
       (`DeckViewport`'s tile style), and dragging a plank's width changes the natural offsets of every
