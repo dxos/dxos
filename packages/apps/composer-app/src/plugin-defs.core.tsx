@@ -73,11 +73,19 @@ export const getCorePlugins = ({
       config,
       services,
       shareableLinkOrigin: origin,
+      // plugin-onboarding owns invitation URL params in Composer.
+      invitationUrlHandler: false,
       onReset: ({ target }) =>
         Effect.sync(() => {
           localStorage.clear();
           if (target === 'deviceInvitation') {
-            window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+            // Carry a pending invitation code across the reset so the join can complete.
+            const url = new URL('/', window.location.origin);
+            url.searchParams.set(
+              'deviceInvitationCode',
+              new URLSearchParams(window.location.search).get('deviceInvitationCode') ?? '',
+            );
+            window.location.assign(url);
           } else if (target === 'recoverIdentity') {
             window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
           } else {
@@ -102,6 +110,8 @@ export const getCorePlugins = ({
     SpacePlugin({
       observability: true,
       shareableLinkOrigin: origin,
+      // plugin-onboarding owns invitation URL params in Composer.
+      invitationUrlHandler: false,
     }),
     StatusBarPlugin(),
     ThemePlugin({
