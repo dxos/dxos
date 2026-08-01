@@ -1,6 +1,6 @@
 # plugin-terra — Tasks
 
-_Resume: Phases 1–2 landed (#12353). On branch `claude/plugin-terra-layout-cache-c82b1b`: the planet cache (see the task below) — 112 node + 6 storybook tests green, live-verified in storybook on port 9010, not yet a PR. Still pending from the prior session: visual confirmation of the flush bow and retuned wakes. Note the browser pane reports a 0x0 viewport (screenshots come back black) — drive storybook with Playwright instead, which does render._
+_Resume: nothing in flight — waiting on the merge queue. Phases 1–2 landed (#12353); everything below it (planet cache, map view, behaviors, rocket work) is PR #12425 on `claude/plugin-terra-layout-cache-c82b1b`, all required checks green on 99ae1c9906, all five review threads resolved, auto-merge armed. Next after it merges: (1) pull the chase camera back when its target is destroyed — inside the blast, front-face-only shells show nothing; (2) still-pending visual confirmation of the flush bow and retuned wakes; (3) the backlog below. Uncommitted: none. Note the browser pane reports a 0x0 viewport (screenshots come back black) — drive storybook with Playwright instead, which does render._
 
 Design and decisions: [DESIGN.md](./DESIGN.md).
 Plans: [Phase 1](../../../agents/superpowers/plans/2026-07-26-plugin-terra.md) ·
@@ -101,6 +101,9 @@ definitions. Plan written and committed; execution begins after Phase 1 closes.
 
 ## Backlog (Phase 3+)
 
+- **Pull the chase camera back when its target is destroyed** (2026-07-31) — it
+  ends up inside the blast, and the explosion shells render front faces only, so
+  the one moment worth watching shows nothing.
 - **Common layout for canvas views and canvas dialogs, shared with `react-ui-geo`**
   (tracked 2026-07-31) — `TerraArticle` (3D canvas, 2D map, overlay panels) and
   `react-ui-geo`'s globe/map surfaces each roll their own canvas + floating-panel

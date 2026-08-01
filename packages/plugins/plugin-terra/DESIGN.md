@@ -162,6 +162,24 @@ with `walkRouteSeries` (one pass over the polyline for all the samples, rather t
 `walkRoute` rescanning it per sample), which took the demo world from 3.05ms to
 1.90ms per frame at that rate.
 
+### Destruction and effects
+
+A rocket is destroyed where it lands, and the blast that replaces it is derived
+the same way everything else in `sim/` is: the impact instant is the arc over the
+speed, so `state.explosion` follows from `elapsed` alone. There is no landing
+event to catch and no per-frame state to keep, which is what lets a peer joining
+late — or a view scrubbed to an arbitrary instant — see the same blast at the
+same stage. `scene/explosion-layer.ts` draws it as concentric shells with
+_additive_ blending; alpha-blended, each shell veils the one inside it and three
+of them over a night sky read as muddy brown rather than as light.
+
+Exhaust is per-kind (`TrailSpec.color`) because a wake and a plume are not the
+same thing — spray behind a hull, flame behind a nozzle. The plume is gated on
+the boost phase, so it stops when the engine does rather than smearing over the
+whole arc, and it is offset along the pitched flight axis: offset along the
+ground track alone (as it first was) hangs a near-vertical launch's whole plume
+beside the arc instead of under it.
+
 ### Views
 
 `TerraArticle` shows one of three views, chosen by tabs: the orbiting 3D planet,
@@ -206,7 +224,8 @@ does not dispose and rebuild identical meshes (~350ms).
 
 Tracked in the Phase 2 spec; summarized here.
 
-- Effects: explosions, exhaust, smoke, vapor trails (spheres).
+- Effects: smoke and vapor trails beyond the wakes/plumes already shipped
+  (explosions and exhaust are done — see "Destruction and effects").
 - Surface (flyover/walk) camera with per-face quadtree LOD and chunk streaming.
 - Zoom-dependent terrain resolution.
 - Sun/directional light; day–night.
