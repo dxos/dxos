@@ -16,6 +16,7 @@ projects:
     design: agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md
     prs: []
     resume: 'Milestone 1 largely verified: local stack up (edge 8787 / mcp 8791, bindings local [connected]), composer 5173 syncing (agents/create 200, live replication), OAuth+MCP round-trip via mcp-smoke.mjs, createDocument/updateDocument live in Composer UI. In flight: CLI-first device pairing — halo create/share re-registered (UNCOMMITTED patch in plugin-client halo/index.ts; run with DX_SOURCE=1), identity burdon-local created with agent, invitation hosted, awaiting browser join. Pending: reverse read (Composer edit → readDocument), cloudflared tunnel round-trip, runbook.'
+
   - name: email-sync-stability
     status: active
     user: mykola
