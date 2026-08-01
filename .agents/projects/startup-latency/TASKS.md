@@ -342,11 +342,42 @@ Activation optimization (each lever measured individually via harness + TBT):
       ServiceNotAvailable); audit post-idle UX (late surfaces, remount behavior of deferred
       ReactRoot/ReactContext); tune the 14-plugin keep set.
 
-**State after this round (warm-cold single run, in-container):** navToReady 10.0 s,
-first-interactive 7.6 s, TBT 1.05 s, client.initialize 1.74 s. Module-side share of
-main:start → spaces-ready is ~1.9 s (enable window ~1.4 s + residual fan-out) vs
-client-init 1.74 s — module work is now at parity with client init, down from 3–4× larger;
-post-spaces-ready module waves ~1.4 s to first-interactive.
+**State after the PoC round (warm-cold single run, in-container):** navToReady 10.0 s,
+first-interactive 7.6 s, TBT 1.05 s, client.initialize 1.74 s.
+
+## DeferredStartup as a plain event (2026-08-01, user-directed restructure) — CHECKPOINT
+
+Manager machinery deleted; `DeferredStartup` is an ordinary activation event. Composer's
+`AfterStartupPlugin` (core, `src/plugins/after-startup.ts`) fires it once
+`app-framework:first-interactive` exists AND the host is idle — the paint anchor matters
+(the ready message precedes the shell render; rIC finds idle gaps mid-render-pipeline and
+an early fire floods the thread ahead of the workspace paint). Assignment is per-module
+`activatesOn: ActivationEvents.DeferredStartup` (6-agent sweep, ~70 plugins, ~155 modules).
+Rules held: ReactContext/ReactRoot eager, LayerSpec providers eager (this also fixed the
+PoC's generateHomeSuggestions ServiceNotAvailable), Migrations eager, non-browser
+node/workerd barrels untouched, roles/skills/createObject gates untouched.
+
+Coupling law (bit twice — transcription RecordingSession, calls CallManager): an eager
+ReactContext/ReactRoot pins every sibling capability its components read via strict
+useCapability/useAtomCapability. Documented at both sites.
+
+N=3 medians (in-container): warm-cold navToReady 12.3 s / fi 8.7 s / TBT 2.15 s /
+client-init 2.36 s; cold navToReady 12.6 s / fi 9.1 s. vs pre-deferral (14.6–15.4 s nav,
+~4.0 s TBT): still a large win. vs the PoC (10.7 s nav, 1.16 s TBT): ~1.5–2 s regression,
+attributable to (a) the user-constrained eager set (+~85 modules: ~40 ReactContexts,
+LayerSpecs, inline modules) and (b) the single idle wave saturating the machine ~5–6 s
+post-paint, which the avatar render (waitForReady's element) partially eats.
+
+Review agenda (how to close the gap and go further):
+1. Granular events replacing the one big wave — most deferred modules should activate on
+   first use (per-domain demand events), eliminating the idle burst entirely.
+2. Trickle the wave: slice DeferredStartup into batches or drop background-wave concurrency.
+3. Re-audit the ~40 eager feature ReactContexts — contexts whose UI cannot appear
+   pre-idle may defer safely with their whole plugin (PoC evidence: no remount issues).
+4. Soften the LayerSpec rule by making ProcessManager's layer collection reactive
+   (re-snapshot on DeferredStartup) — then LayerSpecs defer too.
+5. Wave-eval anomaly: per-module eval in the event wave runs ~2× slower than the PoC's
+   predicate wave for a smaller module set — profile the wave's chunk-eval pattern.
 
 Parked (harness): warm-cold document priming for `milestone:first-editor-interactive` —
 hand-rolled primer UI script was flaky (create-space/createObject races); reverted to the
