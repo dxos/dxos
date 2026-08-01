@@ -7,7 +7,7 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/person-deduplication-plugin-inb
 - [x] 1.1 `IdentitySpec` (+ `IdentityRegistry`) in `@dxos/extractor`.
 - [x] 1.2 `findDuplicates` (union-find over shared keys) + `DuplicateGroup`.
 - [x] 1.3 `planMerge` (survivor = min EntityId) + detached preview.
-- [x] 1.4 `applyMerge` (meta-key transfer, overrides fold, remove losers).
+- [x] 1.4 `applyMerge` (meta-key transfer, overrides assigned over the result, remove losers).
 - [x] 1.5 `personIdentitySpec` + `organizationIdentitySpec` in `@dxos/extractor-lib`.
 - [x] 1.6 Unit suite for Person duplicates — 21 tests green.
 - [x] 1.7 `IdentityIndex` + `makeIdentityIndex`/`buildIdentityIndex`.
@@ -19,7 +19,7 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/person-deduplication-plugin-inb
       `@dxos/app-framework` into `@dxos/extractor` would break its framework-free property. The
       engine itself is in `@dxos/extractor` as agreed. See DESIGN.md §3.4.
 - [x] 2.2 `SpaceCapabilities.IdentitySpec` + handlers in `plugin-space`.
-- [x] 2.3 `plugin-crm` contributes the Person/Organization specs.
+- [x] 2.3 `plugin-inbox` contributes the Person/Organization specs.
 
 ## Phase 3 — UI ✅ (live-verified in storybook)
 
