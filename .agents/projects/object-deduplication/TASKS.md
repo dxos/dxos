@@ -12,7 +12,7 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/person-deduplication-plugin-inb
 - [x] 1.6 Unit suite for Person duplicates — 21 tests green.
 - [x] 1.7 `IdentityIndex` + `makeIdentityIndex`/`buildIdentityIndex`.
 
-## Phase 2 — operations ✅
+## Phase 2 — operations ✅ (specs contributed by plugin-inbox — see DESIGN §3)
 
 - [x] 2.1 `FindDuplicates` / `MergeDuplicates` — definitions AND handlers in `plugin-space`, not
       `@dxos/extractor`: resolving a typename to its spec needs `Capability.Service`, and importing
@@ -29,7 +29,10 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/person-deduplication-plugin-inb
 - [x] 3.4 `TypeArticle.stories.tsx` `Duplicates` story — seeds an email group, a foreign-key group
       and a deliberate non-duplicate pair, registers the operation handlers + identity specs, and
       renders a stand-in Selected companion. Walked end to end with Playwright; two defects found
-      and fixed that way (see below). Play test not written — the manual `Test:` block is on the story.
+      and fixed that way (see below). The manual `Test:` block is on the story.
+- [ ] 3.5 **Play test for the `Duplicates` story.** The highest-value item left: every review bug
+      landed in the callers, not the engine, and codecov's 40% patch coverage is concentrated in
+      `TypeArticle` and the containers. Open the tab, confirm a merge, assert the group is gone.
 
 ### 3a — `TypeArticle` fixes requested alongside (2026-07-31)
 
