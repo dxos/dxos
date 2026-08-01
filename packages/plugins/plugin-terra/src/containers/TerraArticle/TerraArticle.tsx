@@ -19,7 +19,7 @@ import { meta } from '#meta';
 import { Terra, TerraCapabilities, TerraObject } from '#types';
 
 import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine';
-import { ChaseCamera, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene';
+import { ChaseCamera, ExplosionLayer, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene';
 import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim';
 
 /** Tracks pause state for the render-loop clock: while paused, `pausedAtMs` freezes the sim time; on resume, the elapsed pause duration is folded into `pausedTotalMs` so the clock continues from where it froze rather than jumping ahead. */
@@ -79,6 +79,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   const managerRef = useRef<SceneManager | null>(null);
   const objectLayerRef = useRef<ObjectLayer | null>(null);
   const trailLayerRef = useRef<TrailLayer | null>(null);
+  const explosionLayerRef = useRef<ExplosionLayer | null>(null);
   // Set/cleared only by the gizmo-toggle effect below, but read fresh each frame by the mount-once
   // render-loop observer — mirrors `simEngineRef`'s ref-for-freshness pattern, since the layer's own
   // lifetime (created/disposed on toggle) is independent of the observer's (mount-once).
@@ -138,6 +139,8 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     objectLayerRef.current = layer;
     const trails = new TrailLayer({ scene: manager.scene });
     trailLayerRef.current = trails;
+    const explosions = new ExplosionLayer({ scene: manager.scene });
+    explosionLayerRef.current = explosions;
     const initialValues = Terra.toConfigValues(terra);
     simEngineRef.current = buildSimEngine(initialValues, resolveDefinitions(terra));
     configRef.current = initialValues;
@@ -161,6 +164,8 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       layer.update(engine.objects, deltaMs);
       // Shares the same pause-adjusted clock as the sim, so trails freeze in place with everything else.
       trails.update(engine.objects, engineConfig, nowMs);
+      // Blasts run off `state.explosion`, which the sim clock already drives, so they freeze too.
+      explosions.update(engine.objects);
       // Read fresh each frame: the layer itself is created/disposed by the toggle effect, not here.
       gizmoLayerRef.current?.update(engine.objects, deltaMs);
 
@@ -189,6 +194,8 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     return () => {
       manager.scene.onBeforeRenderObservable.remove(observer);
       simEngineRef.current = null;
+      explosions.dispose();
+      explosionLayerRef.current = null;
       trails.dispose();
       trailLayerRef.current = null;
       layer.dispose();

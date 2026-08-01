@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TerraConfigValues, type Vec3, scale } from '../engine';
+import { type TerraConfigValues, type Vec3, add, scale, sub } from '../engine';
 import { type TerraObject } from '../types';
-import { advance } from './geo';
+import { tangentFrame } from './geo';
 import { type MotionContext, type ObjectState, evaluate } from './motion';
+
+const DEG = Math.PI / 180;
 
 /** Per-kind tuning: emission spacing, puff lifetime, sample cap, and render-side sizing/alpha. */
 export type TrailSpec = {
@@ -122,11 +124,18 @@ export const trailPuffs = (
 const APEX_FRACTION = 0.5;
 
 /**
- * `historical`'s world position, moved back along its own heading at that instant by the kind's
- * `aftOffset` so the puff leaves the tail rather than the middle of the form. Purely cosmetic — it
- * never affects emission timing or spacing.
+ * `historical`'s world position, moved back along the axis it was *flying* at that instant by the
+ * kind's `aftOffset`, so the puff leaves the tail rather than the middle of the form. The axis is
+ * pitched off the local horizontal by `state.pitch`, exactly as the mesh is drawn: offsetting along
+ * the ground track alone would hang a climbing rocket's exhaust out beside its arc instead of below
+ * it, which is the whole plume for a near-vertical launch. Purely cosmetic — it never affects
+ * emission timing or spacing.
  */
 const behindHull = (historical: ObjectState, spec: TrailSpec): Vec3 => {
-  const behindUnit = advance(historical.unit, historical.bearing, -spec.aftOffset);
-  return scale(behindUnit, historical.radius);
+  const { north, east } = tangentFrame(historical.unit);
+  const heading = historical.bearing * DEG;
+  const tangent = add(scale(north, Math.cos(heading)), scale(east, Math.sin(heading)));
+  const forward = add(scale(tangent, Math.cos(historical.pitch)), scale(historical.unit, Math.sin(historical.pitch)));
+  // `aftOffset` is an angular offset, so it becomes a world distance at the object's own radius.
+  return sub(scale(historical.unit, historical.radius), scale(forward, spec.aftOffset * historical.radius));
 };

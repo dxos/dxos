@@ -33,6 +33,8 @@ export type ObjectState = {
   phase: RocketPhase;
   /** A rocket's progress through its ballistic arc, `[0, 1]` (launch to touchdown); `0` for every other kind. */
   flightFraction: number;
+  /** Progress through the explosion a rocket leaves where it came down, `[0, 1]`: `0` until it lands, `1` once the blast has faded. The rocket itself is gone for any value above `0`. */
+  explosion: number;
 };
 
 /** `elapsed` is seconds since the object's `spawnedAt` — always absolute, never a per-frame delta. */
@@ -40,6 +42,9 @@ export type MotionContext = { config: TerraConfigValues; elapsed: number };
 
 /** Degrees to radians. */
 const DEG = Math.PI / 180;
+
+/** How long a rocket's impact explosion burns, in simulated seconds. */
+const EXPLOSION_SECONDS = 2.5;
 
 /** A straight great-circle route between an object's source and target, used until Task 6 replans it over the nav grid. */
 const routeFromEndpoints = (definition: TerraObject.TerraObject): Vec3[] => {
@@ -83,6 +88,7 @@ const evaluateRouted = (
     pitch,
     phase: 'cruise',
     flightFraction: 0,
+    explosion: 0,
   };
 };
 
@@ -111,6 +117,7 @@ const evaluateOrbit = (definition: TerraObject.TerraObject, context: MotionConte
       pitch: 0,
       phase: 'cruise',
       flightFraction: 0,
+      explosion: 0,
     };
   }
 
@@ -139,6 +146,7 @@ const evaluateOrbit = (definition: TerraObject.TerraObject, context: MotionConte
     pitch,
     flightFraction: 0,
     phase: 'cruise',
+    explosion: 0,
   };
 };
 
@@ -160,6 +168,12 @@ const evaluateRocket = (definition: TerraObject.TerraObject, context: MotionCont
     flightFraction: fraction,
   });
 
+  // The instant it comes down is closed-form (the arc over its speed), so how far the blast has
+  // burnt through follows from `elapsed` alone — no landing event to catch and remember.
+  const impactElapsed = definition.speed > 0 ? total / definition.speed : Infinity;
+  const explosion =
+    fraction >= 1 ? Math.min(1, (clampNonNegative(context.elapsed) - impactElapsed) / EXPLOSION_SECONDS) : 0;
+
   return {
     unit,
     radius,
@@ -171,6 +185,7 @@ const evaluateRocket = (definition: TerraObject.TerraObject, context: MotionCont
     arrived: fraction >= 1,
     phase,
     flightFraction: fraction,
+    explosion,
   };
 };
 
@@ -201,6 +216,7 @@ export const initialState = (definition: TerraObject.TerraObject, config: TerraC
         pitch,
         phase: 'cruise',
         flightFraction: 0,
+        explosion: 0,
       };
     }
     case 'satellite':

@@ -38,6 +38,8 @@ orbiting camera, and a live config panel — rendered from a `Terra` ECHO object
 - [x] **Task 13 — Changeset** — `.changeset/react-ui-slider-primitive.md`, `@dxos/react-ui: minor` (the consumer-visible part is the new `Slider` primitive + `labelEnd` slot; plugin-terra itself is private).
 - [x] **Final whole-branch review** — returned READY TO MERGE. Fix wave applied: ResizeObserver for container resize (real bug — canvas only resized on `window.resize`), Radix slider pin bump to clear React 19 warnings, PLUGIN.mdl text, Slider thumb a11y names, dependency trim. **PR #12353 opened; Check green.** All 14 CodeRabbit review comments addressed and replied to.
 
+- [x] **Rocket impact and exhaust** (user directive, 2026-07-31) — the exhaust was offset back along the ground track only, so a near-vertical launch hung its whole plume beside the arc instead of under it; `sim/trail.ts` now offsets along the pitched flight axis (`state.pitch`, which the behaviors work gave it). On impact a rocket is destroyed — `ObjectLayer` skips anything with `state.explosion > 0` — and a new `scene/explosion-layer.ts` draws concentric shells that expand and fade over it. `state.explosion` is closed-form like everything else in `sim/`: the impact instant is the arc over the speed, so the blast's progress follows from `elapsed` alone with no landing event to catch. Covered by NullEngine tests (concentric radii, decreasing opacity, expansion, burn-out) and sim tests; NOT yet confirmed on camera — the chase camera ends up inside the blast (spheres are front-face only, so it renders nothing from in there), and from the orbit view it is a few pixels.
+
 ### References
 
 - Per-task review findings and commit ranges: `.superpowers/sdd/progress.md`.

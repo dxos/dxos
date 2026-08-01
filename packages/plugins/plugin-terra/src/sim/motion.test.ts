@@ -154,6 +154,32 @@ describe('rocket motion', () => {
     expect(midFlight.radius).toBeGreaterThan(atLaunch.radius);
   });
 
+  test('explodes where it lands: nothing before impact, a blast that burns out after', () => {
+    const state = initialState(rocket, config);
+    // Its arc is a quarter turn walked at 0.02 rad/s, so it comes down at ~78.5s.
+    const impact = Math.PI / 2 / rocket.speed;
+
+    expect(evaluate(state, rocket, { config, elapsed: impact - 1 }).explosion).toBe(0);
+    const landed = evaluate(state, rocket, { config, elapsed: impact + 0.5 });
+    expect(landed.explosion).toBeGreaterThan(0);
+    expect(landed.explosion).toBeLessThan(1);
+    const later = evaluate(state, rocket, { config, elapsed: impact + 1.5 });
+    expect(later.explosion).toBeGreaterThan(landed.explosion);
+    expect(evaluate(state, rocket, { config, elapsed: impact + 60 }).explosion).toBe(1);
+  });
+
+  test('nothing but a rocket ever explodes', ({ expect }) => {
+    const boat = TerraObject.make({
+      kind: 'boat',
+      speed: 0.02,
+      source: { lat: 0, lng: 0, height: 0 },
+      target: { lat: 0, lng: 10, height: 0 },
+      spawnedAt: 0,
+    });
+    const state = initialState(boat, config);
+    expect(evaluate(state, boat, { config, elapsed: 100_000 }).explosion).toBe(0);
+  });
+
   test('ends at the target', () => {
     const state = initialState(rocket, config);
     const arrived = evaluate(state, rocket, { config, elapsed: 100_000 });

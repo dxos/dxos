@@ -90,6 +90,10 @@ export class ObjectLayer {
     const byKind = new Map<TerraObject.Kind, SimObject[]>(KINDS.map((kind) => [kind, []]));
     const live = new Set<TerraObject.TerraObject>();
     for (const object of objects) {
+      // A rocket is destroyed by its own impact: past that instant only the explosion is drawn.
+      if (object.state.explosion > 0) {
+        continue;
+      }
       byKind.get(object.definition.kind)?.push(object);
       live.add(object.definition);
     }
