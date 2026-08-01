@@ -4,11 +4,13 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
+import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Database, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Obj, Query, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -16,6 +18,12 @@ import { Organization, Person } from '@dxos/types';
 
 import { OperationTestLayer } from '../../../testing';
 import { ObjectCreate } from './definitions';
+
+const loadRootCollection = Effect.gen(function* () {
+  const [properties] = yield* Database.query(Query.type(SpaceProperties)).run;
+  const collectionRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrThrow);
+  return yield* Database.load(collectionRef);
+});
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -67,21 +75,15 @@ describe('ObjectCreate', () => {
     'object-create: default leaves the root collection untouched',
     Effect.fnUntraced(
       function* (_) {
-        const collection = yield* Database.add(Collection.make({ objects: [] }));
-        const properties = yield* Database.add(Obj.make(SpaceProperties, {}));
-        Obj.update(properties, (properties) => {
-          const meta = Obj.getMeta(properties);
-          meta.annotations ??= {};
-          Annotation.setDictionary(meta.annotations, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
-        });
-
         yield* Operation.invoke(ObjectCreate, {
           typename: Type.getTypename(Collection.Collection),
           properties: { name: 'Unattached', objects: [] },
         });
 
+        const collection = yield* loadRootCollection;
         expect(collection.objects).toHaveLength(0);
       },
+      WithProperties,
       Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
     ),
@@ -91,16 +93,6 @@ describe('ObjectCreate', () => {
     'object-create: attach files the object in the space root collection',
     Effect.fnUntraced(
       function* (_) {
-        // Seed the root collection (mirrors plugin-markdown's `WithProperties` test helper;
-        // TODO(burdon): factor out — see plugin-markdown/src/testing.ts).
-        const collection = yield* Database.add(Collection.make({ objects: [] }));
-        const properties = yield* Database.add(Obj.make(SpaceProperties, {}));
-        Obj.update(properties, (properties) => {
-          const meta = Obj.getMeta(properties);
-          meta.annotations ??= {};
-          Annotation.setDictionary(meta.annotations, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
-        });
-
         // A collection is always collection-eligible; non-eligible types (no
         // `CollectionItemAnnotation`) are filed under navtree type nodes instead and skip the root.
         yield* Operation.invoke(ObjectCreate, {
@@ -109,12 +101,14 @@ describe('ObjectCreate', () => {
           attach: true,
         });
 
+        const collection = yield* loadRootCollection;
         const created = (yield* Database.query(Query.type(Collection.Collection)).run).find(
-          (candidate) => candidate !== collection,
+          (candidate) => candidate !== collection && candidate.name === 'Projects',
         );
         expect(created).toBeDefined();
         expect(collection.objects.map((ref) => ref.target)).toContain(created);
       },
+      WithProperties,
       Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
     ),
