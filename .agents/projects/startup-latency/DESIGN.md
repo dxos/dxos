@@ -144,3 +144,63 @@ Module activation is not the only thing that regressed, and the map should not p
   ~122 value-only of 359 startup roots. Byte attribution tells us where the 2–3 MB actually lives.
 - **Client/network init** — see the exit criterion above; if it dominates, it becomes its own
   workstream and module deferral is demoted.
+
+## Proposal: feature-scoped activation events (2026-08-01, for review)
+
+Replaces the coarse `DeferredStartup` gate module-by-module. Principle (user-ratified framing):
+one event per **application feature**, not per concern — a module activates during startup only
+if the feature starting up is the one it belongs to. Example: no dedicated skills event; an
+assistant event carries skills AND every other assistant-related capability.
+
+### The event family
+
+`FeatureRequested(pluginKey)` — one keyed event family (`org.dxos.app-framework.event.
+featureRequested`, specifier = plugin key), using the existing `OWN_PLUGIN_SPECIFIER` mechanism
+so a module declares `activatesOn: FeatureRequested(OWN_PLUGIN)` without naming its plugin.
+Feature ≈ plugin: sheet, markdown, kanban, calls, transcription, each integration (github,
+linear, slack, …). No new manager machinery — plain events, like DeferredStartup.
+
+Cross-feature integrations compose with `allOf`: transcription's MarkdownExtension activates on
+`allOf(FeatureRequested(markdown), FeatureRequested(transcription))` — loaded only when both
+features are live. Same pattern for CommentConfig, AnchorSort, skills contributed by feature
+plugins, and Markdown bindings.
+
+### Fire sites (when a feature "starts up")
+
+1. **Object open** (immediate): a plank/surface resolves an object whose typename maps to a
+   plugin — the typename→plugin map comes from the eager schema modules. Covers editors,
+   boards, sheets, maps, drawings.
+2. **Data presence** (idle-batched): the navtree/space scan sees objects of a plugin's types in
+   the workspace — fire at idle so sidebar items get their graph builders/actions without the
+   user opening one. A feature absent from the user's data never loads.
+3. **Headless operation invocation** (immediate): the invoker, on a keyed-handler miss, resolves
+   the operation's owning plugin from the registry, fires its event, retries once. Covers
+   triggers/routines invoking runInstructions-class ops.
+4. **Settings section open**: opening a plugin's settings panel fires its event (Settings
+   modules ride the feature event).
+5. **Toolkit materialization**: `OpaqueToolkitSpec.getToolkit` fires `FeatureRequested(assistant)`
+   — replaces and retires `SkillsRequested`.
+6. Existing gates stay and compose: `SurfacesRequested(role)`, `CreateObjectRequested`.
+
+### Migration
+
+- Mechanical sweep (same shape as the DeferredStartup sweep): per plugin, replace
+  `activatesOn: DeferredStartup` with the own-feature event; cross-feature modules get `allOf`.
+- `DeferredStartup` remains as the safety-net gate for genuinely app-wide modules (e.g. crx page
+  actions, preview popover) and fires from the same paint-anchored composer hook; the test
+  harness fires Startup → DeferredStartup → (per test) feature events.
+- The eager keyed handler-set DEFINITIONS stay eager per the ratified decision only for keep-set
+  plugins; feature plugins' handler sets ride their feature event, with fire site 3 as the
+  headless safety net.
+- Assistant becomes the exemplar (per the user's example): its 12 deferred modules +
+  SkillDefinition (all plugins' skills via allOf) + Toolkit move onto
+  `FeatureRequested(assistant)`, fired by chat surfaces, toolkit materialization, and the
+  trigger path.
+
+### What this buys over the idle wave
+
+The DeferredStartup wave loads ~180 modules unconditionally at idle (~5 s of background
+saturation). Feature events load only what the session's data and actions actually touch —
+a fresh document-editing session loads markdown and nothing else; the burst disappears
+entirely, replaced by small per-feature waves at interaction time (budgeted per the map's
+interaction-latency column).
