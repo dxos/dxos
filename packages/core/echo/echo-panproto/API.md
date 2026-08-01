@@ -306,7 +306,7 @@ declared type (§1), so this path is less lossy than the stored-schema analogue.
 ## 8. Laws
 
 ```ts
-export const checkLaws: (lens: Lens.Any, options?: { instances?: number }) => LawCheckResult;
+export const checkLaws: (obj: Obj.Unknown, lens: Lens.Any) => LawCheckResult;
 ```
 
 **GetPut only, over the object's own current values** — pure, no mutation, no engine call, so it is

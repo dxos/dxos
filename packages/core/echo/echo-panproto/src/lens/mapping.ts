@@ -16,10 +16,8 @@ import { type Codec, type Converted, type Derived, type Mapping, type Plan, type
 const RESERVED = new Set(['id']);
 
 const properties = (entity: Type.AnyObj | Schema.Schema.Any): SchemaEx.SchemaProperty[] => {
-  const schema = Type.isType(entity as Type.AnyEntity) ? Type.getSchema(entity as Type.AnyEntity) : entity;
-  return SchemaEx.getProperties((schema as Schema.Schema.Any).ast).filter(
-    (property) => !RESERVED.has(String(property.name)),
-  );
+  const schema = Type.isType(entity) ? Type.getSchema(entity) : entity;
+  return SchemaEx.getProperties(schema.ast).filter((property) => !RESERVED.has(String(property.name)));
 };
 
 const literals = (ast: SchemaAST.AST): readonly SchemaAST.LiteralValue[] | undefined => {
@@ -75,7 +73,7 @@ export const compatible = (source: SchemaEx.SchemaProperty, target: SchemaEx.Sch
         .map((property) => String(property.name))
         .sort()
         .join(',');
-    return names(source.type) === names(target.type as SchemaAST.TypeLiteral);
+    return names(source.type) === names(target.type);
   }
 
   // Declarations (Ref, and the branded formats) carry their identity in the AST identifier.
@@ -145,11 +143,14 @@ const entryFor = (property: string, entry: MappingEntryLike): ResolvedEntry => {
   }
 
   if (isDerived(entry)) {
+    // Captured, not re-read in the closure: the guard proves it exists here, which a later
+    // `entry.put` access cannot.
+    const put = entry.put;
     return {
       property,
       from: entry.from as readonly string[],
       get: (source) => entry.get(source),
-      put: entry.put && ((value, source) => entry.put!(value, source) as Record<string, unknown>),
+      put: put && ((value, source) => put(value, source) as Record<string, unknown>),
       origin: 'explicit',
     };
   }
