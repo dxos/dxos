@@ -126,13 +126,106 @@ permutation tables and is now memoized in `engine/noise.ts`. Keep per-call
 allocation out of `evaluate` and its callees; measure with a frame-loop probe
 rather than by reasoning about it, since the trail multiplier is easy to forget.
 
+### Behaviors
+
+`sim/motion.ts` answers _where_ an object is — the route walk, the orbit, the
+ballistic arc. `sim/behaviors.ts` answers _how it flies there_: one behavior per
+kind, each returning the object's attitude (its distance from the planet's centre
+and its nose pitch) for an instant. A new kind is an entry in that table rather
+than another arm of a switch inside the motion controllers, and `ObjectState.pitch`
+is what the renderer orients by — for every kind, not just rockets.
+
+The plane's behavior is terrain-following. It samples the terrain across a window
+that runs both ahead of and behind it, and treats a peak `gap` away as demanding
+`clearance - maxClimb * gap` rather than its full clearance immediately: the plane
+has that much arc left in which to climb. The highest such demand across the window
+is the altitude, which therefore rises into a mountain at the climb limit, tops out
+over it, and settles back to cruise at that same limit once it is behind — no dive
+at a ridge, no fall out of the sky past one. The pitch is that profile's own slope,
+measured across a baseline either side rather than at a point, so the nose eases
+through a summit instead of flipping from climb to descent in one frame.
+
+Two things this deliberately does not do: it does not re-route around terrain (the
+nav grid still lets air routes cross anything — see the backlog), and it cannot
+answer terrain steeper than a full-rate climb over the lookahead can reach.
+
+The rocket's behavior sets its nose to its own flight-path angle — the climb rate
+of the ballistic profile over the speed it covers the arc at. An angle scripted
+independently of the trajectory (a cosine from +90° to -90°, as it was first
+written) is far steeper than a lofted arc really flies, and the rocket visibly
+skids: pointing up while travelling forward. Because the exhaust also trails along
+`state.pitch`, an angle that disagrees with the path takes the plume with it.
+
+Cost: the behavior is the plane's whole per-evaluation expense, and `evaluate` runs
+hundreds of times a frame under the trail sampler. The window is therefore walked
+with `walkRouteSeries` (one pass over the polyline for all the samples, rather than
+`walkRoute` rescanning it per sample), which took the demo world from 3.05ms to
+1.90ms per frame at that rate.
+
+### Destruction and effects
+
+A rocket is destroyed where it lands, and the blast that replaces it is derived
+the same way everything else in `sim/` is: the impact instant is the arc over the
+speed, so `state.explosion` follows from `elapsed` alone. There is no landing
+event to catch and no per-frame state to keep, which is what lets a peer joining
+late — or a view scrubbed to an arbitrary instant — see the same blast at the
+same stage. `scene/explosion-layer.ts` draws it as concentric shells with
+_additive_ blending; alpha-blended, each shell veils the one inside it and three
+of them over a night sky read as muddy brown rather than as light.
+
+Exhaust is per-kind (`TrailSpec.color`) because a wake and a plume are not the
+same thing — spray behind a hull, flame behind a nozzle. The plume is gated on
+the boost phase, so it stops when the engine does rather than smearing over the
+whole arc, and it is offset along the pitched flight axis: offset along the
+ground track alone (as it first was) hangs a near-vertical launch's whole plume
+beside the arc instead of under it.
+
+### Views
+
+`TerraArticle` shows one of three views, chosen by tabs: the orbiting 3D planet,
+the 2D map from above, and a chase camera riding a selected object. The 3D canvas
+is never unmounted — the Babylon render loop is what advances the simulation, and
+the map renders from React state sampled inside that loop — so the map hides it
+with `invisible` rather than `display: none`, which would also collapse the
+canvas to 0x0. One `selectedId` serves the map's highlight, the telemetry row,
+and the camera's target.
+
+A course change (a new destination, a waypoint) is steered into, never snapped
+to: both renderers ease their drawn heading toward `state.bearing` at the kind's
+own turn rate (`scene/heading.ts`). This is rendering-only — it never feeds back
+into `sim/`, so peers rendering at different cadences still agree on position.
+
+Changing one object's destination re-derives only that object
+(`SimEngine.respawn`). Rebuilding the engine would re-spawn every object from
+leg 0, which is not neutral: anything more than `MAX_CATCHUP_LEGS` into its
+sequence snaps to a fresh leg.
+
+### Planet cache
+
+Generation is deterministic in `TerraConfigValues` and costs 1.3s at the default
+resolution of 256 (5s at 512), while the article remounts on any resize, on
+opening a companion, and on navigation — each of which used to regenerate. The
+planet is therefore cached by a stable key over those values (`engine/planet-cache.ts`)
+in a plugin capability (`TerraCapabilities.PlanetCache`), which outlives every
+surface; rendered outside a plugin manager (stories, tests) the mount owns a
+private cache instead. A cache hit also skips the regeneration debounce, since
+there is nothing to coalesce.
+
+Retention is bounded by bytes, not entries: one mesh is 94MB at resolution 256
+and 377MB at 512, so an entry-count cap would be a memory cliff. The budget
+evicts least-recently-used planets but always keeps the newest, which may exceed
+it on its own. `SceneManager.render` additionally no-ops when handed the planet
+it already drew, so a config-identity change that resolves to the same planet
+does not dispose and rebuild identical meshes (~350ms).
+
 ---
 
 ## Backlog (Phase 3+)
 
 Tracked in the Phase 2 spec; summarized here.
 
-- Effects: explosions, exhaust, smoke, vapor trails (spheres).
+- Effects: smoke and vapor trails beyond the wakes/plumes already shipped
+  (explosions and exhaust are done — see "Destruction and effects").
 - Surface (flyover/walk) camera with per-face quadtree LOD and chunk streaming.
 - Zoom-dependent terrain resolution.
 - Sun/directional light; day–night.

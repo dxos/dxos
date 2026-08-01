@@ -17696,6 +17696,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -17709,6 +17712,9 @@ importers:
         specifier: 'catalog:'
         version: 4.0.3
     devDependencies:
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
