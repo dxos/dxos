@@ -6,12 +6,13 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 
 ## Milestone 1 — local round-trip (current)
 
-- [ ] Leg 1: composer dev server syncing with local edge (edge:dev :8787 + composer serve + DX_EDGE_BASE_URL) — FIRST, user watching
-- [ ] Pull ~/Code/dxos/edge to origin/main; secrets via `op` / secrets:dev as needed
-- [ ] Identity + agent on local edge (dx profile → localhost:8787); create working space
-- [ ] MCP leg: START_MCP=1 DX_PARALLEL_WRANGLER_DEV=1; verify bindings hit LOCAL edge/operation-service
-- [ ] dx mcp connect → tools → whoami
-- [ ] Round-trip: createDocument → visible in Composer; Composer edit → readDocument; updateDocument → live in Composer (screenshots)
+- [x] Leg 1: composer dev server syncing with local edge (ws 101, agents/create 200, live queue-replicator traffic)
+- [x] Pull edge to origin/main; rebuilt stale dists; .env via op inject (CLOUDFLARE_API_TOKEN needed for FUNCTIONS_DISPATCHER remote proxy); wiped .wrangler + D1 migrations (UserAgent.ownerIdentityDid)
+- [x] Identity: reused Composer profile (key from edge auth log; agent registered via composer reload); space BAF4N7HEHDPFFQ7Q377TT6CG4ASGP5IR6
+- [x] MCP leg: all service bindings local [connected]
+- [x] OAuth+MCP via mcp-smoke.mjs: register/PKCE/token → initialize → tools/list → whoami (composer identity)
+- [x] createDocument+updateDocument → doc 01KYXPCFW1G3XX5J76PPGJYGHP live in Composer UI (verified visually)
+- [ ] Reverse: Composer edit → readDocument
 - [ ] cloudflared tunnel :8791; repeat one round-trip via tunnel; record URL + morning Claude Desktop steps
 - [ ] Runbook (commands, ports, ids, tunnel URL, morning steps)
 
