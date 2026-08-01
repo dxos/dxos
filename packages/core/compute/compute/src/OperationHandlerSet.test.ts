@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import * as Operation from './Operation';
@@ -121,11 +122,11 @@ describe('OperationHandlerSet.keyed', () => {
         () => (loads.b++, Promise.resolve({ default: makeHandler(KEY_B, 'B') })),
       ],
     ]);
-    const found = await Effect.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_A));
+    const found = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_A));
     expect(found.meta.key).toEqual(KEY_A);
     expect(loads).toEqual({ a: 1, b: 0 });
     // Cached per key across lookups.
-    await Effect.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_A));
+    await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_A));
     expect(loads.a).toEqual(1);
   });
 
@@ -140,12 +141,12 @@ describe('OperationHandlerSet.keyed', () => {
     ]);
     const merged = OperationHandlerSet.merge(keyed, unkeyed);
 
-    const fromKeyed = await Effect.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
+    const fromKeyed = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
     expect(fromKeyed.meta.key).toEqual(KEY_A);
     expect(forced).toEqual(0);
 
     // Unkeyed fallback still resolves (forcing only that set).
-    const fromUnkeyed = await Effect.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_B));
+    const fromUnkeyed = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_B));
     expect(fromUnkeyed.meta.key).toEqual(KEY_B);
     expect(forced).toBeGreaterThan(0);
   });
@@ -164,7 +165,7 @@ describe('OperationHandlerSet.keyed', () => {
     ]);
     const merged = OperationHandlerSet.merge(override, keyed);
 
-    const found = await Effect.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
+    const found = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
     expect(found).toBe(overrideHandler);
   });
 });

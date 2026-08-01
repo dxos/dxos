@@ -3,7 +3,9 @@
 //
 
 import { type Decorator, type StoryContext } from '@storybook/react';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import React, { useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
@@ -133,8 +135,14 @@ const WithPluginManagerApp = ({
   useAsyncEffect(async () => {
     await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
     // Mirror the host contract (composer fires every plugin's start event at idle): stories
-    // see the module set the app converges to, so start-gated modules are present.
-    await EffectEx.runAndForwardErrors(ActivationEvents.activateAllPluginStartEvents(pluginManager));
+    // see the module set the app converges to, so start-gated modules are present. A story
+    // switch shuts the manager down mid-trickle, interrupting the whole activation fiber —
+    // inspect the exit so that expected teardown interruption does not surface as an
+    // unhandled rejection, while real failures still throw.
+    const exit = await Effect.runPromiseExit(ActivationEvents.activateAllPluginStartEvents(pluginManager));
+    if (Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause)) {
+      EffectEx.unwrapExit(exit);
+    }
   }, [fireEvents, pluginManager, storyId]);
 
   // Default to a fallback that offers "Download logs" so a crashed story is still debuggable;
