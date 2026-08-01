@@ -74,8 +74,9 @@ Blocking questions, all in DESIGN.md §12 "What this does not settle":
 - [ ] **URL and deck identity** — BLOCKING for per-collection decks, not merely open: `activeDeck` _is_
       the workspace in both the URL and the `Layout` capability, so a deck cannot be keyed by anything
       else until the two are separated and the grammar gains a slot for which deck. Needs josiah.
-- [ ] **Verify P2 in a browser** — seeding is navtree-driven and the unit tests only cover the pure
-      helper; the wiring (graph children order, attention landing on the first plank) needs the app.
+- [x] **Verify P2 in a browser** — done, and it is what found P2a: the unit tests passed while the
+      feature was unreachable. Clicking a collection of three documents opens three planks. Treat every
+      remaining phase the same way; the pure helpers here are the easy half.
 - [ ] **Deck lifetime** — `decks` is persisted and today bounded by workspace count; keyed by collection
       it grows without bound and wants eviction.
 
