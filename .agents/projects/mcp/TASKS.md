@@ -21,7 +21,8 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 ## Milestone 3 — overnight 2026-08-01 (user-directed)
 
 - [ ] E2E smoke script #1 (device-invitation path): start EDGE services, `halo create` CLI identity, open browser with device invitation (race fix now on main via #12426), complete join, MCP createObject document → assert it appears in the browser (playwright)
-- [ ] E2E smoke script #2 (OAuth-stub path): same assertion via the identity-key OAuth flow (scripted mcp-smoke pattern)
+- [~] E2E smoke script #2 (OAuth-stub path): .agents/projects/mcp/scripts/e2e-oauth-smoke.mjs written; MCP legs verified live (text+document created, root-collection attach worked — collection now 5 members); playwright browser-assert leg still to be run
+- [ ] FINDING: raw createObject makes ORPHANS — not attached to the space root collection, so invisible in the navtree (old createDocument did CollectionModel.add). Script works around via updateObject on the collection objects[] (racy full-array replace). API fix candidates: attach option on createObject, or curated task/document verbs (task-plugin spec)
 - [ ] Design: claude skill ⇄ Composer space sync — TASKS document per project; registry.yml optionally carries the ECHO DXN (spaceid/objectid) of the TASKS doc
 - [ ] Design/track: dedicated task-list plugin — reconcile plugin-outliner vs plugin-projects (different notion of project); consider task/project-specific MCP verbs vs the generic object verbs
 - [ ] Land #12423 first (auto-merge armed), keep working in this worktree
