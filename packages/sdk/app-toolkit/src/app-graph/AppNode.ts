@@ -21,6 +21,7 @@ import { type Position } from '@dxos/util';
 import { NotFound } from '../app';
 import { Translations } from '../app';
 import { AppAnnotation } from '../echo';
+import * as DeckSpec from './DeckSpec';
 
 //
 //
@@ -235,6 +236,7 @@ export const makeObject = ({
   })();
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(AppAnnotation.GraphPropsAnnotation.get(schema)) : undefined;
+  const deckSpec = schema ? Option.getOrUndefined(AppAnnotation.DeckAnnotation.get(schema)) : undefined;
 
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ db, collection: object })
@@ -277,6 +279,7 @@ export const makeObject = ({
       onRearrange,
       blockInstruction,
       canDrop,
+      [DeckSpec.DECK_SPEC_PROPERTY]: deckSpec,
       ...partials,
     },
   };
