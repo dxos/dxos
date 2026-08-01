@@ -68,8 +68,9 @@ Consequences:
 
 - `applyAuthoredDarkRules` cannot fire as written — there is no sender stylesheet in the shadow root to
   rewrite. It is dead code until the sanitizer preserves (or we re-inject) the authored CSS.
-- `detectColorScheme` is unaffected and still useful: it reads the raw string, so the `light`-only
-  branch works today (verified — `m2` gets the paper sheet in dark mode).
+- `detectColorScheme` is unaffected and still useful: it reads the raw string, so the declaration is
+  still available to policy. Note the `light`-only branch no longer withholds the recolor (see
+  Decisions below) — `m2` is recolored like anything else.
 - Two ways forward, not yet chosen: (1) allow `<style>` through sanitization, accepting that CSS can
   still phone home via `background-image` even inside a shadow root, so remote-image blocking would
   need to extend to CSS urls; or (2) extract just the `@media (prefers-color-scheme: dark)` blocks from
@@ -84,7 +85,7 @@ the sender's near-black text. Now addressed by the paper sheet below.
 
 | Declaration                                                        | Fixture | Treatment                                                                                                        |
 | ------------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `color-scheme: light dark` + `@media (prefers-color-scheme: dark)` | —       | Adopt the sender's dark design **if its rules actually survived** — otherwise recolor, so it never renders light |
+| `color-scheme: light dark` + `@media (prefers-color-scheme: dark)` | `m3`    | Adopt the sender's dark design **if its rules actually survived** — otherwise recolor, so it never renders light |
 | `color-scheme: light` only                                         | `m2`    | Recolor. The declaration says the sender has no dark design, not that ours is unwelcome                          |
 | Nothing                                                            | `m1`    | Recolor to the app theme, whatever the layout                                                                    |
 
@@ -175,5 +176,6 @@ per-recipient URL tokens (unsubscribe links, click/open trackers) are replaced w
 layout, inline styling and `color-scheme` declarations — the properties these fixtures exist to
 exercise — are left intact. Scrub anything new the same way; these files are in a public repo.
 
-Both current fixtures are table layouts, so both exercise Gap B only; neither is dark-capable, so
-nothing here yet covers the CSSOM-hoist path. A dark-capable capture is still needed.
+All three fixtures are table layouts. `m3` is dark-capable — it declares `light dark` and ships
+`@media (prefers-color-scheme: dark)` rules — so it is the fixture that will exercise the CSSOM-hoist
+path once Gap A is closed; today its rules are stripped and it falls through to the recolor.

@@ -46,6 +46,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/extractor-lib"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -101,6 +104,9 @@
     },
     {
       "path": "../plugin-routine"
+    },
+    {
+      "path": "../plugin-space"
     }
   ]
 }
