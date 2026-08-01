@@ -1,6 +1,6 @@
 # task-planning Skill — Tasks
 
-_Resume: commit the `$session`→`$project` rename + `$project` picker (5 files). Uncommitted: SKILL.md, TASKS.md, .claude/CLAUDE.md, .claude/hooks/track.sh, AGENTS.md, and the `.agents/sessions`→`.agents/projects` rename. Last: renamed the sentinel/concept and added the numbered pick-to-resume table._
+_Resume: test the skill in a new repo (see Follow-ups). Uncommitted: none. Last: unified all sentinels under `$project VERB [ARGS]` and hardened session-start safety._
 
 ## Sentinel rename + picker
 
@@ -17,6 +17,27 @@ resume from by row number.
 - [x] **`$project` picker** — bare `$project`/`$project list` renders a numbered
       markdown table; replying with a row number resumes that project (in-context, no
       bare-number hook). Verified hook fires on bare/`list`/`new`, silent on `$projects`.
+
+## Unified `$project VERB` sentinel + session-start hardening (2026-08-01)
+
+One sentinel for everything: `$project VERB [ARGS]` (list | new | end | track |
+hydrate | resume); legacy `$track`/`$hydrate`/`$resume` map with a nudge. Resume
+gained an explicit "stay in the assigned worktree" rule after a real session
+adopted another project's worktree via `$resume`.
+
+### Tasks
+
+- [x] **Unify sentinels under `$project`** — track.sh rewrite (verb dispatch,
+      punctuation-safe parsing, soft unknown-verb directive), SKILL.md,
+      .claude/CLAUDE.md. Verified all verbs + legacy forms + prose false-fire.
+- [x] **Resume never leaves the assigned worktree** — rule added to the registry
+      note, the resume steps, and the injected resume directive.
+- [x] **CPD fallback harmonized** — all four hook commands in
+      .claude/settings.json now fall back to `git rev-parse --show-toplevel`.
+- [x] **Global session-start layer** (`~/.claude/hooks/`, outside the repo) —
+      session-context.sh (SessionStart verdict injection), branch-beacon.sh
+      (silent-unless-drifted UserPromptSubmit), dxos-gated guard mirrors;
+      motivated by stub worktrees that load no project files at all.
 
 ## Follow-ups
 
