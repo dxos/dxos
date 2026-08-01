@@ -26,12 +26,10 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
-import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
+import { type SwarmNetworkManagerOptions, type TransportFactory } from '@dxos/network-manager';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
-import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
+import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { isBun } from '@dxos/util';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
@@ -87,7 +85,8 @@ const setupNetworking = async (
   transportFactory: TransportFactory;
 }> => {
   const { MemorySignalManager, MemorySignalManagerContext } = await import('@dxos/messaging');
-  const { createRtcTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
+  const { createIceProvider, createRtcTransportFactory, MemoryTransportFactory } =
+    await import('@dxos/network-manager');
 
   const signals = config.get('runtime.services.signaling');
   const edgeFeatures = config.get('runtime.client.edgeFeatures');
@@ -189,6 +188,13 @@ export class LocalClientServices implements ClientServicesProvider {
 
     const { ClientServicesHost } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
+    // Loaded with the host, not at module scope: this class is exported from the main-thread
+    // barrel, and the sqlite platform stack must only load when an in-process host opens.
+    const [{ layerFile, layerMemory, sqlExportLayer }, SqliteClient, SqlTransactionModule] = await Promise.all([
+      import('@dxos/sql-sqlite/platform'),
+      import('@dxos/sql-sqlite/SqliteClient'),
+      import('@dxos/sql-sqlite/SqlTransaction'),
+    ]);
 
     // Create SQLite runtime layer. The choice is driven by `runtime.client.storage.sqlite_mode`
     // in config — the presence of `createOpfsWorker` or `sqlitePath` options does not influence
@@ -240,7 +246,7 @@ export class LocalClientServices implements ClientServicesProvider {
     }
 
     this._runtime = ManagedRuntime.make(
-      SqlTransaction.layer.pipe(
+      SqlTransactionModule.layer.pipe(
         Layer.provideMerge(sqlExportLayer),
         Layer.provideMerge(sqliteLayer),
         Layer.provideMerge(Reactivity.layer),
