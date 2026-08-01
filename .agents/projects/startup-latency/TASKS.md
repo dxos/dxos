@@ -447,3 +447,38 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
 Branch variance ±1.7% — stable enough for CI budget gates (task #22 RUM/CI remainder).
 Remaining navToReady = client init + identity render (out of scope) + ~2.8s boot floor
 (chunk eval; client chunk split is the next lever).
+
+## Checkpoint 2026-08-01 (boot-graph slimming: static-leak eviction)
+
+- Diagnosed the user's 9–10s local preview: `main:start` fired at 4.3s wall — the gap is
+  entry fetch/parse/eval, not app code. Cause: the entry's static import graph was
+  **749 chunks / 8.8MB** (748 modulepreload links in index.html).
+- Method: `bootgraph.py` (scratchpad) — static-import BFS from the main chunk over the built
+  assets + sourcemap byte attribution + forbidden-package chains. Reusable as the CI
+  structural gate (parked with task #22).
+- Three leak classes evicted (commits 46e9fae304, 1a9ce81baa):
+  1. Plugin types → engine: plugin-sheet schema/operations pulled the HyperFormula engine
+     (548KB) via the `@dxos/compute-hyperformula` barrel for pure A1 helpers. Added
+     engine-free `/types` subpath (runtime re-exports moved to the package barrel).
+  2. `main.tsx` → ResetDialog (fatal-error-only UI) statically pulled FeedbackForm and the
+     whole form stack: react-ui-form, emoji-mart (~484KB), CodeMirror + language-data +
+     mermaid (~500KB), react-aria, motion, syntax-highlighter. Now React.lazy; chunk-load
+     failure degrades to the theme-independent ErrorFallback via the existing double-fault
+     boundary.
+  3. Worker runtime on the main thread: `services/dedicated/index.ts` re-exported
+     `runDedicatedWorker` (client-services 191KB, hypercore, bip39 184KB, sqlite) into the
+     main barrel → moved to new `@dxos/client/worker` subpath (breaking; changeset added).
+     `fromHost`, `createIceProvider`, and LocalClientServices' sqlite platform imports are
+     now loaded on demand.
+- Result: static boot graph **521 chunks / 4.03MB (−54% bytes, −30% chunks)**; forbidden
+  list (hyperformula, emoji, codemirror-language-data, react-aria, hypercore.mjs, bip39,
+  wa-sqlite, client-services) all clear. Bytes-to-ready in the harness: 27.1 → 25.2MB.
+  Remaining top owners are boot-legitimate: effect 780KB, react-dom 744KB, protocol codecs
+  123KB, automerge (echo proxy) ~240KB.
+- Verified: client 13 passed (+1 expected-fail), compute-hyperformula 12, plugin-sheet 7,
+  warm-cold e2e green on the fresh bundle ('open & close' test got 2s timeout — first
+  connect now pays the lazy RTC-stack load that used to be a static import).
+- Follow-ups (not yet done): @dxos/crypto keys ride hypercore-crypto (122KB vendor
+  remnant); yaml 90KB via config; chunk-count consolidation via rolldown `advancedChunks`
+  minSize (2,324 chunks <1KB remain); skeleton-first entry (dynamic plugin-defs) is the
+  end-state lever.
