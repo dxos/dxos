@@ -1,6 +1,27 @@
 # Task-list plugin — reconciliation and MCP verb design
 
-Date: 2026-08-01 · Status: draft (overnight; for review) · Owner: burdon
+Date: 2026-08-01 · Status: **RESOLVED by `claude/competent-curie-20057f`** (kept as option record) · Owner: burdon
+
+> **Resolution (2026-08-01, user's branch):** the ontology landed differently from the proposal
+> below — see the branch as source of truth:
+>
+> - `ExternalProject` → **`TaskSet`** (`org.dxos.type.taskSet@0.2.0`, stays in `@dxos/types`) —
+>   pure container with NO task array; **membership is the ECHO parent edge** (TaskSet parents
+>   root tasks, a task parents its sub-tasks; `Task.taskSet` is the backref). Sync provenance via
+>   `Obj.getMeta` foreign keys.
+> - `Task@0.2.0`: `project` ref removed (parent-edge containment); `assigned: Ref<Person>` →
+>   `assignee: Actor.Actor` (DID / Person ref / email / name — humans AND agents); status gains
+>   `failed`/`cancelled`.
+> - `Outline`/`Journal` move to `@dxos/types` (`Outline@0.2.0`: `project` → `taskSet` ref;
+>   typename unchanged). **plugin-outliner is subsumed by `plugin-tasks`** (new `react-ui-task`
+>   package; TaskSetArticle).
+> - Verbs: `TaskOperation` (`taskCreate`/`taskUpdate`/`taskComplete`/`taskAssign`, keys
+>   `<plugin-tasks>.operation.*`) + `OutlineOperation` (`createOutline`/`convertToTask`/
+>   `quickEntry`) in plugin-tasks; `ProjectOperation` (`create`/`createChat`/`createRoutine`) in
+>   plugin-projects. Full v1 verb table incl. list/get + pagination:
+>   `plugin-projects/MILESTONE-5.md` §7.2; placement §7.3 (edge mcp-space-service projects the
+>   operations; `McpToolAnnotation` planned for phase 4; identity-through-the-call is the edge
+>   prerequisite for assignee-bearing writes).
 Project: `mcp` (milestone 3, task 4). Companion to
 [task-planning ⇄ Composer sync](./2026-08-01-task-planning-composer-sync-design.md).
 
