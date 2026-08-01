@@ -92,10 +92,13 @@ Second round (UI/robustness):
       role mailbox, `List-Unsubscribe`, bulk). Deny beats allow. Wired into the email pipeline via
       `senderSignals`, which reads the `noReply`/`listUnsubscribe` flags the provider mappers
       already record. 8 unit tests.
-- [ ] 4.5a **Outbound signal not wired.** `SenderSignals.outbound` exists and is honoured, but
-      nothing sets it: "we replied to this address" means extracting the _recipients_ of sent mail,
-      and recipients are not extracted at all today. Until that lands, the allow-list is effectively
-      "domain matches a known Organization", which is stricter than intended.
+- [~] 4.5a **Outbound signal not wired** — MOVED to the `mailbox-research` project
+  (`packages/stories/stories-brain/TASKS.md`, "Contact extraction — recipients of sent mail").
+  `SenderSignals.outbound` exists and is honoured, but nothing sets it: "we replied to this
+  address" is a fact about the _recipients_ of sent mail, and recipients are not extracted at
+  all today. Until that lands the allow-list is effectively "domain matches a known
+  Organization", which is stricter than intended. It sits there because the open question is
+  which correspondents matter, not how the dedup engine works.
 
 ## Phase 5 — compound table cells
 
