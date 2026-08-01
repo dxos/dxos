@@ -615,6 +615,7 @@ const useFoldedPlanks = ({
   plankCount,
   maxPlankWidthPx,
   scrollIntentRef,
+  handoffRef,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
@@ -622,6 +623,8 @@ const useFoldedPlanks = ({
   plankCount: number;
   maxPlankWidthPx: number;
   scrollIntentRef: RefObject<string | undefined>;
+  /** Set to the plank this hook hands attention to, so the collapse can tell it apart from a real choice. */
+  handoffRef: RefObject<string | undefined>;
 }) => {
   const { attention } = useAttentionContext(DECK_VIEWPORT_NAME);
 
@@ -692,6 +695,9 @@ const useFoldedPlanks = ({
         // `preventScroll` stops the focus call from fighting the scroll that triggered it.
         const plank = best?.tile.querySelector<HTMLElement>(Attention.ATTENDABLE_SELECTOR);
         if (plank && !plank.contains(document.activeElement)) {
+          // Recorded so the collapse does not treat this as the user choosing a plank and scroll it to
+          // the pile — that would drag the deck back against the gesture that handed attention over.
+          handoffRef.current = best?.tile.getAttribute('data-object-id') ?? undefined;
           plank.focus({ preventScroll: true });
         }
       }
@@ -705,7 +711,7 @@ const useFoldedPlanks = ({
     };
     // `maxPlankWidthPx` is a dep so the fold state recomputes when the width cap shrinks planks (else a
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
-  }, [isSliding, plankCount, maxPlankWidthPx, getPlankTiles, attention, viewportRef, scrollIntentRef]);
+  }, [isSliding, plankCount, maxPlankWidthPx, getPlankTiles, attention, viewportRef, scrollIntentRef, handoffRef]);
 };
 
 /**
@@ -787,6 +793,7 @@ const useCollapseAfterAttended = ({
   attendedPlankId,
   companionId,
   scrollIntentRef,
+  handoffRef,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
@@ -796,6 +803,7 @@ const useCollapseAfterAttended = ({
   /** Re-runs the collapse when the pair lands; see the comment on the effect. */
   companionId: string | undefined;
   scrollIntentRef: RefObject<string | undefined>;
+  handoffRef: RefObject<string | undefined>;
 }) => {
   // A layout effect, so a correction lands before paint instead of as a visible slide.
   useLayoutEffect(() => {
@@ -817,12 +825,20 @@ const useCollapseAfterAttended = ({
       return;
     }
 
+    // Attention the fold hysteresis handed over because the previous plank scrolled out of view. The
+    // user is mid-gesture and did not pick this plank, so collapsing to it would drag the deck back
+    // against the swipe.
+    if (handoffRef.current === attendedPlankId) {
+      handoffRef.current = undefined;
+      return;
+    }
+
     scrollPlankToPile({ viewport, stack, tiles, index });
     // `companionId` is a dependency because the companion arrives a commit *later* than the attention
     // that summoned it — `useCompanions` reads the graph in a commit-phase effect — so the first pass
     // measures the deck before the pair widened. Without re-running here the scroll stays short by the
     // companion's width, leaving the attended plank pinned and its neighbour riding over the companion.
-  }, [isSliding, attendedPlankId, companionId, getPlankTiles, viewportRef, stackRef, scrollIntentRef]);
+  }, [isSliding, attendedPlankId, companionId, getPlankTiles, viewportRef, stackRef, scrollIntentRef, handoffRef]);
 };
 
 /** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
@@ -885,6 +901,10 @@ export const DeckPlanks = () => {
   // frame and no render depends on it.
   const scrollIntentRef = useRef<string | undefined>(undefined);
 
+  // The plank the fold hysteresis last handed attention to, so the collapse can ignore it. A ref for the
+  // same reason as above: it changes per scroll frame and no render depends on it.
+  const handoffRef = useRef<string | undefined>(undefined);
+
   const getPlankTiles = usePlankTiles(stackRef);
   const maxPlankWidthPx = useMaxPlankWidth({ viewportRef, stackRef, isSliding, plankCount: planks.length });
   usePreservedScroll({ viewportRef, isSliding });
@@ -895,6 +915,7 @@ export const DeckPlanks = () => {
     plankCount: planks.length,
     maxPlankWidthPx,
     scrollIntentRef,
+    handoffRef,
   });
   useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView, scrollIntentRef });
   useCollapseAfterAttended({
@@ -905,6 +926,7 @@ export const DeckPlanks = () => {
     attendedPlankId,
     companionId,
     scrollIntentRef,
+    handoffRef,
   });
   const toggleFullscreen = useFullscreen(fullscreenId);
 
