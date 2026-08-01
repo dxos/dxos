@@ -18,6 +18,7 @@ const SPEC: TrailSpec = {
   endScale: 2,
   startAlpha: 0.3,
   aftOffset: 0.03,
+  color: [1, 1, 1],
 };
 
 /** A rocket's motion is a pure function of `(definition, context)` — no route/nav-grid setup needed to exercise `trailPuffs`. */

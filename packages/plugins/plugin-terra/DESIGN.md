@@ -149,6 +149,13 @@ Two things this deliberately does not do: it does not re-route around terrain (t
 nav grid still lets air routes cross anything — see the backlog), and it cannot
 answer terrain steeper than a full-rate climb over the lookahead can reach.
 
+The rocket's behavior sets its nose to its own flight-path angle — the climb rate
+of the ballistic profile over the speed it covers the arc at. An angle scripted
+independently of the trajectory (a cosine from +90° to -90°, as it was first
+written) is far steeper than a lofted arc really flies, and the rocket visibly
+skids: pointing up while travelling forward. Because the exhaust also trails along
+`state.pitch`, an angle that disagrees with the path takes the plume with it.
+
 Cost: the behavior is the plane's whole per-evaluation expense, and `evaluate` runs
 hundreds of times a frame under the trail sampler. The window is therefore walked
 with `walkRouteSeries` (one pass over the polyline for all the samples, rather than

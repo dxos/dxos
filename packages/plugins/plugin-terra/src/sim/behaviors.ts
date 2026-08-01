@@ -4,7 +4,7 @@
 
 import { type TerraConfigValues, type Vec3, makeSampler, radiusAt, seaRadius } from '../engine';
 import { type TerraObject } from '../types';
-import { walkRouteSeries } from './path';
+import { routeLength, walkRouteSeries } from './path';
 
 /** Cruise altitude for planes, as a fraction of sea radius above the surface. */
 export const CRUISE_ALTITUDE = 0.06;
@@ -158,15 +158,17 @@ export const behaviors: Record<TerraObject.Kind, Behavior> = {
   },
 
   rocket: {
-    attitude: ({ config, unit, flightFraction }) => {
-      const apex = seaRadius(config) * (1 + BALLISTIC_APEX * Math.sin(Math.PI * flightFraction));
-      return {
-        radius: Math.max(surfaceRadius(config, unit), apex),
-        // +90° (nose along the surface normal) at launch, 0° at apex, -90° at touchdown: the
-        // derivative of the arc itself, so the rocket noses over smoothly rather than snapping
-        // through the horizontal.
-        pitch: 90 * DEG * Math.cos(Math.PI * flightFraction),
-      };
+    attitude: ({ config, unit, route, flightFraction }) => {
+      const sea = seaRadius(config);
+      const apex = sea * (1 + BALLISTIC_APEX * Math.sin(Math.PI * flightFraction));
+      const radius = Math.max(surfaceRadius(config, unit), apex);
+      // The nose points where the rocket is actually going: its own flight-path angle, the climb
+      // rate of the ballistic profile over the ground speed it is covering the arc at. A scripted
+      // angle (a cosine from +90° to -90°, say) is far steeper than a lofted arc really flies, and
+      // the rocket visibly skids — pointing up while travelling forward.
+      const total = routeLength(route);
+      const climbRate = total > 0 ? (sea * BALLISTIC_APEX * Math.PI * Math.cos(Math.PI * flightFraction)) / total : 0;
+      return { radius, pitch: Math.atan2(climbRate, radius) };
     },
   },
 

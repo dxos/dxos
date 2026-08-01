@@ -19,6 +19,8 @@ export type TrailSpec = {
   startAlpha: number;
   /** Angular distance the emission point sits behind the object's own origin, clearing its tail. */
   aftOffset: number;
+  /** Puff colour, linear RGB. Exhaust burns; a wake does not — a rocket's plume is flame, a boat's is spray. */
+  color: [number, number, number];
 };
 
 /** Only the kinds the "Smoke trails" design calls for; every other kind leaves no trail. */
@@ -34,6 +36,7 @@ export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
     endScale: 2.5,
     startAlpha: 0.3,
     aftOffset: 0.005,
+    color: [1, 1, 1],
   },
   plane: {
     spacing: 0.005,
@@ -43,6 +46,7 @@ export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
     endScale: 3,
     startAlpha: 0.35,
     aftOffset: 0.02,
+    color: [1, 1, 1],
   },
   rocket: {
     spacing: 0.0025,
@@ -52,6 +56,8 @@ export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
     endScale: 2,
     startAlpha: 0.45,
     aftOffset: 0.024,
+    // Burning propellant, shading toward the flame at the nozzle rather than the white of a wake.
+    color: [1, 0.55, 0.16],
   },
 };
 

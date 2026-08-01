@@ -17,14 +17,15 @@ import { type SimObject, TRAIL_SPECS, type TrailSpec, trailPuffs } from '../sim'
 /** Puffs are small, numerous, and never seen up close, so a low-poly sphere is indistinguishable from a smooth one. */
 const PUFF_SEGMENTS = 6;
 
-/** A puff ready to render: its world position, instance scale, and instance alpha. */
-type RenderPuff = { position: Vec3; radius: number; alpha: number };
+/** A puff ready to render: its world position, instance scale, colour, and instance alpha. */
+type RenderPuff = { position: Vec3; radius: number; color: readonly [number, number, number]; alpha: number };
 
 /** Puffs for one object, grown and faded by their normalized age. */
 const renderPuffsFor = (object: SimObject, config: TerraConfigValues, nowMs: number, spec: TrailSpec): RenderPuff[] =>
   trailPuffs(object.state, object.definition, config, nowMs, spec).map(({ position, age }) => ({
     position,
     radius: spec.startRadius * (1 + (spec.endScale - 1) * age),
+    color: spec.color,
     alpha: spec.startAlpha * (1 - age),
   }));
 
@@ -108,9 +109,9 @@ export class TrailLayer {
       const scaling = new Vector3(puff.radius, puff.radius, puff.radius);
       const position = new Vector3(puff.position[0], puff.position[1], puff.position[2]);
       Matrix.Compose(scaling, Quaternion.Identity(), position).copyToArray(matrixBuffer, index * 16);
-      colorBuffer[index * 4] = 1;
-      colorBuffer[index * 4 + 1] = 1;
-      colorBuffer[index * 4 + 2] = 1;
+      colorBuffer[index * 4] = puff.color[0];
+      colorBuffer[index * 4 + 1] = puff.color[1];
+      colorBuffer[index * 4 + 2] = puff.color[2];
       colorBuffer[index * 4 + 3] = puff.alpha;
     });
 

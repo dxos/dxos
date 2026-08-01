@@ -146,11 +146,25 @@ describe('other behaviors', () => {
   });
 
   test('a rocket noses up at launch, over at apex, and down at touchdown', ({ expect }) => {
-    const unit = toUnit({ lat: 0, lng: 0 });
-    expect(at('rocket', unit, 0).pitch).toBeCloseTo(Math.PI / 2, 6);
-    expect(at('rocket', unit, 0.5).pitch).toBeCloseTo(0, 6);
-    expect(at('rocket', unit, 1).pitch).toBeCloseTo(-Math.PI / 2, 6);
+    const source = toUnit({ lat: 0, lng: 0 });
+    const target = toUnit({ lat: 0, lng: 60 });
+    const arc = (flightFraction: number) =>
+      behaviorFor('rocket').attitude({
+        definition: TerraObject.make({ kind: 'rocket', speed: 0.05, spawnedAt: 0 }),
+        config,
+        unit: slerp(source, target, flightFraction),
+        route: [source, target],
+        distance: 0,
+        flightFraction,
+      });
+
+    expect(arc(0).pitch).toBeGreaterThan(0);
+    expect(arc(0.5).pitch).toBeCloseTo(0, 6);
+    expect(arc(1).pitch).toBeLessThan(0);
+    // As steep coming down as going up, give or take the ground clamp: the two ends of the arc sit
+    // on different terrain, and the angle is measured against each end's own radius.
+    expect(arc(0).pitch).toBeCloseTo(-arc(1).pitch, 2);
     // Its arc peaks at apex and returns to the surface at either end.
-    expect(at('rocket', unit, 0.5).radius).toBeGreaterThan(at('rocket', unit, 0).radius);
+    expect(arc(0.5).radius).toBeGreaterThan(arc(0).radius);
   });
 });

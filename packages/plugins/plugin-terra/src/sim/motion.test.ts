@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { makeSampler, radiusAt, seaRadius } from '../engine';
+import { dot, makeSampler, radiusAt, scale, seaRadius, sub } from '../engine';
 import { Terra, TerraObject } from '../types';
 import { toUnit } from './geo';
 import { type ObjectState, evaluate, initialState } from './motion';
@@ -152,6 +152,29 @@ describe('rocket motion', () => {
     const atLaunch = evaluate(state, rocket, { config, elapsed: 0 });
     const midFlight = evaluate(state, rocket, { config, elapsed: 39 });
     expect(midFlight.radius).toBeGreaterThan(atLaunch.radius);
+  });
+
+  test('points where it is going: the nose angle matches the flight path it actually flies', () => {
+    const state = initialState(rocket, config);
+    // The flight-path angle read off the trajectory itself: the radial component of the world
+    // velocity over its horizontal component, differentiated numerically so nothing here shares an
+    // assumption with the behavior that sets `pitch`.
+    const flightPathAngle = (elapsed: number): number => {
+      const step = 0.05;
+      const before = evaluate(state, rocket, { config, elapsed });
+      const after = evaluate(state, rocket, { config, elapsed: elapsed + step });
+      const velocity = sub(scale(after.unit, after.radius), scale(before.unit, before.radius));
+      const climb = dot(velocity, before.unit);
+      const horizontal = sub(velocity, scale(before.unit, climb));
+      return Math.atan2(climb, Math.hypot(...horizontal));
+    };
+
+    // Sampled across the whole arc, skipping the very ends where the ground clamp takes over.
+    for (const fraction of [0.05, 0.2, 0.5, 0.8, 0.95]) {
+      const elapsed = (fraction * (Math.PI / 2)) / rocket.speed;
+      const { pitch } = evaluate(state, rocket, { config, elapsed });
+      expect(pitch).toBeCloseTo(flightPathAngle(elapsed), 1);
+    }
   });
 
   test('explodes where it lands: nothing before impact, a blast that burns out after', () => {
