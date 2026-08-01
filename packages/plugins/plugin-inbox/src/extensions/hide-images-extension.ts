@@ -9,9 +9,10 @@ const hidden = Decoration.replace({});
 
 // Markdown image of any target: `![alt](…)`, optionally wrapped in a link (`[![alt](…)](href)`,
 // common in newsletters) — the whole construct is consumed so no empty `[](href)` link is left
-// behind. The target is captured so `keep` can exempt it. The linked form is listed first so it wins
-// over the bare form at the same position.
-const IMAGE = String.raw`!\[[^\]]*\]\(\s*([^)\s]+)[^)]*\)`;
+// behind. The target is captured so `keep` can exempt it — the capture allows an empty target, so a
+// stray `![alt]()` is hidden rather than left as visible source. The linked form is listed first so it
+// wins over the bare form at the same position.
+const IMAGE = String.raw`!\[[^\]]*\]\(\s*([^)\s]*)[^)]*\)`;
 const IMAGE_REGEXP = new RegExp(String.raw`\[${IMAGE}\]\([^)]*\)|${IMAGE}`, 'g');
 
 /**
