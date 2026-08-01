@@ -4,6 +4,7 @@
 
 import '@babylonjs/core/Meshes/thinInstanceMesh';
 
+import { Constants } from '@babylonjs/core/Engines/constants';
 import { Material } from '@babylonjs/core/Materials/material';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Color3, Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
@@ -16,9 +17,9 @@ import { type SimObject } from '../sim';
 
 /** Blast shells, innermost first: each is a fraction of the full radius, its own colour, and its own opacity at the moment of impact. */
 const SHELLS = [
-  { radius: 0.35, color: new Color3(1, 0.96, 0.75), alpha: 0.95 },
-  { radius: 0.65, color: new Color3(1, 0.66, 0.24), alpha: 0.7 },
-  { radius: 1, color: new Color3(0.85, 0.31, 0.14), alpha: 0.4 },
+  { radius: 0.3, color: new Color3(1, 0.97, 0.82), alpha: 1 },
+  { radius: 0.6, color: new Color3(1, 0.62, 0.18), alpha: 0.8 },
+  { radius: 1, color: new Color3(0.9, 0.26, 0.08), alpha: 0.5 },
 ];
 
 /** Full blast radius at its widest, as a fraction of the sea radius. */
@@ -59,7 +60,12 @@ export class ExplosionLayer {
     this.#buffers = SHELLS.map(() => undefined);
   }
 
-  /** Unlit and alpha-blended, with depth writes off so the shells blend through each other instead of z-fighting. */
+  /**
+   * Unlit and *additive*: a blast is light, so shells have to accumulate into a bright core rather
+   * than each one veiling the one inside it, which is what ordinary alpha blending does — three
+   * translucent shells over a night sky came out a muddy brown. Depth writes are off for the same
+   * reason as `TrailLayer`'s puffs: overlapping shells should blend, not z-fight.
+   */
   #createMaterial(scene: Scene, index: number, color: Color3, alpha: number): StandardMaterial {
     const material = new StandardMaterial(`explosionShellMat${index}`, scene);
     material.diffuseColor = color;
@@ -68,6 +74,7 @@ export class ExplosionLayer {
     material.disableLighting = true;
     material.alpha = alpha;
     material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+    material.alphaMode = Constants.ALPHA_ADD;
     material.disableDepthWrite = true;
     return material;
   }

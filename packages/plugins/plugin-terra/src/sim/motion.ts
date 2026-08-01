@@ -44,7 +44,7 @@ export type MotionContext = { config: TerraConfigValues; elapsed: number };
 const DEG = Math.PI / 180;
 
 /** How long a rocket's impact explosion burns, in simulated seconds. */
-const EXPLOSION_SECONDS = 2.5;
+export const EXPLOSION_SECONDS = 2.5;
 
 /** A straight great-circle route between an object's source and target, used until Task 6 replans it over the nav grid. */
 const routeFromEndpoints = (definition: TerraObject.TerraObject): Vec3[] => {
