@@ -42,10 +42,10 @@ const DefaultStory = ({ content, name }: DefaultStoryProps) => {
 
   return (
     <div className='dx-container grid grid-cols-2 gap-3 p-3'>
-      <div className='border dx-expander'>
+      <div className='dx-expander border border-separator rounded-md'>
         <OutlineArticle role='article' subject={outline} attendableId='story' />
       </div>
-      <div className='border dx-expander'>
+      <div className='dx-expander border border-separator rounded-md'>
         <SourceView text={outline.content.target} />
       </div>
     </div>

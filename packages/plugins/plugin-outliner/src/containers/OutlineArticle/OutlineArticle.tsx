@@ -10,7 +10,7 @@ import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Panel, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
@@ -78,15 +78,13 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
 
   if (task) {
     return (
-      // `Menu.Root` wraps the panel rather than sitting inside the toolbar: the menu scope has to span
-      // the surface that receives attention, not just the toolbar row.
       <Menu.Root {...taskActions} attendableId={attendableId}>
-        <Panel.Root role={role} className='dx-document'>
+        <Panel.Root role={role}>
           <Panel.Toolbar>
-            <Menu.Toolbar />
+            <Menu.Toolbar classNames='dx-document' />
           </Panel.Toolbar>
           <Panel.Content>
-            <TaskForm task={task} />
+            <TaskForm task={task} classNames='dx-document' />
           </Panel.Content>
         </Panel.Root>
       </Menu.Root>
@@ -107,12 +105,12 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
       resolveLinkLabel={resolveLinkLabel}
     >
       <Menu.Root {...outlineActions} attendableId={attendableId}>
-        <Panel.Root role={role} className='dx-document'>
+        <Panel.Root role={role}>
           <Panel.Toolbar>
-            <Menu.Toolbar />
+            <Menu.Toolbar classNames='dx-document' />
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <Outline.Content />
+            <Outline.Content classNames='dx-document border' />
           </Panel.Content>
         </Panel.Root>
       </Menu.Root>
@@ -122,7 +120,7 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
 
 OutlineArticle.displayName = 'OutlineArticle';
 
-const TaskForm = ({ task }: { task: Task.Task }) => {
+const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) => {
   const schema = useMemo(() => omitId(Type.getSchema(Task.Task)), []);
 
   const handleSave = useCallback(
@@ -140,7 +138,7 @@ const TaskForm = ({ task }: { task: Task.Task }) => {
 
   return (
     <Form.Root schema={schema} values={task} autoSave onSave={handleSave}>
-      <Form.Viewport scroll>
+      <Form.Viewport classNames={classNames} scroll>
         <Form.Content>
           <Form.FieldSet />
         </Form.Content>
