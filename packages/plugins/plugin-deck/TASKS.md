@@ -135,7 +135,10 @@ one settles rather than leaving it a permanent preference.
       twice; the transition is FLIP. Five constraints, each of which was a real defect first — all
       recorded in [DESIGN.md](./DESIGN.md) §7, since every one of them typechecks fine when broken.
 - [x] **Arrow-key plank navigation** — left/right step to the previous/next plank and attend it, gated on
-      `isPlankLevelFocus()` so a caret in an editor keeps its own arrows. DESIGN.md §9.
+      `isPlankLevelFocus()` so a caret in an editor keeps its own arrows. In the exposé the gate is
+      dropped (its content is inert, so there is no caret to protect) and attention moves by focusing
+      the target plank with `preventScroll`, leaving the exposé open and its scroll parked. No wrapping
+      at either end. DESIGN.md §9.
 - [ ] **Move the plank navigation onto tabster** — the principled version is a Mover
       (`useArrowNavigationGroup`) on the stack with each tile a groupper, which is what `Focus.Group`
       (`packages/ui/react-ui/src/components/Focus/Focus.tsx`) already wraps. Blocked on `MosaicStackProps`

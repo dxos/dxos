@@ -1372,6 +1372,8 @@ export const DeckPlanks = () => {
   captureRef.current = captureExposeGeometry;
   const navigationRef = useRef({ planks, attendedPlankId });
   navigationRef.current = { planks, attendedPlankId };
+  const getTilesRef = useRef(getPlankTiles);
+  getTilesRef.current = getPlankTiles;
 
   // Bound here rather than as a graph action so the shortcut works wherever the deck has focus; see the
   // note in DESIGN about promoting it once its binding is settled.
@@ -1399,20 +1401,35 @@ export const DeckPlanks = () => {
       if (step === 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
         return;
       }
-      if (exposeRef.current || !isPlankLevelFocus()) {
+      // The exposé shows every plank at once and its content is inert, so there is no caret to protect
+      // and no scrolling to do — arrows just walk attention along the row.
+      if (!exposeRef.current && !isPlankLevelFocus()) {
         return;
       }
 
       const { planks: current, attendedPlankId: attended } = navigationRef.current;
-      const index = attended ? current.indexOf(attended) : -1;
+      // Read the focused plank from the DOM, not from `attendedPlankId`: attention arrives with a
+      // render, so key repeat outruns it and every event in a burst would step from the same stale
+      // plank. Falls back to the attended id when focus is not on a plank (the pre-exposé case).
+      const focused = document.activeElement?.closest('[role="listitem"]')?.getAttribute('data-object-id');
+      const from = (focused && current.includes(focused) ? focused : undefined) ?? attended;
+      const index = from ? current.indexOf(from) : -1;
       const next = index === -1 ? current[0] : current[index + step];
       if (!next) {
         return;
       }
 
+      event.preventDefault();
+      if (exposeRef.current) {
+        // Attention is focus-driven, and `preventScroll` matters here: the exposé parks the scroll at
+        // zero to bring the whole row into frame, and focusing without it would scroll the row away.
+        const tile = getTilesRef.current().find((candidate) => candidate.getAttribute('data-object-id') === next);
+        tile?.querySelector<HTMLElement>(Attention.ATTENDABLE_SELECTOR)?.focus({ preventScroll: true });
+        return;
+      }
+
       // The same one-shot the spines and navigation use: it scrolls the plank to the front *and* attends
       // it, because the plank focuses itself off the flag.
-      event.preventDefault();
       void invokePromise(LayoutOperation.ScrollIntoView, { subject: next });
     };
 

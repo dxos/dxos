@@ -213,10 +213,17 @@ defaults to the last plank in the chain.
 ## 9. Keyboard
 
 - `meta+;` — toggle the exposé; `Escape` leaves it.
-- `←` / `→` — step to the previous/next plank and attend it. Gated on `isPlankLevelFocus()`: the
-  focused element must be the attendable container itself, so a caret in an editor, a list or a toolbar
-  keeps its own arrows. Reaching that level is tabster's groupper ladder — Escape leaves the editor,
-  Escape again lands on the plank.
+- `←` / `→` — step to the previous/next plank and attend it, without wrapping. Gated on
+  `isPlankLevelFocus()`: the focused element must be the attendable container itself, so a caret in an
+  editor, a list or a toolbar keeps its own arrows. Reaching that level is tabster's groupper ladder —
+  Escape leaves the editor, Escape again lands on the plank. In the exposé the gate is dropped, since
+  the miniatures are inert, and attention moves by focusing the target plank with `preventScroll` so
+  the row stays parked and the exposé stays open.
+
+  The step is computed from the _focused_ plank read out of the DOM, not from `attendedPlankId`:
+  attention arrives with a render, so held-down key repeat outruns it and every event in a burst would
+  step from the same stale plank — measured as eight rapid presses moving one plank.
+
 - `Escape` — exits fullscreen.
 
 The arrow stepping is deliberately _not_ tabster's Mover yet: that is the principled version
