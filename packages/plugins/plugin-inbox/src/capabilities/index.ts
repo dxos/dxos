@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -13,12 +14,14 @@ import { SpaceCapability } from '@dxos/plugin-space';
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
 import { InboxCapabilities } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  activatesOn: ActivationEvents.DeferredStartup,
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const Connector = Capability.lazyModule(
   'Connector',
-  { provides: [ConnectorCapability] },
+  { provides: [ConnectorCapability], activatesOn: ActivationEvents.DeferredStartup },
   () => import('./connector'),
 );
 export const ContactExtractor = Capability.inlineModule(
@@ -33,8 +36,11 @@ export const SummarizeExtractor = Capability.inlineModule(
 );
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],
+  activatesOn: ActivationEvents.DeferredStartup,
 });
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.DeferredStartup,
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.role.article',
@@ -47,4 +53,5 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const InboxSettings = AppCapability.settings(() => import('./settings'), {
   provides: [InboxCapabilities.Settings],
+  activatesOn: ActivationEvents.DeferredStartup,
 });
