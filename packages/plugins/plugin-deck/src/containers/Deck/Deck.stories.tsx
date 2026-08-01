@@ -300,11 +300,7 @@ const DefaultStory = ({
       <style>{FOLD_ANIMATION_CSS}</style>
       <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
         <Deck.Content>
-          {/* Outlines the viewport the planks run flush to, so the deck's own edges are visible in
-              isolation (the app frames it with sidebars). */}
-          <Deck.Viewport classNames='border'>
-            {deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}
-          </Deck.Viewport>
+          <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
         </Deck.Content>
       </Deck.Root>
     </div>
