@@ -18,7 +18,7 @@ import { Drawing } from '#types';
  */
 export const IllustratorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Drawing.Drawing] }),
+  AppPlugin.addSchemaModule({ schema: [Drawing.Drawing, Drawing.Canvas] }),
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
