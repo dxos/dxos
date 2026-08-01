@@ -78,14 +78,15 @@ Blocking questions, all in DESIGN.md §12 "What this does not settle":
       chain_; a companion is a _per-plank affordance_. Every plank in `mailbox → message → attachment`
       can independently show or hide its own companion, so companions are cross-cutting and a plugin
       author never chooses between the two. Nothing about companions changes.
-- [ ] **URL and deck identity** — BLOCKING for per-collection decks, not merely open: `activeDeck` _is_
-      the workspace in both the URL and the `Layout` capability, so a deck cannot be keyed by anything
-      else until the two are separated and the grammar gains a slot for which deck. Needs josiah.
-- [x] **Verify P2 in a browser** — done, and it is what found P2a: the unit tests passed while the
-      feature was unreachable. Clicking a collection of three documents opens three planks. Treat every
-      remaining phase the same way; the pure helpers here are the easy half.
-- [ ] **Deck lifetime** — `decks` is persisted and today bounded by workspace count; keyed by collection
-      it grows without bound and wants eviction.
+- [ ] **Per-collection deck memory — use attention view state, later phase.** DECIDED, and it dissolves
+      the blocker rather than solving it: the plank set and widths a collection was left in belong in
+      `react-ui-attention` view state, the same aspect the companion variant already uses
+      (`util/companion-view-state.ts`). View state is per-attendable, global and deliberately absent
+      from the URL, so `activeDeck` never has to be split from the workspace identity and josiah's
+      grammar is untouched. Deferred to a later phase; P3–P5 do not depend on it.
+- [x] **Deck lifetime — moot.** Unbounded `decks` growth was a consequence of keying `decks[]` by
+      collection, which the decision above means we never do. Whatever view state's own retention needs
+      turn out to be belong with that work, not here.
 
 ## Defects
 

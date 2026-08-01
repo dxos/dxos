@@ -413,8 +413,8 @@ depending on the deck plugin — the same reason `LayoutOperation` lives there.
 - **Companion vs level — settled: orthogonal.** A level is a position in the chain; a companion is a
   per-plank affordance. Every plank in `mailbox → message → attachment` can independently show its own
   companion, so the two compose rather than compete and §4 stands unchanged.
-- **URL and deck identity.** Blocking, not merely open: `activeDeck` _is_ the workspace in the URL and
-  in the `Layout` capability, so a deck cannot be keyed by anything else until the two are separated
-  and the pair-chain grammar gains a slot for which deck. Needs the url-deck owner.
-- **Deck lifetime.** `decks` is persisted and currently bounded by workspace count. Keyed by collection
-  it grows without bound and wants eviction.
+- **Per-collection memory belongs in view state.** The plank set and widths a collection was left in
+  should live in `react-ui-attention` view state — the aspect the companion variant already uses
+  (§6) — rather than in a deck keyed by collection. View state is per-attendable, global and absent
+  from the URL, so `activeDeck` never needs separating from the workspace identity and the pair-chain
+  grammar is untouched. A later phase; nothing in §12 above depends on it.
