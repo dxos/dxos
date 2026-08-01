@@ -92,6 +92,8 @@ export const EphemeralDeckState = Schema.Struct({
    * beside it. Transient, and separate from `plankSizing` so collapsing restores the plank's own width.
    */
   expanded: Schema.optional(Schema.String),
+  /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
+  expose: Schema.optional(Schema.Boolean),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literal('default', 'alert')),
   dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),

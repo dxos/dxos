@@ -57,6 +57,21 @@ export const UpdatePlankSize = Operation.make({
   output: Schema.Void,
 });
 
+export const ToggleExpose = Operation.make({
+  meta: {
+    key: makeKey('toggleExpose'),
+    name: 'Toggle Exposé',
+    description: 'Show every plank at once as shrunk-to-fit tiles, or return to the deck.',
+    icon: 'ph--squares-four--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    /** Explicit state; toggles when absent. */
+    expose: Schema.optional(Schema.Boolean),
+  }),
+  output: Schema.Void,
+});
+
 export const UpdatePlankSizes = Operation.make({
   meta: {
     key: makeKey('updatePlankSizes'),

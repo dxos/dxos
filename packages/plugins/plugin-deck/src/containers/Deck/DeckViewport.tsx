@@ -860,6 +860,84 @@ const useCollapseAfterAttended = ({
   }, [isSliding, attendedPlankId, companionId, getPlankTiles, viewportRef, stackRef, scrollIntentRef, handoffRef]);
 };
 
+/**
+ * Every plank at once, shrunk to fit the viewport's width — the deck's exposé. The whole row is scaled by
+ * a single transform rather than each plank being re-laid out at a smaller size, so a tile is a true
+ * miniature of the plank: same widths, same content reflow, just smaller. Clicking one returns to the
+ * deck focused on it.
+ */
+const ExposeDeck = ({
+  planks,
+  active,
+  plankSizing,
+  onSelect,
+}: {
+  planks: string[];
+  active: string[];
+  plankSizing: Record<string, number>;
+  onSelect: (id: string) => void;
+}) => {
+  // Measured here rather than taken from the sliding deck's measurement, which is only taken while
+  // sliding — the exposé also renders over a fullbleed deck, where that would be zero.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidthPx, setContainerWidthPx] = useState(0);
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+    // `getBoundingClientRect` rather than `clientWidth`, and a frame later as well as now: the exposé
+    // mounts into a container that has only just been laid out, and an unmeasured width would leave the
+    // row unscaled and running off the viewport.
+    const measure = () => setContainerWidthPx(container.getBoundingClientRect().width);
+    measure();
+    const frame = requestAnimationFrame(measure);
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
+
+  const gapPx = PLANK_SPACING_REM * REM_PX;
+  const widths = planks.map((id) => (plankSizing[id] ?? DEFAULT_PLANK_SIZE) * REM_PX);
+  const naturalWidthPx = widths.reduce((total, width) => total + width, 0) + Math.max(0, planks.length - 1) * gapPx;
+  // Only ever shrinks: a deck narrower than the viewport keeps its planks at true size rather than being
+  // blown up into a wall of oversized text. Unmeasured reads as 1, so the first paint is not scaled to
+  // nothing.
+  const scale = naturalWidthPx > 0 && containerWidthPx > 0 ? Math.min(1, containerWidthPx / naturalWidthPx) : 1;
+
+  return (
+    <div
+      ref={containerRef}
+      className='absolute inset-0 grid place-items-center overflow-hidden'
+      data-testid='deck.expose'
+    >
+      {/* The row is sized to the deck's natural width and scaled as a whole, so a tile keeps the plank's
+          real proportions and text reflow. Its height is the planks' own content height, which is why the
+          row is centred rather than stretched. */}
+      <div
+        className='flex gap-(--main-spacing) h-full'
+        style={{ inlineSize: `${naturalWidthPx}px`, transform: `scale(${scale})`, transformOrigin: 'center' }}
+      >
+        {planks.map((id, index) => (
+          <button
+            key={id}
+            // Framed, because at exposé scale a plank is dark content on the equally dark deck surface
+            // with unreadable text — the frame is what makes it read as a tile at all.
+            className='relative block h-full text-start cursor-pointer overflow-hidden rounded-sm border border-separator bg-baseSurface shadow-lg transition-shadow hover:border-accentSurface'
+            style={{ inlineSize: `${widths[index]}px` }}
+            onClick={() => onSelect(id)}
+          >
+            <DeckPlank id={id} part='main' active={active} classNames='size-full pointer-events-none' />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 /** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
 const useFullscreen = (fullscreenId: string | undefined) => {
   const { invokePromise } = useOperationInvoker();
@@ -954,6 +1032,30 @@ export const DeckPlanks = () => {
     handoffRef,
   });
   const toggleFullscreen = useFullscreen(fullscreenId);
+  const { invokePromise } = useOperationInvoker();
+
+  // Bound here rather than as a graph action so the shortcut works wherever the deck has focus; see the
+  // note in DESIGN about promoting it once its binding is settled.
+  useEffect(() => {
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === ';' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        void invokePromise(DeckOperation.ToggleExpose, {});
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [invokePromise]);
+
+  // Picking a plank in the exposé is a navigation: leave the overview and attend what was chosen.
+  const handleExposeSelect = useCallback(
+    (id: string) => {
+      void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+      void invokePromise(LayoutOperation.ScrollIntoView, { subject: id });
+    },
+    [invokePromise],
+  );
 
   const plankContext = useMemo<PlankContextValue>(
     () => ({ ...rendered, maxPlankWidthPx }),
@@ -1014,6 +1116,13 @@ export const DeckPlanks = () => {
               classNames={mx('absolute inset-0', mainIntrinsicSize)}
             />
           </>
+        ) : state.expose && planks.length > 0 ? (
+          <ExposeDeck
+            planks={planks}
+            active={deck.active}
+            plankSizing={deck.plankSizing}
+            onSelect={handleExposeSelect}
+          />
         ) : presentation === 'fullbleed' && companionAnchorId && companionId ? (
           // A lone plank with its companion: the pair fills the viewport across the same seam it has as a
           // sliding tile, so opening a second plank never moves it.
