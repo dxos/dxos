@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 const meta = Plugin.makeMeta({
   key: DXN.make('org.dxos.plugin.afterStartup'),
   name: 'After Startup',
-  description: 'Fires the DeferredStartup activation event at host idle once startup completes.',
+  description: 'Fires every plugin start event at host idle once startup completes.',
   tags: ['system'],
 });
 
@@ -25,7 +25,7 @@ const FIRST_INTERACTIVE_MARK = 'app-framework:first-interactive';
 /**
  * Resolves at host idle (`requestIdleCallback` when available, macrotask fallback). The long
  * timeout is a stall backstop only: an aggressive timeout fires mid-render of the ready UI and
- * the deferred wave then floods the main thread ahead of first paint of the workspace.
+ * the start-event waves then flood the main thread ahead of first paint of the workspace.
  */
 const idle: Effect.Effect<void> = Effect.async<void>((resume) => {
   if (typeof requestIdleCallback === 'function') {
@@ -47,11 +47,11 @@ const awaitPaint: Effect.Effect<void> = Effect.gen(function* () {
   }
 });
 
-const FireDeferredStartup = Capability.inlineModule('FireDeferredStartup', { provides: [] }, () =>
+const FirePluginStartEvents = Capability.inlineModule('FirePluginStartEvents', { provides: [] }, () =>
   Effect.gen(function* () {
     const manager = yield* Plugin.Service;
     // Daemon: this module activates during the startup pass, long before the ready signal
-    // it waits for; the deferred wave must also outlive the activation call itself.
+    // it waits for; the start-event trickle must also outlive the activation call itself.
     yield* Effect.gen(function* () {
       yield* Effect.scoped(
         Effect.gen(function* () {
@@ -67,10 +67,12 @@ const FireDeferredStartup = Capability.inlineModule('FireDeferredStartup', { pro
       );
       yield* awaitPaint;
       yield* idle;
-      yield* manager.activate(ActivationEvents.DeferredStartup);
+      // Sequential per-plugin waves (see the helper): trickled so the post-ready background
+      // load never saturates the main thread in one burst.
+      yield* ActivationEvents.activateAllPluginStartEvents(manager);
     }).pipe(
       Effect.catchAll((error) =>
-        Effect.sync(() => log.error('deferred-startup dispatch failed', { error: String(error) })),
+        Effect.sync(() => log.error('plugin start dispatch failed', { error: String(error) })),
       ),
       Effect.forkDaemon,
     );
@@ -78,6 +80,6 @@ const FireDeferredStartup = Capability.inlineModule('FireDeferredStartup', { pro
   }),
 );
 
-export const AfterStartupPlugin = Plugin.define(meta).pipe(Plugin.addModule(FireDeferredStartup), Plugin.make);
+export const AfterStartupPlugin = Plugin.define(meta).pipe(Plugin.addModule(FirePluginStartEvents), Plugin.make);
 
 export default AfterStartupPlugin;

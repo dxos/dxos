@@ -107,5 +107,16 @@ export const Startup = make('org.dxos.app-framework.event.startup');
  * critical path and activate when the host fires this event at idle after ready. A plain
  * activation event — the manager gives it no special treatment — and a coarse, temporary
  * assignment while modules migrate to precise demand events.
+ * @deprecated Being replaced by per-plugin start events; see {@link pluginStart}.
  */
 export const DeferredStartup = make('org.dxos.app-framework.event.deferredStartup');
+
+/**
+ * A plugin's feature-start event, by convention `<pluginKey>.event.start`. A plugin's
+ * off-critical-path modules declare `activatesOn` on its own start event (conventionally
+ * exported as `<Name>Events.Start` from the plugin's types); cross-plugin contributions (a
+ * skill, a markdown extension) declare the CONSUMING plugin's start event. Deriving the id
+ * from the key alone lets fire sites (enable, idle, demand signals) activate a feature
+ * without importing its package.
+ */
+export const pluginStart = (pluginKey: string | DXN.DXN) => make(`${pluginKey}.event.start`);

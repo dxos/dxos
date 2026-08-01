@@ -145,7 +145,26 @@ Module activation is not the only thing that regressed, and the map should not p
 - **Client/network init** — see the exit criterion above; if it dominates, it becomes its own
   workstream and module deferral is demoted.
 
-## Proposal: feature-scoped activation events (2026-08-01, for review)
+## Ratified: per-plugin start events (2026-08-01)
+
+Supersedes the FeatureRequested proposal below (user: no keyed family — each plugin exports a
+named event namespace, `<Name>Events.Start`, id by convention `<pluginKey>.event.start` via
+`ActivationEvent.pluginStart`). Rules:
+
+- A plugin's own off-critical-path modules ride its own `Start`.
+- Cross-plugin contributions ride the CONSUMER's event: skills → assistant's Start (maker
+  default; `AppCapability.AssistantStart` names it by key to avoid package cycles), markdown
+  extensions → `MarkdownEvents.Start`, game variants → `GameEvents.Start`, routine templates →
+  `RoutineEvents.Start`, connectors → `ConnectorEvents.Start`.
+- DeferredStartup and SkillsRequested are deleted. Fire sites: composer idle hook trickles
+  every core+enabled plugin's Start sequentially (`activateAllPluginStartEvents`); catalog
+  fires a plugin's Start on post-boot enable; deck URL parse-miss fires all; chat surfaces /
+  toolkit materialization / routine editor fire assistant's Start; test harness +
+  withPluginManager fire all after Startup.
+- Next refinement (not yet built): prune plugins from the idle trickle once precise demand
+  sites (object-open typename map, data-presence scan, settings-open) cover them.
+
+## Superseded proposal: feature-scoped activation events (2026-08-01, for review)
 
 Replaces the coarse `DeferredStartup` gate module-by-module. Principle (user-ratified framing):
 one event per **application feature**, not per concern — a module activates during startup only

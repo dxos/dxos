@@ -112,10 +112,11 @@ export default Capability.makeModule(
 
       let parsed = UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
       if (Option.isNone(parsed)) {
-        // An unknown key may belong to a DeferredStartup-gated plugin whose graph builder has
-        // not registered its URL keys yet — the URL itself is the demand signal. Fire the wave,
-        // then re-parse (bounded: contributions land reactively after the wave resolves).
-        yield* manager.activate(ActivationEvents.DeferredStartup).pipe(Effect.ignore);
+        // An unknown key may belong to a start-gated plugin whose graph builder has not
+        // registered its URL keys yet — the URL itself is the demand signal. The key's owner is
+        // unknowable before parsing, so fire every plugin's start event, then re-parse
+        // (bounded: contributions land reactively as the waves resolve).
+        yield* ActivationEvents.activateAllPluginStartEvents(manager);
         for (let attempt = 0; attempt < RESOLVE_RETRY_ATTEMPTS && Option.isNone(parsed); attempt++) {
           yield* Effect.sleep(RESOLVE_RETRY_INTERVAL);
           parsed = UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));

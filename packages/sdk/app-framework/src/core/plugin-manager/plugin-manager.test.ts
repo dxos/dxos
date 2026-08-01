@@ -2987,7 +2987,7 @@ describe('PluginManager', () => {
       }),
     );
 
-    it.effect('modules gated on DeferredStartup stay off startup and join the after-startup wave', () =>
+    it.effect('start-gated modules stay off startup and join their plugin start wave', () =>
       Effect.gen(function* () {
         const Test = Plugin.make(
           Plugin.define(testMeta).pipe(
@@ -2998,7 +2998,7 @@ describe('PluginManager', () => {
             }),
             Plugin.addModule({
               id: 'deferred',
-              activatesOn: ActivationEvent.DeferredStartup,
+              activatesOn: ActivationEvent.pluginStart(testMeta.profile.key),
               provides: [Number],
               activate: () => Effect.succeed([Capability.contribute(Number, { number: 1 })]),
             }),
@@ -3024,7 +3024,7 @@ describe('PluginManager', () => {
         assert.deepStrictEqual(manager.capabilities.getAll(Number), []);
         assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
 
-        yield* manager.activate(ActivationEvent.DeferredStartup);
+        yield* manager.activate(ActivationEvent.pluginStart(testMeta.profile.key));
         assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 1 }]);
         // The post-wave pass unlocks the consumer that was waiting on the deferred provider.
         assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'consumer' }]);
@@ -3061,6 +3061,32 @@ describe('PluginManager', () => {
         // and the eager module ran in the incremental dependency pass.
         assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'gated' }]);
         assert.deepStrictEqual(manager.capabilities.getAll(MultiNumber), [{ number: 1 }]);
+      }),
+    );
+
+    it.effect('a plugin enabled after startup activates its start-gated modules', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'startGated',
+              activatesOn: ActivationEvent.pluginStart(testMeta.profile.key),
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'started' })]),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({ pluginLoader, plugins });
+
+        yield* manager.activate(ActivationEvents.Startup);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
+
+        yield* manager.add(testMeta.profile.key);
+        yield* manager.enable(testMeta.profile.key);
+        // The plugin's own start event never fired before it existed; enable fires it so the
+        // plugin converges without waiting for another host trickle.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'started' }]);
       }),
     );
   });

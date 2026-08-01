@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientService } from '@dxos/client';
 import {
   FeedTraceSink,
@@ -110,13 +110,14 @@ const OpaqueToolkitSpec = LayerSpec.make(
         let skillsRequested = false;
         return Layer.succeed(OpaqueToolkit.OpaqueToolkitProvider, {
           getToolkit: () => {
-            // Toolkit materialization is the headless demand signal for gated skill modules
-            // (a trigger-fired routine reaches here with no assistant UI open). Fire-and-forget:
-            // the read below stays sync and later reads see the registered skills.
+            // Toolkit materialization is the headless demand signal for the assistant feature
+            // (a trigger-fired routine reaches here with no assistant UI open); skills ride the
+            // assistant's start event. Fire-and-forget: the read below stays sync and later
+            // reads see the registered skills.
             if (!skillsRequested) {
               skillsRequested = true;
               void EffectEx.runAndForwardErrors(
-                pluginManager.activate(ActivationEvents.SkillsRequested).pipe(Effect.ignore),
+                pluginManager.activate(AppCapability.AssistantStart).pipe(Effect.ignore),
               );
             }
             const toolkits = capabilities.getAll(AppCapabilities.Toolkit);

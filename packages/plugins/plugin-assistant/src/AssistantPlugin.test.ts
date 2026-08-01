@@ -10,7 +10,6 @@ import { describe, test } from 'vitest';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -27,6 +26,7 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
+import { AssistantEvents } from '#types';
 
 import { meta } from './meta';
 import { AssistantSkill } from './skills/assistant';
@@ -55,9 +55,10 @@ describe('AssistantPlugin', () => {
         moduleId('AgentRuntime'),
       ]),
     );
-    // Demand-gated modules park until their events fire (CreateObjectRequested / SkillsRequested).
+    // Demand-gated modules park until their events fire (CreateObjectRequested).
     expect(harness.manager.getActive()).not.toContain(moduleId('CreateObject'));
-    expect(harness.manager.getActive()).not.toContain(moduleId('SkillDefinition'));
+    // Skills ride the assistant's start event, which the harness fires post-startup.
+    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
 
     // Space-affinity LayerSpec — resolution requires a space context.
     const { personalSpace } = await EffectEx.runAndForwardErrors(
@@ -166,9 +167,9 @@ describe('AssistantPlugin', () => {
         EffectEx.runAndForwardErrors,
       );
 
-      // Skills are demand-gated: fire SkillsRequested (the toolkit-materialization demand
-      // signal) deterministically before resolving them from the registry.
-      await EffectEx.runAndForwardErrors(harness.manager.activate(ActivationEvents.SkillsRequested));
+      // Skills ride the assistant's start event; the harness already fired it, but fire
+      // deterministically here to mirror the headless toolkit-materialization path.
+      await EffectEx.runAndForwardErrors(harness.manager.activate(AssistantEvents.Start));
 
       await harness.runPromise(
         Effect.gen(function* () {

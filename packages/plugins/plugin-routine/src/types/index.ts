@@ -5,4 +5,5 @@
 export * from './schema';
 
 export * as RoutineCapabilities from './RoutineCapabilities';
+export * as RoutineEvents from './RoutineEvents';
 export * as RoutineOperation from './RoutineOperation';

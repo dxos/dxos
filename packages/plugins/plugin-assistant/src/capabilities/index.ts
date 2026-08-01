@@ -2,22 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { RoutineCapabilities } from '@dxos/plugin-routine';
+import { Connector as ConnectorCapability, ConnectorEvents } from '@dxos/plugin-connector';
+import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { RoutineCapabilities, RoutineEvents } from '@dxos/plugin-routine';
 import { SpaceCapability } from '@dxos/plugin-space';
 
-import { AssistantCapabilities } from '#types';
+import { AssistantCapabilities, AssistantEvents } from '#types';
 
 export const AgentHydrator = Capability.lazyModule(
   'AgentHydrator',
-  { requires: [Capabilities.ProcessManagerRuntime], provides: [], activatesOn: ActivationEvents.DeferredStartup },
+  { requires: [Capabilities.ProcessManagerRuntime], provides: [], activatesOn: AssistantEvents.Start },
   () => import('./agent-hydrator'),
 );
 export const AgentRuntime = Capability.lazyModule(
@@ -37,15 +36,15 @@ export const AiService = Capability.lazyModule(
 );
 export const Connector = Capability.lazyModule(
   'AnthropicConnector',
-  { provides: [ConnectorCapability], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [ConnectorCapability], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: AssistantEvents.Start,
 });
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
-  { provides: [RoutineCapabilities.Template], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./automation-templates'),
 );
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
@@ -66,28 +65,28 @@ export const CompanionChatProvisioner = Capability.lazyModule(
       AttentionCapabilities.ViewState,
     ],
     provides: [],
-    activatesOn: ActivationEvents.DeferredStartup,
+    activatesOn: AssistantEvents.Start,
   },
   () => import('./companion-chat-provisioner'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const EdgeModelResolver = Capability.lazyModule(
   'EdgeModelResolver',
-  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: AssistantEvents.Start },
   () => import('./edge-model-resolver'),
 );
 export const LocalModelResolver = Capability.lazyModule(
   'LocalModelResolver',
-  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: AssistantEvents.Start },
   () => import('./local-model-resolver'),
 );
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
-  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
   () => import('./markdown-extension'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: AssistantEvents.Start,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
@@ -103,7 +102,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const Settings = AppCapability.settings(() => import('./settings'), {
   provides: [AssistantCapabilities.Settings],
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: AssistantEvents.Start,
 });
 export const AssistantState = Capability.lazyModule(
   'AssistantState',
@@ -113,12 +112,12 @@ export const AssistantState = Capability.lazyModule(
       AssistantCapabilities.CompanionChatCache,
       AssistantCapabilities.HomeSuggestionsCache,
     ],
-    activatesOn: ActivationEvents.DeferredStartup,
+    activatesOn: AssistantEvents.Start,
   },
   () => import('./state'),
 );
 export const Toolkit = Capability.lazyModule(
   'Toolkit',
-  { provides: [AppCapabilities.Toolkit], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [AppCapabilities.Toolkit], activatesOn: AssistantEvents.Start },
   () => import('./toolkit'),
 );

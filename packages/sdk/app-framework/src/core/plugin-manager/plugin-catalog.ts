@@ -9,6 +9,7 @@ import * as PubSub from 'effect/PubSub';
 
 import { log } from '@dxos/log';
 
+import * as ActivationEvent from '../activation-event';
 import * as Plugin from '../plugin';
 import type * as PluginRegistry from '../registry';
 import { type ActivationScheduler } from './activation-scheduler';
@@ -323,6 +324,12 @@ export class PluginCatalog {
         // fan-out into the enable chain. `start()` waits for loader quiescence before ready.
         if (yield* Deferred.isDone(this.#state.initialized)) {
           yield* pass;
+          // A plugin enabled after boot missed every host fire of its own start event, and the
+          // pending-reset replay above only covers events that fired — so fire it here, or the
+          // plugin's start-gated modules would never activate.
+          yield* this.#scheduler
+            .activate(ActivationEvent.pluginStart(id))
+            .pipe(Effect.catchAll((error) => Effect.sync(() => this.#state.recordFailure(id, 'activation', error))));
         } else {
           yield* pass.pipe(Effect.forkDaemon);
         }

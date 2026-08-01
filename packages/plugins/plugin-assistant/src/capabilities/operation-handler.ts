@@ -25,10 +25,10 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributeAll(Capabilities.OperationHandler, [
       AssistantOperationHandlerSet,
-      // Toolkit handler sets register here (eagerly) rather than with the SkillsRequested-gated
-      // skill definitions: their operations (e.g. runInstructions) are invoked headlessly by
-      // triggers, before any toolkit materialization fires the skills gate. The sets are
-      // lazy-bodied, so eager registration costs only the definition map.
+      // Toolkit handler sets register here (eagerly) rather than with the start-gated skill
+      // definitions: their operations (e.g. runInstructions) are invoked headlessly by
+      // triggers, before any toolkit materialization fires the assistant's start event. The
+      // sets are lazy-bodied, so eager registration costs only the definition map.
       AgentHandlers,
       AgentSkillHandlers,
       SkillManagerHandlers,

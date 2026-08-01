@@ -49,14 +49,23 @@ export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.modu
 );
 
 /**
- * Module maker contributing skill definitions. Gated by default on the assistant being in use
+ * The assistant plugin's start event, derived from its well-known key. Skills (and other
+ * assistant-consumed contributions from arbitrary plugins) ride the CONSUMER's start event, and
+ * naming it by key convention here avoids a package dependency on the assistant plugin — which
+ * would be cyclic for plugins the assistant itself integrates with (markdown, routine).
+ */
+export const AssistantStart = ActivationEvents.PluginStart('org.dxos.plugin.assistant');
+
+/**
+ * Module maker contributing skill definitions. Gated by default on the assistant plugin's start
+ * event — a skill belongs to the assistant feature regardless of which plugin contributes it
  * (skills register into a shared registry whose consumers are reactive); declare `activatesOn`
  * to override.
  */
 export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Capability$.moduleMaker(
   'SkillDefinition',
   AppCapabilities.SkillDefinition,
-  { activatesOn: ActivationEvents.SkillsRequested },
+  { activatesOn: AssistantStart },
 );
 
 /**
