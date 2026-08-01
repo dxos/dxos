@@ -5,8 +5,10 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { AppAnnotation } from '@dxos/app-toolkit';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Database, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -55,6 +57,39 @@ describe('ObjectCreate', () => {
         const people = yield* Database.query(Query.type(Person.Person)).run;
         expect(people).toHaveLength(1);
         expect(people[0].organization?.target).toBe(organization);
+      },
+      Effect.provide(OperationTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'object-create: attach files the object in the space root collection',
+    Effect.fnUntraced(
+      function* (_) {
+        // Seed the root collection (mirrors plugin-markdown's `WithProperties` test helper;
+        // TODO(burdon): factor out — see plugin-markdown/src/testing.ts).
+        const collection = yield* Database.add(Collection.make({ objects: [] }));
+        const properties = yield* Database.add(Obj.make(SpaceProperties, {}));
+        Obj.update(properties, (properties) => {
+          const meta = Obj.getMeta(properties);
+          meta.annotations ??= {};
+          Annotation.setDictionary(meta.annotations, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
+        });
+
+        // A collection is always collection-eligible; non-eligible types (no
+        // `CollectionItemAnnotation`) are filed under navtree type nodes instead and skip the root.
+        yield* Operation.invoke(ObjectCreate, {
+          typename: Type.getTypename(Collection.Collection),
+          properties: { name: 'Projects', objects: [] },
+          attach: true,
+        });
+
+        const created = (yield* Database.query(Query.type(Collection.Collection)).run).find(
+          (candidate) => candidate !== collection,
+        );
+        expect(created).toBeDefined();
+        expect(collection.objects.map((ref) => ref.target)).toContain(created);
       },
       Effect.provide(OperationTestLayer),
       TestHelpers.provideTestContext,
