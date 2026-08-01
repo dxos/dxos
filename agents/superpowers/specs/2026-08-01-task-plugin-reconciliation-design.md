@@ -46,6 +46,13 @@ plugin-projects consumes via the `outline` ref. Sync engines (Linear/GitHub) plu
 
 ### Dedicated MCP verbs vs generic object verbs
 
+> **Superseding input (2026-08-01):** the user is producing an updated spec on another branch
+> (`claude/competent-curie-20057f`) introducing `TaskOperation` in a `plugin-tasks`. The MCP task
+> verbs below must **match those operations** (thin projections over the same operation keys —
+> the object-toolkit pattern), and `plugin-tasks` gets registered in the edge operation-service.
+> Constraint from the outliner registration attempt: the worker resolves all lazy operation
+> handlers, so plugin-tasks handler chunks must stay UI-free or only its schema can register.
+
 Recommendation: **keep the generic object verbs as the substrate; add a thin task verb set** —
 not because the generic verbs can't express tasks, but because model ergonomics and safety differ:
 
