@@ -57,9 +57,14 @@ Three layers. Only the first is type-aware.
 ```
 @dxos/extractor            IdentitySpec, IdentityIndex, findDuplicates, planMerge   (generic)
   └─ @dxos/extractor-lib   personIdentitySpec, organizationIdentitySpec            (type-specific)
-       └─ plugin-crm       contributes the specs as a capability
-            └─ plugin-space  FindDuplicates/ApplyMerge handlers + Duplicates tab   (UI)
+       └─ plugin-inbox     contributes the specs as a capability
+            └─ plugin-space  FindDuplicates/MergeDuplicates handlers + Duplicates tab (UI)
 ```
+
+The specs are contributed by **plugin-inbox**, not the plugin that renders them: whoever creates the
+objects owns the rule for deciding when two are the same, and these are materialised from mail.
+It also matters practically — plugin-crm is a Labs plugin, so hanging the tab off it hid the review
+from every profile that had not enabled it.
 
 ### 3.1 `IdentitySpec` — the single identity rule (`@dxos/extractor`)
 
@@ -105,6 +110,12 @@ To fix F1 the index is cached **per database instance** in a module-level `WeakM
 IdentityIndex>` so two concurrent syncs in the same process share it. Cross-_peer_ races remain and
 are out of scope (that is `object-merging`); the Duplicates tab is the backstop.
 
+**Uncommitted objects never enter the shared index.** A run registers into its own
+`overlayIdentityIndex`, which reads through to the shared one: in-run dedup works, and a run that
+dies before committing leaves nothing behind claiming a contact the space never received. A failed
+build is also evicted, so one transient query error cannot disable identity resolution for the
+lifetime of the database.
+
 ### 3.3 Detection and merge (`@dxos/extractor`)
 
 ```ts
@@ -121,8 +132,14 @@ applyMerge(db, spec, plan): Effect<void>             // the only write
   - refs: survivor's when set, else the first non-empty;
   - `Obj.Meta.keys`: union (so the survivor answers every foreign-key lookup afterwards).
 - `applyMerge` copies losers' meta keys onto the survivor, then `db.remove`s the losers. A
-  confirmed draft is **assigned** over the result, not merged, so an edit wins even where the
-  survivor already had a value.
+  confirmed draft is **assigned** over the result (`Obj.updateFrom`), not merged, so an edit wins
+  even where the survivor already had a value.
+- A value that cannot be normalized is **kept, not dropped** — the merge deletes the losers, so
+  anything skipped is destroyed. Compound values are copied before they join the survivor: ECHO
+  refuses to re-parent a nested record owned by another object.
+- `MergeDuplicates` re-derives the group over the requested objects before writing. Being asked to
+  merge is not evidence of duplication, and the operation deletes; an unrelated or partly-connected
+  set is rejected. `planMerge` does not check identity — it only sorts and folds.
 
 **Known limitation (as built)**: references to a loser are not rewritten at all.
 `Message.sender.contact` lives in immutable feed items and cannot be rewritten even in principle,
@@ -144,7 +161,7 @@ UI, and call the generic engine.
 | `FindDuplicates`  | `{ typename }`                        | `{ groups: { keys, objectIds }[] }` |
 | `MergeDuplicates` | `{ typename, objectIds, overrides? }` | `{ survivorId, removedIds }`        |
 
-Specs reach `plugin-space` through `SpaceCapabilities.IdentitySpec`, contributed by `plugin-crm`
+Specs reach `plugin-space` through `SpaceCapabilities.IdentitySpec`, contributed by `plugin-inbox`
 for Person/Organization — mirroring `InboxCapabilities.ObjectExtractor`. The Duplicates tab is
 hidden for types with no registered spec.
 
@@ -187,7 +204,7 @@ placeholder, never an empty chip row. Implementation is phase 5.
 | Phase | Content                                                                                                                                                    | Test                                         |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | 1     | `IdentitySpec`, `IdentityIndex`, `findDuplicates`, `planMerge` in `@dxos/extractor`; `personIdentitySpec` in `@dxos/extractor-lib`                         | Unit suite for Person (`duplicates.test.ts`) |
-| 2     | `FindDuplicates`/`ApplyMerge` definitions + `plugin-space` handlers + `SpaceCapabilities.IdentitySpec` + `plugin-crm` contribution                         | Handler unit tests                           |
+| 2     | `FindDuplicates`/`MergeDuplicates` definitions + handlers + `SpaceCapabilities.IdentitySpec` + `plugin-inbox` contribution                                 | Handler unit tests                           |
 | 3     | Duplicates tab, toolbar, merge-preview companion                                                                                                           | Storybook + play test                        |
 | 4     | Fix F1–F4 at source: `Resolver.Live` on `IdentityIndex`, `ContactLookup` deleted, Google `upsertPerson` falls back to the identity index and unions emails | Existing sync tests + new regression tests   |
 | 5     | Compound-value table cells (§5)                                                                                                                            | Storybook                                    |
