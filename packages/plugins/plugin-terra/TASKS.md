@@ -1,6 +1,6 @@
 # plugin-terra — Tasks
 
-_Resume: watch PR #12353's Check go green after the sampler-memoization fix, then land it. Uncommitted: none. Last: fixed the real cause of the red `storybook` job — `makeSampler` was rebuilt inside `evaluate` on every smoke puff (28.2ms/frame at 20 objects), timing the `Objects` story out; memoized in `engine/noise.ts`, story now 0.32s. 103 node tests + 3 storybook tests green. Still pending: visual confirmation of the flush bow and retuned wakes — the browser pane reports `visibilityState: hidden` with a 0x0 viewport, so screenshots come back black; check the stories yourself._
+_Resume: Phases 1–2 landed (#12353). On branch `claude/plugin-terra-layout-cache-c82b1b`: the planet cache (see the task below) — 112 node + 6 storybook tests green, live-verified in storybook on port 9010, not yet a PR. Still pending from the prior session: visual confirmation of the flush bow and retuned wakes. Note the browser pane reports a 0x0 viewport (screenshots come back black) — drive storybook with Playwright instead, which does render._
 
 Design and decisions: [DESIGN.md](./DESIGN.md).
 Plans: [Phase 1](../../../agents/superpowers/plans/2026-07-26-plugin-terra.md) ·
@@ -72,9 +72,12 @@ definitions. Plan written and committed; execution begins after Phase 1 closes.
 
 - [x] **Fix the flaky engine determinism test (CI fix)** — `engine.test.ts`'s stepped-vs-direct test hard-coded `expect(leg).toBe(3)` at `boundaries[2] + 500`. `TerraObject.make` mints a random id and the re-targeting seed is `(config.seed, definition.id, leg)`, so every _process_ draws a different destination sequence: leg durations were measured across runs at 391–2924ms (one leg as short as 112ms), and any leg under the 500ms constant put the engine on leg 4 instead. The engine was never non-deterministic — its output is fixed given a definition, and peers share the id via ECHO, so the runtime contract always held. Sample instants are now expressed as a fraction _within_ a leg (`withinLeg`), which cannot flip whatever the draw. 8/8 consecutive runs green. Earlier in the session this was misdiagnosed as a transient build-cache artifact; CI run 30317196524 disproved that.
 
+- [x] **Cache generated planets** (user directive, 2026-07-31) — the article regenerated the planet on every mount, so a resize, an opened companion, or navigating back paid 1.3s at resolution 256 (5s at 512; measured). `engine/planet-cache.ts` caches by a stable key over `TerraConfigValues` and is held in a plugin capability (`TerraCapabilities.PlanetCache`) so it outlives the article; outside a plugin manager (stories, tests) the mount owns a private one. Retention is a byte budget, not an entry count — one mesh is 94–377MB. A hit also skips the 150ms regeneration debounce, and `SceneManager.render` no-ops on the planet it already drew. Verified live in storybook (`CachedManual`): mount → unmount → remount leaves `misses=1`, and the longest main-thread block drops from 1808ms to 352ms (Babylon engine + mesh upload, no generation).
+
 ### References
 
 - Determinism contract and passability rules: [DESIGN.md](./DESIGN.md#phase-2--objects--simulation).
+- Pre-existing, unrelated: every article mount logs one `AdvancedDynamicTexture.update` TypeError from the Babylon GUI FPS widget under React StrictMode's double-mount — reproduces on the untouched `Default` story.
 - Storybook flake: `TerraArticle > Objects` is fast alone (~0.4s) and after `Default` (~3.8s), but slow after `Hires` (~13s, sometimes past the 15s timeout). `Hires` renders a 512²/face mesh, and the GPU memory does not appear to be reclaimed before the next story mounts. Unresolved — the sampler memoization above removed the systematic CPU cost, not this ordering effect.
 - Known seam: `SimEngine.#maybeReplan` should import `TerraObject.domainFor` rather than re-deriving the kind→domain mapping; watch for an import cycle.
 

@@ -126,6 +126,24 @@ permutation tables and is now memoized in `engine/noise.ts`. Keep per-call
 allocation out of `evaluate` and its callees; measure with a frame-loop probe
 rather than by reasoning about it, since the trail multiplier is easy to forget.
 
+### Planet cache
+
+Generation is deterministic in `TerraConfigValues` and costs 1.3s at the default
+resolution of 256 (5s at 512), while the article remounts on any resize, on
+opening a companion, and on navigation — each of which used to regenerate. The
+planet is therefore cached by a stable key over those values (`engine/planet-cache.ts`)
+in a plugin capability (`TerraCapabilities.PlanetCache`), which outlives every
+surface; rendered outside a plugin manager (stories, tests) the mount owns a
+private cache instead. A cache hit also skips the regeneration debounce, since
+there is nothing to coalesce.
+
+Retention is bounded by bytes, not entries: one mesh is 94MB at resolution 256
+and 377MB at 512, so an entry-count cap would be a memory cliff. The budget
+evicts least-recently-used planets but always keeps the newest, which may exceed
+it on its own. `SceneManager.render` additionally no-ops when handed the planet
+it already drew, so a config-identity change that resolves to the same planet
+does not dispose and rebuild identical meshes (~350ms).
+
 ---
 
 ## Backlog (Phase 3+)
