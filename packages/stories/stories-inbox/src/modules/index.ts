@@ -75,7 +75,6 @@ export const moduleSurfaces: Surface.Definition[] = [
     filter: Surface.makeFilter(StoryRole.Archive),
     component: ArchiveModule,
   }),
-  // The stats panel reads plugin-debug's transient store directly — no active space needed.
   Surface.create({
     id: 'inbox.stats',
     filter: Surface.makeFilter(StoryRole.Stats),

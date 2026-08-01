@@ -442,6 +442,12 @@ type CardHtmlProps = { html?: string; variant?: 'default' | 'description' };
 /**
  * Renders sanitized HTML content inside a card text slot.
  * Uses DOMPurify to prevent XSS from untrusted markup (e.g. RSS feed content).
+ *
+ * Sanitization is all this does: the markup renders in the app's own DOM, so the content's CSS reaches
+ * the app, remote images (tracking pixels) load, and nothing adapts to the theme. Prefer
+ * `@dxos/react-ui-components`' `Html`, which isolates content in a shadow root and blocks remote images
+ * by default — it cannot be used from here (that package depends on this one), so a caller that needs
+ * those guarantees should compose `Html` into the card rather than reach for this.
  */
 function CardHtml({ html = '', variant = 'default', ...props }: CardHtmlProps & ThemedClassName<object>) {
   const { tx } = useThemeContext();
